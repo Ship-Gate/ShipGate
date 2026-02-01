@@ -11,9 +11,17 @@ import { resolve, relative } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import { parseISL } from '@isl-lang/isl-core';
-import { check as typeCheck, type Diagnostic } from '@isl-lang/typechecker';
 import { output, type DiagnosticError } from '../output.js';
 import { loadConfig, type ISLConfig } from '../config.js';
+
+// Built-in types that don't need to be defined
+const BUILTIN_TYPES = new Set([
+  'String', 'Int', 'Float', 'Decimal', 'Boolean', 'Bool',
+  'UUID', 'Timestamp', 'DateTime', 'Date', 'Time', 'Duration',
+  'Bytes', 'JSON', 'Any', 'Void', 'Never',
+  // Common aliases
+  'Integer', 'Number', 'Double',
+]);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -79,7 +87,7 @@ async function checkFile(filePath: string, verbose: boolean): Promise<FileCheckR
       });
     }
 
-    // If parsing succeeded, run type checker and collect stats
+    // If parsing succeeded, run type checks and collect stats
     let stats: FileCheckResult['stats'];
     if (ast) {
       stats = {
@@ -88,30 +96,112 @@ async function checkFile(filePath: string, verbose: boolean): Promise<FileCheckR
         invariants: ast.invariants?.length ?? 0,
       };
 
-      // Run type checker
-      const typeCheckResult = typeCheck(ast);
-      for (const diag of typeCheckResult.diagnostics) {
-        const diagError: DiagnosticError = {
-          file: filePath,
-          line: diag.location?.line,
-          column: diag.location?.column,
-          message: diag.message,
-          severity: diag.severity === 'error' ? 'error' : 'warning',
-          code: diag.code,
-          help: diag.help,
-        };
+      // Collect all defined types in this domain
+      const definedTypes = new Set<string>();
+      for (const entity of ast.entities) {
+        definedTypes.add(entity.name.name);
+      }
+      for (const typeDef of ast.types ?? []) {
+        definedTypes.add(typeDef.name.name);
+      }
+
+      // Helper to check if a type is valid
+      const isValidType = (typeName: string): boolean => {
+        return BUILTIN_TYPES.has(typeName) || definedTypes.has(typeName);
+      };
+
+      // Helper to get type name from type node (handles various AST shapes)
+      const getTypeName = (typeNode: unknown): string | null => {
+        if (!typeNode || typeof typeNode !== 'object') return null;
+        const node = typeNode as Record<string, unknown>;
         
-        if (diag.severity === 'error') {
-          errors.push(diagError);
-        } else {
-          warnings.push(diagError);
+        // Direct name property (string)
+        if (typeof node.name === 'string') {
+          return node.name;
+        }
+        
+        // TypeReference with name object
+        if (node.kind === 'TypeReference' && node.name) {
+          const name = node.name as Record<string, unknown>;
+          if (typeof name.name === 'string') return name.name;
+        }
+        
+        // Identifier kind
+        if (node.kind === 'Identifier' && typeof node.name === 'string') {
+          return node.name;
+        }
+        
+        // Nested name.name
+        if (node.name && typeof node.name === 'object') {
+          const inner = node.name as Record<string, unknown>;
+          if (typeof inner.name === 'string') return inner.name;
+        }
+        
+        // Type property with nested structure
+        if (node.type && typeof node.type === 'object') {
+          return getTypeName(node.type);
+        }
+        
+        return null;
+      };
+
+      // Check entity fields for undefined types
+      for (const entity of ast.entities) {
+        for (const field of entity.fields ?? []) {
+          const typeName = getTypeName(field.type);
+          if (typeName && !isValidType(typeName)) {
+            errors.push({
+              file: filePath,
+              line: field.location?.start?.line,
+              column: field.location?.start?.column,
+              message: `Type '${typeName}' is not defined`,
+              severity: 'error',
+              code: 'E0100',
+              help: [`Did you mean to define entity '${typeName}'?`],
+            });
+          }
         }
       }
 
-      // Additional semantic checks
-      // Check for empty behaviors
+      // Check behavior inputs/outputs for undefined types
       for (const behavior of ast.behaviors) {
-        if (!behavior.body?.postconditions?.length && !behavior.body?.scenarios?.length) {
+        // Check input fields (behavior.input.fields)
+        const inputBlock = behavior.input as { fields?: Array<{ type?: unknown; location?: { start?: { line?: number; column?: number } } }> } | undefined;
+        for (const field of inputBlock?.fields ?? []) {
+          const typeName = getTypeName(field.type);
+          if (typeName && !isValidType(typeName)) {
+            errors.push({
+              file: filePath,
+              line: field.location?.start?.line,
+              column: field.location?.start?.column,
+              message: `Type '${typeName}' is not defined`,
+              severity: 'error',
+              code: 'E0100',
+              help: [`Define '${typeName}' as an entity or type, or use a built-in type`],
+            });
+          }
+        }
+
+        // Check output type (behavior.output.success)
+        const outputBlock = behavior.output as { success?: unknown } | undefined;
+        if (outputBlock?.success) {
+          const typeName = getTypeName(outputBlock.success);
+          if (typeName && !isValidType(typeName)) {
+            errors.push({
+              file: filePath,
+              message: `Output type '${typeName}' is not defined in behavior '${behavior.name.name}'`,
+              severity: 'error',
+              code: 'E0100',
+            });
+          }
+        }
+      }
+
+      // Check for empty behaviors (postconditions are top-level, not under body)
+      for (const behavior of ast.behaviors) {
+        const postconds = behavior.postconditions as { conditions?: unknown[] } | undefined;
+        const scenarios = behavior.scenarios as unknown[] | undefined;
+        if (!postconds?.conditions?.length && !scenarios?.length) {
           warnings.push({
             file: filePath,
             message: `Behavior '${behavior.name.name}' has no postconditions or scenarios`,

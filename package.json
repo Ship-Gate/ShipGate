@@ -1,35 +1,53 @@
 {
-  "name": "isl-lang",
+  "name": "isl-lang-monorepo",
   "version": "0.1.0",
   "description": "Intent Specification Language - The programming language for the AI era",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm -r build",
-    "test": "pnpm -r test",
-    "test:coverage": "pnpm -r test:coverage",
-    "test:ci": "pnpm -r test -- --reporter=verbose",
-    "lint": "pnpm -r lint",
-    "clean": "pnpm -r clean",
-    "typecheck": "pnpm -r typecheck",
+    "build": "turbo build",
+    "test": "turbo test",
+    "test:coverage": "turbo test:coverage",
+    "test:ci": "turbo test -- --reporter=verbose",
+    "lint": "turbo lint",
+    "clean": "turbo clean",
+    "typecheck": "turbo typecheck",
+    "dev": "turbo dev",
     "coverage:report": "vitest run --coverage --workspace",
-    "benchmark": "node scripts/benchmark.js"
+    "benchmark": "node scripts/benchmark.js",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "turbo build && turbo test && changeset publish",
+    "prepublish-check": "tsx scripts/publish.ts --check",
+    "publish-packages": "tsx scripts/publish.ts"
   },
   "keywords": [
+    "isl",
     "intent",
     "specification",
     "language",
     "verification",
     "ai",
-    "code-generation"
+    "code-generation",
+    "design-by-contract"
   ],
-  "author": "mevla",
+  "author": "ISL Team",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/isl-lang/isl.git"
+  },
+  "homepage": "https://isl-lang.dev",
+  "bugs": {
+    "url": "https://github.com/isl-lang/isl/issues"
+  },
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
   },
-  "workspaces": [
-    "packages/cli"
-  ]
+  "devDependencies": {
+    "@changesets/cli": "^2.27.0",
+    "turbo": "^2.0.0",
+    "tsx": "^4.7.0"
+  }
 }
