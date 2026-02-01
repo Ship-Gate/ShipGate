@@ -21,3 +21,23 @@ export {
   type WebviewMessage,
   type ExtensionMessage
 } from './evidenceViewState';
+
+// Studio Panel
+export { StudioPanel, StudioPanelSerializer } from './StudioPanel';
+export { buildStudioHtml } from './studio.html';
+export {
+  createInitialStudioState,
+  calculateScoreFromClauses,
+  getStatusColorClass,
+  getClauseTypeLabel,
+  type StudioState,
+  type GenerationMode,
+  type StudioStatus,
+  type SpecClause,
+  type StudioScore,
+  type StudioOpenQuestion,
+  type StudioAssumption,
+  type GeneratedSpec,
+  type StudioWebviewMessage,
+  type StudioExtensionMessage
+} from './studioState';
