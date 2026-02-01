@@ -117,17 +117,16 @@ That's all!`,
 
 /**
  * Specs with unexpected/extra fields that could be exploit vectors
+ * Note: In JavaScript, __proto__ as a key actually sets the prototype,
+ * so we use JSON.parse to create objects with literal "__proto__" keys
  */
 export const UNEXPECTED_FIELD_SPECS: BadSpecFixture[] = [
   {
     id: 'UF-001',
     category: 'unexpected_fields',
-    description: 'Spec with __proto__ pollution attempt',
-    spec: {
-      contract: 'User',
-      __proto__: { isAdmin: true },
-      fields: { name: 'String' },
-    },
+    description: 'Spec with __proto__ pollution attempt via JSON',
+    // JSON.parse creates an object with literal "__proto__" key that can be detected
+    spec: JSON.parse('{"contract": "User", "__proto__": {"isAdmin": true}, "fields": {"name": "String"}}'),
     expectedBehavior: 'REJECT',
     severity: 'critical',
   },
@@ -135,11 +134,7 @@ export const UNEXPECTED_FIELD_SPECS: BadSpecFixture[] = [
     id: 'UF-002',
     category: 'unexpected_fields',
     description: 'Spec with constructor pollution',
-    spec: {
-      contract: 'User',
-      constructor: { prototype: { polluted: true } },
-      fields: { name: 'String' },
-    },
+    spec: JSON.parse('{"contract": "User", "constructor": {"prototype": {"polluted": true}}, "fields": {"name": "String"}}'),
     expectedBehavior: 'REJECT',
     severity: 'critical',
   },
@@ -291,9 +286,8 @@ export const ESCAPE_SEQUENCE_SPECS: BadSpecFixture[] = [
     id: 'ES-001',
     category: 'escape_sequences',
     description: 'Null byte injection',
-    spec: `contract User {
-  name: String\x00; malicious content after null
-}`,
+    // Actual null byte character embedded
+    spec: 'contract User {\n  name: String\x00; malicious content after null\n}',
     expectedBehavior: 'REJECT',
     severity: 'high',
   },
@@ -301,9 +295,8 @@ export const ESCAPE_SEQUENCE_SPECS: BadSpecFixture[] = [
     id: 'ES-002',
     category: 'escape_sequences',
     description: 'Carriage return injection (CRLF)',
-    spec: `contract User {
-  name: String\r\nSet-Cookie: admin=true
-}`,
+    // Actual CRLF with HTTP header injection attempt
+    spec: 'contract User {\n  name: String\r\nSet-Cookie: admin=true\r\n}',
     expectedBehavior: 'REJECT',
     severity: 'high',
   },
@@ -311,8 +304,9 @@ export const ESCAPE_SEQUENCE_SPECS: BadSpecFixture[] = [
     id: 'ES-003',
     category: 'escape_sequences',
     description: 'Backslash escape breaking',
+    // Path traversal via backslash escapes
     spec: `contract User {
-  path: String = "C:\\\\..\\\\..\\\\windows\\\\system32"
+  path: String = "..\\\\..\\\\windows\\\\system32"
 }`,
     expectedBehavior: 'REJECT',
     severity: 'high',
@@ -320,7 +314,8 @@ export const ESCAPE_SEQUENCE_SPECS: BadSpecFixture[] = [
   {
     id: 'ES-004',
     category: 'escape_sequences',
-    description: 'Unicode escape sequence',
+    description: 'Unicode escape sequence for XSS',
+    // Unicode escapes that decode to script tags
     spec: `contract User {
   name: String = "\\u003cscript\\u003ealert(1)\\u003c/script\\u003e"
 }`,
@@ -331,6 +326,7 @@ export const ESCAPE_SEQUENCE_SPECS: BadSpecFixture[] = [
     id: 'ES-005',
     category: 'escape_sequences',
     description: 'Octal escape sequence',
+    // Octal escapes for path characters
     spec: `contract User {
   path: String = "\\057etc\\057passwd"
 }`,

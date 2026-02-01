@@ -302,11 +302,11 @@ export const CODE_INJECTION_BINDINGS: MalformedBindingFixture[] = [
   {
     id: 'CI-006',
     category: 'code_injection',
-    description: 'Newline injection in location',
+    description: 'Newline injection in location (embedded newline)',
+    // This has a literal newline within the location field which should be rejected
     binding: `/**
  * @isl-bindings
- * CreateUser.pre.1 -> guard:safe
-rm -rf /
+ * CreateUser.pre.1 -> guard:safe\\nrm -rf /
  */`,
     expectedBehavior: 'REJECT',
     severity: 'critical',
@@ -325,10 +325,11 @@ rm -rf /
   {
     id: 'CI-008',
     category: 'code_injection',
-    description: 'Process.env access in description',
+    description: 'Template literal injection in location',
+    // Template literal syntax in location should be rejected
     binding: `/**
  * @isl-bindings
- * CreateUser.pre.1 -> guard:fn:validate [${`process.env.SECRET`}]
+ * CreateUser.pre.1 -> guard:\${process.env.SECRET}
  */`,
     expectedBehavior: 'REJECT',
     severity: 'critical',
@@ -458,10 +459,11 @@ export const TYPE_CONFUSION_BINDINGS: MalformedBindingFixture[] = [
   {
     id: 'TC-003',
     category: 'type_confusion',
-    description: 'Boolean as clauseId',
+    description: 'Boolean literal syntax as clauseId',
+    // Using actual JavaScript boolean syntax which isn't valid
     binding: `/**
  * @isl-bindings
- * true -> guard:fn:validate
+ * !true -> guard:fn:validate
  */`,
     expectedBehavior: 'REJECT',
     severity: 'medium',
