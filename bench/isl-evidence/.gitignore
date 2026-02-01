@@ -1,0 +1,14 @@
+# Output directory - generated reports
+output/
+
+# Node modules if any samples have dependencies
+node_modules/
+
+# Generated files in samples
+samples/*/generated/
+samples/*/dist/
+samples/*/.isl-cache/
+
+# OS files
+.DS_Store
+Thumbs.db

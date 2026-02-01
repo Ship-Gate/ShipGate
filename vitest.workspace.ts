@@ -118,4 +118,32 @@ export default defineWorkspace([
       },
     },
   },
+  // E2E Integration Tests
+  {
+    test: {
+      name: 'e2e',
+      root: '.',
+      globals: true,
+      environment: 'node',
+      include: ['tests/e2e/**/*.test.ts'],
+      testTimeout: 60000,
+    },
+  },
+  // Intent Translator package
+  {
+    test: {
+      name: 'intent-translator',
+      root: './packages/intent-translator',
+      globals: true,
+      environment: 'node',
+      include: ['tests/**/*.test.ts'],
+      testTimeout: 60000,
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        include: ['src/**/*.ts'],
+        exclude: ['src/**/*.d.ts'],
+      },
+    },
+  },
 ]);
