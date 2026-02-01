@@ -12,7 +12,7 @@ export {
   TRANSLATOR_TOOL_SCHEMAS,
 } from './translator-tools.js';
 
-// Re-export types
+// Re-export translator types
 export type {
   TranslateInput,
   TranslateResult,
@@ -36,3 +36,30 @@ export type {
   StructureSummary,
   TranslatorToolName,
 } from './translator-tool-types.js';
+
+// Re-export pipeline tools
+export {
+  handleBuild,
+  handleVerify,
+  initWorkspace,
+  formatMCPResponse,
+  PIPELINE_TOOL_SCHEMAS,
+} from './pipeline/index.js';
+
+// Re-export pipeline types
+export type {
+  BuildInput,
+  BuildResult,
+  BuildReportSummary,
+  BuildErrorCode,
+  VerifyInput,
+  VerifyResult,
+  VerifyReportSummary,
+  VerifyErrorCode,
+  OutputPaths,
+  WorkspaceConfig,
+  GeneratedFileInfo,
+  CategoryScore,
+  VerificationFailure,
+  PipelineToolName,
+} from './pipeline/index.js';
