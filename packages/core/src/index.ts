@@ -57,6 +57,12 @@ export * from './integration/index.js';
 export * from './policies/index.js';
 
 // ============================================================================
+// Filesystem Guard (safe paths, write allowlists)
+// ============================================================================
+
+export * from './fs-guard/index.js';
+
+// ============================================================================
 // Context Extractor (repository scanning for translator context)
 // ============================================================================
 
