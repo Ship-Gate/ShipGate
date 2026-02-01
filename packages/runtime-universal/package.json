@@ -1,0 +1,55 @@
+{
+  "name": "@isl-lang/runtime-universal",
+  "version": "1.0.0",
+  "description": "Universal runtime engine for ISL - execute intent specifications across any environment",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./vm": {
+      "import": "./dist/vm/index.mjs",
+      "require": "./dist/vm/index.js"
+    },
+    "./scheduler": {
+      "import": "./dist/scheduler/index.mjs",
+      "require": "./dist/scheduler/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*",
+    "isolated-vm": "^4.7.0",
+    "quickjs-emscripten": "^0.29.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "keywords": [
+    "isl",
+    "runtime",
+    "vm",
+    "execution",
+    "universal"
+  ],
+  "author": "mevla",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mevla/isl-lang.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/mevla/isl-lang/issues"
+  }
+}

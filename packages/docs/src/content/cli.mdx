@@ -1,0 +1,57 @@
+---
+title: CLI Reference
+description: Complete reference for the ISL command-line interface.
+---
+
+# CLI Reference
+
+The ISL CLI provides commands for checking, generating, and verifying your 
+specifications.
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `isl init` | Initialize ISL in a project |
+| `isl check` | Validate specification files |
+| `isl generate` | Generate code from specs |
+| `isl verify` | Run verification tests |
+| `isl watch` | Watch for changes |
+
+## isl check
+
+```bash
+isl check specs/auth.isl
+
+# Check all specs
+isl check specs/
+
+# With statistics
+isl check specs/ --stats
+```
+
+## isl generate
+
+```bash
+# Generate TypeScript types
+isl generate types specs/ -o src/generated
+
+# Generate tests
+isl generate tests specs/ -o src/tests
+
+# Generate documentation
+isl generate docs specs/ -o docs/api
+```
+
+## isl verify
+
+```bash
+# Full verification
+isl verify specs/ --all
+
+# Runtime only
+isl verify specs/ --runtime
+
+# With minimum trust score
+isl verify specs/ --min-trust-score 90
+```

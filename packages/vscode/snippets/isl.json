@@ -1,0 +1,361 @@
+{
+  "Intent": {
+    "prefix": "intent",
+    "body": [
+      "intent ${1:Name} {",
+      "  pre: ${2:condition}",
+      "  post: ${3:condition}",
+      "}"
+    ],
+    "description": "Create a new intent with pre/post conditions"
+  },
+  "Scenario": {
+    "prefix": "scenario",
+    "body": [
+      "scenario \"${1:name}\" {",
+      "  given: { ${2} }",
+      "  when: ${3:action}",
+      "  then: ${4:assertion}",
+      "}"
+    ],
+    "description": "Create a test scenario with given/when/then"
+  },
+  "Chaos": {
+    "prefix": "chaos",
+    "body": [
+      "chaos {",
+      "  inject: ${1:fault}",
+      "  expect: ${2:recovery}",
+      "}"
+    ],
+    "description": "Create a chaos engineering test"
+  },
+  "Domain": {
+    "prefix": "domain",
+    "body": [
+      "domain ${1:DomainName} {",
+      "  version: \"${2:1.0.0}\"",
+      "",
+      "  $0",
+      "}"
+    ],
+    "description": "Create a new ISL domain"
+  },
+  "Entity": {
+    "prefix": "entity",
+    "body": [
+      "entity ${1:EntityName} {",
+      "  id: UUID [immutable, unique]",
+      "  ${2:field}: ${3:String}",
+      "  created_at: Timestamp [immutable]",
+      "  updated_at: Timestamp",
+      "",
+      "  invariants {",
+      "    $0",
+      "  }",
+      "}"
+    ],
+    "description": "Create a new entity"
+  },
+  "Entity Simple": {
+    "prefix": "entity-simple",
+    "body": [
+      "entity ${1:EntityName} {",
+      "  id: UUID [immutable, unique]",
+      "  ${2:field}: ${3:String}",
+      "}"
+    ],
+    "description": "Create a simple entity"
+  },
+  "Behavior": {
+    "prefix": "behavior",
+    "body": [
+      "behavior ${1:BehaviorName} {",
+      "  description: \"${2:Description}\"",
+      "",
+      "  actors {",
+      "    ${3:User} {",
+      "      must: authenticated",
+      "    }",
+      "  }",
+      "",
+      "  input {",
+      "    ${4:field}: ${5:String}",
+      "  }",
+      "",
+      "  output {",
+      "    success: ${6:Boolean}",
+      "",
+      "    errors {",
+      "      ${7:ERROR_NAME} {",
+      "        when: \"${8:Error condition}\"",
+      "        retriable: ${9|true,false|}",
+      "      }",
+      "    }",
+      "  }",
+      "",
+      "  preconditions {",
+      "    $0",
+      "  }",
+      "",
+      "  postconditions {",
+      "    success implies {",
+      "      - ${10:condition}",
+      "    }",
+      "  }",
+      "}"
+    ],
+    "description": "Create a new behavior"
+  },
+  "Behavior Simple": {
+    "prefix": "behavior-simple",
+    "body": [
+      "behavior ${1:BehaviorName} {",
+      "  input {",
+      "    ${2:field}: ${3:String}",
+      "  }",
+      "",
+      "  output {",
+      "    success: ${4:Boolean}",
+      "  }",
+      "}"
+    ],
+    "description": "Create a simple behavior"
+  },
+  "Type Alias": {
+    "prefix": "type",
+    "body": [
+      "type ${1:TypeName} = ${2:String} { ${3:constraint}: ${4:value} }"
+    ],
+    "description": "Create a type alias with constraints"
+  },
+  "Enum": {
+    "prefix": "enum",
+    "body": [
+      "enum ${1:EnumName} {",
+      "  ${2:VALUE_ONE}",
+      "  ${3:VALUE_TWO}",
+      "  $0",
+      "}"
+    ],
+    "description": "Create an enumeration"
+  },
+  "Input Block": {
+    "prefix": "input",
+    "body": [
+      "input {",
+      "  ${1:field}: ${2:String}${3: [${4:annotation}]}",
+      "  $0",
+      "}"
+    ],
+    "description": "Create an input block"
+  },
+  "Output Block": {
+    "prefix": "output",
+    "body": [
+      "output {",
+      "  success: ${1:Type}",
+      "",
+      "  errors {",
+      "    $0",
+      "  }",
+      "}"
+    ],
+    "description": "Create an output block"
+  },
+  "Error Definition": {
+    "prefix": "error",
+    "body": [
+      "${1:ERROR_NAME} {",
+      "  when: \"${2:Error condition}\"",
+      "  retriable: ${3|true,false|}",
+      "}"
+    ],
+    "description": "Define an error case"
+  },
+  "Pre Condition": {
+    "prefix": "pre",
+    "body": [
+      "pre: ${1:condition}"
+    ],
+    "description": "Add a precondition"
+  },
+  "Post Condition": {
+    "prefix": "post",
+    "body": [
+      "post: ${1:condition}"
+    ],
+    "description": "Add a postcondition"
+  },
+  "Preconditions Block": {
+    "prefix": "preconditions",
+    "body": [
+      "preconditions {",
+      "  ${1:condition}",
+      "  $0",
+      "}"
+    ],
+    "description": "Create preconditions block"
+  },
+  "Postconditions Block": {
+    "prefix": "postconditions",
+    "body": [
+      "postconditions {",
+      "  success implies {",
+      "    - ${1:condition}",
+      "  }",
+      "",
+      "  failure implies {",
+      "    - ${2:condition}",
+      "  }",
+      "}"
+    ],
+    "description": "Create postconditions block"
+  },
+  "Invariant": {
+    "prefix": "invariant",
+    "body": [
+      "invariant: ${1:condition}"
+    ],
+    "description": "Add an invariant"
+  },
+  "Invariants Block": {
+    "prefix": "invariants",
+    "body": [
+      "invariants {",
+      "  - ${1:invariant}",
+      "  $0",
+      "}"
+    ],
+    "description": "Create invariants block"
+  },
+  "Temporal Constraints": {
+    "prefix": "temporal",
+    "body": [
+      "temporal {",
+      "  - within ${1:500ms} (${2:p50}): ${3:response returned}",
+      "  - within ${4:2s} (${5:p99}): ${6:response returned}",
+      "  - eventually within ${7:5s}: ${8:side effect completed}",
+      "}"
+    ],
+    "description": "Create temporal constraints"
+  },
+  "Security Block": {
+    "prefix": "security",
+    "body": [
+      "security {",
+      "  - rate_limit ${1:100} per ${2:hour} per ${3:ip_address}",
+      "  $0",
+      "}"
+    ],
+    "description": "Create security constraints"
+  },
+  "Actors Block": {
+    "prefix": "actors",
+    "body": [
+      "actors {",
+      "  ${1:User} {",
+      "    must: ${2:authenticated}",
+      "    ${3:owns: ${4:resource_id}}",
+      "  }",
+      "}"
+    ],
+    "description": "Define actors for a behavior"
+  },
+  "Lifecycle": {
+    "prefix": "lifecycle",
+    "body": [
+      "lifecycle {",
+      "  ${1:STATE_ONE} -> ${2:STATE_TWO}",
+      "  ${2:STATE_TWO} -> ${3:STATE_THREE}",
+      "  $0",
+      "}"
+    ],
+    "description": "Define entity state lifecycle"
+  },
+  "Compliance Block": {
+    "prefix": "compliance",
+    "body": [
+      "compliance {",
+      "  ${1:gdpr} {",
+      "    - ${2:requirement}",
+      "    $0",
+      "  }",
+      "}"
+    ],
+    "description": "Create compliance requirements"
+  },
+  "Field with Annotation": {
+    "prefix": "field",
+    "body": [
+      "${1:fieldName}: ${2:Type}${3: [${4|immutable,unique,indexed,secret,sensitive,optional|}]}"
+    ],
+    "description": "Add a field with annotation"
+  },
+  "Optional Field": {
+    "prefix": "field?",
+    "body": [
+      "${1:fieldName}: ${2:Type}?"
+    ],
+    "description": "Add an optional field"
+  },
+  "Implies Block": {
+    "prefix": "implies",
+    "body": [
+      "${1:condition} implies {",
+      "  - ${2:result}",
+      "  $0",
+      "}"
+    ],
+    "description": "Create an implies block"
+  },
+  "ForAll": {
+    "prefix": "forall",
+    "body": [
+      "forall ${1:x} in ${2:collection}: ${3:condition}"
+    ],
+    "description": "Create a forall quantifier"
+  },
+  "Exists": {
+    "prefix": "exists",
+    "body": [
+      "exists ${1:x} in ${2:collection}: ${3:condition}"
+    ],
+    "description": "Create an exists quantifier"
+  },
+  "Inject Fault": {
+    "prefix": "inject",
+    "body": [
+      "inject: ${1:fault_type}"
+    ],
+    "description": "Inject a fault for chaos testing"
+  },
+  "Expect Recovery": {
+    "prefix": "expect",
+    "body": [
+      "expect: ${1:recovery_behavior}"
+    ],
+    "description": "Expect a recovery behavior"
+  },
+  "Given": {
+    "prefix": "given",
+    "body": [
+      "given: { ${1:precondition} }"
+    ],
+    "description": "Define given precondition"
+  },
+  "When": {
+    "prefix": "when",
+    "body": [
+      "when: ${1:action}"
+    ],
+    "description": "Define when action"
+  },
+  "Then": {
+    "prefix": "then",
+    "body": [
+      "then: ${1:assertion}"
+    ],
+    "description": "Define then assertion"
+  }
+}

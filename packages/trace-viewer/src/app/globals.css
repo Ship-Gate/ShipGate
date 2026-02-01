@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Tree view styles */
+.tree-node {
+  @apply pl-4 border-l border-gray-200;
+}
+
+.tree-node-changed {
+  @apply bg-yellow-50 border-l-2 border-yellow-400;
+}
+
+/* Timeline styles */
+.timeline-event {
+  @apply transition-transform duration-150 hover:scale-125 cursor-pointer;
+}
+
+.timeline-event.active {
+  @apply ring-2 ring-offset-1;
+}

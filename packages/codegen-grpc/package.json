@@ -1,0 +1,80 @@
+{
+  "name": "@isl-lang/codegen-grpc",
+  "version": "1.0.0",
+  "description": "ISL to Protobuf/gRPC code generator - generates .proto files, buf configuration, and client/server stubs",
+  "author": "mevla",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./proto": {
+      "import": "./dist/proto/index.js",
+      "types": "./dist/proto/index.d.ts"
+    },
+    "./grpc": {
+      "import": "./dist/grpc/index.js",
+      "types": "./dist/grpc/index.d.ts"
+    },
+    "./connect": {
+      "import": "./dist/connect/index.js",
+      "types": "./dist/connect/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "eslint": "^8.55.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0"
+  },
+  "peerDependencies": {
+    "@isl-lang/isl-core": "workspace:*"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "intentos",
+    "isl",
+    "protobuf",
+    "grpc",
+    "connect-rpc",
+    "codegen",
+    "proto",
+    "buf"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mevla/isl-lang.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mevla/isl-lang/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://intentlang.dev"
+}

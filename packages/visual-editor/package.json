@@ -1,0 +1,35 @@
+{
+  "name": "@isl-lang/visual-editor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Visual/graphical editor for ISL specifications",
+  "scripts": {
+    "dev": "next dev -p 3002",
+    "build": "next build",
+    "start": "next start -p 3002",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "14.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "reactflow": "^11.10.4",
+    "@reactflow/node-resizer": "^2.2.12",
+    "zustand": "^4.5.0",
+    "lucide-react": "^0.323.0",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.0"
+  },
+  "author": "mevla",
+  "license": "MIT"
+}

@@ -1,0 +1,36 @@
+{
+  "name": "@isl-lang/effect-system",
+  "version": "1.0.0",
+  "description": "Algebraic effect system for ISL - track and manage side effects",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "keywords": [
+    "isl",
+    "effects",
+    "algebraic-effects",
+    "side-effects",
+    "functional"
+  ],
+  "license": "MIT",
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mevla/isl-lang.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/mevla/isl-lang/issues"
+  }
+}

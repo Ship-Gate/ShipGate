@@ -1,0 +1,47 @@
+{
+  "name": "@isl-lang/codegen-terraform",
+  "version": "0.1.0",
+  "description": "Generate Terraform/OpenTofu infrastructure from ISL domain specifications",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src/**/*.ts",
+    "clean": "rimraf dist",
+    "validate": "terraform fmt -check -recursive"
+  },
+  "keywords": [
+    "isl",
+    "terraform",
+    "opentofu",
+    "infrastructure-as-code",
+    "aws",
+    "gcp",
+    "azure",
+    "codegen"
+  ],
+  "author": "mevla",
+  "license": "MIT",
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "rimraf": "^5.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mevla/isl-lang.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/mevla/isl-lang/issues"
+  }
+}

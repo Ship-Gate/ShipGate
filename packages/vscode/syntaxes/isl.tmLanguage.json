@@ -1,0 +1,251 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Intent Specification Language",
+  "scopeName": "source.isl",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#annotations" },
+    { "include": "#intent-definition" },
+    { "include": "#keywords" },
+    { "include": "#operators" },
+    { "include": "#types" },
+    { "include": "#constants" },
+    { "include": "#punctuation" },
+    { "include": "#identifiers" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.isl",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.isl",
+          "begin": "/\\*",
+          "end": "\\*/",
+          "patterns": [
+            {
+              "name": "comment.block.isl",
+              "match": "."
+            }
+          ]
+        },
+        {
+          "name": "comment.line.hash.isl",
+          "match": "#.*$"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.isl",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.isl",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.isl",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.isl",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.duration.isl",
+          "match": "\\b\\d+(\\.\\d+)?\\s*(ms|s|m|h|d)\\b"
+        },
+        {
+          "name": "constant.numeric.percentage.isl",
+          "match": "\\b(p\\d+|\\d+%)\\b"
+        },
+        {
+          "name": "constant.numeric.float.isl",
+          "match": "\\b\\d+\\.\\d+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.isl",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+    "annotations": {
+      "patterns": [
+        {
+          "name": "meta.annotation.isl",
+          "begin": "\\[",
+          "end": "\\]",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.annotation.begin.isl" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.annotation.end.isl" }
+          },
+          "patterns": [
+            {
+              "name": "keyword.other.annotation.isl",
+              "match": "\\b(immutable|unique|indexed|secret|sensitive|default|optional|required|deprecated)\\b"
+            },
+            { "include": "#strings" },
+            { "include": "#numbers" },
+            { "include": "#constants" }
+          ]
+        }
+      ]
+    },
+    "intent-definition": {
+      "patterns": [
+        {
+          "match": "\\b(intent)\\s+([A-Z][a-zA-Z0-9_]*)\\b",
+          "captures": {
+            "1": { "name": "keyword.control.isl" },
+            "2": { "name": "entity.name.function.isl" }
+          }
+        },
+        {
+          "match": "\\b(domain|entity|behavior|type|enum)\\s+([A-Z][a-zA-Z0-9_]*)\\b",
+          "captures": {
+            "1": { "name": "keyword.control.isl" },
+            "2": { "name": "entity.name.type.isl" }
+          }
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.isl",
+          "match": "\\b(intent|pre|post|invariant|scenario|chaos|given|when|then|inject|expect)\\b"
+        },
+        {
+          "name": "keyword.control.domain.isl",
+          "match": "\\b(domain|version)\\b"
+        },
+        {
+          "name": "keyword.control.structure.isl",
+          "match": "\\b(entity|behavior|type|enum)\\b"
+        },
+        {
+          "name": "keyword.control.section.isl",
+          "match": "\\b(input|output|preconditions|postconditions|invariants|temporal|security|compliance|actors|errors|lifecycle|description|scope)\\b"
+        },
+        {
+          "name": "keyword.control.condition.isl",
+          "match": "\\b(success|failure|and|or|not|in|for|must|owns)\\b"
+        },
+        {
+          "name": "keyword.control.temporal.isl",
+          "match": "\\b(eventually|within|immediately|never|always)\\b"
+        },
+        {
+          "name": "keyword.control.modifier.isl",
+          "match": "\\b(retriable|retry_after|rate_limit|per|enabled)\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.isl",
+          "match": "\\b(forall|exists|implies|old)\\b"
+        },
+        {
+          "name": "keyword.operator.comparison.isl",
+          "match": "(==|!=|>=|<=|>|<)"
+        },
+        {
+          "name": "keyword.operator.assignment.isl",
+          "match": "="
+        },
+        {
+          "name": "keyword.operator.arrow.isl",
+          "match": "(->|=>)"
+        },
+        {
+          "name": "keyword.operator.optional.isl",
+          "match": "\\?"
+        },
+        {
+          "name": "keyword.operator.logical.isl",
+          "match": "(&&|\\|\\|)"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.isl",
+          "match": "\\b(String|Number|Boolean|Array|Map|Int|Float|UUID|Timestamp|Date|DateTime|Email|URL|JSON|Any)\\b"
+        },
+        {
+          "name": "entity.name.type.isl",
+          "match": "\\b[A-Z][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.isl",
+          "match": "\\b(true|false|null)\\b"
+        },
+        {
+          "name": "constant.other.enum.isl",
+          "match": "\\b[A-Z][A-Z0-9_]+\\b"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.block.isl",
+          "match": "[{}]"
+        },
+        {
+          "name": "punctuation.definition.parameters.isl",
+          "match": "[()]"
+        },
+        {
+          "name": "punctuation.separator.isl",
+          "match": "[:,]"
+        },
+        {
+          "name": "punctuation.accessor.isl",
+          "match": "\\."
+        },
+        {
+          "name": "punctuation.definition.list.isl",
+          "match": "-(?=\\s)"
+        }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "name": "variable.parameter.isl",
+          "match": "\\b[a-z_][a-zA-Z0-9_]*(?=\\s*:)"
+        },
+        {
+          "name": "variable.other.isl",
+          "match": "\\b[a-z_][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    }
+  }
+}

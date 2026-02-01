@@ -1,0 +1,39 @@
+{
+  "name": "@isl-lang/schema-evolution",
+  "version": "1.0.0",
+  "description": "Safe schema evolution and migration tools for ISL specifications",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "test": "vitest run",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "diff": "^5.2.0",
+    "semver": "^7.6.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/diff": "^5.0.9",
+    "@types/semver": "^7.5.6",
+    "typescript": "^5.3.0",
+    "tsup": "^8.0.0",
+    "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "@isl-lang/isl-core": "workspace:*",
+    "@isl-lang/parser": "workspace:*"
+  },
+  "author": "mevla",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mevla/isl-lang.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/mevla/isl-lang/issues"
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "name": "@isl-lang/health-check",
+  "version": "1.0.0",
+  "description": "Generate health check endpoints from ISL dependencies",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./checks": {
+      "import": "./dist/checks/index.mjs",
+      "require": "./dist/checks/index.js",
+      "types": "./dist/checks/index.d.ts"
+    },
+    "./generators": {
+      "import": "./dist/generators/index.mjs",
+      "require": "./dist/generators/index.js",
+      "types": "./dist/generators/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.0",
+    "express": "^4.18.2",
+    "ioredis": "^5.3.2",
+    "pg": "^8.11.3",
+    "amqplib": "^0.10.3",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "express": "^4.18.0",
+    "ioredis": "^5.0.0",
+    "pg": "^8.0.0",
+    "amqplib": "^0.10.0"
+  },
+  "peerDependenciesMeta": {
+    "express": {
+      "optional": true
+    },
+    "ioredis": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "amqplib": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "health-check",
+    "kubernetes",
+    "liveness",
+    "readiness",
+    "isl",
+    "monitoring",
+    "express"
+  ],
+  "license": "MIT",
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mevla/isl-lang.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/mevla/isl-lang/issues"
+  }
+}

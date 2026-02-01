@@ -1,0 +1,54 @@
+---
+title: Types
+description: ISL type system including primitives, custom types, and constraints.
+---
+
+# Types
+
+ISL has a rich type system with built-in primitives, custom type definitions, 
+and powerful constraints.
+
+## Primitive Types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `String` | Text value | `"hello"` |
+| `Int` | Integer number | `42` |
+| `Decimal` | Decimal number | `19.99` |
+| `Boolean` | True or false | `true` |
+| `UUID` | Unique identifier | `"550e8400-..."` |
+| `Timestamp` | Date and time | `2024-01-15T10:30:00Z` |
+
+## Custom Types
+
+Define custom types with constraints:
+
+```isl
+type Email = String { format: "email", max_length: 254 }
+type Password = String { min_length: 8, max_length: 128 }
+type Age = Int { min: 0, max: 150 }
+type Price = Decimal { min: 0, precision: 2 }
+```
+
+## Enumerations
+
+Define a fixed set of values:
+
+```isl
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+```
+
+## Optional Types
+
+Use `?` to make a type optional:
+
+```isl
+entity User {
+  bio: String?  # Optional
+  phone: String?
+}
+```

@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Intent package published to the marketplace
+model IntentPackage {
+  id            String              @id @default(cuid())
+  name          String              @unique
+  displayName   String
+  description   String
+  author        String
+  repository    String?
+  license       String              @default("MIT")
+  keywords      String              @default("[]") // JSON array
+  category      IntentCategory      @default(GENERAL)
+  downloads     Int                 @default(0)
+  stars         Int                 @default(0)
+  isVerified    Boolean             @default(false)
+  isDeprecated  Boolean             @default(false)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  
+  versions      IntentVersion[]
+  trustMetrics  TrustMetrics?
+  
+  @@index([name])
+  @@index([category])
+  @@index([downloads])
+  @@index([stars])
+  @@index([createdAt])
+}
+
+// Specific version of an intent package
+model IntentVersion {
+  id            String         @id @default(cuid())
+  packageId     String
+  package       IntentPackage  @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  version       String         // semver
+  contract      String         // ISL contract source
+  changelog     String?
+  readme        String?
+  isLatest      Boolean        @default(false)
+  downloads     Int            @default(0)
+  publishedAt   DateTime       @default(now())
+  
+  verifications Verification[]
+  
+  @@unique([packageId, version])
+  @@index([packageId])
+  @@index([isLatest])
+  @@index([publishedAt])
+}
+
+// Verification result for a version
+model Verification {
+  id            String           @id @default(cuid())
+  versionId     String
+  version       IntentVersion    @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  verifier      String           // Who ran the verification
+  status        VerificationStatus @default(PENDING)
+  trustScore    Float?
+  totalTests    Int              @default(0)
+  passedTests   Int              @default(0)
+  failedTests   Int              @default(0)
+  coverage      Float?
+  report        String?          // JSON report
+  runAt         DateTime         @default(now())
+  
+  @@index([versionId])
+  @@index([status])
+  @@index([runAt])
+}
+
+// Aggregated trust metrics for a package
+model TrustMetrics {
+  id                String        @id @default(cuid())
+  packageId         String        @unique
+  package           IntentPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  
+  // Core trust factors
+  trustScore        Float         @default(0)      // 0-100
+  verificationCount Int           @default(0)
+  deploymentCount   Int           @default(0)
+  incidentCount     Int           @default(0)
+  
+  // Derived factors
+  avgTestCoverage   Float?
+  avgPassRate       Float?
+  lastVerified      DateTime?
+  
+  // Community signals
+  maintainerScore   Float         @default(50)     // Responsiveness, activity
+  communityScore    Float         @default(50)     // Stars, forks, contributors
+  securityScore     Float         @default(50)     // Vulnerabilities, audits
+  
+  updatedAt         DateTime      @updatedAt
+  
+  @@index([trustScore])
+}
+
+// Deployment tracking for popularity/trust
+model Deployment {
+  id          String   @id @default(cuid())
+  packageName String
+  version     String
+  environment String   // production, staging, development
+  platform    String?  // cloud provider, framework
+  anonymous   Boolean  @default(true)
+  deployedAt  DateTime @default(now())
+  
+  @@index([packageName])
+  @@index([deployedAt])
+}
+
+// Incident reports affecting trust
+model Incident {
+  id          String         @id @default(cuid())
+  packageName String
+  version     String?
+  severity    IncidentSeverity
+  title       String
+  description String
+  status      IncidentStatus @default(OPEN)
+  reportedBy  String
+  resolvedAt  DateTime?
+  createdAt   DateTime       @default(now())
+  
+  @@index([packageName])
+  @@index([severity])
+  @@index([status])
+}
+
+enum IntentCategory {
+  AUTH           // Authentication & authorization
+  PAYMENT        // Financial transactions
+  DATA           // Data validation & transformation
+  WORKFLOW       // Business processes
+  INTEGRATION    // External API contracts
+  SECURITY       // Security constraints
+  GENERAL        // General purpose
+}
+
+enum VerificationStatus {
+  PENDING
+  RUNNING
+  PASSED
+  FAILED
+  ERROR
+}
+
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IncidentStatus {
+  OPEN
+  INVESTIGATING
+  RESOLVED
+  CLOSED
+}

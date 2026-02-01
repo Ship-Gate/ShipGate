@@ -1,0 +1,94 @@
+{
+  "name": "@isl-lang/stdlib-analytics",
+  "version": "1.0.0",
+  "description": "Analytics event tracking standard library for ISL",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./providers/segment": {
+      "types": "./dist/providers/segment.d.ts",
+      "import": "./dist/providers/segment.mjs",
+      "require": "./dist/providers/segment.js"
+    },
+    "./providers/amplitude": {
+      "types": "./dist/providers/amplitude.d.ts",
+      "import": "./dist/providers/amplitude.mjs",
+      "require": "./dist/providers/amplitude.js"
+    },
+    "./providers/mixpanel": {
+      "types": "./dist/providers/mixpanel.d.ts",
+      "import": "./dist/providers/mixpanel.mjs",
+      "require": "./dist/providers/mixpanel.js"
+    },
+    "./providers/posthog": {
+      "types": "./dist/providers/posthog.d.ts",
+      "import": "./dist/providers/posthog.mjs",
+      "require": "./dist/providers/posthog.js"
+    },
+    "./middleware/express": {
+      "types": "./dist/middleware/express.d.ts",
+      "import": "./dist/middleware/express.mjs",
+      "require": "./dist/middleware/express.js"
+    },
+    "./middleware/nextjs": {
+      "types": "./dist/middleware/nextjs.d.ts",
+      "import": "./dist/middleware/nextjs.mjs",
+      "require": "./dist/middleware/nextjs.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist/"
+  },
+  "dependencies": {
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.0",
+    "@types/uuid": "^9.0.7",
+    "express": "^4.18.2",
+    "next": "^14.1.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "peerDependencies": {
+    "express": "^4.0.0",
+    "next": "^13.0.0 || ^14.0.0"
+  },
+  "peerDependenciesMeta": {
+    "express": {
+      "optional": true
+    },
+    "next": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "isl",
+    "analytics",
+    "tracking",
+    "segment",
+    "amplitude",
+    "mixpanel",
+    "posthog"
+  ],
+  "license": "MIT",
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mevla/isl-lang.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/mevla/isl-lang/issues"
+  }
+}

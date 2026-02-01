@@ -1,0 +1,37 @@
+{
+  "name": "@isl-lang/diff-viewer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Visual diff viewer for ISL specification changes",
+  "scripts": {
+    "dev": "next dev -p 3002",
+    "build": "next build",
+    "start": "next start -p 3002",
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*",
+    "@monaco-editor/react": "^4.6.0",
+    "diff": "^5.1.0",
+    "lucide-react": "^0.303.0",
+    "monaco-editor": "^0.45.0",
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/diff": "^5.0.8",
+    "@types/node": "^20.10.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "author": "mevla",
+  "license": "MIT"
+}

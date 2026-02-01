@@ -1,0 +1,40 @@
+{
+  "name": "@isl-lang/codegen-wasm",
+  "version": "1.0.0",
+  "description": "WebAssembly code generator for ISL - compile intents to portable WASM modules",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*",
+    "binaryen": "^116.0.0",
+    "wabt": "^1.0.32"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "keywords": [
+    "isl",
+    "wasm",
+    "webassembly",
+    "codegen",
+    "compiler"
+  ],
+  "author": "mevla",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mevla/isl-lang.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/mevla/isl-lang/issues"
+  }
+}

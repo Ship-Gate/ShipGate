@@ -1,0 +1,29 @@
+{
+  "name": "@isl-lang/stdlib-ai",
+  "version": "0.1.0",
+  "description": "AI/ML integration - LLMs, embeddings, and model inference",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "intents"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@isl-lang/stdlib-core": "workspace:*"
+  },
+  "license": "MIT",
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mevla/isl-lang.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/mevla/isl-lang/issues"
+  }
+}

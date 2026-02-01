@@ -1,0 +1,289 @@
+// ============================================================================
+// ISL JVM Code Generator - Kotlin Data Classes
+// ============================================================================
+
+import type {
+  Entity,
+  Field,
+  TypeDefinition,
+  Annotation,
+} from '../../../../master_contracts/ast';
+import type { GeneratorOptions } from '../generator';
+import { kotlinTypeFromDef } from './types';
+
+// ============================================================================
+// ENTITY DATA CLASS GENERATOR
+// ============================================================================
+
+export function generateKotlinDataClasses(
+  entity: Entity,
+  options: GeneratorOptions
+): string {
+  const name = entity.name.name;
+  const lines: string[] = [];
+
+  // Generate KDoc
+  lines.push('/**');
+  lines.push(` * Entity: ${name}`);
+  lines.push(' * Generated from ISL specification.');
+  lines.push(' */');
+
+  // Generate data class
+  lines.push(`data class ${name}(`);
+
+  const fieldLines = entity.fields.map((field, idx) => {
+    const type = kotlinFieldType(field);
+    const fieldName = toCamelCase(field.name.name);
+    const comma = idx < entity.fields.length - 1 ? ',' : '';
+    const defaultValue = getDefaultValue(field);
+    const annotation = generateFieldAnnotations(field);
+    return `    ${annotation}val ${fieldName}: ${type}${defaultValue}${comma}`;
+  });
+
+  lines.push(fieldLines.join('\n'));
+  lines.push(') {');
+
+  // Generate init block with invariant validation
+  if (entity.invariants.length > 0) {
+    lines.push('    init {');
+    for (const invariant of entity.invariants) {
+      const check = generateInvariantCheck(invariant);
+      if (check) {
+        lines.push(`        ${check}`);
+      }
+    }
+    lines.push('    }');
+  }
+
+  // Generate companion object with factory
+  lines.push('');
+  lines.push('    companion object {');
+  lines.push(generateFactoryMethod(entity));
+  lines.push('    }');
+
+  lines.push('}');
+
+  return lines.join('\n');
+}
+
+// ============================================================================
+// FIELD PROCESSING
+// ============================================================================
+
+function kotlinFieldType(field: Field): string {
+  const base = kotlinTypeFromDef(field.type);
+  return field.optional ? `${base}?` : base;
+}
+
+function getDefaultValue(field: Field): string {
+  if (field.optional) {
+    return ' = null';
+  }
+
+  // Check for default value in annotations
+  const hasDefault = field.defaultValue;
+  if (hasDefault) {
+    return ` = ${expressionToKotlin(hasDefault)}`;
+  }
+
+  return '';
+}
+
+function expressionToKotlin(expr: any): string {
+  switch (expr.kind) {
+    case 'StringLiteral':
+      return `"${expr.value}"`;
+    case 'NumberLiteral':
+      return String(expr.value);
+    case 'BooleanLiteral':
+      return String(expr.value);
+    case 'NullLiteral':
+      return 'null';
+    default:
+      return '/* unknown */';
+  }
+}
+
+function generateFieldAnnotations(field: Field): string {
+  const annotations: string[] = [];
+
+  for (const ann of field.annotations) {
+    switch (ann.name.name) {
+      case 'secret':
+        annotations.push('@com.fasterxml.jackson.annotation.JsonIgnore');
+        break;
+      case 'pii':
+        annotations.push('@PII');
+        break;
+      case 'deprecated':
+        annotations.push('@Deprecated("This field is deprecated")');
+        break;
+    }
+  }
+
+  if (annotations.length === 0) return '';
+  return annotations.join(' ') + '\n    ';
+}
+
+// ============================================================================
+// INVARIANT VALIDATION
+// ============================================================================
+
+function generateInvariantCheck(invariant: any): string | null {
+  if (invariant.kind === 'BinaryExpr') {
+    const left = invariantExprToKotlin(invariant.left);
+    const right = invariantExprToKotlin(invariant.right);
+    const op = invariant.operator;
+
+    return `require(${left} ${op} ${right}) { "Invariant violation: ${left} ${op} ${right}" }`;
+  }
+  return null;
+}
+
+function invariantExprToKotlin(expr: any): string {
+  switch (expr.kind) {
+    case 'Identifier':
+      return toCamelCase(expr.name);
+    case 'NumberLiteral':
+      return String(expr.value);
+    case 'MemberExpr':
+      return `${invariantExprToKotlin(expr.object)}.${toCamelCase(expr.property.name)}`;
+    default:
+      return '/* unknown */';
+  }
+}
+
+// ============================================================================
+// FACTORY METHOD
+// ============================================================================
+
+function generateFactoryMethod(entity: Entity): string {
+  const name = entity.name.name;
+  const lines: string[] = [];
+
+  // Find required fields (non-optional, non-generated)
+  const requiredFields = entity.fields.filter(f => {
+    if (f.optional) return false;
+    const isAutoGenerated = f.annotations.some(a => a.name.name === 'immutable') &&
+      (f.name.name === 'id' || f.name.name.includes('created') || f.name.name.includes('At'));
+    return !isAutoGenerated;
+  });
+
+  if (requiredFields.length > 0 && requiredFields.length < entity.fields.length) {
+    const params = requiredFields.map(f => {
+      const type = kotlinFieldType(f);
+      return `${toCamelCase(f.name.name)}: ${type}`;
+    }).join(',\n            ');
+
+    lines.push(`        fun create(`);
+    lines.push(`            ${params}`);
+    lines.push(`        ): ${name} = ${name}(`);
+
+    const args = entity.fields.map(f => {
+      const fieldName = toCamelCase(f.name.name);
+      if (f.name.name === 'id') {
+        return `            ${fieldName} = UUID.randomUUID()`;
+      }
+      if (f.name.name.includes('created') || f.name.name.includes('At')) {
+        return `            ${fieldName} = Instant.now()`;
+      }
+      if (f.optional) {
+        return `            ${fieldName} = null`;
+      }
+      return `            ${fieldName} = ${fieldName}`;
+    }).join(',\n');
+
+    lines.push(args);
+    lines.push('        )');
+  }
+
+  return lines.join('\n');
+}
+
+// ============================================================================
+// ENTITY EXTENSIONS
+// ============================================================================
+
+export function generateKotlinEntityExtensions(
+  entity: Entity,
+  options: GeneratorOptions
+): string {
+  const name = entity.name.name;
+  const lines: string[] = [];
+
+  // Generate copy-with extensions
+  lines.push(`// Extension functions for ${name}`);
+
+  // Generate with* functions for immutable updates
+  for (const field of entity.fields) {
+    if (field.annotations.some(a => a.name.name === 'immutable')) {
+      continue; // Skip immutable fields
+    }
+
+    const fieldName = toCamelCase(field.name.name);
+    const methodName = `with${toPascalCase(field.name.name)}`;
+    const type = kotlinFieldType(field);
+
+    lines.push(`fun ${name}.${methodName}(${fieldName}: ${type}): ${name} = copy(${fieldName} = ${fieldName})`);
+  }
+
+  return lines.join('\n');
+}
+
+// ============================================================================
+// DTO GENERATION
+// ============================================================================
+
+export function generateKotlinDTO(
+  entity: Entity,
+  options: GeneratorOptions
+): string {
+  const name = entity.name.name;
+  const lines: string[] = [];
+
+  // Generate DTO for API responses
+  lines.push(`data class ${name}Dto(`);
+
+  const fieldLines = entity.fields
+    .filter(f => !f.annotations.some(a => a.name.name === 'secret'))
+    .map((field, idx, arr) => {
+      const type = kotlinFieldType(field);
+      const fieldName = toCamelCase(field.name.name);
+      const comma = idx < arr.length - 1 ? ',' : '';
+      return `    val ${fieldName}: ${type}${comma}`;
+    });
+
+  lines.push(fieldLines.join('\n'));
+  lines.push(') {');
+
+  // Companion object with from factory
+  lines.push('    companion object {');
+  lines.push(`        fun from(entity: ${name}): ${name}Dto = ${name}Dto(`);
+
+  const mappings = entity.fields
+    .filter(f => !f.annotations.some(a => a.name.name === 'secret'))
+    .map((f, idx, arr) => {
+      const fieldName = toCamelCase(f.name.name);
+      const comma = idx < arr.length - 1 ? ',' : '';
+      return `            ${fieldName} = entity.${fieldName}${comma}`;
+    });
+
+  lines.push(mappings.join('\n'));
+  lines.push('        )');
+  lines.push('    }');
+  lines.push('}');
+
+  return lines.join('\n');
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+function toCamelCase(str: string): string {
+  return str.charAt(0).toLowerCase() + str.slice(1);
+}
+
+function toPascalCase(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}

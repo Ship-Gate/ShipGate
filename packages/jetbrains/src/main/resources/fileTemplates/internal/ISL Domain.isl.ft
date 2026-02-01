@@ -1,0 +1,29 @@
+# ${NAME} Domain
+# Generated with ISL Plugin
+
+domain ${NAME} {
+  version: "1.0.0"
+
+  # Define your entities here
+  # entity User {
+  #   id: UUID [immutable, unique]
+  #   email: String [unique]
+  #   created_at: Timestamp [immutable]
+  # }
+
+  # Define your behaviors here
+  # behavior CreateUser {
+  #   input {
+  #     email: String
+  #   }
+  #
+  #   output {
+  #     success: User
+  #     errors {
+  #       EMAIL_EXISTS {
+  #         when: "Email already registered"
+  #       }
+  #     }
+  #   }
+  # }
+}

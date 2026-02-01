@@ -1,0 +1,377 @@
+# How IntentOS Works - Complete Technical Breakdown
+
+## The Pipeline (Current State)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           INTENTOS PIPELINE                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────┐     ┌──────────────┐     ┌─────────────┐     ┌──────────┐ │
+│  │   INPUT     │     │    PARSE     │     │   CODEGEN   │     │  VERIFY  │ │
+│  │             │     │              │     │             │     │          │ │
+│  │ Plain       │────▶│ ISL Spec     │────▶│ TypeScript  │────▶│ Trust    │ │
+│  │ English     │     │ ↓            │     │ Types       │     │ Score    │ │
+│  │ or          │     │ AST          │     │ Tests       │     │          │ │
+│  │ ISL Spec    │     │              │     │ Impl        │     │          │ │
+│  └─────────────┘     └──────────────┘     └─────────────┘     └──────────┘ │
+│                                                                             │
+│  STATUS:             STATUS:              STATUS:             STATUS:       │
+│  ✅ Working          ✅ 90% Done          🟡 70% Done         🟡 60% Done   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Step 1: Input → ISL Spec
+
+### How It Works Now
+
+```typescript
+// packages/intent-translator/src/translator.ts
+
+// User says: "I want a todo app with tasks"
+const result = await translate("I want a todo app with tasks");
+
+// System detects:
+// - Potential entities: Task
+// - Potential behaviors: Create, Complete, Delete
+// - Suggested libraries: none
+
+// Generates ISL template:
+domain MyApp {
+  entity Task { ... }
+  behavior Create { ... }
+}
+```
+
+### Current Limitations
+- ❌ Pattern matching is basic (regex-based)
+- ❌ No AI integration by default (needs API key)
+- ❌ Doesn't understand complex requirements
+
+### Improvements Needed
+1. **Better NLP parsing** - Use AI to extract entities/behaviors more accurately
+2. **Context awareness** - Remember previous conversations
+3. **Smart defaults** - Auto-suggest stdlib libraries based on domain
+
+---
+
+## Step 2: Parsing ISL → AST
+
+### How It Works Now
+
+```typescript
+// packages/parser/src/parser.ts
+
+// Input: ISL source code
+const source = `
+domain Todo {
+  entity Task {
+    id: UUID [immutable]
+    title: String
+  }
+}
+`;
+
+// Parser tokenizes then builds AST
+const lexer = new Lexer(source);
+const { tokens } = lexer.tokenize();
+// tokens: [DOMAIN, IDENTIFIER("Todo"), LBRACE, ENTITY, ...]
+
+const parser = new Parser();
+const result = parser.parse(source);
+// result.domain = { name: "Todo", entities: [...], behaviors: [...] }
+```
+
+### What Gets Parsed
+
+```
+ISL Source Code
+     │
+     ▼
+┌────────────────────────────────────────────────────────────┐
+│ LEXER (tokenize)                                           │
+│ "domain Todo { ... }" → [DOMAIN, IDENTIFIER, LBRACE, ...]  │
+└────────────────────────────────────────────────────────────┘
+     │
+     ▼
+┌────────────────────────────────────────────────────────────┐
+│ PARSER (recursive descent)                                 │
+│                                                            │
+│ parseDomain()                                              │
+│   ├─ parseEntity()                                         │
+│   │    ├─ parseField()                                     │
+│   │    └─ parseInvariants()                                │
+│   ├─ parseBehavior()                                       │
+│   │    ├─ parseInput()                                     │
+│   │    ├─ parseOutput()                                    │
+│   │    ├─ parsePreconditions()                             │
+│   │    └─ parsePostconditions()                            │
+│   └─ parseInvariants()                                     │
+└────────────────────────────────────────────────────────────┘
+     │
+     ▼
+┌────────────────────────────────────────────────────────────┐
+│ AST (Abstract Syntax Tree)                                 │
+│                                                            │
+│ {                                                          │
+│   kind: "Domain",                                          │
+│   name: { value: "Todo" },                                 │
+│   entities: [{                                             │
+│     kind: "Entity",                                        │
+│     name: { value: "Task" },                               │
+│     fields: [{ name: "id", type: "UUID", ... }]            │
+│   }],                                                      │
+│   behaviors: [...]                                         │
+│ }                                                          │
+└────────────────────────────────────────────────────────────┘
+```
+
+### Current Limitations
+- ❌ **No semantic analysis** - Parses syntax but doesn't check types
+- ❌ **No import resolution** - Can't resolve `use stdlib-auth`
+- ❌ **Basic error messages** - "Unexpected token" without suggestions
+
+### Improvements Needed
+1. **Type checker** - Verify field types, behavior references
+2. **Import resolver** - Load and merge stdlib libraries
+3. **Better errors** - "Did you mean 'String' instead of 'string'?"
+
+---
+
+## Step 3: Code Generation
+
+### How It Works Now
+
+```typescript
+// packages/codegen-types/src/typescript.ts
+
+function generateTypes(domain: Domain): string {
+  let output = '';
+  
+  // For each entity, generate interface
+  for (const entity of domain.entities) {
+    output += `export interface ${entity.name.value} {\n`;
+    for (const field of entity.fields) {
+      const tsType = mapToTypeScript(field.type);
+      output += `  ${field.name.value}: ${tsType};\n`;
+    }
+    output += '}\n';
+  }
+  
+  // For each behavior, generate types
+  for (const behavior of domain.behaviors) {
+    output += generateBehaviorTypes(behavior);
+  }
+  
+  return output;
+}
+```
+
+### What Gets Generated
+
+```
+AST
+ │
+ ▼
+┌────────────────────────────────────────────────────────────┐
+│ TYPE GENERATOR                                             │
+│                                                            │
+│ Entity "Task" →                                            │
+│   export interface Task {                                  │
+│     id: string;                                            │
+│     title: string;                                         │
+│   }                                                        │
+│                                                            │
+│ Behavior "CreateTask" →                                    │
+│   export interface CreateTaskInput { ... }                 │
+│   export type CreateTaskError = 'NOT_FOUND' | 'INVALID';   │
+│   export type CreateTaskResult =                           │
+│     | { success: true; data: Task }                        │
+│     | { success: false; error: CreateTaskError };          │
+└────────────────────────────────────────────────────────────┘
+ │
+ ▼
+┌────────────────────────────────────────────────────────────┐
+│ TEST GENERATOR                                             │
+│                                                            │
+│ Behavior "CreateTask" →                                    │
+│   describe('CreateTask', () => {                           │
+│     it('validates preconditions', ...);                    │
+│     it('handles NOT_FOUND error', ...);                    │
+│   });                                                      │
+└────────────────────────────────────────────────────────────┘
+```
+
+### Current Limitations
+- ❌ **Expression compilation incomplete** - Complex postconditions become `/* TODO */`
+- ❌ **Tests are scaffolds** - Need manual completion
+- ❌ **No implementation generation** - Only types and test stubs
+
+### Improvements Needed
+1. **Complete expression compiler** - Turn `User.exists(result.id)` into real code
+2. **Executable tests** - Generate tests that actually run
+3. **Implementation generator** - Generate service code from behaviors
+
+---
+
+## Step 4: Verification
+
+### How It Works Now
+
+```typescript
+// packages/isl-verify/src/runner/test-runner.ts
+
+async function verify(spec: string, implementation: string): Promise<VerifyResult> {
+  // 1. Parse the ISL spec
+  const { domain } = parse(spec);
+  
+  // 2. Load the implementation
+  const impl = await import(implementation);
+  
+  // 3. Run generated tests
+  const testResults = await runTests(domain, impl);
+  
+  // 4. Calculate trust score
+  const trustScore = calculateTrustScore({
+    postconditions: testResults.postconditions,  // 40% weight
+    invariants: testResults.invariants,          // 30% weight
+    scenarios: testResults.scenarios,            // 20% weight
+    temporal: testResults.temporal,              // 10% weight
+  });
+  
+  return { trustScore, details: testResults };
+}
+```
+
+### Trust Score Calculation
+
+```
+┌────────────────────────────────────────────────────────────┐
+│ TRUST SCORE FORMULA                                        │
+│                                                            │
+│ Score = (Postconditions × 0.4)                             │
+│       + (Invariants × 0.3)                                 │
+│       + (Scenarios × 0.2)                                  │
+│       + (Temporal × 0.1)                                   │
+│                                                            │
+│ Example:                                                   │
+│   Postconditions: 8/10 passed = 80%                        │
+│   Invariants: 5/5 passed = 100%                            │
+│   Scenarios: 3/4 passed = 75%                              │
+│   Temporal: 2/2 passed = 100%                              │
+│                                                            │
+│   Score = (80 × 0.4) + (100 × 0.3) + (75 × 0.2) + (100 × 0.1)
+│         = 32 + 30 + 15 + 10                                │
+│         = 87/100                                           │
+└────────────────────────────────────────────────────────────┘
+```
+
+### Current Limitations
+- ❌ **Expression evaluator incomplete** - Can't evaluate complex conditions
+- ❌ **No symbolic execution** - Can't prove properties mathematically
+- ❌ **Basic coverage** - Line coverage only, no branch/path coverage
+
+### Improvements Needed
+1. **Complete expression evaluator** - Evaluate `old(User.count) + 1 == User.count`
+2. **Symbolic execution** - Prove properties without running all cases
+3. **Mutation testing** - Test the tests themselves
+4. **Formal verification** - Integrate TLA+/Alloy for mathematical proofs
+
+---
+
+## Current System Health
+
+| Component | Completeness | Blocking Issues |
+|-----------|--------------|-----------------|
+| **Translator** | 60% | No AI by default, basic patterns |
+| **Parser** | 90% | No semantic analysis, no imports |
+| **Type Generator** | 85% | Missing edge cases |
+| **Test Generator** | 70% | Tests need manual completion |
+| **Verifier** | 60% | Expression evaluator incomplete |
+| **CLI** | 80% | No watch mode, no incremental |
+
+---
+
+## The Critical Gap
+
+The biggest issue is the **expression evaluator**. Without it:
+
+```isl
+postconditions {
+  success implies {
+    - User.exists(result.id)        # ← Can't verify this
+    - User.email == input.email     # ← Can't verify this
+  }
+}
+```
+
+The system can **generate** these as test assertions but can't **execute** them automatically. This means:
+- Tests need manual implementation
+- Trust score is based on scaffold, not actual verification
+- The "proof" is incomplete
+
+---
+
+## What "Done" Looks Like
+
+When complete, the system will:
+
+1. **Parse any ISL spec** (including imports)
+2. **Type-check** the spec for errors
+3. **Generate executable tests** that actually run
+4. **Verify automatically** with real trust scores
+5. **Give actionable feedback** when verification fails
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          COMPLETE PIPELINE                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  "Build me a login"                                                         │
+│         │                                                                   │
+│         ▼                                                                   │
+│  ┌─────────────┐                                                            │
+│  │ TRANSLATOR  │ → ISL Spec (with AI understanding)                         │
+│  └─────────────┘                                                            │
+│         │                                                                   │
+│         ▼                                                                   │
+│  ┌─────────────┐                                                            │
+│  │   PARSER    │ → AST + Type Checking + Import Resolution                  │
+│  └─────────────┘                                                            │
+│         │                                                                   │
+│         ▼                                                                   │
+│  ┌─────────────┐                                                            │
+│  │  CODEGEN    │ → Types + Executable Tests + Implementation                │
+│  └─────────────┘                                                            │
+│         │                                                                   │
+│         ▼                                                                   │
+│  ┌─────────────┐                                                            │
+│  │  VERIFIER   │ → Run All Tests + Formal Proofs + Trust Score              │
+│  └─────────────┘                                                            │
+│         │                                                                   │
+│         ▼                                                                   │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ RESULT                                                               │   │
+│  │                                                                      │   │
+│  │ Trust Score: 94/100 ✓                                                │   │
+│  │                                                                      │   │
+│  │ ✅ All preconditions validated                                       │   │
+│  │ ✅ 14/15 postconditions verified                                     │   │
+│  │ ⚠️  1 postcondition needs review:                                    │   │
+│  │    "User.last_login updated" - timing not guaranteed                 │   │
+│  │ ✅ All error cases covered                                           │   │
+│  │ ✅ Security constraints enforced                                     │   │
+│  │                                                                      │   │
+│  │ Generated:                                                           │   │
+│  │   • src/types/login.ts (42 lines)                                    │   │
+│  │   • src/services/login.ts (128 lines)                                │   │
+│  │   • tests/login.test.ts (89 lines)                                   │   │
+│  │                                                                      │   │
+│  │ Recommendation: Ready for production                                 │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```

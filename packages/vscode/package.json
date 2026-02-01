@@ -1,0 +1,273 @@
+{
+  "name": "isl-vscode",
+  "displayName": "ISL - Intent Specification Language",
+  "description": "Language support for Intent Specification Language (.isl) files - syntax highlighting, LSP, code generation, and more",
+  "version": "0.1.0",
+  "publisher": "intentos",
+  "license": "MIT",
+  "icon": "icons/isl-icon.png",
+  "galleryBanner": {
+    "color": "#1E1E1E",
+    "theme": "dark"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Snippets",
+    "Formatters"
+  ],
+  "keywords": [
+    "isl",
+    "intent",
+    "specification",
+    "domain",
+    "contracts",
+    "design-by-contract",
+    "formal-methods"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/intentos/intentos"
+  },
+  "bugs": {
+    "url": "https://github.com/intentos/intentos/issues"
+  },
+  "homepage": "https://intentos.dev",
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onLanguage:isl",
+    "workspaceContains:**/*.isl"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "isl",
+        "aliases": [
+          "Intent Specification Language",
+          "ISL"
+        ],
+        "extensions": [
+          ".isl"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/isl-light.svg",
+          "dark": "./icons/isl-dark.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "isl",
+        "scopeName": "source.isl",
+        "path": "./syntaxes/isl.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "isl",
+        "path": "./snippets/isl.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "isl.parseFile",
+        "title": "ISL: Parse Current File",
+        "category": "ISL",
+        "icon": "$(symbol-structure)"
+      },
+      {
+        "command": "isl.typeCheck",
+        "title": "ISL: Type Check Current File",
+        "category": "ISL",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "isl.generateTypeScript",
+        "title": "ISL: Generate TypeScript",
+        "category": "ISL",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "isl.generateRust",
+        "title": "ISL: Generate Rust",
+        "category": "ISL",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "isl.openRepl",
+        "title": "ISL: Open REPL",
+        "category": "ISL",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "isl.initProject",
+        "title": "ISL: Initialize Project",
+        "category": "ISL",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "isl.verifySpec",
+        "title": "ISL: Verify Spec",
+        "category": "ISL",
+        "icon": "$(verified)"
+      },
+      {
+        "command": "isl.restartServer",
+        "title": "ISL: Restart Language Server",
+        "category": "ISL",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "resourceLangId == isl",
+          "command": "isl.parseFile",
+          "group": "isl@1"
+        },
+        {
+          "when": "resourceLangId == isl",
+          "command": "isl.typeCheck",
+          "group": "isl@2"
+        },
+        {
+          "when": "resourceLangId == isl",
+          "command": "isl.generateTypeScript",
+          "group": "isl@3"
+        },
+        {
+          "when": "resourceLangId == isl",
+          "command": "isl.verifySpec",
+          "group": "isl@4"
+        }
+      ],
+      "editor/title": [
+        {
+          "when": "resourceLangId == isl",
+          "command": "isl.typeCheck",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "isl.parseFile",
+          "when": "resourceLangId == isl"
+        },
+        {
+          "command": "isl.typeCheck",
+          "when": "resourceLangId == isl"
+        },
+        {
+          "command": "isl.generateTypeScript",
+          "when": "resourceLangId == isl"
+        },
+        {
+          "command": "isl.generateRust",
+          "when": "resourceLangId == isl"
+        },
+        {
+          "command": "isl.verifySpec",
+          "when": "resourceLangId == isl"
+        },
+        {
+          "command": "isl.openRepl"
+        },
+        {
+          "command": "isl.initProject"
+        },
+        {
+          "command": "isl.restartServer"
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "ISL Configuration",
+      "properties": {
+        "isl.server.path": {
+          "type": "string",
+          "default": "",
+          "description": "Custom path to the ISL language server executable. Leave empty to use bundled server."
+        },
+        "isl.defaultTarget": {
+          "type": "string",
+          "enum": [
+            "typescript",
+            "rust",
+            "go",
+            "python"
+          ],
+          "default": "typescript",
+          "description": "Default code generation target language"
+        },
+        "isl.formatOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically format ISL files on save"
+        },
+        "isl.lintOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run linter on save"
+        },
+        "isl.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Trace communication between VS Code and the ISL language server"
+        },
+        "isl.languageServer.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the ISL language server for advanced features"
+        },
+        "isl.codegen.outputDir": {
+          "type": "string",
+          "default": "generated",
+          "description": "Output directory for generated code"
+        },
+        "isl.validation.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable real-time validation of ISL files"
+        }
+      }
+    },
+    "configurationDefaults": {
+      "[isl]": {
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true,
+        "editor.formatOnSave": true,
+        "editor.semanticHighlighting.enabled": true
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.js --production",
+    "watch": "node esbuild.js --watch",
+    "lint": "eslint src --ext ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package --no-dependencies",
+    "publish": "vsce publish --no-dependencies"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.22.0",
+    "esbuild": "^0.19.8",
+    "typescript": "^5.3.0"
+  }
+}

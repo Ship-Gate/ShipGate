@@ -1,0 +1,68 @@
+---
+title: Behaviors
+description: Operations with preconditions, postconditions, and errors.
+---
+
+# Behaviors
+
+Behaviors define operations in your domain with explicit contracts.
+
+## Basic Structure
+
+```isl
+behavior CreateUser {
+  description: "Create a new user account"
+
+  input {
+    email: String
+    password: String [sensitive]
+  }
+
+  output {
+    success: User
+    errors {
+      EMAIL_EXISTS { when: "Email already registered" }
+    }
+  }
+
+  preconditions {
+    not User.exists_by_email(input.email)
+  }
+
+  postconditions {
+    success implies {
+      - User.exists(result.id)
+      - result.email == input.email
+    }
+  }
+}
+```
+
+## Preconditions
+
+What must be true before the behavior executes:
+
+```isl
+preconditions {
+  input.email.is_valid_format
+  input.password.length >= 8
+  not User.exists_by_email(input.email)
+}
+```
+
+## Postconditions
+
+What must be true after the behavior executes:
+
+```isl
+postconditions {
+  success implies {
+    - User.exists(result.id)
+    - result.email == input.email
+  }
+
+  failure implies {
+    - no User created
+  }
+}
+```

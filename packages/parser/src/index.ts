@@ -1,0 +1,82 @@
+// ============================================================================
+// ISL Parser - Public API
+// ============================================================================
+
+import * as fs from 'fs/promises';
+import { parse as parseSource, type ParseResult } from './parser.js';
+
+// Re-export types
+export * from './ast.js';
+export * from './tokens.js';
+export * from './errors.js';
+export { Parser, ParseResult } from './parser.js';
+export { Lexer, tokenize } from './lexer.js';
+
+// ============================================================================
+// PARSER API (matches contracts/api.ts)
+// ============================================================================
+
+export interface ParserAPI {
+  /** Parse ISL source code into an AST */
+  parse(source: string, filename?: string): ParseResult;
+  
+  /** Parse an ISL file from disk */
+  parseFile(path: string): Promise<ParseResult>;
+}
+
+/**
+ * Parse ISL source code into an AST
+ * @param source - ISL source code
+ * @param filename - Optional filename for error reporting
+ * @returns ParseResult with success status, domain AST, errors, and tokens
+ */
+export function parse(source: string, filename?: string): ParseResult {
+  return parseSource(source, filename);
+}
+
+/**
+ * Parse an ISL file from disk
+ * @param path - Path to the ISL file
+ * @returns Promise<ParseResult> with parsed domain
+ */
+export async function parseFile(path: string): Promise<ParseResult> {
+  try {
+    const source = await fs.readFile(path, 'utf-8');
+    return parse(source, path);
+  } catch (error) {
+    return {
+      success: false,
+      errors: [{
+        severity: 'error',
+        code: 'E001',
+        message: error instanceof Error ? error.message : 'Failed to read file',
+        location: {
+          file: path,
+          line: 1,
+          column: 1,
+          endLine: 1,
+          endColumn: 1,
+        },
+        source: 'parser',
+      }],
+    };
+  }
+}
+
+/**
+ * Create a ParserAPI instance
+ * @returns ParserAPI implementation
+ */
+export function createParser(): ParserAPI {
+  return {
+    parse,
+    parseFile,
+  };
+}
+
+// Default export
+export default {
+  parse,
+  parseFile,
+  createParser,
+};

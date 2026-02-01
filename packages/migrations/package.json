@@ -1,0 +1,72 @@
+{
+  "name": "@isl-lang/migrations",
+  "version": "0.1.0",
+  "description": "Generate database migrations from ISL entity changes with safety checks and rollback support",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./generators/prisma": {
+      "types": "./dist/generators/prisma.d.ts",
+      "import": "./dist/generators/prisma.js"
+    },
+    "./generators/drizzle": {
+      "types": "./dist/generators/drizzle.d.ts",
+      "import": "./dist/generators/drizzle.js"
+    },
+    "./generators/knex": {
+      "types": "./dist/generators/knex.d.ts",
+      "import": "./dist/generators/knex.js"
+    },
+    "./generators/sql": {
+      "types": "./dist/generators/sql.d.ts",
+      "import": "./dist/generators/sql.js"
+    },
+    "./validators": {
+      "types": "./dist/validators/index.d.ts",
+      "import": "./dist/validators/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "keywords": [
+    "isl",
+    "migrations",
+    "database",
+    "prisma",
+    "drizzle",
+    "knex",
+    "sql",
+    "schema"
+  ],
+  "author": "mevla",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mevla/isl-lang.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/mevla/isl-lang/issues"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "name": "@isl-lang/runtime-sdk",
+  "version": "0.1.0",
+  "description": "SDK for embedding ISL verification in production code",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./express": {
+      "import": "./dist/middleware/express.js",
+      "types": "./dist/middleware/express.d.ts"
+    },
+    "./fastify": {
+      "import": "./dist/middleware/fastify.js",
+      "types": "./dist/middleware/fastify.d.ts"
+    },
+    "./trpc": {
+      "import": "./dist/middleware/trpc.js",
+      "types": "./dist/middleware/trpc.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/middleware/express.ts src/middleware/fastify.ts src/middleware/trpc.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*"
+  },
+  "peerDependencies": {
+    "express": "^4.18.0",
+    "fastify": "^4.0.0",
+    "@trpc/server": "^10.0.0",
+    "prom-client": "^15.0.0",
+    "@opentelemetry/api": "^1.7.0"
+  },
+  "peerDependenciesMeta": {
+    "express": {
+      "optional": true
+    },
+    "fastify": {
+      "optional": true
+    },
+    "@trpc/server": {
+      "optional": true
+    },
+    "prom-client": {
+      "optional": true
+    },
+    "@opentelemetry/api": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "rimraf": "^5.0.5",
+    "@types/node": "^20.11.0",
+    "@types/express": "^4.17.21"
+  },
+  "author": "mevla",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mevla/isl-lang.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/mevla/isl-lang/issues"
+  }
+}

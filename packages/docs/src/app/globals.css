@@ -1,0 +1,165 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 262.1 83.3% 57.8%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 263.4 70% 50.4%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 263.4 70% 50.4%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* ISL Syntax Highlighting */
+.isl-keyword {
+  @apply text-isl-purple font-semibold;
+}
+
+.isl-type {
+  @apply text-isl-blue;
+}
+
+.isl-entity {
+  @apply text-isl-cyan;
+}
+
+.isl-string {
+  @apply text-isl-green;
+}
+
+.isl-comment {
+  @apply text-muted-foreground italic;
+}
+
+/* Code block styling */
+pre {
+  @apply rounded-lg border bg-card p-4 overflow-x-auto;
+}
+
+pre code {
+  @apply bg-transparent p-0 text-sm leading-relaxed;
+}
+
+/* Custom scrollbar for code blocks */
+pre::-webkit-scrollbar {
+  height: 8px;
+}
+
+pre::-webkit-scrollbar-track {
+  @apply bg-muted rounded;
+}
+
+pre::-webkit-scrollbar-thumb {
+  @apply bg-border rounded;
+}
+
+/* MDX styling */
+.prose h1 {
+  @apply text-3xl font-bold tracking-tight;
+}
+
+.prose h2 {
+  @apply text-2xl font-semibold tracking-tight mt-10 mb-4 pb-2 border-b;
+}
+
+.prose h3 {
+  @apply text-xl font-semibold tracking-tight mt-8 mb-3;
+}
+
+.prose p {
+  @apply leading-7 mb-4;
+}
+
+.prose ul {
+  @apply list-disc pl-6 mb-4;
+}
+
+.prose ol {
+  @apply list-decimal pl-6 mb-4;
+}
+
+.prose li {
+  @apply mb-2;
+}
+
+.prose a {
+  @apply text-primary underline underline-offset-4 hover:text-primary/80;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-primary pl-4 italic my-4;
+}
+
+/* Playground editor styling */
+.playground-editor {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  tab-size: 2;
+}
+
+.playground-editor:focus {
+  outline: none;
+}
+
+/* Animation for feature cards */
+.feature-card {
+  @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-1;
+}
+
+/* Sidebar link styles */
+.sidebar-link {
+  @apply block py-1.5 px-3 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors;
+}
+
+.sidebar-link.active {
+  @apply bg-primary/10 text-primary font-medium;
+}

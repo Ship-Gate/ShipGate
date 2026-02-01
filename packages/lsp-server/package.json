@@ -1,0 +1,45 @@
+{
+  "name": "@isl-lang/lsp-server",
+  "version": "0.1.0",
+  "description": "Language Server Protocol implementation for ISL",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "isl-lsp": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/cli.js --stdio",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@isl-lang/lsp-core": "workspace:*",
+    "@isl-lang/parser": "workspace:*",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11",
+    "vscode-uri": "^3.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
+  },
+  "keywords": [
+    "isl",
+    "lsp",
+    "language-server",
+    "intent-specification"
+  ],
+  "license": "MIT",
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mevla/isl-lang.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/mevla/isl-lang/issues"
+  }
+}

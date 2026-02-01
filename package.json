@@ -1,0 +1,28 @@
+{
+  "name": "isl-lang",
+  "version": "0.1.0",
+  "description": "Intent Specification Language - The programming language for the AI era",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "clean": "pnpm -r clean",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "keywords": [
+    "intent",
+    "specification",
+    "language",
+    "verification",
+    "ai",
+    "code-generation"
+  ],
+  "author": "mevla",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

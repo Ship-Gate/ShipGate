@@ -1,0 +1,383 @@
+/**
+ * Generate Command
+ * 
+ * Generate TypeScript types, tests, and documentation from ISL files.
+ * Usage: isl generate --types --tests --docs
+ */
+
+import { readFile, writeFile, mkdir } from 'fs/promises';
+import { glob } from 'glob';
+import { resolve, relative, dirname, join, basename } from 'path';
+import chalk from 'chalk';
+import ora from 'ora';
+import { parseISL, type DomainDeclaration } from '@intentos/isl-core';
+import { compile, generateTypes, generateTests } from '@intentos/isl-compiler';
+import { output } from '../output.js';
+import { loadConfig, type ISLConfig } from '../config.js';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface GenerateOptions {
+  /** Generate TypeScript types */
+  types?: boolean;
+  /** Generate test files */
+  tests?: boolean;
+  /** Generate documentation */
+  docs?: boolean;
+  /** Output directory */
+  output?: string;
+  /** Config file path */
+  config?: string;
+  /** Watch mode */
+  watch?: boolean;
+  /** Overwrite existing files */
+  force?: boolean;
+  /** Verbose output */
+  verbose?: boolean;
+}
+
+export interface GeneratedFile {
+  path: string;
+  type: 'types' | 'tests' | 'docs';
+  content: string;
+}
+
+export interface GenerateResult {
+  success: boolean;
+  files: GeneratedFile[];
+  errors: string[];
+  duration: number;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Generation Implementation
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Generate types for a domain
+ */
+function generateTypesForDomain(domain: DomainDeclaration): string {
+  const result = generateTypes(domain);
+  return result.code;
+}
+
+/**
+ * Generate tests for a domain
+ */
+function generateTestsForDomain(domain: DomainDeclaration): string {
+  const result = generateTests(domain);
+  return result.code;
+}
+
+/**
+ * Generate documentation for a domain
+ */
+function generateDocsForDomain(domain: DomainDeclaration): string {
+  const lines: string[] = [];
+  
+  // Header
+  lines.push(`# ${domain.name.name}`);
+  lines.push('');
+  if (domain.description) {
+    lines.push(domain.description);
+    lines.push('');
+  }
+  
+  // Table of Contents
+  lines.push('## Table of Contents');
+  lines.push('');
+  lines.push('- [Entities](#entities)');
+  lines.push('- [Behaviors](#behaviors)');
+  if (domain.invariants?.length) {
+    lines.push('- [Invariants](#invariants)');
+  }
+  lines.push('');
+
+  // Entities
+  lines.push('## Entities');
+  lines.push('');
+  
+  for (const entity of domain.entities) {
+    lines.push(`### ${entity.name.name}`);
+    lines.push('');
+    
+    if (entity.fields && entity.fields.length > 0) {
+      lines.push('| Field | Type | Description |');
+      lines.push('|-------|------|-------------|');
+      
+      for (const field of entity.fields) {
+        const typeStr = field.type?.name ?? 'unknown';
+        lines.push(`| \`${field.name.name}\` | \`${typeStr}\` | |`);
+      }
+      lines.push('');
+    }
+  }
+
+  // Behaviors
+  lines.push('## Behaviors');
+  lines.push('');
+  
+  for (const behavior of domain.behaviors) {
+    lines.push(`### ${behavior.name.name}`);
+    lines.push('');
+    
+    // Signature
+    if (behavior.inputs && behavior.inputs.length > 0) {
+      const inputs = behavior.inputs.map(i => `${i.name.name}: ${i.type?.name ?? 'unknown'}`).join(', ');
+      const output = behavior.output?.name ?? 'void';
+      lines.push(`**Signature:** \`(${inputs}) -> ${output}\``);
+      lines.push('');
+    }
+
+    // Postconditions
+    if (behavior.body?.postconditions && behavior.body.postconditions.length > 0) {
+      lines.push('**Postconditions:**');
+      for (const post of behavior.body.postconditions) {
+        lines.push(`- ${post.description ?? 'No description'}`);
+      }
+      lines.push('');
+    }
+
+    // Scenarios
+    if (behavior.body?.scenarios && behavior.body.scenarios.length > 0) {
+      lines.push('**Scenarios:**');
+      lines.push('');
+      for (const scenario of behavior.body.scenarios) {
+        lines.push(`#### ${scenario.name}`);
+        if (scenario.given) {
+          lines.push(`- **Given:** ${JSON.stringify(scenario.given)}`);
+        }
+        if (scenario.when) {
+          lines.push(`- **When:** ${JSON.stringify(scenario.when)}`);
+        }
+        if (scenario.then) {
+          lines.push(`- **Then:** ${JSON.stringify(scenario.then)}`);
+        }
+        lines.push('');
+      }
+    }
+  }
+
+  // Invariants
+  if (domain.invariants && domain.invariants.length > 0) {
+    lines.push('## Invariants');
+    lines.push('');
+    
+    for (const inv of domain.invariants) {
+      lines.push(`- **${inv.name?.name ?? 'Unnamed'}:** ${inv.description ?? 'No description'}`);
+    }
+    lines.push('');
+  }
+
+  // Footer
+  lines.push('---');
+  lines.push(`*Generated by ISL CLI on ${new Date().toISOString()}*`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Generate all outputs for a single ISL file
+ */
+async function generateForFile(
+  filePath: string,
+  options: GenerateOptions,
+  outputDir: string
+): Promise<{ files: GeneratedFile[]; errors: string[] }> {
+  const files: GeneratedFile[] = [];
+  const errors: string[] = [];
+  
+  try {
+    const source = await readFile(filePath, 'utf-8');
+    const { ast, errors: parseErrors } = parseISL(source, filePath);
+
+    if (parseErrors.length > 0 || !ast) {
+      errors.push(...parseErrors.map(e => `${filePath}: ${e.message}`));
+      return { files, errors };
+    }
+
+    const domainName = ast.name.name.toLowerCase();
+
+    // Generate types
+    if (options.types !== false) {
+      const typesContent = generateTypesForDomain(ast);
+      const typesPath = join(outputDir, 'types', `${domainName}.types.ts`);
+      files.push({ path: typesPath, type: 'types', content: typesContent });
+    }
+
+    // Generate tests
+    if (options.tests !== false) {
+      const testsContent = generateTestsForDomain(ast);
+      const testsPath = join(outputDir, 'tests', `${domainName}.test.ts`);
+      files.push({ path: testsPath, type: 'tests', content: testsContent });
+    }
+
+    // Generate docs
+    if (options.docs) {
+      const docsContent = generateDocsForDomain(ast);
+      const docsPath = join(outputDir, 'docs', `${domainName}.md`);
+      files.push({ path: docsPath, type: 'docs', content: docsContent });
+    }
+  } catch (err) {
+    errors.push(`${filePath}: ${err instanceof Error ? err.message : String(err)}`);
+  }
+
+  return { files, errors };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Generate Function
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Generate types, tests, and documentation from ISL files
+ */
+export async function generate(filePatterns: string[], options: GenerateOptions = {}): Promise<GenerateResult> {
+  const startTime = Date.now();
+  const spinner = ora('Loading configuration...').start();
+
+  // Load config
+  const { config } = await loadConfig();
+  
+  // Determine what to generate
+  const generateTypes = options.types ?? config?.output?.types ?? true;
+  const generateTests = options.tests ?? config?.output?.tests ?? true;
+  const generateDocs = options.docs ?? config?.output?.docs ?? false;
+
+  // Determine output directory
+  const outputDir = resolve(options.output ?? config?.output?.dir ?? './generated');
+
+  // Resolve files
+  const patterns = filePatterns.length > 0 ? filePatterns : config?.include ?? ['**/*.isl'];
+  const exclude = config?.exclude ?? ['node_modules/**', 'dist/**'];
+  
+  const islFiles: string[] = [];
+  for (const pattern of patterns) {
+    if (pattern.endsWith('.isl')) {
+      islFiles.push(resolve(pattern));
+    } else {
+      const matches = await glob(pattern, { cwd: process.cwd(), ignore: exclude });
+      islFiles.push(...matches.filter(m => m.endsWith('.isl')).map(m => resolve(m)));
+    }
+  }
+
+  if (islFiles.length === 0) {
+    spinner.warn('No ISL files found');
+    return {
+      success: true,
+      files: [],
+      errors: [],
+      duration: Date.now() - startTime,
+    };
+  }
+
+  spinner.text = `Generating from ${islFiles.length} file${islFiles.length === 1 ? '' : 's'}...`;
+
+  // Collect all generated files
+  const allFiles: GeneratedFile[] = [];
+  const allErrors: string[] = [];
+
+  for (const file of islFiles) {
+    const { files, errors } = await generateForFile(file, {
+      ...options,
+      types: generateTypes,
+      tests: generateTests,
+      docs: generateDocs,
+    }, outputDir);
+    
+    allFiles.push(...files);
+    allErrors.push(...errors);
+  }
+
+  // Write all files
+  if (allErrors.length === 0) {
+    spinner.text = `Writing ${allFiles.length} file${allFiles.length === 1 ? '' : 's'}...`;
+    
+    for (const file of allFiles) {
+      await mkdir(dirname(file.path), { recursive: true });
+      
+      // Add header comment for code files
+      let content = file.content;
+      if (file.type !== 'docs') {
+        content = `/**
+ * Auto-generated by ISL CLI
+ * DO NOT EDIT - regenerate with: isl generate
+ * Generated: ${new Date().toISOString()}
+ */
+
+${content}`;
+      }
+      
+      await writeFile(file.path, content);
+    }
+  }
+
+  const duration = Date.now() - startTime;
+
+  if (allErrors.length > 0) {
+    spinner.fail(`Generation failed with ${allErrors.length} error${allErrors.length === 1 ? '' : 's'}`);
+  } else {
+    spinner.succeed(`Generated ${allFiles.length} file${allFiles.length === 1 ? '' : 's'} (${duration}ms)`);
+  }
+
+  return {
+    success: allErrors.length === 0,
+    files: allFiles,
+    errors: allErrors,
+    duration,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Output Formatting
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Print generate results to console
+ */
+export function printGenerateResult(result: GenerateResult): void {
+  console.log('');
+
+  if (result.success) {
+    // Group files by type
+    const typeFiles = result.files.filter(f => f.type === 'types');
+    const testFiles = result.files.filter(f => f.type === 'tests');
+    const docFiles = result.files.filter(f => f.type === 'docs');
+
+    if (typeFiles.length > 0) {
+      output.section('Types');
+      for (const file of typeFiles) {
+        output.filePath(relative(process.cwd(), file.path), 'created');
+      }
+    }
+
+    if (testFiles.length > 0) {
+      output.section('Tests');
+      for (const file of testFiles) {
+        output.filePath(relative(process.cwd(), file.path), 'created');
+      }
+    }
+
+    if (docFiles.length > 0) {
+      output.section('Documentation');
+      for (const file of docFiles) {
+        output.filePath(relative(process.cwd(), file.path), 'created');
+      }
+    }
+
+    console.log('');
+    console.log(chalk.green(`✓ Generated ${result.files.length} file${result.files.length === 1 ? '' : 's'}`));
+  } else {
+    console.log(chalk.red('✗ Generation failed'));
+    console.log('');
+    for (const error of result.errors) {
+      console.log(chalk.red(`  ${error}`));
+    }
+  }
+
+  console.log(chalk.gray(`  Completed in ${result.duration}ms`));
+}
+
+export default generate;

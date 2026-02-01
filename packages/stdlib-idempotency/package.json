@@ -1,0 +1,170 @@
+{
+  "name": "@isl-lang/stdlib-idempotency",
+  "version": "1.0.0",
+  "description": "ISL Standard Library - Idempotency Key Management",
+  "license": "MIT",
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mevla/isl-lang.git"
+  },
+  "keywords": [
+    "intentos",
+    "isl",
+    "stdlib",
+    "idempotency",
+    "idempotent",
+    "retry",
+    "exactly-once",
+    "deduplication",
+    "api",
+    "middleware"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./types": {
+      "import": {
+        "types": "./dist/types.d.ts",
+        "default": "./dist/types.js"
+      },
+      "require": {
+        "types": "./dist/types.d.cts",
+        "default": "./dist/types.cjs"
+      }
+    },
+    "./utils": {
+      "import": {
+        "types": "./dist/utils.d.ts",
+        "default": "./dist/utils.js"
+      },
+      "require": {
+        "types": "./dist/utils.d.cts",
+        "default": "./dist/utils.cjs"
+      }
+    },
+    "./store/memory": {
+      "import": {
+        "types": "./dist/store/memory.d.ts",
+        "default": "./dist/store/memory.js"
+      },
+      "require": {
+        "types": "./dist/store/memory.d.cts",
+        "default": "./dist/store/memory.cjs"
+      }
+    },
+    "./store/redis": {
+      "import": {
+        "types": "./dist/store/redis.d.ts",
+        "default": "./dist/store/redis.js"
+      },
+      "require": {
+        "types": "./dist/store/redis.d.cts",
+        "default": "./dist/store/redis.cjs"
+      }
+    },
+    "./store/postgres": {
+      "import": {
+        "types": "./dist/store/postgres.d.ts",
+        "default": "./dist/store/postgres.js"
+      },
+      "require": {
+        "types": "./dist/store/postgres.d.cts",
+        "default": "./dist/store/postgres.cjs"
+      }
+    },
+    "./manager": {
+      "import": {
+        "types": "./dist/manager.d.ts",
+        "default": "./dist/manager.js"
+      },
+      "require": {
+        "types": "./dist/manager.d.cts",
+        "default": "./dist/manager.cjs"
+      }
+    },
+    "./middleware/express": {
+      "import": {
+        "types": "./dist/middleware/express.d.ts",
+        "default": "./dist/middleware/express.js"
+      },
+      "require": {
+        "types": "./dist/middleware/express.d.cts",
+        "default": "./dist/middleware/express.cjs"
+      }
+    },
+    "./middleware/fastify": {
+      "import": {
+        "types": "./dist/middleware/fastify.d.ts",
+        "default": "./dist/middleware/fastify.js"
+      },
+      "require": {
+        "types": "./dist/middleware/fastify.d.cts",
+        "default": "./dist/middleware/fastify.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "intents"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint implementations/typescript --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.2",
+    "vitest": "^1.0.4"
+  },
+  "peerDependencies": {
+    "@isl-lang/isl-core": "workspace:*",
+    "express": "^4.0.0 || ^5.0.0",
+    "fastify": "^4.0.0 || ^5.0.0",
+    "ioredis": "^5.0.0",
+    "pg": "^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@intentos/isl-core": {
+      "optional": true
+    },
+    "express": {
+      "optional": true
+    },
+    "fastify": {
+      "optional": true
+    },
+    "ioredis": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/mevla/isl-lang/issues"
+  }
+}

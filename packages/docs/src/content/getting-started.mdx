@@ -1,0 +1,63 @@
+---
+title: Getting Started
+description: Learn how to install ISL and write your first specification.
+---
+
+# Getting Started with ISL
+
+Intent Specification Language (ISL) is a domain-specific language for defining 
+behavioral contracts that guarantee your software works correctly.
+
+## What is ISL?
+
+ISL lets you define **what** your software should do, rather than **how** it 
+should do it. You write specifications that describe:
+
+- **Types** - The shape of your data with validation rules
+- **Entities** - Domain objects with invariants and lifecycles
+- **Behaviors** - Operations with preconditions and postconditions
+- **Temporal properties** - Performance and ordering guarantees
+
+From these specs, ISL can generate TypeScript types, runtime validation tests, 
+API documentation, and more.
+
+## Installation
+
+```bash
+npm install -g @intentos/cli
+```
+
+## Your First Spec
+
+Create a file called `hello.isl`:
+
+```isl
+domain HelloWorld {
+  entity Greeting {
+    id: UUID [immutable]
+    message: String
+  }
+
+  behavior SayHello {
+    input {
+      name: String
+    }
+
+    output {
+      success: Greeting
+    }
+
+    postconditions {
+      success implies {
+        - result.message.contains(input.name)
+      }
+    }
+  }
+}
+```
+
+Then validate it:
+
+```bash
+isl check hello.isl
+```
