@@ -1,0 +1,98 @@
+// Sample TypeScript type definitions for migration testing
+// This is a text fixture, not an actual executable file
+
+// User types
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+  role: UserRole;
+  createdAt: Date;
+  updatedAt: Date | null;
+}
+
+export type UserRole = 'admin' | 'user' | 'guest';
+
+export interface CreateUserInput {
+  email: string;
+  name?: string;
+  password: string;
+  role?: UserRole;
+}
+
+// Product types
+export interface Product {
+  id: string;
+  name: string;
+  price: number;
+  currency: Currency;
+  description?: string;
+  tags: string[];
+  inStock: boolean;
+  createdAt: Date;
+}
+
+export type Currency = 'USD' | 'EUR' | 'GBP';
+
+// Order types
+export interface OrderItem {
+  productId: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface Order {
+  id: string;
+  userId: string;
+  items: OrderItem[];
+  status: OrderStatus;
+  totalAmount: number;
+  shippingAddress?: Address;
+  createdAt: Date;
+}
+
+export enum OrderStatus {
+  Pending = 'pending',
+  Processing = 'processing',
+  Shipped = 'shipped',
+  Delivered = 'delivered',
+  Cancelled = 'cancelled',
+}
+
+// Address type
+export interface Address {
+  street: string;
+  city: string;
+  state?: string;
+  country: string;
+  postalCode: string;
+}
+
+// Payment types
+export type PaymentMethod = 'credit_card' | 'debit_card' | 'paypal' | 'bank_transfer';
+
+export interface Payment {
+  id: string;
+  orderId: string;
+  method: PaymentMethod;
+  amount: number;
+  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  processedAt?: Date;
+}
+
+// API Response wrapper
+export interface ApiResponse<T> {
+  data: T;
+  success: boolean;
+  error?: string;
+  timestamp: Date;
+}
+
+// Pagination types
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}

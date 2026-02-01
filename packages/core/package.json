@@ -29,13 +29,21 @@
     "./isl-diff": {
       "import": "./dist/isl-diff/index.js",
       "types": "./dist/isl-diff/index.d.ts"
+    },
+    "./isl-lint-v2": {
+      "import": "./dist/isl-lint-v2/index.js",
+      "types": "./dist/isl-lint-v2/index.d.ts"
+    },
+    "./isl-migrate-v2": {
+      "import": "./dist/isl-migrate-v2/index.js",
+      "types": "./dist/isl-migrate-v2/index.d.ts"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts src/evidence/index.ts src/isl-agent/scoring/index.ts src/isl-lint/index.ts src/isl-diff/index.ts --format esm --dts --clean",
+    "build": "tsup src/index.ts src/evidence/index.ts src/isl-agent/scoring/index.ts src/isl-lint/index.ts src/isl-diff/index.ts src/isl-lint-v2/index.ts src/isl-migrate-v2/index.ts --format esm --dts --clean",
     "dev": "tsup src/index.ts src/evidence/index.ts --format esm --dts --watch",
     "test": "vitest run",
     "test:watch": "vitest",
