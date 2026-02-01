@@ -55,3 +55,9 @@ export * from './integration/index.js';
 // ============================================================================
 
 export * from './policies/index.js';
+
+// ============================================================================
+// Context Extractor (repository scanning for translator context)
+// ============================================================================
+
+export * from './context/index.js';
