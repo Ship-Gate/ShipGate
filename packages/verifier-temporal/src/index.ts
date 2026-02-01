@@ -1,5 +1,5 @@
 /**
- * @intentos/verifier-temporal
+ * @isl-lang/verifier-temporal
  * 
  * Temporal property verification for ISL specifications.
  * Verifies eventually, within (latency), and always (invariant) properties.

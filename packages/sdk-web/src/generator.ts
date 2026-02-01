@@ -17,7 +17,7 @@ export function generateSDK(domain: Domain): string {
  * 
  * Auto-generated type-safe client for ${domain.name} domain.
  */
-import { ISLClient, type RequestConfig, type ApiResponse } from '@intentos/sdk-web';
+import { ISLClient, type RequestConfig, type ApiResponse } from '@isl-lang/sdk-web';
 
 // Entity Types
 ${entityTypes}

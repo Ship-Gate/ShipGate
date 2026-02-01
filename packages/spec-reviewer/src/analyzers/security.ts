@@ -4,7 +4,7 @@
  * Checks for security issues and vulnerabilities in specs.
  */
 
-import type { DomainDeclaration, BehaviorDeclaration, FieldDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration, FieldDeclaration } from '@isl-lang/isl-core';
 
 export interface SecurityIssue {
   id: string;

@@ -14,7 +14,7 @@ import type {
   Expression,
   TemporalBlock,
   TemporalRequirement,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 export interface GeneratedTests {
   filename: string;
@@ -76,6 +76,12 @@ export class TestGenerator {
     }
     
     this.writeLine('');
+    
+    // Import test runtime for entity bindings
+    this.writeLine('// Test runtime for entity bindings');
+    this.writeLine("import { createTestContext } from '@isl-lang/test-runtime';");
+    this.writeLine('');
+    
     this.writeLine(`// Import types from generated types`);
     this.writeLine(`import type {`);
     this.indent++;
@@ -87,7 +93,6 @@ export class TestGenerator {
     
     for (const entity of domain.entities) {
       this.writeLine(`${entity.name.name},`);
-      this.writeLine(`${entity.name.name}Repository,`);
     }
     
     this.indent--;
@@ -99,6 +104,17 @@ export class TestGenerator {
     for (const behavior of domain.behaviors) {
       const funcName = this.camelCase(behavior.name.name);
       this.writeLine(`// import { ${funcName} } from './implementations/${funcName}.js';`);
+    }
+    
+    this.writeLine('');
+    
+    // Setup test context with entity bindings
+    const entityNames = domain.entities.map(e => `'${e.name.name}'`).join(', ');
+    this.writeLine('// Test context with entity bindings');
+    this.writeLine(`const ctx = createTestContext({ entities: [${entityNames}] });`);
+    if (domain.entities.length > 0) {
+      const destructure = domain.entities.map(e => e.name.name).join(', ');
+      this.writeLine(`const { ${destructure} } = ctx.entities;`);
     }
   }
 
@@ -144,26 +160,14 @@ export class TestGenerator {
     this.writeLine('// Test setup');
     this.writeLine(`let ${funcName}: (input: ${behavior.name.name}Input) => Promise<${behavior.name.name}Result>;`);
     
-    if (this.options.generateMocks) {
-      this.writeLine('let mockRepositories: Record<string, unknown>;');
-    }
-    
     this.writeLine('');
     this.writeLine('beforeEach(() => {');
     this.indent++;
+    this.writeLine('// Reset entity store');
+    this.writeLine('ctx.reset();');
+    this.writeLine('');
     this.writeLine('// TODO: Initialize your implementation here');
-    this.writeLine(`// ${funcName} = createImplementation(mockRepositories);`);
-    
-    if (this.options.generateMocks) {
-      this.writeLine('');
-      this.writeLine('// Mock repositories');
-      this.writeLine('mockRepositories = {');
-      this.indent++;
-      this.writeLine('// Add mock implementations');
-      this.indent--;
-      this.writeLine('};');
-    }
-    
+    this.writeLine(`// ${funcName} = createImplementation();`);
     this.indent--;
     this.writeLine('});');
     
@@ -267,20 +271,23 @@ export class TestGenerator {
     this.indent++;
     
     this.writeLine('// Arrange');
-    this.writeLine(`const validInput: ${behavior.name.name}Input = {`);
+    this.writeLine(`const input: ${behavior.name.name}Input = {`);
     this.indent++;
     this.writeLine('// TODO: Set up valid input');
     this.indent--;
     this.writeLine('};');
     this.writeLine('');
+    this.writeLine('// Capture state before operation');
+    this.writeLine('const __old__ = ctx.captureState();');
+    this.writeLine('');
     this.writeLine('// Act');
-    this.writeLine(`const result = await ${funcName}(validInput);`);
+    this.writeLine(`const result = await ${funcName}(input);`);
     this.writeLine('');
     this.writeLine('// Assert');
     this.writeLine('expect(result.success).toBe(true);');
     this.writeLine('if (result.success) {');
     this.indent++;
-    this.generateAssertionFromExpression(statement.expression, 'result.data', 'validInput');
+    this.generateAssertionFromExpression(statement.expression, 'result.data', 'input');
     this.indent--;
     this.writeLine('}');
     
@@ -449,11 +456,122 @@ export class TestGenerator {
     this.writeLine('');
   }
 
-  private generateAssertionFromExpression(expr: Expression, _resultVar: string, _inputVar: string): void {
+  private generateAssertionFromExpression(expr: Expression, resultVar: string, inputVar: string): void {
     // Generate assertion based on expression type
     const exprStr = this.expressionToString(expr);
+    const compiled = this.compileExpression(expr, resultVar, inputVar);
+    
     this.writeLine(`// Verify: ${exprStr}`);
-    this.writeLine('// TODO: Add specific assertions based on postcondition');
+    this.writeLine(`expect(${compiled}).toBe(true);`);
+  }
+
+  /**
+   * Compile an expression to TypeScript code
+   * Handles entity methods like User.exists(), User.lookup()
+   */
+  private compileExpression(expr: Expression, resultVar: string, inputVar: string): string {
+    switch (expr.kind) {
+      case 'Identifier':
+        if (expr.name === 'result') return resultVar;
+        if (expr.name === 'input') return inputVar;
+        return expr.name;
+        
+      case 'StringLiteral':
+        return `"${expr.value}"`;
+        
+      case 'NumberLiteral':
+        return String(expr.value);
+        
+      case 'BooleanLiteral':
+        return String(expr.value);
+        
+      case 'MemberExpression': {
+        const obj = this.compileExpression(expr.object, resultVar, inputVar);
+        return `${obj}.${expr.property.name}`;
+      }
+        
+      case 'CallExpression': {
+        const callee = this.compileExpression(expr.callee, resultVar, inputVar);
+        
+        // Check if this is an entity method call like User.exists(...)
+        if (expr.callee.kind === 'MemberExpression') {
+          const method = expr.callee.property.name;
+          if (['exists', 'lookup', 'count'].includes(method)) {
+            // Wrap single argument in criteria object
+            if (expr.arguments.length === 1) {
+              const arg = expr.arguments[0]!;
+              const argValue = this.compileExpression(arg, resultVar, inputVar);
+              const fieldName = this.inferFieldName(arg);
+              return `${callee}({ ${fieldName}: ${argValue} })`;
+            }
+          }
+        }
+        
+        const args = expr.arguments.map(a => this.compileExpression(a, resultVar, inputVar)).join(', ');
+        return `${callee}(${args})`;
+      }
+        
+      case 'ComparisonExpression': {
+        const left = this.compileExpression(expr.left, resultVar, inputVar);
+        const right = this.compileExpression(expr.right, resultVar, inputVar);
+        const op = expr.operator === '==' ? '===' : expr.operator;
+        return `(${left} ${op} ${right})`;
+      }
+        
+      case 'LogicalExpression': {
+        const left = this.compileExpression(expr.left, resultVar, inputVar);
+        const right = this.compileExpression(expr.right, resultVar, inputVar);
+        
+        // Handle implies (may be encoded as 'implies' string)
+        if ((expr.operator as string) === 'implies') {
+          return `(!${left} || ${right})`;
+        }
+        
+        const op = expr.operator === 'and' ? '&&' : expr.operator === 'or' ? '||' : expr.operator;
+        return `(${left} ${op} ${right})`;
+      }
+        
+      case 'OldExpression':
+        // Use captured state for old() expressions
+        const inner = this.compileOldExpression(expr.expression, resultVar, inputVar);
+        return inner;
+        
+      default:
+        return `/* unsupported: ${expr.kind} */`;
+    }
+  }
+  
+  /**
+   * Compile expression inside old() context
+   */
+  private compileOldExpression(expr: Expression, resultVar: string, inputVar: string): string {
+    if (expr.kind === 'CallExpression' && expr.callee.kind === 'MemberExpression') {
+      // Entity method call in old context
+      const entityName = expr.callee.object.kind === 'Identifier' ? expr.callee.object.name : 'Entity';
+      const method = expr.callee.property.name;
+      
+      if (['exists', 'lookup', 'count'].includes(method)) {
+        if (expr.arguments.length === 0) {
+          return `__old__.entity('${entityName}').${method}()`;
+        }
+        const arg = expr.arguments[0]!;
+        const argValue = this.compileExpression(arg, resultVar, inputVar);
+        const fieldName = this.inferFieldName(arg);
+        return `__old__.entity('${entityName}').${method}({ ${fieldName}: ${argValue} })`;
+      }
+    }
+    
+    return `__old__.${this.compileExpression(expr, resultVar, inputVar)}`;
+  }
+  
+  /**
+   * Infer field name from expression
+   */
+  private inferFieldName(expr: Expression): string {
+    if (expr.kind === 'MemberExpression') {
+      return expr.property.name;
+    }
+    return 'id'; // Default
   }
 
   private expressionToTestName(expr: Expression, prefix: string): string {

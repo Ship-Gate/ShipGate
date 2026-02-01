@@ -1,5 +1,5 @@
 /**
- * @intentos/verifier-chaos
+ * @isl-lang/verifier-chaos
  * 
  * Chaos engineering verifier for ISL implementations.
  * Injects failures and verifies implementations handle them correctly.

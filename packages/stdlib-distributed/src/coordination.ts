@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Standard Library - Coordination (Leader Election & Distributed Locks)
-// @intentos/stdlib-distributed/coordination
+// @isl-lang/stdlib-distributed/coordination
 // ============================================================================
 
 // ============================================================================

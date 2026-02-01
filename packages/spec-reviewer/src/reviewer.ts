@@ -4,7 +4,7 @@
  * Main review logic that coordinates analyzers and generates results.
  */
 
-import type { DomainDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
 import { analyzeCompleteness, type CompletenessResult } from './analyzers/completeness.js';
 import { analyzeConsistency, type ConsistencyResult } from './analyzers/consistency.js';
 import { analyzeSecurity, type SecurityResult } from './analyzers/security.js';

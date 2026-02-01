@@ -4,7 +4,7 @@
  * Analyzes verification failures to determine the root cause and fix strategy.
  */
 
-import type { DomainDeclaration, BehaviorDeclaration, Expression } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration, Expression } from '@isl-lang/isl-core';
 
 // ============================================================================
 // Types

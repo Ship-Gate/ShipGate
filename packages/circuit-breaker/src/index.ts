@@ -1,5 +1,5 @@
 /**
- * @intentos/circuit-breaker
+ * @isl-lang/circuit-breaker
  * 
  * Resilience patterns and circuit breaker for ISL behaviors
  */

@@ -7,7 +7,7 @@
 import { Location, Position, Range } from 'vscode-languageserver/node.js';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { ISLDocument } from './documents.js';
-import type { SourceSpan } from '@intentos/isl-core';
+import type { SourceSpan } from '@isl-lang/isl-core';
 
 export function getDefinition(
   islDoc: ISLDocument,

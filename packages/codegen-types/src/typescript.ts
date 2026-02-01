@@ -16,7 +16,7 @@ import type {
   InputBlock,
   OutputBlock,
   ErrorDeclaration,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 import type { GeneratorOptions } from './generator.js';
 

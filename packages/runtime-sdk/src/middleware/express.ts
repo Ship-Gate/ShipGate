@@ -32,7 +32,7 @@ export interface ExpressMiddlewareOptions {
  * @example
  * ```typescript
  * import express from 'express';
- * import { islMiddleware } from '@intentos/runtime-sdk/express';
+ * import { islMiddleware } from '@isl-lang/runtime-sdk/express';
  * 
  * const app = express();
  * 

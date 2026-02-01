@@ -9,7 +9,7 @@ import { buildRows } from './rows.js';
 
 /**
  * Simplified Domain interface for dashboard generation
- * Compatible with @intentos/parser Domain type
+ * Compatible with @isl-lang/parser Domain type
  */
 export interface Domain {
   name: { value: string };

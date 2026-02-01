@@ -4,7 +4,7 @@
  * Uses LLMs to generate fixes for complex verification failures.
  */
 
-import type { DomainDeclaration, BehaviorDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration } from '@isl-lang/isl-core';
 import type { VerificationFailure, AnalysisResult, FixStrategy } from '../analyzer.js';
 import type { Patch } from '../patcher.js';
 
@@ -253,7 +253,7 @@ Response format:
   private async callAI(systemPrompt: string, userPrompt: string): Promise<string> {
     // Try to use the ai-generator package if available
     try {
-      const { generateWithClaude } = await import('@intentos/ai-generator');
+      const { generateWithClaude } = await import('@isl-lang/ai-generator');
       return await generateWithClaude(systemPrompt, userPrompt, {
         apiKey: this.options.apiKey || undefined,
         model: this.options.model,

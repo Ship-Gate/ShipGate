@@ -58,7 +58,7 @@ function generateTypeScriptBindings(
   lines.push('');
 
   // Imports
-  lines.push("import type { WasmExports, WasmInstance } from '@intentos/codegen-wasm';");
+  lines.push("import type { WasmExports, WasmInstance } from '@isl-lang/codegen-wasm';");
   lines.push('');
 
   // Types for entities

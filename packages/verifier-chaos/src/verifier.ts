@@ -4,7 +4,7 @@
  * Main verification logic for chaos testing implementations.
  */
 
-import type { DomainDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
 import { parseScenarioNames, type ParsedChaosScenario } from './scenarios.js';
 import { ChaosExecutor, type ScenarioResult, type BehaviorImplementation } from './executor.js';
 import type { TimelineReport } from './timeline.js';

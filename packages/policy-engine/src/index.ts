@@ -1,5 +1,5 @@
 /**
- * @intentos/policy-engine
+ * @isl-lang/policy-engine
  * 
  * Policy enforcement engine for ISL specifications
  */

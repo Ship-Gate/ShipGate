@@ -25,7 +25,7 @@ export {
 } from './orchestrator.js';
 
 // Re-export agent prompts for use by LangChain
-export { ISL_AGENT_PROMPTS } from '@intentos/intent-translator';
+export { ISL_AGENT_PROMPTS } from '@isl-lang/intent-translator';
 
 /**
  * Quick helper to run the full pipeline

@@ -97,7 +97,7 @@ export function debug(message: string): void {
  * Log an info message
  */
 export function info(message: string): void {
-  if (!config.quiet) {
+  if (!isQuietOutput() && !isJsonOutput()) {
     console.log(message);
   }
 }
@@ -120,7 +120,7 @@ export function error(message: string): void {
  * Log a success message
  */
 export function success(message: string): void {
-  if (!config.quiet) {
+  if (!isQuietOutput() && !isJsonOutput()) {
     console.log(chalk.green(`✓ ${message}`));
   }
 }
@@ -133,7 +133,7 @@ export function success(message: string): void {
  * Print a header/title
  */
 export function header(text: string): void {
-  if (!config.quiet) {
+  if (!isQuietOutput() && !isJsonOutput()) {
     console.log('');
     console.log(chalk.bold.cyan(text));
     console.log(chalk.gray('─'.repeat(Math.min(text.length + 4, 60))));
@@ -144,7 +144,7 @@ export function header(text: string): void {
  * Print a section title
  */
 export function section(text: string): void {
-  if (!config.quiet) {
+  if (!isQuietOutput() && !isJsonOutput()) {
     console.log('');
     console.log(chalk.bold(text));
   }
@@ -154,7 +154,7 @@ export function section(text: string): void {
  * Print a list item
  */
 export function listItem(text: string, indent = 0): void {
-  if (!config.quiet) {
+  if (!isQuietOutput() && !isJsonOutput()) {
     const prefix = '  '.repeat(indent);
     console.log(`${prefix}• ${text}`);
   }
@@ -164,7 +164,7 @@ export function listItem(text: string, indent = 0): void {
  * Print a numbered list item
  */
 export function numberedItem(num: number, text: string, indent = 0): void {
-  if (!config.quiet) {
+  if (!isQuietOutput() && !isJsonOutput()) {
     const prefix = '  '.repeat(indent);
     console.log(`${prefix}${chalk.cyan(num.toString() + '.')} ${text}`);
   }
@@ -174,7 +174,7 @@ export function numberedItem(num: number, text: string, indent = 0): void {
  * Print a key-value pair
  */
 export function keyValue(key: string, value: string, indent = 0): void {
-  if (!config.quiet) {
+  if (!isQuietOutput() && !isJsonOutput()) {
     const prefix = '  '.repeat(indent);
     console.log(`${prefix}${chalk.gray(key + ':')} ${value}`);
   }
@@ -184,7 +184,7 @@ export function keyValue(key: string, value: string, indent = 0): void {
  * Print a file path
  */
 export function filePath(path: string, status?: 'created' | 'updated' | 'deleted' | 'checked'): void {
-  if (!config.quiet) {
+  if (!isQuietOutput() && !isJsonOutput()) {
     const statusIcon = status === 'created' ? chalk.green('+')
       : status === 'updated' ? chalk.yellow('~')
       : status === 'deleted' ? chalk.red('-')
@@ -253,7 +253,7 @@ export function table<T extends Record<string, unknown>>(
   data: T[],
   columns: TableColumn[]
 ): void {
-  if (config.quiet || data.length === 0) return;
+  if (isQuietOutput() || isJsonOutput() || data.length === 0) return;
 
   // Calculate column widths
   const widths = columns.map(col => {
@@ -294,12 +294,17 @@ export interface DiagnosticError {
   file?: string;
   line?: number;
   column?: number;
+  endLine?: number;
+  endColumn?: number;
   message: string;
   severity?: 'error' | 'warning' | 'info';
+  code?: string;
+  notes?: string[];
+  help?: string[];
 }
 
 /**
- * Print a diagnostic error with location
+ * Print a diagnostic error with location (legacy format)
  */
 export function diagnostic(err: DiagnosticError): void {
   const severity = err.severity ?? 'error';
@@ -327,7 +332,7 @@ export function diagnostic(err: DiagnosticError): void {
 }
 
 /**
- * Print multiple diagnostic errors
+ * Print multiple diagnostic errors (legacy format)
  */
 export function diagnostics(errors: DiagnosticError[]): void {
   for (const err of errors) {
@@ -346,6 +351,117 @@ export function diagnostics(errors: DiagnosticError[]): void {
   }
 }
 
+/**
+ * Print a beautiful diagnostic error with code snippet (Elm/Rust style)
+ * 
+ * Example output:
+ * ```
+ * error[E0200]: Type mismatch
+ *   --> specs/payment.isl:7:9
+ *    |
+ *  7 |   post: sender.balance == old(sender.balance) - amount
+ *    |         ^^^^^^^^^^^^^^
+ *    |
+ *    = note: sender.balance is typed as String
+ *    = help: Did you mean sender.balanceAmount?
+ * ```
+ */
+export function prettyDiagnostic(
+  err: DiagnosticError,
+  sourceLines?: string[],
+  options: { colors?: boolean } = {}
+): void {
+  const useColors = options.colors ?? !config.noColor;
+  const color = useColors
+    ? (err.severity === 'error' ? chalk.red : err.severity === 'warning' ? chalk.yellow : chalk.blue)
+    : chalk.reset;
+  const dimColor = useColors ? chalk.gray : chalk.reset;
+  const cyanColor = useColors ? chalk.cyan : chalk.reset;
+
+  // Header: error[E0200]: Type mismatch
+  const codeStr = err.code ? `[${err.code}]` : '';
+  console.log(color.bold(`${err.severity ?? 'error'}${codeStr}: ${err.message}`));
+
+  // Location: --> file:line:column
+  if (err.file) {
+    const pos = err.line ? `:${err.line}${err.column ? `:${err.column}` : ''}` : '';
+    console.log(`  ${dimColor('-->')} ${cyanColor(err.file)}${pos}`);
+  }
+
+  // Code snippet with underline
+  if (sourceLines && err.line !== undefined) {
+    const lineNum = err.line;
+    const line = sourceLines[lineNum - 1];
+    
+    if (line !== undefined) {
+      const gutterWidth = String(lineNum).length;
+      const gutter = dimColor(`${String(lineNum).padStart(gutterWidth)} |`);
+      const emptyGutter = dimColor(`${' '.repeat(gutterWidth)} |`);
+
+      console.log(emptyGutter);
+      console.log(`${gutter} ${line}`);
+
+      // Underline
+      if (err.column !== undefined) {
+        const startCol = err.column - 1;
+        const endCol = err.endColumn ? err.endColumn - 1 : startCol + 1;
+        const underline = ' '.repeat(startCol) + color('^'.repeat(Math.max(1, endCol - startCol)));
+        console.log(`${emptyGutter} ${underline}`);
+      }
+
+      console.log(emptyGutter);
+    }
+  }
+
+  // Notes
+  if (err.notes) {
+    for (const note of err.notes) {
+      console.log(cyanColor(`   = note: ${note}`));
+    }
+  }
+
+  // Help
+  if (err.help) {
+    for (const help of err.help) {
+      console.log(cyanColor(`   = help: ${help}`));
+    }
+  }
+}
+
+/**
+ * Print multiple diagnostics with pretty formatting
+ */
+export function prettyDiagnostics(
+  errors: DiagnosticError[],
+  sourceLines?: string[],
+  options: { colors?: boolean; maxErrors?: number } = {}
+): void {
+  const maxErrors = options.maxErrors ?? 10;
+  const toShow = errors.slice(0, maxErrors);
+
+  for (let i = 0; i < toShow.length; i++) {
+    if (i > 0) console.log();
+    prettyDiagnostic(toShow[i]!, sourceLines, options);
+  }
+
+  if (errors.length > maxErrors) {
+    console.log();
+    console.log(chalk.gray(`... and ${errors.length - maxErrors} more error(s)`));
+  }
+
+  // Summary
+  const errorCount = errors.filter(e => e.severity === 'error' || !e.severity).length;
+  const warnCount = errors.filter(e => e.severity === 'warning').length;
+
+  if (errorCount > 0 || warnCount > 0) {
+    console.log();
+    const parts: string[] = [];
+    if (errorCount > 0) parts.push(chalk.red.bold(`${errorCount} error${errorCount === 1 ? '' : 's'}`));
+    if (warnCount > 0) parts.push(chalk.yellow.bold(`${warnCount} warning${warnCount === 1 ? '' : 's'}`));
+    console.log(parts.join(', ') + ' generated');
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Boxes & Panels
 // ─────────────────────────────────────────────────────────────────────────────
@@ -354,7 +470,7 @@ export function diagnostics(errors: DiagnosticError[]): void {
  * Print a boxed message
  */
 export function box(title: string, content: string[], style: 'info' | 'success' | 'warning' | 'error' = 'info'): void {
-  if (config.quiet) return;
+  if (isQuietOutput() || isJsonOutput()) return;
 
   const colors = {
     info: chalk.cyan,

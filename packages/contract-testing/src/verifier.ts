@@ -4,7 +4,7 @@
  * Verify contracts against ISL specifications.
  */
 
-import { parseISL, type DomainDeclaration } from '@intentos/isl-core';
+import { parseISL, type DomainDeclaration } from '@isl-lang/isl-core';
 import type { Contract, ContractBehavior } from './broker.js';
 
 export interface VerificationOptions {

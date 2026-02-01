@@ -147,7 +147,7 @@ async function runVerification(
   // Simulate verification delay
   await new Promise(resolve => setTimeout(resolve, 1500));
 
-  // TODO: Integrate with @intentos/isl-verify
+  // TODO: Integrate with @isl-lang/isl-verify
   // For now, return mock result
   const mockResults: Record<string, VerificationResult> = {
     'Auth': {

@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Interpreter - Sandboxed Execution
-// @intentos/interpreter/sandbox
+// @isl-lang/interpreter/sandbox
 // ============================================================================
 
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';

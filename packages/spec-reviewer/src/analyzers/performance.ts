@@ -4,7 +4,7 @@
  * Checks for performance concerns and optimization opportunities.
  */
 
-import type { DomainDeclaration, BehaviorDeclaration, EntityDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration, EntityDeclaration } from '@isl-lang/isl-core';
 
 export interface PerformanceIssue {
   id: string;

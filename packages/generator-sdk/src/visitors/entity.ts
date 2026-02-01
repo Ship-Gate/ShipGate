@@ -7,7 +7,7 @@
 import type {
   EntityDeclaration,
   FieldDeclaration,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 import type {
   GeneratedFile,

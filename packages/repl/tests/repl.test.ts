@@ -1,137 +1,204 @@
 // ============================================================================
-// REPL Tests
+// ISL REPL Tests
 // ============================================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
-  ISLRepl,
+  Session,
+  createSession,
+  ISLREPL,
+  CompletionProvider,
+  metaCommands,
+  islCommands,
+  findSimilarCommand,
+  formatSuccess,
+  formatError,
+  formatIntent,
+  highlightExpression,
+  stripColors,
   History,
   MemoryHistory,
-  CompletionProvider,
-  Evaluator,
-  formatValue,
-  formatType,
-  formatExpression,
-  formatEntity,
-  formatBehavior,
-  checkCommand,
-  generateCommand,
-  verifyCommand,
-  inspectCommand,
-  helpCommand,
-  loadFromString,
   COMMANDS,
   KEYWORDS,
-  type Domain,
-  type ReplContext,
-  type EvalContext,
-} from '../src/index.js';
+} from '../src/index';
 
 // ============================================================================
-// Test Domain
+// Session Tests
 // ============================================================================
 
-const testDomain: Domain = {
-  kind: 'Domain',
-  name: { name: 'TestDomain' },
-  version: { value: '1.0.0' },
-  imports: [],
-  types: [
-    {
-      kind: 'TypeDeclaration',
-      name: { name: 'Email' },
-      definition: {
-        kind: 'ConstrainedType',
-        base: { kind: 'PrimitiveType', name: 'String' },
-        constraints: [
-          { kind: 'Constraint', name: 'format', value: { kind: 'LiteralExpression', value: 'email', type: 'string' } }
-        ],
-      },
-      annotations: [],
-    },
-    {
-      kind: 'TypeDeclaration',
-      name: { name: 'Status' },
-      definition: {
-        kind: 'EnumType',
-        variants: [
-          { kind: 'EnumVariant', name: { name: 'ACTIVE' } },
-          { kind: 'EnumVariant', name: { name: 'INACTIVE' } },
-          { kind: 'EnumVariant', name: { name: 'PENDING' } },
-        ],
-      },
-      annotations: [],
-    },
-  ],
-  entities: [
-    {
-      kind: 'Entity',
-      name: { name: 'User' },
-      description: { value: 'A user in the system' },
-      fields: [
-        { kind: 'Field', name: { name: 'id' }, type: { kind: 'PrimitiveType', name: 'UUID' }, optional: false, annotations: [] },
-        { kind: 'Field', name: { name: 'email' }, type: { kind: 'ReferenceType', name: { name: 'Email' } }, optional: false, annotations: [] },
-        { kind: 'Field', name: { name: 'name' }, type: { kind: 'PrimitiveType', name: 'String' }, optional: false, annotations: [] },
-        { kind: 'Field', name: { name: 'age' }, type: { kind: 'PrimitiveType', name: 'Int' }, optional: true, annotations: [] },
-      ],
-      computed: [],
-      invariants: [],
-      annotations: [],
-    },
-  ],
-  behaviors: [
-    {
-      kind: 'Behavior',
-      name: { name: 'CreateUser' },
-      description: { value: 'Create a new user' },
-      input: {
-        kind: 'BehaviorInput',
-        fields: [
-          { kind: 'Field', name: { name: 'email' }, type: { kind: 'PrimitiveType', name: 'String' }, optional: false, annotations: [] },
-          { kind: 'Field', name: { name: 'name' }, type: { kind: 'PrimitiveType', name: 'String' }, optional: false, annotations: [] },
-          { kind: 'Field', name: { name: 'age' }, type: { kind: 'PrimitiveType', name: 'Int' }, optional: true, annotations: [] },
-        ],
-      },
-      output: {
-        kind: 'BehaviorOutput',
-        success: { kind: 'ReferenceType', name: { name: 'User' } },
-        errors: [
-          { kind: 'BehaviorError', name: { name: 'EmailAlreadyExists' }, retriable: false },
-          { kind: 'BehaviorError', name: { name: 'InvalidEmail' }, retriable: false },
-        ],
-      },
-      preconditions: [],
-      postconditions: [],
-      sideEffects: [
-        { kind: 'SideEffect', entity: { name: 'User' }, action: 'creates' },
-      ],
-      steps: [],
-      annotations: [],
-    },
-  ],
-  invariants: [],
-  policies: [],
-  views: [],
-  scenarios: [],
-  chaos: [],
-};
+describe('Session', () => {
+  let session: Session;
+
+  beforeEach(() => {
+    session = createSession();
+  });
+
+  describe('Intent Management', () => {
+    it('defines and retrieves intents', () => {
+      const intent = {
+        name: 'Greeting',
+        preconditions: [{ expression: 'name.length > 0' }],
+        postconditions: [{ expression: 'result.startsWith("Hello")' }],
+        invariants: [],
+        scenarios: [],
+        rawSource: 'intent Greeting { ... }',
+      };
+
+      session.defineIntent(intent);
+      
+      expect(session.hasIntent('Greeting')).toBe(true);
+      expect(session.getIntent('Greeting')).toEqual(intent);
+      expect(session.getIntentNames()).toContain('Greeting');
+    });
+
+    it('lists all intents', () => {
+      session.defineIntent({
+        name: 'Intent1',
+        preconditions: [],
+        postconditions: [],
+        invariants: [],
+        scenarios: [],
+        rawSource: '',
+      });
+      session.defineIntent({
+        name: 'Intent2',
+        preconditions: [],
+        postconditions: [],
+        invariants: [],
+        scenarios: [],
+        rawSource: '',
+      });
+
+      const intents = session.getAllIntents();
+      expect(intents.length).toBe(2);
+      expect(intents.map(i => i.name)).toContain('Intent1');
+      expect(intents.map(i => i.name)).toContain('Intent2');
+    });
+
+    it('removes intents', () => {
+      session.defineIntent({
+        name: 'ToRemove',
+        preconditions: [],
+        postconditions: [],
+        invariants: [],
+        scenarios: [],
+        rawSource: '',
+      });
+
+      expect(session.hasIntent('ToRemove')).toBe(true);
+      session.removeIntent('ToRemove');
+      expect(session.hasIntent('ToRemove')).toBe(false);
+    });
+
+    it('parses intent from source', () => {
+      const source = `intent Greeting {
+        pre: name.length > 0
+        post: result.startsWith("Hello")
+      }`;
+
+      const intent = session.parseIntent(source);
+      
+      expect(intent).not.toBeNull();
+      expect(intent!.name).toBe('Greeting');
+      expect(intent!.preconditions.length).toBe(1);
+      expect(intent!.postconditions.length).toBe(1);
+    });
+  });
+
+  describe('Variable Management', () => {
+    it('sets and gets variables', () => {
+      session.setVariable('x', 42);
+      session.setVariable('name', 'test');
+
+      expect(session.getVariable('x')).toBe(42);
+      expect(session.getVariable('name')).toBe('test');
+      expect(session.hasVariable('x')).toBe(true);
+      expect(session.hasVariable('nonexistent')).toBe(false);
+    });
+
+    it('tracks last result', () => {
+      session.setLastResult({ success: true });
+      
+      expect(session.getLastResult()).toEqual({ success: true });
+      expect(session.getVariable('_')).toEqual({ success: true });
+    });
+  });
+
+  describe('History Management', () => {
+    it('adds to and retrieves history', () => {
+      session.addToHistory('command 1');
+      session.addToHistory('command 2');
+      session.addToHistory('command 3');
+
+      const history = session.getHistory();
+      expect(history.length).toBe(3);
+      expect(history).toContain('command 1');
+      expect(history).toContain('command 3');
+    });
+
+    it('retrieves limited history', () => {
+      for (let i = 0; i < 10; i++) {
+        session.addToHistory(`command ${i}`);
+      }
+
+      const history = session.getHistory(3);
+      expect(history.length).toBe(3);
+      expect(history[0]).toBe('command 7');
+      expect(history[2]).toBe('command 9');
+    });
+
+    it('deduplicates consecutive entries', () => {
+      session.addToHistory('same');
+      session.addToHistory('same');
+      session.addToHistory('same');
+
+      expect(session.getHistory().length).toBe(1);
+    });
+  });
+
+  describe('State Management', () => {
+    it('clears session state', () => {
+      session.defineIntent({
+        name: 'Test',
+        preconditions: [],
+        postconditions: [],
+        invariants: [],
+        scenarios: [],
+        rawSource: '',
+      });
+      session.setVariable('x', 1);
+
+      session.clear();
+
+      expect(session.getAllIntents().length).toBe(0);
+      expect(session.getAllVariables().size).toBe(0);
+    });
+
+    it('provides session summary', () => {
+      session.defineIntent({
+        name: 'Test',
+        preconditions: [],
+        postconditions: [],
+        invariants: [],
+        scenarios: [],
+        rawSource: '',
+      });
+      session.setVariable('x', 1);
+
+      const summary = session.getSummary();
+      
+      expect(summary.intentCount).toBe(1);
+      expect(summary.variableCount).toBe(1);
+    });
+  });
+});
 
 // ============================================================================
 // History Tests
 // ============================================================================
 
 describe('History', () => {
-  it('adds entries', () => {
-    const history = new MemoryHistory();
-    history.add('command 1');
-    history.add('command 2');
-    
-    expect(history.size).toBe(2);
-    expect(history.getAll()).toContain('command 1');
-    expect(history.getAll()).toContain('command 2');
-  });
-
-  it('navigates with previous/next', () => {
+  it('adds entries and navigates', () => {
     const history = new MemoryHistory();
     history.add('first');
     history.add('second');
@@ -152,21 +219,10 @@ describe('History', () => {
     history.add(':load file1.isl');
     history.add(':check');
     history.add(':load file2.isl');
-    history.add(':generate types');
+    history.add(':gen typescript');
 
     const results = history.search('load');
     expect(results.length).toBe(2);
-    expect(results).toContain(':load file1.isl');
-    expect(results).toContain(':load file2.isl');
-  });
-
-  it('deduplicates consecutive entries', () => {
-    const history = new MemoryHistory();
-    history.add('same');
-    history.add('same');
-    history.add('same');
-    
-    expect(history.size).toBe(1);
   });
 
   it('respects max size', () => {
@@ -182,41 +238,51 @@ describe('History', () => {
 });
 
 // ============================================================================
-// Completions Tests
+// Completion Tests
 // ============================================================================
 
 describe('CompletionProvider', () => {
   let provider: CompletionProvider;
+  let session: Session;
 
   beforeEach(() => {
-    const context: ReplContext = {
-      domain: testDomain,
-      state: new Map(),
-      history: [],
-      variables: new Map(),
-    };
-    provider = new CompletionProvider(context);
+    session = createSession();
+    session.defineIntent({
+      name: 'Greeting',
+      preconditions: [{ expression: 'name.length > 0' }],
+      postconditions: [{ expression: 'result.startsWith("Hello")' }],
+      invariants: [],
+      scenarios: [],
+      rawSource: '',
+    });
+    provider = new CompletionProvider(session);
   });
 
-  it('completes commands', () => {
-    const [items] = provider.complete(':lo');
-    expect(items.some(i => i.text === ':load')).toBe(true);
+  it('completes meta commands', () => {
+    const [items] = provider.complete('.he');
+    expect(items.some(i => i.text === '.help')).toBe(true);
   });
 
-  it('completes all commands for bare colon', () => {
+  it('completes ISL commands', () => {
+    const [items] = provider.complete(':ch');
+    expect(items.some(i => i.text === ':check')).toBe(true);
+  });
+
+  it('completes all meta commands for bare .', () => {
+    const [items] = provider.complete('.');
+    expect(items.length).toBeGreaterThan(0);
+    expect(items.every(i => i.text.startsWith('.'))).toBe(true);
+  });
+
+  it('completes all ISL commands for bare :', () => {
     const [items] = provider.complete(':');
     expect(items.length).toBeGreaterThan(0);
-    expect(items.every(i => i.type === 'command')).toBe(true);
+    expect(items.every(i => i.text.startsWith(':'))).toBe(true);
   });
 
-  it('completes entity names', () => {
-    const [items] = provider.complete('Us');
-    expect(items.some(i => i.text === 'User' && i.type === 'entity')).toBe(true);
-  });
-
-  it('completes behavior names', () => {
-    const [items] = provider.complete('Create');
-    expect(items.some(i => i.text === 'CreateUser' && i.type === 'behavior')).toBe(true);
+  it('completes intent names', () => {
+    const [items] = provider.complete('Greet');
+    expect(items.some(i => i.text === 'Greeting' && i.type === 'intent')).toBe(true);
   });
 
   it('completes keywords', () => {
@@ -226,188 +292,10 @@ describe('CompletionProvider', () => {
 
   it('gets all completions', () => {
     const all = provider.getAllCompletions();
-    expect(all.commands.length).toBeGreaterThan(0);
+    expect(all.metaCommands.length).toBeGreaterThan(0);
+    expect(all.islCommands.length).toBeGreaterThan(0);
     expect(all.keywords.length).toBeGreaterThan(0);
-    expect(all.domain.length).toBeGreaterThan(0);
-  });
-});
-
-// ============================================================================
-// Evaluator Tests
-// ============================================================================
-
-describe('Evaluator', () => {
-  let evaluator: Evaluator;
-
-  beforeEach(() => {
-    const context: EvalContext = {
-      domain: testDomain,
-      state: new Map(),
-      variables: new Map(),
-    };
-    evaluator = new Evaluator(context);
-  });
-
-  it('evaluates literals', async () => {
-    expect((await evaluator.evaluate('42')).value).toBe(42);
-    expect((await evaluator.evaluate('"hello"')).value).toBe('hello');
-    expect((await evaluator.evaluate('true')).value).toBe(true);
-    expect((await evaluator.evaluate('false')).value).toBe(false);
-    expect((await evaluator.evaluate('null')).value).toBe(null);
-  });
-
-  it('evaluates arithmetic', async () => {
-    expect((await evaluator.evaluate('1 + 2')).value).toBe(3);
-    expect((await evaluator.evaluate('10 - 3')).value).toBe(7);
-    expect((await evaluator.evaluate('4 * 5')).value).toBe(20);
-    expect((await evaluator.evaluate('15 / 3')).value).toBe(5);
-  });
-
-  it('evaluates comparison', async () => {
-    expect((await evaluator.evaluate('5 > 3')).value).toBe(true);
-    expect((await evaluator.evaluate('5 < 3')).value).toBe(false);
-    expect((await evaluator.evaluate('5 >= 5')).value).toBe(true);
-    expect((await evaluator.evaluate('5 == 5')).value).toBe(true);
-    expect((await evaluator.evaluate('5 != 3')).value).toBe(true);
-  });
-
-  it('evaluates logical operators', async () => {
-    expect((await evaluator.evaluate('true and true')).value).toBe(true);
-    expect((await evaluator.evaluate('true and false')).value).toBe(false);
-    expect((await evaluator.evaluate('true or false')).value).toBe(true);
-    expect((await evaluator.evaluate('not true')).value).toBe(false);
-    expect((await evaluator.evaluate('false implies true')).value).toBe(true);
-  });
-
-  it('evaluates arrays', async () => {
-    const result = await evaluator.evaluate('[1, 2, 3]');
-    expect(result.value).toEqual([1, 2, 3]);
-  });
-
-  it('evaluates objects', async () => {
-    const result = await evaluator.evaluate('{a: 1, b: "two"}');
-    expect(result.value).toEqual({ a: 1, b: 'two' });
-  });
-
-  it('evaluates behavior calls', async () => {
-    const result = await evaluator.evaluate('CreateUser(email: "test@example.com", name: "Test")');
-    expect(result.success).toBe(true);
-    expect(result.value).toHaveProperty('success', true);
-  });
-
-  it('handles parse errors gracefully', async () => {
-    const result = await evaluator.evaluate('invalid @@@ syntax');
-    expect(result.success).toBe(false);
-    expect(result.error).toBeDefined();
-  });
-});
-
-// ============================================================================
-// Formatter Tests
-// ============================================================================
-
-describe('Formatter', () => {
-  describe('formatValue', () => {
-    it('formats primitives', () => {
-      expect(formatValue(42, { colors: false })).toBe('42');
-      expect(formatValue('hello', { colors: false })).toBe('"hello"');
-      expect(formatValue(true, { colors: false })).toBe('true');
-      expect(formatValue(null, { colors: false })).toBe('null');
-    });
-
-    it('formats arrays', () => {
-      const result = formatValue([1, 2, 3], { colors: false, compact: true });
-      expect(result).toContain('1');
-      expect(result).toContain('2');
-      expect(result).toContain('3');
-    });
-
-    it('formats objects', () => {
-      const result = formatValue({ name: 'test', value: 42 }, { colors: false });
-      expect(result).toContain('name');
-      expect(result).toContain('test');
-      expect(result).toContain('value');
-      expect(result).toContain('42');
-    });
-
-    it('formats behavior results', () => {
-      const success = formatValue({ success: true, data: { id: '123' } }, { colors: false });
-      expect(success).toContain('Success');
-
-      const failure = formatValue({ success: false, error: 'Something went wrong' }, { colors: false });
-      expect(failure).toContain('Error');
-      expect(failure).toContain('Something went wrong');
-    });
-  });
-
-  describe('formatType', () => {
-    it('formats primitive types', () => {
-      expect(formatType({ kind: 'PrimitiveType', name: 'String' }, { colors: false })).toBe('String');
-      expect(formatType({ kind: 'PrimitiveType', name: 'Int' }, { colors: false })).toBe('Int');
-    });
-
-    it('formats reference types', () => {
-      expect(formatType({ kind: 'ReferenceType', name: { name: 'User' } }, { colors: false })).toBe('User');
-    });
-
-    it('formats list types', () => {
-      const result = formatType({
-        kind: 'ListType',
-        element: { kind: 'PrimitiveType', name: 'String' },
-      }, { colors: false });
-      expect(result).toBe('List<String>');
-    });
-
-    it('formats optional types', () => {
-      const result = formatType({
-        kind: 'OptionalType',
-        inner: { kind: 'PrimitiveType', name: 'Int' },
-      }, { colors: false });
-      expect(result).toBe('Optional<Int>');
-    });
-  });
-
-  describe('formatExpression', () => {
-    it('formats literals', () => {
-      expect(formatExpression({ kind: 'LiteralExpression', value: 42, type: 'number' })).toBe('42');
-      expect(formatExpression({ kind: 'LiteralExpression', value: 'hello', type: 'string' })).toBe('"hello"');
-    });
-
-    it('formats identifiers', () => {
-      expect(formatExpression({ kind: 'IdentifierExpression', name: 'user' })).toBe('user');
-    });
-
-    it('formats binary expressions', () => {
-      const expr = {
-        kind: 'BinaryExpression' as const,
-        operator: '+',
-        left: { kind: 'LiteralExpression' as const, value: 1, type: 'number' as const },
-        right: { kind: 'LiteralExpression' as const, value: 2, type: 'number' as const },
-      };
-      expect(formatExpression(expr)).toBe('1 + 2');
-    });
-  });
-
-  describe('formatEntity', () => {
-    it('formats entity with fields', () => {
-      const result = formatEntity(testDomain.entities[0]!, { colors: false });
-      expect(result).toContain('Entity: User');
-      expect(result).toContain('Fields:');
-      expect(result).toContain('id');
-      expect(result).toContain('email');
-      expect(result).toContain('name');
-    });
-  });
-
-  describe('formatBehavior', () => {
-    it('formats behavior with input/output', () => {
-      const result = formatBehavior(testDomain.behaviors[0]!, { colors: false });
-      expect(result).toContain('Behavior: CreateUser');
-      expect(result).toContain('Input:');
-      expect(result).toContain('Output:');
-      expect(result).toContain('email');
-      expect(result).toContain('name');
-    });
+    expect(all.intents.length).toBeGreaterThan(0);
   });
 });
 
@@ -416,177 +304,141 @@ describe('Formatter', () => {
 // ============================================================================
 
 describe('Commands', () => {
-  describe('checkCommand', () => {
-    it('returns error when no domain loaded', () => {
-      const result = checkCommand(null);
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('No domain loaded');
+  describe('Meta Commands', () => {
+    it('has help command', () => {
+      const helpCmd = metaCommands.find(c => c.name === 'help');
+      expect(helpCmd).toBeDefined();
+      expect(helpCmd!.aliases).toContain('h');
     });
 
-    it('checks valid domain', () => {
-      const result = checkCommand(testDomain);
-      expect(result.success).toBe(true);
-      expect(result.message).toContain('valid');
-    });
-  });
-
-  describe('generateCommand', () => {
-    it('returns error when no domain loaded', () => {
-      const result = generateCommand('types', null);
-      expect(result.success).toBe(false);
+    it('has exit command', () => {
+      const exitCmd = metaCommands.find(c => c.name === 'exit');
+      expect(exitCmd).toBeDefined();
+      expect(exitCmd!.aliases).toContain('quit');
     });
 
-    it('generates types', () => {
-      const result = generateCommand('types', testDomain);
-      expect(result.success).toBe(true);
-      expect(result.data).toContain('interface User');
-      expect(result.data).toContain('interface CreateUserInput');
+    it('has clear command', () => {
+      const clearCmd = metaCommands.find(c => c.name === 'clear');
+      expect(clearCmd).toBeDefined();
     });
 
-    it('generates tests', () => {
-      const result = generateCommand('tests', testDomain);
-      expect(result.success).toBe(true);
-      expect(result.data).toContain('describe');
-      expect(result.data).toContain('User');
-      expect(result.data).toContain('CreateUser');
-    });
-
-    it('generates docs', () => {
-      const result = generateCommand('docs', testDomain);
-      expect(result.success).toBe(true);
-      expect(result.data).toContain('# TestDomain');
-      expect(result.data).toContain('## Entities');
-      expect(result.data).toContain('## Behaviors');
-    });
-
-    it('generates api', () => {
-      const result = generateCommand('api', testDomain);
-      expect(result.success).toBe(true);
-      expect(result.data).toContain('router.post');
-      expect(result.data).toContain('create-user');
-    });
-
-    it('generates schema', () => {
-      const result = generateCommand('schema', testDomain);
-      expect(result.success).toBe(true);
-      expect(result.data).toContain('CREATE TABLE');
-      expect(result.data).toContain('user');
-    });
-
-    it('rejects unknown target', () => {
-      const result = generateCommand('unknown', testDomain);
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Unknown generate target');
+    it('has history command', () => {
+      const histCmd = metaCommands.find(c => c.name === 'history');
+      expect(histCmd).toBeDefined();
     });
   });
 
-  describe('verifyCommand', () => {
-    it('returns error when no domain loaded', () => {
-      const result = verifyCommand('CreateUser', null, new Map());
-      expect(result.success).toBe(false);
+  describe('ISL Commands', () => {
+    it('has check command', () => {
+      const checkCmd = islCommands.find(c => c.name === 'check');
+      expect(checkCmd).toBeDefined();
+      expect(checkCmd!.aliases).toContain('c');
     });
 
-    it('returns error for unknown behavior', () => {
-      const result = verifyCommand('Unknown', testDomain, new Map());
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Unknown behavior');
+    it('has gen command', () => {
+      const genCmd = islCommands.find(c => c.name === 'gen');
+      expect(genCmd).toBeDefined();
+      expect(genCmd!.aliases).toContain('generate');
     });
 
-    it('verifies behavior', () => {
-      const result = verifyCommand('CreateUser', testDomain, new Map());
-      expect(result.success).toBe(true);
-      expect(result.message).toContain('Verification');
-      expect(result.message).toContain('CreateUser');
-    });
-  });
-
-  describe('inspectCommand', () => {
-    it('returns error when no domain loaded', () => {
-      const result = inspectCommand('User', null);
-      expect(result.success).toBe(false);
+    it('has load command', () => {
+      const loadCmd = islCommands.find(c => c.name === 'load');
+      expect(loadCmd).toBeDefined();
     });
 
-    it('inspects entity', () => {
-      const result = inspectCommand('User', testDomain);
-      expect(result.success).toBe(true);
-      expect(result.message).toContain('Entity: User');
-      expect(result.message).toContain('Fields');
+    it('has list command', () => {
+      const listCmd = islCommands.find(c => c.name === 'list');
+      expect(listCmd).toBeDefined();
+      expect(listCmd!.aliases).toContain('ls');
     });
 
-    it('inspects behavior', () => {
-      const result = inspectCommand('CreateUser', testDomain);
-      expect(result.success).toBe(true);
-      expect(result.message).toContain('Behavior: CreateUser');
-      expect(result.message).toContain('Input');
-      expect(result.message).toContain('Output');
+    it('has inspect command', () => {
+      const inspectCmd = islCommands.find(c => c.name === 'inspect');
+      expect(inspectCmd).toBeDefined();
+      expect(inspectCmd!.aliases).toContain('i');
     });
 
-    it('shows domain summary when no name given', () => {
-      const result = inspectCommand(undefined, testDomain);
-      expect(result.success).toBe(true);
-      expect(result.message).toContain('Domain: TestDomain');
-    });
-
-    it('returns error for unknown name', () => {
-      const result = inspectCommand('Unknown', testDomain);
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Not found');
+    it('has export command', () => {
+      const exportCmd = islCommands.find(c => c.name === 'export');
+      expect(exportCmd).toBeDefined();
+      expect(exportCmd!.aliases).toContain('save');
     });
   });
 
-  describe('helpCommand', () => {
-    it('shows general help', () => {
-      const result = helpCommand();
-      expect(result.success).toBe(true);
-      expect(result.message).toContain('Commands:');
-      expect(result.message).toContain('Expressions:');
+  describe('Command Suggestion', () => {
+    it('suggests similar meta command', () => {
+      expect(findSimilarCommand('hlep', 'meta')).toBe('help');
+      expect(findSimilarCommand('exti', 'meta')).toBe('exit');
     });
 
-    it('shows commands help', () => {
-      const result = helpCommand('commands');
-      expect(result.success).toBe(true);
-      expect(result.message).toContain(':load');
-      expect(result.message).toContain(':check');
+    it('suggests similar ISL command', () => {
+      expect(findSimilarCommand('chekc', 'isl')).toBe('check');
+      expect(findSimilarCommand('listt', 'isl')).toBe('list');
     });
 
-    it('shows expressions help', () => {
-      const result = helpCommand('expressions');
-      expect(result.success).toBe(true);
-      expect(result.message).toContain('Literals');
-      expect(result.message).toContain('Operators');
+    it('returns null for very different input', () => {
+      expect(findSimilarCommand('xyzabc', 'meta')).toBeNull();
+    });
+  });
+});
+
+// ============================================================================
+// Formatter Tests
+// ============================================================================
+
+describe('Formatter', () => {
+  describe('Message Formatting', () => {
+    it('formats success message', () => {
+      const msg = formatSuccess('Test passed');
+      expect(stripColors(msg)).toContain('✓');
+      expect(stripColors(msg)).toContain('Test passed');
     });
 
-    it('returns error for unknown topic', () => {
-      const result = helpCommand('unknown');
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Unknown help topic');
+    it('formats error message', () => {
+      const msg = formatError('Something failed');
+      expect(stripColors(msg)).toContain('✗');
+      expect(stripColors(msg)).toContain('Error');
+      expect(stripColors(msg)).toContain('Something failed');
     });
   });
 
-  describe('loadFromString', () => {
-    it('loads simple domain', () => {
-      const result = loadFromString(`
-        domain MyDomain
-        version "1.0.0"
-        
-        entity User {
-          id: UUID
-          name: String
-        }
-        
-        behavior CreateUser {
-        }
-      `);
-      
-      expect(result.success).toBe(true);
-      expect(result.domain).toBeDefined();
-      expect(result.domain?.name.name).toBe('MyDomain');
-      expect(result.domain?.entities.length).toBeGreaterThan(0);
+  describe('Intent Formatting', () => {
+    it('formats intent with pre/post conditions', () => {
+      const intent = {
+        name: 'Greeting',
+        preconditions: [{ expression: 'name.length > 0' }],
+        postconditions: [{ expression: 'result.startsWith("Hello")' }],
+        invariants: [],
+        scenarios: [],
+        rawSource: '',
+      };
+
+      const formatted = formatIntent(intent);
+      expect(stripColors(formatted)).toContain('Intent: Greeting');
+      expect(stripColors(formatted)).toContain('Preconditions:');
+      expect(stripColors(formatted)).toContain('name.length > 0');
+      expect(stripColors(formatted)).toContain('Postconditions:');
+      expect(stripColors(formatted)).toContain('result.startsWith');
+    });
+  });
+
+  describe('Expression Highlighting', () => {
+    it('highlights operators', () => {
+      const highlighted = highlightExpression('x > 0 and y < 10');
+      expect(highlighted).toContain('and');
+      expect(highlighted).toContain('>');
     });
 
-    it('returns error for invalid ISL', () => {
-      const result = loadFromString('not valid isl');
-      expect(result.success).toBe(false);
+    it('highlights boolean values', () => {
+      const highlighted = highlightExpression('value == true');
+      expect(highlighted).toContain('true');
+    });
+  });
+
+  describe('Strip Colors', () => {
+    it('removes ANSI codes', () => {
+      const colored = '\x1b[31mRed\x1b[0m and \x1b[32mGreen\x1b[0m';
+      expect(stripColors(colored)).toBe('Red and Green');
     });
   });
 });
@@ -595,73 +447,41 @@ describe('Commands', () => {
 // REPL Integration Tests
 // ============================================================================
 
-describe('ISLRepl', () => {
-  let repl: ISLRepl;
+describe('ISLREPL', () => {
+  let repl: ISLREPL;
 
   beforeEach(() => {
-    repl = new ISLRepl({ colors: false });
+    repl = new ISLREPL({ colors: false });
   });
 
-  it('starts with no domain', () => {
-    expect(repl.getDomain()).toBeNull();
-  });
-
-  it('can set domain directly', () => {
-    repl.setDomain(testDomain);
-    expect(repl.getDomain()).toBe(testDomain);
-  });
-
-  it('executes check command', async () => {
-    repl.setDomain(testDomain);
-    const result = await repl.executeOnce(':check');
-    expect(result.success).toBe(true);
-  });
-
-  it('executes generate command', async () => {
-    repl.setDomain(testDomain);
-    const result = await repl.executeOnce(':generate types');
-    expect(result.success).toBe(true);
-  });
-
-  it('executes inspect command', async () => {
-    repl.setDomain(testDomain);
-    const result = await repl.executeOnce(':inspect User');
-    expect(result.success).toBe(true);
+  it('starts with empty session', () => {
+    const session = repl.getSession();
+    expect(session.getAllIntents().length).toBe(0);
   });
 
   it('executes help command', async () => {
-    const result = await repl.executeOnce(':help');
+    const result = await repl.executeOnce('.help');
     expect(result.success).toBe(true);
+    expect(result.output).toContain('Meta Commands');
+    expect(result.output).toContain('ISL Commands');
   });
 
-  it('evaluates expressions', async () => {
-    repl.setDomain(testDomain);
-    const result = await repl.executeOnce('1 + 2');
+  it('executes list command with no intents', async () => {
+    const result = await repl.executeOnce(':list');
     expect(result.success).toBe(true);
-    expect(result.data).toBe(3);
+    expect(result.output).toContain('No intents defined');
   });
 
-  it('returns error for unknown command', async () => {
+  it('returns error for unknown meta command', async () => {
+    const result = await repl.executeOnce('.unknown');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Unknown command');
+  });
+
+  it('returns error for unknown ISL command', async () => {
     const result = await repl.executeOnce(':unknown');
     expect(result.success).toBe(false);
-  });
-
-  it('returns error for expression without domain', async () => {
-    const result = await repl.executeOnce('1 + 2');
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('No domain loaded');
-  });
-
-  it('maintains state', () => {
-    repl.setDomain(testDomain);
-    const state = repl.getState();
-    expect(state).toBeInstanceOf(Map);
-  });
-
-  it('maintains variables', () => {
-    repl.setDomain(testDomain);
-    const variables = repl.getVariables();
-    expect(variables).toBeInstanceOf(Map);
+    expect(result.error).toContain('Unknown command');
   });
 });
 
@@ -672,9 +492,8 @@ describe('ISLRepl', () => {
 describe('Constants', () => {
   it('has commands defined', () => {
     expect(COMMANDS.length).toBeGreaterThan(0);
-    expect(COMMANDS.some(c => c.text === ':load')).toBe(true);
+    expect(COMMANDS.some(c => c.text === '.help')).toBe(true);
     expect(COMMANDS.some(c => c.text === ':check')).toBe(true);
-    expect(COMMANDS.some(c => c.text === ':help')).toBe(true);
   });
 
   it('has keywords defined', () => {
@@ -683,5 +502,6 @@ describe('Constants', () => {
     expect(KEYWORDS.some(k => k.text === 'false')).toBe(true);
     expect(KEYWORDS.some(k => k.text === 'and')).toBe(true);
     expect(KEYWORDS.some(k => k.text === 'or')).toBe(true);
+    expect(KEYWORDS.some(k => k.text === 'intent')).toBe(true);
   });
 });

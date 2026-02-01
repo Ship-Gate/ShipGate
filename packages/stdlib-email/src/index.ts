@@ -1,11 +1,11 @@
 /**
- * @intentos/stdlib-email
+ * @isl-lang/stdlib-email
  * 
  * ISL Standard Library for email templating, validation, and delivery.
  * 
  * @example
  * ```typescript
- * import { createEmailClient } from '@intentos/stdlib-email';
+ * import { createEmailClient } from '@isl-lang/stdlib-email';
  * 
  * const email = createEmailClient({
  *   defaultProvider: 'sendgrid',

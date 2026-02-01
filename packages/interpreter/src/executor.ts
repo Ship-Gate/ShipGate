@@ -1,9 +1,9 @@
 // ============================================================================
 // ISL Interpreter - Function Executor
-// @intentos/interpreter/executor
+// @isl-lang/interpreter/executor
 // ============================================================================
 
-import type { Value, Environment, ExecutionContext } from '@intentos/runtime-interpreter';
+import type { Value, Environment, ExecutionContext } from '@isl-lang/runtime-interpreter';
 import type {
   TargetFunction,
   TargetModule,

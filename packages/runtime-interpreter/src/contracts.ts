@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Runtime Interpreter - Contract Checking
-// @intentos/runtime-interpreter/contracts
+// @isl-lang/runtime-interpreter/contracts
 // ============================================================================
 
 import type {

@@ -86,9 +86,14 @@ export class Lexer {
       return this.makeTokenAt('OPERATOR', 'SLASH', '/', startLine, startColumn);
     }
 
-    // Strings
-    if (c === '"') {
-      return this.string(startLine, startColumn);
+    // Hash comments (Python/Ruby style)
+    if (c === '#') {
+      return this.lineComment(startLine, startColumn, '#');
+    }
+
+    // Strings (double or single quotes)
+    if (c === '"' || c === "'") {
+      return this.string(startLine, startColumn, c);
     }
 
     // Regex
@@ -126,7 +131,26 @@ export class Lexer {
       case ';': return this.makeTokenAt('PUNCTUATION', 'SEMICOLON', ';', startLine, startColumn);
       case '.': return this.makeTokenAt('PUNCTUATION', 'DOT', '.', startLine, startColumn);
       case '?': return this.makeTokenAt('PUNCTUATION', 'QUESTION', '?', startLine, startColumn);
-      case '|': return this.makeTokenAt('PUNCTUATION', 'PIPE', '|', startLine, startColumn);
+      case '|': {
+        if (this.peek() === '|') {
+          this.advance();
+          return this.makeTokenAt('OPERATOR', 'OR', '||', startLine, startColumn);
+        }
+        return this.makeTokenAt('PUNCTUATION', 'PIPE', '|', startLine, startColumn);
+      }
+      case '&': {
+        if (this.peek() === '&') {
+          this.advance();
+          return this.makeTokenAt('OPERATOR', 'AND', '&&', startLine, startColumn);
+        }
+        // Single & is not a valid ISL token - report error
+        this.errors.addError(
+          `Unexpected character '${c}'`,
+          ErrorCode.UNEXPECTED_CHARACTER,
+          this.makeLocation(startLine, startColumn, this.line, this.column)
+        );
+        return null;
+      }
       case '@': return this.makeTokenAt('PUNCTUATION', 'AT', '@', startLine, startColumn);
       
       case '=': {
@@ -183,9 +207,12 @@ export class Lexer {
     }
   }
 
-  private lineComment(startLine: number, startColumn: number): Token {
-    this.advance(); // consume second '/'
-    let value = '//';
+  private lineComment(startLine: number, startColumn: number, prefix: string = '//'): Token {
+    // For // comments, consume the second slash
+    if (prefix === '//') {
+      this.advance(); // consume second '/'
+    }
+    let value = prefix;
     while (!this.isAtEnd() && this.peek() !== '\n') {
       value += this.advance();
     }
@@ -218,9 +245,9 @@ export class Lexer {
     return this.makeTokenAt('COMMENT', 'COMMENT', value, startLine, startColumn);
   }
 
-  private string(startLine: number, startColumn: number): Token {
+  private string(startLine: number, startColumn: number, quote: string = '"'): Token {
     let value = '';
-    while (!this.isAtEnd() && this.peek() !== '"') {
+    while (!this.isAtEnd() && this.peek() !== quote) {
       const c = this.peek();
       if (c === '\n') {
         this.errors.addError(
@@ -239,6 +266,7 @@ export class Lexer {
           case 'r': value += '\r'; break;
           case '\\': value += '\\'; break;
           case '"': value += '"'; break;
+          case "'": value += "'"; break;
           case '/': value += '/'; break;
           default:
             this.errors.addError(
@@ -252,7 +280,7 @@ export class Lexer {
         value += this.advance();
       }
     }
-    if (this.peek() === '"') {
+    if (this.peek() === quote) {
       this.advance(); // closing quote
     } else {
       this.errors.addError(

@@ -17,7 +17,7 @@
  * 
  * @example
  * ```typescript
- * import { createClient } from '@intentos/sdk-web';
+ * import { createClient } from '@isl-lang/sdk-web';
  * 
  * const client = createClient({
  *   baseUrl: 'https://api.example.com',

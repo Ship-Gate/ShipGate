@@ -4,7 +4,7 @@
  * Validates that fixes actually resolve the verification failures.
  */
 
-import type { DomainDeclaration, BehaviorDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration } from '@isl-lang/isl-core';
 import type { VerificationFailure, AnalysisResult } from './analyzer.js';
 import type { Patch, PatchResult } from './patcher.js';
 

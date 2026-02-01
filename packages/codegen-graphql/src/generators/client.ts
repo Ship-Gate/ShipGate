@@ -9,7 +9,7 @@ import type {
   EntityDeclaration,
   BehaviorDeclaration,
   FieldDeclaration,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 import type {
   GraphQLGeneratorOptions,

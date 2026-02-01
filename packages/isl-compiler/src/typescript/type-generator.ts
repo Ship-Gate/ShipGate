@@ -14,7 +14,7 @@ import type {
   TypeExpression,
   InputBlock,
   OutputBlock,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 export interface GeneratedTypes {
   filename: string;

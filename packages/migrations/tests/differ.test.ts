@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { DomainDeclaration, EntityDeclaration, FieldDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, EntityDeclaration, FieldDeclaration } from '@isl-lang/isl-core';
 import { diffDomains, emptyDiff, isDiffEmpty, getDiffSummary } from '../src/differ.js';
 
 // Helper to create mock span

@@ -2,7 +2,7 @@
 // Custom Proto Options Generation
 // ============================================================================
 
-import type { Behavior, SecuritySpec, ComplianceSpec } from '@intentos/isl-core';
+import type { Behavior, SecuritySpec, ComplianceSpec } from '@isl-lang/isl-core';
 import { toPascalCase, toSnakeCase } from '../utils';
 
 // ==========================================================================

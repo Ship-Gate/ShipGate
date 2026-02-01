@@ -10,8 +10,8 @@ import { clsx } from "clsx";
 
 const navItems = [
   { href: "/docs/getting-started", label: "Docs" },
-  { href: "/docs/language", label: "Language" },
-  { href: "/docs/stdlib", label: "Standard Library" },
+  { href: "/docs/language-reference", label: "Reference" },
+  { href: "/docs/guides", label: "Guides" },
   { href: "/playground", label: "Playground" },
 ];
 

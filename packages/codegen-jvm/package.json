@@ -7,7 +7,7 @@
   "homepage": "https://intentlang.dev",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mevla/isl-lang.git"
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
   },
   "keywords": [
     "isl",
@@ -78,6 +78,6 @@
     "access": "public"
   },
   "bugs": {
-    "url": "https://github.com/mevla/isl-lang/issues"
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
   }
 }

@@ -10,7 +10,8 @@ import { glob } from 'glob';
 import { resolve, relative } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
-import { parseISL } from '@intentos/isl-core';
+import { parseISL } from '@isl-lang/isl-core';
+import { check as typeCheck, type Diagnostic } from '@isl-lang/typechecker';
 import { output, type DiagnosticError } from '../output.js';
 import { loadConfig, type ISLConfig } from '../config.js';
 
@@ -78,7 +79,7 @@ async function checkFile(filePath: string, verbose: boolean): Promise<FileCheckR
       });
     }
 
-    // If parsing succeeded, collect stats
+    // If parsing succeeded, run type checker and collect stats
     let stats: FileCheckResult['stats'];
     if (ast) {
       stats = {
@@ -87,7 +88,27 @@ async function checkFile(filePath: string, verbose: boolean): Promise<FileCheckR
         invariants: ast.invariants?.length ?? 0,
       };
 
-      // Semantic checks (basic)
+      // Run type checker
+      const typeCheckResult = typeCheck(ast);
+      for (const diag of typeCheckResult.diagnostics) {
+        const diagError: DiagnosticError = {
+          file: filePath,
+          line: diag.location?.line,
+          column: diag.location?.column,
+          message: diag.message,
+          severity: diag.severity === 'error' ? 'error' : 'warning',
+          code: diag.code,
+          help: diag.help,
+        };
+        
+        if (diag.severity === 'error') {
+          errors.push(diagError);
+        } else {
+          warnings.push(diagError);
+        }
+      }
+
+      // Additional semantic checks
       // Check for empty behaviors
       for (const behavior of ast.behaviors) {
         if (!behavior.body?.postconditions?.length && !behavior.body?.scenarios?.length) {
@@ -198,7 +219,7 @@ export async function check(filePatterns: string[], options: CheckOptions = {}):
     };
   }
 
-  spinner?.text = `Checking ${files.length} file${files.length === 1 ? '' : 's'}...`;
+  if (spinner) spinner.text = `Checking ${files.length} file${files.length === 1 ? '' : 's'}...`;
 
   // Check all files
   const results: FileCheckResult[] = [];

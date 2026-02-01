@@ -9,9 +9,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/mevla/isl-lang/actions"><img src="https://github.com/mevla/isl-lang/actions/workflows/ci.yml/badge.svg" alt="Build Status" /></a>
+  <a href="https://github.com/guardiavault-oss/ISL-LANG/actions"><img src="https://github.com/guardiavault-oss/ISL-LANG/actions/workflows/ci.yml/badge.svg" alt="Build Status" /></a>
   <a href="https://www.npmjs.com/package/@isl-lang/cli"><img src="https://img.shields.io/npm/v/@isl-lang/cli.svg" alt="npm version" /></a>
-  <a href="https://github.com/mevla/isl-lang/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License" /></a>
+  <a href="https://github.com/guardiavault-oss/ISL-LANG/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License" /></a>
 </p>
 
 ---

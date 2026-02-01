@@ -1,5 +1,5 @@
 /**
- * @intentos/api-versioning
+ * @isl-lang/api-versioning
  * 
  * API versioning system that integrates with ISL domain versions.
  */

@@ -1,5 +1,5 @@
 /**
- * @intentos/distributed-tracing
+ * @isl-lang/distributed-tracing
  * 
  * OpenTelemetry-based distributed tracing for ISL behaviors
  */

@@ -20,7 +20,7 @@ import type {
   BehaviorDeclaration,
   FieldDeclaration,
   TypeExpression,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 // ============================================================================
 // Test Fixtures

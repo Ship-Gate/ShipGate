@@ -34,6 +34,6 @@ export type {
 export { DEFAULT_OPTIONS } from './types';
 
 // Platform-specific exports are in separate entry points:
-// - @intentos/edge-runtime/cloudflare
-// - @intentos/edge-runtime/deno
-// - @intentos/edge-runtime/vercel
+// - @isl-lang/edge-runtime/cloudflare
+// - @isl-lang/edge-runtime/deno
+// - @isl-lang/edge-runtime/vercel

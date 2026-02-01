@@ -4,7 +4,7 @@
  * Build and analyze dependency graphs from ISL domains.
  */
 
-import { parseISL, type DomainDeclaration } from '@intentos/isl-core';
+import { parseISL, type DomainDeclaration } from '@isl-lang/isl-core';
 
 export interface AnalyzerOptions {
   /** Include entity dependencies */

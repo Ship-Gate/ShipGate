@@ -1,11 +1,11 @@
 /**
- * @intentos/stdlib-cache
+ * @isl-lang/stdlib-cache
  * 
  * ISL Standard Library for caching with multiple backend support.
  * 
  * @example
  * ```typescript
- * import { createCache } from '@intentos/stdlib-cache';
+ * import { createCache } from '@isl-lang/stdlib-cache';
  * 
  * // Create memory cache
  * const cache = createCache({

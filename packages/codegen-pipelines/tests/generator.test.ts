@@ -9,7 +9,7 @@ import {
   requiresSecurityScanning,
   type GeneratorOptions,
 } from '../src/generator.js';
-import type { DomainDeclaration, BehaviorDeclaration, Identifier } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration, Identifier } from '@isl-lang/isl-core';
 
 // Helper to create mock span
 const mockSpan = { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 1, offset: 0 } };

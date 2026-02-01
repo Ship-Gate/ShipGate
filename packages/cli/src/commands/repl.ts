@@ -7,7 +7,7 @@
 
 import { createInterface } from 'readline';
 import chalk from 'chalk';
-import { parseISL } from '@intentos/isl-core';
+import { parseISL } from '@isl-lang/isl-core';
 import { output } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
 

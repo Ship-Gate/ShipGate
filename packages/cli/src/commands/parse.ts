@@ -9,7 +9,7 @@ import { readFile, access } from 'fs/promises';
 import { resolve, relative } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
-import { parseISL, type DomainDeclaration } from '@intentos/isl-core';
+import { parseISL, type DomainDeclaration } from '@isl-lang/isl-core';
 import { output, type DiagnosticError } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
 import { findSimilarFiles, formatCodeSnippet } from '../utils.js';

@@ -8,8 +8,8 @@ import { spawn } from 'child_process';
 import { writeFile, mkdir, rm } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import type { DomainDeclaration } from '@intentos/isl-core';
-import { compile } from '@intentos/isl-compiler';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
+import { compile } from '@isl-lang/isl-compiler';
 
 export interface TestResult {
   passed: number;

@@ -1,9 +1,23 @@
 // ============================================================================
-// Type Error Definitions
+// Type Checker Error Definitions
+// ============================================================================
+//
+// Uses the unified @isl-lang/errors infrastructure while maintaining
+// backward compatibility with existing type checker code.
+//
 // ============================================================================
 
-import type { SourceLocation } from './types';
+import type { SourceLocation } from './types.js';
+import {
+  TYPE_ERRORS,
+  SEMANTIC_ERRORS,
+  diagnostic,
+  findSimilar,
+  ISL_BUILTIN_TYPES,
+  type Diagnostic as UnifiedDiagnostic,
+} from '@isl-lang/errors';
 
+// Re-export types for backward compatibility
 export type DiagnosticSeverity = 'error' | 'warning' | 'info' | 'hint';
 
 export interface RelatedInformation {
@@ -18,65 +32,75 @@ export interface Diagnostic {
   location: SourceLocation;
   source: string;
   relatedInformation?: RelatedInformation[];
+  notes?: string[];
+  help?: string[];
 }
 
-// Error codes
+// ============================================================================
+// Error Codes - Map to unified codes
+// ============================================================================
+
 export const ErrorCodes = {
   // Type resolution errors
-  UNDEFINED_TYPE: 'TC001',
-  UNDEFINED_ENTITY: 'TC002',
-  UNDEFINED_FIELD: 'TC003',
-  UNDEFINED_VARIABLE: 'TC004',
-  UNDEFINED_BEHAVIOR: 'TC005',
-  UNDEFINED_ENUM_VARIANT: 'TC006',
+  UNDEFINED_TYPE: TYPE_ERRORS.UNDEFINED_TYPE.code,
+  UNDEFINED_ENTITY: SEMANTIC_ERRORS.UNDEFINED_ENTITY.code,
+  UNDEFINED_FIELD: TYPE_ERRORS.UNDEFINED_FIELD.code,
+  UNDEFINED_VARIABLE: SEMANTIC_ERRORS.UNDEFINED_VARIABLE.code,
+  UNDEFINED_BEHAVIOR: SEMANTIC_ERRORS.UNDEFINED_BEHAVIOR.code,
+  UNDEFINED_ENUM_VARIANT: SEMANTIC_ERRORS.UNDEFINED_ENUM_VARIANT.code,
   
   // Duplicate errors
-  DUPLICATE_TYPE: 'TC010',
-  DUPLICATE_ENTITY: 'TC011',
-  DUPLICATE_FIELD: 'TC012',
-  DUPLICATE_BEHAVIOR: 'TC013',
-  DUPLICATE_VARIABLE: 'TC014',
-  DUPLICATE_PARAMETER: 'TC015',
-  DUPLICATE_ENUM_VARIANT: 'TC016',
+  DUPLICATE_TYPE: SEMANTIC_ERRORS.DUPLICATE_DEFINITION.code,
+  DUPLICATE_ENTITY: SEMANTIC_ERRORS.DUPLICATE_DEFINITION.code,
+  DUPLICATE_FIELD: SEMANTIC_ERRORS.DUPLICATE_DEFINITION.code,
+  DUPLICATE_BEHAVIOR: SEMANTIC_ERRORS.DUPLICATE_DEFINITION.code,
+  DUPLICATE_VARIABLE: SEMANTIC_ERRORS.DUPLICATE_DEFINITION.code,
+  DUPLICATE_PARAMETER: SEMANTIC_ERRORS.DUPLICATE_DEFINITION.code,
+  DUPLICATE_ENUM_VARIANT: SEMANTIC_ERRORS.DUPLICATE_DEFINITION.code,
   
   // Type mismatch errors
-  TYPE_MISMATCH: 'TC020',
-  INCOMPATIBLE_TYPES: 'TC021',
-  INVALID_OPERATOR: 'TC022',
-  INVALID_ARGUMENT_COUNT: 'TC023',
-  INVALID_ARGUMENT_TYPE: 'TC024',
+  TYPE_MISMATCH: TYPE_ERRORS.TYPE_MISMATCH.code,
+  INCOMPATIBLE_TYPES: TYPE_ERRORS.INCOMPATIBLE_TYPES.code,
+  INVALID_OPERATOR: TYPE_ERRORS.INVALID_OPERATOR_FOR_TYPE.code,
+  INVALID_ARGUMENT_COUNT: TYPE_ERRORS.WRONG_NUMBER_OF_ARGUMENTS.code,
+  INVALID_ARGUMENT_TYPE: TYPE_ERRORS.INVALID_ARGUMENT_TYPE.code,
   
   // Context errors
-  OLD_OUTSIDE_POSTCONDITION: 'TC030',
-  RESULT_OUTSIDE_POSTCONDITION: 'TC031',
-  INPUT_INVALID_FIELD: 'TC032',
+  OLD_OUTSIDE_POSTCONDITION: SEMANTIC_ERRORS.OLD_OUTSIDE_POSTCONDITION.code,
+  RESULT_OUTSIDE_POSTCONDITION: SEMANTIC_ERRORS.RESULT_OUTSIDE_POSTCONDITION.code,
+  INPUT_INVALID_FIELD: SEMANTIC_ERRORS.INPUT_INVALID_FIELD.code,
   
   // Lifecycle errors
-  INVALID_LIFECYCLE_STATE: 'TC040',
-  INVALID_LIFECYCLE_TRANSITION: 'TC041',
-  UNDEFINED_LIFECYCLE_STATE: 'TC042',
+  INVALID_LIFECYCLE_STATE: SEMANTIC_ERRORS.INVALID_LIFECYCLE_STATE.code,
+  INVALID_LIFECYCLE_TRANSITION: SEMANTIC_ERRORS.INVALID_LIFECYCLE_TRANSITION.code,
+  UNDEFINED_LIFECYCLE_STATE: SEMANTIC_ERRORS.INVALID_LIFECYCLE_STATE.code,
   
   // Entity method errors
-  INVALID_ENTITY_LOOKUP: 'TC050',
-  INVALID_ENTITY_EXISTS: 'TC051',
+  INVALID_ENTITY_LOOKUP: 'E0350',
+  INVALID_ENTITY_EXISTS: 'E0351',
   
   // Constraint errors
-  INVALID_CONSTRAINT_VALUE: 'TC060',
-  INVALID_CONSTRAINT_TYPE: 'TC061',
+  INVALID_CONSTRAINT_VALUE: SEMANTIC_ERRORS.INVALID_CONSTRAINT_VALUE.code,
+  INVALID_CONSTRAINT_TYPE: SEMANTIC_ERRORS.INVALID_CONSTRAINT_VALUE.code,
   
   // Other errors
-  CIRCULAR_REFERENCE: 'TC070',
-  INVALID_EXPRESSION: 'TC071',
+  CIRCULAR_REFERENCE: TYPE_ERRORS.CIRCULAR_TYPE_REFERENCE.code,
+  INVALID_EXPRESSION: 'E0371',
 } as const;
 
 export type ErrorCode = typeof ErrorCodes[keyof typeof ErrorCodes];
 
-// Error factory functions
+// ============================================================================
+// Error Factory Functions
+// ============================================================================
+
 export function createError(
   code: ErrorCode,
   message: string,
   location: SourceLocation,
-  related?: RelatedInformation[]
+  related?: RelatedInformation[],
+  notes?: string[],
+  help?: string[]
 ): Diagnostic {
   return {
     severity: 'error',
@@ -85,6 +109,8 @@ export function createError(
     location,
     source: 'typechecker',
     relatedInformation: related,
+    notes,
+    help,
   };
 }
 
@@ -92,7 +118,8 @@ export function createWarning(
   code: string,
   message: string,
   location: SourceLocation,
-  related?: RelatedInformation[]
+  related?: RelatedInformation[],
+  help?: string[]
 ): Diagnostic {
   return {
     severity: 'warning',
@@ -101,63 +128,154 @@ export function createWarning(
     location,
     source: 'typechecker',
     relatedInformation: related,
+    help,
   };
 }
 
-// Specific error creators
-export function undefinedTypeError(name: string, location: SourceLocation): Diagnostic {
+// ============================================================================
+// Specific Error Creators (Enhanced with suggestions)
+// ============================================================================
+
+export function undefinedTypeError(
+  name: string,
+  location: SourceLocation,
+  availableTypes: string[] = []
+): Diagnostic {
+  const allTypes = [...ISL_BUILTIN_TYPES, ...availableTypes];
+  const suggestions = findSimilar(name, allTypes, { maxDistance: 3 });
+  
+  const help: string[] = [];
+  if (suggestions.length > 0) {
+    help.push(`Did you mean '${suggestions[0]!.value}'?`);
+  }
+  
+  // Check for lowercase version of builtin type
+  const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  if (ISL_BUILTIN_TYPES.includes(capitalizedName) && capitalizedName !== name) {
+    help.push(`Type names are case-sensitive. Use '${capitalizedName}'`);
+  }
+
   return createError(
     ErrorCodes.UNDEFINED_TYPE,
     `Type '${name}' is not defined`,
-    location
+    location,
+    undefined,
+    undefined,
+    help
   );
 }
 
-export function undefinedEntityError(name: string, location: SourceLocation): Diagnostic {
+export function undefinedEntityError(
+  name: string,
+  location: SourceLocation,
+  availableEntities: string[] = []
+): Diagnostic {
+  const suggestions = findSimilar(name, availableEntities, { maxDistance: 3 });
+  const help = suggestions.length > 0 
+    ? [`Did you mean '${suggestions[0]!.value}'?`]
+    : undefined;
+
   return createError(
     ErrorCodes.UNDEFINED_ENTITY,
     `Entity '${name}' is not defined`,
-    location
+    location,
+    undefined,
+    undefined,
+    help
   );
 }
 
 export function undefinedFieldError(
   fieldName: string,
   typeName: string,
-  location: SourceLocation
+  location: SourceLocation,
+  availableFields: string[] = []
 ): Diagnostic {
+  const suggestions = findSimilar(fieldName, availableFields, { maxDistance: 3 });
+  const help: string[] = [];
+  
+  if (suggestions.length > 0) {
+    help.push(`Did you mean '${suggestions[0]!.value}'?`);
+  }
+  
+  if (availableFields.length > 0 && availableFields.length <= 5) {
+    help.push(`Available fields: ${availableFields.join(', ')}`);
+  }
+
   return createError(
     ErrorCodes.UNDEFINED_FIELD,
     `Field '${fieldName}' does not exist on type '${typeName}'`,
-    location
+    location,
+    undefined,
+    undefined,
+    help
   );
 }
 
-export function undefinedVariableError(name: string, location: SourceLocation): Diagnostic {
+export function undefinedVariableError(
+  name: string,
+  location: SourceLocation,
+  availableVars: string[] = []
+): Diagnostic {
+  const suggestions = findSimilar(name, availableVars, { maxDistance: 2 });
+  const help = suggestions.length > 0
+    ? [`Did you mean '${suggestions[0]!.value}'?`]
+    : undefined;
+
   return createError(
     ErrorCodes.UNDEFINED_VARIABLE,
     `Variable '${name}' is not defined in this scope`,
-    location
+    location,
+    undefined,
+    undefined,
+    help
   );
 }
 
-export function undefinedBehaviorError(name: string, location: SourceLocation): Diagnostic {
+export function undefinedBehaviorError(
+  name: string,
+  location: SourceLocation,
+  availableBehaviors: string[] = []
+): Diagnostic {
+  const suggestions = findSimilar(name, availableBehaviors, { maxDistance: 3 });
+  const help = suggestions.length > 0
+    ? [`Did you mean '${suggestions[0]!.value}'?`]
+    : undefined;
+
   return createError(
     ErrorCodes.UNDEFINED_BEHAVIOR,
     `Behavior '${name}' is not defined`,
-    location
+    location,
+    undefined,
+    undefined,
+    help
   );
 }
 
 export function undefinedEnumVariantError(
   variant: string,
   enumName: string,
-  location: SourceLocation
+  location: SourceLocation,
+  availableVariants: string[] = []
 ): Diagnostic {
+  const suggestions = findSimilar(variant, availableVariants, { maxDistance: 2 });
+  const help: string[] = [];
+  
+  if (suggestions.length > 0) {
+    help.push(`Did you mean '${enumName}.${suggestions[0]!.value}'?`);
+  }
+  
+  if (availableVariants.length > 0 && availableVariants.length <= 8) {
+    help.push(`Valid variants: ${availableVariants.join(', ')}`);
+  }
+
   return createError(
     ErrorCodes.UNDEFINED_ENUM_VARIANT,
     `Enum '${enumName}' does not have variant '${variant}'`,
-    location
+    location,
+    undefined,
+    undefined,
+    help
   );
 }
 
@@ -170,7 +288,9 @@ export function duplicateTypeError(
     ErrorCodes.DUPLICATE_TYPE,
     `Type '${name}' is already defined`,
     location,
-    [{ message: 'Previously defined here', location: previousLocation }]
+    [{ message: 'Previously defined here', location: previousLocation }],
+    undefined,
+    ['Rename one of the types or remove the duplicate']
   );
 }
 
@@ -183,7 +303,9 @@ export function duplicateEntityError(
     ErrorCodes.DUPLICATE_ENTITY,
     `Entity '${name}' is already defined`,
     location,
-    [{ message: 'Previously defined here', location: previousLocation }]
+    [{ message: 'Previously defined here', location: previousLocation }],
+    undefined,
+    ['Rename one of the entities or remove the duplicate']
   );
 }
 
@@ -197,7 +319,9 @@ export function duplicateFieldError(
     ErrorCodes.DUPLICATE_FIELD,
     `Field '${fieldName}' is already defined in '${containerName}'`,
     location,
-    [{ message: 'Previously defined here', location: previousLocation }]
+    [{ message: 'Previously defined here', location: previousLocation }],
+    undefined,
+    ['Each field must have a unique name within its container']
   );
 }
 
@@ -210,7 +334,9 @@ export function duplicateBehaviorError(
     ErrorCodes.DUPLICATE_BEHAVIOR,
     `Behavior '${name}' is already defined`,
     location,
-    [{ message: 'Previously defined here', location: previousLocation }]
+    [{ message: 'Previously defined here', location: previousLocation }],
+    undefined,
+    ['Rename one of the behaviors or remove the duplicate']
   );
 }
 
@@ -219,10 +345,26 @@ export function typeMismatchError(
   actual: string,
   location: SourceLocation
 ): Diagnostic {
+  const help: string[] = [];
+  
+  // Suggest conversion functions for common mismatches
+  if (expected === 'String' && actual === 'Int') {
+    help.push('Use toString() to convert Int to String');
+  } else if (expected === 'Int' && actual === 'String') {
+    help.push('Use parseInt() to convert String to Int');
+  } else if (expected === 'Decimal' && actual === 'String') {
+    help.push('Use parseDecimal() to convert String to Decimal');
+  } else if (expected === 'String' && actual === 'Decimal') {
+    help.push('Use toString() to convert Decimal to String');
+  }
+
   return createError(
     ErrorCodes.TYPE_MISMATCH,
     `Type mismatch: expected '${expected}', got '${actual}'`,
-    location
+    location,
+    undefined,
+    [`The expression has type '${actual}' but '${expected}' was expected`],
+    help
   );
 }
 
@@ -235,7 +377,10 @@ export function incompatibleTypesError(
   return createError(
     ErrorCodes.INCOMPATIBLE_TYPES,
     `Cannot apply operator '${operator}' to types '${left}' and '${right}'`,
-    location
+    location,
+    undefined,
+    undefined,
+    ['Ensure both operands have compatible types']
   );
 }
 
@@ -247,35 +392,59 @@ export function invalidOperatorError(
   return createError(
     ErrorCodes.INVALID_OPERATOR,
     `Operator '${operator}' cannot be applied to type '${type}'`,
-    location
+    location,
+    undefined,
+    undefined,
+    [`Check which operators are supported for type '${type}'`]
   );
 }
 
 export function oldOutsidePostconditionError(location: SourceLocation): Diagnostic {
   return createError(
     ErrorCodes.OLD_OUTSIDE_POSTCONDITION,
-    `'old()' can only be used in postconditions`,
-    location
+    "'old()' can only be used in postconditions",
+    location,
+    undefined,
+    ["old() captures the value of an expression before a behavior executes"],
+    ["Move this expression to a postcondition, or reference the value directly"]
   );
 }
 
 export function resultOutsidePostconditionError(location: SourceLocation): Diagnostic {
   return createError(
     ErrorCodes.RESULT_OUTSIDE_POSTCONDITION,
-    `'result' can only be used in postconditions`,
-    location
+    "'result' can only be used in postconditions",
+    location,
+    undefined,
+    ["'result' refers to the output of a behavior after it completes"],
+    ["Move this expression to a postcondition"]
   );
 }
 
 export function inputInvalidFieldError(
   fieldName: string,
   behaviorName: string,
-  location: SourceLocation
+  location: SourceLocation,
+  availableFields: string[] = []
 ): Diagnostic {
+  const suggestions = findSimilar(fieldName, availableFields, { maxDistance: 2 });
+  const help: string[] = [];
+  
+  if (suggestions.length > 0) {
+    help.push(`Did you mean '${suggestions[0]!.value}'?`);
+  }
+  
+  if (availableFields.length > 0) {
+    help.push(`Available input fields: ${availableFields.join(', ')}`);
+  }
+
   return createError(
     ErrorCodes.INPUT_INVALID_FIELD,
     `Input field '${fieldName}' is not defined in behavior '${behaviorName}'`,
-    location
+    location,
+    undefined,
+    undefined,
+    help
   );
 }
 
@@ -285,10 +454,21 @@ export function invalidLifecycleStateError(
   validStates: string[],
   location: SourceLocation
 ): Diagnostic {
+  const suggestions = findSimilar(state, validStates, { maxDistance: 2 });
+  const help: string[] = [];
+  
+  if (suggestions.length > 0) {
+    help.push(`Did you mean '${suggestions[0]!.value}'?`);
+  }
+  help.push(`Valid states for '${entityName}': ${validStates.join(', ')}`);
+
   return createError(
     ErrorCodes.INVALID_LIFECYCLE_STATE,
-    `'${state}' is not a valid lifecycle state for entity '${entityName}'. Valid states: ${validStates.join(', ')}`,
-    location
+    `'${state}' is not a valid lifecycle state for entity '${entityName}'`,
+    location,
+    undefined,
+    undefined,
+    help
   );
 }
 
@@ -299,7 +479,10 @@ export function invalidEntityLookupError(
   return createError(
     ErrorCodes.INVALID_ENTITY_LOOKUP,
     `Entity '${entityName}' does not support lookup()`,
-    location
+    location,
+    undefined,
+    ['lookup() is available on entities with a primary key defined'],
+    undefined
   );
 }
 
@@ -310,7 +493,10 @@ export function invalidEntityExistsError(
   return createError(
     ErrorCodes.INVALID_ENTITY_EXISTS,
     `Entity '${entityName}' does not support exists()`,
-    location
+    location,
+    undefined,
+    undefined,
+    undefined
   );
 }
 
@@ -322,7 +508,10 @@ export function invalidConstraintValueError(
   return createError(
     ErrorCodes.INVALID_CONSTRAINT_VALUE,
     `Constraint '${constraintName}' expects a value of type '${expectedType}'`,
-    location
+    location,
+    undefined,
+    undefined,
+    [`Provide a ${expectedType} value for the '${constraintName}' constraint`]
   );
 }
 
@@ -334,6 +523,9 @@ export function circularReferenceError(
   return createError(
     ErrorCodes.CIRCULAR_REFERENCE,
     `Circular reference detected: ${cycle.join(' -> ')} -> ${typeName}`,
-    location
+    location,
+    undefined,
+    ['Circular type references create infinite types'],
+    ['Break the cycle by using Optional<T> or a reference type']
   );
 }

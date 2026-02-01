@@ -129,7 +129,7 @@ export class StateMachineGenerator {
     const eventNames = [...new Set(lifecycle.transitions.map((t) => t.event))];
 
     return `
-import { StateMachine, createStateMachine, StateMachineConfig } from '@intentos/state-machine';
+import { StateMachine, createStateMachine, StateMachineConfig } from '@isl-lang/state-machine';
 
 // State type
 export type ${lifecycle.entityName}State = ${stateNames.map((s) => `'${s}'`).join(' | ')};

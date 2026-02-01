@@ -4,7 +4,7 @@
  * Generates improvement suggestions based on analysis results.
  */
 
-import type { DomainDeclaration, BehaviorDeclaration, EntityDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration, EntityDeclaration } from '@isl-lang/isl-core';
 import { 
   findApplicableTemplates, 
   type SuggestionTemplate, 

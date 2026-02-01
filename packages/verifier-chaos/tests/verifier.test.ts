@@ -25,7 +25,7 @@ import {
   createExecutor,
   type BehaviorImplementation,
 } from '../src/index.js';
-import type { DomainDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
 
 // Mock domain for testing
 const createMockDomain = (): DomainDeclaration => ({

@@ -6,8 +6,8 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Range, CodeActionContext } from 'vscode-languageserver';
 import { CodeAction, CodeActionKind, TextEdit } from 'vscode-languageserver';
-import type { ISLDocumentManager } from '../documents.js';
-import { DiagnosticSeverity } from '@intentos/lsp-core';
+import type { ISLDocumentManager } from '../documents';
+import { DiagnosticSeverity } from '@isl-lang/lsp-core';
 
 export class ISLCodeActionProvider {
   constructor(private documentManager: ISLDocumentManager) {}

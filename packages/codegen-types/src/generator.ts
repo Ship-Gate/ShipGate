@@ -10,7 +10,7 @@ import type {
   TypeDeclaration,
   EnumDeclaration,
   BehaviorDeclaration,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 import { TypeScriptGenerator } from './typescript.js';
 import { PythonGenerator } from './python.js';

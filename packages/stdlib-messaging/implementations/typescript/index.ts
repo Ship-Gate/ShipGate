@@ -1,5 +1,5 @@
 /**
- * @intentos/stdlib-messaging
+ * @isl-lang/stdlib-messaging
  * 
  * ISL Standard Library - Messaging
  * Provides messaging primitives: queues, topics, pub/sub patterns.

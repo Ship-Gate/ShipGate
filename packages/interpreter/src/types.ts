@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Interpreter - Type Definitions
-// @intentos/interpreter/types
+// @isl-lang/interpreter/types
 // ============================================================================
 
 import type {
@@ -10,7 +10,7 @@ import type {
   ExecutionContext,
   Domain as RuntimeDomain,
   BehaviorDefinition,
-} from '@intentos/runtime-interpreter';
+} from '@isl-lang/runtime-interpreter';
 
 import type {
   Domain as ASTDomain,
@@ -19,7 +19,7 @@ import type {
   Expression as ASTExpression,
   Statement,
   ScenarioBlock,
-} from '@intentos/parser';
+} from '@isl-lang/parser';
 
 // ============================================================================
 // VERIFICATION MODES

@@ -19,7 +19,7 @@
  * ## Quick Start
  * 
  * ```typescript
- * import { createDatadogClient, createInitializedClient } from '@intentos/datadog';
+ * import { createDatadogClient, createInitializedClient } from '@isl-lang/datadog';
  * 
  * // Create and initialize client
  * const client = await createInitializedClient({
@@ -38,7 +38,7 @@
  * });
  * ```
  * 
- * @module @intentos/datadog
+ * @module @isl-lang/datadog
  */
 
 // ============================================================================

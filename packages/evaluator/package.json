@@ -18,6 +18,7 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist"
   },
@@ -42,10 +43,10 @@
   "author": "mevla",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mevla/isl-lang.git"
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
   },
   "homepage": "https://intentlang.dev",
   "bugs": {
-    "url": "https://github.com/mevla/isl-lang/issues"
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
   }
 }

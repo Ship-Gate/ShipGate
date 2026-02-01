@@ -10,7 +10,7 @@ import { join, resolve } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import { output } from '../output.js';
-import { createConfigTemplate } from '../config.js';
+import { createConfigTemplate, createJsonConfigTemplate } from '../config.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -460,7 +460,7 @@ const PACKAGE_JSON_TEMPLATE = `{
     "build": "isl check && isl generate"
   },
   "devDependencies": {
-    "@intentos/cli": "workspace:*",
+    "@isl-lang/cli": "workspace:*",
     "typescript": "^5.3.3"
   }
 }
@@ -562,11 +562,10 @@ export async function init(name: string, options: InitOptions = {}): Promise<Ini
     await writeFile(islPath, applyTemplate(islTemplate, templateVars));
     files.push(islPath);
 
-    // Create config file
+    // Create config file (JSON format for better tooling support)
     spinner.text = 'Creating configuration...';
-    const configPath = join(projectDir, 'isl.config.yaml');
-    const configContent = createConfigTemplate({
-      name: projectName,
+    const configPath = join(projectDir, 'isl.config.json');
+    const configContent = createJsonConfigTemplate({
       include: ['src/**/*.isl'],
       output: {
         dir: './generated',
@@ -617,7 +616,7 @@ ${projectName}/
 │   ├── types/                 # Generated types
 │   ├── tests/                 # Generated tests
 │   └── docs/                  # Generated documentation
-├── isl.config.yaml           # ISL configuration
+├── isl.config.json           # ISL configuration
 └── package.json
 \`\`\`
 

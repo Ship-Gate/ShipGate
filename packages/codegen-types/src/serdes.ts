@@ -12,7 +12,7 @@ import type {
   BehaviorDeclaration,
   FieldDeclaration,
   TypeExpression,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 import type { GeneratorOptions } from './generator.js';
 

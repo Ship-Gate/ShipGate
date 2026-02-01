@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Effect System - Algebraic Effects and Handlers
-// @intentos/effect-handlers
+// @isl-lang/effect-handlers
 // ============================================================================
 
 export * from './types';

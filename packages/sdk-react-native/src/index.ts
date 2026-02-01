@@ -1,5 +1,5 @@
 /**
- * @intentos/sdk-react-native
+ * @isl-lang/sdk-react-native
  * 
  * React Native SDK for ISL-verified APIs
  * Provides hooks, offline support, and full TypeScript integration

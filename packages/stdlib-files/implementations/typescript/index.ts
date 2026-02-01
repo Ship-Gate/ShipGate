@@ -1,5 +1,5 @@
 /**
- * @intentos/stdlib-files
+ * @isl-lang/stdlib-files
  * 
  * File storage standard library implementation.
  * Provides upload, download, and file management operations.

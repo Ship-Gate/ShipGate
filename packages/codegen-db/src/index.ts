@@ -1,5 +1,5 @@
 /**
- * @intentos/codegen-db
+ * @isl-lang/codegen-db
  * 
  * Generate database adapters (Prisma, Drizzle, TypeORM) from ISL entities.
  */

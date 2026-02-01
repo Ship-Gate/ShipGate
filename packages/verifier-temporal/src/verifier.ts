@@ -5,7 +5,7 @@
  * Handles eventually, within (latency), and always (invariant) checks.
  */
 
-import type { DomainDeclaration, Behavior, TemporalSpec, DurationLiteral } from '@intentos/isl-core';
+import type { DomainDeclaration, Behavior, TemporalSpec, DurationLiteral } from '@isl-lang/isl-core';
 import { eventually, eventuallyWithin, type EventuallyResult } from './properties/eventually.js';
 import { within, type WithinResult } from './properties/within.js';
 import { always, alwaysFor, type AlwaysResult } from './properties/always.js';

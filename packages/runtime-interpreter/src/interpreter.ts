@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Runtime Interpreter - Main Interpreter
-// @intentos/runtime-interpreter/interpreter
+// @isl-lang/runtime-interpreter/interpreter
 // ============================================================================
 
 import type {

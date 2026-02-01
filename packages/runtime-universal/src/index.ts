@@ -1,5 +1,5 @@
 /**
- * @intentos/runtime-universal
+ * @isl-lang/runtime-universal
  * Universal Runtime Engine for ISL
  * 
  * Execute intent specifications across any environment with:

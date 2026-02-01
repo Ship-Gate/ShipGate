@@ -20,6 +20,7 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
+    "@isl-lang/errors": "workspace:*",
     "@isl-lang/isl-ai": "workspace:*",
     "@isl-lang/isl-compiler": "workspace:*",
     "@isl-lang/isl-core": "workspace:*",
@@ -39,10 +40,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mevla/isl-lang.git"
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
   },
   "homepage": "https://intentlang.dev",
   "bugs": {
-    "url": "https://github.com/mevla/isl-lang/issues"
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
   }
 }

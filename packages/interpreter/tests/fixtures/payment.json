@@ -1,0 +1,103 @@
+{
+  "intent": "TransferFunds",
+  "bindings": {
+    "pre": {
+      "sender": {
+        "id": "550e8400-e29b-41d4-a716-446655440001",
+        "balance": 500,
+        "currency": "USD",
+        "isActive": true
+      },
+      "receiver": {
+        "id": "550e8400-e29b-41d4-a716-446655440002",
+        "balance": 100,
+        "currency": "USD",
+        "isActive": true
+      },
+      "amount": 100
+    },
+    "post": {
+      "sender": {
+        "id": "550e8400-e29b-41d4-a716-446655440001",
+        "balance": 400,
+        "currency": "USD",
+        "isActive": true
+      },
+      "receiver": {
+        "id": "550e8400-e29b-41d4-a716-446655440002",
+        "balance": 200,
+        "currency": "USD",
+        "isActive": true
+      },
+      "amount": 100,
+      "transaction": {
+        "id": "550e8400-e29b-41d4-a716-446655440003",
+        "senderId": "550e8400-e29b-41d4-a716-446655440001",
+        "receiverId": "550e8400-e29b-41d4-a716-446655440002",
+        "amount": 100,
+        "status": "Completed",
+        "createdAt": "2024-01-15T10:30:00Z",
+        "completedAt": "2024-01-15T10:30:01Z"
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "happy path",
+      "given": {
+        "sender": { "balance": 500, "isActive": true },
+        "receiver": { "balance": 100, "isActive": true },
+        "amount": 100
+      },
+      "expected": {
+        "success": true,
+        "result": {
+          "status": "Completed",
+          "amount": 100
+        }
+      }
+    },
+    {
+      "name": "insufficient funds",
+      "given": {
+        "sender": { "balance": 50, "isActive": true },
+        "receiver": { "balance": 100, "isActive": true },
+        "amount": 100
+      },
+      "expected": {
+        "success": false,
+        "error": {
+          "code": "INSUFFICIENT_FUNDS"
+        }
+      }
+    },
+    {
+      "name": "inactive sender",
+      "given": {
+        "sender": { "balance": 500, "isActive": false },
+        "receiver": { "balance": 100, "isActive": true },
+        "amount": 100
+      },
+      "expected": {
+        "success": false,
+        "error": {
+          "code": "INACTIVE_ACCOUNT"
+        }
+      }
+    },
+    {
+      "name": "zero amount",
+      "given": {
+        "sender": { "balance": 500, "isActive": true },
+        "receiver": { "balance": 100, "isActive": true },
+        "amount": 0
+      },
+      "expected": {
+        "success": false,
+        "error": {
+          "code": "INVALID_AMOUNT"
+        }
+      }
+    }
+  ]
+}

@@ -33,7 +33,7 @@ export interface TRPCContext {
  * @example
  * ```typescript
  * import { initTRPC } from '@trpc/server';
- * import { islMiddleware } from '@intentos/runtime-sdk/trpc';
+ * import { islMiddleware } from '@isl-lang/runtime-sdk/trpc';
  * 
  * const t = initTRPC.context<Context>().create();
  * 

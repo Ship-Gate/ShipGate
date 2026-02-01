@@ -2,9 +2,9 @@
 // ISL Language Core - Public API
 // ============================================================================
 
-export { ISLAnalyzer, type AnalysisResult, type AnalysisOptions } from './analyzer.js';
-export { SymbolIndex, type IndexedSymbol, type SymbolQuery } from './symbols.js';
-export { IncrementalParser, type ParseCache, type IncrementalResult } from './incremental.js';
+export { ISLAnalyzer, type AnalysisResult, type AnalysisOptions } from './analyzer';
+export { SymbolIndex, type IndexedSymbol, type SymbolQuery } from './symbols';
+export { IncrementalParser, type ParseCache, type IncrementalResult } from './incremental';
 export {
   type ISLDiagnostic,
   type ISLSymbolInfo,
@@ -12,5 +12,12 @@ export {
   type ISLCompletionInfo,
   type ISLDefinitionInfo,
   type ISLCodeAction,
+  type SourceLocation,
+  type SymbolKind,
+  type ContextType,
+  type CompletionContext,
   DiagnosticSeverity,
-} from './types.js';
+} from './types';
+
+// Re-export parser types for convenience
+export type { Domain, ASTNode } from '@isl-lang/parser';

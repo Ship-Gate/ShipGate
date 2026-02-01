@@ -4,7 +4,7 @@
  * Orchestrates comparison across multiple implementations.
  */
 
-import type { DomainDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
 import {
   checkAllEquivalence,
   type EquivalenceResult,

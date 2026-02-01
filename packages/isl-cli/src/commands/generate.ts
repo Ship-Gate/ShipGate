@@ -8,8 +8,8 @@ import { readFile, writeFile, mkdir } from 'fs/promises';
 import { join, dirname } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
-import { parseISL } from '@intentos/isl-core';
-import { generateAllImplementations, type GenerationResult } from '@intentos/isl-ai';
+import { parseISL } from '@isl-lang/isl-core';
+import { generateAllImplementations, type GenerationResult } from '@isl-lang/isl-ai';
 
 export interface GenerateOptions {
   output?: string;

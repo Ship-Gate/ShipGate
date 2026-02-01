@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Effect System - Effect Construction
-// @intentos/effect-handlers/effect
+// @isl-lang/effect-handlers/effect
 // ============================================================================
 
 import type {

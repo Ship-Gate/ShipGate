@@ -224,7 +224,9 @@ export type DurationUnit = typeof DURATION_UNITS[number];
 // Operator precedence for expression parsing
 export const PRECEDENCE: Record<string, number> = {
   'or': 1,
+  '||': 1,
   'and': 2,
+  '&&': 2,
   'implies': 2,
   'iff': 2,
   '==': 3,

@@ -1,5 +1,5 @@
 /**
- * @intentos/codegen-types
+ * @isl-lang/codegen-types
  * 
  * TypeScript/Python type and validator generator from ISL.
  * Transforms ISL domain definitions into type-safe code with validation.

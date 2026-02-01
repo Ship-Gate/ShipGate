@@ -4,7 +4,7 @@
  * Generates implementations from ISL specifications using LLM APIs.
  */
 
-import type { DomainDeclaration, BehaviorDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration } from '@isl-lang/isl-core';
 import { AnthropicClient, type AnthropicOptions } from './models/anthropic.js';
 import { OpenAIClient, type OpenAIOptions } from './models/openai.js';
 import { getCompleteSystemPrompt, type SystemPromptOptions } from './prompts/system.js';

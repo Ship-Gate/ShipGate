@@ -4,7 +4,7 @@
  * Main gateway class that orchestrates ISL-aware request handling.
  */
 
-import { parseISL, type DomainDeclaration } from '@intentos/isl-core';
+import { parseISL, type DomainDeclaration } from '@isl-lang/isl-core';
 import { RouteHandler, type Route, type RouteMatch } from './router.js';
 import { RequestValidator, type ValidationResult } from './validator.js';
 import { ResponseTransformer, type TransformResult } from './transformer.js';

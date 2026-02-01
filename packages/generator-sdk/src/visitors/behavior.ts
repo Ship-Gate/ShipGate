@@ -9,7 +9,7 @@ import type {
   FieldDeclaration,
   ErrorDeclaration,
   TypeExpression,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 import type {
   GeneratedFile,

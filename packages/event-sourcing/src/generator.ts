@@ -74,7 +74,7 @@ export class EventGenerator {
   }
 
   private generateImports(): string {
-    return `import { EventStore, Aggregate, Projection, CommandBus } from '@intentos/event-sourcing';`;
+    return `import { EventStore, Aggregate, Projection, CommandBus } from '@isl-lang/event-sourcing';`;
   }
 
   private generateEventTypes(domain: ParsedDomain): string {

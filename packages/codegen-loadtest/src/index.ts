@@ -87,7 +87,7 @@ import type { Domain } from './ast-types';
  *
  * @example
  * ```typescript
- * import { generate } from '@intentos/codegen-loadtest';
+ * import { generate } from '@isl-lang/codegen-loadtest';
  *
  * // Generate k6 tests
  * const files = generate(domainAST, {

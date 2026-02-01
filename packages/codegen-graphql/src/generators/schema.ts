@@ -12,7 +12,7 @@ import type {
   EnumDeclaration,
   TypeDeclaration,
   TypeExpression,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 import type {
   GraphQLGeneratorOptions,

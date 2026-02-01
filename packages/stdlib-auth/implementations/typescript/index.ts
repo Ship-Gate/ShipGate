@@ -1,6 +1,6 @@
 // ============================================================================
 // Authentication Standard Library - Main Entry Point
-// @intentos/stdlib-auth
+// @isl-lang/stdlib-auth
 // ============================================================================
 
 import {

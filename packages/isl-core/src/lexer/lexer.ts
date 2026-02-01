@@ -244,11 +244,20 @@ export class Lexer {
           this.advance();
           break;
         case '#':
-          // Line comment
+          // Line comment with #
           while (!this.isAtEnd() && this.peek() !== '\n') {
             this.advance();
           }
           break;
+        case '/':
+          // Check for // line comment
+          if (this.peekNext() === '/') {
+            while (!this.isAtEnd() && this.peek() !== '\n') {
+              this.advance();
+            }
+            break;
+          }
+          return; // Not a comment, let tokenizer handle /
         default:
           return;
       }

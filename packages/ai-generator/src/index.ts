@@ -1,11 +1,11 @@
 /**
- * @intentos/ai-generator
+ * @isl-lang/ai-generator
  * 
  * Generate implementations from ISL specifications using Claude/GPT APIs.
  * 
  * @example
  * ```typescript
- * import { generate } from '@intentos/ai-generator';
+ * import { generate } from '@isl-lang/ai-generator';
  * 
  * const result = await generate(domain, 'Login', {
  *   model: 'claude-sonnet-4-20250514',
@@ -17,7 +17,7 @@
  * ```
  */
 
-import type { DomainDeclaration, BehaviorDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration } from '@isl-lang/isl-core';
 import {
   Generator,
   createGenerator,

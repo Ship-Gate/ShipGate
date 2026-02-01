@@ -7,8 +7,8 @@
 import { readFile } from 'fs/promises';
 import chalk from 'chalk';
 import ora from 'ora';
-import { parseISL } from '@intentos/isl-core';
-import { verify as verifyImpl, type VerificationResult } from '@intentos/isl-verify';
+import { parseISL } from '@isl-lang/isl-core';
+import { verify as verifyImpl, type VerificationResult } from '@isl-lang/isl-verify';
 
 export interface VerifyOptions {
   implementation?: string;

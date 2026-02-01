@@ -1,5 +1,5 @@
 /**
- * @intentos/stdlib-notifications
+ * @isl-lang/stdlib-notifications
  * 
  * ISL Standard Library - Notifications
  * Multi-channel notification system: email, SMS, push notifications.

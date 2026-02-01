@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Effect System - Effect Inference
-// @intentos/effect-handlers/inference
+// @isl-lang/effect-handlers/inference
 // ============================================================================
 
 import type { EffectSignature, EffectRow, Eff } from './types';

@@ -36,7 +36,7 @@ export function createLanguageClient(
       'ISL language server not found. The extension will work with basic syntax highlighting only. ' +
       'For full LSP support, either:\n' +
       '1. Build the extension with `npm run build` to bundle the server\n' +
-      '2. Install @intentos/lsp-server globally: npm install -g @intentos/lsp-server\n' +
+      '2. Install @isl-lang/lsp-server globally: npm install -g @isl-lang/lsp-server\n' +
       '3. Set isl.server.path in settings to point to the server'
     );
   }

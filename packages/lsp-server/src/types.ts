@@ -1,105 +1,24 @@
 // ============================================================================
 // ISL Language Server Types
+// Re-exports types from lsp-core with LSP-specific additions
 // ============================================================================
 
-import type { Position, Range, Location } from 'vscode-languageserver';
+// Re-export core types
+export type {
+  ISLDiagnostic,
+  ISLSymbolInfo,
+  ISLCompletionInfo,
+  ISLHoverInfo,
+  ISLDefinitionInfo,
+  ISLCodeAction,
+  SymbolKind,
+  CompletionKind,
+  CodeActionKind,
+  ContextType,
+  CompletionContext,
+} from '@isl-lang/lsp-core';
 
-// ============================================================================
-// Document Symbols
-// ============================================================================
-
-export type ISLSymbolKind = 
-  | 'domain'
-  | 'entity'
-  | 'behavior'
-  | 'type'
-  | 'invariant'
-  | 'policy'
-  | 'view'
-  | 'scenario'
-  | 'field'
-  | 'input'
-  | 'output'
-  | 'error'
-  | 'state'
-  | 'constraint';
-
-export interface ISLSymbol {
-  name: string;
-  kind: ISLSymbolKind;
-  range: Range;
-  selectionRange: Range;
-  detail?: string;
-  children?: ISLSymbol[];
-  parent?: string;
-}
-
-// ============================================================================
-// Parsed Document
-// ============================================================================
-
-export interface ParsedDocument {
-  uri: string;
-  version: number;
-  domain?: DomainInfo;
-  symbols: ISLSymbol[];
-  references: Reference[];
-  diagnostics: Diagnostic[];
-}
-
-export interface DomainInfo {
-  name: string;
-  version?: string;
-  range: Range;
-}
-
-export interface Reference {
-  name: string;
-  range: Range;
-  kind: 'type' | 'entity' | 'behavior' | 'field';
-  definitionUri?: string;
-  definitionRange?: Range;
-}
-
-export interface Diagnostic {
-  range: Range;
-  message: string;
-  severity: 'error' | 'warning' | 'info' | 'hint';
-  code?: string;
-  source: string;
-}
-
-// ============================================================================
-// Completion
-// ============================================================================
-
-export interface CompletionContext {
-  position: Position;
-  line: string;
-  prefix: string;
-  triggerCharacter?: string;
-  isInBlock: boolean;
-  blockType?: ISLSymbolKind;
-  parentName?: string;
-}
-
-export interface CompletionItem {
-  label: string;
-  kind: 'keyword' | 'type' | 'entity' | 'behavior' | 'field' | 'snippet' | 'function';
-  detail?: string;
-  documentation?: string;
-  insertText?: string;
-  insertTextFormat?: 'plainText' | 'snippet';
-}
-
-// ============================================================================
-// Hover
-// ============================================================================
-
-export interface HoverInfo {
-  contents: string;
-  range?: Range;
-}
+export { DiagnosticSeverity } from '@isl-lang/lsp-core';
 
 // ============================================================================
 // Semantic Tokens

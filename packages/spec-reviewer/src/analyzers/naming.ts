@@ -4,7 +4,7 @@
  * Checks for consistent naming conventions throughout the spec.
  */
 
-import type { DomainDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
 
 export interface NamingIssue {
   id: string;

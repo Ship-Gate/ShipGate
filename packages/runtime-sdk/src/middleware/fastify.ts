@@ -52,7 +52,7 @@ export interface FastifyPluginOptions {
  * @example
  * ```typescript
  * import Fastify from 'fastify';
- * import { islPlugin } from '@intentos/runtime-sdk/fastify';
+ * import { islPlugin } from '@isl-lang/runtime-sdk/fastify';
  * 
  * const fastify = Fastify();
  * 

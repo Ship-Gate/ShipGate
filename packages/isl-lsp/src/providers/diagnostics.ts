@@ -2,6 +2,8 @@
  * Diagnostic Provider
  * 
  * Provides error and warning diagnostics for ISL documents.
+ * Uses unified error codes from @isl-lang/errors for consistency
+ * across CLI, parser, and LSP.
  */
 
 import {
@@ -13,37 +15,37 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { ISLLanguageService, type ParseError } from '../services/language-service.js';
 
 // ============================================================================
-// Diagnostic Codes
+// Diagnostic Codes - Unified with @isl-lang/errors
 // ============================================================================
 
 export const DiagnosticCodes = {
-  // Syntax errors (ISL0xx)
-  PARSE_ERROR: 'ISL001',
-  UNEXPECTED_TOKEN: 'ISL002',
-  UNCLOSED_BRACE: 'ISL003',
-  INVALID_SYNTAX: 'ISL004',
+  // Syntax/Parser errors (E01xx)
+  PARSE_ERROR: 'E0100',
+  UNEXPECTED_TOKEN: 'E0100',
+  UNCLOSED_BRACE: 'E0105',
+  INVALID_SYNTAX: 'E0100',
 
-  // Type errors (ISL1xx)
-  UNKNOWN_TYPE: 'ISL101',
-  TYPE_MISMATCH: 'ISL102',
-  UNDEFINED_REFERENCE: 'ISL103',
-  DUPLICATE_DEFINITION: 'ISL104',
+  // Type errors (E02xx)
+  UNKNOWN_TYPE: 'E0201',
+  TYPE_MISMATCH: 'E0200',
+  UNDEFINED_REFERENCE: 'E0300',
+  DUPLICATE_DEFINITION: 'E0309',
 
-  // Semantic errors (ISL2xx)
-  MISSING_REQUIRED_FIELD: 'ISL201',
-  INVALID_CONSTRAINT: 'ISL202',
-  CIRCULAR_REFERENCE: 'ISL203',
-  INCOMPATIBLE_CONSTRAINT: 'ISL204',
+  // Semantic errors (E03xx)
+  MISSING_REQUIRED_FIELD: 'E0313',
+  INVALID_CONSTRAINT: 'E0314',
+  CIRCULAR_REFERENCE: 'E0207',
+  INCOMPATIBLE_CONSTRAINT: 'E0314',
 
-  // Warnings (ISL3xx)
-  UNUSED_TYPE: 'ISL301',
-  DEPRECATED_SYNTAX: 'ISL302',
-  MISSING_DESCRIPTION: 'ISL303',
-  IMPLICIT_ANY: 'ISL304',
+  // Warnings (W0xx)
+  UNUSED_TYPE: 'W001',
+  DEPRECATED_SYNTAX: 'W002',
+  MISSING_DESCRIPTION: 'W003',
+  IMPLICIT_ANY: 'W004',
 
-  // Hints (ISL4xx)
-  CONSIDER_ADDING: 'ISL401',
-  NAMING_CONVENTION: 'ISL402',
+  // Hints (H0xx)
+  CONSIDER_ADDING: 'H001',
+  NAMING_CONVENTION: 'H002',
 } as const;
 
 // ============================================================================

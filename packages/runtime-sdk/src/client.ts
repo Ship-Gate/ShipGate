@@ -4,7 +4,7 @@
  * Main client for ISL runtime verification.
  */
 
-import { parseISL, type DomainDeclaration } from '@intentos/isl-core';
+import { parseISL, type DomainDeclaration } from '@isl-lang/isl-core';
 import type { Violation, VerificationResult, ExecutionContext, VerificationMode } from './types.js';
 import { Sampler } from './sampling/sampler.js';
 

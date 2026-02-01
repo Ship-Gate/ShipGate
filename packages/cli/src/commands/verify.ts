@@ -9,8 +9,8 @@ import { readFile } from 'fs/promises';
 import { resolve, relative } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
-import { parseISL } from '@intentos/isl-core';
-import { verify as verifyImpl, type VerificationResult, type TrustScore } from '@intentos/isl-verify';
+import { parseISL } from '@isl-lang/isl-core';
+import { verify as verifyImpl, type VerificationResult, type TrustScore } from '@isl-lang/isl-verify';
 import { output } from '../output.js';
 import { loadConfig } from '../config.js';
 

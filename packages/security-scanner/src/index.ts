@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Security Scanner
-// @intentos/security-scanner
+// @isl-lang/security-scanner
 // 
 // Scan ISL specs and implementations for security vulnerabilities
 // ============================================================================
@@ -132,7 +132,7 @@ export default scan;
 /**
  * @example Basic usage
  * ```typescript
- * import { scan } from '@intentos/security-scanner';
+ * import { scan } from '@isl-lang/security-scanner';
  * 
  * const domain = parseISL(islSource);
  * const result = await scan(domain);
@@ -142,14 +142,14 @@ export default scan;
  * 
  * @example With implementation
  * ```typescript
- * import { fullScan } from '@intentos/security-scanner';
+ * import { fullScan } from '@isl-lang/security-scanner';
  * 
  * const result = await fullScan(domain, tsImplementation, 'typescript');
  * ```
  * 
  * @example CI/CD integration
  * ```typescript
- * import { runCI } from '@intentos/security-scanner';
+ * import { runCI } from '@isl-lang/security-scanner';
  * 
  * const { passed, exitCode, summary } = await runCI(domain, implementation);
  * console.log(summary);
@@ -158,7 +158,7 @@ export default scan;
  * 
  * @example Generate SARIF report
  * ```typescript
- * import { scan, generateSarifString } from '@intentos/security-scanner';
+ * import { scan, generateSarifString } from '@isl-lang/security-scanner';
  * 
  * const result = await scan(domain);
  * const sarif = generateSarifString(result);
@@ -167,7 +167,7 @@ export default scan;
  * 
  * @example Custom rules
  * ```typescript
- * import { SecurityScanner, SecurityRule } from '@intentos/security-scanner';
+ * import { SecurityScanner, SecurityRule } from '@isl-lang/security-scanner';
  * 
  * const customRule: SecurityRule = {
  *   id: 'CUSTOM001',

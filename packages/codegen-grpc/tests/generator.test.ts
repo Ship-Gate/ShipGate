@@ -14,7 +14,7 @@ import {
   toScreamingSnakeCase,
   toProtoPackage,
 } from '../src/utils';
-import type { Domain, Entity, Behavior, TypeDeclaration } from '@intentos/isl-core';
+import type { Domain, Entity, Behavior, TypeDeclaration } from '@isl-lang/isl-core';
 
 // ==========================================================================
 // TEST FIXTURES

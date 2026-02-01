@@ -1,5 +1,5 @@
 /**
- * @intentos/stdlib-workflow
+ * @isl-lang/stdlib-workflow
  * Workflow Engine Standard Library
  *
  * Provides state machines, saga orchestration, and distributed transaction

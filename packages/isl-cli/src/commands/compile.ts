@@ -7,8 +7,8 @@
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { join, dirname, basename } from 'path';
 import chalk from 'chalk';
-import { parseISL } from '@intentos/isl-core';
-import { compile as compileISL } from '@intentos/isl-compiler';
+import { parseISL } from '@isl-lang/isl-core';
+import { compile as compileISL } from '@isl-lang/isl-compiler';
 
 export interface CompileOptions {
   output?: string;

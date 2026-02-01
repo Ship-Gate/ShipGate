@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Effect System - Built-in Effects
-// @intentos/effect-handlers/builtins
+// @isl-lang/effect-handlers/builtins
 // ============================================================================
 
 import type { EffectSignature, EffectOperation, Handler, Fiber, ScheduleId } from './types';

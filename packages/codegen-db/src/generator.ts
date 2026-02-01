@@ -2,7 +2,7 @@
  * Main database adapter generator
  */
 
-import type { DomainDeclaration, EntityDeclaration, EnumDeclaration, FieldDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, EntityDeclaration, EnumDeclaration, FieldDeclaration } from '@isl-lang/isl-core';
 import type {
   GeneratorOptions,
   GeneratedFile,
@@ -193,7 +193,7 @@ function normalizeField(
 // Type Resolution
 // ============================================
 
-function resolveFieldType(type: import('@intentos/isl-core').TypeExpression, enumNames: Set<string>): FieldType {
+function resolveFieldType(type: import('@isl-lang/isl-core').TypeExpression, enumNames: Set<string>): FieldType {
   switch (type.kind) {
     case 'SimpleType': {
       const typeName = type.name.name;

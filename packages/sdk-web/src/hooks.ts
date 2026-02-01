@@ -38,7 +38,7 @@ function generateHookImports(): string {
  */
 import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useState, useCallback } from 'react';
-import type { ApiResponse } from '@intentos/sdk-web';
+import type { ApiResponse } from '@isl-lang/sdk-web';
 `;
 }
 

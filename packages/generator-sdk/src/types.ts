@@ -12,7 +12,7 @@ import type {
   EnumDeclaration,
   FieldDeclaration,
   TypeExpression,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 // ============================================================================
 // Generated File Types

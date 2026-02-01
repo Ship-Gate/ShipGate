@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import type { DomainDeclaration, EntityDeclaration, BehaviorDeclaration, FieldDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, EntityDeclaration, BehaviorDeclaration, FieldDeclaration } from '@isl-lang/isl-core';
 import {
   review,
   SpecReviewer,

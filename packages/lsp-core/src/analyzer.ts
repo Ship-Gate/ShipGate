@@ -3,10 +3,10 @@
 // Integrates parser and type checker for language intelligence
 // ============================================================================
 
-import { parse, type ParseResult, type Domain, type SourceLocation, type ASTNode } from '@intentos/parser';
-import { TypeChecker, type TypeCheckResult, type Diagnostic as TypeDiagnostic } from '@intentos/typechecker';
-import type { ISLDiagnostic, ISLSymbolInfo, SymbolKind } from './types.js';
-import { DiagnosticSeverity } from './types.js';
+import { parse, type ParseResult, type Domain, type SourceLocation, type ASTNode } from '@isl-lang/parser';
+import { TypeChecker, type TypeCheckResult, type Diagnostic as TypeDiagnostic } from '@isl-lang/typechecker';
+import type { ISLDiagnostic, ISLSymbolInfo, SymbolKind } from './types';
+import { DiagnosticSeverity } from './types';
 
 // ============================================================================
 // Analysis Options

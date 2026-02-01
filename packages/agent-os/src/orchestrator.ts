@@ -18,7 +18,7 @@
  * Result with Trust Score
  */
 
-import { ISL_AGENT_PROMPTS } from '@intentos/intent-translator';
+import { ISL_AGENT_PROMPTS } from '@isl-lang/intent-translator';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -264,7 +264,7 @@ export class Orchestrator {
     }
 
     // Detect libraries
-    const { detectLibraries } = await import('@intentos/intent-translator');
+    const { detectLibraries } = await import('@isl-lang/intent-translator');
     const suggestedLibraries = detectLibraries(request);
 
     return {
@@ -280,7 +280,7 @@ export class Orchestrator {
    * Step 2: Translate to ISL
    */
   private async translate(request: string, triage: TriageResult): Promise<string> {
-    const { translate } = await import('@intentos/intent-translator');
+    const { translate } = await import('@isl-lang/intent-translator');
     
     const result = await translate(request, {
       apiKey: this.options.apiKey,

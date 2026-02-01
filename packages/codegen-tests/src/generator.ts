@@ -4,9 +4,13 @@
 // ============================================================================
 
 import type * as AST from '../../../master_contracts/ast';
-import type { GenerateOptions, GeneratedFile, GenerateResult, GeneratorError, TestFramework } from './types';
-import { generatePreconditionsDescribeBlock, generatePreconditionValidators } from './preconditions';
-import { generatePostconditionsDescribeBlock, generatePostconditionAssertions, generateImpliesTests } from './postconditions';
+import type { GenerateOptions, GeneratedFile, GeneratorError, TestFramework } from './types';
+import { generatePreconditionsDescribeBlock } from './preconditions';
+import { 
+  generatePostconditionsDescribeBlock, 
+  generateImpliesTests,
+  type PostconditionGeneratorContext 
+} from './postconditions';
 import { generateScenarioTests, generateScenarioHelpers, generateScenarioDataBuilders } from './scenarios';
 import { generateChaosTests, generateChaosController } from './chaos';
 import { getJestTemplate, getJestConfig } from '../templates/jest';
@@ -130,11 +134,18 @@ function generateBehaviorTestFile(
   const domainName = domain.name.name;
   const template = framework === 'jest' ? getJestTemplate() : getVitestTemplate();
 
-  const imports = generateImports(behavior, framework);
+  // Extract entity names from domain
+  const entityNames = domain.entities.map((e) => e.name.name);
+  const genCtx: PostconditionGeneratorContext = {
+    entityNames,
+    domainName,
+  };
+
+  const imports = generateImports(behavior, domain, framework);
   const preconditionTests = generatePreconditionsDescribeBlock(behavior, framework);
-  const postconditionTests = generatePostconditionsDescribeBlock(behavior, framework);
-  const impliesTests = generateImpliesTests(behavior, framework);
-  const invariantTests = generateInvariantTests(behavior, framework);
+  const postconditionTests = generatePostconditionsDescribeBlock(behavior, framework, genCtx);
+  const impliesTests = generateImpliesTests(behavior, framework, genCtx);
+  const invariantTests = generateInvariantTests(behavior, domain, framework);
 
   return `
 ${template.header}
@@ -173,16 +184,29 @@ describe('${behaviorName}', () => {
 /**
  * Generate imports for a behavior test file
  */
-function generateImports(behavior: AST.Behavior, framework: TestFramework): string {
+function generateImports(behavior: AST.Behavior, domain: AST.Domain, framework: TestFramework): string {
   const behaviorName = behavior.name.name;
+  const entityNames = domain.entities.map((e) => e.name.name);
+  
   const imports = [
+    // Test runtime for entity bindings
+    `import { createTestContext } from '@isl-lang/test-runtime';`,
+    // Behavior implementation
     `import { ${behaviorName} } from '../src/${behaviorName}';`,
+    // Types
     `import type { ${behaviorName}Input, ${behaviorName}Result } from '../src/types';`,
-    `import { createTestInput, createInvalidInput, captureState } from './helpers/test-utils';`,
+    // Test helpers
+    `import { createTestInput, createInvalidInput } from './helpers/test-utils';`,
   ];
 
   if (framework === 'vitest') {
     imports.unshift(`import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';`);
+  }
+
+  // Add a comment showing entity bindings
+  if (entityNames.length > 0) {
+    imports.push('');
+    imports.push(`// Entity bindings from test runtime: ${entityNames.join(', ')}`);
   }
 
   return imports.join('\n');
@@ -253,14 +277,17 @@ ${chaosTests}
  */
 function generateInvariantTests(
   behavior: AST.Behavior,
+  domain: AST.Domain,
   framework: TestFramework
 ): string {
   if (behavior.invariants.length === 0) {
     return '';
   }
 
+  const entityNames = domain.entities.map((e) => e.name.name);
+
   const tests = behavior.invariants.map((inv, index) => {
-    const invCode = compileExpressionSimple(inv);
+    const invCode = compileExpressionSimple(inv, entityNames);
     return `
     it('should maintain invariant ${index + 1}: ${truncate(invCode, 40)}', async () => {
       const input = createTestInput();
@@ -475,26 +502,12 @@ ${entityFixtures}
 
 // Helper functions
 
-function compileExpressionSimple(expr: AST.Expression): string {
-  // Simplified expression compilation for display purposes
-  switch (expr.kind) {
-    case 'Identifier':
-      return expr.name;
-    case 'StringLiteral':
-      return `"${expr.value}"`;
-    case 'NumberLiteral':
-      return String(expr.value);
-    case 'BooleanLiteral':
-      return String(expr.value);
-    case 'BinaryExpr':
-      return `${compileExpressionSimple(expr.left)} ${expr.operator} ${compileExpressionSimple(expr.right)}`;
-    case 'MemberExpr':
-      return `${compileExpressionSimple(expr.object)}.${expr.property.name}`;
-    case 'CallExpr':
-      return `${compileExpressionSimple(expr.callee)}(...)`;
-    default:
-      return '/* expression */';
-  }
+import { compileExpression, createCompilerContext } from './expression-compiler';
+
+function compileExpressionSimple(expr: AST.Expression, entityNames: string[] = []): string {
+  // Use the full expression compiler with entity context
+  const ctx = createCompilerContext(entityNames);
+  return compileExpression(expr, ctx);
 }
 
 function truncate(str: string, maxLen: number): string {

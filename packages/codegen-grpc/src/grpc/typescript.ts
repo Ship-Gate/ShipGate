@@ -2,7 +2,7 @@
 // TypeScript gRPC Stub Generation
 // ============================================================================
 
-import type { Domain, Behavior, Entity } from '@intentos/isl-core';
+import type { Domain, Behavior, Entity } from '@isl-lang/isl-core';
 import type { GeneratedFile } from '../generator';
 import { toPascalCase, toCamelCase, toSnakeCase } from '../utils';
 

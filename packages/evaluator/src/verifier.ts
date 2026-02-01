@@ -12,9 +12,11 @@ import type {
   CheckResult,
   VerificationFailure,
   VerificationResult,
+  DomainDef,
 } from './types.js';
-import { EvaluationError } from './types.js';
+// Import types only - EvaluationError is handled by the evaluator
 import { Evaluator, expressionToString } from './evaluator.js';
+import { SnapshotEntityStore } from './environment.js';
 
 // ============================================================================
 // SPEC TYPES (simplified from parser AST)
@@ -65,11 +67,7 @@ export interface VerificationInput {
   };
   
   /** Domain definition for entity/type lookups */
-  domain?: {
-    name: string;
-    entities: Array<{ name: string; fields: unknown[] }>;
-    types: unknown[];
-  };
+  domain?: DomainDef;
   
   /** Current timestamp */
   now?: Date;
@@ -223,8 +221,6 @@ export class Verifier {
 
   private buildPreContext(input: VerificationInput): EvaluationContext {
     // For preconditions, we use pre-state without old() access
-    const { SnapshotEntityStore } = require('./environment.js');
-    
     return {
       input: input.input,
       result: undefined,

@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Standard Library - Idempotency
-// @intentos/stdlib-idempotency
+// @isl-lang/stdlib-idempotency
 // ============================================================================
 
 // Core types

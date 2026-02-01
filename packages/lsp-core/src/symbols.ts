@@ -3,8 +3,8 @@
 // Fast symbol lookup for go-to-definition, find references, etc.
 // ============================================================================
 
-import type { SourceLocation } from '@intentos/parser';
-import type { ISLSymbolInfo, SymbolKind } from './types.js';
+import type { SourceLocation } from '@isl-lang/parser';
+import type { ISLSymbolInfo, SymbolKind } from './types';
 
 // ============================================================================
 // Indexed Symbol

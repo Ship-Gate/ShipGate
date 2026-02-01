@@ -352,15 +352,19 @@ export class InMemoryEntityStore implements EntityStore {
  * Read-only entity store wrapper for old() evaluation
  */
 export class SnapshotEntityStore implements EntityStore {
-  constructor(private readonly snapshot: EntityStoreSnapshot) {}
+  private readonly _snapshot: EntityStoreSnapshot;
+  
+  constructor(snapshot: EntityStoreSnapshot) {
+    this._snapshot = snapshot;
+  }
 
   getAll(entityName: string): EntityInstance[] {
-    const entities = this.snapshot.entities.get(entityName);
+    const entities = this._snapshot.entities.get(entityName);
     return entities ? Array.from(entities.values()) : [];
   }
 
   exists(entityName: string, criteria?: Record<string, unknown>): boolean {
-    const entities = this.snapshot.entities.get(entityName);
+    const entities = this._snapshot.entities.get(entityName);
     if (!entities || entities.size === 0) return false;
     if (!criteria) return entities.size > 0;
     return Array.from(entities.values()).some((e) =>
@@ -372,7 +376,7 @@ export class SnapshotEntityStore implements EntityStore {
     entityName: string,
     criteria: Record<string, unknown>
   ): EntityInstance | undefined {
-    const entities = this.snapshot.entities.get(entityName);
+    const entities = this._snapshot.entities.get(entityName);
     if (!entities) return undefined;
     return Array.from(entities.values()).find((e) =>
       Object.entries(criteria).every(([k, v]) => e[k] === v)
@@ -380,7 +384,7 @@ export class SnapshotEntityStore implements EntityStore {
   }
 
   count(entityName: string, criteria?: Record<string, unknown>): number {
-    const entities = this.snapshot.entities.get(entityName);
+    const entities = this._snapshot.entities.get(entityName);
     if (!entities) return 0;
     if (!criteria) return entities.size;
     return Array.from(entities.values()).filter((e) =>
@@ -401,7 +405,7 @@ export class SnapshotEntityStore implements EntityStore {
   }
 
   snapshot(): EntityStoreSnapshot {
-    return this.snapshot;
+    return this._snapshot;
   }
 
   restore(): void {

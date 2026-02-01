@@ -15,5 +15,5 @@ export default defineConfig({
   minify: false,
   target: 'es2022',
   outDir: 'dist',
-  external: ['@intentos/isl-core'],
+  external: ['@isl-lang/isl-core'],
 });

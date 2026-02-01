@@ -24,6 +24,6 @@ export default defineConfig({
     'ioredis',
     'redis',
     'pg',
-    '@intentos/isl-core',
+    '@isl-lang/isl-core',
   ],
 });

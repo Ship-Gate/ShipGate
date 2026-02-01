@@ -1,11 +1,11 @@
 /**
- * @intentos/autofix
+ * @isl-lang/autofix
  * 
  * Automatically fix implementation bugs based on verification failures.
  * 
  * @example
  * ```typescript
- * import { fix } from '@intentos/autofix';
+ * import { fix } from '@isl-lang/autofix';
  * 
  * const result = await fix(verificationResult, implementation, domain);
  * 
@@ -15,7 +15,7 @@
  * ```
  */
 
-import type { DomainDeclaration, BehaviorDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration } from '@isl-lang/isl-core';
 import {
   FailureAnalyzer,
   parseVerificationResult,

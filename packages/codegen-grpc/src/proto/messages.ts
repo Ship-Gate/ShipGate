@@ -6,7 +6,7 @@ import type {
   Entity,
   Field,
   LifecycleSpec,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 import {
   toSnakeCase,
   toPascalCase,

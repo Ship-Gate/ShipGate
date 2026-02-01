@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Interpreter - Report Generation
-// @intentos/interpreter/report
+// @isl-lang/interpreter/report
 // ============================================================================
 
 import { writeFile } from 'node:fs/promises';

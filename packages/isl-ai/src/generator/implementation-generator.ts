@@ -5,7 +5,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import type { DomainDeclaration, BehaviorDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration } from '@isl-lang/isl-core';
 import { generateSystemPrompt, generateImplementationPrompt, generateTypesFromDomain, type PromptContext } from '../prompts/templates.js';
 
 export interface GenerationResult {

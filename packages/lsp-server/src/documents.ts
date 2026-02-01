@@ -14,8 +14,9 @@ import {
   type IndexedSymbol,
   type CompletionContext,
   type ContextType,
-} from '@intentos/lsp-core';
-import type { SourceLocation, Domain } from '@intentos/parser';
+  type SourceLocation,
+  type Domain,
+} from '@isl-lang/lsp-core';
 
 // ============================================================================
 // Types

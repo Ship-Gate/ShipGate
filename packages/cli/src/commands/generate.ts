@@ -10,8 +10,8 @@ import { glob } from 'glob';
 import { resolve, relative, dirname, join, basename } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
-import { parseISL, type DomainDeclaration } from '@intentos/isl-core';
-import { compile, generateTypes, generateTests } from '@intentos/isl-compiler';
+import { parseISL, type DomainDeclaration } from '@isl-lang/isl-core';
+import { compile, generateTypes, generateTests } from '@isl-lang/isl-compiler';
 import { output } from '../output.js';
 import { loadConfig, type ISLConfig } from '../config.js';
 
@@ -60,7 +60,7 @@ export interface GenerateResult {
  */
 function generateTypesForDomain(domain: DomainDeclaration): string {
   const result = generateTypes(domain);
-  return result.code;
+  return result.content;
 }
 
 /**
@@ -68,7 +68,7 @@ function generateTypesForDomain(domain: DomainDeclaration): string {
  */
 function generateTestsForDomain(domain: DomainDeclaration): string {
   const result = generateTests(domain);
-  return result.code;
+  return result.content;
 }
 
 /**

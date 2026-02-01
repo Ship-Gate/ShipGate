@@ -12,7 +12,7 @@ import type {
   EnumDeclaration,
   TypeExpression,
   Expression,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 // ============================================
 // Diff Types

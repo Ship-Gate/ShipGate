@@ -10,7 +10,7 @@ import type {
   TypeExpression,
   Annotation,
   TypeConstraint,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 // ============================================
 // Generator Options

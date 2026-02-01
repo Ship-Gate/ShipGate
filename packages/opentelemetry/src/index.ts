@@ -1,5 +1,5 @@
 /**
- * @intentos/opentelemetry
+ * @isl-lang/opentelemetry
  * OpenTelemetry integration for ISL verification tracing
  */
 

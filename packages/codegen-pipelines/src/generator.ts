@@ -5,7 +5,7 @@
  * and generates appropriate CI/CD configurations.
  */
 
-import type { DomainDeclaration, BehaviorDeclaration, ComplianceStandard } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration, ComplianceStandard } from '@isl-lang/isl-core';
 import { generateGitHubActions } from './platforms/github.js';
 import { generateGitLabCI } from './platforms/gitlab.js';
 import { generateCircleCI } from './platforms/circle.js';

@@ -13,6 +13,7 @@ import {
   compile, printCompileResult,
   generate, printGenerateResult,
   verify, printVerifyResult,
+  explain,
 } from './commands/index.js';
 
 const program = new Command();
@@ -75,6 +76,21 @@ program
     });
     printVerifyResult(result);
     process.exit(result.success ? 0 : 1);
+  });
+
+// Explain command
+program
+  .command('explain [code]')
+  .description('Show detailed explanation for an error code')
+  .option('-l, --list', 'List all error codes')
+  .option('-c, --category <category>', 'Show errors in category (lexer, parser, type, semantic, eval, verify, config, io)')
+  .option('--no-color', 'Disable colored output')
+  .action((code, options) => {
+    explain(code, {
+      list: options.list,
+      category: options.category,
+      noColor: options.noColor,
+    });
   });
 
 // Build command (combined pipeline)

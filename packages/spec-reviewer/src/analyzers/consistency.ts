@@ -4,7 +4,7 @@
  * Checks for internal consistency issues in the spec.
  */
 
-import type { DomainDeclaration, BehaviorDeclaration, EntityDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration, EntityDeclaration } from '@isl-lang/isl-core';
 
 export interface ConsistencyIssue {
   id: string;

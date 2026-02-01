@@ -154,8 +154,8 @@ function createPackageJson(
       keywords: ['isl', 'intentos', 'generator', 'codegen'],
       license: 'MIT',
       dependencies: {
-        '@intentos/generator-sdk': 'workspace:*',
-        '@intentos/isl-core': 'workspace:*',
+        '@isl-lang/generator-sdk': 'workspace:*',
+        '@isl-lang/isl-core': 'workspace:*',
       },
       devDependencies: {
         '@types/node': '^20.11.0',
@@ -211,7 +211,7 @@ import {
   type BehaviorDeclaration,
   type TypeDeclaration,
   type EnumDeclaration,
-} from '@intentos/generator-sdk';
+} from '@isl-lang/generator-sdk';
 
 // ============================================================================
 // Generator Implementation
@@ -328,7 +328,7 @@ export type {
   DomainDeclaration,
   EntityDeclaration,
   BehaviorDeclaration,
-} from '@intentos/generator-sdk';
+} from '@isl-lang/generator-sdk';
 `;
 }
 
@@ -572,7 +572,7 @@ npm install @isl/${name}
 
 \`\`\`typescript
 import { ${toPascalCase(name)} } from '@isl/${name}';
-import { parseISL } from '@intentos/isl-core';
+import { parseISL } from '@isl-lang/isl-core';
 
 // Parse your ISL file
 const { ast } = parseISL(islSource);

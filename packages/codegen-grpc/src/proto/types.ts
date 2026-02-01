@@ -17,7 +17,7 @@ import type {
   Constraint,
   NumberLiteral,
   RegexLiteral,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 import {
   toScreamingSnakeCase,
   toSnakeCase,

@@ -7,7 +7,7 @@
 export * from './runner/index.js';
 export * from './reporter/index.js';
 
-import type { DomainDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
 import { runTests, type TestResult, type RunnerOptions } from './runner/index.js';
 import { 
   calculateTrustScore, 

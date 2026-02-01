@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Runtime Interpreter - Built-in Functions
-// @intentos/runtime-interpreter/builtins
+// @isl-lang/runtime-interpreter/builtins
 // ============================================================================
 
 import type { Value, Environment, NativeFunction, EffectHandler } from './types';

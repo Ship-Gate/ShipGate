@@ -4,7 +4,7 @@
  * ISL-aware routing based on domain behaviors.
  */
 
-import type { DomainDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
 
 export interface Route {
   /** Route pattern */

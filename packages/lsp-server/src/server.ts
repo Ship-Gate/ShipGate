@@ -29,16 +29,16 @@ import {
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { ISLDocumentManager } from './documents.js';
-import { ISLCompletionProvider } from './features/completion.js';
-import { ISLHoverProvider } from './features/hover.js';
-import { ISLDiagnosticsProvider } from './features/diagnostics.js';
-import { ISLDefinitionProvider } from './features/definition.js';
-import { ISLSymbolProvider } from './features/symbols.js';
-import { ISLSemanticTokensProvider, TOKEN_TYPES, TOKEN_MODIFIERS } from './features/semantic-tokens.js';
-import { ISLCodeActionProvider } from './features/actions.js';
-import { ISLFormattingProvider } from './features/formatting.js';
-import { DiagnosticSeverity } from '@intentos/lsp-core';
+import { ISLDocumentManager } from './documents';
+import { ISLCompletionProvider } from './features/completion';
+import { ISLHoverProvider } from './features/hover';
+import { ISLDiagnosticsProvider } from './features/diagnostics';
+import { ISLDefinitionProvider } from './features/definition';
+import { ISLSymbolProvider } from './features/symbols';
+import { ISLSemanticTokensProvider, TOKEN_TYPES, TOKEN_MODIFIERS } from './features/semantic-tokens';
+import { ISLCodeActionProvider } from './features/actions';
+import { ISLFormattingProvider } from './features/formatting';
+import { DiagnosticSeverity } from '@isl-lang/lsp-core';
 
 export class ISLServer {
   private connection: Connection;

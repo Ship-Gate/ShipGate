@@ -15,7 +15,7 @@ import {
   type Identifier,
   type ASTNode,
   type SourceSpan,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 export interface ISLDocument {
   uri: string;

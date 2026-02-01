@@ -1,5 +1,5 @@
 /**
- * @intentos/distributed
+ * @isl-lang/distributed
  * Distributed Systems Primitives for ISL
  * 
  * Features:

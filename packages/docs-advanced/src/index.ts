@@ -62,7 +62,7 @@ import {
  * 
  * @example
  * ```typescript
- * import { generateDocs } from '@intentos/docs-advanced';
+ * import { generateDocs } from '@isl-lang/docs-advanced';
  * 
  * const docs = await generateDocs(domain, {
  *   format: 'nextra',

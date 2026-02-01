@@ -1,5 +1,5 @@
 /**
- * @intentos/ai-copilot
+ * @isl-lang/ai-copilot
  * 
  * AI-powered ISL development assistant with natural language to ISL conversion
  */

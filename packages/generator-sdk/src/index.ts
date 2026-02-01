@@ -1,5 +1,5 @@
 /**
- * @intentos/generator-sdk
+ * @isl-lang/generator-sdk
  *
  * SDK for building custom ISL code generators.
  *
@@ -9,7 +9,7 @@
  *
  * @example
  * ```typescript
- * import { Generator, EntityVisitorBase } from '@intentos/generator-sdk';
+ * import { Generator, EntityVisitorBase } from '@isl-lang/generator-sdk';
  *
  * class MyGenerator extends Generator {
  *   name = 'my-generator';

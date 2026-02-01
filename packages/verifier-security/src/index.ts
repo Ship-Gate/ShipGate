@@ -16,7 +16,7 @@
  * 
  * @example
  * ```typescript
- * import { createSecurityVerifier } from '@intentos/verifier-security';
+ * import { createSecurityVerifier } from '@isl-lang/verifier-security';
  * 
  * const verifier = createSecurityVerifier({
  *   categories: ['authentication', 'injection'],

@@ -1,5 +1,5 @@
 /**
- * @intentos/health-check
+ * @isl-lang/health-check
  * Type definitions for health check system
  */
 

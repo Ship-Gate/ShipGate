@@ -36,9 +36,9 @@ export type Value =
   | string
   | Date
   | RegExp
-  | Value[]
-  | Map<string, Value>
-  | Record<string, Value>
+  | unknown[]
+  | Map<string, unknown>
+  | Record<string, unknown>
   | EntityInstance
   | LambdaValue;
 
@@ -151,23 +151,23 @@ export interface EntityStoreSnapshot {
 export interface DomainDef {
   name: string;
   entities: EntityDef[];
-  types: TypeDef[];
+  types?: TypeDef[];
 }
 
 export interface EntityDef {
   name: string;
-  fields: FieldDef[];
+  fields?: FieldDef[] | unknown[];
 }
 
 export interface TypeDef {
   name: string;
-  definition: unknown;
+  definition?: unknown;
 }
 
 export interface FieldDef {
   name: string;
-  type: unknown;
-  optional: boolean;
+  type?: unknown;
+  optional?: boolean;
 }
 
 /**
@@ -200,8 +200,40 @@ export interface EvaluationContext {
 }
 
 // ============================================================================
-// ERRORS
+// ERRORS - Using unified @isl-lang/errors codes
 // ============================================================================
+
+// Import unified error codes
+// Note: These are imported at runtime from @isl-lang/errors
+// E0400 = Division by zero
+// E0401 = Null reference
+// E0402 = Index out of bounds
+// E0403 = Undefined property
+// E0404 = Invalid operation
+// E0408 = Type coercion failed
+
+/**
+ * Unified error codes for evaluator
+ */
+export const EvalErrorCodes = {
+  DIVISION_BY_ZERO: 'E0400',
+  NULL_REFERENCE: 'E0401',
+  INDEX_OUT_OF_BOUNDS: 'E0402',
+  UNDEFINED_PROPERTY: 'E0403',
+  INVALID_OPERATION: 'E0404',
+  STACK_OVERFLOW: 'E0405',
+  TIMEOUT: 'E0406',
+  MEMORY_LIMIT: 'E0407',
+  TYPE_COERCION_FAILED: 'E0408',
+  INVALID_REGEX: 'E0409',
+  ENTITY_NOT_FOUND: 'E0410',
+  IMMUTABLE_MODIFICATION: 'E0411',
+  // Legacy codes (for backward compat)
+  EVALUATION_ERROR: 'E0404',
+  TYPE_ERROR: 'E0408',
+  REFERENCE_ERROR: 'E0403',
+  RUNTIME_ERROR: 'E0404',
+} as const;
 
 /**
  * Error information during evaluation
@@ -217,11 +249,14 @@ export interface EvaluationErrorInfo {
  * Structured evaluation error with source location
  */
 export class EvaluationError extends Error {
+  public readonly notes: string[] = [];
+  public readonly help: string[] = [];
+
   constructor(
     message: string,
     public readonly location: SourceLocation,
     public readonly expression?: unknown,
-    public readonly code: string = 'EVALUATION_ERROR'
+    public readonly code: string = EvalErrorCodes.EVALUATION_ERROR
   ) {
     super(message);
     this.name = 'EvaluationError';
@@ -234,10 +269,26 @@ export class EvaluationError extends Error {
   formatMessage(): string {
     return `${this.code}: ${this.message} at ${this.location.file}:${this.location.line}:${this.location.column}`;
   }
+
+  /**
+   * Add a note to the error
+   */
+  withNote(note: string): this {
+    this.notes.push(note);
+    return this;
+  }
+
+  /**
+   * Add a help suggestion to the error
+   */
+  withHelp(help: string): this {
+    this.help.push(help);
+    return this;
+  }
 }
 
 /**
- * Error for type mismatches
+ * Error for type mismatches (E0408)
  */
 export class TypeError extends EvaluationError {
   constructor(
@@ -247,14 +298,14 @@ export class TypeError extends EvaluationError {
     public readonly actualType: string,
     expression?: unknown
   ) {
-    super(message, location, expression, 'TYPE_ERROR');
+    super(message, location, expression, EvalErrorCodes.TYPE_ERROR);
     this.name = 'TypeError';
     Object.setPrototypeOf(this, TypeError.prototype);
   }
 }
 
 /**
- * Error for undefined variables
+ * Error for undefined variables (E0403)
  */
 export class ReferenceError extends EvaluationError {
   constructor(
@@ -263,24 +314,73 @@ export class ReferenceError extends EvaluationError {
     public readonly identifier: string,
     expression?: unknown
   ) {
-    super(message, location, expression, 'REFERENCE_ERROR');
+    super(message, location, expression, EvalErrorCodes.REFERENCE_ERROR);
     this.name = 'ReferenceError';
     Object.setPrototypeOf(this, ReferenceError.prototype);
   }
 }
 
 /**
- * Error for division by zero and similar runtime errors
+ * Error for division by zero and similar runtime errors (E0400-E0411)
  */
 export class RuntimeError extends EvaluationError {
   constructor(
     message: string,
     location: SourceLocation,
-    expression?: unknown
+    expression?: unknown,
+    code: string = EvalErrorCodes.RUNTIME_ERROR
   ) {
-    super(message, location, expression, 'RUNTIME_ERROR');
+    super(message, location, expression, code);
     this.name = 'RuntimeError';
     Object.setPrototypeOf(this, RuntimeError.prototype);
+  }
+
+  /**
+   * Create a division by zero error
+   */
+  static divisionByZero(location: SourceLocation, expression?: unknown): RuntimeError {
+    return new RuntimeError(
+      'Division by zero',
+      location,
+      expression,
+      EvalErrorCodes.DIVISION_BY_ZERO
+    ).withHelp('Add a precondition to ensure the divisor is non-zero');
+  }
+
+  /**
+   * Create a null reference error
+   */
+  static nullReference(property: string, location: SourceLocation, expression?: unknown): RuntimeError {
+    return new RuntimeError(
+      `Cannot read property '${property}' of null`,
+      location,
+      expression,
+      EvalErrorCodes.NULL_REFERENCE
+    ).withHelp('Check for null before accessing properties, or use optional chaining (?.)');
+  }
+
+  /**
+   * Create an index out of bounds error
+   */
+  static indexOutOfBounds(index: number, length: number, location: SourceLocation, expression?: unknown): RuntimeError {
+    return new RuntimeError(
+      `Index ${index} is out of bounds for array of length ${length}`,
+      location,
+      expression,
+      EvalErrorCodes.INDEX_OUT_OF_BOUNDS
+    ).withHelp('Ensure the index is within the valid range [0, length)');
+  }
+
+  /**
+   * Create an entity not found error
+   */
+  static entityNotFound(entityName: string, id: string, location: SourceLocation): RuntimeError {
+    return new RuntimeError(
+      `Entity '${entityName}' with id '${id}' not found`,
+      location,
+      undefined,
+      EvalErrorCodes.ENTITY_NOT_FOUND
+    ).withHelp('Check that the entity exists before accessing it, or use exists() first');
   }
 }
 

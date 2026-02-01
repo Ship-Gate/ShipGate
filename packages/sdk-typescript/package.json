@@ -43,7 +43,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mevla/isl-lang.git"
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
   },
   "homepage": "https://intentlang.dev",
   "dependencies": {
@@ -73,6 +73,6 @@
     "node": ">=18.0.0"
   },
   "bugs": {
-    "url": "https://github.com/mevla/isl-lang/issues"
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
   }
 }

@@ -2,7 +2,8 @@
 // ISL Language Core Types
 // ============================================================================
 
-import type { SourceLocation } from '@intentos/parser';
+// Re-export SourceLocation from parser
+export type { SourceLocation } from '@isl-lang/parser';
 
 // ============================================================================
 // Diagnostic Types

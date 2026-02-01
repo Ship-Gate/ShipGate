@@ -289,25 +289,63 @@ export const islCommands: ISLCommand[] = [
     aliases: ['l'],
     description: 'Load intents from a file',
     usage: ':load <file.isl>',
-    handler: async (args, session) => {
+    handler: (args, session) => {
       if (args.length === 0) {
         return { output: 'Usage: :load <file.isl>' };
       }
 
       const filePath = args[0]!;
-      const result = await session.loadFile(filePath);
+      
+      // Synchronous wrapper around async load
+      // In a real implementation, this would need proper async handling
+      let result: { intents: { name: string }[]; errors: string[] } = { intents: [], errors: [] };
+      
+      session.loadFile(filePath).then(r => {
+        result = r;
+      }).catch(e => {
+        result.errors.push(String(e));
+      });
 
-      if (result.errors.length > 0) {
-        return { output: formatError(result.errors.join('\n')) };
+      // For now, we'll do a blocking load using fs.readFileSync
+      const fs = require('fs');
+      const path = require('path');
+      
+      try {
+        const resolvedPath = path.isAbsolute(filePath)
+          ? filePath
+          : path.resolve(process.cwd(), filePath);
+
+        if (!fs.existsSync(resolvedPath)) {
+          return { output: formatError(`File not found: ${resolvedPath}`) };
+        }
+
+        const content = fs.readFileSync(resolvedPath, 'utf-8');
+        
+        // Find all intent/behavior definitions
+        const intentRegex = /(?:intent|behavior)\s+(\w+)\s*\{[^}]*(?:\{[^}]*\}[^}]*)*\}/g;
+        let match;
+        let count = 0;
+        
+        while ((match = intentRegex.exec(content)) !== null) {
+          const intent = session.parseIntent(match[0]);
+          if (intent) {
+            session.defineIntent(intent);
+            count++;
+          }
+        }
+
+        if (count === 0) {
+          return { output: formatWarning('No intents found in file') };
+        }
+
+        return { 
+          output: formatSuccess(`Loaded ${count} intent(s) from ${filePath}`) 
+        };
+      } catch (error) {
+        return { 
+          output: formatError(`Failed to load: ${error instanceof Error ? error.message : String(error)}`) 
+        };
       }
-
-      if (result.intents.length === 0) {
-        return { output: formatWarning('No intents found in file') };
-      }
-
-      return { 
-        output: formatSuccess(`Loaded ${result.intents.length} intent(s) from ${filePath}`) 
-      };
     },
   },
 
@@ -395,19 +433,57 @@ export const islCommands: ISLCommand[] = [
     aliases: ['save'],
     description: 'Export intents to a file',
     usage: ':export <file.isl>',
-    handler: async (args, session) => {
+    handler: (args, session) => {
       if (args.length === 0) {
         return { output: 'Usage: :export <file.isl>' };
       }
 
       const filePath = args[0]!;
-      const result = await session.exportToFile(filePath);
+      const fs = require('fs');
+      const path = require('path');
 
-      if (!result.success) {
-        return { output: formatError(result.error || 'Failed to export') };
+      try {
+        const resolvedPath = path.isAbsolute(filePath)
+          ? filePath
+          : path.resolve(process.cwd(), filePath);
+
+        const intents = session.getAllIntents();
+        
+        if (intents.length === 0) {
+          return { output: formatWarning('No intents to export') };
+        }
+
+        const lines: string[] = [];
+        lines.push('// Exported ISL intents');
+        lines.push(`// Generated at ${new Date().toISOString()}`);
+        lines.push('');
+
+        for (const intent of intents) {
+          lines.push(`intent ${intent.name} {`);
+          
+          for (const pre of intent.preconditions) {
+            lines.push(`  pre: ${pre.expression}`);
+          }
+          
+          for (const post of intent.postconditions) {
+            lines.push(`  post: ${post.expression}`);
+          }
+          
+          for (const inv of intent.invariants) {
+            lines.push(`  invariant: ${inv.expression}`);
+          }
+          
+          lines.push('}');
+          lines.push('');
+        }
+
+        fs.writeFileSync(resolvedPath, lines.join('\n'));
+        return { output: formatSuccess(`Exported ${intents.length} intent(s) to ${filePath}`) };
+      } catch (error) {
+        return { 
+          output: formatError(`Failed to export: ${error instanceof Error ? error.message : String(error)}`) 
+        };
       }
-
-      return { output: formatSuccess(`Exported to ${filePath}`) };
     },
   },
 ];

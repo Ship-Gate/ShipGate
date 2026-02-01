@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Effect System - Effect Combinators
-// @intentos/effect-handlers/combinators
+// @isl-lang/effect-handlers/combinators
 // ============================================================================
 
 import type { Eff, EffectRow, Handler } from './types';

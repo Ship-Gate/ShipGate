@@ -68,7 +68,7 @@ import { TypeChecker } from './checker';
  * 
  * @example
  * ```typescript
- * import { check } from '@intentos/typechecker';
+ * import { check } from '@isl-lang/typechecker';
  * 
  * const result = check(domainAST);
  * if (!result.success) {

@@ -15,7 +15,7 @@ import type {
   TypeConstraint,
   InputBlock,
   OutputBlock,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 import type { GeneratorOptions } from './generator.js';
 

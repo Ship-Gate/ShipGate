@@ -4,7 +4,7 @@
   "description": "Command-line interface for ISL (Intent Specification Language)",
   "type": "module",
   "bin": {
-    "isl": "./dist/index.js"
+    "isl": "dist/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -17,6 +17,7 @@
     "dev": "tsup src/index.ts --format esm --dts --watch",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist"
   },
@@ -26,6 +27,7 @@
     "@isl-lang/isl-core": "workspace:*",
     "@isl-lang/isl-verify": "workspace:*",
     "@isl-lang/repl": "workspace:*",
+    "@isl-lang/typechecker": "workspace:*",
     "chalk": "^5.3.0",
     "commander": "^12.0.0",
     "ora": "^8.0.1",
@@ -50,10 +52,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mevla/isl-lang.git"
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
   },
   "homepage": "https://intentlang.dev",
   "bugs": {
-    "url": "https://github.com/mevla/isl-lang/issues"
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "directories": {
+    "test": "tests"
   }
 }

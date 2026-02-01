@@ -14,7 +14,7 @@ Thank you for your interest in contributing to ISL (Intent Specification Languag
 1. Fork the repository
 2. Clone your fork:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/isl-lang.git
+   git clone https://github.com/guardiavault-oss/ISL-LANG.git
    cd isl-lang
    ```
 3. Install dependencies:

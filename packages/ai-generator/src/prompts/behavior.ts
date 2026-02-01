@@ -11,7 +11,7 @@ import type {
   Expression,
   TypeExpression,
   FieldDeclaration,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 export interface BehaviorPromptContext {
   domain: DomainDeclaration;

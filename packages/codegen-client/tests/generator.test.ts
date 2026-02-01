@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { generate } from '../src/generator';
-import type * as AST from '@intentos/isl-core';
+import type * as AST from '@isl-lang/isl-core';
 
 // Mock ISL Domain for testing
 const mockDomain: AST.Domain = {

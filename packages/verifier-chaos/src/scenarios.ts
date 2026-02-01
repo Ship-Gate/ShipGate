@@ -4,7 +4,7 @@
  * Parses and validates chaos scenarios from ISL domain definitions.
  */
 
-import type { DomainDeclaration, BehaviorDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration } from '@isl-lang/isl-core';
 
 export type InjectionType = 
   | 'database_failure'

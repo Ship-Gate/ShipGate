@@ -1,15 +1,15 @@
 // ============================================================================
 // ISL Interpreter - Scenario Runner
-// @intentos/interpreter/scenarios
+// @isl-lang/interpreter/scenarios
 // ============================================================================
 
-import type { Value, Environment, ExecutionContext } from '@intentos/runtime-interpreter';
+import type { Value, Environment, ExecutionContext } from '@isl-lang/runtime-interpreter';
 import type {
   Scenario,
   Statement,
   ASTExpression,
   ScenarioBlock,
-} from '@intentos/parser';
+} from '@isl-lang/parser';
 import type {
   ScenarioResult,
   StepResult,

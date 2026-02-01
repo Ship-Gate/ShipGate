@@ -115,8 +115,8 @@ const DEFAULT_OPTIONS = {
  * Usage:
  * ```typescript
  * import Fastify from 'fastify';
- * import { idempotencyPlugin } from '@intentos/stdlib-idempotency/middleware/fastify';
- * import { createMemoryStore } from '@intentos/stdlib-idempotency/store/memory';
+ * import { idempotencyPlugin } from '@isl-lang/stdlib-idempotency/middleware/fastify';
+ * import { createMemoryStore } from '@isl-lang/stdlib-idempotency/store/memory';
  * 
  * const fastify = Fastify();
  * const store = createMemoryStore();

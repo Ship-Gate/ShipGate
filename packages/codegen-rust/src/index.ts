@@ -77,7 +77,7 @@ import type { Domain } from './ast-types';
  *
  * @example
  * ```typescript
- * import { generate } from '@intentos/codegen-rust';
+ * import { generate } from '@isl-lang/codegen-rust';
  *
  * const files = generate(domainAST, {
  *   outputDir: './generated',

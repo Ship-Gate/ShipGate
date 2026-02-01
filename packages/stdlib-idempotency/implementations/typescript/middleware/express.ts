@@ -113,8 +113,8 @@ const DEFAULT_OPTIONS: Required<
  * Usage:
  * ```typescript
  * import express from 'express';
- * import { createIdempotencyMiddleware } from '@intentos/stdlib-idempotency/middleware/express';
- * import { createMemoryStore } from '@intentos/stdlib-idempotency/store/memory';
+ * import { createIdempotencyMiddleware } from '@isl-lang/stdlib-idempotency/middleware/express';
+ * import { createMemoryStore } from '@isl-lang/stdlib-idempotency/store/memory';
  * 
  * const app = express();
  * const store = createMemoryStore();

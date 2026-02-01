@@ -4,7 +4,7 @@
  * Executes chaos scenarios with injections and collects results.
  */
 
-import type { DomainDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
 import type { ParsedChaosScenario, ChaosInjection, ChaosAssertion } from './scenarios.js';
 import { Timeline, createTimeline, type TimelineReport } from './timeline.js';
 import { NetworkInjector } from './injectors/network.js';

@@ -10,7 +10,7 @@ import type {
   EntityDeclaration,
   Expression,
   TypeExpression,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 export interface PromptContext {
   domain: DomainDeclaration;

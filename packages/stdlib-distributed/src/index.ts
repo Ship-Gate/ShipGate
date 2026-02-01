@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Standard Library - Distributed Computing
-// @intentos/stdlib-distributed
+// @isl-lang/stdlib-distributed
 // ============================================================================
 
 // Actor System

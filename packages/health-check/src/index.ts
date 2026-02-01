@@ -1,5 +1,5 @@
 /**
- * @intentos/health-check
+ * @isl-lang/health-check
  * 
  * Generate health check endpoints from ISL dependencies.
  * Supports Kubernetes probes, Express middleware, and custom health checks.

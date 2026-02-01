@@ -1,5 +1,5 @@
 /**
- * @intentos/grafana
+ * @isl-lang/grafana
  * 
  * Generate Grafana dashboards from ISL domains.
  */

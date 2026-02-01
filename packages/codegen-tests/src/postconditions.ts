@@ -4,17 +4,42 @@
 // ============================================================================
 
 import type * as AST from '../../../master_contracts/ast';
-import { compileExpression, compileAssertion } from './expression-compiler';
+import { 
+  compileExpression, 
+  compileAssertion, 
+  createCompilerContext,
+  type CompilerContext 
+} from './expression-compiler';
 import type { PostconditionTest, TestFramework } from './types';
+
+// ============================================================================
+// CONTEXT TYPES
+// ============================================================================
+
+/**
+ * Context for generating postcondition tests
+ */
+export interface PostconditionGeneratorContext {
+  /** Entity names in the domain */
+  entityNames: string[];
+  /** Domain name */
+  domainName?: string;
+}
 
 /**
  * Generate postcondition assertion tests for a behavior
+ * 
+ * @param behavior - The behavior AST node
+ * @param framework - Test framework ('jest' or 'vitest')
+ * @param genCtx - Generator context with entity names
  */
 export function generatePostconditionTests(
   behavior: AST.Behavior,
-  framework: TestFramework
+  framework: TestFramework,
+  genCtx: PostconditionGeneratorContext = { entityNames: [] }
 ): PostconditionTest[] {
   const tests: PostconditionTest[] = [];
+  const ctx = createCompilerContext(genCtx.entityNames);
 
   behavior.postconditions.forEach((block) => {
     const condition = extractConditionName(block.condition);
@@ -24,7 +49,7 @@ export function generatePostconditionTests(
       name: testName,
       condition,
       expressions: block.predicates,
-      testCode: generatePostconditionBlockCode(block, behavior, framework),
+      testCode: generatePostconditionBlockCode(block, behavior, framework, ctx),
     });
   });
 
@@ -50,11 +75,14 @@ function extractConditionName(condition: AST.Identifier | 'success' | 'any_error
 function generatePostconditionBlockCode(
   block: AST.PostconditionBlock,
   behavior: AST.Behavior,
-  framework: TestFramework
+  framework: TestFramework,
+  ctx: CompilerContext
 ): string {
   const condition = extractConditionName(block.condition);
   const behaviorName = behavior.name.name;
-  const assertions = block.predicates.map((pred) => compileAssertion(pred, framework)).join('\n      ');
+  const assertions = block.predicates
+    .map((pred) => compileAssertion(pred, framework, ctx))
+    .join('\n        ');
 
   if (condition === 'success') {
     return `
@@ -62,7 +90,7 @@ function generatePostconditionBlockCode(
       it('should satisfy all success postconditions', async () => {
         // Setup
         const input = createValidInput();
-        const __old__ = captureState();
+        const __old__ = ctx.captureState();
 
         // Execute
         const result = await ${behaviorName}(input);
@@ -83,7 +111,7 @@ function generatePostconditionBlockCode(
       it('should satisfy error postconditions', async () => {
         // Setup: trigger an error condition
         const input = createInputThatCausesError();
-        const __old__ = captureState();
+        const __old__ = ctx.captureState();
 
         // Execute
         const result = await ${behaviorName}(input);
@@ -104,14 +132,14 @@ function generatePostconditionBlockCode(
       it('should satisfy ${condition} postconditions', async () => {
         // Setup: trigger ${condition}
         const input = createInputFor${sanitizeName(condition)}();
-        const __old__ = captureState();
+        const __old__ = ctx.captureState();
 
         // Execute
         const result = await ${behaviorName}(input);
 
         // Verify specific error
         expect(result.success).toBe(false);
-        expect(result.error).toBe('${condition}');
+        expect(result.error?.code).toBe('${condition}');
 
         // Verify postconditions
         ${assertions}
@@ -122,26 +150,32 @@ function generatePostconditionBlockCode(
 
 /**
  * Generate a describe block containing all postcondition tests
+ * 
+ * @param behavior - The behavior AST node
+ * @param framework - Test framework
+ * @param genCtx - Generator context with entity names
  */
 export function generatePostconditionsDescribeBlock(
   behavior: AST.Behavior,
-  framework: TestFramework
+  framework: TestFramework,
+  genCtx: PostconditionGeneratorContext = { entityNames: [] }
 ): string {
-  const tests = generatePostconditionTests(behavior, framework);
-  const behaviorName = behavior.name.name;
+  const tests = generatePostconditionTests(behavior, framework, genCtx);
 
   if (tests.length === 0) {
     return '';
   }
 
   const testCases = tests.map((test) => test.testCode).join('\n\n    ');
+  const entityList = genCtx.entityNames.map(e => `'${e}'`).join(', ');
 
   return `
   describe('Postconditions', () => {
-    // Helpers for state capture
-    const captureState = () => ({
-      // Capture relevant state before operation
-    });
+    // Test context with entity bindings
+    const ctx = createTestContext({ entities: [${entityList}] });
+    const { ${genCtx.entityNames.join(', ')} } = ctx.entities;
+
+    beforeEach(() => ctx.reset());
 
     ${testCases}
   });
@@ -153,26 +187,28 @@ export function generatePostconditionsDescribeBlock(
  */
 export function generatePostconditionAssertions(
   behavior: AST.Behavior,
-  framework: TestFramework
+  framework: TestFramework,
+  genCtx: PostconditionGeneratorContext = { entityNames: [] }
 ): string {
   const behaviorName = behavior.name.name;
+  const ctx = createCompilerContext(genCtx.entityNames);
   
   const successAssertions = behavior.postconditions
     .filter((b) => b.condition === 'success')
     .flatMap((b) => b.predicates)
     .map((p, i) => `
-  assertSuccessPostcondition${i + 1}(result: ${behaviorName}Result, input: ${behaviorName}Input, __old__: State): void {
-    // ${compileExpression(p)}
-    expect(${compileExpression(p)}).toBe(true);
+  assertSuccessPostcondition${i + 1}(result: ${behaviorName}Result, input: ${behaviorName}Input, __old__: StateCapture): void {
+    // ${compileExpression(p, ctx)}
+    expect(${compileExpression(p, ctx)}).toBe(true);
   }`);
 
   const errorAssertions = behavior.postconditions
     .filter((b) => b.condition === 'any_error')
     .flatMap((b) => b.predicates)
     .map((p, i) => `
-  assertErrorPostcondition${i + 1}(result: ${behaviorName}Result, input: ${behaviorName}Input, __old__: State): void {
-    // ${compileExpression(p)}
-    expect(${compileExpression(p)}).toBe(true);
+  assertErrorPostcondition${i + 1}(result: ${behaviorName}Result, input: ${behaviorName}Input, __old__: StateCapture): void {
+    // ${compileExpression(p, ctx)}
+    expect(${compileExpression(p, ctx)}).toBe(true);
   }`);
 
   return `
@@ -181,11 +217,11 @@ export const postconditionAssertions = {
   ${successAssertions.join(',\n')}
   ${errorAssertions.join(',\n')}
 
-  assertAllSuccess(result: ${behaviorName}Result, input: ${behaviorName}Input, __old__: State): void {
+  assertAllSuccess(result: ${behaviorName}Result, input: ${behaviorName}Input, __old__: StateCapture): void {
     ${successAssertions.map((_, i) => `this.assertSuccessPostcondition${i + 1}(result, input, __old__);`).join('\n    ')}
   },
 
-  assertAllError(result: ${behaviorName}Result, input: ${behaviorName}Input, __old__: State): void {
+  assertAllError(result: ${behaviorName}Result, input: ${behaviorName}Input, __old__: StateCapture): void {
     ${errorAssertions.map((_, i) => `this.assertErrorPostcondition${i + 1}(result, input, __old__);`).join('\n    ')}
   }
 };
@@ -197,25 +233,27 @@ export const postconditionAssertions = {
  */
 export function generateImpliesTests(
   behavior: AST.Behavior,
-  framework: TestFramework
+  framework: TestFramework,
+  genCtx: PostconditionGeneratorContext = { entityNames: [] }
 ): string {
   const behaviorName = behavior.name.name;
+  const ctx = createCompilerContext(genCtx.entityNames);
   const tests: string[] = [];
 
   behavior.postconditions.forEach((block) => {
     const condition = extractConditionName(block.condition);
 
-    block.predicates.forEach((predicate, index) => {
-      const predicateCode = compileExpression(predicate);
-      const assertion = compileAssertion(predicate, framework);
+    block.predicates.forEach((predicate) => {
+      const predicateCode = compileExpression(predicate, ctx);
+      const assertion = compileAssertion(predicate, framework, ctx);
 
       tests.push(`
     it('${condition} implies ${truncate(predicateCode, 40)}', async () => {
       const input = createInputFor${sanitizeName(condition)}();
-      const __old__ = captureState();
+      const __old__ = ctx.captureState();
       const result = await ${behaviorName}(input);
 
-      if (${condition === 'success' ? 'result.success' : condition === 'any error' ? '!result.success' : `result.error === '${condition}'`}) {
+      if (${condition === 'success' ? 'result.success' : condition === 'any error' ? '!result.success' : `result.error?.code === '${condition}'`}) {
         ${assertion}
       }
     });

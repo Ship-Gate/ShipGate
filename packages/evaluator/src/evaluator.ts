@@ -6,9 +6,7 @@ import type {
   Value,
   EvaluationContext,
   SourceLocation,
-  EntityInstance,
   EntityStore,
-  EntityStoreSnapshot,
   BuiltinRegistry,
   LambdaValue,
 } from './types.js';
@@ -17,15 +15,14 @@ import {
   TypeError,
   ReferenceError,
   RuntimeError,
-  isEntityInstance,
   isLambdaValue,
   getValueType,
 } from './types.js';
-import { Scope, SnapshotEntityStore, createScope } from './environment.js';
+import { SnapshotEntityStore, createScope } from './environment.js';
 import { getDefaultBuiltins } from './builtins.js';
 
 // ============================================================================
-// AST TYPE INTERFACES (for compatibility with @intentos/parser)
+// AST TYPE INTERFACES (for compatibility with @isl-lang/parser)
 // ============================================================================
 
 // These interfaces match the AST types from the parser package
@@ -216,7 +213,6 @@ export interface EvaluatorOptions {
  */
 export class Evaluator {
   private readonly builtins: BuiltinRegistry;
-  private readonly strict: boolean;
   private readonly maxDepth: number;
   private currentDepth: number = 0;
   private startTime: number = 0;
@@ -224,7 +220,7 @@ export class Evaluator {
 
   constructor(options: EvaluatorOptions = {}) {
     this.builtins = options.builtins ?? getDefaultBuiltins();
-    this.strict = options.strict ?? false;
+    // options.strict reserved for future strict mode
     this.maxDepth = options.maxDepth ?? 1000;
     this.timeout = options.timeout ?? 5000;
   }
@@ -324,12 +320,14 @@ export class Evaluator {
         case 'MapExpr':
           return this.evalMapExpr(expr, ctx);
 
-        default:
+        default: {
+          const unknownExpr = expr as unknown as ASTNode;
           throw new EvaluationError(
-            `Unsupported expression kind: ${(expr as ASTNode).kind}`,
-            expr.location,
+            `Unsupported expression kind: ${unknownExpr.kind}`,
+            unknownExpr.location,
             expr
           );
+        }
       }
     } finally {
       this.currentDepth--;
@@ -359,7 +357,7 @@ export class Evaluator {
 
     // Check if it's an entity type
     if (ctx.domain?.entities.some((e) => e.name === name)) {
-      return this.createEntityProxy(name, ctx.store);
+      return this.createEntityProxy(name, ctx.store) as unknown as Value;
     }
 
     // Check input fields

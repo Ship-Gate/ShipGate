@@ -4,7 +4,7 @@
  * Checks for ISL best practices and patterns.
  */
 
-import type { DomainDeclaration, BehaviorDeclaration, EntityDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration, EntityDeclaration } from '@isl-lang/isl-core';
 
 export interface BestPracticeIssue {
   id: string;

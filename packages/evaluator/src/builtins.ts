@@ -3,11 +3,8 @@
 // ============================================================================
 
 import type {
-  Value,
   BuiltinFn,
   BuiltinRegistry,
-  EvaluationContext,
-  SourceLocation,
 } from './types.js';
 import { RuntimeError, TypeError, getValueType } from './types.js';
 

@@ -1,5 +1,5 @@
 /**
- * @intentos/codegen-wasm
+ * @isl-lang/codegen-wasm
  * WebAssembly Code Generator for ISL
  * Compiles intent specifications to portable WASM modules
  */

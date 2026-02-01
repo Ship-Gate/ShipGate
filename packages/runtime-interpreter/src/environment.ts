@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Runtime Interpreter - Environment Management
-// @intentos/runtime-interpreter/environment
+// @isl-lang/runtime-interpreter/environment
 // ============================================================================
 
 import type { Environment, Value, TypeDefinition, EffectHandler } from './types';

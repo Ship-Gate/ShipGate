@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Runtime Interpreter - Direct ISL Execution Engine
-// @intentos/runtime-interpreter
+// @isl-lang/runtime-interpreter
 // ============================================================================
 
 export * from './types';

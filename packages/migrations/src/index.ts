@@ -1,11 +1,11 @@
 /**
- * @intentos/migrations
+ * @isl-lang/migrations
  * 
  * Generate database migrations from ISL entity changes with safety checks and rollback support.
  * 
  * @example
  * ```typescript
- * import { diffDomains, generatePrismaMigration, checkMigrationSafety } from '@intentos/migrations';
+ * import { diffDomains, generatePrismaMigration, checkMigrationSafety } from '@isl-lang/migrations';
  * 
  * // Compare two domain versions
  * const diff = diffDomains(oldDomain, newDomain);
@@ -183,8 +183,8 @@ export function createMigrationGenerator(defaultOptions: Partial<import('./types
  * Quick migration generation from ISL domains
  */
 export async function migrate(
-  oldDomain: import('@intentos/isl-core').DomainDeclaration,
-  newDomain: import('@intentos/isl-core').DomainDeclaration,
+  oldDomain: import('@isl-lang/isl-core').DomainDeclaration,
+  newDomain: import('@isl-lang/isl-core').DomainDeclaration,
   options: {
     generator?: import('./types.js').GeneratorType;
     options?: Partial<import('./types.js').GeneratorOptions>;

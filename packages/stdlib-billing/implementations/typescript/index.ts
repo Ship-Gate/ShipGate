@@ -1,5 +1,5 @@
 /**
- * @intentos/stdlib-billing
+ * @isl-lang/stdlib-billing
  * 
  * Billing and subscription management standard library.
  */

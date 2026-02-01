@@ -4,7 +4,7 @@
  * Checks for missing specifications, incomplete behaviors, and gaps.
  */
 
-import type { DomainDeclaration, BehaviorDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration } from '@isl-lang/isl-core';
 
 export interface CompletenessIssue {
   id: string;

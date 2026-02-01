@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Runtime Interpreter - Temporal Property Checking
-// @intentos/runtime-interpreter/temporal
+// @isl-lang/runtime-interpreter/temporal
 // ============================================================================
 
 import type { Value, Expression, Environment, ExecutionContext } from './types';

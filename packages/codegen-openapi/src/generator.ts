@@ -4,7 +4,7 @@
 // ============================================================================
 
 import * as YAML from 'yaml';
-import type * as AST from '@intentos/isl-core';
+import type * as AST from '@isl-lang/isl-core';
 import type {
   GenerateOptions,
   GeneratedFile,

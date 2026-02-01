@@ -83,7 +83,7 @@ export class PostHogProvider implements AnalyticsProvider {
       properties: {
         ...payload.properties,
         ...this.getDeviceProperties(payload),
-        $lib: '@intentos/stdlib-analytics',
+        $lib: '@isl-lang/stdlib-analytics',
         $lib_version: '1.0.0',
       },
       timestamp: payload.timestamp.toISOString(),

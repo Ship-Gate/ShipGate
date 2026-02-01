@@ -8,35 +8,28 @@ import {
   TestTube,
   BookOpen,
   Terminal,
+  Bot,
+  Copy,
+  Check,
 } from "lucide-react";
 
-const heroExample = `domain PaymentProcessing {
-  entity Payment {
-    id: UUID [immutable, unique]
-    amount: Decimal [positive]
-    status: PaymentStatus
-    
-    invariants {
-      amount > 0
-      status == COMPLETED implies captured_at != null
-    }
+const heroExample = `intent ProcessPayment {
+  pre {
+    amount > 0
+    card.valid
+    !order.alreadyPaid
   }
-
-  behavior ProcessPayment {
-    input {
-      amount: Decimal
-      card_token: String [sensitive]
+  
+  post {
+    success implies {
+      payment.charged == amount
+      order.status == "paid"
+      receipt.sent(customer.email)
     }
-
-    postconditions {
-      success implies {
-        - Payment.status == COMPLETED
-        - Payment.amount == input.amount
-      }
-    }
-
-    temporal {
-      - within 3s (p99): response returned
+    
+    failure implies {
+      order.status == old(order.status)
+      error.logged
     }
   }
 }`;
@@ -44,27 +37,21 @@ const heroExample = `domain PaymentProcessing {
 const features = [
   {
     icon: Shield,
-    title: "Behavioral Contracts",
+    title: "Catch Fake Features",
     description:
-      "Define what your software must do, not how. ISL captures intent as verifiable specifications.",
+      "AI can generate code that looks right but doesn't work. ISL catches functions that return hardcoded values, skip validation, or ignore errors.",
   },
   {
-    icon: Zap,
-    title: "Runtime Verification",
+    icon: Bot,
+    title: "Verify AI-Generated Code",
     description:
-      "Automatically generate tests from specs. Verify your implementation matches your intent.",
+      "Write specs before asking AI to generate code. Then verify the implementation actually matches your intent—not just your tests.",
   },
   {
     icon: FileCode,
-    title: "Type Generation",
+    title: "Generate Type-Safe Code",
     description:
-      "Generate TypeScript types, API schemas, and documentation from a single source of truth.",
-  },
-  {
-    icon: TestTube,
-    title: "Chaos Testing",
-    description:
-      "Built-in support for chaos engineering. Test how your system behaves under failure conditions.",
+      "From one ISL spec, generate TypeScript types, Rust structs, Go interfaces, and OpenAPI schemas. One source of truth for your contracts.",
   },
 ];
 
@@ -72,20 +59,20 @@ const quickLinks = [
   {
     icon: BookOpen,
     title: "Getting Started",
-    description: "Install ISL and write your first specification",
+    description: "Install ISL and write your first specification in 5 minutes",
     href: "/docs/getting-started",
   },
   {
     icon: FileCode,
     title: "Language Reference",
-    description: "Complete guide to ISL syntax and features",
-    href: "/docs/language",
+    description: "Complete guide to ISL syntax, types, and features",
+    href: "/docs/language-reference",
   },
   {
     icon: Terminal,
     title: "CLI Reference",
     description: "All commands and options for the ISL CLI",
-    href: "/docs/cli",
+    href: "/docs/tools/cli",
   },
 ];
 
@@ -103,21 +90,37 @@ export default function Home() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                 </span>
-                v1.0 Now Available
+                Part of the VibeCheck Platform
               </div>
               <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-6">
-                Intent Specification
+                Specify intent.
                 <br />
-                <span className="text-primary">Language</span>
+                Verify code.
+                <br />
+                <span className="text-primary">Ship with confidence.</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8 max-w-lg">
-                Define behavioral contracts that guarantee your software does
-                what you intend. Write specs, generate types, verify
-                implementations.
+                ISL is a contract/specification language for validating AI-generated code.
+                Define what your code should do, verify it actually does it.
               </p>
+              
+              {/* Install command */}
+              <div className="mb-8">
+                <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg bg-card border border-border font-mono text-sm">
+                  <span className="text-muted-foreground">$</span>
+                  <span>npm install -g @isl/cli</span>
+                  <button
+                    className="ml-2 p-1 rounded hover:bg-muted transition-colors"
+                    aria-label="Copy install command"
+                  >
+                    <Copy className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+              
               <div className="flex flex-wrap gap-4">
                 <Link
-                  href="/docs/getting-started"
+                  href="/docs/getting-started/quick-start"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
                 >
                   Get Started
@@ -127,7 +130,7 @@ export default function Home() {
                   href="/playground"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-border hover:bg-muted transition-colors"
                 >
-                  Try in Playground
+                  Try Playground
                 </Link>
               </div>
             </div>
@@ -139,7 +142,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Value Props Section */}
       <section className="py-20 px-6 lg:px-8 border-t border-border">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -147,15 +150,15 @@ export default function Home() {
               Why ISL?
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Stop writing tests that miss edge cases. Define your intent once
-              and let ISL ensure your code matches.
+              AI-generated code can look perfect but be completely broken.
+              ISL helps you catch &quot;fake features&quot; before they ship.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-3 gap-8">
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="feature-card p-6 rounded-xl border border-border bg-card"
+                className="p-6 rounded-xl border border-border bg-card"
               >
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                   <feature.icon className="w-6 h-6 text-primary" />
@@ -170,7 +173,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Quick Example Section */}
+      {/* How It Works Section */}
       <section className="py-20 px-6 lg:px-8 bg-muted/30">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-start">
@@ -180,39 +183,39 @@ export default function Home() {
               </h2>
               <p className="text-muted-foreground mb-6">
                 ISL specifications are your single source of truth. From one
-                spec file, generate:
+                spec file, you can:
               </p>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3">
                   <div className="w-6 h-6 rounded-full bg-isl-green/20 flex items-center justify-center">
-                    <span className="text-isl-green text-sm">✓</span>
+                    <Check className="w-4 h-4 text-isl-green" />
                   </div>
-                  <span>TypeScript types and interfaces</span>
+                  <span>Generate TypeScript types and validators</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <div className="w-6 h-6 rounded-full bg-isl-green/20 flex items-center justify-center">
-                    <span className="text-isl-green text-sm">✓</span>
+                    <Check className="w-4 h-4 text-isl-green" />
                   </div>
-                  <span>Runtime validation tests</span>
+                  <span>Verify implementations match your intent</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <div className="w-6 h-6 rounded-full bg-isl-green/20 flex items-center justify-center">
-                    <span className="text-isl-green text-sm">✓</span>
+                    <Check className="w-4 h-4 text-isl-green" />
                   </div>
-                  <span>API documentation</span>
+                  <span>Generate OpenAPI documentation</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <div className="w-6 h-6 rounded-full bg-isl-green/20 flex items-center justify-center">
-                    <span className="text-isl-green text-sm">✓</span>
+                    <Check className="w-4 h-4 text-isl-green" />
                   </div>
-                  <span>Chaos test scenarios</span>
+                  <span>Run chaos tests for failure scenarios</span>
                 </li>
               </ul>
               <Link
-                href="/docs/getting-started"
+                href="/docs/code-generation"
                 className="inline-flex items-center gap-2 text-primary hover:underline"
               >
-                Learn more about code generation
+                Learn about code generation
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -221,20 +224,26 @@ export default function Home() {
                 Terminal
               </div>
               <CodeBlock
-                code={`$ isl check auth.isl
+                code={`$ isl check payment.isl
 ✓ Parsed successfully
 ✓ Type checking passed
-✓ 4 entities, 6 behaviors found
+✓ 3 intents, 2 invariants found
 
-$ isl generate types auth.isl -o ./src/types
-Generated 12 TypeScript interfaces
-Generated 6 API schemas
+$ isl generate typescript payment.isl -o ./src/types
+Generated 4 TypeScript interfaces
+Generated 3 Zod validators
+Generated 3 contract checkers
 
-$ isl verify auth.isl --runtime
-Running 47 generated tests...
-✓ All postconditions verified
-✓ All invariants hold
-Trust Score: 94.2%`}
+$ isl verify payment.isl --impl ./src/payment.ts
+Running verification...
+
+ProcessPayment:
+  ✓ Precondition: amount > 0 (passed)
+  ✓ Precondition: card.valid (passed)
+  ✓ Postcondition: payment.charged == amount (passed)
+  ✓ Postcondition: order.status == "paid" (passed)
+
+Trust Score: 100%`}
                 language="bash"
               />
             </div>

@@ -79,7 +79,13 @@ export class Parser {
     const start = this.currentToken();
     this.expect('DOMAIN', "Expected 'domain'");
     const name = this.parseIdentifier();
-    this.expect('LBRACE', "Expected '{'");
+    
+    // Support both braced syntax: domain Name { ... }
+    // and brace-less syntax: domain Name\nversion "1.0.0"\n...
+    const useBraces = this.check('LBRACE');
+    if (useBraces) {
+      this.advance(); // consume '{'
+    }
 
     const domain: AST.Domain = {
       kind: 'Domain',
@@ -97,7 +103,12 @@ export class Parser {
       location: start.location,
     };
 
-    while (!this.check('RBRACE') && !this.isAtEnd()) {
+    // Parse until RBRACE (braced) or EOF (brace-less)
+    const shouldContinue = () => useBraces 
+      ? !this.check('RBRACE') && !this.isAtEnd()
+      : !this.isAtEnd();
+
+    while (shouldContinue()) {
       try {
         this.parseDomainMember(domain);
       } catch (e) {
@@ -113,8 +124,14 @@ export class Parser {
       }
     }
 
-    const endToken = this.expect('RBRACE', "Expected '}'");
-    domain.location = AST.mergeLocations(start.location, endToken.location);
+    if (useBraces) {
+      const endToken = this.expect('RBRACE', "Expected '}'");
+      domain.location = AST.mergeLocations(start.location, endToken.location);
+    } else {
+      // For brace-less syntax, extend location to last parsed item
+      const lastLocation = this.previousToken().location;
+      domain.location = AST.mergeLocations(start.location, lastLocation);
+    }
 
     // Validate required fields
     if (domain.version.value === '') {
@@ -175,13 +192,15 @@ export class Parser {
 
   private parseVersionField(): AST.StringLiteral {
     this.advance(); // consume 'version'
-    this.expect('COLON', "Expected ':'");
+    // Support both `version: "1.0.0"` and `version "1.0.0"` (brace-less)
+    this.match('COLON');
     return this.parseStringLiteral();
   }
 
   private parseOwnerField(): AST.StringLiteral {
     this.advance(); // consume 'owner'
-    this.expect('COLON', "Expected ':'");
+    // Support both `owner: "Acme"` and `owner "Acme"` (brace-less)
+    this.match('COLON');
     return this.parseStringLiteral();
   }
 
@@ -2362,6 +2381,10 @@ export class Parser {
 
   private currentToken(): Token {
     return this.tokens[this.current] ?? this.eofToken();
+  }
+
+  private previousToken(): Token {
+    return this.tokens[this.current - 1] ?? this.eofToken();
   }
 
   private peekNextToken(): Token | undefined {

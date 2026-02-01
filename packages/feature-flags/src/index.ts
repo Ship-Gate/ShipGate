@@ -1,5 +1,5 @@
 /**
- * @intentos/feature-flags
+ * @isl-lang/feature-flags
  * 
  * ISL-aware feature flag system with behavioral targeting
  */

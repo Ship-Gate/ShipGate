@@ -1,12 +1,12 @@
 // ============================================================================
 // ISL Interpreter - Binding Loaders
-// @intentos/interpreter/bindings
+// @isl-lang/interpreter/bindings
 // ============================================================================
 
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
-import type { Value } from '@intentos/runtime-interpreter';
+import type { Value } from '@isl-lang/runtime-interpreter';
 import type {
   BindingSource,
   TestData,

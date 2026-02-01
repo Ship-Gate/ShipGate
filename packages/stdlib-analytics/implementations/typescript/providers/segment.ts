@@ -141,7 +141,7 @@ export class SegmentProvider implements AnalyticsProvider {
     return {
       ...context,
       library: {
-        name: '@intentos/stdlib-analytics',
+        name: '@isl-lang/stdlib-analytics',
         version: '1.0.0',
       },
     };

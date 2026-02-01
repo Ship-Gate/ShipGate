@@ -1,6 +1,6 @@
 // ============================================================================
 // ISL Runtime Interpreter - Expression Evaluator
-// @intentos/runtime-interpreter/evaluator
+// @isl-lang/runtime-interpreter/evaluator
 // ============================================================================
 
 import type {

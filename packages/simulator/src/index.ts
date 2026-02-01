@@ -5,7 +5,7 @@
  * 
  * @example
  * ```typescript
- * import { Simulator } from '@intentos/simulator';
+ * import { Simulator } from '@isl-lang/simulator';
  * 
  * const sim = new Simulator({
  *   domain: authDomain,

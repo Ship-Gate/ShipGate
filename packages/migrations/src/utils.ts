@@ -10,7 +10,7 @@ import type {
   FieldDeclaration,
   TypeConstraint,
   Annotation,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 import type { SqlDialect, SerializedValue, NamingConvention } from './types.js';
 

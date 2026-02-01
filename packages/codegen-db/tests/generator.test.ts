@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { generate } from '../src/generator.js';
-import type { DomainDeclaration } from '@intentos/isl-core';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
 
 // Helper to create a minimal source span
 const span = { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 1, offset: 0 } };

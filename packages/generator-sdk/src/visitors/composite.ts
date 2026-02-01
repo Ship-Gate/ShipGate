@@ -10,7 +10,7 @@ import type {
   BehaviorDeclaration,
   TypeDeclaration,
   EnumDeclaration,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 
 import type {
   GeneratedFile,

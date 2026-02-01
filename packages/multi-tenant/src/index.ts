@@ -1,11 +1,11 @@
 /**
- * @intentos/multi-tenant
+ * @isl-lang/multi-tenant
  * 
  * Multi-tenancy support module for ISL domains.
  * 
  * @example
  * ```typescript
- * import { Tenant, withTenant, TenantContext } from '@intentos/multi-tenant';
+ * import { Tenant, withTenant, TenantContext } from '@isl-lang/multi-tenant';
  * 
  * // Execute code in tenant context
  * await withTenant(tenant, async () => {

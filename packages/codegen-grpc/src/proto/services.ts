@@ -9,7 +9,7 @@ import type {
   ErrorSpec,
   InputSpec,
   OutputSpec,
-} from '@intentos/isl-core';
+} from '@isl-lang/isl-core';
 import {
   toSnakeCase,
   toPascalCase,

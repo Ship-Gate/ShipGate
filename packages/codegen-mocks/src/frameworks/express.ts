@@ -2,7 +2,7 @@
 // Express Mock Server Generator
 // ============================================================================
 
-import type * as AST from '@intentos/isl-core';
+import type * as AST from '@isl-lang/isl-core';
 import type { GenerateOptions, MockEndpoint, DataFactory } from '../types';
 
 /**

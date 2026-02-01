@@ -1,5 +1,5 @@
 /**
- * @intentos/compliance
+ * @isl-lang/compliance
  * 
  * Generate compliance reports (SOC2, PCI-DSS, HIPAA, GDPR) from ISL specifications.
  * Maps ISL constructs to compliance framework requirements and produces
