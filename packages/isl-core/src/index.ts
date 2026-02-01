@@ -7,6 +7,7 @@
 export * from './lexer/index.js';
 export * from './ast/index.js';
 export * from './parser/index.js';
+export * as verification from './isl-agent/verification/index.js';
 
 import { tokenize, type LexerError } from './lexer/index.js';
 import { parse, type ParseError } from './parser/index.js';

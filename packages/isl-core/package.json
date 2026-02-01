@@ -9,6 +9,10 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./verification": {
+      "import": "./dist/isl-agent/verification/index.js",
+      "types": "./dist/isl-agent/verification/index.d.ts"
     }
   },
   "files": [
