@@ -13,3 +13,4 @@ export { gen, printGenResult, getGenExitCode, VALID_TARGETS, type GenOptions, ty
 export { repl, type ReplOptions } from './repl.js';
 export { fmt, printFmtResult, getFmtExitCode, type FmtOptions, type FmtResult } from './fmt.js';
 export { lint, printLintResult, getLintExitCode, type LintOptions, type LintResult, type LintIssue } from './lint.js';
+export { spec, printSpecResult, getSpecExitCode, listTemplates, getTemplate, TEMPLATES, type SpecOptions, type SpecResult, type TemplateInfo } from './spec.js';

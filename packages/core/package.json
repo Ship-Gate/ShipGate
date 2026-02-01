@@ -21,13 +21,21 @@
     "./context": {
       "import": "./dist/context/index.js",
       "types": "./dist/context/index.d.ts"
+    },
+    "./isl-lint": {
+      "import": "./dist/isl-lint/index.js",
+      "types": "./dist/isl-lint/index.d.ts"
+    },
+    "./isl-diff": {
+      "import": "./dist/isl-diff/index.js",
+      "types": "./dist/isl-diff/index.d.ts"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts src/evidence/index.ts src/isl-agent/scoring/index.ts --format esm --dts --clean",
+    "build": "tsup src/index.ts src/evidence/index.ts src/isl-agent/scoring/index.ts src/isl-lint/index.ts src/isl-diff/index.ts --format esm --dts --clean",
     "dev": "tsup src/index.ts src/evidence/index.ts --format esm --dts --watch",
     "test": "vitest run",
     "test:watch": "vitest",
