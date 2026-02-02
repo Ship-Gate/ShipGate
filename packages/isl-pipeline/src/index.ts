@@ -77,6 +77,36 @@ export type {
   ProofCompletenessResult,
 } from './semantic-rules.js';
 
+// Fingerprint and stuck detection
+export {
+  stableFingerprint,
+  computeViolationFingerprint,
+  normalizeMessage,
+  normalizeSpan,
+  FingerprintTracker,
+  fingerprintsEqual,
+  hasViolationsChanged,
+  violationsDiffSummary,
+} from './fingerprint.js';
+
+export type {
+  ViolationLike,
+  FingerprintOptions,
+  StuckDetectionConfig,
+  AbortReason,
+  AbortCondition,
+} from './fingerprint.js';
+
+// Production code templates
+export {
+  generateNextJSRoute,
+  generateTests,
+} from './code-templates.js';
+
+export type {
+  TemplateContext,
+} from './code-templates.js';
+
 // Re-export from dependencies for convenience
 export { createTranslator, type ISLAST, type RepoContext, type TranslationResult } from '@isl-lang/translator';
 export { createGenerator, type GenerationResult, type ProofLink, type FileDiff } from '@isl-lang/generator';

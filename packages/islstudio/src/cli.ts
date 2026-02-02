@@ -123,9 +123,12 @@ function parseArgs(args: string[]): CliOptions {
       options.all = true;
     } else if (arg === '--ci') {
       options.ci = true;
+    } else if (arg === '--json') {
+      // Shorthand for --output json (healer-compatible machine-readable output)
+      options.output = 'json';
     } else if (arg === '--output' || arg === '-o') {
       const next = args[++i];
-      if (next === 'json' || next === 'sarif') {
+      if (next === 'json' || next === 'sarif' || next === 'text') {
         options.output = next;
       }
     } else if (arg === '--config' || arg === '-c') {

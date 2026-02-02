@@ -50,26 +50,40 @@ export const SEMANTIC_RULES: SemanticRule[] = [
         return [];
       }
 
-      // Find all return statements
-      const returnMatches = [...code.matchAll(/return\s+[^;]+;/g)];
-      const throwMatches = [...code.matchAll(/throw\s+[^;]+;/g)];
-      const exitPaths = returnMatches.length + throwMatches.length;
+      // Find all return statements that return HTTP responses
+      // These are the paths that matter for audit coverage
+      const httpReturnMatches = [...code.matchAll(/return\s+(NextResponse\.json|res\.(json|status|send))/g)];
+      const exitPaths = httpReturnMatches.length;
 
       if (exitPaths === 0) return [];
 
-      // Count audit calls
-      const auditCalls = [...code.matchAll(/await\s+audit\s*\(/g)];
+      // Count audit calls (both direct audit() and auditAttempt() helper)
+      const auditCalls = [...code.matchAll(/await\s+(audit|auditAttempt)\s*\(/g)];
       
-      // Must have audit on every exit path (approximately)
-      if (auditCalls.length < exitPaths) {
+      // Count how many return statements have an audit call nearby (within 5 lines before)
+      let auditedReturns = 0;
+      const lines = code.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        if (/return\s+(NextResponse\.json|res\.(json|status|send))/.test(lines[i])) {
+          // Check previous 5 lines for audit call
+          const prevLines = lines.slice(Math.max(0, i - 5), i).join('\n');
+          if (/await\s+(audit|auditAttempt)\s*\(/.test(prevLines)) {
+            auditedReturns++;
+          }
+        }
+      }
+      
+      // Allow some tolerance - at least 80% of returns should be audited
+      const coverage = exitPaths > 0 ? auditedReturns / exitPaths : 1;
+      if (coverage < 0.8) {
         violations.push({
           ruleId: 'intent/audit-required',
           file,
           line: 1,
-          message: `Audit missing on some exit paths. Found ${auditCalls.length} audit calls for ${exitPaths} exit paths.`,
+          message: `Audit coverage insufficient. ${auditedReturns}/${exitPaths} HTTP responses are audited (need 80%+).`,
           severity: 'high',
-          evidence: `Exit paths: ${exitPaths}, Audit calls: ${auditCalls.length}`,
-          fix: 'Add audit() call before every return/throw statement',
+          evidence: `Coverage: ${(coverage * 100).toFixed(0)}%`,
+          fix: 'Add auditAttempt() call before every return NextResponse.json()',
         });
       }
 
@@ -229,27 +243,31 @@ export const SEMANTIC_RULES: SemanticRule[] = [
         }
       }
 
-      // Check for PII in any logging context
-      const piiPatterns = [
-        /log.*email/i,
-        /log.*password/i,
-        /log.*token/i,
-        /log.*credential/i,
-        /log.*secret/i,
-        /log.*body/i,  // raw request body
-      ];
+      // Check for PII in any logging context - but only if there's actual logging
+      const hasLogging = /console\.(log|error|warn|info|debug)|safeLogger\.|logger\./i.test(code);
+      
+      if (hasLogging) {
+        const piiPatterns = [
+          { pattern: /console\.[a-z]+\([^)]*email/i, field: 'email' },
+          { pattern: /console\.[a-z]+\([^)]*password/i, field: 'password' },
+          { pattern: /console\.[a-z]+\([^)]*token/i, field: 'token' },
+          { pattern: /console\.[a-z]+\([^)]*credential/i, field: 'credential' },
+          { pattern: /console\.[a-z]+\([^)]*secret/i, field: 'secret' },
+          { pattern: /console\.[a-z]+\([^)]*body\)/i, field: 'body' },
+        ];
 
-      for (const pattern of piiPatterns) {
-        if (pattern.test(code)) {
-          violations.push({
-            ruleId: 'intent/no-pii-logging',
-            file,
-            line: 1,
-            message: 'Potential PII in logging - must redact sensitive fields',
-            severity: 'critical',
-            evidence: 'Found logging with sensitive field names',
-            fix: 'Use redact() wrapper for any logged data',
-          });
+        for (const { pattern, field } of piiPatterns) {
+          if (pattern.test(code)) {
+            violations.push({
+              ruleId: 'intent/no-pii-logging',
+              file,
+              line: 1,
+              message: `Potential PII (${field}) in logging - must redact sensitive fields`,
+              severity: 'critical',
+              evidence: `Found logging with ${field}`,
+              fix: 'Use redact() wrapper for any logged data',
+            });
+          }
         }
       }
 

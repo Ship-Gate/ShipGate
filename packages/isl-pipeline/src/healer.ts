@@ -24,7 +24,7 @@ import type { ISLAST, RepoContext } from '@isl-lang/translator';
 import type { FileDiff } from '@isl-lang/generator';
 import type { ProofBundle, GateEvidence } from '@isl-lang/proof';
 import { createProofBundle } from '@isl-lang/proof';
-import * as crypto from 'crypto';
+import { stableFingerprint, FingerprintTracker, type AbortCondition } from './fingerprint.js';
 
 // ============================================================================
 // Types
