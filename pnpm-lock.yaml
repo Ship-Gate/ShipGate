@@ -2438,6 +2438,16 @@ importers:
         version: 1.6.1(@types/node@25.1.0)
 
   packages/islstudio:
+    dependencies:
+      '@isl-lang/evidence':
+        specifier: workspace:*
+        version: link:../isl-evidence
+      '@isl-lang/firewall':
+        specifier: workspace:*
+        version: link:../isl-firewall
+      '@isl-lang/policy-packs':
+        specifier: workspace:*
+        version: link:../isl-policy-packs
     devDependencies:
       '@types/node':
         specifier: ^20.10.0
@@ -4477,10 +4487,6 @@ importers:
         version: 5.9.3
 
   packages/vscode-islstudio:
-    dependencies:
-      islstudio:
-        specifier: workspace:*
-        version: link:../islstudio
     devDependencies:
       '@types/vscode':
         specifier: ^1.85.0

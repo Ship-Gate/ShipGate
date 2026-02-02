@@ -54,17 +54,50 @@
     "commands": [
       {
         "command": "islstudio.runGate",
-        "title": "ISL Studio: Run Gate"
+        "title": "ISL Studio: Run Gate (All Files)",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "islstudio.runGateChangedOnly",
+        "title": "ISL Studio: Run Gate (Changed Files Only)",
+        "icon": "$(git-compare)"
       },
       {
         "command": "islstudio.explainRule",
-        "title": "ISL Studio: Explain Rule"
+        "title": "ISL Studio: Explain Rule",
+        "icon": "$(book)"
       },
       {
         "command": "islstudio.createBaseline",
-        "title": "ISL Studio: Create Baseline"
+        "title": "ISL Studio: Create Baseline",
+        "icon": "$(save)"
+      },
+      {
+        "command": "islstudio.useBaseline",
+        "title": "ISL Studio: Show Baseline Status",
+        "icon": "$(list-flat)"
+      },
+      {
+        "command": "islstudio.init",
+        "title": "ISL Studio: Initialize Project",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "islstudio.showOutput",
+        "title": "ISL Studio: Show Output",
+        "icon": "$(output)"
       }
     ],
+    "menus": {
+      "commandPalette": [
+        { "command": "islstudio.runGate" },
+        { "command": "islstudio.runGateChangedOnly" },
+        { "command": "islstudio.explainRule" },
+        { "command": "islstudio.createBaseline" },
+        { "command": "islstudio.useBaseline" },
+        { "command": "islstudio.init" }
+      ]
+    },
     "configuration": {
       "title": "ISL Studio",
       "properties": {
@@ -76,13 +109,17 @@
         "islstudio.runOnSave": {
           "type": "boolean",
           "default": true,
-          "description": "Run gate on file save"
+          "description": "Run quick check on file save"
         },
-        "islstudio.severity": {
-          "type": "string",
-          "enum": ["error", "warning", "information"],
-          "default": "warning",
-          "description": "Default severity for violations"
+        "islstudio.runOnOpen": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run gate on workspace open"
+        },
+        "islstudio.changedOnlyByDefault": {
+          "type": "boolean",
+          "default": true,
+          "description": "Only check changed files by default"
         }
       }
     }

@@ -63,7 +63,8 @@ jobs:
 
       - uses: ISL-Studio/islstudio-gate-action@v1
         with:
-          mode: enforce
+          # Start with warn mode - switch to enforce when ready
+          mode: warn
           upload-sarif: true
           changed-only: true
 `,
@@ -130,8 +131,10 @@ jobs:
 
       - uses: ISL-Studio/islstudio-gate-action@v1
         with:
-          mode: enforce
+          # Start with warn mode - switch to enforce when ready
+          mode: warn
           upload-sarif: true
+          changed-only: true
 `,
 };
 
@@ -183,8 +186,10 @@ jobs:
 
       - uses: ISL-Studio/islstudio-gate-action@v1
         with:
-          mode: enforce
+          # Start with warn mode - switch to enforce when ready
+          mode: warn
           upload-sarif: true
+          changed-only: true
 `,
 };
 
@@ -234,8 +239,10 @@ jobs:
 
       - uses: ISL-Studio/islstudio-gate-action@v1
         with:
-          mode: enforce
+          # Start with warn mode - switch to enforce when ready
+          mode: warn
           upload-sarif: true
+          changed-only: true
           threshold: '80'
 `,
 };
@@ -283,7 +290,10 @@ jobs:
 
       - uses: ISL-Studio/islstudio-gate-action@v1
         with:
-          mode: enforce
+          # Start with warn mode - switch to enforce when ready
+          mode: warn
+          upload-sarif: true
+          changed-only: true
 `,
 };
 

@@ -24,7 +24,11 @@
     "test": "vitest run",
     "prepublishOnly": "npm run build"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@isl-lang/policy-packs": "workspace:*",
+    "@isl-lang/firewall": "workspace:*",
+    "@isl-lang/evidence": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^20.10.0",
     "tsup": "^8.0.1",
