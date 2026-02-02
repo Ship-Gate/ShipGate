@@ -1,19 +1,25 @@
 {
   "name": "vscode-islstudio",
   "displayName": "ISL Studio",
-  "description": "Block risky code before it ships. Auth, PII, payments, rate-limit checks.",
+  "description": "Block risky code before it ships. 25 rules for auth bypass, PII leaks, payment issues, and missing rate limits.",
   "version": "0.1.0",
   "publisher": "isl-studio",
   "icon": "icon.png",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/ISL-Studio/ISL-Studio-"
   },
+  "bugs": {
+    "url": "https://github.com/ISL-Studio/ISL-Studio-/issues"
+  },
+  "homepage": "https://islstudio.dev",
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
     "Linters",
+    "Programming Languages",
     "Other"
   ],
   "keywords": [
@@ -21,7 +27,22 @@
     "linter",
     "auth",
     "pii",
-    "gate"
+    "gate",
+    "typescript",
+    "javascript",
+    "code review",
+    "pull request"
+  ],
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "badges": [
+    {
+      "url": "https://img.shields.io/npm/v/islstudio.svg",
+      "href": "https://www.npmjs.com/package/islstudio",
+      "description": "npm version"
+    }
   ],
   "activationEvents": [
     "onLanguage:typescript",

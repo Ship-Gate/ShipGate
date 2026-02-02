@@ -6,17 +6,20 @@
  * Creates:
  *   - .islstudio/config.json
  *   - Optional baseline
- *   - Prints GitHub workflow YAML
+ *   - GitHub workflow YAML
+ *   - Optional intent file
  */
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as readline from 'readline';
+import { templates, detectFramework, getTemplate } from './templates/index.js';
 
 export interface InitOptions {
   preset?: string;
   baseline?: boolean;
   yes?: boolean;
+  framework?: string;
 }
 
 const WORKFLOW_YAML = `# .github/workflows/isl-gate.yml
@@ -101,20 +104,33 @@ export async function runInitCommand(args: string[]): Promise<void> {
     // Not initialized, continue
   }
 
+  // Detect framework from package.json
+  let detectedFramework: string | null = null;
+  try {
+    const pkgJson = JSON.parse(await fs.readFile(path.join(cwd, 'package.json'), 'utf-8'));
+    detectedFramework = detectFramework(pkgJson);
+  } catch {
+    // No package.json
+  }
+
   // Parse options
   const options: InitOptions = {
     preset: 'startup-default',
     baseline: false,
     yes: args.includes('-y') || args.includes('--yes'),
+    framework: detectedFramework || undefined,
   };
 
-  // Get preset from args
+  // Get options from args
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--preset' && args[i + 1]) {
       options.preset = args[i + 1];
     }
     if (args[i] === '--baseline') {
       options.baseline = true;
+    }
+    if (args[i] === '--framework' && args[i + 1]) {
+      options.framework = args[i + 1];
     }
   }
 
@@ -128,7 +144,28 @@ export async function runInitCommand(args: string[]): Promise<void> {
     const ask = (q: string): Promise<string> =>
       new Promise(resolve => rl.question(q, resolve));
 
-    console.log('Choose a preset:\n');
+    // Framework selection
+    if (detectedFramework) {
+      console.log(`📦 Detected framework: ${detectedFramework}\n`);
+    } else {
+      console.log('Select your framework:\n');
+      console.log('  1) nextjs   - Next.js with API routes');
+      console.log('  2) express  - Express.js REST API');
+      console.log('  3) fastify  - Fastify REST API');
+      console.log('  4) nestjs   - NestJS enterprise API');
+      console.log('  5) hono     - Hono edge API');
+      console.log('  6) generic  - Generic TypeScript\n');
+
+      const fwChoice = await ask('Select framework [1]: ');
+      const fwMap: Record<string, string> = {
+        '1': 'nextjs', '2': 'express', '3': 'fastify',
+        '4': 'nestjs', '5': 'hono', '6': 'generic',
+      };
+      options.framework = fwMap[fwChoice] || 'nextjs';
+    }
+
+    // Preset selection
+    console.log('\nChoose a preset:\n');
     console.log('  1) startup-default  - Auth + PII + Rate-limit (recommended)');
     console.log('  2) strict-security  - All packs enabled, 90% threshold');
     console.log('  3) minimal          - Auth only, 50% threshold\n');
@@ -144,13 +181,16 @@ export async function runInitCommand(args: string[]): Promise<void> {
     rl.close();
   }
 
+  // Get template for framework
+  const template = options.framework ? getTemplate(options.framework) : null;
+
   // Create config directory
   await fs.mkdir(configDir, { recursive: true });
 
-  // Write config
-  const config = CONFIG_TEMPLATE[options.preset as keyof typeof CONFIG_TEMPLATE] || CONFIG_TEMPLATE['startup-default'];
+  // Write config (use template config if available)
+  const config = template?.config || CONFIG_TEMPLATE[options.preset as keyof typeof CONFIG_TEMPLATE] || CONFIG_TEMPLATE['startup-default'];
   await fs.writeFile(configPath, JSON.stringify(config, null, 2));
-  console.log(`\n✅ Created .islstudio/config.json (preset: ${options.preset})`);
+  console.log(`\n✅ Created .islstudio/config.json (${options.framework || options.preset})`);
 
   // Create baseline if requested
   if (options.baseline) {
@@ -180,10 +220,18 @@ export async function runInitCommand(args: string[]): Promise<void> {
 
   if (!workflowExists) {
     await fs.mkdir(workflowDir, { recursive: true });
-    await fs.writeFile(workflowPath, WORKFLOW_YAML);
-    console.log('✅ Created .github/workflows/isl-gate.yml');
+    const workflowContent = template?.workflow || WORKFLOW_YAML;
+    await fs.writeFile(workflowPath, workflowContent);
+    console.log(`✅ Created .github/workflows/isl-gate.yml (${options.framework || 'generic'})`);
   } else {
     console.log('⚠️  Workflow already exists at .github/workflows/isl-gate.yml');
+  }
+
+  // Create intent file if template has one
+  if (template?.intentFile) {
+    const intentPath = path.join(configDir, 'intent.md');
+    await fs.writeFile(intentPath, template.intentFile);
+    console.log('✅ Created .islstudio/intent.md (intent declarations)');
   }
 
   console.log(`

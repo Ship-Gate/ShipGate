@@ -1,88 +1,149 @@
-# ISL Studio - Pricing Strategy
+# ISL Studio Pricing
 
-## Philosophy
-
-**Usage + credibility > money (for now)**
-
-Keep the OSS core free forever. Monetize on enterprise/org features later.
+**Free for everyone. Pay for governance.**
 
 ## Tiers
 
 ### Free (OSS)
 
-Everything needed to use ISL Studio:
+Everything you need to ship safely.
 
-- ✅ All 25 built-in rules (auth, pii, payments, rate-limit, intent)
-- ✅ GitHub Action integration
+**Included:**
+- ✅ 25 built-in rules (auth, pii, payments, rate-limit, intent)
+- ✅ GitHub/GitLab/Bitbucket/Azure DevOps integration
 - ✅ CLI (`npx islstudio gate`)
-- ✅ Evidence bundles
-- ✅ Baseline & suppressions
 - ✅ VS Code extension
+- ✅ Evidence bundles + HTML reports
+- ✅ Baseline + inline suppressions
 - ✅ SARIF upload
 - ✅ Unlimited repos
+- ✅ Unlimited team members
 
-### Pro (Future)
+**Limits:**
+- Community support only
+- No custom rules
+- Suppressions without approval workflow
 
-For teams that want more:
+**Best for:** Solo devs, open-source projects, startups.
 
-- Everything in Free
-- 🔒 Custom rule authoring
-- 🔒 Private policy packs
-- 🔒 Team dashboard
-- 🔒 Violation trends over time
-- 🔒 Priority support
+---
 
-**Pricing:** $29/user/month (or $19 annual)
+### Team — $29/user/month
 
-### Enterprise (Future)
+Everything in Free, plus governance for teams.
 
-For organizations:
+**Added:**
+- ✅ Custom rule authoring
+- ✅ Private policy packs
+- ✅ Suppressions require reason + expiry
+- ✅ Exception workflow (break-glass with approval)
+- ✅ Audit log export (JSON)
+- ✅ Slack/Discord notifications
+- ✅ Priority email support
 
-- Everything in Pro
-- 🔒 Org-wide policy packs
-- 🔒 SSO/SAML
-- 🔒 Audit logs
-- 🔒 Custom integrations
-- 🔒 SLA guarantees
-- 🔒 Dedicated support
+**Limits:**
+- Up to 50 users
+- Self-hosted or cloud
 
-**Pricing:** Contact sales
+**Best for:** Engineering teams, scale-ups, compliance-aware orgs.
 
-## What We Don't Charge For
+---
 
-These stay free forever:
+### Enterprise — Custom
 
-1. **All core rules** - The gate logic is OSS
-2. **CLI usage** - No limits
-3. **GitHub Action** - Free for all repos
-4. **Evidence generation** - Free for all
-5. **VS Code extension** - Free
+Everything in Team, plus org-wide control.
 
-## Revenue Streams
+**Added:**
+- ✅ Signed policy bundles (pinned per org)
+- ✅ Org-wide policy management
+- ✅ SSO/SAML
+- ✅ Role-based access control
+- ✅ Compliance packs (SOC2, HIPAA, PCI-DSS)
+- ✅ Multi-repo dashboard
+- ✅ Dedicated support + SLA
+- ✅ Custom integrations
+- ✅ On-prem deployment option
 
-1. **Pro subscriptions** - Teams wanting dashboards
-2. **Enterprise contracts** - Large orgs
-3. **Private packs** - Companies wanting custom rules
-4. **Consulting** - ISL spec writing, integration help
+**Best for:** Large orgs, regulated industries, multi-team setups.
 
-## Competitor Pricing Reference
+---
 
-| Tool | Free | Paid |
-|------|------|------|
-| Snyk | 100 tests/mo | $52/user/mo |
-| SonarQube | OSS only | $150/mo |
-| CodeClimate | 1 repo | $15/user/mo |
+## Comparison Table
 
-ISL Studio is more specialized (intent enforcement) and cheaper.
+| Feature | Free | Team | Enterprise |
+|---------|------|------|------------|
+| Built-in rules | 25 | 25 | 25+ |
+| Custom rules | ❌ | ✅ | ✅ |
+| Private packs | ❌ | ✅ | ✅ |
+| Compliance packs | ❌ | ❌ | ✅ |
+| Baseline | ✅ | ✅ | ✅ |
+| Suppressions | Basic | + Expiry | + Approval |
+| Exceptions | ❌ | ✅ | ✅ |
+| Policy bundles | ❌ | ❌ | ✅ (signed) |
+| Audit export | ❌ | ✅ | ✅ |
+| Multi-repo dashboard | ❌ | ❌ | ✅ |
+| SSO/SAML | ❌ | ❌ | ✅ |
+| Support | Community | Email | Dedicated |
+| Users | Unlimited | 50 | Unlimited |
 
-## Launch Strategy
+---
 
-1. **Phase 1 (Now):** Free everything, get 100+ repos using it
-2. **Phase 2 (3 months):** Launch Pro tier, target power users
-3. **Phase 3 (6 months):** Enterprise tier, target orgs
+## FAQ
 
-## Don't Mess It Up
+### Why is Free so generous?
 
-- **Never gate-keep rules** - All detection is free
-- **Never require signup for CLI** - Anonymous usage OK
-- **Never break OSS** - The gate must always work offline
+We want ISL Studio on every repo. Usage = proof. Proof = enterprise customers.
+
+### Can I use Free forever?
+
+Yes. The core gate is MIT licensed and always will be.
+
+### What counts as a "user"?
+
+Anyone who commits to a repo with ISL Studio enabled. Bots don't count.
+
+### Do I need Team for compliance?
+
+You can achieve compliance with Free, but Team adds the audit trail and approval workflows auditors want.
+
+### What's in compliance packs?
+
+Pre-built rules for SOC2, HIPAA, PCI-DSS, GDPR. Coming in Enterprise tier.
+
+### Can I self-host?
+
+Free and Team: Yes, it's all local-first.
+Enterprise: Optional cloud or on-prem.
+
+### How do I upgrade?
+
+Email team@islstudio.dev or use the CLI:
+```bash
+npx islstudio upgrade
+```
+
+---
+
+## Pricing Philosophy
+
+1. **Never gate-keep detection** — All 25 rules are free forever.
+2. **Never require signup for CLI** — Anonymous usage is fine.
+3. **Monetize governance, not security** — Teams pay for control, not protection.
+4. **Solo devs are distribution** — Don't squeeze them.
+
+---
+
+## Coming Soon
+
+- [ ] Compliance packs (SOC2, HIPAA, PCI-DSS)
+- [ ] Multi-repo dashboard
+- [ ] GitHub App (simplified setup)
+- [ ] Slack bot for real-time alerts
+
+---
+
+## Contact
+
+**Sales:** team@islstudio.dev
+**Support:** support@islstudio.dev
+**Twitter:** @islstudio
