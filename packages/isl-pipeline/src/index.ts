@@ -52,6 +52,31 @@ export type {
   FrameworkAdapter,
 } from './healer.js';
 
+// Semantic healer (production-grade)
+export {
+  SemanticHealer,
+  healSemantically,
+} from './semantic-healer.js';
+
+export type {
+  SemanticHealResult,
+  SemanticHealIteration,
+  SemanticHealOptions,
+} from './semantic-healer.js';
+
+// Semantic rules
+export {
+  SEMANTIC_RULES,
+  runSemanticRules,
+  checkProofCompleteness,
+} from './semantic-rules.js';
+
+export type {
+  SemanticViolation,
+  SemanticRule,
+  ProofCompletenessResult,
+} from './semantic-rules.js';
+
 // Re-export from dependencies for convenience
 export { createTranslator, type ISLAST, type RepoContext, type TranslationResult } from '@isl-lang/translator';
 export { createGenerator, type GenerationResult, type ProofLink, type FileDiff } from '@isl-lang/generator';
