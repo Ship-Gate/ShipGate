@@ -1,10 +1,14 @@
 {
   "name": "@isl-lang/firewall",
   "version": "0.1.0",
-  "description": "ISL Firewall - Agent file write governance and hallucination prevention",
+  "description": "ISL Firewall - Agent file write governance with VibeCheck + ISL Studio integration",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "isl-firewall": "./dist/cli.js",
+    "vibecheck-gate": "./dist/cli.js"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -15,7 +19,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean",
+    "build": "tsup src/index.ts src/cli.ts --format esm --dts --clean",
     "dev": "tsup src/index.ts --format esm --dts --watch",
     "test": "vitest run",
     "test:watch": "vitest",
