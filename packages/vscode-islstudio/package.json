@@ -3,7 +3,7 @@
   "displayName": "ISL Studio",
   "description": "Block risky code before it ships. 25 rules for auth bypass, PII leaks, payment issues, and missing rate limits.",
   "version": "0.1.0",
-  "publisher": "isl-studio",
+  "publisher": "ISL",
   "license": "MIT",
   "repository": {
     "type": "git",

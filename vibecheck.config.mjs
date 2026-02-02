@@ -38,4 +38,39 @@ export default {
     enabled: false,
     crashReports: false,
   },
+
+  // ============================================================================
+  // ISL Studio Integration
+  // ============================================================================
+  // When enabled, VibeCheck firewall runs ISL Studio policy packs alongside
+  // truthpack validation for comprehensive code governance.
+  islStudio: {
+    enabled: true,
+    
+    // Policy packs to enable
+    packs: {
+      auth: true,        // Auth bypass, hardcoded credentials
+      pii: true,         // Logged PII, console.log in production
+      payments: true,    // Client-side amounts, missing idempotency
+      'rate-limit': true, // Missing rate limiting on auth endpoints
+      intent: true,      // Intent enforcement from ISL specs
+    },
+    
+    // Severity overrides (optional)
+    // severity: {
+    //   'pii/console-in-production': 'warn',
+    // },
+    
+    // Generate evidence bundles
+    evidence: {
+      enabled: true,
+      outputPath: '.vibecheck/evidence',
+    },
+    
+    // SARIF output for GitHub Security tab
+    sarif: {
+      enabled: true,
+      outputPath: '.vibecheck/results.sarif',
+    },
+  },
 };
