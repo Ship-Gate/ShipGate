@@ -2346,6 +2346,25 @@ importers:
         specifier: ^1.2.0
         version: 1.6.1(@types/node@20.19.30)
 
+  packages/isl-generator:
+    dependencies:
+      '@isl-lang/translator':
+        specifier: workspace:*
+        version: link:../isl-translator
+    devDependencies:
+      '@types/node':
+        specifier: ^20.10.0
+        version: 20.19.30
+      tsup:
+        specifier: ^8.0.1
+        version: 8.5.1(tsx@4.21.0)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.3.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.2.0
+        version: 1.6.1(@types/node@20.19.30)
+
   packages/isl-lsp:
     dependencies:
       '@isl-lang/isl-core':
@@ -2371,6 +2390,34 @@ importers:
         specifier: ^1.0.0
         version: 1.6.1(@types/node@20.19.30)
 
+  packages/isl-pipeline:
+    dependencies:
+      '@isl-lang/generator':
+        specifier: workspace:*
+        version: link:../isl-generator
+      '@isl-lang/proof':
+        specifier: workspace:*
+        version: link:../isl-proof
+      '@isl-lang/translator':
+        specifier: workspace:*
+        version: link:../isl-translator
+    devDependencies:
+      '@types/node':
+        specifier: ^20.10.0
+        version: 20.19.30
+      tsup:
+        specifier: ^8.0.1
+        version: 8.5.1(tsx@4.21.0)(typescript@5.9.3)
+      tsx:
+        specifier: ^4.7.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5.3.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.2.0
+        version: 1.6.1(@types/node@20.19.30)
+
   packages/isl-policy-packs:
     dependencies:
       '@isl-lang/firewall':
@@ -2383,6 +2430,28 @@ importers:
       rimraf:
         specifier: ^5.0.5
         version: 5.0.10
+      tsup:
+        specifier: ^8.0.1
+        version: 8.5.1(tsx@4.21.0)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.3.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.2.0
+        version: 1.6.1(@types/node@20.19.30)
+
+  packages/isl-proof:
+    dependencies:
+      '@isl-lang/generator':
+        specifier: workspace:*
+        version: link:../isl-generator
+      '@isl-lang/translator':
+        specifier: workspace:*
+        version: link:../isl-translator
+    devDependencies:
+      '@types/node':
+        specifier: ^20.10.0
+        version: 20.19.30
       tsup:
         specifier: ^8.0.1
         version: 8.5.1(tsx@4.21.0)(typescript@5.9.3)
