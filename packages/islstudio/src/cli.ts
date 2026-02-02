@@ -33,6 +33,9 @@ async function main() {
 
   if (command === 'gate') {
     await runGateCommand(args.slice(1));
+  } else if (command === 'init') {
+    const { runInitCommand } = await import('./init-command.js');
+    await runInitCommand(args.slice(1));
   } else if (command === 'rules') {
     await runRulesCommand(args.slice(1));
   } else if (command === 'baseline') {
@@ -236,6 +239,7 @@ USAGE
 
 COMMANDS
   gate          Run the gate on your code
+  init          Set up ISL Studio in your project
   rules         Manage and explore rules
   baseline      Manage baseline for legacy code
   help          Show this help message

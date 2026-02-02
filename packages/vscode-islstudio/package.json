@@ -1,0 +1,83 @@
+{
+  "name": "vscode-islstudio",
+  "displayName": "ISL Studio",
+  "description": "Block risky code before it ships. Auth, PII, payments, rate-limit checks.",
+  "version": "0.1.0",
+  "publisher": "isl-studio",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ISL-Studio/ISL-Studio-"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "security",
+    "linter",
+    "auth",
+    "pii",
+    "gate"
+  ],
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:javascript",
+    "onLanguage:typescriptreact",
+    "onLanguage:javascriptreact"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "islstudio.runGate",
+        "title": "ISL Studio: Run Gate"
+      },
+      {
+        "command": "islstudio.explainRule",
+        "title": "ISL Studio: Explain Rule"
+      },
+      {
+        "command": "islstudio.createBaseline",
+        "title": "ISL Studio: Create Baseline"
+      }
+    ],
+    "configuration": {
+      "title": "ISL Studio",
+      "properties": {
+        "islstudio.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable ISL Studio diagnostics"
+        },
+        "islstudio.runOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run gate on file save"
+        },
+        "islstudio.severity": {
+          "type": "string",
+          "enum": ["error", "warning", "information"],
+          "default": "warning",
+          "description": "Default severity for violations"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "watch": "tsup --watch",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "islstudio": "workspace:*"
+  }
+}

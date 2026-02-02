@@ -1,0 +1,192 @@
+# ISL Studio CI - Self-gate and publish with provenance
+name: ISL Studio CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write  # For npm provenance
+
+jobs:
+  # Gate ourselves with our own gate
+  self-gate:
+    name: Self Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build islstudio
+        run: pnpm --filter islstudio build
+
+      - name: Run ISL Gate on self
+        run: |
+          cd packages/islstudio
+          node dist/cli.js gate --ci --output json > gate-result.json || true
+          
+          VERDICT=$(jq -r '.verdict' gate-result.json)
+          SCORE=$(jq -r '.score' gate-result.json)
+          
+          echo "::notice::ISL Gate: $VERDICT (Score: $SCORE/100)"
+          
+          if [ "$VERDICT" = "NO_SHIP" ]; then
+            echo "::error::ISL Gate blocked this PR"
+            jq -r '.violations[]? | "::warning file=\(.filePath // "unknown"),line=\(.line // 1),title=\(.ruleId)::\(.message)"' gate-result.json
+            exit 1
+          fi
+
+  # Test the CLI
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm --filter islstudio build
+
+      - name: Test
+        run: pnpm --filter islstudio test
+
+  # Smoke test npm pack
+  pack-smoke:
+    name: Pack Smoke Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm --filter islstudio build
+
+      - name: Pack
+        run: |
+          cd packages/islstudio
+          npm pack
+          
+          # Verify package contents
+          tar -tzf islstudio-*.tgz
+          
+          # Install from tarball and verify
+          npm install -g islstudio-*.tgz
+          islstudio --version
+          islstudio help
+
+  # Snapshot test for rule IDs
+  rule-snapshot:
+    name: Rule ID Snapshot
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm --filter @isl-lang/policy-packs build
+
+      - name: Generate rule snapshot
+        run: |
+          cd packages/isl-policy-packs
+          node -e "
+            const { createRegistry, loadBuiltinPacks } = require('./dist/index.js');
+            (async () => {
+              const reg = createRegistry();
+              await loadBuiltinPacks(reg);
+              const rules = reg.getEnabledRules();
+              const ids = rules.map(r => r.id).sort();
+              console.log(JSON.stringify(ids, null, 2));
+            })();
+          " > rule-ids.json
+          
+          # Compare with expected
+          if [ -f ../../.github/rule-ids.snapshot.json ]; then
+            diff rule-ids.json ../../.github/rule-ids.snapshot.json || {
+              echo "::error::Rule IDs have changed! Update snapshot if intentional."
+              exit 1
+            }
+          else
+            echo "::notice::No snapshot found, creating one"
+            mkdir -p ../../.github
+            cp rule-ids.json ../../.github/rule-ids.snapshot.json
+          fi
+
+  # Publish with provenance (tags only)
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    needs: [self-gate, test, pack-smoke]
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm --filter islstudio build
+
+      - name: Publish with provenance
+        run: |
+          cd packages/islstudio
+          npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
