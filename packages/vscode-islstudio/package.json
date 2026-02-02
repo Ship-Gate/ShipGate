@@ -1,8 +1,8 @@
 {
   "name": "vscode-islstudio",
-  "displayName": "ISL Studio",
-  "description": "Block risky code before it ships. 25 rules for auth bypass, PII leaks, payment issues, and missing rate limits.",
-  "version": "0.1.0",
+  "displayName": "VibeCheck + ISL Studio",
+  "description": "Unified code gate. Truthpack validation (routes, env, imports) + 25 security rules (auth, pii, payments, rate-limit, intent). SHIP or NO_SHIP with evidence.",
+  "version": "0.2.0",
   "publisher": "ISL",
   "license": "MIT",
   "repository": {
@@ -24,13 +24,16 @@
   "keywords": [
     "security",
     "linter",
+    "vibecheck",
     "auth",
     "pii",
     "gate",
     "typescript",
     "javascript",
     "code review",
-    "pull request"
+    "pull request",
+    "ai-safety",
+    "truthpack"
   ],
   "galleryBanner": {
     "color": "#1e1e1e",
