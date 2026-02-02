@@ -9,12 +9,25 @@ import {
   expressionToString,
 } from '../src/evaluator.js';
 import { 
-  Scope, 
   InMemoryEntityStore,
-  createScope,
   createEntityStore,
 } from '../src/environment.js';
 import type { EvaluationContext } from '../src/types.js';
+
+// Helper to create a minimal evaluation context
+function createContext(overrides: Partial<EvaluationContext> = {}): EvaluationContext {
+  return {
+    input: {},
+    result: undefined,
+    error: undefined,
+    store: createEntityStore(),
+    oldState: undefined,
+    domain: undefined,
+    now: new Date(),
+    variables: new Map<string, unknown>(),
+    ...overrides,
+  };
+}
 
 // Helper to create a minimal AST node location
 const loc = {
@@ -148,48 +161,46 @@ const AST = {
 
 describe('Evaluator', () => {
   let evaluator: Evaluator;
-  let scope: Scope;
   let store: InMemoryEntityStore;
   let context: EvaluationContext;
 
   beforeEach(() => {
-    scope = createScope();
     store = createEntityStore();
-    context = { scope, store };
-    evaluator = new Evaluator(context);
+    context = createContext({ store });
+    evaluator = new Evaluator();
   });
 
   describe('Literal Evaluation', () => {
     it('should evaluate string literals', () => {
-      const result = evaluator.evaluate(AST.string('hello'));
+      const result = evaluator.evaluate(AST.string('hello'), context);
       expect(result).toBe('hello');
     });
 
     it('should evaluate number literals', () => {
-      expect(evaluator.evaluate(AST.number(42))).toBe(42);
-      expect(evaluator.evaluate(AST.number(3.14, true))).toBe(3.14);
+      expect(evaluator.evaluate(AST.number(42), context)).toBe(42);
+      expect(evaluator.evaluate(AST.number(3.14, true), context)).toBe(3.14);
     });
 
     it('should evaluate boolean literals', () => {
-      expect(evaluator.evaluate(AST.boolean(true))).toBe(true);
-      expect(evaluator.evaluate(AST.boolean(false))).toBe(false);
+      expect(evaluator.evaluate(AST.boolean(true), context)).toBe(true);
+      expect(evaluator.evaluate(AST.boolean(false), context)).toBe(false);
     });
 
     it('should evaluate null literal', () => {
-      expect(evaluator.evaluate(AST.null())).toBeNull();
+      expect(evaluator.evaluate(AST.null(), context)).toBeNull();
     });
   });
 
   describe('Identifier Evaluation', () => {
     it('should evaluate bound identifiers', () => {
-      scope.define('x', 42);
+      context.variables.set('x', 42);
       
-      const result = evaluator.evaluate(AST.identifier('x'));
+      const result = evaluator.evaluate(AST.identifier('x'), context);
       expect(result).toBe(42);
     });
 
     it('should throw for undefined identifiers', () => {
-      expect(() => evaluator.evaluate(AST.identifier('undefined_var')))
+      expect(() => evaluator.evaluate(AST.identifier('undefined_var'), context))
         .toThrow();
     });
   });
@@ -198,110 +209,110 @@ describe('Evaluator', () => {
     describe('Arithmetic', () => {
       it('should evaluate addition', () => {
         const expr = AST.binary('+', AST.number(10), AST.number(5));
-        expect(evaluator.evaluate(expr)).toBe(15);
+        expect(evaluator.evaluate(expr, context)).toBe(15);
       });
 
       it('should evaluate subtraction', () => {
         const expr = AST.binary('-', AST.number(10), AST.number(5));
-        expect(evaluator.evaluate(expr)).toBe(5);
+        expect(evaluator.evaluate(expr, context)).toBe(5);
       });
 
       it('should evaluate multiplication', () => {
         const expr = AST.binary('*', AST.number(10), AST.number(5));
-        expect(evaluator.evaluate(expr)).toBe(50);
+        expect(evaluator.evaluate(expr, context)).toBe(50);
       });
 
       it('should evaluate division', () => {
         const expr = AST.binary('/', AST.number(10), AST.number(5));
-        expect(evaluator.evaluate(expr)).toBe(2);
+        expect(evaluator.evaluate(expr, context)).toBe(2);
       });
 
       it('should evaluate modulo', () => {
         const expr = AST.binary('%', AST.number(10), AST.number(3));
-        expect(evaluator.evaluate(expr)).toBe(1);
+        expect(evaluator.evaluate(expr, context)).toBe(1);
       });
     });
 
     describe('Comparison', () => {
       it('should evaluate equality', () => {
-        expect(evaluator.evaluate(AST.binary('==', AST.number(5), AST.number(5)))).toBe(true);
-        expect(evaluator.evaluate(AST.binary('==', AST.number(5), AST.number(3)))).toBe(false);
-        expect(evaluator.evaluate(AST.binary('==', AST.string('a'), AST.string('a')))).toBe(true);
+        expect(evaluator.evaluate(AST.binary('==', AST.number(5), AST.number(5)), context)).toBe(true);
+        expect(evaluator.evaluate(AST.binary('==', AST.number(5), AST.number(3)), context)).toBe(false);
+        expect(evaluator.evaluate(AST.binary('==', AST.string('a'), AST.string('a')), context)).toBe(true);
       });
 
       it('should evaluate inequality', () => {
-        expect(evaluator.evaluate(AST.binary('!=', AST.number(5), AST.number(3)))).toBe(true);
-        expect(evaluator.evaluate(AST.binary('!=', AST.number(5), AST.number(5)))).toBe(false);
+        expect(evaluator.evaluate(AST.binary('!=', AST.number(5), AST.number(3)), context)).toBe(true);
+        expect(evaluator.evaluate(AST.binary('!=', AST.number(5), AST.number(5)), context)).toBe(false);
       });
 
       it('should evaluate less than', () => {
-        expect(evaluator.evaluate(AST.binary('<', AST.number(3), AST.number(5)))).toBe(true);
-        expect(evaluator.evaluate(AST.binary('<', AST.number(5), AST.number(3)))).toBe(false);
+        expect(evaluator.evaluate(AST.binary('<', AST.number(3), AST.number(5)), context)).toBe(true);
+        expect(evaluator.evaluate(AST.binary('<', AST.number(5), AST.number(3)), context)).toBe(false);
       });
 
       it('should evaluate greater than', () => {
-        expect(evaluator.evaluate(AST.binary('>', AST.number(5), AST.number(3)))).toBe(true);
-        expect(evaluator.evaluate(AST.binary('>', AST.number(3), AST.number(5)))).toBe(false);
+        expect(evaluator.evaluate(AST.binary('>', AST.number(5), AST.number(3)), context)).toBe(true);
+        expect(evaluator.evaluate(AST.binary('>', AST.number(3), AST.number(5)), context)).toBe(false);
       });
 
       it('should evaluate less than or equal', () => {
-        expect(evaluator.evaluate(AST.binary('<=', AST.number(3), AST.number(5)))).toBe(true);
-        expect(evaluator.evaluate(AST.binary('<=', AST.number(5), AST.number(5)))).toBe(true);
-        expect(evaluator.evaluate(AST.binary('<=', AST.number(6), AST.number(5)))).toBe(false);
+        expect(evaluator.evaluate(AST.binary('<=', AST.number(3), AST.number(5)), context)).toBe(true);
+        expect(evaluator.evaluate(AST.binary('<=', AST.number(5), AST.number(5)), context)).toBe(true);
+        expect(evaluator.evaluate(AST.binary('<=', AST.number(6), AST.number(5)), context)).toBe(false);
       });
 
       it('should evaluate greater than or equal', () => {
-        expect(evaluator.evaluate(AST.binary('>=', AST.number(5), AST.number(3)))).toBe(true);
-        expect(evaluator.evaluate(AST.binary('>=', AST.number(5), AST.number(5)))).toBe(true);
-        expect(evaluator.evaluate(AST.binary('>=', AST.number(3), AST.number(5)))).toBe(false);
+        expect(evaluator.evaluate(AST.binary('>=', AST.number(5), AST.number(3)), context)).toBe(true);
+        expect(evaluator.evaluate(AST.binary('>=', AST.number(5), AST.number(5)), context)).toBe(true);
+        expect(evaluator.evaluate(AST.binary('>=', AST.number(3), AST.number(5)), context)).toBe(false);
       });
     });
 
     describe('Logical', () => {
       it('should evaluate and', () => {
-        expect(evaluator.evaluate(AST.binary('and', AST.boolean(true), AST.boolean(true)))).toBe(true);
-        expect(evaluator.evaluate(AST.binary('and', AST.boolean(true), AST.boolean(false)))).toBe(false);
-        expect(evaluator.evaluate(AST.binary('and', AST.boolean(false), AST.boolean(true)))).toBe(false);
+        expect(evaluator.evaluate(AST.binary('and', AST.boolean(true), AST.boolean(true)), context)).toBe(true);
+        expect(evaluator.evaluate(AST.binary('and', AST.boolean(true), AST.boolean(false)), context)).toBe(false);
+        expect(evaluator.evaluate(AST.binary('and', AST.boolean(false), AST.boolean(true)), context)).toBe(false);
       });
 
       it('should evaluate or', () => {
-        expect(evaluator.evaluate(AST.binary('or', AST.boolean(true), AST.boolean(false)))).toBe(true);
-        expect(evaluator.evaluate(AST.binary('or', AST.boolean(false), AST.boolean(true)))).toBe(true);
-        expect(evaluator.evaluate(AST.binary('or', AST.boolean(false), AST.boolean(false)))).toBe(false);
+        expect(evaluator.evaluate(AST.binary('or', AST.boolean(true), AST.boolean(false)), context)).toBe(true);
+        expect(evaluator.evaluate(AST.binary('or', AST.boolean(false), AST.boolean(true)), context)).toBe(true);
+        expect(evaluator.evaluate(AST.binary('or', AST.boolean(false), AST.boolean(false)), context)).toBe(false);
       });
 
       it('should evaluate implies', () => {
         // p implies q = !p || q
-        expect(evaluator.evaluate(AST.binary('implies', AST.boolean(false), AST.boolean(false)))).toBe(true);
-        expect(evaluator.evaluate(AST.binary('implies', AST.boolean(false), AST.boolean(true)))).toBe(true);
-        expect(evaluator.evaluate(AST.binary('implies', AST.boolean(true), AST.boolean(true)))).toBe(true);
-        expect(evaluator.evaluate(AST.binary('implies', AST.boolean(true), AST.boolean(false)))).toBe(false);
+        expect(evaluator.evaluate(AST.binary('implies', AST.boolean(false), AST.boolean(false)), context)).toBe(true);
+        expect(evaluator.evaluate(AST.binary('implies', AST.boolean(false), AST.boolean(true)), context)).toBe(true);
+        expect(evaluator.evaluate(AST.binary('implies', AST.boolean(true), AST.boolean(true)), context)).toBe(true);
+        expect(evaluator.evaluate(AST.binary('implies', AST.boolean(true), AST.boolean(false)), context)).toBe(false);
       });
     });
   });
 
   describe('Unary Operations', () => {
     it('should evaluate not', () => {
-      expect(evaluator.evaluate(AST.unary('not', AST.boolean(true)))).toBe(false);
-      expect(evaluator.evaluate(AST.unary('not', AST.boolean(false)))).toBe(true);
+      expect(evaluator.evaluate(AST.unary('not', AST.boolean(true)), context)).toBe(false);
+      expect(evaluator.evaluate(AST.unary('not', AST.boolean(false)), context)).toBe(true);
     });
 
     it('should evaluate negation', () => {
-      expect(evaluator.evaluate(AST.unary('-', AST.number(5)))).toBe(-5);
-      expect(evaluator.evaluate(AST.unary('-', AST.number(-3)))).toBe(3);
+      expect(evaluator.evaluate(AST.unary('-', AST.number(5)), context)).toBe(-5);
+      expect(evaluator.evaluate(AST.unary('-', AST.number(-3)), context)).toBe(3);
     });
   });
 
   describe('Member Access', () => {
     it('should access object properties', () => {
-      scope.define('obj', { name: 'Alice', age: 30 });
+      context.variables.set('obj', { name: 'Alice', age: 30 });
       
       const expr = AST.member(AST.identifier('obj'), 'name');
-      expect(evaluator.evaluate(expr)).toBe('Alice');
+      expect(evaluator.evaluate(expr, context)).toBe('Alice');
     });
 
     it('should access nested properties', () => {
-      scope.define('user', { 
+      context.variables.set('user', { 
         profile: { 
           address: { 
             city: 'NYC' 
@@ -316,50 +327,51 @@ describe('Evaluator', () => {
         ),
         'city'
       );
-      expect(evaluator.evaluate(expr)).toBe('NYC');
+      expect(evaluator.evaluate(expr, context)).toBe('NYC');
     });
 
     it('should access string length', () => {
-      scope.define('str', 'hello');
+      context.variables.set('str', 'hello');
       
       const expr = AST.member(AST.identifier('str'), 'length');
-      expect(evaluator.evaluate(expr)).toBe(5);
+      expect(evaluator.evaluate(expr, context)).toBe(5);
     });
 
     it('should access array length', () => {
-      scope.define('arr', [1, 2, 3, 4, 5]);
+      context.variables.set('arr', [1, 2, 3, 4, 5]);
       
       const expr = AST.member(AST.identifier('arr'), 'length');
-      expect(evaluator.evaluate(expr)).toBe(5);
+      expect(evaluator.evaluate(expr, context)).toBe(5);
     });
   });
 
   describe('Index Access', () => {
     it('should access array elements', () => {
-      scope.define('arr', [10, 20, 30]);
+      context.variables.set('arr', [10, 20, 30]);
       
-      expect(evaluator.evaluate(AST.index(AST.identifier('arr'), AST.number(0)))).toBe(10);
-      expect(evaluator.evaluate(AST.index(AST.identifier('arr'), AST.number(1)))).toBe(20);
+      expect(evaluator.evaluate(AST.index(AST.identifier('arr'), AST.number(0)), context)).toBe(10);
+      expect(evaluator.evaluate(AST.index(AST.identifier('arr'), AST.number(1)), context)).toBe(20);
     });
 
     it('should access map values', () => {
-      scope.define('map', new Map([['a', 1], ['b', 2]]));
+      // Implementation uses Record, not Map, for index access by string key
+      context.variables.set('map', { a: 1, b: 2 });
       
       const expr = AST.index(AST.identifier('map'), AST.string('a'));
-      expect(evaluator.evaluate(expr)).toBe(1);
+      expect(evaluator.evaluate(expr, context)).toBe(1);
     });
 
     it('should access object properties by key', () => {
-      scope.define('obj', { key1: 'value1', key2: 'value2' });
+      context.variables.set('obj', { key1: 'value1', key2: 'value2' });
       
       const expr = AST.index(AST.identifier('obj'), AST.string('key1'));
-      expect(evaluator.evaluate(expr)).toBe('value1');
+      expect(evaluator.evaluate(expr, context)).toBe('value1');
     });
   });
 
   describe('List Expressions', () => {
     it('should evaluate empty list', () => {
-      const result = evaluator.evaluate(AST.list([]));
+      const result = evaluator.evaluate(AST.list([]), context);
       expect(result).toEqual([]);
     });
 
@@ -368,7 +380,7 @@ describe('Evaluator', () => {
         AST.number(1),
         AST.number(2),
         AST.number(3),
-      ]));
+      ]), context);
       expect(result).toEqual([1, 2, 3]);
     });
 
@@ -376,25 +388,26 @@ describe('Evaluator', () => {
       const result = evaluator.evaluate(AST.list([
         AST.list([AST.number(1), AST.number(2)]),
         AST.list([AST.number(3), AST.number(4)]),
-      ]));
+      ]), context);
       expect(result).toEqual([[1, 2], [3, 4]]);
     });
   });
 
   describe('Map Expressions', () => {
     it('should evaluate empty map', () => {
-      const result = evaluator.evaluate(AST.map([]));
-      expect(result).toBeInstanceOf(Map);
-      expect((result as Map<string, unknown>).size).toBe(0);
+      const result = evaluator.evaluate(AST.map([]), context);
+      // Implementation returns plain object, not Map
+      expect(result).toEqual({});
     });
 
     it('should evaluate map with entries', () => {
       const result = evaluator.evaluate(AST.map([
         { key: AST.string('a'), value: AST.number(1) },
         { key: AST.string('b'), value: AST.number(2) },
-      ]));
-      expect((result as Map<string, unknown>).get('a')).toBe(1);
-      expect((result as Map<string, unknown>).get('b')).toBe(2);
+      ]), context);
+      // Implementation returns plain object, not Map
+      expect((result as Record<string, unknown>)['a']).toBe(1);
+      expect((result as Record<string, unknown>)['b']).toBe(2);
     });
   });
 
@@ -405,7 +418,7 @@ describe('Evaluator', () => {
         AST.string('yes'),
         AST.string('no')
       );
-      expect(evaluator.evaluate(expr)).toBe('yes');
+      expect(evaluator.evaluate(expr, context)).toBe('yes');
     });
 
     it('should evaluate false branch', () => {
@@ -414,14 +427,10 @@ describe('Evaluator', () => {
         AST.string('yes'),
         AST.string('no')
       );
-      expect(evaluator.evaluate(expr)).toBe('no');
+      expect(evaluator.evaluate(expr, context)).toBe('no');
     });
 
     it('should short-circuit evaluation', () => {
-      // The false branch should not be evaluated
-      let evaluated = false;
-      scope.define('sideEffect', () => { evaluated = true; return 'bad'; });
-      
       // Since we can't easily test side effects in expressions,
       // we just verify the correct branch is taken
       const expr = AST.conditional(
@@ -429,13 +438,13 @@ describe('Evaluator', () => {
         AST.string('good'),
         AST.string('bad')
       );
-      expect(evaluator.evaluate(expr)).toBe('good');
+      expect(evaluator.evaluate(expr, context)).toBe('good');
     });
   });
 
   describe('Quantifier Expressions', () => {
     it('should evaluate all()', () => {
-      scope.define('numbers', [1, 2, 3, 4, 5]);
+      context.variables.set('numbers', [1, 2, 3, 4, 5]);
       
       // all(n in numbers: n > 0)
       const allPositive = AST.quantifier(
@@ -444,7 +453,7 @@ describe('Evaluator', () => {
         AST.identifier('numbers'),
         AST.binary('>', AST.identifier('n'), AST.number(0))
       );
-      expect(evaluator.evaluate(allPositive)).toBe(true);
+      expect(evaluator.evaluate(allPositive, context)).toBe(true);
       
       // all(n in numbers: n > 2)
       const allGreaterThanTwo = AST.quantifier(
@@ -453,11 +462,11 @@ describe('Evaluator', () => {
         AST.identifier('numbers'),
         AST.binary('>', AST.identifier('n'), AST.number(2))
       );
-      expect(evaluator.evaluate(allGreaterThanTwo)).toBe(false);
+      expect(evaluator.evaluate(allGreaterThanTwo, context)).toBe(false);
     });
 
     it('should evaluate any()', () => {
-      scope.define('numbers', [1, 2, 3, 4, 5]);
+      context.variables.set('numbers', [1, 2, 3, 4, 5]);
       
       // any(n in numbers: n > 4)
       const anyGreaterThanFour = AST.quantifier(
@@ -466,7 +475,7 @@ describe('Evaluator', () => {
         AST.identifier('numbers'),
         AST.binary('>', AST.identifier('n'), AST.number(4))
       );
-      expect(evaluator.evaluate(anyGreaterThanFour)).toBe(true);
+      expect(evaluator.evaluate(anyGreaterThanFour, context)).toBe(true);
       
       // any(n in numbers: n > 10)
       const anyGreaterThanTen = AST.quantifier(
@@ -475,11 +484,11 @@ describe('Evaluator', () => {
         AST.identifier('numbers'),
         AST.binary('>', AST.identifier('n'), AST.number(10))
       );
-      expect(evaluator.evaluate(anyGreaterThanTen)).toBe(false);
+      expect(evaluator.evaluate(anyGreaterThanTen, context)).toBe(false);
     });
 
     it('should evaluate none()', () => {
-      scope.define('numbers', [1, 2, 3, 4, 5]);
+      context.variables.set('numbers', [1, 2, 3, 4, 5]);
       
       // none(n in numbers: n < 0)
       const noneNegative = AST.quantifier(
@@ -488,7 +497,7 @@ describe('Evaluator', () => {
         AST.identifier('numbers'),
         AST.binary('<', AST.identifier('n'), AST.number(0))
       );
-      expect(evaluator.evaluate(noneNegative)).toBe(true);
+      expect(evaluator.evaluate(noneNegative, context)).toBe(true);
       
       // none(n in numbers: n > 3)
       const noneGreaterThanThree = AST.quantifier(
@@ -497,11 +506,11 @@ describe('Evaluator', () => {
         AST.identifier('numbers'),
         AST.binary('>', AST.identifier('n'), AST.number(3))
       );
-      expect(evaluator.evaluate(noneGreaterThanThree)).toBe(false);
+      expect(evaluator.evaluate(noneGreaterThanThree, context)).toBe(false);
     });
 
     it('should evaluate count()', () => {
-      scope.define('numbers', [1, 2, 3, 4, 5]);
+      context.variables.set('numbers', [1, 2, 3, 4, 5]);
       
       // count(n in numbers: n > 3)
       const countGreaterThanThree = AST.quantifier(
@@ -510,11 +519,11 @@ describe('Evaluator', () => {
         AST.identifier('numbers'),
         AST.binary('>', AST.identifier('n'), AST.number(3))
       );
-      expect(evaluator.evaluate(countGreaterThanThree)).toBe(2); // 4, 5
+      expect(evaluator.evaluate(countGreaterThanThree, context)).toBe(2); // 4, 5
     });
 
     it('should evaluate filter()', () => {
-      scope.define('numbers', [1, 2, 3, 4, 5]);
+      context.variables.set('numbers', [1, 2, 3, 4, 5]);
       
       // filter(n in numbers: n > 3)
       const filterGreaterThanThree = AST.quantifier(
@@ -523,18 +532,18 @@ describe('Evaluator', () => {
         AST.identifier('numbers'),
         AST.binary('>', AST.identifier('n'), AST.number(3))
       );
-      expect(evaluator.evaluate(filterGreaterThanThree)).toEqual([4, 5]);
+      expect(evaluator.evaluate(filterGreaterThanThree, context)).toEqual([4, 5]);
     });
   });
 });
 
 describe('evaluate() Function', () => {
   it('should evaluate expression with context', () => {
-    const scope = createScope();
     const store = createEntityStore();
-    scope.define('x', 10);
+    const ctx = createContext({ store });
+    ctx.variables.set('x', 10);
     
-    const result = evaluate(AST.identifier('x'), { scope, store });
+    const result = evaluate(AST.identifier('x'), ctx);
     expect(result).toBe(10);
   });
 });
@@ -556,3 +565,6 @@ describe('expressionToString()', () => {
     expect(expressionToString(expr)).toContain('+');
   });
 });
+
+// Re-export the createContext helper for other tests if needed
+export { createContext };

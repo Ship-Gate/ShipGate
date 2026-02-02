@@ -94,7 +94,6 @@ export function createOTLPTraceExporter(config: ISLOTLPConfig): SpanExporter {
     return new OTLPGrpcTraceExporter({
       url: endpoint.replace('/v1/traces', ''),
       headers: config.headers,
-      compression: config.compression === 'gzip' ? 1 : 0, // CompressionAlgorithm
       timeoutMillis: config.timeoutMs,
     });
   }
@@ -102,7 +101,6 @@ export function createOTLPTraceExporter(config: ISLOTLPConfig): SpanExporter {
   return new OTLPHttpTraceExporter({
     url: endpoint,
     headers: config.headers,
-    compression: config.compression === 'gzip' ? 1 : 0,
     timeoutMillis: config.timeoutMs,
   });
 }
@@ -135,7 +133,6 @@ export function createOTLPMetricExporter(config: ISLOTLPConfig): OTLPMetricExpor
   return new OTLPMetricExporter({
     url: endpoint,
     headers: config.headers,
-    compression: config.compression === 'gzip' ? 1 : 0,
     timeoutMillis: config.timeoutMs,
   });
 }
@@ -170,12 +167,13 @@ export function configureOTLPProvider(
  * Configure meter provider with OTLP exporter
  */
 export function configureOTLPMeterProvider(
-  provider: MeterProvider,
+  _provider: MeterProvider,
   config: ISLOTLPConfig
-): void {
+): PeriodicExportingMetricReader {
   const reader = createOTLPMetricReader(config);
   // Note: MeterProvider needs to be created with readers
   // This function is for reference - actual configuration should be done at creation
+  return reader;
 }
 
 /**

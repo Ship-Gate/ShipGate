@@ -13,7 +13,6 @@ import type {
   FieldDeclaration,
   TypeExpression,
   TypeConstraint,
-  InputBlock,
   OutputBlock,
 } from '@isl-lang/isl-core';
 
@@ -273,7 +272,7 @@ export class PythonGenerator {
     }
   }
 
-  private generateConstraintValidation(constraint: TypeConstraint, baseType: string): void {
+  private generateConstraintValidation(constraint: TypeConstraint, _baseType: string): void {
     const name = constraint.name.name;
     const value = this.constraintValueToString(constraint);
 

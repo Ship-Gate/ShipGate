@@ -6,8 +6,6 @@ import type {
   Domain,
   Behavior,
   Entity,
-  Field,
-  TypeDefinition,
   ErrorSpec,
 } from '../../../../master_contracts/ast';
 import type { GeneratorOptions } from '../generator';
@@ -78,7 +76,7 @@ export function generateSpringController(
 function generateBehaviorEndpoint(
   behavior: Behavior,
   serviceVar: string,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const lines: string[] = [];
   const name = behavior.name.name;
@@ -135,11 +133,10 @@ function generateBehaviorEndpoint(
 function generateEntityEndpoints(
   entity: Entity,
   serviceVar: string,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const lines: string[] = [];
   const name = entity.name.name;
-  const varName = toCamelCase(name);
   const path = toKebabCase(name) + 's';
 
   // GET all
@@ -221,7 +218,7 @@ export function generateSpringConfig(
 // ============================================================================
 
 export function generateExceptionHandler(
-  domain: Domain,
+  _domain: Domain,
   options: GeneratorOptions
 ): string {
   const lines: string[] = [];
@@ -289,7 +286,7 @@ export function generateExceptionHandler(
 
 export function generateOpenApiAnnotations(
   behavior: Behavior,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string[] {
   const annotations: string[] = [];
   const name = behavior.name.name;

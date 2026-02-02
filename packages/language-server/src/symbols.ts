@@ -76,12 +76,14 @@ export function getQuickOutline(document: TextDocument): DocumentSymbol[] {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+    if (line === undefined) continue;
+    
     const trimmed = line.trim();
     const indent = line.length - line.trimStart().length;
 
     // Domain
     const domainMatch = trimmed.match(/^domain\s+(\w+)/);
-    if (domainMatch) {
+    if (domainMatch && domainMatch[1]) {
       const symbol: DocumentSymbol = {
         name: domainMatch[1],
         kind: SymbolKind.Namespace,
@@ -97,7 +99,7 @@ export function getQuickOutline(document: TextDocument): DocumentSymbol[] {
 
     // Type
     const typeMatch = trimmed.match(/^type\s+(\w+)/);
-    if (typeMatch) {
+    if (typeMatch && typeMatch[1]) {
       const symbol: DocumentSymbol = {
         name: typeMatch[1],
         kind: SymbolKind.TypeParameter,
@@ -110,7 +112,7 @@ export function getQuickOutline(document: TextDocument): DocumentSymbol[] {
 
     // Entity
     const entityMatch = trimmed.match(/^entity\s+(\w+)/);
-    if (entityMatch) {
+    if (entityMatch && entityMatch[1]) {
       const symbol: DocumentSymbol = {
         name: entityMatch[1],
         kind: SymbolKind.Class,
@@ -125,7 +127,7 @@ export function getQuickOutline(document: TextDocument): DocumentSymbol[] {
 
     // Behavior
     const behaviorMatch = trimmed.match(/^behavior\s+(\w+)/);
-    if (behaviorMatch) {
+    if (behaviorMatch && behaviorMatch[1]) {
       const symbol: DocumentSymbol = {
         name: behaviorMatch[1],
         kind: SymbolKind.Function,
@@ -140,7 +142,7 @@ export function getQuickOutline(document: TextDocument): DocumentSymbol[] {
 
     // Enum
     const enumMatch = trimmed.match(/^enum\s+(\w+)/);
-    if (enumMatch) {
+    if (enumMatch && enumMatch[1]) {
       const symbol: DocumentSymbol = {
         name: enumMatch[1],
         kind: SymbolKind.Enum,
@@ -155,7 +157,7 @@ export function getQuickOutline(document: TextDocument): DocumentSymbol[] {
 
     // Invariants block
     const invariantsMatch = trimmed.match(/^invariants\s+(\w+)/);
-    if (invariantsMatch) {
+    if (invariantsMatch && invariantsMatch[1]) {
       const symbol: DocumentSymbol = {
         name: invariantsMatch[1],
         kind: SymbolKind.Constant,
@@ -168,7 +170,7 @@ export function getQuickOutline(document: TextDocument): DocumentSymbol[] {
 
     // Scenarios block
     const scenariosMatch = trimmed.match(/^scenarios\s+(\w+)/);
-    if (scenariosMatch) {
+    if (scenariosMatch && scenariosMatch[1]) {
       const symbol: DocumentSymbol = {
         name: `scenarios ${scenariosMatch[1]}`,
         kind: SymbolKind.Module,
@@ -183,7 +185,7 @@ export function getQuickOutline(document: TextDocument): DocumentSymbol[] {
 
     // Scenario
     const scenarioMatch = trimmed.match(/^scenario\s+"([^"]+)"/);
-    if (scenarioMatch) {
+    if (scenarioMatch && scenarioMatch[1]) {
       const symbol: DocumentSymbol = {
         name: scenarioMatch[1],
         kind: SymbolKind.Event,
@@ -196,10 +198,10 @@ export function getQuickOutline(document: TextDocument): DocumentSymbol[] {
 
     // Field (within entity or behavior input/output)
     const fieldMatch = trimmed.match(/^(\w+):\s*(\w+)/);
-    if (fieldMatch && stack.length > 0) {
+    if (fieldMatch && fieldMatch[1] && fieldMatch[2] && stack.length > 0) {
       const parent = stack[stack.length - 1];
-      if (parent.symbol.kind === SymbolKind.Class || 
-          parent.symbol.kind === SymbolKind.Function) {
+      if (parent && (parent.symbol.kind === SymbolKind.Class || 
+          parent.symbol.kind === SymbolKind.Function)) {
         const symbol: DocumentSymbol = {
           name: fieldMatch[1],
           kind: SymbolKind.Property,
@@ -232,12 +234,15 @@ function addToParentOrRoot(
   root: DocumentSymbol[]
 ): void {
   // Pop stack until we find parent at lower indent
-  while (stack.length > 0 && stack[stack.length - 1].depth >= indent) {
+  while (stack.length > 0) {
+    const top = stack[stack.length - 1];
+    if (!top || top.depth < indent) break;
     stack.pop();
   }
 
-  if (stack.length > 0) {
-    const parent = stack[stack.length - 1].symbol;
+  const parentEntry = stack.length > 0 ? stack[stack.length - 1] : undefined;
+  if (parentEntry) {
+    const parent = parentEntry.symbol;
     if (!parent.children) {
       parent.children = [];
     }

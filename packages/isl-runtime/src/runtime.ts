@@ -191,7 +191,7 @@ export class Runtime {
     return this.executor.execute(
       behaviorSpec,
       input,
-      handler,
+      handler as BehaviorHandler<TInput, TOutput>,
       domainSpec.invariants
     );
   }

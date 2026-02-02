@@ -196,7 +196,8 @@ export class RaftNode<V> {
     for (const entry of request.entries) {
       index++;
       if (index <= this.state.log.length) {
-        if (this.state.log[index - 1].term !== entry.term) {
+        const existingEntry = this.state.log[index - 1];
+        if (existingEntry && existingEntry.term !== entry.term) {
           // Conflict - remove this and all following entries
           this.state.log = this.state.log.slice(0, index - 1);
           this.state.log.push(entry);
@@ -262,7 +263,8 @@ export class RaftNode<V> {
     const votesNeeded = Math.floor((this.peers.length + 1) / 2) + 1;
 
     const lastLogIndex = this.state.log.length;
-    const lastLogTerm = lastLogIndex > 0 ? this.state.log[lastLogIndex - 1].term : 0;
+    const lastEntry = lastLogIndex > 0 ? this.state.log[lastLogIndex - 1] : undefined;
+    const lastLogTerm = lastEntry?.term ?? 0;
 
     // Request votes from all peers
     for (const peer of this.peers) {
@@ -367,7 +369,8 @@ export class RaftNode<V> {
 
   private updateCommitIndex(): void {
     for (let n = this.state.log.length; n > this.state.commitIndex; n--) {
-      if (this.state.log[n - 1].term !== this.state.currentTerm) continue;
+      const entry = this.state.log[n - 1];
+      if (!entry || entry.term !== this.state.currentTerm) continue;
 
       let matchCount = 1; // Count self
       for (const peer of this.peers) {
@@ -388,13 +391,16 @@ export class RaftNode<V> {
     while (this.state.lastApplied < this.state.commitIndex) {
       this.state.lastApplied++;
       const entry = this.state.log[this.state.lastApplied - 1];
-      this.onApply(entry.command);
+      if (entry) {
+        this.onApply(entry.command);
+      }
     }
   }
 
   private isLogUpToDate(lastLogIndex: number, lastLogTerm: number): boolean {
     const myLastIndex = this.state.log.length;
-    const myLastTerm = myLastIndex > 0 ? this.state.log[myLastIndex - 1].term : 0;
+    const myLastEntry = myLastIndex > 0 ? this.state.log[myLastIndex - 1] : undefined;
+    const myLastTerm = myLastEntry?.term ?? 0;
 
     if (lastLogTerm !== myLastTerm) {
       return lastLogTerm > myLastTerm;
@@ -448,7 +454,7 @@ export interface AppendEntriesResponse {
   success: boolean;
 }
 
-export type ProposalResult<V> =
+export type ProposalResult<_V = unknown> =
   | { success: true; index: number; term: number }
   | { success: false; error: string; leaderId?: NodeId | null };
 

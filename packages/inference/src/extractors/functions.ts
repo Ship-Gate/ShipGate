@@ -5,8 +5,8 @@
  */
 
 import * as ts from 'typescript';
-import type { TypeScriptParseResult, extractValidationsFromBody } from '../parsers/typescript.js';
-import type { PythonParseResult, extractValidationsFromPython } from '../parsers/python.js';
+import type { TypeScriptParseResult } from '../parsers/typescript.js';
+import type { PythonParseResult } from '../parsers/python.js';
 import type { ExtractedFunction, ExtractedParameter, ExtractedError, ExtractedSideEffect } from '../analyzer.js';
 
 /**
@@ -153,7 +153,7 @@ function extractErrorFromThrow(node: ts.ThrowStatement, sourceFile: ts.SourceFil
     // Extract message from first argument
     if (node.expression.arguments && node.expression.arguments.length > 0) {
       const firstArg = node.expression.arguments[0];
-      if (ts.isStringLiteral(firstArg)) {
+      if (firstArg && ts.isStringLiteral(firstArg)) {
         message = firstArg.text;
         condition = message;
       }
@@ -194,7 +194,7 @@ function extractSideEffect(node: ts.AwaitExpression, sourceFile: ts.SourceFile):
 function extractTarget(callText: string): string {
   // Extract entity name from patterns like "db.users.create" or "userRepository.create"
   const match = callText.match(/(?:db\.)?(\w+)(?:Repository)?\.(?:create|update|delete|find|get)/i);
-  if (match) {
+  if (match && match[1]) {
     return capitalize(match[1].replace(/s$/, '')); // users -> User
   }
   return 'Entity';
@@ -246,12 +246,15 @@ function mapPythonFunction(func: {
   const throwsErrors: ExtractedError[] = [];
   const errorMatches = func.body.matchAll(/raise\s+(\w+)\(["']([^"']+)["']\)/g);
   for (const match of errorMatches) {
-    const errorType = toScreamingSnakeCase(match[1].replace(/Error$/, ''));
+    const matchedError = match[1];
+    const matchedMessage = match[2];
+    if (!matchedError || !matchedMessage) continue;
+    const errorType = toScreamingSnakeCase(matchedError.replace(/Error$/, ''));
     if (!throwsErrors.some((e) => e.type === errorType)) {
       throwsErrors.push({
         type: errorType,
-        condition: match[2],
-        message: match[2],
+        condition: matchedMessage,
+        message: matchedMessage,
       });
     }
   }
@@ -291,7 +294,7 @@ function mapTypeScriptType(tsType: string): string {
 
   // Handle Promise<T>
   const promiseMatch = tsType.match(/Promise<(.+)>/);
-  if (promiseMatch) {
+  if (promiseMatch && promiseMatch[1]) {
     return mapTypeScriptType(promiseMatch[1]);
   }
 
@@ -314,7 +317,7 @@ function mapPythonType(pyType: string): string {
 function extractErrorName(throwDoc: string): string {
   // Extract error name from JSDoc @throws comment
   const match = throwDoc.match(/^(\w+)/);
-  return match ? toScreamingSnakeCase(match[1]) : 'UNKNOWN_ERROR';
+  return match && match[1] ? toScreamingSnakeCase(match[1]) : 'UNKNOWN_ERROR';
 }
 
 function toSnakeCase(str: string): string {

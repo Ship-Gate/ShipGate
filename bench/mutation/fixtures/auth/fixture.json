@@ -1,0 +1,57 @@
+{
+  "name": "auth",
+  "specFile": "auth.isl",
+  "implFile": "auth.impl.ts",
+  "testFile": "auth.test.ts",
+  "mutations": [
+    {
+      "id": "remove-password-validation-assert",
+      "type": "remove-assert",
+      "description": "Remove assertion that validates password strength",
+      "target": {
+        "file": "auth.impl.ts",
+        "line": 16,
+        "pattern": "assert\\(password\\.length"
+      },
+      "expectedFailedClause": "precondition_1",
+      "expectedScoreDrop": 25
+    },
+    {
+      "id": "weaken-lockout-threshold",
+      "type": "change-comparator",
+      "description": "Change > to >= in failed attempt check (allows lockout bypass)",
+      "target": {
+        "file": "auth.impl.ts",
+        "line": 43,
+        "pattern": "failed_attempts > 4"
+      },
+      "expectedFailedClause": "invariant_boundary_1",
+      "expectedScoreDrop": 30
+    },
+    {
+      "id": "delete-session-validation",
+      "type": "delete-expectation",
+      "description": "Delete test expectation for session creation",
+      "target": {
+        "file": "auth.test.ts",
+        "line": 24,
+        "pattern": "expect\\(session\\.id\\)"
+      },
+      "expectedFailedClause": "postcondition_success_1",
+      "expectedScoreDrop": 20
+    },
+    {
+      "id": "bypass-rate-limiting",
+      "type": "bypass-precondition",
+      "description": "Bypass rate limiting check",
+      "target": {
+        "file": "auth.impl.ts",
+        "line": 10,
+        "pattern": "function checkRateLimit"
+      },
+      "expectedFailedClause": "precondition_validation_1",
+      "expectedScoreDrop": 50
+    }
+  ],
+  "expectedBaselineScore": 100
+}

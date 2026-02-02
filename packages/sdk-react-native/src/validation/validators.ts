@@ -244,7 +244,7 @@ export function validateObject<T extends Record<string, unknown>>(
       const result = validator(obj[field as keyof T]);
       if (!result.valid && result.errors) {
         errors.push(
-          ...result.errors.map(err => ({
+          ...result.errors.map((err: ValidationError) => ({
             ...err,
             field: err.field ? `${field}.${err.field}` : field,
           }))

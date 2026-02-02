@@ -373,32 +373,12 @@ export function createGrpcCheck(
       const start = Date.now();
 
       try {
-        const grpc = await import('@grpc/grpc-js');
-        const protoLoader = await import('@grpc/proto-loader');
-
-        // Use standard gRPC health check proto
-        const HEALTH_PROTO = `
-          syntax = "proto3";
-          package grpc.health.v1;
-          message HealthCheckRequest { string service = 1; }
-          message HealthCheckResponse {
-            enum ServingStatus { UNKNOWN = 0; SERVING = 1; NOT_SERVING = 2; }
-            ServingStatus status = 1;
-          }
-          service Health {
-            rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
-          }
-        `;
-
-        const packageDefinition = protoLoader.loadSync('', {
-          keepCase: true,
-          longs: String,
-          enums: String,
-          defaults: true,
-          oneofs: true,
-        });
+        // Verify grpc dependencies are available
+        await import('@grpc/grpc-js');
+        await import('@grpc/proto-loader');
 
         // This is a simplified check - in production, use actual proto files
+        // with the standard gRPC health check protocol
         return {
           status: 'healthy',
           latency: Date.now() - start,

@@ -23,7 +23,7 @@ export interface ISLSpanAttributes {
  */
 export class SpanBuilder {
   private options: SpanOptions;
-  private tags: Record<string, string | number | boolean> = {};
+  private _tags: Record<string, string | number | boolean> = {};
 
   constructor(domain: string, behavior: string) {
     this.options = { domain, behavior };
@@ -49,7 +49,7 @@ export class SpanBuilder {
    * Add a tag
    */
   tag(key: string, value: string | number | boolean): this {
-    this.tags[key] = value;
+    this._tags[key] = value;
     return this;
   }
 
@@ -57,7 +57,7 @@ export class SpanBuilder {
    * Add multiple tags
    */
   tags(tags: Record<string, string | number | boolean>): this {
-    Object.assign(this.tags, tags);
+    Object.assign(this._tags, tags);
     return this;
   }
 
@@ -67,7 +67,7 @@ export class SpanBuilder {
   build(): SpanOptions {
     return {
       ...this.options,
-      tags: this.tags,
+      tags: this._tags,
     };
   }
 }

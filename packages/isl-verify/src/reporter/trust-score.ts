@@ -78,8 +78,19 @@ export class TrustCalculator {
    * Calculate trust score from test results
    */
   calculate(testResult: TestResult): TrustScore {
-    // Categorize test results
-    const categories = this.categorizeTests(testResult.details);
+    // Use pre-categorized results if available, otherwise categorize
+    const categories = testResult.categories 
+      ? {
+          postconditions: testResult.categories.postconditions,
+          invariants: testResult.categories.invariants,
+          scenarios: testResult.categories.scenarios,
+          temporal: testResult.categories.temporal,
+          // Merge chaos into scenarios for backwards compatibility
+          ...(testResult.categories.chaos?.length 
+            ? { scenarios: [...testResult.categories.scenarios, ...testResult.categories.chaos] }
+            : {})
+        }
+      : this.categorizeTests(testResult.details);
 
     // Calculate category scores
     const postconditions = this.calculateCategoryScore(categories.postconditions);

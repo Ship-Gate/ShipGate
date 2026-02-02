@@ -5,8 +5,8 @@
  */
 
 import type { DomainDeclaration, BehaviorDeclaration } from '@isl-lang/isl-core';
-import type { VerificationFailure, AnalysisResult } from './analyzer.js';
-import type { Patch, PatchResult } from './patcher.js';
+import type { VerificationFailure } from './analyzer.js';
+import type { Patch } from './patcher.js';
 
 // ============================================================================
 // Types
@@ -40,17 +40,13 @@ export interface ValidatorOptions {
 // ============================================================================
 
 export class FixValidator {
-  private domain: DomainDeclaration;
-  private behavior: BehaviorDeclaration;
   private options: Required<ValidatorOptions>;
 
   constructor(
-    domain: DomainDeclaration,
-    behavior: BehaviorDeclaration,
+    _domain: DomainDeclaration,
+    _behavior: BehaviorDeclaration,
     options: ValidatorOptions = {}
   ) {
-    this.domain = domain;
-    this.behavior = behavior;
     this.options = {
       runStaticAnalysis: options.runStaticAnalysis ?? true,
       runTypeCheck: options.runTypeCheck ?? true,
@@ -212,7 +208,7 @@ export class FixValidator {
 
   private runStaticAnalysis(
     code: string,
-    patches: Patch[],
+    _patches: Patch[],
     originalFailure: VerificationFailure
   ): { valid: boolean; errors: ValidationError[] } {
     const errors: ValidationError[] = [];

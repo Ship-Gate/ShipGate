@@ -181,8 +181,6 @@ export function clearLoadersForRequest(loaders: DataLoaders): void {
     const functions: string[] = [];
 
     for (const entity of domain.entities) {
-      const nameLower = this.toCamelCase(entity.name);
-
       functions.push(`
 /**
  * Optimized batch loading for ${entity.name}

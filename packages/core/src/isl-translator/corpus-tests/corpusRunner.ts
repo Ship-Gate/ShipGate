@@ -885,7 +885,7 @@ export function normalizeAST<T extends ASTNode>(node: T): T {
   }
 
   if (Array.isArray(node)) {
-    return node.map(item => normalizeAST(item)) as T;
+    return node.map(item => normalizeAST(item)) as unknown as T;
   }
 
   if (typeof node !== 'object') {

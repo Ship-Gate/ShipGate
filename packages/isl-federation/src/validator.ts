@@ -3,11 +3,10 @@
 // Validates federated schemas and cross-service references
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from './ast';
 import type {
   FederatedService,
   CrossServiceReference,
-  SchemaConflict,
   EventContract,
 } from './types';
 import { FederationRegistry } from './registry';
@@ -360,9 +359,11 @@ function validateTypeCompatibility(services: FederatedService[]): ValidationErro
   for (const [typeName, definitions] of typeDefinitions) {
     if (definitions.length > 1) {
       const first = definitions[0];
+      if (!first) continue;
       
       for (let i = 1; i < definitions.length; i++) {
         const current = definitions[i];
+        if (!current) continue;
         
         if (!areTypesStructurallyEqual(first.type.definition, current.type.definition)) {
           errors.push({

@@ -164,7 +164,7 @@ export class PrismaGenerator implements DatabaseAdapterGenerator {
     return baseType;
   }
 
-  private mapScalarType(scalarType: string, context: GeneratorContext): string {
+  private mapScalarType(scalarType: string, _context: GeneratorContext): string {
     const mapping: Record<string, string> = {
       String: 'String',
       Int: 'Int',
@@ -229,7 +229,7 @@ export class PrismaGenerator implements DatabaseAdapterGenerator {
     return attrs;
   }
 
-  private generateDefaultAttribute(defaultValue: DefaultValue, field: NormalizedField): string | null {
+  private generateDefaultAttribute(defaultValue: DefaultValue, _field: NormalizedField): string | null {
     switch (defaultValue.kind) {
       case 'literal':
         if (typeof defaultValue.value === 'string') {

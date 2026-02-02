@@ -2,7 +2,7 @@
  * Cache Patterns - Common caching patterns.
  */
 
-import type { Cache, SetOptions } from '../types';
+import type { Cache, SetOptions } from '../types.js';
 
 /**
  * Cache-aside pattern decorator
@@ -170,10 +170,10 @@ export function refreshAhead<T>(
       const entry = cached.data;
       
       // Check if we should refresh
-      if (entry.expiresAt) {
+      if (entry.expiresAt !== undefined) {
         const now = Date.now();
-        const created = entry.createdAt.getTime();
-        const expires = entry.expiresAt.getTime();
+        const created = entry.createdAt;
+        const expires = entry.expiresAt;
         const elapsed = now - created;
         const ttl = expires - created;
 

@@ -1,8 +1,8 @@
 import * as Sentry from '@sentry/node';
 import type { ISLRequest, ISLResponse, NextFunction } from '../types';
-import { setISLBehavior, extractISLContextFromHeaders } from '../context/isl';
-import { addISLRequestBreadcrumb } from '../breadcrumbs/isl';
-import { trackBehavior } from '../performance/spans';
+import { setBehaviorContext } from '../context/isl';
+import { addBehaviorBreadcrumb } from '../breadcrumbs/isl';
+import { startBehaviorSpan } from '../performance/spans';
 
 /**
  * Express middleware for ISL Sentry integration
@@ -12,13 +12,6 @@ export function sentryISLMiddleware() {
     const domain = req.headers['x-isl-domain'] as string | undefined;
     const behavior = req.headers['x-isl-behavior'] as string | undefined;
     const traceId = req.headers['x-isl-trace-id'] as string | undefined;
-
-    // Extract ISL context from headers
-    const islContext = extractISLContextFromHeaders(req.headers);
-
-    if (islContext) {
-      Sentry.setContext('isl', islContext);
-    }
 
     if (domain && behavior) {
       // Set ISL tags
@@ -32,27 +25,33 @@ export function sentryISLMiddleware() {
       }
 
       // Set ISL context
-      setISLBehavior(domain, behavior);
+      setBehaviorContext(domain, behavior);
 
       // Add request breadcrumb
-      addISLRequestBreadcrumb(
-        req.method ?? 'UNKNOWN',
-        req.url ?? req.path ?? 'unknown',
+      addBehaviorBreadcrumb(
         domain,
-        behavior
+        behavior,
+        'start',
+        {
+          method: req.method ?? 'UNKNOWN',
+          url: req.url ?? req.path ?? 'unknown',
+        }
       );
 
       // Wrap request handling with behavior tracking
-      trackBehavior(domain, behavior, () => {
+      startBehaviorSpan({ domain, behavior }, () => {
         return new Promise<void>((resolve, reject) => {
           res.on('finish', () => {
             // Add response breadcrumb
-            addISLRequestBreadcrumb(
-              req.method ?? 'UNKNOWN',
-              req.url ?? req.path ?? 'unknown',
+            addBehaviorBreadcrumb(
               domain,
               behavior,
-              res.statusCode
+              res.statusCode >= 400 ? 'error' : 'end',
+              {
+                method: req.method ?? 'UNKNOWN',
+                url: req.url ?? req.path ?? 'unknown',
+                statusCode: res.statusCode,
+              }
             );
 
             if (res.statusCode >= 400) {
@@ -87,7 +86,7 @@ export function sentryISLErrorHandler() {
     const behavior = req.headers['x-isl-behavior'] as string | undefined;
 
     // Add ISL context to the error
-    Sentry.withScope((scope) => {
+    Sentry.withScope((scope: Sentry.Scope) => {
       if (domain) {
         scope.setTag('isl.domain', domain);
       }

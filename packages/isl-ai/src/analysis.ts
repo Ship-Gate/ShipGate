@@ -3,13 +3,17 @@
 // AI-powered analysis of ISL specifications
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type {
+  DomainDeclaration,
+  FieldDeclaration,
+  SourceSpan,
+} from '@isl-lang/isl-core';
 import type {
   AIProvider,
   CodeQualityMetric,
   SecurityFinding,
   DesignPattern,
-} from './types';
+} from './types.js';
 
 // ============================================================================
 // TYPES
@@ -29,7 +33,7 @@ export interface SpecInsight {
   title: string;
   description: string;
   severity: 'info' | 'warning' | 'error';
-  location?: AST.SourceLocation;
+  location?: SourceSpan;
   suggestion?: string;
 }
 
@@ -69,7 +73,7 @@ export interface CoverageMetrics {
  * Analyze ISL domain for quality, security, and patterns
  */
 export async function analyze(
-  domain: AST.Domain,
+  domain: DomainDeclaration,
   provider: AIProvider
 ): Promise<AnalysisResult> {
   // Compute basic metrics
@@ -99,7 +103,7 @@ export async function analyze(
 // ============================================================================
 
 async function analyzeQuality(
-  domain: AST.Domain,
+  domain: DomainDeclaration,
   provider: AIProvider,
   complexity: ComplexityMetrics,
   coverage: CoverageMetrics
@@ -172,7 +176,7 @@ async function analyzeQuality(
 }
 
 async function getAIQualityAssessment(
-  domain: AST.Domain,
+  domain: DomainDeclaration,
   provider: AIProvider
 ): Promise<CodeQualityMetric[]> {
   const prompt = `Assess the quality of this ISL specification:
@@ -204,20 +208,21 @@ Respond with JSON: [{"name": "...", "score": N, "description": "...", "suggestio
 // ============================================================================
 
 async function analyzeSecurity(
-  domain: AST.Domain,
+  domain: DomainDeclaration,
   provider: AIProvider
 ): Promise<SecurityFinding[]> {
   const findings: SecurityFinding[] = [];
 
   // Check for behaviors without authorization
   for (const behavior of domain.behaviors) {
-    if (behavior.security.length === 0 && !behavior.actors) {
+    const hasNoSecurity = !behavior.security || behavior.security.requirements.length === 0;
+    if (hasNoSecurity && !behavior.actors) {
       findings.push({
         severity: 'high',
         category: 'Authorization',
         title: `No authorization on ${behavior.name.name}`,
         description: 'Behavior has no security constraints or actor specifications',
-        location: behavior.location,
+        location: behavior.span,
         fix: `Add security: requires: "permission:${behavior.name.name.toLowerCase()}"`,
       });
     }
@@ -240,7 +245,7 @@ async function analyzeSecurity(
             category: 'Data Protection',
             title: `Sensitive field ${entity.name.name}.${field.name.name} not protected`,
             description: 'Field appears to contain sensitive data but has no protection annotations',
-            location: field.location,
+            location: field.span,
             fix: `Add @sensitive or @encrypted annotation`,
           });
         }
@@ -250,8 +255,8 @@ async function analyzeSecurity(
 
   // Check for missing rate limiting on public behaviors
   for (const behavior of domain.behaviors) {
-    const isPublic = behavior.actors?.some(a => a.name.name === 'Anonymous');
-    const hasRateLimit = behavior.security.some(s => s.type === 'rate_limit');
+    const isPublic = behavior.actors?.actors.some(a => a.name.name === 'Anonymous');
+    const hasRateLimit = behavior.security?.requirements.some(s => s.type === 'rate_limit');
     
     if (isPublic && !hasRateLimit) {
       findings.push({
@@ -259,7 +264,7 @@ async function analyzeSecurity(
         category: 'DoS Protection',
         title: `No rate limiting on public behavior ${behavior.name.name}`,
         description: 'Public behaviors should have rate limiting to prevent abuse',
-        location: behavior.location,
+        location: behavior.span,
         fix: `Add security: rate_limit 100/minute per ip`,
       });
     }
@@ -273,7 +278,7 @@ async function analyzeSecurity(
 }
 
 async function getAISecurityReview(
-  domain: AST.Domain,
+  domain: DomainDeclaration,
   provider: AIProvider
 ): Promise<SecurityFinding[]> {
   const prompt = `Security review this ISL specification:
@@ -306,7 +311,7 @@ Respond with JSON: [{"severity": "high|medium|low", "category": "...", "title": 
 // ============================================================================
 
 async function analyzePatterns(
-  domain: AST.Domain,
+  domain: DomainDeclaration,
   provider: AIProvider
 ): Promise<DesignPattern[]> {
   const patterns: DesignPattern[] = [];
@@ -319,16 +324,13 @@ async function analyzePatterns(
     recommendation: 'Pattern is correctly applied',
   });
 
-  // Check for CQRS pattern
-  const hasViews = domain.views.length > 0;
+  // Check for CQRS pattern (simplified check - no views in current AST)
   const hasBehaviors = domain.behaviors.length > 0;
   patterns.push({
     name: 'CQRS (Command Query Responsibility Segregation)',
     description: 'Separate read models (views) from write operations (behaviors)',
-    applicable: hasViews && hasBehaviors,
-    recommendation: !hasViews 
-      ? 'Consider adding views for read-optimized queries'
-      : 'CQRS pattern is applied',
+    applicable: hasBehaviors,
+    recommendation: 'Consider adding views for read-optimized queries',
   });
 
   // Check for Event Sourcing readiness
@@ -352,7 +354,7 @@ async function analyzePatterns(
 }
 
 async function getAIPatternAnalysis(
-  domain: AST.Domain,
+  domain: DomainDeclaration,
   provider: AIProvider
 ): Promise<DesignPattern[]> {
   const prompt = `Identify design patterns in this ISL specification:
@@ -385,16 +387,16 @@ Respond with JSON: [{"name": "...", "description": "...", "applicable": boolean,
 // ============================================================================
 
 async function generateSuggestions(
-  domain: AST.Domain,
-  provider: AIProvider,
+  domain: DomainDeclaration,
+  _provider: AIProvider,
   complexity: ComplexityMetrics,
-  coverage: CoverageMetrics
+  _coverage: CoverageMetrics
 ): Promise<AnalysisSuggestion[]> {
   const suggestions: AnalysisSuggestion[] = [];
 
   // Entity suggestions
   for (const entity of domain.entities) {
-    if (entity.invariants.length === 0) {
+    if (!entity.invariants || entity.invariants.length === 0) {
       suggestions.push({
         type: 'add',
         target: `entity ${entity.name.name}`,
@@ -407,7 +409,7 @@ async function generateSuggestions(
 
   // Behavior suggestions
   for (const behavior of domain.behaviors) {
-    if (behavior.postconditions.length === 0) {
+    if (!behavior.postconditions || behavior.postconditions.conditions.length === 0) {
       suggestions.push({
         type: 'add',
         target: `behavior ${behavior.name.name}`,
@@ -436,25 +438,24 @@ async function generateSuggestions(
 // METRICS COMPUTATION
 // ============================================================================
 
-function computeComplexityMetrics(domain: AST.Domain): ComplexityMetrics {
+function computeComplexityMetrics(domain: DomainDeclaration): ComplexityMetrics {
   const entityCount = domain.entities.length;
   const behaviorCount = domain.behaviors.length;
   const typeCount = domain.types.length;
   const invariantCount = domain.invariants.length + 
-    domain.entities.reduce((sum, e) => sum + e.invariants.length, 0);
+    domain.entities.reduce((sum, e) => sum + (e.invariants?.length ?? 0), 0);
 
   const totalFields = domain.entities.reduce((sum, e) => sum + e.fields.length, 0);
   const avgFieldsPerEntity = entityCount > 0 ? totalFields / entityCount : 0;
 
   const totalConstraints = domain.behaviors.reduce(
-    (sum, b) => sum + b.preconditions.length + b.postconditions.length,
+    (sum, b) => sum + (b.preconditions?.conditions.length ?? 0) + (b.postconditions?.conditions.length ?? 0),
     0
   );
   const avgConstraintsPerBehavior = behaviorCount > 0 ? totalConstraints / behaviorCount : 0;
 
   // Simple cyclomatic complexity estimate
-  const cyclomaticComplexity = behaviorCount + invariantCount + 
-    domain.policies.length + (entityCount > 5 ? entityCount - 5 : 0);
+  const cyclomaticComplexity = behaviorCount + invariantCount + (entityCount > 5 ? entityCount - 5 : 0);
 
   // Dependency depth (simplified)
   const dependencyDepth = domain.imports.length;
@@ -471,11 +472,11 @@ function computeComplexityMetrics(domain: AST.Domain): ComplexityMetrics {
   };
 }
 
-function computeCoverageMetrics(domain: AST.Domain): CoverageMetrics {
-  const entitiesWithInvariants = domain.entities.filter(e => e.invariants.length > 0).length;
-  const behaviorsWithPreconditions = domain.behaviors.filter(b => b.preconditions.length > 0).length;
-  const behaviorsWithPostconditions = domain.behaviors.filter(b => b.postconditions.length > 0).length;
-  const behaviorsWithSecurity = domain.behaviors.filter(b => b.security.length > 0 || b.actors).length;
+function computeCoverageMetrics(domain: DomainDeclaration): CoverageMetrics {
+  const entitiesWithInvariants = domain.entities.filter(e => e.invariants && e.invariants.length > 0).length;
+  const behaviorsWithPreconditions = domain.behaviors.filter(b => b.preconditions && b.preconditions.conditions.length > 0).length;
+  const behaviorsWithPostconditions = domain.behaviors.filter(b => b.postconditions && b.postconditions.conditions.length > 0).length;
+  const behaviorsWithSecurity = domain.behaviors.filter(b => (b.security && b.security.requirements.length > 0) || b.actors).length;
 
   const totalFields = domain.entities.reduce((sum, e) => sum + e.fields.length, 0);
   const fieldsWithConstraints = domain.entities.reduce(
@@ -514,17 +515,18 @@ function computeCoverageMetrics(domain: AST.Domain): CoverageMetrics {
   };
 }
 
-function hasConstraints(field: AST.Field): boolean {
-  return field.type.kind === 'ConstrainedType' ||
+function hasConstraints(field: FieldDeclaration): boolean {
+  return field.constraints.length > 0 ||
     field.annotations.some(a => 
       ['minLength', 'maxLength', 'min', 'max', 'pattern', 'notEmpty'].includes(a.name.name)
     );
 }
 
-function summarizeDomain(domain: AST.Domain): string {
+function summarizeDomain(domain: DomainDeclaration): string {
   const summary: string[] = [];
   
-  summary.push(`Domain: ${domain.name.name} v${domain.version.value}`);
+  const version = domain.version?.value ?? '1.0.0';
+  summary.push(`Domain: ${domain.name.name} v${version}`);
   summary.push(`Entities: ${domain.entities.map(e => e.name.name).join(', ')}`);
   summary.push(`Behaviors: ${domain.behaviors.map(b => b.name.name).join(', ')}`);
   summary.push(`Types: ${domain.types.map(t => t.name.name).join(', ')}`);

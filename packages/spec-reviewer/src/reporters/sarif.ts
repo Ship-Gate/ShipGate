@@ -5,7 +5,7 @@
  * for integration with GitHub Code Scanning and other tools.
  */
 
-import type { ReviewResult, Issue, Suggestion } from '../reviewer.js';
+import type { ReviewResult, Issue } from '../reviewer.js';
 
 // SARIF types
 interface SarifLog {
@@ -257,9 +257,14 @@ export function mergeSarifReports(reports: string[]): string {
     throw new Error('No reports to merge');
   }
 
+  const first = parsed[0];
+  if (!first) {
+    throw new Error('No reports to merge');
+  }
+
   const merged: SarifLog = {
     version: '2.1.0',
-    $schema: parsed[0].$schema,
+    $schema: first.$schema,
     runs: [],
   };
 

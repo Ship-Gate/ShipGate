@@ -54,7 +54,7 @@ export function generateJavaValidation(
 // VALIDATION ANNOTATION
 // ============================================================================
 
-function generateValidationAnnotation(name: string, def: ConstrainedType): string {
+function generateValidationAnnotation(name: string, _def: ConstrainedType): string {
   const lines: string[] = [];
 
   lines.push(`@Documented`);
@@ -81,12 +81,8 @@ function generateValidator(name: string, def: ConstrainedType): string {
   lines.push(`public class ${name}Validator implements ConstraintValidator<Valid${name}, ${baseType}> {`);
   lines.push('');
 
-  // Extract constraints
+  // Extract format constraint for pattern field
   const formatConstraint = def.constraints.find(c => c.name === 'format');
-  const minLengthConstraint = def.constraints.find(c => c.name === 'min_length');
-  const maxLengthConstraint = def.constraints.find(c => c.name === 'max_length');
-  const minConstraint = def.constraints.find(c => c.name === 'min');
-  const maxConstraint = def.constraints.find(c => c.name === 'max');
 
   // Generate pattern field if needed
   if (formatConstraint && formatConstraint.value.kind === 'RegexLiteral') {
@@ -203,7 +199,7 @@ function generateNumericValidations(lines: string[], constraints: Constraint[]):
 
 export function generateFieldValidationAnnotations(
   field: Field,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string[] {
   const annotations: string[] = [];
 

@@ -10,8 +10,7 @@ import { glob } from 'glob';
 import { resolve, relative, dirname, join, basename } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
-import { parseISL, type DomainDeclaration } from '@isl-lang/isl-core';
-import { compile, generateTypes, generateTests } from '@isl-lang/isl-compiler';
+import { parse as parseISL, type Domain as DomainDeclaration, type TypeDefinition } from '@isl-lang/parser';
 import { output } from '../output.js';
 import { loadConfig, type ISLConfig } from '../config.js';
 
@@ -59,16 +58,172 @@ export interface GenerateResult {
  * Generate types for a domain
  */
 function generateTypesForDomain(domain: DomainDeclaration): string {
-  const result = generateTypes(domain);
-  return result.content;
+  const lines: string[] = [];
+  
+  lines.push('// Types generated from ISL specification');
+  lines.push('');
+  
+  // Generate type aliases for custom types
+  for (const type of domain.types) {
+    const tsType = generateTypeDefinition(type.definition);
+    lines.push(`export type ${type.name.name} = ${tsType};`);
+    lines.push('');
+  }
+  
+  // Generate interfaces for entities
+  for (const entity of domain.entities) {
+    lines.push(`export interface ${entity.name.name} {`);
+    
+    if (entity.fields) {
+      for (const field of entity.fields) {
+        const tsType = mapToTypeScriptType(field.type);
+        const optional = field.optional ? '?' : '';
+        lines.push(`  ${field.name.name}${optional}: ${tsType};`);
+      }
+    }
+    
+    lines.push('}');
+    lines.push('');
+  }
+  
+  // Generate function types for behaviors
+  for (const behavior of domain.behaviors) {
+    const inputParams = behavior.inputs?.map(i => 
+      `${i.name.name}: ${mapToTypeScriptType(i.type)}`
+    ).join(', ') ?? '';
+    
+    const outputType = behavior.output 
+      ? mapToTypeScriptType(behavior.output)
+      : 'void';
+    
+    lines.push(`export type ${behavior.name.name}Fn = (${inputParams}) => Promise<${outputType}>;`);
+    lines.push('');
+  }
+  
+  return lines.join('\n');
 }
 
 /**
  * Generate tests for a domain
  */
 function generateTestsForDomain(domain: DomainDeclaration): string {
-  const result = generateTests(domain);
-  return result.content;
+  const lines: string[] = [];
+  
+  lines.push("import { describe, it, expect } from 'vitest';");
+  lines.push('');
+  
+  // Generate tests for each behavior
+  for (const behavior of domain.behaviors) {
+    lines.push(`describe('${behavior.name.name}', () => {`);
+    
+    // Generate a basic test skeleton
+    lines.push(`  it('should execute successfully', async () => {`);
+    lines.push(`    // TODO: Implement test for ${behavior.name.name}`);
+    lines.push(`    expect(true).toBe(true);`);
+    lines.push(`  });`);
+    
+    // Generate precondition tests
+    if (behavior.preconditions && behavior.preconditions.length > 0) {
+      lines.push('');
+      lines.push(`  describe('preconditions', () => {`);
+      for (let i = 0; i < behavior.preconditions.length; i++) {
+        lines.push(`    it('should validate precondition ${i + 1}', () => {`);
+        lines.push(`      // TODO: Test precondition`);
+        lines.push(`      expect(true).toBe(true);`);
+        lines.push(`    });`);
+      }
+      lines.push(`  });`);
+    }
+    
+    lines.push(`});`);
+    lines.push('');
+  }
+  
+  return lines.join('\n');
+}
+
+/**
+ * Generate TypeScript type from ISL type definition
+ */
+function generateTypeDefinition(def: TypeDefinition): string {
+  switch (def.kind) {
+    case 'PrimitiveType':
+      return mapPrimitiveToTS(def.name);
+    case 'EnumType':
+      return def.variants.map(v => `'${v.name.name}'`).join(' | ');
+    case 'StructType':
+      const fields = def.fields.map(f => 
+        `${f.name.name}${f.optional ? '?' : ''}: ${mapToTypeScriptType(f.type)}`
+      ).join('; ');
+      return `{ ${fields} }`;
+    case 'ListType':
+      return `${generateTypeDefinition(def.elementType)}[]`;
+    case 'MapType':
+      return `Record<${generateTypeDefinition(def.keyType)}, ${generateTypeDefinition(def.valueType)}>`;
+    case 'OptionalType':
+      return `${generateTypeDefinition(def.inner)} | null`;
+    case 'UnionType':
+      return def.types.map(t => generateTypeDefinition(t)).join(' | ');
+    case 'ReferenceType':
+      return def.name.name;
+    case 'ConstrainedType':
+      return generateTypeDefinition(def.base);
+    default:
+      return 'unknown';
+  }
+}
+
+/**
+ * Map ISL primitive to TypeScript type
+ */
+function mapPrimitiveToTS(name: string): string {
+  const map: Record<string, string> = {
+    'String': 'string',
+    'Int': 'number',
+    'Decimal': 'number',
+    'Boolean': 'boolean',
+    'Timestamp': 'Date',
+    'UUID': 'string',
+    'Duration': 'number',
+  };
+  return map[name] ?? 'unknown';
+}
+
+/**
+ * Map ISL type reference to TypeScript
+ */
+function mapToTypeScriptType(typeRef: TypeDefinition | { name: string } | undefined | null): string {
+  if (!typeRef) return 'unknown';
+  
+  // Handle TypeDefinition
+  if ('kind' in typeRef) {
+    return generateTypeDefinition(typeRef as TypeDefinition);
+  }
+  
+  // Handle simple name reference
+  if ('name' in typeRef) {
+    const name = typeRef.name;
+    const primitiveMap: Record<string, string> = {
+      'String': 'string',
+      'Int': 'number',
+      'Integer': 'number',
+      'Float': 'number',
+      'Decimal': 'number',
+      'Boolean': 'boolean',
+      'Bool': 'boolean',
+      'ID': 'string',
+      'UUID': 'string',
+      'DateTime': 'Date',
+      'Timestamp': 'Date',
+      'Date': 'string',
+      'Time': 'string',
+      'Void': 'void',
+      'Any': 'unknown',
+    };
+    return primitiveMap[name] ?? name;
+  }
+  
+  return 'unknown';
 }
 
 /**
@@ -191,7 +346,7 @@ async function generateForFile(
   
   try {
     const source = await readFile(filePath, 'utf-8');
-    const { ast, errors: parseErrors } = parseISL(source, filePath);
+    const { domain: ast, errors: parseErrors } = parseISL(source, filePath);
 
     if (parseErrors.length > 0 || !ast) {
       errors.push(...parseErrors.map(e => `${filePath}: ${e.message}`));

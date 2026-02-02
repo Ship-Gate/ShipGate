@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "1.0.0",
+  "verdict": "NO_SHIP",
+  "summary": {
+    "totalClauses": 3,
+    "passedClauses": 1,
+    "partialClauses": 1,
+    "failedClauses": 1,
+    "passRate": 33,
+    "totalDurationMs": 180
+  },
+  "metadata": {
+    "contractName": "OrderService",
+    "contractFile": "contracts/orders.isl",
+    "verifierVersion": "1.0.0",
+    "gitCommit": "def5678",
+    "gitBranch": "feature/orders",
+    "buildId": "ci-999"
+  },
+  "clauses": [
+    {
+      "id": "order-001",
+      "name": "Create order validates items",
+      "status": "PASS",
+      "evidence": [
+        {
+          "type": "precondition",
+          "description": "Items array is non-empty"
+        }
+      ],
+      "durationMs": 40
+    },
+    {
+      "id": "order-002",
+      "name": "Order total calculated correctly",
+      "status": "PARTIAL",
+      "description": "Sum of item prices equals order total",
+      "evidence": [
+        {
+          "type": "assertion",
+          "description": "Total matches for integer prices but not decimals",
+          "location": {
+            "file": "src/orders/total.ts",
+            "line": 15,
+            "column": 3,
+            "snippet": "total += item.price * item.quantity"
+          }
+        }
+      ],
+      "durationMs": 60
+    },
+    {
+      "id": "order-003",
+      "name": "Inventory decremented on order",
+      "status": "FAIL",
+      "description": "After order placement, inventory count should decrease",
+      "evidence": [
+        {
+          "type": "invariant",
+          "description": "Inventory count unchanged after order",
+          "location": {
+            "file": "src/orders/place.ts",
+            "line": 88
+          }
+        }
+      ],
+      "durationMs": 80,
+      "error": "Expected inventory to decrease by 2, but remained at 100"
+    }
+  ],
+  "assumptions": [
+    {
+      "id": "assume-order-001",
+      "description": "Inventory service is operational",
+      "rationale": "External service dependency",
+      "risk": "medium"
+    },
+    {
+      "id": "assume-order-002",
+      "description": "Prices are in USD",
+      "risk": "high"
+    }
+  ],
+  "openQuestions": [
+    {
+      "id": "q-001",
+      "question": "Should we support backorders?",
+      "context": "Currently orders fail if inventory is insufficient",
+      "suggestedActions": [
+        "Review with product team",
+        "Check competitor behavior"
+      ],
+      "priority": "high"
+    },
+    {
+      "id": "q-002",
+      "question": "How to handle partial fulfillment?",
+      "priority": "medium"
+    }
+  ],
+  "reproCommands": [
+    {
+      "description": "Run order tests",
+      "command": "pnpm test:orders",
+      "workingDirectory": "packages/orders"
+    },
+    {
+      "description": "Run specific failing test",
+      "command": "pnpm vitest run inventory.test.ts -t 'decrements'",
+      "workingDirectory": "packages/orders",
+      "env": {
+        "DEBUG": "orders:*",
+        "LOG_LEVEL": "debug"
+      }
+    }
+  ]
+}

@@ -208,15 +208,18 @@ export class OpenAPIGenerator {
    * Convert behavior output to schema
    */
   private outputToSchema(behavior: BehaviorSpec): SchemaObject {
+    const properties: Record<string, SchemaProperty> = {
+      success: { type: 'boolean' },
+      data: { $ref: `#/components/schemas/${behavior.output?.success}` },
+    };
+
+    if (behavior.output?.errors.length) {
+      properties.error = { $ref: `#/components/schemas/${behavior.name}Error` };
+    }
+
     return {
       type: 'object',
-      properties: {
-        success: { type: 'boolean' },
-        data: { $ref: `#/components/schemas/${behavior.output?.success}` },
-        error: behavior.output?.errors.length
-          ? { $ref: `#/components/schemas/${behavior.name}Error` }
-          : undefined,
-      },
+      properties,
       required: ['success'],
     };
   }

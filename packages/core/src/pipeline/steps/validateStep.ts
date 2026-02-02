@@ -26,7 +26,7 @@ function validateDomainStructure(ast: Domain): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
 
   // Check domain name
-  if (!ast.name?.value) {
+  if (!ast.name?.name) {
     issues.push({
       path: 'name',
       message: 'Domain must have a name',
@@ -48,7 +48,7 @@ function validateDomainStructure(ast: Domain): ValidationIssue[] {
     const entity = ast.entities[i];
     if (!entity) continue;
 
-    if (!entity.name?.value) {
+    if (!entity.name?.name) {
       issues.push({
         path: `entities[${i}].name`,
         message: 'Entity must have a name',
@@ -59,15 +59,15 @@ function validateDomainStructure(ast: Domain): ValidationIssue[] {
     // Check for duplicate field names
     const fieldNames = new Set<string>();
     for (const field of entity.fields || []) {
-      if (field.name?.value) {
-        if (fieldNames.has(field.name.value)) {
+      if (field.name?.name) {
+        if (fieldNames.has(field.name.name)) {
           issues.push({
             path: `entities[${i}].fields`,
-            message: `Duplicate field name: ${field.name.value}`,
+            message: `Duplicate field name: ${field.name.name}`,
             severity: 'error',
           });
         }
-        fieldNames.add(field.name.value);
+        fieldNames.add(field.name.name);
       }
     }
   }
@@ -77,7 +77,7 @@ function validateDomainStructure(ast: Domain): ValidationIssue[] {
     const behavior = ast.behaviors[i];
     if (!behavior) continue;
 
-    if (!behavior.name?.value) {
+    if (!behavior.name?.name) {
       issues.push({
         path: `behaviors[${i}].name`,
         message: 'Behavior must have a name',
@@ -88,13 +88,12 @@ function validateDomainStructure(ast: Domain): ValidationIssue[] {
     // Check that behaviors have at least one clause
     const hasClauses =
       (behavior.preconditions?.length ?? 0) > 0 ||
-      (behavior.postconditions?.length ?? 0) > 0 ||
-      (behavior.effects?.length ?? 0) > 0;
+      (behavior.postconditions?.length ?? 0) > 0;
 
     if (!hasClauses) {
       issues.push({
         path: `behaviors[${i}]`,
-        message: `Behavior '${behavior.name?.value || 'unnamed'}' has no clauses`,
+        message: `Behavior '${behavior.name?.name || 'unnamed'}' has no clauses`,
         severity: 'warning',
       });
     }
@@ -105,7 +104,7 @@ function validateDomainStructure(ast: Domain): ValidationIssue[] {
     const invariantBlock = ast.invariants[i];
     if (!invariantBlock) continue;
 
-    if (!invariantBlock.invariants?.length) {
+    if (!invariantBlock.predicates?.length) {
       issues.push({
         path: `invariants[${i}]`,
         message: 'Invariant block is empty',

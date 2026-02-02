@@ -2,9 +2,9 @@
 // TypeScript gRPC Stub Generation
 // ============================================================================
 
-import type { Domain, Behavior, Entity } from '@isl-lang/isl-core';
+import type { Domain, Behavior, Entity } from '../types';
 import type { GeneratedFile } from '../generator';
-import { toPascalCase, toCamelCase, toSnakeCase } from '../utils';
+import { toPascalCase, toCamelCase } from '../utils';
 
 // ==========================================================================
 // OPTIONS
@@ -79,7 +79,7 @@ export function generateTypeScriptStubs(
 // CLIENT STUB GENERATION
 // ==========================================================================
 
-function generateClientStub(domain: Domain, options: TypeScriptStubOptions): string {
+function generateClientStub(domain: Domain, _options: TypeScriptStubOptions): string {
   const domainName = toPascalCase(domain.name.name);
   const serviceName = `${domainName}Service`;
   
@@ -170,7 +170,6 @@ function generateClientMethod(behavior: Behavior): string {
 
 function generateCrudClientMethods(entity: Entity): string {
   const entityName = toPascalCase(entity.name.name);
-  const varName = toCamelCase(entity.name.name);
   
   return `
   async create${entityName}(
@@ -263,7 +262,7 @@ function generateCrudClientMethods(entity: Entity): string {
 // SERVER STUB GENERATION
 // ==========================================================================
 
-function generateServerStub(domain: Domain, options: TypeScriptStubOptions): string {
+function generateServerStub(domain: Domain, _options: TypeScriptStubOptions): string {
   const domainName = toPascalCase(domain.name.name);
   const serviceName = `${domainName}Service`;
   
@@ -388,36 +387,42 @@ function generateTypeDefinitions(domain: Domain, _options: TypeScriptStubOptions
     
     // Request type
     lines.push(`export interface ${behaviorName}Request {`);
-    for (const field of behavior.input.fields) {
-      const fieldName = toCamelCase(field.name.name);
-      const tsType = islTypeToTs(field.type);
-      const optional = field.optional ? '?' : '';
-      lines.push(`  ${fieldName}${optional}: ${tsType};`);
+    if (behavior.input) {
+      for (const field of behavior.input.fields) {
+        const fieldName = toCamelCase(field.name.name);
+        const tsType = islTypeToTs(field.type);
+        const optional = field.optional ? '?' : '';
+        lines.push(`  ${fieldName}${optional}: ${tsType};`);
+      }
     }
     lines.push('}');
     lines.push('');
     
     // Response type
     lines.push(`export type ${behaviorName}Response =`);
-    lines.push(`  | { success: true; data: ${islTypeToTs(behavior.output.success)} }`);
-    if (behavior.output.errors.length > 0) {
-      lines.push(`  | { success: false; error: ${behaviorName}Error };`);
-      lines.push('');
-      lines.push(`export interface ${behaviorName}Error {`);
-      lines.push(`  code: ${behaviorName}ErrorCode;`);
-      lines.push('  message: string;');
-      lines.push('  retriable: boolean;');
-      lines.push('  retryAfterSeconds?: number;');
-      lines.push('}');
-      lines.push('');
-      lines.push(`export enum ${behaviorName}ErrorCode {`);
-      for (const error of behavior.output.errors) {
-        const errorName = error.name.name.toUpperCase();
-        lines.push(`  ${errorName} = '${errorName}',`);
+    if (behavior.output) {
+      lines.push(`  | { success: true; data: ${islTypeToTs(behavior.output.success)} }`);
+      if (behavior.output.errors.length > 0) {
+        lines.push(`  | { success: false; error: ${behaviorName}Error };`);
+        lines.push('');
+        lines.push(`export interface ${behaviorName}Error {`);
+        lines.push(`  code: ${behaviorName}ErrorCode;`);
+        lines.push('  message: string;');
+        lines.push('  retriable: boolean;');
+        lines.push('  retryAfterSeconds?: number;');
+        lines.push('}');
+        lines.push('');
+        lines.push(`export enum ${behaviorName}ErrorCode {`);
+        for (const error of behavior.output.errors) {
+          const errorName = error.name.name.toUpperCase();
+          lines.push(`  ${errorName} = '${errorName}',`);
+        }
+        lines.push('}');
+      } else {
+        lines.push(';');
       }
-      lines.push('}');
     } else {
-      lines.push(';');
+      lines.push('  | { success: true; data: void };');
     }
     lines.push('');
   }
@@ -425,10 +430,11 @@ function generateTypeDefinitions(domain: Domain, _options: TypeScriptStubOptions
   return lines.join('\n');
 }
 
-function islTypeToTs(type: { kind: string; name?: string | { parts?: Array<{ name: string }> }; element?: unknown; inner?: unknown }): string {
+function islTypeToTs(type: { kind: string; name?: { name: string }; elementType?: unknown; typeArguments?: Array<{ kind: string; name?: { name: string } }> }): string {
   switch (type.kind) {
-    case 'PrimitiveType':
-      switch (type.name) {
+    case 'SimpleType': {
+      const typeName = type.name?.name ?? '';
+      switch (typeName) {
         case 'String':
         case 'UUID':
           return 'string';
@@ -442,18 +448,30 @@ function islTypeToTs(type: { kind: string; name?: string | { parts?: Array<{ nam
         case 'Duration':
           return 'number';
         default:
-          return 'unknown';
+          // Reference to another type
+          return typeName || 'unknown';
       }
-    case 'ReferenceType':
-      if (typeof type.name === 'object' && type.name?.parts) {
-        return type.name.parts.map(p => p.name).join('.');
+    }
+    case 'GenericType': {
+      const typeName = type.name?.name ?? '';
+      if (typeName === 'List' || typeName === 'Array') {
+        const elemType = type.typeArguments?.[0];
+        return `${elemType ? islTypeToTs(elemType) : 'unknown'}[]`;
       }
+      if (typeName === 'Map') {
+        return 'Record<string, unknown>';
+      }
+      if (typeName === 'Optional') {
+        const innerType = type.typeArguments?.[0];
+        return `${innerType ? islTypeToTs(innerType) : 'unknown'} | null`;
+      }
+      return typeName || 'unknown';
+    }
+    case 'ArrayType':
+      return `${islTypeToTs(type.elementType as { kind: string })}[]`;
+    case 'UnionType':
       return 'unknown';
-    case 'ListType':
-      return `${islTypeToTs(type.element as { kind: string })}[]`;
-    case 'OptionalType':
-      return `${islTypeToTs(type.inner as { kind: string })} | null`;
-    case 'MapType':
+    case 'ObjectType':
       return 'Record<string, unknown>';
     default:
       return 'unknown';

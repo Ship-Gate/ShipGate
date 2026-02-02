@@ -21,7 +21,7 @@ import {
 } from './types.js';
 import { Corpus } from './corpus.js';
 import { minimize } from './minimizer.js';
-import { generateReport, formatMarkdown, printReport } from './reporter.js';
+// reporter.js imports available for future use
 import { generateRandom } from './strategies/random.js';
 import { generateBoundaryValues } from './strategies/boundary.js';
 import { generateMutations } from './strategies/mutation.js';
@@ -235,7 +235,7 @@ export class Fuzzer<T = unknown, R = unknown> {
   private async testInput(
     input: T,
     category: FuzzCategory,
-    description: string,
+    _description: string,
     target: FuzzTarget<T, R>
   ): Promise<void> {
     this.iterations++;
@@ -247,7 +247,7 @@ export class Fuzzer<T = unknown, R = unknown> {
 
     try {
       // Run with timeout
-      const result = await this.runWithTimeout(
+      await this.runWithTimeout(
         () => target(input),
         this.config.inputTimeout ?? 5000
       );
@@ -257,7 +257,7 @@ export class Fuzzer<T = unknown, R = unknown> {
 
     } catch (error) {
       // Crash detected
-      const crash = this.recordCrash(input, error, category);
+      this.recordCrash(input, error, category);
       this.corpus.add(input, category, coverageBits, true);
     }
   }
@@ -325,7 +325,7 @@ export class Fuzzer<T = unknown, R = unknown> {
   /**
    * Categorize a crash
    */
-  private categorizeCrash(error: unknown, message: string): CrashCategory {
+  private categorizeCrash(_error: unknown, message: string): CrashCategory {
     if (message.includes('Timeout')) return 'timeout';
     if (message.includes('heap') || message.includes('memory')) return 'oom';
     if (message.includes('assert') || message.includes('Assert')) return 'assertion';
@@ -343,10 +343,10 @@ export class Fuzzer<T = unknown, R = unknown> {
    * Minimize all crashes
    */
   private async minimizeCrashes(target: FuzzTarget<T, R>): Promise<void> {
-    for (const [id, crash] of this.crashes) {
+    for (const [, crash] of this.crashes) {
       try {
         const result = await minimize(
-          crash.input,
+          crash.input as T,
           target,
           { maxSteps: 50, verifyFirst: true }
         );

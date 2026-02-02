@@ -7,7 +7,6 @@ import {
   SecurityRule,
   Finding,
   RuleContext,
-  SourceLocation,
 } from '../severity';
 
 // ============================================================================
@@ -181,7 +180,7 @@ function findPatternMatches(
   return findings;
 }
 
-function getFixSuggestion(cwe: string, line: string): string {
+function getFixSuggestion(cwe: string, _line: string): string {
   switch (cwe) {
     case 'CWE-89':
       return (

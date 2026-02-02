@@ -4,20 +4,12 @@
  */
 
 // Re-export OpenTelemetry API types for convenience
-export {
-  trace,
-  context,
-  SpanStatusCode,
-  SpanKind,
-  Span,
-  Tracer,
-  Context,
-  Attributes,
-} from '@opentelemetry/api';
+export { trace, context, SpanStatusCode, SpanKind } from '@opentelemetry/api';
+export type { Span, Tracer, Context, Attributes } from '@opentelemetry/api';
 
 // Semantic attributes
-export {
-  ISLSemanticAttributes,
+export { ISLSemanticAttributes } from './semantic-attributes';
+export type {
   ISLSemanticAttributeKey,
   ISLSemanticAttributeValue,
   VerificationVerdict,
@@ -27,66 +19,68 @@ export {
 } from './semantic-attributes';
 
 // Tracer
-export {
-  ISLTracer,
+export { ISLTracer, createISLTracer } from './tracer';
+export type {
   ISLTracerConfig,
   VerificationResult,
   CheckResult as TracerCheckResult,
   CoverageResult as TracerCoverageResult,
-  createISLTracer,
 } from './tracer';
 
 // Spans
 export {
   // Behavior
   BehaviorSpan,
-  BehaviorSpanConfig,
-  BehaviorResult,
   BehaviorSpanBuilder,
   withBehaviorSpan,
   createBehaviorSpan,
   TraceBehavior,
   // Verification
   VerificationSpan,
-  VerificationSpanConfig,
-  CheckResult as SpanCheckResult,
-  CoverageMetrics,
-  VerificationResult as SpanVerificationResult,
   VerificationSpanBuilder,
   withVerificationSpan,
   createVerificationSpan,
   TraceVerification,
   // Chaos
   ChaosSpan,
-  ChaosSpanConfig,
-  ChaosResult,
   ChaosSpanBuilder,
   withChaosSpan,
   createChaosSpan,
   ChaosUtils,
 } from './spans';
+export type {
+  BehaviorSpanConfig,
+  BehaviorResult,
+  VerificationSpanConfig,
+  CheckResult as SpanCheckResult,
+  CoverageMetrics,
+  VerificationResult as SpanVerificationResult,
+  ChaosSpanConfig,
+  ChaosResult,
+} from './spans';
 
 // Metrics
 export {
   VerificationMetrics,
-  VerificationBatchResult,
   createVerificationMetrics,
   CoverageMetrics as CoverageMetricsCollector,
+  createCoverageMetrics,
+  SLOMetrics,
+  SLOTemplates,
+  createSLOMetrics,
+} from './metrics';
+export type {
+  VerificationBatchResult,
   CoverageData,
   CoverageReport,
   DomainCoverageReport,
-  createCoverageMetrics,
-  SLOMetrics,
   SLODefinition,
   SLOMeasurement,
   SLOStatus,
-  SLOTemplates,
-  createSLOMetrics,
 } from './metrics';
 
 // Propagation
 export {
-  ISLContextData,
   ISL_HEADERS,
   ISLContextPropagator,
   ISLCompositePropagator,
@@ -98,18 +92,17 @@ export {
   createISLHeaders,
   parseISLHeaders,
 } from './propagation/isl-context';
+export type { ISLContextData } from './propagation/isl-context';
 
 // Exporters
 export {
   // Jaeger
-  ISLJaegerConfig,
   createJaegerExporter,
   createJaegerProcessor,
   configureJaegerProvider,
   defaultJaegerConfig,
   jaegerConfigFromEnv,
   // Zipkin
-  ISLZipkinConfig,
   createZipkinExporter,
   createZipkinProcessor,
   configureZipkinProvider,
@@ -117,8 +110,6 @@ export {
   zipkinConfigFromEnv,
   ZipkinURLs,
   // OTLP
-  ISLOTLPConfig,
-  OTLPProtocol,
   createOTLPTraceExporter,
   createOTLPProcessor,
   createOTLPMetricExporter,
@@ -129,18 +120,22 @@ export {
   otlpConfigFromEnv,
   OTLPBackends,
 } from './exporters';
+export type {
+  ISLJaegerConfig,
+  ISLZipkinConfig,
+  ISLOTLPConfig,
+  OTLPProtocol,
+} from './exporters';
 
 // Instrumentation
 export {
   // Express
-  ExpressInstrumentationOptions,
   islExpressMiddleware,
   islExpressErrorHandler,
   traceBehavior as expressTraceBehavior,
   traceVerification as expressTraceVerification,
   createISLRequestHeaders,
   // Fastify
-  FastifyInstrumentationOptions,
   islFastifyPlugin,
   registerISLPlugin,
   createBehaviorHook,
@@ -150,8 +145,6 @@ export {
   getISLContextFromRequest,
   runInRequestContext,
   // gRPC
-  GrpcInstrumentationOptions,
-  GrpcCall,
   extractISLContextFromMetadata,
   injectISLContextToMetadata,
   traceUnaryCall,
@@ -160,18 +153,42 @@ export {
   traceBidiStreamingCall,
   traceService,
 } from './instrumentation';
+export type {
+  ExpressInstrumentationOptions,
+  FastifyInstrumentationOptions,
+  GrpcInstrumentationOptions,
+  GrpcCall,
+} from './instrumentation';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Convenience Factory Functions
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { ISLTracer, ISLTracerConfig } from './tracer';
-import { VerificationMetrics } from './metrics/verification';
-import { CoverageMetrics } from './metrics/coverage';
-import { SLOMetrics, SLOTemplates } from './metrics/slo';
-import { configureJaegerProvider, jaegerConfigFromEnv } from './exporters/jaeger';
-import { configureZipkinProvider, zipkinConfigFromEnv } from './exporters/zipkin';
+import { ISLTracer, createISLTracer as _createISLTracer } from './tracer';
+import type { ISLTracerConfig } from './tracer';
+import {
+  VerificationMetrics,
+  createVerificationMetrics as _createVerificationMetrics,
+} from './metrics/verification';
+import {
+  CoverageMetrics,
+  createCoverageMetrics as _createCoverageMetrics,
+} from './metrics/coverage';
+import {
+  SLOMetrics,
+  SLOTemplates as _SLOTemplates,
+  createSLOMetrics as _createSLOMetrics,
+} from './metrics/slo';
+import {
+  configureJaegerProvider,
+  jaegerConfigFromEnv,
+} from './exporters/jaeger';
+import {
+  configureZipkinProvider,
+  zipkinConfigFromEnv,
+} from './exporters/zipkin';
 import { configureOTLPProvider, otlpConfigFromEnv } from './exporters/otlp';
+import { ISLSemanticAttributes as _ISLSemanticAttributes } from './semantic-attributes';
 
 /**
  * Full ISL observability configuration
@@ -262,9 +279,9 @@ export function createISLObservability(
 
     // Auto-register SLOs
     if (config.autoRegisterSLOs && config.domainName) {
-      sloMetrics.registerSLO(SLOTemplates.verificationPassRate(config.domainName));
-      sloMetrics.registerSLO(SLOTemplates.verificationLatency(config.domainName));
-      sloMetrics.registerSLO(SLOTemplates.errorRate(config.domainName));
+      sloMetrics.registerSLO(_SLOTemplates.verificationPassRate(config.domainName));
+      sloMetrics.registerSLO(_SLOTemplates.verificationLatency(config.domainName));
+      sloMetrics.registerSLO(_SLOTemplates.errorRate(config.domainName));
     }
   }
 
@@ -282,10 +299,10 @@ export function createISLObservability(
  */
 export default {
   createISLObservability,
-  createISLTracer,
-  createVerificationMetrics,
-  createCoverageMetrics,
-  createSLOMetrics,
-  ISLSemanticAttributes,
-  SLOTemplates,
+  createISLTracer: _createISLTracer,
+  createVerificationMetrics: _createVerificationMetrics,
+  createCoverageMetrics: _createCoverageMetrics,
+  createSLOMetrics: _createSLOMetrics,
+  ISLSemanticAttributes: _ISLSemanticAttributes,
+  SLOTemplates: _SLOTemplates,
 };

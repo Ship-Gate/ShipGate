@@ -1,0 +1,82 @@
+{
+  "description": "Evidence with contradictions (expected to FAIL)",
+  "evidence": [
+    {
+      "type": "EXECUTED_TEST",
+      "source": "tests/order.test.ts",
+      "description": "Test for post-order-total failed: total calculation incorrect",
+      "location": {
+        "file": "tests/order.test.ts",
+        "line": 88
+      },
+      "coverage": 100,
+      "metadata": {
+        "passed": false,
+        "failed": true,
+        "testName": "should calculate order total correctly",
+        "error": "Expected 100, received 99.99"
+      }
+    },
+    {
+      "type": "EXECUTED_TEST",
+      "source": "tests/discount.test.ts",
+      "description": "Test for post-discount contradicts: discount not applied",
+      "location": {
+        "file": "tests/discount.test.ts",
+        "line": 42
+      },
+      "coverage": 85,
+      "metadata": {
+        "passed": false,
+        "contradicts": true,
+        "testName": "should apply discount correctly"
+      }
+    },
+    {
+      "type": "RUNTIME_ASSERT",
+      "source": "src/services/refund.ts",
+      "description": "Runtime assert for post-refund-processed exists",
+      "location": {
+        "file": "src/services/refund.ts",
+        "line": 65
+      },
+      "metadata": {
+        "assertType": "postcondition"
+      }
+    }
+  ],
+  "clauses": [
+    {
+      "id": "post-order-total",
+      "expression": "result.total == sum(items.price * items.quantity)",
+      "description": "Order total must equal sum of item prices"
+    },
+    {
+      "id": "post-discount",
+      "expression": "result.discount == input.discountPercent * result.subtotal",
+      "description": "Discount must be correctly applied"
+    },
+    {
+      "id": "post-refund-processed",
+      "expression": "result.refund.status == 'processed'",
+      "description": "Refund must be processed"
+    }
+  ],
+  "expectedResults": [
+    {
+      "clauseId": "post-order-total",
+      "status": "FAIL",
+      "evidenceType": "EXECUTED_TEST"
+    },
+    {
+      "clauseId": "post-discount",
+      "status": "FAIL",
+      "evidenceType": "EXECUTED_TEST"
+    },
+    {
+      "clauseId": "post-refund-processed",
+      "status": "PARTIAL",
+      "evidenceType": "RUNTIME_ASSERT"
+    }
+  ]
+}

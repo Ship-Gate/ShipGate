@@ -5,26 +5,52 @@
  */
 
 import type {
-  DomainDeclaration,
-  EntityDeclaration,
-  FieldDeclaration,
-  BehaviorDeclaration,
-  EnumDeclaration,
-  TypeDeclaration,
-  TypeExpression,
-} from '@isl-lang/isl-core';
-
-import type {
   GraphQLGeneratorOptions,
-  GraphQLTypeDefinition,
-  GraphQLFieldDefinition,
-  GraphQLEnumValue,
   CustomScalar,
-  AppliedDirective,
   TypeMapping,
 } from '../types.js';
 
 import { DEFAULT_TYPE_MAPPINGS } from '../types.js';
+
+// Simple types for this generator (uses string names directly)
+interface DomainDeclaration {
+  name: string;
+  version?: string;
+  enums: EnumDeclaration[];
+  entities: EntityDeclaration[];
+  behaviors: BehaviorDeclaration[];
+}
+
+interface EntityDeclaration {
+  name: string;
+  fields: FieldDeclaration[];
+}
+
+interface BehaviorDeclaration {
+  name: string;
+  description?: string;
+  postconditions?: { conditions?: unknown[] };
+  input?: { fields: FieldDeclaration[] };
+  output?: { success?: string };
+}
+
+interface FieldDeclaration {
+  name: string;
+  type: string;
+  optional?: boolean;
+  annotations?: Annotation[];
+  computed?: boolean;
+}
+
+interface EnumDeclaration {
+  name: string;
+  variants: { name: string }[];
+}
+
+interface Annotation {
+  name: string;
+  value?: string;
+}
 
 /**
  * Default generator options
@@ -61,8 +87,8 @@ export function generateSchema(
   
   // Schema description
   lines.push(`"""
-Schema generated from ISL domain: ${domain.name.name}
-${domain.version ? `Version: ${domain.version.value}` : ''}
+Schema generated from ISL domain: ${domain.name}
+${domain.version ? `Version: ${domain.version}` : ''}
 """
 `);
   
@@ -159,7 +185,7 @@ function generateScalar(scalar: CustomScalar): string {
 function generateEnum(enumDecl: EnumDeclaration, opts: GraphQLGeneratorOptions): string {
   const lines: string[] = [];
   
-  lines.push(`enum ${enumDecl.name.name} {`);
+  lines.push(`enum ${enumDecl.name} {`);
   
   for (const variant of enumDecl.variants) {
     lines.push(`  ${variant.name}`);
@@ -175,7 +201,7 @@ function generateEnum(enumDecl: EnumDeclaration, opts: GraphQLGeneratorOptions):
  */
 function generateObjectType(entity: EntityDeclaration, opts: GraphQLGeneratorOptions): string {
   const lines: string[] = [];
-  const typeName = entity.name.name;
+  const typeName = entity.name;
   
   // Type description
   if (opts.includeDescriptions) {
@@ -214,27 +240,27 @@ function generateObjectType(entity: EntityDeclaration, opts: GraphQLGeneratorOpt
  * Generate field definition
  */
 function generateFieldDefinition(field: FieldDeclaration, opts: GraphQLGeneratorOptions): string {
-  const fieldName = toFieldCase(field.name.name, opts);
+  const fieldName = toFieldCase(field.name, opts);
   const graphqlType = islTypeToGraphQL(field.type, opts);
   const nullable = field.optional ? '' : '!';
   
   let description = '';
-  if (opts.includeDescriptions) {
+  if (opts.includeDescriptions && field.annotations) {
     // Check for description annotation
-    const descAnnotation = field.annotations.find(a => a.name.name === 'description');
-    if (descAnnotation && descAnnotation.value?.kind === 'StringLiteral') {
-      description = `"""${descAnnotation.value.value}"""\n  `;
+    const descAnnotation = field.annotations.find(a => a.name === 'description');
+    if (descAnnotation && descAnnotation.value) {
+      description = `"""${descAnnotation.value}"""\n  `;
     }
   }
   
   // Check for deprecated annotation
   let deprecated = '';
-  const deprecatedAnnotation = field.annotations.find(a => a.name.name === 'deprecated');
-  if (deprecatedAnnotation && opts.handleDeprecation) {
-    const reason = deprecatedAnnotation.value?.kind === 'StringLiteral'
-      ? deprecatedAnnotation.value.value
-      : 'No longer supported';
-    deprecated = ` @deprecated(reason: "${reason}")`;
+  if (field.annotations) {
+    const deprecatedAnnotation = field.annotations.find(a => a.name === 'deprecated');
+    if (deprecatedAnnotation && opts.handleDeprecation) {
+      const reason = deprecatedAnnotation.value ?? 'No longer supported';
+      deprecated = ` @deprecated(reason: "${reason}")`;
+    }
   }
   
   return `${description}${fieldName}: ${graphqlType}${nullable}${deprecated}`;
@@ -245,15 +271,15 @@ function generateFieldDefinition(field: FieldDeclaration, opts: GraphQLGenerator
  */
 function generateInputType(entity: EntityDeclaration, opts: GraphQLGeneratorOptions): string {
   const lines: string[] = [];
-  const typeName = `${entity.name.name}${opts.naming?.inputSuffix || 'Input'}`;
+  const typeName = `${entity.name}${opts.naming?.inputSuffix || 'Input'}`;
   
   lines.push(`input ${typeName} {`);
   
   for (const field of entity.fields) {
     // Skip computed fields and id for create inputs
-    if (field.computed || field.name.name.toLowerCase() === 'id') continue;
+    if (field.computed || field.name.toLowerCase() === 'id') continue;
     
-    const fieldName = toFieldCase(field.name.name, opts);
+    const fieldName = toFieldCase(field.name, opts);
     const graphqlType = islTypeToGraphQL(field.type, opts, true);
     
     // All input fields are optional for updates
@@ -270,7 +296,7 @@ function generateInputType(entity: EntityDeclaration, opts: GraphQLGeneratorOpti
  */
 function generateFilterType(entity: EntityDeclaration, opts: GraphQLGeneratorOptions): string {
   const lines: string[] = [];
-  const typeName = `${entity.name.name}${opts.naming?.filterSuffix || 'Filter'}`;
+  const typeName = `${entity.name}${opts.naming?.filterSuffix || 'Filter'}`;
   
   lines.push(`input ${typeName} {`);
   
@@ -280,7 +306,7 @@ function generateFilterType(entity: EntityDeclaration, opts: GraphQLGeneratorOpt
   lines.push(`  NOT: ${typeName}`);
   
   for (const field of entity.fields) {
-    const fieldName = toFieldCase(field.name.name, opts);
+    const fieldName = toFieldCase(field.name, opts);
     const baseType = getBaseTypeName(field.type);
     
     // Generate filter operators based on type
@@ -330,7 +356,7 @@ function generateFilterFieldsForType(fieldName: string, typeName: string): strin
  * Generate connection type for pagination
  */
 function generateConnectionType(entity: EntityDeclaration, opts: GraphQLGeneratorOptions): string {
-  const typeName = entity.name.name;
+  const typeName = entity.name;
   const connectionName = `${typeName}${opts.naming?.connectionSuffix || 'Connection'}`;
   const edgeName = `${typeName}Edge`;
   
@@ -362,11 +388,11 @@ function generateSortingTypes(entities: EntityDeclaration[], opts: GraphQLGenera
   
   // Sort input for each entity
   for (const entity of entities) {
-    const typeName = entity.name.name;
+    const typeName = entity.name;
     lines.push(`input ${typeName}SortInput {`);
     
     for (const field of entity.fields) {
-      const fieldName = toFieldCase(field.name.name, opts);
+      const fieldName = toFieldCase(field.name, opts);
       lines.push(`  ${fieldName}: SortDirection`);
     }
     
@@ -392,7 +418,7 @@ function generateQueryType(domain: DomainDeclaration, opts: GraphQLGeneratorOpti
   
   // Generate queries for each entity
   for (const entity of domain.entities) {
-    const typeName = entity.name.name;
+    const typeName = entity.name;
     const fieldName = toCamelCase(typeName);
     const pluralName = pluralize(fieldName);
     
@@ -445,7 +471,7 @@ function generateMutationType(
   
   // CRUD mutations for each entity
   for (const entity of domain.entities) {
-    const typeName = entity.name.name;
+    const typeName = entity.name;
     const fieldName = toCamelCase(typeName);
     const inputType = `${typeName}${opts.naming?.inputSuffix || 'Input'}`;
     
@@ -496,19 +522,19 @@ function generateSubscriptionType(
  * Generate field from behavior
  */
 function generateBehaviorField(behavior: BehaviorDeclaration, opts: GraphQLGeneratorOptions): string {
-  const fieldName = toCamelCase(behavior.name.name);
+  const fieldName = toCamelCase(behavior.name);
   const lines: string[] = [];
   
   // Description
   if (opts.includeDescriptions && behavior.description) {
-    lines.push(`  """${behavior.description.value}"""`);
+    lines.push(`  """${behavior.description}"""`);
   }
   
   // Arguments from input block
   const args: string[] = [];
   if (behavior.input?.fields) {
     for (const field of behavior.input.fields) {
-      const argName = toFieldCase(field.name.name, opts);
+      const argName = toFieldCase(field.name, opts);
       const argType = islTypeToGraphQL(field.type, opts);
       const nullable = field.optional ? '' : '!';
       args.push(`${argName}: ${argType}${nullable}`);
@@ -606,60 +632,55 @@ function collectCustomScalars(domain: DomainDeclaration, opts: GraphQLGeneratorO
 }
 
 /**
- * Convert ISL type to GraphQL type
+ * Convert ISL type string to GraphQL type
  */
-function islTypeToGraphQL(type: TypeExpression, opts: GraphQLGeneratorOptions, isInput = false): string {
-  switch (type.kind) {
-    case 'SimpleType': {
-      const typeName = type.name.name;
-      const mapping = DEFAULT_TYPE_MAPPINGS[typeName];
-      return mapping?.graphqlType || typeName;
-    }
+function islTypeToGraphQL(type: string, opts: GraphQLGeneratorOptions, isInput = false): string {
+  // Handle generic types like List<T>, Set<T>, Optional<T>
+  const genericMatch = type.match(/^(\w+)<(.+)>$/);
+  if (genericMatch) {
+    const [, containerType, innerType] = genericMatch;
     
-    case 'ArrayType': {
-      const elementType = islTypeToGraphQL(type.elementType, opts, isInput);
+    if (containerType === 'List' || containerType === 'Set') {
+      const elementType = islTypeToGraphQL(innerType, opts, isInput);
       return `[${elementType}!]`;
     }
-    
-    case 'GenericType': {
-      const baseName = type.name.name;
-      if (baseName === 'List' || baseName === 'Set') {
-        const elementType = islTypeToGraphQL(type.typeArguments[0], opts, isInput);
-        return `[${elementType}!]`;
-      }
-      if (baseName === 'Optional') {
-        return islTypeToGraphQL(type.typeArguments[0], opts, isInput);
-      }
-      return baseName;
+    if (containerType === 'Optional') {
+      return islTypeToGraphQL(innerType, opts, isInput);
     }
-    
-    case 'UnionType': {
-      // GraphQL unions are handled separately
-      return type.variants.map(v => v.name.name).join(' | ');
-    }
-    
-    default:
-      return 'String';
+    return containerType;
   }
+  
+  // Handle array types like String[]
+  if (type.endsWith('[]')) {
+    const elementType = islTypeToGraphQL(type.slice(0, -2), opts, isInput);
+    return `[${elementType}!]`;
+  }
+  
+  // Simple type mapping
+  const mapping = DEFAULT_TYPE_MAPPINGS[type];
+  return mapping?.graphqlType || type;
 }
 
 /**
- * Get base type name from type expression
+ * Get base type name from type string
  */
-function getBaseTypeName(type: TypeExpression): string {
-  switch (type.kind) {
-    case 'SimpleType':
-      return type.name.name;
-    case 'ArrayType':
-      return getBaseTypeName(type.elementType);
-    case 'GenericType':
-      if (type.typeArguments.length > 0) {
-        return getBaseTypeName(type.typeArguments[0]);
-      }
-      return type.name.name;
-    default:
-      return 'String';
+function getBaseTypeName(type: string): string {
+  // Handle generic types
+  const genericMatch = type.match(/^(\w+)<(.+)>$/);
+  if (genericMatch) {
+    const [, containerType, innerType] = genericMatch;
+    if (containerType === 'List' || containerType === 'Set' || containerType === 'Optional') {
+      return getBaseTypeName(innerType);
+    }
+    return containerType;
   }
+  
+  // Handle array types
+  if (type.endsWith('[]')) {
+    return getBaseTypeName(type.slice(0, -2));
+  }
+  
+  return type;
 }
 
 // ============================================
@@ -702,7 +723,7 @@ function pluralize(str: string): string {
 }
 
 function hasIdField(entity: EntityDeclaration): boolean {
-  return entity.fields.some(f => f.name.name.toLowerCase() === 'id');
+  return entity.fields.some(f => f.name.toLowerCase() === 'id');
 }
 
 function hasSideEffects(behavior: BehaviorDeclaration): boolean {
@@ -711,7 +732,7 @@ function hasSideEffects(behavior: BehaviorDeclaration): boolean {
     return true;
   }
   // Check for naming conventions
-  const name = behavior.name.name.toLowerCase();
+  const name = behavior.name.toLowerCase();
   return name.startsWith('create') || 
          name.startsWith('update') || 
          name.startsWith('delete') ||
@@ -721,7 +742,7 @@ function hasSideEffects(behavior: BehaviorDeclaration): boolean {
 }
 
 function isSubscription(behavior: BehaviorDeclaration): boolean {
-  const name = behavior.name.name.toLowerCase();
+  const name = behavior.name.toLowerCase();
   return name.startsWith('on') || name.includes('subscribe') || name.includes('watch');
 }
 

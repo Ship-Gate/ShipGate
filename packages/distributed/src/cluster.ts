@@ -3,7 +3,7 @@
  * Node membership and cluster coordination
  */
 
-import { ClusterNode, NodeStatus, NodeRole, ClusterConfig } from './types';
+import { ClusterNode, NodeRole, ClusterConfig } from './types';
 
 /**
  * Cluster manager

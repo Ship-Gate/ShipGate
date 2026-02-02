@@ -266,7 +266,6 @@ export const LIST_${entityName.toUpperCase()}S = gql\`
 
     // Behavior mutations
     for (const behavior of this.domain!.behaviors) {
-      const inputFields = behavior.input.map((f) => f.name).join(', ');
       const behaviorName = behavior.name;
       const methodName = this.toCamelCase(behaviorName);
 
@@ -326,7 +325,6 @@ export const ${entityName.toUpperCase()}_UPDATED_SUBSCRIPTION = gql\`
     // Query hooks
     for (const entity of this.domain!.entities) {
       const entityName = entity.name;
-      const entityNameLower = this.toCamelCase(entityName);
 
       hooks.push(`
 /**

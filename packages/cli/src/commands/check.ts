@@ -10,7 +10,7 @@ import { glob } from 'glob';
 import { resolve, relative } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
-import { parseISL } from '@isl-lang/isl-core';
+import { parse as parseISL } from '@isl-lang/parser';
 import { output, type DiagnosticError } from '../output.js';
 import { loadConfig, type ISLConfig } from '../config.js';
 
@@ -22,6 +22,15 @@ const BUILTIN_TYPES = new Set([
   // Common aliases
   'Integer', 'Number', 'Double',
 ]);
+
+// Standard library type definitions
+const STDLIB_TYPES: Record<string, string[]> = {
+  'stdlib-auth': ['User', 'Session', 'Role', 'Permission', 'Token', 'Credential'],
+  'stdlib-billing': ['Payment', 'Invoice', 'Subscription', 'Price', 'Currency', 'Transaction'],
+  'stdlib-files': ['File', 'FileMetadata', 'StorageProvider', 'UploadResult'],
+  'stdlib-messaging': ['Message', 'Channel', 'Notification', 'Template'],
+  'stdlib-analytics': ['Event', 'Metric', 'Dimension', 'Report'],
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -71,7 +80,7 @@ async function checkFile(filePath: string, verbose: boolean): Promise<FileCheckR
 
   try {
     const source = await readFile(filePath, 'utf-8');
-    const { ast, errors: parseErrors } = parseISL(source, filePath);
+    const { domain: ast, errors: parseErrors } = parseISL(source, filePath);
 
     // Convert parse errors to diagnostics
     for (const error of parseErrors) {
@@ -98,9 +107,47 @@ async function checkFile(filePath: string, verbose: boolean): Promise<FileCheckR
 
       // Collect all defined types in this domain
       const definedTypes = new Set<string>();
+      
+      // Add types from imports
+      for (const importDecl of ast.imports ?? []) {
+        const moduleName = importDecl.from?.value;
+        if (moduleName && STDLIB_TYPES[moduleName]) {
+          // If specific names imported, add those
+          if (importDecl.names?.length) {
+            for (const name of importDecl.names) {
+              if (STDLIB_TYPES[moduleName].includes(name.name)) {
+                definedTypes.add(name.name);
+              } else {
+                warnings.push({
+                  file: filePath,
+                  message: `Type '${name.name}' is not exported from '${moduleName}'`,
+                  severity: 'warning',
+                  help: [`Available types: ${STDLIB_TYPES[moduleName].join(', ')}`],
+                });
+              }
+            }
+          } else {
+            // Wildcard import - add all types from module
+            for (const typeName of STDLIB_TYPES[moduleName]) {
+              definedTypes.add(typeName);
+            }
+          }
+        } else if (moduleName) {
+          warnings.push({
+            file: filePath,
+            message: `Unknown module '${moduleName}'`,
+            severity: 'warning',
+            help: [`Available modules: ${Object.keys(STDLIB_TYPES).join(', ')}`],
+          });
+        }
+      }
+      
+      // Add entities as types
       for (const entity of ast.entities) {
         definedTypes.add(entity.name.name);
       }
+      
+      // Add type declarations
       for (const typeDef of ast.types ?? []) {
         definedTypes.add(typeDef.name.name);
       }

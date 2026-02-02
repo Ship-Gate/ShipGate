@@ -179,8 +179,8 @@ function applyReplacePatch(ast: Domain, patch: ReplacePatch): void {
     if (patch.preserveProperties && target) {
       newNode = { ...newNode };
       for (const prop of patch.preserveProperties) {
-        if (prop in (target as Record<string, unknown>)) {
-          (newNode as Record<string, unknown>)[prop] = (target as Record<string, unknown>)[prop];
+        if (prop in (target as unknown as Record<string, unknown>)) {
+          (newNode as unknown as Record<string, unknown>)[prop] = (target as unknown as Record<string, unknown>)[prop];
         }
       }
     }
@@ -219,7 +219,7 @@ function applyModifyPatch(ast: Domain, patch: ModifyPatch): void {
       if (propKey === 'push' && Array.isArray(target)) {
         target.push(propValue);
       } else {
-        (target as Record<string, unknown>)[propKey] = propValue;
+        (target as unknown as Record<string, unknown>)[propKey] = propValue;
       }
     }
   } else {
@@ -249,10 +249,10 @@ function resolveTargetPath(ast: Domain, path: string): ResolveResult {
     const segment = segments[i];
     parent = current;
 
-    if (segment.type === 'property') {
+    if (segment.type === 'property' && segment.name !== undefined) {
       key = segment.name;
       current = (current as Record<string, unknown>)?.[segment.name];
-    } else if (segment.type === 'index') {
+    } else if (segment.type === 'index' && segment.index !== undefined) {
       index = segment.index;
       current = (current as unknown[])?.[segment.index];
     }

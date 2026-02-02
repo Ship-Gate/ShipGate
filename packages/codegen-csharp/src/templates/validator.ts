@@ -3,15 +3,7 @@
 // ============================================================================
 
 import type { CSharpClassInfo, CSharpPropertyInfo, CSharpGeneratorOptions } from '../types';
-import { generateUsings, generateXmlDoc, generateAttributes } from './model';
-
-/**
- * FluentValidation rule info
- */
-interface ValidationRule {
-  property: string;
-  rules: string[];
-}
+import { generateUsings, generateXmlDoc } from './model';
 
 /**
  * Generate FluentValidation validator

@@ -3,7 +3,7 @@
  * Data partitioning for horizontal scaling
  */
 
-import { ShardConfig, ShardRange, ShardStatus } from './types';
+import { ShardConfig, ShardRange } from './types';
 
 /**
  * Shard manager
@@ -69,7 +69,6 @@ export class ShardManager {
    */
   async rebalance(): Promise<ShardMigration[]> {
     const migrations: ShardMigration[] = [];
-    const shardList = Array.from(this.shards.values());
 
     // Calculate ideal distribution
     const keysPerShard = this.hashRing.getDistribution();
@@ -170,7 +169,7 @@ export class ShardManager {
     return start;
   }
 
-  private calculateMigrationRange(shardId: string, keyCount: number): ShardRange {
+  private calculateMigrationRange(shardId: string, _keyCount: number): ShardRange {
     const shard = this.shards.get(shardId)!;
     // Simplified - in production would need to analyze actual key distribution
     return {

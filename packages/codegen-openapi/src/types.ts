@@ -137,7 +137,8 @@ export interface OpenAPIRequestBody {
 }
 
 export interface OpenAPIResponse {
-  description: string;
+  $ref?: string;
+  description?: string;
   content?: Record<string, OpenAPIMediaType>;
   headers?: Record<string, OpenAPIHeader>;
 }
@@ -161,7 +162,7 @@ export interface OpenAPIExample {
 }
 
 export interface OpenAPISchema {
-  type?: string;
+  type?: string | string[];
   format?: string;
   title?: string;
   description?: string;

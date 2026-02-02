@@ -9,7 +9,6 @@ import {
 } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { ISLAnalyzer } from './analyzer';
-import { ISL_KEYWORDS, ISL_BUILTIN_TYPES, ISL_ANNOTATIONS } from './capabilities';
 
 /**
  * Get hover information at position
@@ -55,11 +54,15 @@ function getWordAtPosition(text: string, offset: number): string | null {
   let start = offset;
   let end = offset;
 
-  while (start > 0 && /\w/.test(text[start - 1])) {
+  while (start > 0) {
+    const char = text[start - 1];
+    if (!char || !/\w/.test(char)) break;
     start--;
   }
 
-  while (end < text.length && /\w/.test(text[end])) {
+  while (end < text.length) {
+    const char = text[end];
+    if (!char || !/\w/.test(char)) break;
     end++;
   }
 

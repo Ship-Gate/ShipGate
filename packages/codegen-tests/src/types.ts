@@ -2,7 +2,7 @@
 // Test Generator Types
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 
 export type TestFramework = 'jest' | 'vitest';
 

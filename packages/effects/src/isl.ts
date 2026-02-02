@@ -4,8 +4,8 @@
  * Defines effect constraints in ISL syntax and provides verification
  */
 
-import type { AnyEffect, EffectSpec, EffectConstraint } from './types';
-import { collectEffects } from './runtime';
+import type { AnyEffect, EffectSpec, EffectConstraint } from './types.js';
+import { collectEffects } from './runtime.js';
 
 /**
  * Effect verification result

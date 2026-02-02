@@ -83,8 +83,13 @@ export interface Interceptors {
   response?: ResponseInterceptor[];
 }
 
-export type RequestInterceptor = (config: RequestInit & { url: string }) => Promise<RequestInit & { url: string }>;
-export type ResponseInterceptor = (response: Response, request: RequestInit) => Promise<Response>;
+/**
+ * Extended request init with URL
+ */
+export type RequestInitWithUrl = RequestInit & { url: string };
+
+export type RequestInterceptor = (config: RequestInitWithUrl) => Promise<RequestInitWithUrl>;
+export type ResponseInterceptor = (response: Response, request: RequestInitWithUrl) => Promise<Response>;
 
 /**
  * API Response wrapper
@@ -153,6 +158,77 @@ export interface ErrorDef {
   name: string;
   status?: number;
   message?: string;
+}
+
+/**
+ * ISL Web Client Configuration (alias for RequestConfig)
+ */
+export type ISLWebClientConfig = RequestConfig;
+
+/**
+ * Generic ISL Error type
+ */
+export interface ISLError {
+  code: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+/**
+ * Result type for operations
+ */
+export interface Result<TData, TError = ISLError> {
+  success: boolean;
+  data?: TData;
+  error?: TError;
+}
+
+/**
+ * Query options for data fetching hooks
+ */
+export interface QueryOptions<TData> {
+  enabled?: boolean;
+  refetchInterval?: number;
+  onSuccess?: (data: TData) => void;
+  onError?: (error: ISLError) => void;
+  select?: (data: TData) => TData;
+}
+
+/**
+ * Mutation options for data modification hooks
+ */
+export interface MutationOptions<TInput, TOutput> {
+  onSuccess?: (data: TOutput, input: TInput) => void;
+  onError?: (error: ISLError, input: TInput) => void;
+  onSettled?: () => void;
+  validate?: (input: TInput) => { valid: boolean; errors?: string[] };
+}
+
+/**
+ * Subscription options for real-time data
+ */
+export interface SubscriptionOptions<TData> {
+  onMessage?: (data: TData) => void;
+  onConnect?: () => void;
+  onDisconnect?: () => void;
+  onError?: (error: Error) => void;
+}
+
+/**
+ * WebSocket message structure
+ */
+export interface WebSocketMessage<T = unknown> {
+  type: 'subscribe' | 'unsubscribe' | 'message' | 'ping' | 'pong' | 'error';
+  channel?: string;
+  data?: T;
+}
+
+/**
+ * Validation result
+ */
+export interface ValidationResult {
+  valid: boolean;
+  errors?: Array<{ field: string; message: string }>;
 }
 
 /**

@@ -28,9 +28,7 @@ import {
 } from '../types';
 import {
   validateKey,
-  prefixKey,
   generateLockToken,
-  calculateExpiration,
   validateResponseSize,
 } from '../utils';
 

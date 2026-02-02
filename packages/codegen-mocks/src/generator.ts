@@ -3,7 +3,14 @@
 // Transforms ISL domains into mock API servers
 // ============================================================================
 
-import type * as AST from '@isl-lang/isl-core';
+import type {
+  DomainDeclaration,
+  FieldDeclaration,
+  BehaviorDeclaration,
+  ErrorDeclaration,
+  TypeDeclaration,
+  TypeExpression,
+} from '@isl-lang/isl-core';
 import type {
   GenerateOptions,
   GeneratedFile,
@@ -18,7 +25,7 @@ import * as express from './frameworks/express';
  * Generate mock server from ISL domain
  */
 export function generate(
-  domain: AST.Domain,
+  domain: DomainDeclaration,
   options: GenerateOptions
 ): GeneratedFile[] {
   const files: GeneratedFile[] = [];
@@ -86,7 +93,7 @@ export function generate(
   }
 
   // Generate seed data if using scenarios
-  if (options.useScenarios && domain.scenarios) {
+  if (options.useScenarios) {
     files.push({
       path: 'seed-data.ts',
       content: generateSeedData(domain, factories, options),
@@ -100,24 +107,25 @@ export function generate(
 /**
  * Extract endpoints from domain behaviors
  */
-function extractEndpoints(domain: AST.Domain, options: GenerateOptions): MockEndpoint[] {
+function extractEndpoints(domain: DomainDeclaration, options: GenerateOptions): MockEndpoint[] {
   const endpoints: MockEndpoint[] = [];
 
   for (const behavior of domain.behaviors || []) {
-    const method = inferHttpMethod(behavior.name);
-    const path = inferPath(behavior.name);
+    const behaviorName = behavior.name.name;
+    const method = inferHttpMethod(behaviorName);
+    const path = inferPath(behaviorName);
     const outputType = inferOutputType(behavior, domain);
 
-    const errors = (behavior.output?.errors || []).map((e) => ({
-      name: e.name,
-      statusCode: inferErrorStatusCode(e.name),
+    const errors = (behavior.output?.errors || []).map((e: ErrorDeclaration) => ({
+      name: e.name.name,
+      statusCode: inferErrorStatusCode(e.name.name),
     }));
 
     endpoints.push({
       method,
       path,
-      behaviorName: behavior.name,
-      inputType: behavior.input ? `${behavior.name}Input` : undefined,
+      behaviorName,
+      inputType: behavior.input ? `${behaviorName}Input` : undefined,
       outputType,
       errors,
     });
@@ -129,7 +137,7 @@ function extractEndpoints(domain: AST.Domain, options: GenerateOptions): MockEnd
 /**
  * Extract factories from domain entities
  */
-function extractFactories(domain: AST.Domain, options: GenerateOptions): DataFactory[] {
+function extractFactories(domain: DomainDeclaration, options: GenerateOptions): DataFactory[] {
   const factories: DataFactory[] = [];
 
   for (const entity of domain.entities || []) {
@@ -137,14 +145,14 @@ function extractFactories(domain: AST.Domain, options: GenerateOptions): DataFac
 
     for (const field of entity.fields) {
       fields.push({
-        name: field.name,
+        name: field.name.name,
         generator: getFieldGenerator(field, domain),
         constraints: extractConstraints(field),
       });
     }
 
     factories.push({
-      entityName: entity.name,
+      entityName: entity.name.name,
       fields,
     });
   }
@@ -155,30 +163,42 @@ function extractFactories(domain: AST.Domain, options: GenerateOptions): DataFac
 /**
  * Get faker generator for field
  */
-function getFieldGenerator(field: AST.Field, domain: AST.Domain): string {
+function getFieldGenerator(field: FieldDeclaration, domain: DomainDeclaration): string {
   const type = field.type;
+  const fieldName = field.name.name;
 
-  if (type.kind === 'optional') {
-    return `Math.random() > 0.5 ? ${getFieldGenerator({ ...field, type: type.innerType }, domain)} : undefined`;
+  // Handle optional types (GenericType with name 'Optional')
+  if (type.kind === 'GenericType' && type.name.name === 'Optional') {
+    const innerType = type.typeArguments[0];
+    const innerField = { ...field, type: innerType } as FieldDeclaration;
+    return `Math.random() > 0.5 ? ${getFieldGenerator(innerField, domain)} : undefined`;
   }
 
-  if (type.kind === 'primitive') {
-    return getPrimitiveGenerator(type.name, field.name);
-  }
-
-  if (type.kind === 'reference') {
+  // Handle simple types (primitives and references)
+  if (type.kind === 'SimpleType') {
+    const typeName = type.name.name;
     // Check if it's an enum
-    const typeDecl = domain.types?.find((t) => t.name === type.name);
-    if (typeDecl?.definition.kind === 'enum') {
-      const values = typeDecl.definition.values.map((v) => `'${v.name}'`).join(', ');
+    const enumDecl = domain.enums?.find((e) => e.name.name === typeName);
+    if (enumDecl) {
+      const values = enumDecl.variants.map((v) => `'${v.name}'`).join(', ');
       return `randomItem([${values}])`;
     }
-    // Foreign key reference
-    return 'crypto.randomUUID()';
+    // Check if it's a known primitive type
+    return getPrimitiveGenerator(typeName, fieldName);
   }
 
-  if (type.kind === 'list') {
-    const itemGen = getFieldGenerator({ ...field, type: type.elementType }, domain);
+  // Handle generic types (like List<T>)
+  if (type.kind === 'GenericType' && type.name.name === 'List') {
+    const elementType = type.typeArguments[0];
+    const itemField = { ...field, type: elementType } as FieldDeclaration;
+    const itemGen = getFieldGenerator(itemField, domain);
+    return `Array.from({ length: randomInt(1, 5) }, () => ${itemGen})`;
+  }
+
+  // Handle array types
+  if (type.kind === 'ArrayType') {
+    const itemField = { ...field, type: type.elementType } as FieldDeclaration;
+    const itemGen = getFieldGenerator(itemField, domain);
     return `Array.from({ length: randomInt(1, 5) }, () => ${itemGen})`;
   }
 
@@ -230,12 +250,13 @@ function getPrimitiveGenerator(typeName: string, fieldName: string): string {
 /**
  * Extract constraints from field annotations
  */
-function extractConstraints(field: AST.Field): Record<string, unknown> {
+function extractConstraints(field: FieldDeclaration): Record<string, unknown> {
   const constraints: Record<string, unknown> = {};
 
   for (const annotation of field.annotations || []) {
-    if (annotation.args && annotation.args.length > 0) {
-      constraints[annotation.name] = annotation.args[0];
+    // Annotations have a name (Identifier) and optional value (Expression)
+    if (annotation.value) {
+      constraints[annotation.name.name] = annotation.value;
     }
   }
 
@@ -309,7 +330,7 @@ function generateFactoriesFile(factories: DataFactory[], options: GenerateOption
  * Generate seed data from scenarios
  */
 function generateSeedData(
-  domain: AST.Domain,
+  domain: DomainDeclaration,
   factories: DataFactory[],
   options: GenerateOptions
 ): string {
@@ -391,23 +412,31 @@ function inferPath(name: string): string {
   return `/${toKebabCase(name)}`;
 }
 
-function inferOutputType(behavior: AST.Behavior, domain: AST.Domain): string {
+function inferOutputType(behavior: BehaviorDeclaration, domain: DomainDeclaration): string {
   if (!behavior.output?.success) {
     return 'void';
   }
 
   const success = behavior.output.success;
 
-  if (success.kind === 'reference') {
-    return success.name;
+  if (success.kind === 'SimpleType') {
+    return success.name.name;
   }
 
-  if (success.kind === 'list' && success.elementType.kind === 'reference') {
-    return success.elementType.name;
+  if (success.kind === 'GenericType' && success.name.name === 'List') {
+    const elementType = success.typeArguments[0];
+    if (elementType.kind === 'SimpleType') {
+      return elementType.name.name;
+    }
+  }
+
+  if (success.kind === 'ArrayType' && success.elementType.kind === 'SimpleType') {
+    return success.elementType.name.name;
   }
 
   // Try to infer from behavior name
-  const match = behavior.name.match(/^(Get|Create|Update|Delete|List|Find)(.+)$/i);
+  const behaviorName = behavior.name.name;
+  const match = behaviorName.match(/^(Get|Create|Update|Delete|List|Find)(.+)$/i);
   if (match) {
     return match[2];
   }

@@ -3,7 +3,7 @@
 // ============================================================================
 
 import * as Sentry from '@sentry/node';
-import type { Span, SpanStatusType } from '@sentry/types';
+import type { Span } from '@sentry/types';
 
 import type {
   BehaviorTrackingOptions,
@@ -57,7 +57,7 @@ export function startBehaviorSpan<T>(
         ...options.attributes,
       },
     },
-    async (span) => {
+    async (span: Span) => {
       // Set context
       Sentry.setContext('isl', {
         domain: options.domain,
@@ -141,7 +141,7 @@ export function startVerificationSpan<T>(
         'isl.execution_id': executionId,
       },
     },
-    async (span) => {
+    async (span: Span) => {
       Sentry.setContext('isl.verification', {
         domain,
         behavior,
@@ -192,7 +192,7 @@ export function startCheckSpan<T>(
         'isl.expression': expression,
       },
     },
-    async (span) => {
+    async (span: Span) => {
       try {
         const result = await fn();
         span.setStatus(SPAN_STATUS.OK);
@@ -228,7 +228,7 @@ export function recordVerificationToSpan(result: VerifyResult): void {
         'isl.passed_count': result.passed.length,
       },
     },
-    (span) => {
+    (span: Span) => {
       // Set status based on verdict
       if (result.verdict === 'unsafe') {
         span.setStatus({ code: 2, message: 'Verification failed' });
@@ -273,7 +273,7 @@ export function createISLSpan(data: ISLSpanData): void {
       attributes: data.attributes,
       startTime: data.startTime,
     },
-    (span) => {
+    (span: Span) => {
       span.setStatus(SPAN_STATUS.OK);
     }
   );
@@ -340,7 +340,7 @@ export function measureTiming(
             'isl.duration_human': formatDuration(duration),
           },
         },
-        (span) => {
+        (span: Span) => {
           if (success) {
             span.setStatus(SPAN_STATUS.OK);
           } else {
@@ -383,7 +383,7 @@ export function startDomainTransaction<T>(
         'isl.operation': operation,
       },
     },
-    async (span) => {
+    async (span: Span) => {
       try {
         const result = await fn();
         span.setStatus(SPAN_STATUS.OK);

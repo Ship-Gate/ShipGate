@@ -62,7 +62,7 @@ export function generateErrorPatches(
  */
 function parseErrorPredicate(
   predicate: string,
-  context?: { behaviorName?: string }
+  _context?: { behaviorName?: string }
 ): ErrorFix | null {
   // Extract error code from predicate
   // Pattern: DUPLICATE_EMAIL, NOT_FOUND, INVALID_CREDENTIALS, etc.
@@ -160,21 +160,19 @@ function extractCondition(predicate: string, errorCode: string): string | undefi
 function findErrorHandlingLocation(
   relatedCode: CodeSegment[],
   implementation: string,
-  fix: ErrorFix
+  _fix: ErrorFix
 ): { type: 'insert' | 'replace'; file: string; line: number; column?: number; original?: string; replacement?: string } | null {
   const lines = implementation.split('\n');
 
   // Look for existing try-catch blocks
   let inTryCatch = false;
   let catchLine = -1;
-  let tryStartLine = -1;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]!;
 
     if (/\btry\s*{/.test(line)) {
       inTryCatch = true;
-      tryStartLine = i;
     }
 
     if (inTryCatch && /\bcatch\s*\(/.test(line)) {

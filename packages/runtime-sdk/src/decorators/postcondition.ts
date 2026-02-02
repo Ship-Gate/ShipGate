@@ -44,7 +44,7 @@ export function Postcondition<TResult = unknown, TInput = unknown>(
   ) {
     // Get existing postconditions
     const existing: PostconditionMetadata[] = 
-      Reflect.getMetadata(POSTCONDITIONS_METADATA, target, propertyKey) ?? [];
+      (Reflect.getMetadata(POSTCONDITIONS_METADATA, target, propertyKey) as PostconditionMetadata[] | undefined) ?? [];
     
     // Add new postcondition
     existing.push({ fn: fn as PostconditionFn, description });
@@ -55,7 +55,7 @@ export function Postcondition<TResult = unknown, TInput = unknown>(
     
     descriptor.value = async function (this: unknown, ...args: unknown[]) {
       const postconditions: PostconditionMetadata[] = 
-        Reflect.getMetadata(POSTCONDITIONS_METADATA, target, propertyKey) ?? [];
+        (Reflect.getMetadata(POSTCONDITIONS_METADATA, target, propertyKey) as PostconditionMetadata[] | undefined) ?? [];
       
       const input = args[0];
       const ctx: ExecutionContext = (args[1] as ExecutionContext) ?? {};
@@ -136,5 +136,5 @@ export function getPostconditions(
   target: object,
   propertyKey: string | symbol
 ): PostconditionMetadata[] {
-  return Reflect.getMetadata(POSTCONDITIONS_METADATA, target, propertyKey) ?? [];
+  return (Reflect.getMetadata(POSTCONDITIONS_METADATA, target, propertyKey) as PostconditionMetadata[] | undefined) ?? [];
 }

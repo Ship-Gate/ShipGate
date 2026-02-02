@@ -4,7 +4,7 @@
  * Checks for performance concerns and optimization opportunities.
  */
 
-import type { DomainDeclaration, BehaviorDeclaration, EntityDeclaration } from '@isl-lang/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration } from '@isl-lang/isl-core';
 
 export interface PerformanceIssue {
   id: string;
@@ -93,7 +93,7 @@ function checkMissingIndexes(domain: DomainDeclaration): PerformanceIssue[] {
           severity: 'warning',
           title: `Foreign key field "${field.name.name}" not indexed`,
           description: `Field "${field.name.name}" in "${entity.name.name}" appears to be a foreign key but is not indexed.`,
-          location: field.span ? { line: field.span.line, column: field.span.column } : undefined,
+          location: field.span ? { line: field.span.start.line, column: field.span.start.column } : undefined,
           fix: `Add [indexed] annotation to field "${field.name.name}".`,
           impact: 'Queries filtering by this field may be slow.',
         });
@@ -106,7 +106,7 @@ function checkMissingIndexes(domain: DomainDeclaration): PerformanceIssue[] {
           severity: 'info',
           title: `Status field not indexed in "${entity.name.name}"`,
           description: 'Status fields are commonly filtered and should typically be indexed.',
-          location: field.span ? { line: field.span.line, column: field.span.column } : undefined,
+          location: field.span ? { line: field.span.start.line, column: field.span.start.column } : undefined,
           fix: `Add [indexed] annotation to "${field.name.name}".`,
         });
       }
@@ -118,7 +118,7 @@ function checkMissingIndexes(domain: DomainDeclaration): PerformanceIssue[] {
           severity: 'info',
           title: `Timestamp field "${field.name.name}" not indexed`,
           description: 'Timestamp fields used for sorting should be indexed.',
-          location: field.span ? { line: field.span.line, column: field.span.column } : undefined,
+          location: field.span ? { line: field.span.start.line, column: field.span.start.column } : undefined,
           fix: `Add [indexed] annotation if this field is used for sorting.`,
         });
       }
@@ -146,7 +146,7 @@ function checkNPlusOnePatterns(domain: DomainDeclaration): PerformanceIssue[] {
           severity: 'info',
           title: `Potential N+1 query pattern in "${behavior.name.name}"`,
           description: 'List operation with nested entity references may cause N+1 queries. Consider using batch loading or joins.',
-          location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+          location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
           fix: 'Use batch loading, includes, or denormalization for nested data.',
           impact: 'Performance degrades linearly with result set size.',
         });
@@ -186,7 +186,7 @@ function checkUnboundedQueries(domain: DomainDeclaration): PerformanceIssue[] {
           severity: 'warning',
           title: `Unbounded query in "${behavior.name.name}"`,
           description: 'List/search operations should have a limit parameter to prevent fetching too many records.',
-          location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+          location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
           fix: 'Add a "limit" input parameter with a reasonable maximum.',
           impact: 'Could cause memory exhaustion or timeout on large datasets.',
         });
@@ -196,7 +196,7 @@ function checkUnboundedQueries(domain: DomainDeclaration): PerformanceIssue[] {
           severity: 'info',
           title: `No pagination in "${behavior.name.name}"`,
           description: 'Consider adding cursor-based pagination for large result sets.',
-          location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+          location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
           fix: 'Add cursor or page/offset parameters for pagination.',
         });
       }
@@ -226,7 +226,7 @@ function checkCachingOpportunities(domain: DomainDeclaration): PerformanceIssue[
           severity: 'info',
           title: `Consider caching for "${behavior.name.name}"`,
           description: 'Read-only operations may benefit from caching. Consider adding cache hints or TTL.',
-          location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+          location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
           fix: 'Add caching configuration or response time requirements.',
         });
       }
@@ -258,7 +258,7 @@ function checkTemporalRequirements(domain: DomainDeclaration): PerformanceIssue[
               severity: 'warning',
               title: `Possibly unrealistic temporal requirement in "${behavior.name.name}"`,
               description: `Response time requirement of ${durationMs}ms may be too aggressive.`,
-              location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+              location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
               fix: 'Consider if this requirement is achievable given network latency.',
             });
           }
@@ -270,7 +270,7 @@ function checkTemporalRequirements(domain: DomainDeclaration): PerformanceIssue[
               severity: 'info',
               title: `Loose temporal requirement in "${behavior.name.name}"`,
               description: `Response time requirement of ${durationMs}ms may be too lenient for good UX.`,
-              location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+              location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
             });
           }
         }
@@ -301,7 +301,7 @@ function checkExpensiveComputations(domain: DomainDeclaration): PerformanceIssue
             severity: 'warning',
             title: `Computed field "${field.name.name}" is indexed`,
             description: 'Indexing computed fields may cause performance issues if computation is expensive.',
-            location: field.span ? { line: field.span.line, column: field.span.column } : undefined,
+            location: field.span ? { line: field.span.start.line, column: field.span.start.column } : undefined,
             fix: 'Consider materializing the computed value if it needs to be indexed.',
             impact: 'May cause slow writes or stale index data.',
           });

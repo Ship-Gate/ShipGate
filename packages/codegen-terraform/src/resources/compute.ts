@@ -2,7 +2,7 @@
 // Compute Resource Generation
 // ============================================================================
 
-import type * as AST from '../../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 import type { CloudProvider, ComputeRequirements } from '../types';
 import { generateAwsLambda } from '../providers/aws';
 import { generateGcpCloudRun } from '../providers/gcp';
@@ -97,6 +97,8 @@ function convertDurationToMs(duration: AST.DurationLiteral): number {
       return duration.value * 60 * 60 * 1000;
     case 'days':
       return duration.value * 24 * 60 * 60 * 1000;
+    default:
+      return duration.value;
   }
 }
 

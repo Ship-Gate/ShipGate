@@ -3,13 +3,13 @@
 // @stdlib/audit/exporters/json
 // ============================================================================
 
-import type {
-  AuditExporter,
-  AuditEvent,
+import {
   ExportFormat,
-  ExportOptions,
-  ExportOutput,
   CompressionType,
+  type AuditExporter,
+  type AuditEvent,
+  type ExportOptions,
+  type ExportOutput,
 } from '../types';
 import { maskPii, redactPii } from '../utils/pii';
 
@@ -83,7 +83,7 @@ export class JsonExporter implements AuditExporter {
   }
 
   private filterFields(event: AuditEvent): Record<string, unknown> {
-    const obj = event as Record<string, unknown>;
+    const obj = event as unknown as Record<string, unknown>;
 
     if (this.options.fields && this.options.fields.length > 0) {
       const filtered: Record<string, unknown> = {};
@@ -124,7 +124,7 @@ export class JsonExporter implements AuditExporter {
     return result;
   }
 
-  private async compress(buffer: Buffer, compression: CompressionType): Promise<Buffer> {
+  private async compress(buffer: Buffer, _compression: CompressionType): Promise<Buffer> {
     // In production, implement actual compression
     return buffer;
   }
@@ -186,7 +186,7 @@ export class NdjsonExporter implements AuditExporter {
   }
 
   private filterFields(event: AuditEvent): Record<string, unknown> {
-    const obj = event as Record<string, unknown>;
+    const obj = event as unknown as Record<string, unknown>;
 
     if (this.options.fields && this.options.fields.length > 0) {
       const filtered: Record<string, unknown> = {};
@@ -227,7 +227,7 @@ export class NdjsonExporter implements AuditExporter {
     return result;
   }
 
-  private async compress(buffer: Buffer, compression: CompressionType): Promise<Buffer> {
+  private async compress(buffer: Buffer, _compression: CompressionType): Promise<Buffer> {
     // In production, implement actual compression
     return buffer;
   }
@@ -253,7 +253,7 @@ export class StreamingJsonWriter {
     const prefix = this.first ? '' : ',\n';
     this.first = false;
 
-    const formatted = this.formatDates(event as Record<string, unknown>);
+    const formatted = this.formatDates(event as unknown as Record<string, unknown>);
     const json = this.options.pretty
       ? JSON.stringify(formatted, null, this.options.indent ?? 2)
       : JSON.stringify(formatted);
@@ -296,7 +296,7 @@ export class StreamingNdjsonWriter {
   }
 
   writeEvent(event: AuditEvent): string {
-    const formatted = this.formatDates(event as Record<string, unknown>);
+    const formatted = this.formatDates(event as unknown as Record<string, unknown>);
     return JSON.stringify(formatted) + '\n';
   }
 

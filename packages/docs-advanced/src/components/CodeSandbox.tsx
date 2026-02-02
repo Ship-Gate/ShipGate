@@ -61,7 +61,7 @@ export function CodeSandbox({
   const handleFileChange = (content: string) => {
     if (readOnly) return;
     
-    setFileContents((prev) => ({
+    setFileContents((prev: Record<string, string>) => ({
       ...prev,
       [activeFile]: content,
     }));
@@ -172,7 +172,7 @@ export function CodeSandbox({
           <div className="flex-1 relative">
             <textarea
               value={fileContents[activeFile] ?? ''}
-              onChange={(e) => handleFileChange(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFileChange(e.target.value)}
               readOnly={readOnly}
               className={`w-full h-full p-4 font-mono text-sm resize-none focus:outline-none ${
                 theme === 'dark' ? 'bg-gray-900 text-gray-100' : 'bg-white'

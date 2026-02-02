@@ -113,12 +113,12 @@ export class SMTSolver {
 
       case 'and':
         if (formula.args.length === 0) return 'true';
-        if (formula.args.length === 1) return this.formulaToSMTLIB(formula.args[0]);
+        if (formula.args.length === 1 && formula.args[0]) return this.formulaToSMTLIB(formula.args[0]);
         return `(and ${formula.args.map((a) => this.formulaToSMTLIB(a)).join(' ')})`;
 
       case 'or':
         if (formula.args.length === 0) return 'false';
-        if (formula.args.length === 1) return this.formulaToSMTLIB(formula.args[0]);
+        if (formula.args.length === 1 && formula.args[0]) return this.formulaToSMTLIB(formula.args[0]);
         return `(or ${formula.args.map((a) => this.formulaToSMTLIB(a)).join(' ')})`;
 
       case 'implies':

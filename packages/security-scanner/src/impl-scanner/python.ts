@@ -3,7 +3,7 @@
 // Scans Python source code for security vulnerabilities
 // ============================================================================
 
-import { Finding, SourceLocation } from '../severity';
+import { Finding } from '../severity';
 
 // ============================================================================
 // Scanner Interface

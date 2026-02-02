@@ -19,7 +19,6 @@ import {
   parseISLHeaders,
   ISLContextData,
   setISLContext,
-  getISLContext,
 } from '../propagation/isl-context';
 import { BehaviorSpan } from '../spans/behavior';
 import { VerificationSpan } from '../spans/verification';

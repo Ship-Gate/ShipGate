@@ -1,0 +1,92 @@
+{
+  "description": "Mixed evidence types with evidence ladder resolution",
+  "evidence": [
+    {
+      "type": "BINDING_PROOF",
+      "source": "type-checker/cart.ts",
+      "description": "Type system proves post-cart-items: cart.items is always array",
+      "location": {
+        "file": "src/models/cart.ts",
+        "line": 10
+      }
+    },
+    {
+      "type": "EXECUTED_TEST",
+      "source": "tests/cart.test.ts",
+      "description": "Test also verifies post-cart-items array type",
+      "coverage": 100,
+      "metadata": {
+        "passed": true
+      }
+    },
+    {
+      "type": "EXECUTED_TEST",
+      "source": "tests/checkout.test.ts",
+      "description": "Test for post-checkout-complete verifies checkout flow",
+      "coverage": 75,
+      "metadata": {
+        "passed": true
+      }
+    },
+    {
+      "type": "RUNTIME_ASSERT",
+      "source": "src/services/checkout.ts",
+      "description": "Assert for post-checkout-complete exists in code",
+      "location": {
+        "file": "src/services/checkout.ts",
+        "line": 120
+      }
+    },
+    {
+      "type": "HEURISTIC_MATCH",
+      "source": "analyzer/patterns.ts",
+      "description": "Pattern match for post-shipping-calculated suggests compliance",
+      "metadata": {
+        "confidence": 0.65
+      }
+    },
+    {
+      "type": "RUNTIME_ASSERT",
+      "source": "src/services/shipping.ts",
+      "description": "Assert for post-shipping-calculated in shipping service",
+      "location": {
+        "file": "src/services/shipping.ts",
+        "line": 88
+      }
+    }
+  ],
+  "clauses": [
+    {
+      "id": "post-cart-items",
+      "expression": "Array.isArray(result.items)",
+      "description": "Cart items must be an array"
+    },
+    {
+      "id": "post-checkout-complete",
+      "expression": "result.checkout.status == 'complete'",
+      "description": "Checkout must complete successfully"
+    },
+    {
+      "id": "post-shipping-calculated",
+      "expression": "result.shipping.cost > 0",
+      "description": "Shipping cost must be calculated"
+    }
+  ],
+  "expectedResults": [
+    {
+      "clauseId": "post-cart-items",
+      "status": "PASS",
+      "evidenceType": "BINDING_PROOF"
+    },
+    {
+      "clauseId": "post-checkout-complete",
+      "status": "PARTIAL",
+      "evidenceType": "EXECUTED_TEST"
+    },
+    {
+      "clauseId": "post-shipping-calculated",
+      "status": "PARTIAL",
+      "evidenceType": "RUNTIME_ASSERT"
+    }
+  ]
+}

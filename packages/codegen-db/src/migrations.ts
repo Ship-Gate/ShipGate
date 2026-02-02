@@ -6,7 +6,6 @@ import type {
   GeneratorContext,
   GeneratedFile,
   NormalizedEntity,
-  NormalizedEnum,
   NormalizedField,
 } from './types.js';
 
@@ -36,7 +35,6 @@ function generatePrismaMigration(context: GeneratorContext, timestamp: string): 
   // Prisma migrations are typically managed by `prisma migrate dev`
   // We generate a placeholder SQL migration for reference
   const lines: string[] = [];
-  const provider = context.options.provider || 'postgresql';
 
   lines.push('-- Prisma Migration');
   lines.push(`-- Created: ${new Date().toISOString()}`);

@@ -410,7 +410,7 @@ export class ISLInterpreter {
   /**
    * Breakpoint handler (can be overridden)
    */
-  protected async onBreakpoint(address: number): Promise<void> {
+  protected async onBreakpoint(_address: number): Promise<void> {
     // Default: just continue
   }
 

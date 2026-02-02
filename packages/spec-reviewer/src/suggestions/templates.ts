@@ -198,7 +198,7 @@ export const errorTemplates: SuggestionTemplate[] = [
     title: 'Add NOT_FOUND error',
     description: 'Handle case when entity is not found.',
     applicability: (ctx) => !!ctx.behaviorName,
-    generateCode: (ctx) => `
+    generateCode: (_ctx) => `
   NOT_FOUND {
     when: "Resource not found"
   }`,
@@ -210,7 +210,7 @@ export const errorTemplates: SuggestionTemplate[] = [
     title: 'Add VALIDATION_ERROR',
     description: 'Handle input validation failures.',
     applicability: (ctx) => !!ctx.behaviorName,
-    generateCode: (ctx) => `
+    generateCode: (_ctx) => `
   VALIDATION_ERROR {
     when: "Input validation failed"
     returns: { field: String, message: String }
@@ -225,7 +225,7 @@ export const errorTemplates: SuggestionTemplate[] = [
     applicability: (ctx) => 
       !!ctx.behaviorName &&
       ctx.behaviorName.toLowerCase().includes('update'),
-    generateCode: (ctx) => `
+    generateCode: (_ctx) => `
   CONFLICT {
     when: "Resource was modified by another request"
     retriable: true
@@ -239,7 +239,7 @@ export const errorTemplates: SuggestionTemplate[] = [
     title: 'Add RATE_LIMITED error',
     description: 'Handle rate limit exceeded.',
     applicability: (ctx) => !!ctx.behaviorName,
-    generateCode: (ctx) => `
+    generateCode: (_ctx) => `
   RATE_LIMITED {
     when: "Too many requests"
     retriable: true
@@ -351,7 +351,7 @@ export const validationTemplates: SuggestionTemplate[] = [
     title: 'Use Email type',
     description: 'Use the Email type for email validation.',
     applicability: (ctx) => 
-      ctx.fieldName?.toLowerCase().includes('email'),
+      ctx.fieldName?.toLowerCase().includes('email') ?? false,
     generateCode: (ctx) => `
   // Define type if not exists
   type Email = String {

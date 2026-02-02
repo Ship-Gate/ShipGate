@@ -1,0 +1,17 @@
+{
+  "version": "0.1",
+  "gate": {
+    "changedOnly": false,
+    "strict": false
+  },
+  "policyPacks": {
+    "auth": { "enabled": true },
+    "payments": { "enabled": false },
+    "pii": { "enabled": true },
+    "rate-limit": { "enabled": true }
+  },
+  "evidence": {
+    "outputDir": ".islstudio/evidence",
+    "sign": true
+  }
+}

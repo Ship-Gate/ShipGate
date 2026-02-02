@@ -2,6 +2,6 @@
 // Checks Module - Export all check functions
 // ============================================================================
 
-export * from './preconditions';
-export * from './postconditions';
-export * from './invariants';
+export * from './preconditions.js';
+export * from './postconditions.js';
+export * from './invariants.js';

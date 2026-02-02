@@ -1,0 +1,491 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Evidence HTML Renderer > snapshot tests > should match NO_SHIP report snapshot > no-ship-report 1`] = `
+"
+    <div class="evidence-report">
+      
+    <div class="evidence-banner evidence-banner--no-ship">
+      <div class="evidence-banner__verdict">
+        <span>✗</span>
+        <span>NO_SHIP</span>
+      </div>
+      <div class="evidence-banner__stats">
+        <div class="evidence-banner__pass-rate">33% Pass Rate</div>
+        <div class="evidence-banner__details">
+          1 passed, 1 partial, 1 failed of 3 clauses
+        </div>
+        <div class="evidence-banner__details">
+          Total duration: 180ms
+        </div>
+      </div>
+    </div>
+  
+
+      <section class="evidence-section">
+        <h2 class="evidence-section__title">Clause Results</h2>
+        
+    <table class="evidence-clauses">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Clause</th>
+          <th>Status</th>
+          <th>Duration</th>
+          <th>Evidence</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+      <tr>
+        <td>
+          <code>order-001</code>
+        </td>
+        <td>
+          <strong>Create order validates items</strong>
+          
+        </td>
+        <td>
+          <span class="evidence-status evidence-status--pass">PASS</span>
+        </td>
+        <td>
+          40ms
+        </td>
+        <td>
+          -
+          <div class="evidence-details"><strong>precondition:</strong> Items array is non-empty</div>
+        </td>
+      </tr>
+    
+      <tr>
+        <td>
+          <code>order-002</code>
+        </td>
+        <td>
+          <strong>Order total calculated correctly</strong>
+          <div style="font-size: 0.8125rem; color: var(--evidence-text-muted, #6b7280);">Sum of item prices equals order total</div>
+        </td>
+        <td>
+          <span class="evidence-status evidence-status--partial">PARTIAL</span>
+        </td>
+        <td>
+          60ms
+        </td>
+        <td>
+          -
+          <div class="evidence-details"><strong>assertion:</strong> Total matches for integer prices but not decimals
+      <div class="evidence-location">
+        src/orders/total.ts:15:3
+      </div>
+    <pre class="evidence-snippet">total += item.price * item.quantity</pre></div>
+        </td>
+      </tr>
+    
+      <tr>
+        <td>
+          <code>order-003</code>
+        </td>
+        <td>
+          <strong>Inventory decremented on order</strong>
+          <div style="font-size: 0.8125rem; color: var(--evidence-text-muted, #6b7280);">After order placement, inventory count should decrease</div>
+        </td>
+        <td>
+          <span class="evidence-status evidence-status--fail">FAIL</span>
+        </td>
+        <td>
+          80ms
+        </td>
+        <td>
+          <span style="color: var(--evidence-fail, #dc2626);">Expected inventory to decrease by 2, but remained at 100</span>
+          <div class="evidence-details"><strong>invariant:</strong> Inventory count unchanged after order
+      <div class="evidence-location">
+        src/orders/place.ts:88
+      </div>
+    </div>
+        </td>
+      </tr>
+    
+      </tbody>
+    </table>
+  
+      </section>
+
+      <section class="evidence-section">
+        <h2 class="evidence-section__title">Assumptions</h2>
+        <ul class="evidence-list">
+      <li class="evidence-list__item">
+        <div class="evidence-list__item-header">
+          <span class="evidence-list__item-id">assume-order-001</span>
+          <span class="evidence-risk evidence-risk--medium">medium risk</span>
+        </div>
+        <div>Inventory service is operational</div>
+        <div style="font-size: 0.8125rem; color: var(--evidence-text-muted, #6b7280); margin-top: 0.25rem;"><em>Rationale:</em> External service dependency</div>
+      </li>
+    
+      <li class="evidence-list__item">
+        <div class="evidence-list__item-header">
+          <span class="evidence-list__item-id">assume-order-002</span>
+          <span class="evidence-risk evidence-risk--high">high risk</span>
+        </div>
+        <div>Prices are in USD</div>
+        
+      </li>
+    </ul>
+      </section>
+
+      <section class="evidence-section">
+        <h2 class="evidence-section__title">Open Questions</h2>
+        <ul class="evidence-list">
+      <li class="evidence-list__item">
+        <div class="evidence-list__item-header">
+          <span class="evidence-list__item-id">q-001</span>
+          <span class="evidence-risk evidence-priority--high">high priority</span>
+        </div>
+        <div><strong>Should we support backorders?</strong></div>
+        <div style="font-size: 0.8125rem; color: var(--evidence-text-muted, #6b7280); margin-top: 0.25rem;">Currently orders fail if inventory is insufficient</div>
+        <div style="font-size: 0.8125rem; margin-top: 0.5rem;"><em>Suggested actions:</em><ul style="margin: 0.25rem 0 0 1rem;"><li>Review with product team</li><li>Check competitor behavior</li></ul></div>
+      </li>
+    
+      <li class="evidence-list__item">
+        <div class="evidence-list__item-header">
+          <span class="evidence-list__item-id">q-002</span>
+          <span class="evidence-risk evidence-priority--medium">medium priority</span>
+        </div>
+        <div><strong>How to handle partial fulfillment?</strong></div>
+        
+        
+      </li>
+    </ul>
+      </section>
+
+      <section class="evidence-section">
+        <h2 class="evidence-section__title">Reproduction Commands</h2>
+        
+      <div class="evidence-command">
+        <div class="evidence-command__description">Run order tests</div>
+        <pre class="evidence-command__code">pnpm test:orders</pre>
+        <div class="evidence-command__meta"><div>Working directory: <code>packages/orders</code></div></div>
+      </div>
+    
+      <div class="evidence-command">
+        <div class="evidence-command__description">Run specific failing test</div>
+        <pre class="evidence-command__code">pnpm vitest run inventory.test.ts -t &#039;decrements&#039;</pre>
+        <div class="evidence-command__meta"><div>Working directory: <code>packages/orders</code></div><div>Environment: <code>DEBUG=orders:* LOG_LEVEL=debug</code></div></div>
+      </div>
+    
+      </section>
+
+      
+    <div class="evidence-metadata">
+      <dl>
+    <dt>Contract</dt>
+    <dd>OrderService</dd>
+  
+      <dt>File</dt>
+      <dd>contracts/orders.isl</dd>
+    
+    <dt>Verifier</dt>
+    <dd>v1.0.0</dd>
+  
+      <dt>Commit</dt>
+      <dd>def5678</dd>
+    
+      <dt>Branch</dt>
+      <dd>feature/orders</dd>
+    
+      <dt>Build</dt>
+      <dd>ci-999</dd>
+    </dl>
+    </div>
+  
+    </div>
+  "
+`;
+
+exports[`Evidence HTML Renderer > snapshot tests > should match SHIP report snapshot > ship-report 1`] = `
+"
+    <div class="evidence-report">
+      
+    <div class="evidence-banner evidence-banner--ship">
+      <div class="evidence-banner__verdict">
+        <span>✓</span>
+        <span>SHIP</span>
+      </div>
+      <div class="evidence-banner__stats">
+        <div class="evidence-banner__pass-rate">100% Pass Rate</div>
+        <div class="evidence-banner__details">
+          2 passed, 0 partial, 0 failed of 2 clauses
+        </div>
+        <div class="evidence-banner__details">
+          Total duration: 95ms
+        </div>
+      </div>
+    </div>
+  
+
+      <section class="evidence-section">
+        <h2 class="evidence-section__title">Clause Results</h2>
+        
+    <table class="evidence-clauses">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Clause</th>
+          <th>Status</th>
+          <th>Duration</th>
+          <th>Evidence</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+      <tr>
+        <td>
+          <code>user-001</code>
+        </td>
+        <td>
+          <strong>Create user returns valid ID</strong>
+          <div style="font-size: 0.8125rem; color: var(--evidence-text-muted, #6b7280);">When creating a new user, a unique UUID is returned</div>
+        </td>
+        <td>
+          <span class="evidence-status evidence-status--pass">PASS</span>
+        </td>
+        <td>
+          45ms
+        </td>
+        <td>
+          -
+          <div class="evidence-details"><strong>assertion:</strong> Response contains valid UUID v4
+      <div class="evidence-location">
+        src/user/create.ts:25
+      </div>
+    <pre class="evidence-snippet">return { id: uuidv4() }</pre></div>
+        </td>
+      </tr>
+    
+      <tr>
+        <td>
+          <code>user-002</code>
+        </td>
+        <td>
+          <strong>Get user returns correct data</strong>
+          <div style="font-size: 0.8125rem; color: var(--evidence-text-muted, #6b7280);">Retrieved user matches the created user</div>
+        </td>
+        <td>
+          <span class="evidence-status evidence-status--pass">PASS</span>
+        </td>
+        <td>
+          50ms
+        </td>
+        <td>
+          -
+          <div class="evidence-details"><strong>postcondition:</strong> User email matches input</div>
+        </td>
+      </tr>
+    
+      </tbody>
+    </table>
+  
+      </section>
+
+      <section class="evidence-section">
+        <h2 class="evidence-section__title">Assumptions</h2>
+        <ul class="evidence-list">
+      <li class="evidence-list__item">
+        <div class="evidence-list__item-header">
+          <span class="evidence-list__item-id">assume-001</span>
+          <span class="evidence-risk evidence-risk--low">low risk</span>
+        </div>
+        <div>Database connection is stable</div>
+        
+      </li>
+    </ul>
+      </section>
+
+      <section class="evidence-section">
+        <h2 class="evidence-section__title">Open Questions</h2>
+        <div class="evidence-empty">No open questions</div>
+      </section>
+
+      <section class="evidence-section">
+        <h2 class="evidence-section__title">Reproduction Commands</h2>
+        
+      <div class="evidence-command">
+        <div class="evidence-command__description">Run user service tests</div>
+        <pre class="evidence-command__code">pnpm test:user</pre>
+        
+      </div>
+    
+      </section>
+
+      
+    <div class="evidence-metadata">
+      <dl>
+    <dt>Contract</dt>
+    <dd>UserService</dd>
+  
+      <dt>File</dt>
+      <dd>contracts/user.isl</dd>
+    
+    <dt>Verifier</dt>
+    <dd>v1.0.0</dd>
+  
+      <dt>Commit</dt>
+      <dd>abc1234</dd>
+    
+      <dt>Branch</dt>
+      <dd>main</dd>
+    </dl>
+    </div>
+  
+    </div>
+  "
+`;
+
+exports[`Evidence HTML Renderer > snapshot tests > should match full document snapshot > full-document 1`] = `
+"<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Report</title>
+  
+</head>
+<body>
+  
+    <div class="evidence-report">
+      
+    <div class="evidence-banner evidence-banner--ship">
+      <div class="evidence-banner__verdict">
+        <span>✓</span>
+        <span>SHIP</span>
+      </div>
+      <div class="evidence-banner__stats">
+        <div class="evidence-banner__pass-rate">100% Pass Rate</div>
+        <div class="evidence-banner__details">
+          2 passed, 0 partial, 0 failed of 2 clauses
+        </div>
+        <div class="evidence-banner__details">
+          Total duration: 95ms
+        </div>
+      </div>
+    </div>
+  
+
+      <section class="evidence-section">
+        <h2 class="evidence-section__title">Clause Results</h2>
+        
+    <table class="evidence-clauses">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Clause</th>
+          <th>Status</th>
+          <th>Duration</th>
+          <th>Evidence</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+      <tr>
+        <td>
+          <code>user-001</code>
+        </td>
+        <td>
+          <strong>Create user returns valid ID</strong>
+          <div style="font-size: 0.8125rem; color: var(--evidence-text-muted, #6b7280);">When creating a new user, a unique UUID is returned</div>
+        </td>
+        <td>
+          <span class="evidence-status evidence-status--pass">PASS</span>
+        </td>
+        <td>
+          45ms
+        </td>
+        <td>
+          -
+          <div class="evidence-details"><strong>assertion:</strong> Response contains valid UUID v4
+      <div class="evidence-location">
+        src/user/create.ts:25
+      </div>
+    <pre class="evidence-snippet">return { id: uuidv4() }</pre></div>
+        </td>
+      </tr>
+    
+      <tr>
+        <td>
+          <code>user-002</code>
+        </td>
+        <td>
+          <strong>Get user returns correct data</strong>
+          <div style="font-size: 0.8125rem; color: var(--evidence-text-muted, #6b7280);">Retrieved user matches the created user</div>
+        </td>
+        <td>
+          <span class="evidence-status evidence-status--pass">PASS</span>
+        </td>
+        <td>
+          50ms
+        </td>
+        <td>
+          -
+          <div class="evidence-details"><strong>postcondition:</strong> User email matches input</div>
+        </td>
+      </tr>
+    
+      </tbody>
+    </table>
+  
+      </section>
+
+      <section class="evidence-section">
+        <h2 class="evidence-section__title">Assumptions</h2>
+        <ul class="evidence-list">
+      <li class="evidence-list__item">
+        <div class="evidence-list__item-header">
+          <span class="evidence-list__item-id">assume-001</span>
+          <span class="evidence-risk evidence-risk--low">low risk</span>
+        </div>
+        <div>Database connection is stable</div>
+        
+      </li>
+    </ul>
+      </section>
+
+      <section class="evidence-section">
+        <h2 class="evidence-section__title">Open Questions</h2>
+        <div class="evidence-empty">No open questions</div>
+      </section>
+
+      <section class="evidence-section">
+        <h2 class="evidence-section__title">Reproduction Commands</h2>
+        
+      <div class="evidence-command">
+        <div class="evidence-command__description">Run user service tests</div>
+        <pre class="evidence-command__code">pnpm test:user</pre>
+        
+      </div>
+    
+      </section>
+
+      
+    <div class="evidence-metadata">
+      <dl>
+    <dt>Contract</dt>
+    <dd>UserService</dd>
+  
+      <dt>File</dt>
+      <dd>contracts/user.isl</dd>
+    
+    <dt>Verifier</dt>
+    <dd>v1.0.0</dd>
+  
+      <dt>Commit</dt>
+      <dd>abc1234</dd>
+    
+      <dt>Branch</dt>
+      <dd>main</dd>
+    </dl>
+    </div>
+  
+    </div>
+  
+</body>
+</html>"
+`;

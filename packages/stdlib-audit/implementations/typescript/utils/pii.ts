@@ -9,11 +9,6 @@ import type { AuditEvent, Actor } from '../types';
 // PII FIELD DEFINITIONS
 // ============================================================================
 
-const PII_FIELDS = {
-  actor: ['email', 'ip_address', 'name'],
-  // Add more PII field paths as needed
-};
-
 const MASK_CHAR = '*';
 const REDACT_TEXT = '[REDACTED]';
 
@@ -42,8 +37,10 @@ function maskActor(actor: Actor): Actor {
 }
 
 export function maskEmail(email: string): string {
-  const [local, domain] = email.split('@');
-  if (!domain) return maskString(email);
+  const parts = email.split('@');
+  const local = parts[0];
+  const domain = parts[1];
+  if (!domain || !local) return maskString(email);
 
   const maskedLocal = local.length > 2
     ? local[0] + MASK_CHAR.repeat(local.length - 2) + local[local.length - 1]

@@ -2,7 +2,7 @@
  * Input Validation Generator - Generate validation from ISL constraints.
  */
 
-import type { Field, Constraint } from '../types/ast';
+import type { Field, Constraint } from '../types.js';
 
 /**
  * Generate validation code for GraphQL inputs

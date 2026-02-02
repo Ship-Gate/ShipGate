@@ -5,8 +5,6 @@
 import type {
   Entity,
   Field,
-  TypeDefinition,
-  Annotation,
 } from '../../../../master_contracts/ast';
 import type { GeneratorOptions } from '../generator';
 import { kotlinTypeFromDef } from './types';
@@ -17,7 +15,7 @@ import { kotlinTypeFromDef } from './types';
 
 export function generateKotlinDataClasses(
   entity: Entity,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const name = entity.name.name;
   const lines: string[] = [];
@@ -206,7 +204,7 @@ function generateFactoryMethod(entity: Entity): string {
 
 export function generateKotlinEntityExtensions(
   entity: Entity,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const name = entity.name.name;
   const lines: string[] = [];
@@ -236,7 +234,7 @@ export function generateKotlinEntityExtensions(
 
 export function generateKotlinDTO(
   entity: Entity,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const name = entity.name.name;
   const lines: string[] = [];

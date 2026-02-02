@@ -205,7 +205,7 @@ function compareObjects(
     
     if (!shadowKeys.has(key)) {
       // Check equivalent paths
-      const equivalent = options.equivalentPaths?.find(([p, s]) => p === keyPath);
+      const equivalent = options.equivalentPaths?.find(([p, _s]) => p === keyPath);
       if (equivalent && shadow[equivalent[1].split('.').pop()!] !== undefined) {
         continue;
       }
@@ -227,7 +227,7 @@ function compareObjects(
     
     if (!primaryKeys.has(key)) {
       // Check equivalent paths
-      const equivalent = options.equivalentPaths?.find(([p, s]) => s === keyPath);
+      const equivalent = options.equivalentPaths?.find(([_p, s]) => s === keyPath);
       if (equivalent && primary[equivalent[0].split('.').pop()!] !== undefined) {
         continue;
       }

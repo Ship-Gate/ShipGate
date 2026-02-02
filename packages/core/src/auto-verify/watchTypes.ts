@@ -56,7 +56,7 @@ export type WatchEvent =
   | { type: 'verification-started'; specPath: string }
   | { type: 'verification-complete'; result: VerificationResult }
   | { type: 'evidence-written'; path: string }
-  | { type: 'error'; error: Error; phase: WatchPhase }
+  | { type: 'error'; error: Error; phase: WatchPhase | 'idle' | 'stopped' }
   | { type: 'stopped' };
 
 /**

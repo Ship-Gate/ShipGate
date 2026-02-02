@@ -4,7 +4,7 @@
  * Analyzes verification failures to determine the root cause and fix strategy.
  */
 
-import type { DomainDeclaration, BehaviorDeclaration, Expression } from '@isl-lang/isl-core';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
 
 // ============================================================================
 // Types
@@ -93,10 +93,14 @@ export interface CodeSegment {
 // ============================================================================
 
 export class FailureAnalyzer {
+  private implementation: string;
+  
   constructor(
-    private domain: DomainDeclaration,
-    private implementation: string
-  ) {}
+    _domain: DomainDeclaration,
+    implementation: string
+  ) {
+    this.implementation = implementation;
+  }
 
   /**
    * Analyze a verification failure
@@ -262,7 +266,7 @@ export class FailureAnalyzer {
     }
 
     // Check for uniqueness invariants
-    if (predicate.includes('unique') || predicate.includes('count') === 1) {
+    if (predicate.includes('unique') || predicate.includes('count')) {
       evidence.push(`Uniqueness constraint violated: ${predicate}`);
       return {
         type: 'state_mutation',

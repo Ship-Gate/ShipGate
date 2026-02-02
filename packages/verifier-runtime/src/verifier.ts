@@ -2,7 +2,7 @@
 // Runtime Verifier - Main verification logic
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 import type {
   Implementation,
   VerifyResult,
@@ -12,16 +12,16 @@ import type {
   CoverageInfo,
   TimingInfo,
   VerifyVerdict,
-} from './types';
-import { generateInputs, generateQuickInput } from './inputs';
-import { createRunner, createEntityStore, type RunnerOptions } from './runner';
+} from './types.js';
+import { generateInputs, generateQuickInput } from './inputs.js';
+import { createRunner, createEntityStore, type RunnerOptions } from './runner.js';
 import {
   checkPreconditions,
   allPreconditionsPassed,
   checkPostconditions,
   determineOutcome,
   checkAllInvariants,
-} from './checks';
+} from './checks/index.js';
 
 /**
  * Options for verification

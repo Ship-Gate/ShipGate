@@ -358,7 +358,7 @@ function estimateComplexity(code: string): number {
 function createCompilerHost(
   code: string,
   fileName: string,
-  options: ts.CompilerOptions
+  _options: ts.CompilerOptions
 ): ts.CompilerHost {
   return {
     getSourceFile: (name) => {

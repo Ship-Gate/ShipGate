@@ -4,10 +4,8 @@ import {
   TextMapGetter,
   TextMapPropagator,
   TextMapSetter,
-  trace,
   createContextKey,
   Span,
-  SpanContext,
 } from '@opentelemetry/api';
 
 /**
@@ -39,7 +37,7 @@ export const ISL_HEADERS = {
 /**
  * Context key for ISL data
  */
-const ISL_CONTEXT_KEY = createContextKey<ISLContextData>('isl-context');
+const ISL_CONTEXT_KEY = createContextKey('isl-context');
 
 /**
  * Get ISL context from the current context

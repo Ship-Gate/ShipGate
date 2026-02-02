@@ -181,8 +181,6 @@ export function transformResponse(
   data: unknown,
   options: TransformOptions = {}
 ): TransformResult {
-  const transformer = new ResponseTransformer();
-  
   // Apply inline transformation
   let result = data;
 

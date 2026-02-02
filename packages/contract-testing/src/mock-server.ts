@@ -4,7 +4,7 @@
  * Create mock servers from contracts for consumer testing.
  */
 
-import type { Contract, ContractInteraction } from './broker.js';
+import { Contract, ContractInteraction } from './types.js';
 import { ContractMatcher, type MatcherOptions } from './matcher.js';
 
 export interface MockServerOptions {

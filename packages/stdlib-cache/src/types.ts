@@ -22,6 +22,8 @@ export interface CacheOptions {
 }
 
 export interface CacheEntry<T = unknown> {
+  /** The cache key (optional, for verification) */
+  key?: string;
   value: T;
   createdAt: number;
   expiresAt?: number;
@@ -29,6 +31,8 @@ export interface CacheEntry<T = unknown> {
   accessCount: number;
   size?: number;
   tags?: string[];
+  /** TTL in seconds (alternative to expiresAt) */
+  ttl?: number;
 }
 
 export interface CacheStats {
@@ -40,6 +44,10 @@ export interface CacheStats {
   maxSize?: number;
   hitRate: number;
   evictions: number;
+  /** Memory usage in bytes */
+  memory?: number;
+  /** Memory usage in bytes (alias) */
+  memoryUsage?: number;
 }
 
 export interface SetOptions {
@@ -60,6 +68,103 @@ export interface GetOptions {
   touch?: boolean;
   /** Return stale value while revalidating */
   stale?: boolean;
+}
+
+// ============================================
+// Simple Cache Interface (ICache)
+// ============================================
+
+/**
+ * Simple cache interface for basic operations
+ */
+export interface ICache {
+  /** Get a value */
+  get<T>(key: string): Promise<T | null>;
+  /** Set a value */
+  set<T>(key: string, value: T, options?: SetOptions): Promise<void>;
+  /** Delete a value */
+  delete(key: string): Promise<boolean>;
+  /** Check if key exists */
+  has(key: string): Promise<boolean>;
+  /** Clear all values */
+  clear(): Promise<void>;
+  /** Get all keys matching pattern */
+  keys(pattern?: string): Promise<string[]>;
+  /** Get cache statistics */
+  getStats(): Promise<CacheStats>;
+  /** Close connection */
+  close(): Promise<void>;
+}
+
+// ============================================
+// Result-based Cache Interface
+// ============================================
+
+/**
+ * Cache error type
+ */
+export interface CacheError {
+  code: string;
+  message: string;
+}
+
+/**
+ * Cache result type for operations that may fail
+ */
+export type CacheResult<T> = 
+  | { ok: true; data: CacheEntry<T> }
+  | { ok: false; error: CacheError };
+
+/**
+ * Result-based cache interface with explicit success/failure
+ */
+export interface Cache<T = unknown> {
+  /** Get a value with result */
+  get(key: string): Promise<CacheResult<T>>;
+  /** Set a value */
+  set(key: string, value: T, options?: SetOptions): Promise<void>;
+  /** Delete a value */
+  delete(key: string): Promise<boolean>;
+  /** Check if key exists */
+  has(key: string): Promise<boolean>;
+  /** Clear all values */
+  clear(): Promise<void>;
+  /** Get or set with factory function */
+  getOrSet(key: string, factory: () => Promise<T>, options?: SetOptions): Promise<T>;
+  /** Get multiple values */
+  mget(keys: readonly string[]): Promise<Map<string, T>>;
+  /** Set multiple values */
+  mset(entries: Map<string, T>, options?: SetOptions): Promise<void>;
+  /** Get cache statistics */
+  stats(): Promise<CacheStats>;
+  /** Close connection */
+  close(): Promise<void>;
+}
+
+// ============================================
+// Redis Configuration
+// ============================================
+
+/**
+ * Redis connection configuration
+ */
+export interface RedisConfig {
+  /** Redis host */
+  host?: string;
+  /** Redis port */
+  port?: number;
+  /** Redis password */
+  password?: string;
+  /** Redis database number */
+  db?: number;
+  /** Enable cluster mode */
+  cluster?: boolean;
+  /** Enable TLS */
+  tls?: boolean;
+  /** Maximum retries */
+  maxRetries?: number;
+  /** Connection timeout in ms */
+  connectTimeout?: number;
 }
 
 // ============================================

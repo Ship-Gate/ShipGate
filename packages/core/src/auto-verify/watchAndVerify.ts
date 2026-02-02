@@ -7,14 +7,12 @@
  */
 
 import { watch as fsWatch, type FSWatcher } from 'fs';
-import { readFile, writeFile, mkdir, access, stat, readdir } from 'fs/promises';
-import { join, dirname, basename, extname, resolve } from 'path';
+import { readFile, writeFile, mkdir, access, readdir } from 'fs/promises';
+import { join, dirname, basename, extname } from 'path';
 import type {
   WatchConfig,
-  WatchEvent,
   WatchEventCallback,
   WatchHandle,
-  WatchStatus,
   WatchPhase,
   VerificationResult,
   MarkerFileContent,
@@ -37,7 +35,7 @@ import {
   createClauseResult,
   type ClauseResult,
   type ScoringResult,
-} from '../isl-agent/scoring/scoring.js';
+} from '../isl-agent/scoring/index.js';
 
 /**
  * Create a file watcher that triggers verification after code generation
@@ -515,7 +513,7 @@ export function watchAndVerify(
 
     // Watch the marker directory for changes
     try {
-      watcher = fsWatch(markerDir, { persistent: true }, (eventType, filename) => {
+      watcher = fsWatch(markerDir, { persistent: true }, (_eventType, filename) => {
         if (filename && basename(markerPath) === filename) {
           onMarkerChange();
         }

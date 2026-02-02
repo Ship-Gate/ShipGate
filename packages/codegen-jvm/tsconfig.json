@@ -2,11 +2,10 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "composite": true
+    "noEmit": false
   },
   "include": [
     "src/**/*.ts"
@@ -15,10 +14,5 @@
     "node_modules",
     "dist",
     "tests"
-  ],
-  "references": [
-    {
-      "path": "../isl-core"
-    }
   ]
 }

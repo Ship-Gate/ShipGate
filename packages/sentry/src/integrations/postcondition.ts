@@ -46,10 +46,8 @@ export class PostconditionIntegration implements Integration {
   /**
    * Setup the integration
    */
-  setupOnce(
-    addGlobalEventProcessor: (processor: (event: Event, hint?: EventHint) => Event | null) => void
-  ): void {
-    addGlobalEventProcessor((event, hint) => {
+  setupOnce(): void {
+    Sentry.addEventProcessor((event: Event, hint?: EventHint) => {
       return this.processEvent(event, hint);
     });
   }
@@ -57,7 +55,7 @@ export class PostconditionIntegration implements Integration {
   /**
    * Process postcondition-related events
    */
-  private processEvent(event: Event, hint?: EventHint): Event | null {
+  processEvent(event: Event, hint?: EventHint): Event | null {
     const error = hint?.originalException;
 
     if (!isPostconditionError(error)) {

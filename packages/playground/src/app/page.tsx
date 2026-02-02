@@ -24,7 +24,7 @@ const Preview = dynamic(() => import('@/components/Preview').then(mod => ({ defa
 })
 
 export default function PlaygroundPage() {
-  const [code, setCode] = useState(EXAMPLES.auth.code)
+  const [code, setCode] = useState<string>(EXAMPLES.auth.code)
   const [output, setOutput] = useState('')
   const [errors, setErrors] = useState<CompileError[]>([])
   const [warnings, setWarnings] = useState<CompileError[]>([])

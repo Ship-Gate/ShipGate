@@ -179,7 +179,7 @@ function createNoopTracer(): Tracer {
  * Create an OpenTelemetry tracer wrapper
  * (actual implementation would import @opentelemetry/api)
  */
-export function createOpenTelemetryTracer(serviceName: string): Tracer {
+export function createOpenTelemetryTracer(_serviceName: string): Tracer {
   // This is a placeholder - real implementation would use @opentelemetry/api
   return createNoopTracer();
 }

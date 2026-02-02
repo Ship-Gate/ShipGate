@@ -133,14 +133,4 @@ export const validatePaginationParams = createValidator(PaginationParamsSchema);
 export const validateUserFilters = createValidator(UserFiltersSchema);
 export const validateUserSettings = createValidator(UserSettingsSchema);
 
-// Type exports
-export type CreateUserInput = z.infer<typeof CreateUserInputSchema>;
-export type UpdateUserInput = z.infer<typeof UpdateUserInputSchema>;
-export type LoginInput = z.infer<typeof LoginInputSchema>;
-export type RegisterInput = z.infer<typeof RegisterInputSchema>;
-export type ResetPasswordInput = z.infer<typeof ResetPasswordInputSchema>;
-export type ChangePasswordInput = z.infer<typeof ChangePasswordInputSchema>;
-export type PaginationParams = z.infer<typeof PaginationParamsSchema>;
-export type CursorPaginationParams = z.infer<typeof CursorPaginationParamsSchema>;
-export type UserFilters = z.infer<typeof UserFiltersSchema>;
-export type UserSettings = z.infer<typeof UserSettingsSchema>;
+// Type exports are in ./types.ts to avoid duplicate declarations

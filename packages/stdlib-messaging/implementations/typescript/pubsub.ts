@@ -12,7 +12,6 @@ import {
   type TopicName, 
   type QueueName,
   type MessageId,
-  QueueError,
 } from './queue.js';
 
 // ============================================================================
@@ -294,11 +293,14 @@ export class PubSubStore {
 
     let startIndex = 0;
     if (cursor) {
-      startIndex = subIds.findIndex(id => id === cursor) + 1;
+      const foundIndex = subIds.findIndex(id => id === cursor);
+      startIndex = foundIndex >= 0 ? foundIndex + 1 : 0;
     }
 
     for (let i = startIndex; i < subIds.length && subscriptions.length < limit; i++) {
-      const sub = this.subscriptions.get(subIds[i]);
+      const subId = subIds[i];
+      if (!subId) continue;
+      const sub = this.subscriptions.get(subId);
       if (sub) {
         subscriptions.push(sub);
       }
@@ -424,6 +426,7 @@ export class PubSubStore {
 
     for (let i = 0; i < config.messages.length; i++) {
       const msgConfig = config.messages[i];
+      if (!msgConfig) continue;
       try {
         const result = this.publish({
           topic: config.topic,

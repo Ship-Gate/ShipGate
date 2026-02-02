@@ -3,8 +3,6 @@
  * Compiles WAT to WASM binary
  */
 
-import { CompiledWASM, WASMModule } from './types';
-
 /**
  * Compiler options
  */
@@ -141,7 +139,7 @@ export class WASMCompiler {
   /**
    * Convert WAT to WASM binary
    */
-  private watToWasm(wat: string): Uint8Array {
+  private watToWasm(_wat: string): Uint8Array {
     // This is a placeholder - real implementation would use wabt
     // For now, create a minimal valid WASM module
 

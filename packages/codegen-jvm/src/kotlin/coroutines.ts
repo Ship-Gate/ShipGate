@@ -6,7 +6,6 @@ import type {
   Domain,
   Behavior,
   Entity,
-  TypeDefinition,
 } from '../../../../master_contracts/ast';
 import type { GeneratorOptions } from '../generator';
 import { kotlinTypeFromDef } from './types';
@@ -74,7 +73,7 @@ export function generateKotlinCoroutines(
 // ENTITY CRUD METHODS
 // ============================================================================
 
-function generateEntityMethods(entity: Entity, options: GeneratorOptions): string {
+function generateEntityMethods(entity: Entity, _options: GeneratorOptions): string {
   const name = entity.name.name;
   const lines: string[] = [];
 

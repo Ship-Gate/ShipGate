@@ -3,12 +3,12 @@
 // Standard library of common effects
 // ============================================================================
 
-import type { Effect, EffectHandler } from './types.js';
+import type { AlgebraicEffect, AlgebraicEffectHandler } from './types.js';
 
 /**
  * IO Effect - General input/output
  */
-export const IOEffect: Effect = {
+export const IOEffect: AlgebraicEffect = {
   kind: 'IO',
   name: 'IO',
   description: 'General input/output operations',
@@ -33,7 +33,7 @@ export const IOEffect: Effect = {
 /**
  * State Effect - Mutable state
  */
-export const StateEffect: Effect = {
+export const StateEffect: AlgebraicEffect = {
   kind: 'State',
   name: 'State',
   description: 'Mutable state operations',
@@ -73,7 +73,7 @@ export const StateEffect: Effect = {
 /**
  * Exception Effect - Error handling
  */
-export const ExceptionEffect: Effect = {
+export const ExceptionEffect: AlgebraicEffect = {
   kind: 'Exception',
   name: 'Exception',
   description: 'Exception handling operations',
@@ -117,7 +117,7 @@ export const ExceptionEffect: Effect = {
 /**
  * Async Effect - Asynchronous operations
  */
-export const AsyncEffect: Effect = {
+export const AsyncEffect: AlgebraicEffect = {
   kind: 'Async',
   name: 'Async',
   description: 'Asynchronous operations',
@@ -188,7 +188,7 @@ export const AsyncEffect: Effect = {
 /**
  * Resource Effect - Resource management
  */
-export const ResourceEffect: Effect = {
+export const ResourceEffect: AlgebraicEffect = {
   kind: 'Resource',
   name: 'Resource',
   description: 'Resource acquisition and release',
@@ -267,7 +267,7 @@ export const ResourceEffect: Effect = {
 /**
  * Random Effect - Non-determinism
  */
-export const RandomEffect: Effect = {
+export const RandomEffect: AlgebraicEffect = {
   kind: 'Random',
   name: 'Random',
   description: 'Random number generation',
@@ -315,7 +315,7 @@ export const RandomEffect: Effect = {
 /**
  * Time Effect - Time operations
  */
-export const TimeEffect: Effect = {
+export const TimeEffect: AlgebraicEffect = {
   kind: 'Time',
   name: 'Time',
   description: 'Time-related operations',
@@ -355,7 +355,7 @@ export const TimeEffect: Effect = {
 /**
  * Logging Effect - Structured logging
  */
-export const LoggingEffect: Effect = {
+export const LoggingEffect: AlgebraicEffect = {
   kind: 'Logging',
   name: 'Logging',
   description: 'Structured logging operations',
@@ -418,7 +418,7 @@ export const LoggingEffect: Effect = {
 /**
  * All built-in effects
  */
-export const BUILTIN_EFFECTS: Effect[] = [
+export const BUILTIN_EFFECTS: AlgebraicEffect[] = [
   IOEffect,
   StateEffect,
   ExceptionEffect,
@@ -432,7 +432,7 @@ export const BUILTIN_EFFECTS: Effect[] = [
 /**
  * Create a state handler with initial value
  */
-export function createStateHandler<S>(initial: S): EffectHandler[] {
+export function createStateHandler<S>(initial: S): AlgebraicEffectHandler[] {
   let state = initial;
 
   return [
@@ -449,7 +449,7 @@ export function createStateHandler<S>(initial: S): EffectHandler[] {
     {
       effect: 'State',
       operation: 'modify',
-      implementation: { kind: 'Native', fn: (fn: (s: S) => S) => { state = fn(state); } },
+      implementation: { kind: 'Native', fn: (fn: unknown) => { state = (fn as (s: S) => S)(state); } },
     },
   ];
 }
@@ -457,7 +457,7 @@ export function createStateHandler<S>(initial: S): EffectHandler[] {
 /**
  * Create console IO handler
  */
-export function createConsoleHandler(): EffectHandler[] {
+export function createConsoleHandler(): AlgebraicEffectHandler[] {
   return [
     {
       effect: 'IO',
@@ -475,7 +475,7 @@ export function createConsoleHandler(): EffectHandler[] {
 /**
  * Create random handler (using Math.random)
  */
-export function createRandomHandler(seed?: number): EffectHandler[] {
+export function createRandomHandler(seed?: number): AlgebraicEffectHandler[] {
   let rng = seed !== undefined ? seededRandom(seed) : Math.random;
 
   return [
@@ -541,8 +541,8 @@ function seededRandom(seed: number): () => number {
  * Create exception handler
  */
 export function createExceptionHandler<E, T>(
-  onError: (error: E) => T
-): EffectHandler[] {
+  _onError: (error: E) => T
+): AlgebraicEffectHandler[] {
   return [
     {
       effect: 'Exception',
@@ -560,7 +560,7 @@ export function createExceptionHandler<E, T>(
  */
 export function createLoggingHandler(
   sink: (level: string, message: string, context?: unknown) => void
-): EffectHandler[] {
+): AlgebraicEffectHandler[] {
   return [
     {
       effect: 'Logging',

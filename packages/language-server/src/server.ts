@@ -13,8 +13,6 @@ import {
   Hover,
   Definition,
   DocumentSymbol,
-  Diagnostic,
-  DiagnosticSeverity,
   DidChangeConfigurationNotification,
   TextDocumentPositionParams,
   DocumentSymbolParams,

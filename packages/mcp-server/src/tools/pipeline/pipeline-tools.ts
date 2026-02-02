@@ -632,7 +632,7 @@ function determineRecommendation(
 /**
  * Format pipeline results for MCP response
  */
-export function formatMCPResponse(result: BuildResult | VerifyResult) {
+export function formatMCPResponse<T>(result: T) {
   return {
     content: [
       {

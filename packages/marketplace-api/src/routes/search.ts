@@ -5,7 +5,7 @@
  */
 
 import { Router, Request, Response, NextFunction } from 'express';
-import { IntentCategory } from '@prisma/client';
+import { IntentCategory } from '../types.js';
 import {
   searchPackages,
   getTrendingPackages,
@@ -14,7 +14,8 @@ import {
   suggestPackages,
 } from '../services/search.js';
 
-export const searchRouter = Router();
+import type { Router as RouterType } from 'express';
+export const searchRouter: RouterType = Router();
 
 /**
  * Handle async route errors
@@ -154,7 +155,7 @@ searchRouter.get('/category/:category', asyncHandler(async (req, res) => {
  * Get related packages
  */
 searchRouter.get('/related/:name', asyncHandler(async (req, res) => {
-  const { name } = req.params;
+  const name = req.params.name as string;
   const { limit = '5' } = req.query;
 
   const results = await getRelatedPackages(

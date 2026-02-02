@@ -7,10 +7,24 @@ import { defaultConfig } from './config';
 import { UserService } from './services/user-service';
 
 /**
+ * Resolved configuration with all fields present
+ */
+type ResolvedConfig = {
+  baseUrl: string;
+  authToken: string | undefined;
+  timeout: number;
+  fetch: typeof fetch | undefined;
+  retry: Required<NonNullable<ISLClientConfig['retry']>>;
+  verification: Required<NonNullable<ISLClientConfig['verification']>>;
+  interceptors: ISLClientConfig['interceptors'];
+  headers: Record<string, string> | undefined;
+};
+
+/**
  * ISL Client for type-safe API access
  */
 export class ISLClient {
-  private readonly config: Required<ISLClientConfig>;
+  private readonly config: ResolvedConfig;
   private readonly _users: UserService;
 
   constructor(config: ISLClientConfig) {
@@ -19,7 +33,7 @@ export class ISLClient {
       ...config,
       retry: { ...defaultConfig.retry, ...config.retry },
       verification: { ...defaultConfig.verification, ...config.verification },
-    };
+    } as ResolvedConfig;
 
     this._users = new UserService(this.config);
   }

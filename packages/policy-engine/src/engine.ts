@@ -3,7 +3,6 @@
  */
 import type {
   Policy,
-  PolicyRule,
   PolicyCondition,
   PolicyContext,
   PolicyDecision,
@@ -90,7 +89,7 @@ export class PolicyEngine {
       if (decision) {
         decisions.push(decision);
         matchedPolicies.push(policy.id);
-        this.stats.policyHits[policy.id]++;
+        this.stats.policyHits[policy.id] = (this.stats.policyHits[policy.id] ?? 0) + 1;
 
         // Stop on first deny for enforcing policies
         if (decision.effect === 'DENY' && policy.enforcement === 'ENFORCING') {
@@ -297,7 +296,7 @@ export class PolicyEngine {
         return condition.children?.some(c => this.evaluateCondition(c, context)) ?? false;
 
       case 'not':
-        return condition.children
+        return condition.children && condition.children[0]
           ? !this.evaluateCondition(condition.children[0], context)
           : true;
 

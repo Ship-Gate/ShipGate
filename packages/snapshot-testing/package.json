@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "@types/diff": "^5.0.9",
+    "@types/jest": "^29.5.14",
     "@types/node": "^25.1.0",
     "rimraf": "^5.0.5",
     "tsup": "^8.0.1",
@@ -45,9 +46,13 @@
     "vitest": "^1.2.0"
   },
   "peerDependencies": {
+    "jest": "^29.0.0",
     "vitest": "^1.0.0"
   },
   "peerDependenciesMeta": {
+    "jest": {
+      "optional": true
+    },
     "vitest": {
       "optional": true
     }

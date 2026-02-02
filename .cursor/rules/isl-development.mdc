@@ -1,0 +1,143 @@
+# ISL-Guided Development
+
+This project uses ISL (Intent Specification Language) to specify behavior contracts. When implementing code, follow these guidelines to ensure implementations satisfy their specifications.
+
+## Understanding ISL Specifications
+
+ISL files (`.isl`) define:
+- **Entities**: Data structures with fields and invariants
+- **Behaviors**: Operations with inputs, outputs, preconditions, and postconditions
+- **Invariants**: Properties that must always hold
+
+## Implementing from ISL Specs
+
+When implementing a behavior from an ISL specification:
+
+### 1. Read the Spec First
+Before writing any code, understand:
+- What inputs the behavior accepts
+- What outputs it produces (success and error cases)
+- What preconditions must be satisfied
+- What postconditions must hold after execution
+- What invariants must be preserved
+
+### 2. Respect Preconditions
+Preconditions define what must be true BEFORE the behavior executes. Your implementation should:
+- Assume preconditions are satisfied (caller's responsibility)
+- NOT duplicate precondition checks in production code (use generated wrappers)
+- Use preconditions to understand valid input states
+
+```isl
+// Example: These conditions are guaranteed true at execution start
+pre amount > 0
+pre sender.balance >= amount
+pre sender.isActive and receiver.isActive
+```
+
+### 3. Ensure Postconditions
+Postconditions define what must be true AFTER the behavior executes. Your implementation MUST:
+- Make all state changes implied by postconditions
+- Return values that satisfy output constraints
+- Handle all error cases defined in the spec
+
+```isl
+// Example: These conditions must be true after success
+post success {
+  sender.balance == old(sender.balance) - amount
+  receiver.balance == old(receiver.balance) + amount
+  result.status == "completed"
+}
+```
+
+The `old(expr)` syntax references the pre-execution value.
+
+### 4. Preserve Invariants
+Invariants must be true before AND after execution:
+- Never write code that could violate an invariant
+- If an invariant seems impossible to maintain, the spec may need updating
+
+```isl
+// Example: This must always be true
+invariant account.balance >= 0
+```
+
+## Error Handling
+
+ISL specs define possible error outcomes:
+
+```isl
+output {
+  success: Transaction
+  errors {
+    InsufficientFunds when "sender has insufficient balance"
+    InvalidAmount when "amount is not positive"
+  }
+}
+```
+
+Your implementation should:
+- Throw/return the specific error types defined
+- Include meaningful error messages
+- NOT invent new error types not in the spec
+
+## Using Generated Code
+
+This project generates runtime verification wrappers. Use them:
+
+```typescript
+import { createTransferFundsWrapper } from './generated/payments/transfer-funds.wrapper';
+
+// Your implementation
+async function transferFundsImpl(input: TransferFundsInput): Promise<Transaction> {
+  // ... your code here
+}
+
+// Wrap with verification
+export const transferFunds = createTransferFundsWrapper(transferFundsImpl);
+```
+
+The wrapper will:
+- Check preconditions before calling your implementation
+- Check postconditions after your implementation returns
+- Throw descriptive errors if any condition fails
+
+## Verification Workflow
+
+1. Write or update the ISL spec
+2. Run `isl check` to validate the spec
+3. Run `isl gen ts` to generate types and wrappers
+4. Implement the behavior
+5. Run `isl verify` to validate the implementation
+
+## MCP Server Tools
+
+If connected to the ISL MCP server, you can use these tools:
+- `isl_check`: Validate ISL syntax and types
+- `isl_generate`: Generate code from spec
+- `isl_constraints`: Extract constraints for a behavior
+- `isl_suggest`: Get suggestions for fixing failures
+
+## Common Patterns
+
+### Checking Entity Existence
+```typescript
+// ISL: User.exists(input.userId)
+if (!entityStore.has('User', input.userId)) {
+  throw new NotFoundError('User not found');
+}
+```
+
+### State Mutations
+```typescript
+// ISL: sender.balance == old(sender.balance) - amount
+sender.balance = sender.balance - amount;
+receiver.balance = receiver.balance + amount;
+```
+
+### Quantifier Expressions
+```typescript
+// ISL: all items in cart: item.quantity > 0
+if (!cart.items.every(item => item.quantity > 0)) {
+  throw new InvalidStateError('All items must have positive quantity');
+}
+```

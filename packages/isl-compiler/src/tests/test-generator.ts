@@ -6,15 +6,13 @@
  */
 
 import type {
-  DomainDeclaration,
-  BehaviorDeclaration,
-  ConditionBlock,
-  ConditionStatement,
-  InvariantStatement,
+  Domain,
+  Behavior,
+  PostconditionBlock,
   Expression,
-  TemporalBlock,
-  TemporalRequirement,
-} from '@isl-lang/isl-core';
+  TemporalSpec,
+  DurationLiteral,
+} from '@isl-lang/parser';
 
 export interface GeneratedTests {
   filename: string;
@@ -44,7 +42,7 @@ export class TestGenerator {
   /**
    * Generate test suite from an ISL domain
    */
-  generate(domain: DomainDeclaration): GeneratedTests {
+  generate(domain: Domain): GeneratedTests {
     this.output = [];
     this.indent = 0;
     this.domainName = domain.name.name;
@@ -66,7 +64,7 @@ export class TestGenerator {
     };
   }
 
-  private generateImports(domain: DomainDeclaration): void {
+  private generateImports(domain: Domain): void {
     const framework = this.options.framework;
     
     if (framework === 'vitest') {
@@ -118,7 +116,7 @@ export class TestGenerator {
     }
   }
 
-  private generateBehaviorTests(behavior: BehaviorDeclaration): void {
+  private generateBehaviorTests(behavior: Behavior): void {
     const name = behavior.name.name;
 
     this.writeLine(`describe('${name}', () => {`);
@@ -131,30 +129,30 @@ export class TestGenerator {
     }
 
     // Generate tests from preconditions
-    if (behavior.preconditions) {
-      this.generatePreconditionTests(behavior, behavior.preconditions);
+    if (behavior.preconditions.length > 0) {
+      this.generatePreconditionTests(behavior);
     }
 
     // Generate tests from postconditions
-    if (behavior.postconditions) {
-      this.generatePostconditionTests(behavior, behavior.postconditions);
+    if (behavior.postconditions.length > 0) {
+      this.generatePostconditionTests(behavior);
     }
 
     // Generate tests from invariants
-    if (behavior.invariants && behavior.invariants.length > 0) {
-      this.generateInvariantTests(behavior, behavior.invariants);
+    if (behavior.invariants.length > 0) {
+      this.generateInvariantTests(behavior);
     }
 
     // Generate temporal requirement tests
-    if (behavior.temporal) {
-      this.generateTemporalTests(behavior, behavior.temporal);
+    if (behavior.temporal.length > 0) {
+      this.generateTemporalTests(behavior);
     }
 
     this.indent--;
     this.writeLine('});');
   }
 
-  private generateSetup(behavior: BehaviorDeclaration): void {
+  private generateSetup(behavior: Behavior): void {
     const funcName = this.camelCase(behavior.name.name);
     
     this.writeLine('// Test setup');
@@ -179,14 +177,12 @@ export class TestGenerator {
     this.writeLine('});');
   }
 
-  private generatePreconditionTests(behavior: BehaviorDeclaration, preconditions: ConditionBlock): void {
+  private generatePreconditionTests(behavior: Behavior): void {
     this.writeLine('describe("preconditions", () => {');
     this.indent++;
 
-    for (const condition of preconditions.conditions) {
-      for (const statement of condition.statements) {
-        this.generatePreconditionTest(behavior, statement);
-      }
+    for (const precondition of behavior.preconditions) {
+      this.generatePreconditionTest(behavior, precondition);
     }
 
     this.indent--;
@@ -194,8 +190,8 @@ export class TestGenerator {
     this.writeLine('');
   }
 
-  private generatePreconditionTest(behavior: BehaviorDeclaration, statement: ConditionStatement): void {
-    const testName = this.expressionToTestName(statement.expression, 'rejects when');
+  private generatePreconditionTest(behavior: Behavior, precondition: Expression): void {
+    const testName = this.expressionToTestName(precondition, 'rejects when');
     const funcName = this.camelCase(behavior.name.name);
 
     this.writeLine(`it('${testName}', async () => {`);
@@ -215,47 +211,12 @@ export class TestGenerator {
     this.writeLine('');
   }
 
-  private generatePostconditionTests(behavior: BehaviorDeclaration, postconditions: ConditionBlock): void {
+  private generatePostconditionTests(behavior: Behavior): void {
     this.writeLine('describe("postconditions", () => {');
     this.indent++;
 
-    for (const condition of postconditions.conditions) {
-      if (condition.guard === 'success' || (condition.implies && !condition.guard)) {
-        this.writeLine('describe("on success", () => {');
-        this.indent++;
-        
-        for (const statement of condition.statements) {
-          this.generateSuccessPostconditionTest(behavior, statement);
-        }
-        
-        this.indent--;
-        this.writeLine('});');
-        this.writeLine('');
-      } else if (condition.guard === 'failure') {
-        this.writeLine('describe("on failure", () => {');
-        this.indent++;
-        
-        for (const statement of condition.statements) {
-          this.generateFailurePostconditionTest(behavior, statement);
-        }
-        
-        this.indent--;
-        this.writeLine('});');
-        this.writeLine('');
-      } else if (condition.guard && typeof condition.guard === 'object') {
-        // Named error condition
-        const errorName = condition.guard.name;
-        this.writeLine(`describe("on ${errorName}", () => {`);
-        this.indent++;
-        
-        for (const statement of condition.statements) {
-          this.generateErrorPostconditionTest(behavior, statement, errorName);
-        }
-        
-        this.indent--;
-        this.writeLine('});');
-        this.writeLine('');
-      }
+    for (const block of behavior.postconditions) {
+      this.generatePostconditionBlockTests(behavior, block);
     }
 
     this.indent--;
@@ -263,9 +224,55 @@ export class TestGenerator {
     this.writeLine('');
   }
 
-  private generateSuccessPostconditionTest(behavior: BehaviorDeclaration, statement: ConditionStatement): void {
-    const testName = this.expressionToTestName(statement.expression, 'ensures');
+  private generatePostconditionBlockTests(behavior: Behavior, block: PostconditionBlock): void {
+    const condition = this.getConditionName(block.condition);
     const funcName = this.camelCase(behavior.name.name);
+    
+    if (condition === 'success') {
+      this.writeLine('describe("on success", () => {');
+      this.indent++;
+      
+      for (const predicate of block.predicates) {
+        this.generateSuccessPostconditionTest(behavior, predicate, funcName);
+      }
+      
+      this.indent--;
+      this.writeLine('});');
+      this.writeLine('');
+    } else if (condition === 'any_error') {
+      this.writeLine('describe("on any error", () => {');
+      this.indent++;
+      
+      for (const predicate of block.predicates) {
+        this.generateFailurePostconditionTest(behavior, predicate, funcName);
+      }
+      
+      this.indent--;
+      this.writeLine('});');
+      this.writeLine('');
+    } else {
+      // Named error condition
+      this.writeLine(`describe("on ${condition}", () => {`);
+      this.indent++;
+      
+      for (const predicate of block.predicates) {
+        this.generateErrorPostconditionTest(behavior, predicate, funcName, condition);
+      }
+      
+      this.indent--;
+      this.writeLine('});');
+      this.writeLine('');
+    }
+  }
+
+  private getConditionName(condition: PostconditionBlock['condition']): string {
+    if (condition === 'success') return 'success';
+    if (condition === 'any_error') return 'any_error';
+    return condition.name;
+  }
+
+  private generateSuccessPostconditionTest(behavior: Behavior, predicate: Expression, funcName: string): void {
+    const testName = this.expressionToTestName(predicate, 'ensures');
 
     this.writeLine(`it('${testName}', async () => {`);
     this.indent++;
@@ -287,7 +294,7 @@ export class TestGenerator {
     this.writeLine('expect(result.success).toBe(true);');
     this.writeLine('if (result.success) {');
     this.indent++;
-    this.generateAssertionFromExpression(statement.expression, 'result.data', 'input');
+    this.generateAssertionFromExpression(predicate, 'result.data', 'input');
     this.indent--;
     this.writeLine('}');
     
@@ -296,9 +303,8 @@ export class TestGenerator {
     this.writeLine('');
   }
 
-  private generateFailurePostconditionTest(behavior: BehaviorDeclaration, statement: ConditionStatement): void {
-    const testName = this.expressionToTestName(statement.expression, 'ensures on failure');
-    const funcName = this.camelCase(behavior.name.name);
+  private generateFailurePostconditionTest(behavior: Behavior, predicate: Expression, funcName: string): void {
+    const testName = this.expressionToTestName(predicate, 'ensures on failure');
 
     this.writeLine(`it('${testName}', async () => {`);
     this.indent++;
@@ -321,9 +327,8 @@ export class TestGenerator {
     this.writeLine('');
   }
 
-  private generateErrorPostconditionTest(behavior: BehaviorDeclaration, statement: ConditionStatement, errorName: string): void {
-    const testName = this.expressionToTestName(statement.expression, `on ${errorName}`);
-    const funcName = this.camelCase(behavior.name.name);
+  private generateErrorPostconditionTest(behavior: Behavior, predicate: Expression, funcName: string, errorName: string): void {
+    const testName = this.expressionToTestName(predicate, `on ${errorName}`);
 
     this.writeLine(`it('${testName}', async () => {`);
     this.indent++;
@@ -351,11 +356,11 @@ export class TestGenerator {
     this.writeLine('');
   }
 
-  private generateInvariantTests(behavior: BehaviorDeclaration, invariants: InvariantStatement[]): void {
+  private generateInvariantTests(behavior: Behavior): void {
     this.writeLine('describe("invariants", () => {');
     this.indent++;
 
-    for (const invariant of invariants) {
+    for (const invariant of behavior.invariants) {
       this.generateInvariantTest(behavior, invariant);
     }
 
@@ -364,8 +369,8 @@ export class TestGenerator {
     this.writeLine('');
   }
 
-  private generateInvariantTest(behavior: BehaviorDeclaration, invariant: InvariantStatement): void {
-    const testName = this.expressionToTestName(invariant.expression, 'maintains');
+  private generateInvariantTest(behavior: Behavior, invariant: Expression): void {
+    const testName = this.expressionToTestName(invariant, 'maintains');
     const funcName = this.camelCase(behavior.name.name);
 
     this.writeLine(`it('${testName}', async () => {`);
@@ -382,19 +387,19 @@ export class TestGenerator {
     this.writeLine(`const result = await ${funcName}(input);`);
     this.writeLine('');
     this.writeLine('// Assert: Invariant should hold regardless of success/failure');
-    this.writeLine(`// TODO: Verify invariant: ${this.expressionToString(invariant.expression)}`);
+    this.writeLine(`// TODO: Verify invariant: ${this.expressionToString(invariant)}`);
     
     this.indent--;
     this.writeLine('});');
     this.writeLine('');
   }
 
-  private generateTemporalTests(behavior: BehaviorDeclaration, temporal: TemporalBlock): void {
+  private generateTemporalTests(behavior: Behavior): void {
     this.writeLine('describe("temporal requirements", () => {');
     this.indent++;
 
-    for (const req of temporal.requirements) {
-      this.generateTemporalTest(behavior, req);
+    for (const temporal of behavior.temporal) {
+      this.generateTemporalTest(behavior, temporal);
     }
 
     this.indent--;
@@ -402,34 +407,40 @@ export class TestGenerator {
     this.writeLine('');
   }
 
-  private generateTemporalTest(behavior: BehaviorDeclaration, req: TemporalRequirement): void {
+  private generateTemporalTest(behavior: Behavior, temporal: TemporalSpec): void {
     const funcName = this.camelCase(behavior.name.name);
     let testName: string;
     
-    switch (req.type) {
+    switch (temporal.operator) {
       case 'within':
-        const ms = req.duration ? this.durationToMs(req.duration) : 1000;
-        const percentile = req.percentile ?? 'p99';
+        const ms = temporal.duration ? this.durationToMs(temporal.duration) : 1000;
+        const percentile = temporal.percentile ? `p${temporal.percentile}` : 'p99';
         testName = `completes within ${ms}ms (${percentile})`;
         break;
       case 'eventually':
-        testName = `eventually ${this.expressionToString(req.condition)}`;
+        testName = `eventually ${this.expressionToString(temporal.predicate)}`;
         break;
       case 'immediately':
-        testName = `immediately ${this.expressionToString(req.condition)}`;
+        testName = `immediately ${this.expressionToString(temporal.predicate)}`;
         break;
       case 'never':
-        testName = `never ${this.expressionToString(req.condition)}`;
+        testName = `never ${this.expressionToString(temporal.predicate)}`;
+        break;
+      case 'always':
+        testName = `always ${this.expressionToString(temporal.predicate)}`;
+        break;
+      case 'response':
+        testName = `responds with ${this.expressionToString(temporal.predicate)}`;
         break;
       default:
-        testName = `${req.type} ${this.expressionToString(req.condition)}`;
+        testName = `temporal: ${this.expressionToString(temporal.predicate)}`;
     }
 
     this.writeLine(`it('${testName}', async () => {`);
     this.indent++;
     
-    if (req.type === 'within' && req.duration) {
-      const ms = this.durationToMs(req.duration);
+    if (temporal.operator === 'within' && temporal.duration) {
+      const ms = this.durationToMs(temporal.duration);
       this.writeLine('// Arrange');
       this.writeLine(`const input: ${behavior.name.name}Input = {`);
       this.indent++;
@@ -444,11 +455,11 @@ export class TestGenerator {
       this.writeLine('');
       this.writeLine('// Assert');
       this.writeLine(`expect(endTime - startTime).toBeLessThan(${ms});`);
-    } else if (req.type === 'eventually') {
+    } else if (temporal.operator === 'eventually') {
       this.writeLine('// TODO: Implement eventual consistency check');
       this.writeLine('// This typically requires polling or event subscription');
     } else {
-      this.writeLine(`// TODO: Implement ${req.type} temporal check`);
+      this.writeLine(`// TODO: Implement ${temporal.operator} temporal check`);
     }
     
     this.indent--;
@@ -485,16 +496,16 @@ export class TestGenerator {
       case 'BooleanLiteral':
         return String(expr.value);
         
-      case 'MemberExpression': {
+      case 'MemberExpr': {
         const obj = this.compileExpression(expr.object, resultVar, inputVar);
         return `${obj}.${expr.property.name}`;
       }
         
-      case 'CallExpression': {
+      case 'CallExpr': {
         const callee = this.compileExpression(expr.callee, resultVar, inputVar);
         
         // Check if this is an entity method call like User.exists(...)
-        if (expr.callee.kind === 'MemberExpression') {
+        if (expr.callee.kind === 'MemberExpr') {
           const method = expr.callee.property.name;
           if (['exists', 'lookup', 'count'].includes(method)) {
             // Wrap single argument in criteria object
@@ -511,27 +522,30 @@ export class TestGenerator {
         return `${callee}(${args})`;
       }
         
-      case 'ComparisonExpression': {
+      case 'BinaryExpr': {
         const left = this.compileExpression(expr.left, resultVar, inputVar);
         const right = this.compileExpression(expr.right, resultVar, inputVar);
+        
+        // Handle logical operators
+        if (expr.operator === 'implies') {
+          return `(!${left} || ${right})`;
+        }
+        if (expr.operator === 'and') {
+          return `(${left} && ${right})`;
+        }
+        if (expr.operator === 'or') {
+          return `(${left} || ${right})`;
+        }
+        if (expr.operator === 'iff') {
+          return `(${left} === ${right})`;
+        }
+        
+        // Comparison operators
         const op = expr.operator === '==' ? '===' : expr.operator;
         return `(${left} ${op} ${right})`;
       }
         
-      case 'LogicalExpression': {
-        const left = this.compileExpression(expr.left, resultVar, inputVar);
-        const right = this.compileExpression(expr.right, resultVar, inputVar);
-        
-        // Handle implies (may be encoded as 'implies' string)
-        if ((expr.operator as string) === 'implies') {
-          return `(!${left} || ${right})`;
-        }
-        
-        const op = expr.operator === 'and' ? '&&' : expr.operator === 'or' ? '||' : expr.operator;
-        return `(${left} ${op} ${right})`;
-      }
-        
-      case 'OldExpression':
+      case 'OldExpr':
         // Use captured state for old() expressions
         const inner = this.compileOldExpression(expr.expression, resultVar, inputVar);
         return inner;
@@ -545,9 +559,9 @@ export class TestGenerator {
    * Compile expression inside old() context
    */
   private compileOldExpression(expr: Expression, resultVar: string, inputVar: string): string {
-    if (expr.kind === 'CallExpression' && expr.callee.kind === 'MemberExpression') {
+    if (expr.kind === 'CallExpr' && expr.callee.kind === 'MemberExpr') {
       // Entity method call in old context
-      const entityName = expr.callee.object.kind === 'Identifier' ? expr.callee.object.name : 'Entity';
+      const entityName = expr.callee.object.kind === 'Identifier' ? (expr.callee.object as { name: string }).name : 'Entity';
       const method = expr.callee.property.name;
       
       if (['exists', 'lookup', 'count'].includes(method)) {
@@ -568,7 +582,7 @@ export class TestGenerator {
    * Infer field name from expression
    */
   private inferFieldName(expr: Expression): string {
-    if (expr.kind === 'MemberExpression') {
+    if (expr.kind === 'MemberExpr') {
       return expr.property.name;
     }
     return 'id'; // Default
@@ -595,29 +609,27 @@ export class TestGenerator {
         return String(expr.value);
       case 'BooleanLiteral':
         return String(expr.value);
-      case 'MemberExpression':
+      case 'MemberExpr':
         return `${this.expressionToString(expr.object)}.${expr.property.name}`;
-      case 'CallExpression':
+      case 'CallExpr':
         const args = expr.arguments.map(a => this.expressionToString(a)).join(', ');
         return `${this.expressionToString(expr.callee)}(${args})`;
-      case 'ComparisonExpression':
+      case 'BinaryExpr':
         return `${this.expressionToString(expr.left)} ${expr.operator} ${this.expressionToString(expr.right)}`;
-      case 'LogicalExpression':
-        return `${this.expressionToString(expr.left)} ${expr.operator} ${this.expressionToString(expr.right)}`;
-      case 'OldExpression':
+      case 'OldExpr':
         return `old(${this.expressionToString(expr.expression)})`;
       default:
         return 'expression';
     }
   }
 
-  private durationToMs(duration: { value: number; unit: string }): number {
+  private durationToMs(duration: DurationLiteral): number {
     const multipliers: Record<string, number> = {
       'ms': 1,
-      's': 1000,
-      'm': 60000,
-      'h': 3600000,
-      'd': 86400000,
+      'seconds': 1000,
+      'minutes': 60000,
+      'hours': 3600000,
+      'days': 86400000,
     };
     return duration.value * (multipliers[duration.unit] ?? 1);
   }
@@ -636,7 +648,7 @@ export class TestGenerator {
  * Generate test suite from an ISL domain
  */
 export function generateTests(
-  domain: DomainDeclaration,
+  domain: Domain,
   options?: TestGeneratorOptions
 ): GeneratedTests {
   const generator = new TestGenerator(options);

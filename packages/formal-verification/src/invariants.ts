@@ -9,7 +9,6 @@ import type {
   ISLSpecification,
   ISLInvariant,
   ISLBehavior,
-  VerificationResult,
 } from './types';
 import { translateToFormula } from './contracts';
 
@@ -53,7 +52,7 @@ export class InvariantChecker {
   ): { preserved: boolean; counterexample?: unknown } {
     const context = {
       domain: spec.domain,
-      assumptions: [],
+      assumptions: [] as Formula[],
       bindings: {},
     };
 
@@ -62,13 +61,11 @@ export class InvariantChecker {
     // Where I is invariant, Pre is preconditions, Post is postconditions
     // and I' is the invariant with primed (post-state) variables
 
-    const invariantFormula = this.buildInvariantFormula(invariant, context);
-    const preconditions = behavior.preconditions.map((p) =>
-      translateToFormula(p, context)
-    );
-    const postconditions = behavior.postconditions.map((p) =>
-      translateToFormula(p, context)
-    );
+    // TODO: These would be used in a full SMT-based implementation
+    // For now, we build them to validate the formulas but don't use them
+    void this.buildInvariantFormula(invariant, context);
+    void behavior.preconditions.map((p) => translateToFormula(p, context));
+    void behavior.postconditions.map((p) => translateToFormula(p, context));
 
     // For now, assume preserved if we can't find a counterexample
     // Real implementation would use SMT solver
@@ -86,8 +83,12 @@ export class InvariantChecker {
       translateToFormula(c, context)
     );
 
+    if (conditions.length === 0) {
+      return { kind: 'const', value: true };
+    }
+
     if (conditions.length === 1) {
-      return conditions[0];
+      return conditions[0]!;
     }
 
     return {
@@ -100,8 +101,8 @@ export class InvariantChecker {
    * Generate strengthening suggestions for non-inductive invariants
    */
   suggestStrengthening(
-    invariant: ISLInvariant,
-    counterexample: unknown
+    _invariant: ISLInvariant,
+    _counterexample: unknown
   ): string[] {
     const suggestions: string[] = [];
 
@@ -214,7 +215,11 @@ export class InvariantInference {
         // If postcondition is of form "success implies X"
         // X might be a candidate invariant
         if (postcond.includes('success implies')) {
-          const consequence = postcond.split('success implies')[1].trim();
+          const parts = postcond.split('success implies');
+          const consequenceRaw = parts[1];
+          if (!consequenceRaw) continue;
+          
+          const consequence = consequenceRaw.trim();
           
           // Check if this appears in multiple behaviors
           const appearsElsewhere = spec.behaviors.some((b) =>

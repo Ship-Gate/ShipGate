@@ -2,7 +2,11 @@
 // Deno Deploy Code Generator
 // ============================================================================
 
-import type * as AST from '../../../../master_contracts/ast';
+import type {
+  DomainDeclaration,
+  BehaviorDeclaration,
+  TypeExpression,
+} from '@isl-lang/isl-core';
 import type {
   GeneratedEdgeCode,
   EdgeFile,
@@ -16,8 +20,8 @@ import type { EdgeGenOptions } from '../generator';
 // ============================================================================
 
 export function generateDeno(
-  domain: AST.Domain,
-  options: EdgeGenOptions
+  domain: DomainDeclaration,
+  _options: EdgeGenOptions
 ): GeneratedEdgeCode {
   const files: EdgeFile[] = [];
 
@@ -25,7 +29,7 @@ export function generateDeno(
   files.push({
     path: 'main.ts',
     type: 'handler',
-    content: generateMainServer(domain, options),
+    content: generateMainServer(domain),
   });
 
   // Generate behavior handlers
@@ -33,7 +37,7 @@ export function generateDeno(
     files.push({
       path: `handlers/${toKebabCase(behavior.name.name)}.ts`,
       type: 'handler',
-      content: generateHandler(behavior, domain),
+      content: generateHandler(behavior),
     });
   }
 
@@ -51,8 +55,8 @@ export function generateDeno(
     content: generateKVClient(),
   });
 
-  const config = generateEdgeConfig(domain, options);
-  const manifest = generateManifest(domain, options);
+  const config = generateEdgeConfig(domain);
+  const manifest = generateManifest(domain);
 
   return { files, config, manifest };
 }
@@ -61,7 +65,7 @@ export function generateDeno(
 // MAIN SERVER
 // ============================================================================
 
-function generateMainServer(domain: AST.Domain, options: EdgeGenOptions): string {
+function generateMainServer(domain: DomainDeclaration): string {
   const lines: string[] = [];
 
   lines.push('// ============================================================================');
@@ -130,9 +134,10 @@ function generateMainServer(domain: AST.Domain, options: EdgeGenOptions): string
 // BEHAVIOR HANDLERS
 // ============================================================================
 
-function generateHandler(behavior: AST.Behavior, domain: AST.Domain): string {
+function generateHandler(behavior: BehaviorDeclaration): string {
   const lines: string[] = [];
   const name = behavior.name.name;
+  const inputFields = behavior.input?.fields ?? [];
 
   lines.push(`// Handler for ${name}`);
   lines.push('import { kv } from "../lib/kv.ts";');
@@ -140,7 +145,7 @@ function generateHandler(behavior: AST.Behavior, domain: AST.Domain): string {
 
   // Input type
   lines.push(`interface ${name}Input {`);
-  for (const field of behavior.input.fields) {
+  for (const field of inputFields) {
     const tsType = islTypeToTS(field.type);
     const optional = field.optional ? '?' : '';
     lines.push(`  ${field.name.name}${optional}: ${tsType};`);
@@ -188,7 +193,7 @@ function generateHandler(behavior: AST.Behavior, domain: AST.Domain): string {
   lines.push(`function validate${name}Input(input: ${name}Input): string[] {`);
   lines.push('  const errors: string[] = [];');
   
-  for (const field of behavior.input.fields) {
+  for (const field of inputFields) {
     if (!field.optional) {
       lines.push(`  if (input.${field.name.name} === undefined || input.${field.name.name} === null) {`);
       lines.push(`    errors.push("${field.name.name} is required");`);
@@ -300,10 +305,12 @@ export function listenQueue(
 // CONFIG FILES
 // ============================================================================
 
-function generateDenoConfig(domain: AST.Domain): string {
+function generateDenoConfig(domain: DomainDeclaration): string {
+  const version = domain.version?.value ?? '0.0.0';
+  
   const config = {
     name: toKebabCase(domain.name.name),
-    version: domain.version.value,
+    version,
     exports: './main.ts',
     tasks: {
       dev: 'deno run --allow-net --allow-env --watch main.ts',
@@ -323,12 +330,12 @@ function generateDenoConfig(domain: AST.Domain): string {
   return JSON.stringify(config, null, 2);
 }
 
-function generateEdgeConfig(domain: AST.Domain, options: EdgeGenOptions): EdgeConfig {
+function generateEdgeConfig(domain: DomainDeclaration): EdgeConfig {
   return {
     target: 'deno-deploy',
     entrypoint: 'main.ts',
     bindings: [{ name: 'KV', type: 'kv', config: {} }],
-    routes: domain.behaviors.map(b => ({
+    routes: domain.behaviors.map((b: BehaviorDeclaration) => ({
       pattern: `/api/${toKebabCase(b.name.name)}`,
       handler: `handle${b.name.name}`,
       method: 'POST',
@@ -337,12 +344,14 @@ function generateEdgeConfig(domain: AST.Domain, options: EdgeGenOptions): EdgeCo
   };
 }
 
-function generateManifest(domain: AST.Domain, options: EdgeGenOptions): EdgeManifest {
+function generateManifest(domain: DomainDeclaration): EdgeManifest {
+  const version = domain.version?.value ?? '0.0.0';
+  
   return {
     name: toKebabCase(domain.name.name),
-    version: domain.version.value,
+    version,
     target: 'deno-deploy',
-    behaviors: domain.behaviors.map(b => ({
+    behaviors: domain.behaviors.map((b: BehaviorDeclaration) => ({
       name: b.name.name,
       route: `/api/${toKebabCase(b.name.name)}`,
       method: 'POST',
@@ -367,22 +376,27 @@ function toKebabCase(str: string): string {
   return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
-function islTypeToTS(type: AST.TypeDefinition): string {
+function islTypeToTS(type: TypeExpression): string {
   switch (type.kind) {
-    case 'PrimitiveType':
-      switch (type.name) {
+    case 'SimpleType':
+      switch (type.name.name) {
         case 'String': return 'string';
         case 'Int': return 'number';
         case 'Decimal': return 'number';
         case 'Boolean': return 'boolean';
         case 'Timestamp': return 'Date | string';
         case 'UUID': return 'string';
-        default: return 'unknown';
+        default: return type.name.name;
       }
-    case 'ListType':
-      return `${islTypeToTS(type.element)}[]`;
-    case 'OptionalType':
-      return `${islTypeToTS(type.inner)} | null`;
+    case 'ArrayType':
+      return type.elementType ? `${islTypeToTS(type.elementType)}[]` : 'unknown[]';
+    case 'GenericType': {
+      const typeArgs = type.typeArguments ?? [];
+      if (type.name.name === 'Optional' && typeArgs.length === 1 && typeArgs[0]) {
+        return `${islTypeToTS(typeArgs[0])} | null`;
+      }
+      return 'unknown';
+    }
     default:
       return 'unknown';
   }

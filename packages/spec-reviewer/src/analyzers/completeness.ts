@@ -42,7 +42,7 @@ export function analyzeCompleteness(domain: DomainDeclaration): CompletenessResu
         severity: 'warning',
         title: `Entity "${entity.name.name}" has no invariants`,
         description: 'Entities should define invariants to ensure data integrity.',
-        location: entity.span ? { line: entity.span.line, column: entity.span.column } : undefined,
+        location: entity.span ? { line: entity.span.start.line, column: entity.span.start.column } : undefined,
         fix: `Add invariants block to entity ${entity.name.name}`,
       });
       suggestions.push(`Consider adding invariants to entity "${entity.name.name}" to enforce data integrity rules.`);
@@ -55,7 +55,7 @@ export function analyzeCompleteness(domain: DomainDeclaration): CompletenessResu
         severity: 'info',
         title: `Entity "${entity.name.name}" has status field but no lifecycle`,
         description: 'Entities with status fields should define lifecycle transitions.',
-        location: entity.span ? { line: entity.span.line, column: entity.span.column } : undefined,
+        location: entity.span ? { line: entity.span.start.line, column: entity.span.start.column } : undefined,
       });
     }
   }
@@ -69,7 +69,7 @@ export function analyzeCompleteness(domain: DomainDeclaration): CompletenessResu
         severity: 'info',
         title: `Type "${type.name.name}" is defined but never used`,
         description: 'Consider removing unused types or using them in entity/behavior definitions.',
-        location: type.span ? { line: type.span.line, column: type.span.column } : undefined,
+        location: type.span ? { line: type.span.start.line, column: type.span.start.column } : undefined,
       });
     }
   }
@@ -82,7 +82,7 @@ export function analyzeCompleteness(domain: DomainDeclaration): CompletenessResu
         severity: 'warning',
         title: `Behavior "${behavior.name.name}" defines no error cases`,
         description: 'Most behaviors should handle at least some error conditions.',
-        location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+        location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
       });
       suggestions.push(`Add error cases to behavior "${behavior.name.name}" to handle failure scenarios.`);
     }
@@ -114,7 +114,7 @@ function checkBehaviorCompleteness(behavior: BehaviorDeclaration): CompletenessI
       severity: 'info',
       title: `Behavior "${name}" has no description`,
       description: 'Behaviors should have descriptions explaining their purpose.',
-      location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+      location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
       fix: `Add description: "..." to behavior ${name}`,
     });
   }
@@ -126,7 +126,7 @@ function checkBehaviorCompleteness(behavior: BehaviorDeclaration): CompletenessI
       severity: 'warning',
       title: `Behavior "${name}" has no input block`,
       description: 'Behaviors typically need input parameters.',
-      location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+      location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
     });
   }
 
@@ -137,7 +137,7 @@ function checkBehaviorCompleteness(behavior: BehaviorDeclaration): CompletenessI
       severity: 'critical',
       title: `Behavior "${name}" has no output block`,
       description: 'Behaviors must define their output type.',
-      location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+      location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
     });
   }
 
@@ -148,7 +148,7 @@ function checkBehaviorCompleteness(behavior: BehaviorDeclaration): CompletenessI
       severity: 'warning',
       title: `Behavior "${name}" has no pre/postconditions`,
       description: 'Behaviors should define preconditions and/or postconditions for verification.',
-      location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+      location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
     });
   }
 
@@ -159,7 +159,7 @@ function checkBehaviorCompleteness(behavior: BehaviorDeclaration): CompletenessI
       severity: 'info',
       title: `State-changing behavior "${name}" has no temporal requirements`,
       description: 'Consider adding response time or eventual consistency requirements.',
-      location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+      location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
     });
   }
 

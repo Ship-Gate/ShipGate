@@ -3,8 +3,8 @@
 // Provides domain-aware shrinking for better counterexample minimization
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
-import type { ShrinkerDefinition } from './types';
+import type * as AST from '../../../master_contracts/ast.js';
+import type { ShrinkerDefinition } from './types.js';
 
 /**
  * Generate custom shrinker for a type

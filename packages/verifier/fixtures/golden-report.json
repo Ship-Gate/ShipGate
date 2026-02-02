@@ -1,0 +1,114 @@
+{
+  "version": "1.0.0",
+  "domain": "UserDomain",
+  "behavior": "*",
+  "verdict": "NO_SHIP",
+  "score": 63,
+  "scoreBreakdown": {
+    "total": 63,
+    "preconditions": 75,
+    "postconditions": 67,
+    "invariants": 50,
+    "security": 100,
+    "bindings": 50,
+    "testCoverage": 43
+  },
+  "clauseResults": [
+    {
+      "clauseId": "UserDomain.CreateUser.precondition.0",
+      "clauseType": "precondition",
+      "expression": "input.email.length > 0",
+      "status": "PASS",
+      "evidence": [],
+      "reason": "Binding found with 1 test assertion(s)",
+      "confidence": 70
+    },
+    {
+      "clauseId": "UserDomain.CreateUser.precondition.1",
+      "clauseType": "precondition",
+      "expression": "input.email.contains('@')",
+      "status": "PASS",
+      "evidence": [],
+      "reason": "Binding found with 1 test assertion(s)",
+      "confidence": 70
+    },
+    {
+      "clauseId": "UserDomain.CreateUser.postcondition.0",
+      "clauseType": "postcondition",
+      "expression": "result.email == input.email",
+      "status": "PASS",
+      "evidence": [],
+      "reason": "Binding found with 1 test assertion(s)",
+      "confidence": 70
+    },
+    {
+      "clauseId": "UserDomain.CreateUser.postcondition.1",
+      "clauseType": "postcondition",
+      "expression": "result.active == true",
+      "status": "PASS",
+      "evidence": [],
+      "reason": "Binding found with 1 test assertion(s)",
+      "confidence": 70
+    },
+    {
+      "clauseId": "UserDomain.CreateUser.postcondition.2",
+      "clauseType": "postcondition",
+      "expression": "result.id != null",
+      "status": "PASS",
+      "evidence": [],
+      "reason": "Binding found with 1 test assertion(s)",
+      "confidence": 70
+    },
+    {
+      "clauseId": "UserDomain.DeleteUser.precondition.0",
+      "clauseType": "precondition",
+      "expression": "input.userId != null",
+      "status": "PARTIAL",
+      "evidence": [],
+      "reason": "Binding found, tests exist but no direct assertion for this clause",
+      "confidence": 30
+    },
+    {
+      "clauseId": "UserDomain.DeleteUser.precondition.1",
+      "clauseType": "precondition",
+      "expression": "User.exists(id: input.userId)",
+      "status": "PARTIAL",
+      "evidence": [],
+      "reason": "Binding found, tests exist but no direct assertion for this clause",
+      "confidence": 30
+    },
+    {
+      "clauseId": "UserDomain.DeleteUser.postcondition.0",
+      "clauseType": "postcondition",
+      "expression": "not User.exists(id: input.userId)",
+      "status": "PARTIAL",
+      "evidence": [],
+      "reason": "Binding found, tests exist but no direct assertion for this clause",
+      "confidence": 30
+    },
+    {
+      "clauseId": "UserDomain.UserIntegrity.invariant.0",
+      "clauseType": "invariant",
+      "expression": "all(u in User, u.email.contains('@'))",
+      "status": "PARTIAL",
+      "evidence": [],
+      "reason": "Limited evidence available",
+      "confidence": 25
+    }
+  ],
+  "summary": {
+    "totalClauses": 9,
+    "passed": 5,
+    "partial": 4,
+    "failed": 0,
+    "skipped": 0,
+    "evidenceCount": 0,
+    "blockingIssues": []
+  },
+  "artifacts": {
+    "testFiles": [],
+    "bindings": [],
+    "assertions": []
+  },
+  "inputHash": "placeholder"
+}

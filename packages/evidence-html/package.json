@@ -1,0 +1,56 @@
+{
+  "name": "@isl-lang/evidence-html",
+  "version": "1.0.0",
+  "description": "HTML renderer for ISL verification evidence reports - readable, embeddable reports",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./renderer": {
+      "import": "./dist/renderer.js",
+      "types": "./dist/renderer.d.ts"
+    },
+    "./styles": {
+      "import": "./dist/styles.js",
+      "types": "./dist/styles.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest --coverage",
+    "test:update": "vitest run --update",
+    "lint": "eslint src/"
+  },
+  "keywords": [
+    "isl",
+    "evidence",
+    "html",
+    "renderer",
+    "report",
+    "verification"
+  ],
+  "author": "mevla",
+  "license": "MIT",
+  "dependencies": {
+    "@isl-lang/evidence-schema": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  }
+}

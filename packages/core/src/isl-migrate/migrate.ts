@@ -117,8 +117,9 @@ export function migrateContracts(
     }
     
     try {
-      const types = adapter.extractTypes(contract);
-      const operations = adapter.extractOperations(contract);
+      // Type assertion needed because the adapter is matched to contract type at runtime
+      const types = adapter.extractTypes(contract as never);
+      const operations = adapter.extractOperations(contract as never);
       
       allTypes.push(...types);
       allOperations.push(...operations);
@@ -402,7 +403,7 @@ function mapArrayType(
   const location = createMigrationLocation(sourcePath);
   const { type: elementType, note } = extracted.itemType
     ? mapExtractedToISLType(context, extracted.itemType, sourcePath)
-    : { type: createPrimitiveType('String', location), isFallback: true };
+    : { type: createPrimitiveType('String', location), note: undefined };
   
   let type: TypeDefinition = {
     kind: 'ListType',

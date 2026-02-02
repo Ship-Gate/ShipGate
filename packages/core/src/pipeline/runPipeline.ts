@@ -21,7 +21,6 @@ import type {
   PipelineResult,
   PipelineState,
   PipelineStatus,
-  DEFAULT_PIPELINE_OPTIONS,
 } from './pipelineTypes.js';
 import type { EvidenceReport, Assumption, OpenQuestion } from '../evidence/evidenceTypes.js';
 import {
@@ -76,14 +75,14 @@ function createInitialState(
 function generateSpecFingerprint(ast: Domain): string {
   // Create a deterministic representation of the AST for fingerprinting
   const fingerprintData = {
-    name: ast.name?.value,
+    name: ast.name?.name,
     version: ast.version?.value,
     entities: ast.entities.map((e) => ({
-      name: e.name?.value,
+      name: e.name?.name,
       fieldCount: e.fields?.length || 0,
     })),
     behaviors: ast.behaviors.map((b) => ({
-      name: b.name?.value,
+      name: b.name?.name,
       preCount: b.preconditions?.length || 0,
       postCount: b.postconditions?.length || 0,
     })),
@@ -145,7 +144,7 @@ function buildEvidenceReport(state: PipelineState): EvidenceReport {
     version: '1.0',
     reportId: randomUUID(),
     specFingerprint,
-    specName: state.options.specName || state.ast?.name?.value,
+    specName: state.options.specName || state.ast?.name?.name,
     specPath: state.options.specPath,
     clauseResults: state.clauseResults || [],
     scoreSummary,

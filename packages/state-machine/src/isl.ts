@@ -111,7 +111,7 @@ function parseStateDeclaration(line: string, states: StateSpec[]): void {
 function parseEventDeclaration(line: string, events: EventSpec[]): void {
   // Format: EventName; or EventName { payload }
   const match = line.match(/^(\w+)(?:\s*\{([^}]+)\})?;?$/);
-  if (match) {
+  if (match && match[1]) {
     const event: EventSpec = { name: match[1] };
     if (match[2]) {
       event.payload = parsePayload(match[2]);
@@ -146,7 +146,7 @@ function parseTransitionDeclaration(line: string, transitions: TransitionSpec[])
     /^(\w+)\s*->\s*(\w+)\s+on\s+(\w+)(?:\s*\[([^\]]+)\])?(?:\s*\/\s*(.+))?;?$/
   );
   
-  if (match) {
+  if (match && match[1] && match[2] && match[3]) {
     const transition: TransitionSpec = {
       from: match[1],
       to: match[2],
@@ -273,21 +273,24 @@ export function specToMachine(spec: StateMachineSpec): StateMachine {
   }
   
   // Set initial if not explicitly marked
-  if (!initial && spec.states.length > 0) {
+  if (!initial && spec.states.length > 0 && spec.states[0]) {
     initial = spec.states[0].name;
   }
   
   // Add transitions
   for (const trans of spec.transitions) {
-    if (!states[trans.from].on) {
-      states[trans.from].on = {};
+    const fromState = states[trans.from];
+    if (fromState) {
+      if (!fromState.on) {
+        fromState.on = {};
+      }
+      
+      fromState.on[trans.event] = {
+        target: trans.to,
+        guard: trans.guard,
+        actions: trans.actions,
+      };
     }
-    
-    states[trans.from].on![trans.event] = {
-      target: trans.to,
-      guard: trans.guard,
-      actions: trans.actions,
-    };
   }
   
   return {

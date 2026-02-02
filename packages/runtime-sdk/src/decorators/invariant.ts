@@ -44,7 +44,7 @@ export function Invariant<TThis = unknown>(
   ) {
     // Get existing invariants
     const existing: InvariantMetadata[] = 
-      Reflect.getMetadata(INVARIANTS_METADATA, target, propertyKey) ?? [];
+      (Reflect.getMetadata(INVARIANTS_METADATA, target, propertyKey) as InvariantMetadata[] | undefined) ?? [];
     
     // Add new invariant
     existing.push({ fn: fn as InvariantFn, description });
@@ -55,7 +55,7 @@ export function Invariant<TThis = unknown>(
     
     descriptor.value = async function (this: TThis, ...args: unknown[]) {
       const invariants: InvariantMetadata[] = 
-        Reflect.getMetadata(INVARIANTS_METADATA, target, propertyKey) ?? [];
+        (Reflect.getMetadata(INVARIANTS_METADATA, target, propertyKey) as InvariantMetadata[] | undefined) ?? [];
       
       const ctx: ExecutionContext = (args[1] as ExecutionContext) ?? {};
       const behaviorMeta = getBehaviorMetadata(this);
@@ -152,5 +152,5 @@ export function getInvariants(
   target: object,
   propertyKey: string | symbol
 ): InvariantMetadata[] {
-  return Reflect.getMetadata(INVARIANTS_METADATA, target, propertyKey) ?? [];
+  return (Reflect.getMetadata(INVARIANTS_METADATA, target, propertyKey) as InvariantMetadata[] | undefined) ?? [];
 }

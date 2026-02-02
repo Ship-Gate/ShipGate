@@ -4,26 +4,23 @@
 // ============================================================================
 
 import { createHash, randomUUID } from 'crypto';
-import type {
-  AuditEvent,
-  AuditEventId,
-  ActorId,
-  ResourceId,
-  RecordInput,
-  RecordResult,
-  RecordBatchInput,
-  QueryInput,
-  QueryResult,
-  AuditQueryResult,
-  AuditFilters,
-  StatsInput,
-  AuditStats,
-  ExportInput,
-  ExportResultType,
-  AuditStorage,
+import {
   EventCategory,
-  EventOutcome,
-  RetentionPolicy,
+  type AuditEvent,
+  type AuditEventId,
+  type ActorId,
+  type ResourceId,
+  type RecordInput,
+  type RecordResult,
+  type RecordError,
+  type RecordBatchInput,
+  type QueryInput,
+  type QueryResult,
+  type StatsInput,
+  type AuditStats,
+  type AuditStorage,
+  type EventOutcome,
+  type RetentionPolicy,
 } from './types';
 
 // ============================================================================
@@ -150,13 +147,15 @@ export class AuditLogger {
   async recordBatch(input: RecordBatchInput): Promise<{
     success: boolean;
     events?: AuditEvent[];
-    errors?: Array<{ index: number; error: RecordResult['error'] }>;
+    errors?: Array<{ index: number; error: unknown }>;
   }> {
     const events: AuditEvent[] = [];
-    const errors: Array<{ index: number; error: any }> = [];
+    const errors: Array<{ index: number; error: unknown }> = [];
 
     for (let i = 0; i < input.events.length; i++) {
       const eventInput = input.events[i];
+      if (!eventInput) continue;
+      
       const validationError = this.validateRecordInput(eventInput);
 
       if (validationError) {
@@ -386,7 +385,7 @@ export class AuditLogger {
     return event;
   }
 
-  private validateRecordInput(input: RecordInput): RecordResult['error'] | null {
+  private validateRecordInput(input: RecordInput): RecordError | null {
     // Validate action
     if (!input.action || input.action.length === 0) {
       return { code: 'INVALID_ACTOR', field: 'action', reason: 'Action is required' };

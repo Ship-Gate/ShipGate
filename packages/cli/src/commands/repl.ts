@@ -7,7 +7,7 @@
 
 import { createInterface } from 'readline';
 import chalk from 'chalk';
-import { parseISL } from '@isl-lang/isl-core';
+import { parse as parseISL } from '@isl-lang/parser';
 import { output } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
 
@@ -138,7 +138,7 @@ function evaluateInput(input: string): void {
   }
   
   try {
-    const { ast, errors } = parseISL(code, '<repl>');
+    const { domain: ast, errors } = parseISL(code, '<repl>');
     
     if (errors.length > 0) {
       console.log('');

@@ -31,6 +31,7 @@ import {
   repl,
   fmt, printFmtResult, getFmtExitCode,
   lint, printLintResult, getLintExitCode,
+  gate, printGateResult, getGateExitCode,
 } from './commands/index.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -46,7 +47,62 @@ const VERSION = '0.1.0';
 const COMMANDS = [
   'parse', 'check', 'gen', 'verify', 'repl', 'init', 'fmt', 'lint',
   'generate', 'build', // aliases
+  'gate', // SHIP/NO-SHIP gate
+  'vibecheck', // integration command
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Optional Features (defensive loading)
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface VibecheckModule {
+  runVibecheck(options: {
+    spec?: string;
+    impl?: string;
+    mode?: string;
+    verbose?: boolean;
+  }): Promise<{
+    success: boolean;
+    score?: number;
+    report?: unknown;
+    error?: string;
+  }>;
+}
+
+let vibecheckModule: VibecheckModule | undefined;
+let vibecheckAvailable = false;
+
+/**
+ * Try to load the vibecheck module
+ */
+async function loadVibecheck(): Promise<boolean> {
+  if (vibecheckAvailable) return true;
+  
+  try {
+    const module = await import('@isl-lang/vibecheck');
+    if (module.runVibecheck) {
+      vibecheckModule = module;
+      vibecheckAvailable = true;
+      return true;
+    }
+  } catch {
+    // Not installed - this is fine
+  }
+  
+  // Try alternative paths
+  try {
+    const module = await import('vibecheck');
+    if (module.runVibecheck) {
+      vibecheckModule = module;
+      vibecheckAvailable = true;
+      return true;
+    }
+  } catch {
+    // Not installed - this is fine
+  }
+  
+  return false;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CLI Setup
@@ -335,86 +391,314 @@ program
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Build Command (Combined Pipeline)
+// Build Command (Full Pipeline via Build Runner)
 // ─────────────────────────────────────────────────────────────────────────────
 
 program
-  .command('build [files...]')
-  .description('Full pipeline: check + generate')
-  .option('-o, --output <dir>', 'Output directory')
-  .option('--skip-types', 'Skip type generation')
-  .option('--skip-tests', 'Skip test generation')
-  .option('--skip-docs', 'Skip documentation generation')
-  .action(async (files: string[], options) => {
+  .command('build <spec>')
+  .description('Full ISL build pipeline: parse → check → codegen → testgen → verify → evidence')
+  .option('-o, --output <dir>', 'Output directory', './generated')
+  .option('-t, --target <target>', 'Code generation target (typescript)', 'typescript')
+  .option('--test-framework <framework>', 'Test framework (vitest, jest)', 'vitest')
+  .option('--no-verify', 'Skip verification stage')
+  .option('--no-html', 'Skip HTML report generation')
+  .option('--no-chaos', 'Skip chaos test generation')
+  .option('--no-helpers', 'Skip helper file generation')
+  .action(async (spec: string, options) => {
     const opts = program.opts();
     const isJson = opts.format === 'json';
+    
+    // Dynamically import build-runner to avoid startup cost when not used
+    let buildRunner: typeof import('@isl-lang/build-runner');
+    try {
+      buildRunner = await import('@isl-lang/build-runner');
+    } catch (error) {
+      if (!isJson) {
+        console.error(chalk.red('Error: Build runner not available'));
+        console.log(chalk.gray('Install with: pnpm add @isl-lang/build-runner'));
+      } else {
+        console.log(JSON.stringify({ success: false, error: 'Build runner not available' }, null, 2));
+      }
+      process.exit(ExitCode.ISL_ERROR);
+      return;
+    }
     
     if (!isJson) {
       console.log('');
       console.log(chalk.bold.cyan('🔧 ISL Build Pipeline'));
+      console.log(chalk.gray(`  Spec: ${spec}`));
+      console.log(chalk.gray(`  Output: ${options.output}`));
       console.log('');
     }
 
-    // Step 1: Check
-    if (!isJson) console.log(chalk.cyan('Step 1/2:') + ' Checking ISL files...');
-    const checkResult = await check(files, {
-      verbose: opts.verbose,
-      quiet: true,
-    });
-    
-    if (!checkResult.success) {
+    try {
+      const result = await buildRunner.run({
+        specPath: spec,
+        outDir: options.output,
+        target: options.target as 'typescript',
+        testFramework: options.testFramework as 'vitest' | 'jest',
+        verify: options.verify,
+        htmlReport: options.html,
+        includeChaosTests: options.chaos,
+        includeHelpers: options.helpers,
+      });
+
+      if (!result.success) {
+        if (!isJson) {
+          console.log(chalk.red('✗ Build failed'));
+          console.log('');
+          for (const error of result.errors) {
+            const location = error.file ? `${error.file}${error.line ? `:${error.line}` : ''}` : '';
+            console.log(chalk.red(`  [${error.stage}] ${error.message}${location ? ` at ${location}` : ''}`));
+          }
+        } else {
+          console.log(JSON.stringify({
+            success: false,
+            errors: result.errors,
+            timing: result.timing,
+          }, null, 2));
+        }
+        process.exit(ExitCode.ISL_ERROR);
+        return;
+      }
+
       if (!isJson) {
-        console.log(chalk.red('  ✗ Check failed'));
-        printCheckResult(checkResult);
+        console.log(chalk.bold.green('✓ Build complete!'));
+        console.log('');
+        
+        // Show summary
+        console.log(chalk.gray(`  Files generated: ${result.files.length}`));
+        console.log(chalk.gray(`  Output directory: ${result.outDir}`));
+        
+        if (result.evidence) {
+          const { summary } = result.evidence;
+          const verdictColor = summary.verdict === 'verified' ? chalk.green : 
+                              summary.verdict === 'risky' ? chalk.yellow : chalk.red;
+          console.log('');
+          console.log(chalk.bold('  Verification:'));
+          console.log(`    Score: ${verdictColor(`${summary.overallScore}/100`)}`);
+          console.log(`    Verdict: ${verdictColor(summary.verdict.toUpperCase())}`);
+          console.log(`    Behaviors: ${summary.passedBehaviors}/${summary.totalBehaviors} passed`);
+          console.log(`    Checks: ${summary.passedChecks}/${summary.totalChecks} passed`);
+        }
+        
+        console.log('');
+        console.log(chalk.gray(`  Total time: ${result.timing.total.toFixed(0)}ms`));
+        console.log('');
+        
+        // Show file breakdown
+        const counts = result.manifest.counts;
+        console.log(chalk.gray('  Output breakdown:'));
+        if (counts.types > 0) console.log(chalk.gray(`    Types: ${counts.types} files`));
+        if (counts.test > 0) console.log(chalk.gray(`    Tests: ${counts.test} files`));
+        if (counts.helper > 0) console.log(chalk.gray(`    Helpers: ${counts.helper} files`));
+        if (counts.evidence > 0) console.log(chalk.gray(`    Evidence: ${counts.evidence} files`));
+        if (counts.report > 0) console.log(chalk.gray(`    Reports: ${counts.report} files`));
+        console.log('');
       } else {
-        console.log(JSON.stringify({ success: false, step: 'check', result: checkResult }, null, 2));
+        console.log(JSON.stringify({
+          success: true,
+          files: result.files.length,
+          outDir: result.outDir,
+          evidence: result.evidence ? {
+            verdict: result.evidence.summary.verdict,
+            score: result.evidence.summary.overallScore,
+            behaviors: {
+              total: result.evidence.summary.totalBehaviors,
+              passed: result.evidence.summary.passedBehaviors,
+            },
+            checks: {
+              total: result.evidence.summary.totalChecks,
+              passed: result.evidence.summary.passedChecks,
+            },
+          } : null,
+          timing: result.timing,
+          manifest: result.manifest.counts,
+        }, null, 2));
+      }
+
+      process.exit(ExitCode.SUCCESS);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!isJson) {
+        console.error(chalk.red(`Build error: ${message}`));
+      } else {
+        console.log(JSON.stringify({ success: false, error: message }, null, 2));
       }
       process.exit(ExitCode.ISL_ERROR);
     }
-    if (!isJson) {
-      console.log(chalk.green('  ✓ All files valid'));
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Vibecheck Command (Integration - defensive loading)
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('vibecheck <subcommand> [args...]')
+  .description('Vibecheck integration commands (verify, report)')
+  .option('-s, --spec <file>', 'ISL specification file')
+  .option('-i, --impl <file>', 'Implementation file to verify')
+  .option('-m, --mode <mode>', 'Verification mode (quick, full, strict)', 'full')
+  .option('--json', 'Output as JSON')
+  .action(async (subcommand: string, args: string[], options) => {
+    const opts = program.opts();
+    const isJson = opts.format === 'json' || options.json;
+    
+    // Check if vibecheck is available
+    const available = await loadVibecheck();
+    
+    if (!available || !vibecheckModule) {
+      if (isJson) {
+        console.log(JSON.stringify({
+          success: false,
+          error: 'Vibecheck module is not installed',
+          hint: 'Install with: npm install @isl-lang/vibecheck',
+        }, null, 2));
+      } else {
+        console.error(chalk.red('Error: Vibecheck module is not installed'));
+        console.log('');
+        console.log(chalk.gray('Vibecheck provides AI-powered verification and evidence collection.'));
+        console.log(chalk.gray('Install with: npm install @isl-lang/vibecheck'));
+      }
+      process.exit(ExitCode.USAGE_ERROR);
+      return;
+    }
+    
+    switch (subcommand) {
+      case 'verify': {
+        const specFile = options.spec || args[0];
+        if (!specFile) {
+          if (isJson) {
+            console.log(JSON.stringify({ success: false, error: 'Missing spec file' }, null, 2));
+          } else {
+            console.error(chalk.red('Error: Missing spec file'));
+            console.log(chalk.gray('Usage: isl vibecheck verify --spec <file> --impl <file>'));
+          }
+          process.exit(ExitCode.USAGE_ERROR);
+          return;
+        }
+        
+        if (!isJson) {
+          console.log('');
+          console.log(chalk.bold.cyan('🔍 Vibecheck Verify'));
+          console.log('');
+          console.log(chalk.gray(`Spec: ${specFile}`));
+          if (options.impl) console.log(chalk.gray(`Impl: ${options.impl}`));
+          console.log('');
+        }
+        
+        try {
+          const result = await vibecheckModule.runVibecheck({
+            spec: specFile,
+            impl: options.impl,
+            mode: options.mode,
+            verbose: opts.verbose,
+          });
+          
+          if (isJson) {
+            console.log(JSON.stringify(result, null, 2));
+          } else {
+            if (result.success) {
+              console.log(chalk.green(`✓ Verification passed`));
+              if (result.score !== undefined) {
+                console.log(chalk.gray(`  Score: ${result.score}%`));
+              }
+            } else {
+              console.log(chalk.red(`✗ Verification failed`));
+              if (result.error) {
+                console.log(chalk.gray(`  Error: ${result.error}`));
+              }
+            }
+          }
+          
+          process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          if (isJson) {
+            console.log(JSON.stringify({ success: false, error: message }, null, 2));
+          } else {
+            console.error(chalk.red(`Vibecheck error: ${message}`));
+          }
+          process.exit(ExitCode.ISL_ERROR);
+        }
+        break;
+      }
+      
+      case 'report': {
+        if (isJson) {
+          console.log(JSON.stringify({
+            success: false,
+            error: 'Report subcommand not yet implemented',
+            hint: 'Use "isl vibecheck verify" to generate a verification report',
+          }, null, 2));
+        } else {
+          console.log(chalk.yellow('Report subcommand coming soon...'));
+          console.log(chalk.gray('For now, use: isl vibecheck verify --spec <file>'));
+        }
+        process.exit(ExitCode.SUCCESS);
+        break;
+      }
+      
+      default: {
+        if (isJson) {
+          console.log(JSON.stringify({
+            success: false,
+            error: `Unknown vibecheck subcommand: ${subcommand}`,
+            availableCommands: ['verify', 'report'],
+          }, null, 2));
+        } else {
+          console.error(chalk.red(`Unknown vibecheck subcommand: ${subcommand}`));
+          console.log('');
+          console.log(chalk.gray('Available subcommands:'));
+          console.log(chalk.gray('  verify   Run verification against an ISL spec'));
+          console.log(chalk.gray('  report   Generate verification report'));
+        }
+        process.exit(ExitCode.USAGE_ERROR);
+      }
+    }
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Gate Command (SHIP/NO-SHIP)
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('gate <spec>')
+  .description('SHIP/NO-SHIP gate for AI-generated code. Verifies implementation against spec and returns a decision with evidence bundle.')
+  .requiredOption('-i, --impl <file>', 'Implementation file or directory to verify')
+  .option('-t, --threshold <score>', 'Minimum trust score to SHIP (default: 95)', '95')
+  .option('-o, --output <dir>', 'Output directory for evidence bundle')
+  .option('--ci', 'CI mode: minimal output, just the decision')
+  .action(async (spec: string, options) => {
+    const opts = program.opts();
+    const isJson = opts.format === 'json';
+    const isCi = options.ci || isCI();
+    
+    if (!isCi && !isJson) {
+      console.log('');
+      console.log(chalk.bold.cyan('🚦 ISL Gate'));
+      console.log(chalk.gray(`   Spec: ${spec}`));
+      console.log(chalk.gray(`   Impl: ${options.impl}`));
+      console.log(chalk.gray(`   Threshold: ${options.threshold}%`));
       console.log('');
     }
 
-    // Step 2: Generate
-    if (!isJson) console.log(chalk.cyan('Step 2/2:') + ' Generating outputs...');
-    const generateResult = await generate(files, {
-      types: !options.skipTypes,
-      tests: !options.skipTests,
-      docs: !options.skipDocs,
-      output: options.output,
+    const result = await gate(spec, {
+      impl: options.impl,
+      threshold: parseInt(options.threshold),
+      output: options.output ?? process.cwd(),
       verbose: opts.verbose,
+      format: opts.format,
+      ci: isCi,
     });
 
-    if (!generateResult.success) {
-      if (!isJson) {
-        console.log(chalk.red('  ✗ Generation failed'));
-        printGenerateResult(generateResult);
-      } else {
-        console.log(JSON.stringify({ success: false, step: 'generate', result: generateResult }, null, 2));
-      }
-      process.exit(ExitCode.ISL_ERROR);
-    }
-    
-    if (!isJson) {
-      console.log(chalk.green('  ✓ Files generated'));
-      console.log('');
+    printGateResult(result, {
+      format: isJson ? 'json' : 'pretty',
+      verbose: opts.verbose,
+      ci: isCi,
+    });
 
-      // Summary
-      console.log(chalk.bold.green('✓ Build complete!'));
-      console.log('');
-      console.log(chalk.gray(`  Checked: ${checkResult.files.length} file${checkResult.files.length === 1 ? '' : 's'}`));
-      console.log(chalk.gray(`  Generated: ${generateResult.files.length} file${generateResult.files.length === 1 ? '' : 's'}`));
-      console.log('');
-    } else {
-      console.log(JSON.stringify({
-        success: true,
-        check: { files: checkResult.files.length, errors: checkResult.totalErrors },
-        generate: { files: generateResult.files.length },
-      }, null, 2));
-    }
-    
-    process.exit(ExitCode.SUCCESS);
+    process.exit(getGateExitCode(result));
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -440,6 +724,15 @@ program.on('command:*', ([cmd]) => {
 
 program.addHelpText('after', `
 ${chalk.bold('Examples:')}
+  ${chalk.gray('# SHIP/NO-SHIP gate (the main workflow)')}
+  $ isl gate src/auth.isl --impl src/auth.ts
+
+  ${chalk.gray('# Gate with custom threshold')}
+  $ isl gate src/auth.isl --impl src/ --threshold 90
+
+  ${chalk.gray('# Gate in CI mode (minimal output)')}
+  $ isl gate src/auth.isl --impl src/ --ci
+
   ${chalk.gray('# Parse and show AST')}
   $ isl parse src/auth.isl
 
@@ -449,17 +742,11 @@ ${chalk.bold('Examples:')}
   ${chalk.gray('# Generate TypeScript code')}
   $ isl gen ts src/auth.isl
 
-  ${chalk.gray('# Generate Rust code')}
-  $ isl gen rust src/api.isl
-
   ${chalk.gray('# Verify implementation')}
   $ isl verify src/auth.isl --impl dist/auth.js
 
   ${chalk.gray('# Format ISL file')}
   $ isl fmt src/auth.isl
-
-  ${chalk.gray('# Lint ISL file')}
-  $ isl lint src/auth.isl
 
   ${chalk.gray('# Start REPL')}
   $ isl repl
@@ -468,8 +755,8 @@ ${chalk.bold('Examples:')}
   $ isl init my-api --template api
 
 ${chalk.bold('Exit Codes:')}
-  ${chalk.gray('0')}  Success
-  ${chalk.gray('1')}  ISL errors (parse, type check, verification)
+  ${chalk.gray('0')}  SHIP (or success)
+  ${chalk.gray('1')}  NO-SHIP (or ISL errors)
   ${chalk.gray('2')}  Usage errors (bad flags, missing file)
   ${chalk.gray('3')}  Internal errors
 

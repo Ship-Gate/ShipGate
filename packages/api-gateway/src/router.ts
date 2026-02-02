@@ -222,7 +222,11 @@ export class RouteHandler {
         const params: Record<string, string> = {};
         
         for (let i = 0; i < compiled.paramNames.length; i++) {
-          params[compiled.paramNames[i]] = match[i + 1];
+          const paramName = compiled.paramNames[i];
+          const paramValue = match[i + 1];
+          if (paramName !== undefined && paramValue !== undefined) {
+            params[paramName] = paramValue;
+          }
         }
 
         return {

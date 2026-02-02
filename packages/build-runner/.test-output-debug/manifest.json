@@ -1,0 +1,64 @@
+{
+  "root": "C:/Users/mevla/OneDrive/Desktop/IntentOS/packages/build-runner/.test-output-debug",
+  "generated": "build-runner",
+  "fileCount": 8,
+  "counts": {
+    "config": 1,
+    "evidence": 0,
+    "fixture": 1,
+    "helper": 4,
+    "report": 0,
+    "test": 1,
+    "types": 0
+  },
+  "files": [
+    {
+      "path": "manifest.json",
+      "type": "config",
+      "size": 0,
+      "hash": ""
+    },
+    {
+      "path": "tests/CreateItem.test.ts",
+      "type": "test",
+      "size": 3383,
+      "hash": "7d9c14c24401474b"
+    },
+    {
+      "path": "tests/fixtures/index.ts",
+      "type": "fixture",
+      "size": 242,
+      "hash": "46042afd80ce0017"
+    },
+    {
+      "path": "tests/helpers/chaos-controller.ts",
+      "type": "helper",
+      "size": 3515,
+      "hash": "967b64ad2a737b38"
+    },
+    {
+      "path": "tests/helpers/CreateItem.builder.ts",
+      "type": "helper",
+      "size": 379,
+      "hash": "fb9a31178e6a7956"
+    },
+    {
+      "path": "tests/helpers/scenario-helpers.ts",
+      "type": "helper",
+      "size": 906,
+      "hash": "16f238400f1e0731"
+    },
+    {
+      "path": "tests/helpers/test-utils.ts",
+      "type": "helper",
+      "size": 577,
+      "hash": "646132f48485b98a"
+    },
+    {
+      "path": "tests/vitest.config.ts",
+      "type": "config",
+      "size": 977,
+      "hash": "4b106b709a967a89"
+    }
+  ]
+}

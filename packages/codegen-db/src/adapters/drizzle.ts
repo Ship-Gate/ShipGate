@@ -143,7 +143,7 @@ export class DrizzleGenerator implements DatabaseAdapterGenerator {
     return mapping[provider]?.[scalarType] || 'varchar';
   }
 
-  private generateEnum(enumDef: NormalizedEnum, provider: string): string[] {
+  private generateEnum(enumDef: NormalizedEnum, _provider: string): string[] {
     const lines: string[] = [];
     const enumName = toCase(enumDef.name, 'camel') + 'Enum';
     const values = enumDef.values.map(v => `'${v}'`).join(', ');
@@ -156,7 +156,6 @@ export class DrizzleGenerator implements DatabaseAdapterGenerator {
   private generateTable(entity: NormalizedEntity, context: GeneratorContext): string[] {
     const lines: string[] = [];
     const tableName = toCase(entity.name, 'camel');
-    const provider = context.options.provider || 'postgresql';
 
     lines.push(`export const ${tableName} = pgTable('${entity.tableName}', {`);
 
@@ -182,9 +181,11 @@ export class DrizzleGenerator implements DatabaseAdapterGenerator {
 
       for (let i = 0; i < entity.indexes.length; i++) {
         const index = entity.indexes[i];
-        const indexName = `${tableName}Idx${i + 1}`;
-        const fields = index.fields.map(f => `table.${toCase(f, 'camel')}`).join(', ');
-        lines.push(`  ${indexName}: index('${entity.tableName}_${index.fields.join('_')}_idx').on(${fields}),`);
+        if (index) {
+          const indexName = `${tableName}Idx${i + 1}`;
+          const fields = index.fields.map(f => `table.${toCase(f, 'camel')}`).join(', ');
+          lines.push(`  ${indexName}: index('${entity.tableName}_${index.fields.join('_')}_idx').on(${fields}),`);
+        }
       }
 
       lines.push('}));');
@@ -220,7 +221,6 @@ export class DrizzleGenerator implements DatabaseAdapterGenerator {
     }
 
     const scalarType = field.type.scalarType || 'String';
-    const drizzleType = this.mapFieldTypeToImport(field, provider) || 'varchar';
 
     // Handle type-specific configurations
     switch (scalarType) {

@@ -105,7 +105,7 @@ ${stages.join('\n\n')}
 /**
  * Generate chaos testing stage for Jenkins
  */
-function generateJenkinsChaosStage(config: PipelineConfig): string {
+function generateJenkinsChaosStage(_config: PipelineConfig): string {
   return `        stage('Chaos Testing') {
             steps {
                 sh 'npm ci'
@@ -122,7 +122,7 @@ function generateJenkinsChaosStage(config: PipelineConfig): string {
 /**
  * Generate security scanning stage for Jenkins
  */
-function generateJenkinsSecurityStage(config: PipelineConfig, standards: string[]): string {
+function generateJenkinsSecurityStage(_config: PipelineConfig, standards: string[]): string {
   const standardFlags = standards.map((s) => `--${s.toLowerCase().replace('_', '-')}`).join(' ');
 
   return `        stage('Security') {
@@ -150,7 +150,7 @@ function generateJenkinsSecurityStage(config: PipelineConfig, standards: string[
 /**
  * Generate performance testing stage for Jenkins
  */
-function generateJenkinsPerformanceStage(config: PipelineConfig): string {
+function generateJenkinsPerformanceStage(_config: PipelineConfig): string {
   return `        stage('Performance') {
             steps {
                 sh 'npm ci'

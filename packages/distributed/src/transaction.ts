@@ -6,7 +6,6 @@
 import {
   DistributedTransaction,
   TransactionParticipant,
-  TransactionStatus,
 } from './types';
 
 /**

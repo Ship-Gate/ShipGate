@@ -2,7 +2,12 @@
 // ISL AI Types
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type {
+  DomainDeclaration,
+  EntityDeclaration,
+  BehaviorDeclaration,
+  SourceSpan,
+} from '@isl-lang/isl-core';
 
 // ============================================================================
 // AI PROVIDER TYPES
@@ -79,7 +84,7 @@ export interface GenerationConfig {
   style?: 'concise' | 'detailed' | 'documented';
   includeExamples?: boolean;
   includeTests?: boolean;
-  domainContext?: AST.Domain;
+  domainContext?: DomainDeclaration;
 }
 
 export interface GeneratedComponent {
@@ -106,7 +111,7 @@ export interface SecurityFinding {
   category: string;
   title: string;
   description: string;
-  location?: AST.SourceLocation;
+  location?: SourceSpan;
   fix?: string;
 }
 
@@ -160,7 +165,7 @@ export interface ISLContext {
   currentFile?: string;
   cursorPosition?: Position;
   visibleRange?: TextRange;
-  projectDomains?: AST.Domain[];
+  projectDomains?: DomainDeclaration[];
   recentEdits?: RecentEdit[];
   semanticContext?: SemanticContext;
 }
@@ -173,8 +178,8 @@ export interface RecentEdit {
 }
 
 export interface SemanticContext {
-  currentEntity?: AST.Entity;
-  currentBehavior?: AST.Behavior;
+  currentEntity?: EntityDeclaration;
+  currentBehavior?: BehaviorDeclaration;
   availableTypes: string[];
   availableEntities: string[];
   availableBehaviors: string[];

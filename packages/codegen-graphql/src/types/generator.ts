@@ -2,7 +2,7 @@
  * GraphQL Types Generator - Generate TypeScript types from ISL AST.
  */
 
-import type { AST } from './ast';
+import type { AST, ASTEntity, ASTBehavior, ASTField, ASTEnum, ASTVariant } from '../types.js';
 
 /**
  * Type generator configuration

@@ -3,8 +3,8 @@
 // Converts ISL types to fast-check arbitraries
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
-import type { ArbitraryDefinition, ConstraintInfo } from './types';
+import type * as AST from '../../../master_contracts/ast.js';
+import type { ArbitraryDefinition, ConstraintInfo } from './types.js';
 
 /**
  * Generate arbitrary for a type declaration
@@ -155,7 +155,7 @@ function applyConstraints(baseName: string, constraints: ConstraintInfo[]): stri
       arb = options.length > 0 ? `fc.double({ ${options.join(', ')} })` : 'fc.double()';
       break;
     default:
-      arb = generatePrimitiveArbitrary({ kind: 'PrimitiveType', name: baseName, location: {} as AST.SourceLocation });
+      arb = generatePrimitiveArbitrary({ kind: 'PrimitiveType', name: baseName as AST.PrimitiveType['name'], location: {} as AST.SourceLocation });
   }
 
   if (filters.length > 0) {

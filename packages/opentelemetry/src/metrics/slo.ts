@@ -1,11 +1,13 @@
+import { MeterProvider } from '@opentelemetry/sdk-metrics';
 import {
-  MeterProvider,
+  Attributes,
+  ObservableResult,
   ObservableGauge,
   Counter,
   Histogram,
   Meter,
-} from '@opentelemetry/sdk-metrics';
-import { Attributes, ObservableResult } from '@opentelemetry/api';
+  metrics,
+} from '@opentelemetry/api';
 
 /**
  * SLO (Service Level Objective) definition
@@ -63,8 +65,10 @@ export class SLOMetrics {
   private sloLatency: Histogram;
 
   constructor(meterProvider?: MeterProvider) {
-    const provider = meterProvider ?? new MeterProvider();
-    this.meter = provider.getMeter('isl-slo-metrics', '1.0.0');
+    if (meterProvider) {
+      metrics.setGlobalMeterProvider(meterProvider);
+    }
+    this.meter = metrics.getMeter('isl-slo-metrics', '1.0.0');
 
     // SLO current value gauge
     this.sloCurrentValue = this.meter.createObservableGauge('isl_slo_current_value', {

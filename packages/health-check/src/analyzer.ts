@@ -9,7 +9,6 @@ import type {
   DependencyInfo,
   DependencyType,
   DependencyConfig,
-  DependencySource,
 } from './types.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -107,9 +106,10 @@ export interface DependencyRule {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const STORAGE_ANNOTATIONS = ['@persistent', '@stored', '@indexed', '@unique'];
-const CACHE_ANNOTATIONS = ['@cached', '@memoized'];
-const QUEUE_ANNOTATIONS = ['@async', '@queued', '@event'];
-const EXTERNAL_API_ANNOTATIONS = ['@external', '@webhook', '@integration'];
+// Reserved for future annotation-based detection
+// const CACHE_ANNOTATIONS = ['@cached', '@memoized'];
+// const QUEUE_ANNOTATIONS = ['@async', '@queued', '@event'];
+// const EXTERNAL_API_ANNOTATIONS = ['@external', '@webhook', '@integration'];
 
 // Known external service patterns
 const EXTERNAL_SERVICE_PATTERNS: Record<string, Partial<DependencyConfig>> = {
@@ -193,7 +193,6 @@ export class ISLDependencyAnalyzer {
             entity: entity.name.name,
           },
           config: {
-            query: 'SELECT 1',
             timeout: 5000,
           },
         });
@@ -228,7 +227,7 @@ export class ISLDependencyAnalyzer {
   /**
    * Infer database name from entity and domain
    */
-  private inferDatabaseName(entity: ISLEntity, domain: ISLDomain): string {
+  private inferDatabaseName(_entity: ISLEntity, domain: ISLDomain): string {
     // Use domain name as database name
     return `${domain.name.name.toLowerCase()}_db`;
   }

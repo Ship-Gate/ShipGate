@@ -87,7 +87,7 @@ export interface TestInput {
  * A value used in testing
  */
 export type TestValue =
-  | { type: 'literal'; value: string | number | boolean | null }
+  | { type: 'literal'; value: string | number | boolean | null | Record<string, unknown> | unknown[] }
   | { type: 'generated'; generator: ValueGenerator }
   | { type: 'reference'; path: string }
   | { type: 'invalid'; reason: string; value?: unknown };

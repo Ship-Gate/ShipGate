@@ -230,6 +230,8 @@ export class Parser {
     items.push(item);
 
     while (this.match('COMMA')) {
+      // Check if this was a trailing comma (next token is 'from')
+      if (this.check('FROM')) break;
       items.push(this.parseImportItem());
     }
 
@@ -609,6 +611,7 @@ export class Parser {
 
     const invariants: AST.Expression[] = [];
     while (!this.check('RBRACE') && !this.isAtEnd()) {
+      this.skipOptionalBullet();
       invariants.push(this.parseExpression());
     }
 
@@ -718,9 +721,19 @@ export class Parser {
       case 'OUTPUT':
         behavior.output = this.parseOutput();
         break;
+      // Shorthand syntax: pre { }
+      case 'PRE':
+        behavior.preconditions = this.parsePreconditions();
+        break;
+      // Legacy verbose syntax: preconditions { }
       case 'PRECONDITIONS':
         behavior.preconditions = this.parsePreconditions();
         break;
+      // Shorthand syntax: post success { }, post ErrorName { }
+      case 'POST':
+        behavior.postconditions.push(this.parsePostShorthand());
+        break;
+      // Legacy verbose syntax: postconditions { success implies { } }
       case 'POSTCONDITIONS':
         behavior.postconditions = this.parsePostconditions();
         break;
@@ -893,11 +906,28 @@ export class Parser {
 
     const preconditions: AST.Expression[] = [];
     while (!this.check('RBRACE') && !this.isAtEnd()) {
+      this.skipOptionalBullet();
       preconditions.push(this.parseExpression());
     }
 
     this.expect('RBRACE', "Expected '}'");
     return preconditions;
+  }
+
+  /**
+   * Skip optional bullet point prefix (- ) before expressions in lists.
+   * This supports the shorthand syntax: `- User.exists(id)` 
+   * instead of just `User.exists(id)`.
+   */
+  private skipOptionalBullet(): void {
+    // Skip `-` when followed by an identifier (not a number literal)
+    // This allows `- expr` as a bullet point marker
+    if (this.check('MINUS')) {
+      const next = this.peekNextToken();
+      if (next && (next.type === 'IDENTIFIER' || next.type === 'KEYWORD')) {
+        this.advance(); // consume the bullet `-`
+      }
+    }
   }
 
   private parsePostconditions(): AST.PostconditionBlock[] {
@@ -932,6 +962,48 @@ export class Parser {
 
     const predicates: AST.Expression[] = [];
     while (!this.check('RBRACE') && !this.isAtEnd()) {
+      this.skipOptionalBullet();
+      predicates.push(this.parseExpression());
+    }
+
+    const end = this.expect('RBRACE', "Expected '}'");
+
+    return {
+      kind: 'PostconditionBlock',
+      condition,
+      predicates,
+      location: AST.mergeLocations(start.location, end.location),
+    };
+  }
+
+  /**
+   * Parse shorthand postcondition syntax: post success { } or post ErrorName { }
+   * This is the canonical syntax (preferred over verbose postconditions { success implies { } })
+   */
+  private parsePostShorthand(): AST.PostconditionBlock {
+    const start = this.advance(); // consume 'post'
+    
+    let condition: AST.Identifier | 'success' | 'any_error';
+
+    if (this.check('SUCCESS') || this.currentToken().value === 'success') {
+      condition = 'success';
+      this.advance();
+    } else if (this.check('ANY') || this.currentToken().value === 'any_error') {
+      condition = 'any_error';
+      this.advance();
+    } else if (this.currentToken().value === 'failure') {
+      // 'failure' is an alias for 'any_error'
+      condition = 'any_error';
+      this.advance();
+    } else {
+      condition = this.parseIdentifier();
+    }
+
+    this.expect('LBRACE', "Expected '{'");
+
+    const predicates: AST.Expression[] = [];
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      this.skipOptionalBullet();
       predicates.push(this.parseExpression());
     }
 
@@ -951,6 +1023,7 @@ export class Parser {
 
     const invariants: AST.Expression[] = [];
     while (!this.check('RBRACE') && !this.isAtEnd()) {
+      this.skipOptionalBullet();
       invariants.push(this.parseExpression());
     }
 
@@ -1289,10 +1362,12 @@ export class Parser {
         this.advance();
         this.expect('LBRACE', "Expected '{'");
         while (!this.check('RBRACE') && !this.isAtEnd()) {
+          this.skipOptionalBullet();
           predicates.push(this.parseExpression());
         }
         this.expect('RBRACE', "Expected '}'");
       } else {
+        this.skipOptionalBullet();
         predicates.push(this.parseExpression());
       }
     }
@@ -2209,6 +2284,8 @@ export class Parser {
     if (this.check('COMMA')) {
       const params: AST.Identifier[] = first.kind === 'Identifier' ? [first] : [];
       while (this.match('COMMA')) {
+        // Check if this was a trailing comma (next token is ')')
+        if (this.check('RPAREN')) break;
         const param = this.parseIdentifier();
         params.push(param);
       }
@@ -2328,16 +2405,30 @@ export class Parser {
       };
     }
 
-    // Handle "numberunit" style (e.g., 200ms)
+    // Handle "numberunit" style (e.g., 200ms, 1s, 15m, 1h, 1d)
     if (token.type === 'DURATION') {
       this.advance();
-      // Parse the value and unit from the token
-      const match = token.value.match(/^(\d+(?:\.\d+)?)(ms|seconds|minutes|hours|days)$/);
+      // Parse the value and unit from the token - supports both long and short forms
+      const match = token.value.match(/^(\d+(?:\.\d+)?)(ms|seconds|minutes|hours|days|s|m|h|d)$/);
       if (match) {
+        // Map short units to canonical form
+        const unitMap: Record<string, AST.DurationLiteral['unit']> = {
+          'ms': 'ms',
+          's': 'seconds',
+          'seconds': 'seconds',
+          'm': 'minutes',
+          'minutes': 'minutes',
+          'h': 'hours',
+          'hours': 'hours',
+          'd': 'days',
+          'days': 'days',
+        };
+        const rawUnit = match[2] ?? 'ms';
+        const unit = unitMap[rawUnit] ?? 'ms';
         return {
           kind: 'DurationLiteral',
           value: parseFloat(match[1] ?? '0'),
-          unit: match[2] as AST.DurationLiteral['unit'],
+          unit,
           location: token.location,
         };
       }

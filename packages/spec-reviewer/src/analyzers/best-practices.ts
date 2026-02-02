@@ -79,7 +79,7 @@ function checkDomainBestPractices(domain: DomainDeclaration): BestPracticeIssue[
       severity: 'warning',
       title: 'Domain has no version specified',
       description: 'Domains should specify a version for API evolution tracking.',
-      location: domain.span ? { line: domain.span.line, column: domain.span.column } : undefined,
+      location: domain.span ? { line: domain.span.start.line, column: domain.span.start.column } : undefined,
       fix: 'Add version: "1.0.0" to the domain declaration.',
     });
   }
@@ -91,7 +91,7 @@ function checkDomainBestPractices(domain: DomainDeclaration): BestPracticeIssue[
       severity: 'info',
       title: 'Domain has no global invariants',
       description: 'Consider adding domain-wide invariants to enforce business rules.',
-      location: domain.span ? { line: domain.span.line, column: domain.span.column } : undefined,
+      location: domain.span ? { line: domain.span.start.line, column: domain.span.start.column } : undefined,
     });
   }
 
@@ -102,7 +102,7 @@ function checkDomainBestPractices(domain: DomainDeclaration): BestPracticeIssue[
       severity: 'info',
       title: 'Domain has many entities',
       description: 'Consider splitting into bounded contexts if domain has >20 entities.',
-      location: domain.span ? { line: domain.span.line, column: domain.span.column } : undefined,
+      location: domain.span ? { line: domain.span.start.line, column: domain.span.start.column } : undefined,
       documentation: 'See: Domain-Driven Design bounded contexts',
     });
   }
@@ -124,7 +124,7 @@ function checkDomainBestPractices(domain: DomainDeclaration): BestPracticeIssue[
 /**
  * Check entity best practices
  */
-function checkEntityBestPractices(entity: EntityDeclaration, domain: DomainDeclaration): BestPracticeIssue[] {
+function checkEntityBestPractices(entity: EntityDeclaration, _domain: DomainDeclaration): BestPracticeIssue[] {
   const issues: BestPracticeIssue[] = [];
   const entityName = entity.name.name;
 
@@ -142,7 +142,7 @@ function checkEntityBestPractices(entity: EntityDeclaration, domain: DomainDecla
       severity: 'warning',
       title: `Entity "${entityName}" may lack proper ID field`,
       description: 'Entities should have an immutable, unique ID field.',
-      location: entity.span ? { line: entity.span.line, column: entity.span.column } : undefined,
+      location: entity.span ? { line: entity.span.start.line, column: entity.span.start.column } : undefined,
       fix: 'Add id: UUID [immutable, unique] to the entity.',
     });
   }
@@ -151,17 +151,13 @@ function checkEntityBestPractices(entity: EntityDeclaration, domain: DomainDecla
   const hasCreatedAt = entity.fields.some(f => 
     f.name.name.toLowerCase().includes('created')
   );
-  const hasUpdatedAt = entity.fields.some(f => 
-    f.name.name.toLowerCase().includes('updated')
-  );
-
   if (!hasCreatedAt) {
     issues.push({
       id: `best-practice-no-created-at-${entityName}`,
       severity: 'info',
       title: `Entity "${entityName}" has no created_at timestamp`,
       description: 'Consider adding a created_at timestamp for auditing.',
-      location: entity.span ? { line: entity.span.line, column: entity.span.column } : undefined,
+      location: entity.span ? { line: entity.span.start.line, column: entity.span.start.column } : undefined,
     });
   }
 
@@ -172,7 +168,7 @@ function checkEntityBestPractices(entity: EntityDeclaration, domain: DomainDecla
       severity: 'info',
       title: `Entity "${entityName}" has very few fields`,
       description: 'Entity might be anemic. Consider if it should be a value object or merged.',
-      location: entity.span ? { line: entity.span.line, column: entity.span.column } : undefined,
+      location: entity.span ? { line: entity.span.start.line, column: entity.span.start.column } : undefined,
     });
   }
 
@@ -182,7 +178,7 @@ function checkEntityBestPractices(entity: EntityDeclaration, domain: DomainDecla
       severity: 'warning',
       title: `Entity "${entityName}" has too many fields (${entity.fields.length})`,
       description: 'Consider decomposing into smaller entities or value objects.',
-      location: entity.span ? { line: entity.span.line, column: entity.span.column } : undefined,
+      location: entity.span ? { line: entity.span.start.line, column: entity.span.start.column } : undefined,
     });
   }
 
@@ -195,7 +191,7 @@ function checkEntityBestPractices(entity: EntityDeclaration, domain: DomainDecla
       severity: 'info',
       title: `Entity "${entityName}" has many optional fields`,
       description: 'Many optional fields may indicate entity does too much. Consider splitting.',
-      location: entity.span ? { line: entity.span.line, column: entity.span.column } : undefined,
+      location: entity.span ? { line: entity.span.start.line, column: entity.span.start.column } : undefined,
     });
   }
 
@@ -205,7 +201,7 @@ function checkEntityBestPractices(entity: EntityDeclaration, domain: DomainDecla
 /**
  * Check behavior best practices
  */
-function checkBehaviorBestPractices(behavior: BehaviorDeclaration, domain: DomainDeclaration): BestPracticeIssue[] {
+function checkBehaviorBestPractices(behavior: BehaviorDeclaration, _domain: DomainDeclaration): BestPracticeIssue[] {
   const issues: BestPracticeIssue[] = [];
   const behaviorName = behavior.name.name;
 
@@ -217,7 +213,7 @@ function checkBehaviorBestPractices(behavior: BehaviorDeclaration, domain: Domai
       severity: 'info',
       title: `Behavior "${behaviorName}" has many input parameters`,
       description: 'Consider grouping related parameters into a request object.',
-      location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+      location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
     });
   }
 
@@ -229,7 +225,7 @@ function checkBehaviorBestPractices(behavior: BehaviorDeclaration, domain: Domai
       severity: 'info',
       title: `Behavior "${behaviorName}" has many error cases`,
       description: 'Consider if some errors can be grouped or if behavior does too much.',
-      location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+      location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
     });
   }
 
@@ -246,7 +242,7 @@ function checkBehaviorBestPractices(behavior: BehaviorDeclaration, domain: Domai
         severity: 'info',
         title: `Network behavior "${behaviorName}" has no retriable errors`,
         description: 'Network operations should typically have retriable error cases.',
-        location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+        location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
         fix: 'Add retriable: true to transient error cases.',
       });
     }
@@ -261,7 +257,7 @@ function checkBehaviorBestPractices(behavior: BehaviorDeclaration, domain: Domai
       severity: 'info',
       title: `Behavior "${behaviorName}" may need idempotency key`,
       description: 'Create/update operations should support idempotency for safe retries.',
-      location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+      location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
       fix: 'Add idempotency_key: String? to input.',
     });
   }
@@ -276,7 +272,7 @@ function checkScenarioCoverage(domain: DomainDeclaration): BestPracticeIssue[] {
   const issues: BestPracticeIssue[] = [];
 
   // Check if behaviors have scenarios
-  for (const behavior of domain.behaviors) {
+  for (const _behavior of domain.behaviors) {
     // This would need scenario blocks in the AST
     // For now, just note that scenarios are recommended
   }
@@ -299,19 +295,6 @@ function checkScenarioCoverage(domain: DomainDeclaration): BestPracticeIssue[] {
 function checkCQRSPatterns(domain: DomainDeclaration): BestPracticeIssue[] {
   const issues: BestPracticeIssue[] = [];
 
-  // Separate read and write behaviors
-  const readBehaviors = domain.behaviors.filter(b => {
-    const name = b.name.name.toLowerCase();
-    return name.startsWith('get') || name.startsWith('find') || 
-           name.startsWith('list') || name.startsWith('search');
-  });
-
-  const writeBehaviors = domain.behaviors.filter(b => {
-    const name = b.name.name.toLowerCase();
-    return name.startsWith('create') || name.startsWith('update') || 
-           name.startsWith('delete') || name.startsWith('set');
-  });
-
   // Check for mixed read/write in single behavior
   for (const behavior of domain.behaviors) {
     const name = behavior.name.name.toLowerCase();
@@ -322,7 +305,7 @@ function checkCQRSPatterns(domain: DomainDeclaration): BestPracticeIssue[] {
         severity: 'info',
         title: `Behavior "${behavior.name.name}" may mix commands and queries`,
         description: 'Consider separating read and write operations (CQRS pattern).',
-        location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+        location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
         documentation: 'See: Command Query Responsibility Segregation',
       });
     }
@@ -351,7 +334,7 @@ function checkEventSourcingPatterns(domain: DomainDeclaration): BestPracticeIssu
         severity: 'info',
         title: `Entity "${entity.name.name}" might benefit from event sourcing`,
         description: 'Complex lifecycle with history tracking is a good fit for event sourcing.',
-        location: entity.span ? { line: entity.span.line, column: entity.span.column } : undefined,
+        location: entity.span ? { line: entity.span.start.line, column: entity.span.start.column } : undefined,
         documentation: 'See: Event Sourcing pattern',
       });
     }

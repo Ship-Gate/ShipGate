@@ -2,9 +2,9 @@
 // Postcondition Checker - Verify postconditions after execution
 // ============================================================================
 
-import type * as AST from '../../../../master_contracts/ast';
-import type { CheckResult, EvaluationContext, VerificationError } from '../types';
-import { evaluate, expressionToString, EvaluationError } from '../expressions';
+import type * as AST from '@isl-lang/parser';
+import type { CheckResult, EvaluationContext, VerificationError } from '../types.js';
+import { evaluate, expressionToString, EvaluationError } from '../expressions.js';
 
 /**
  * Outcome type for postcondition checking

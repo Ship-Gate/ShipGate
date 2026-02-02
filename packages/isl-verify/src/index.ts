@@ -7,7 +7,7 @@
 export * from './runner/index.js';
 export * from './reporter/index.js';
 
-import type { DomainDeclaration } from '@isl-lang/isl-core';
+import type { Domain } from '@isl-lang/parser';
 import { runTests, type TestResult, type RunnerOptions } from './runner/index.js';
 import { 
   calculateTrustScore, 
@@ -31,7 +31,7 @@ export interface VerifyOptions {
  * Verify an implementation against an ISL domain
  */
 export async function verify(
-  domain: DomainDeclaration,
+  domain: Domain,
   implementationCode: string,
   options?: VerifyOptions
 ): Promise<VerificationResult> {

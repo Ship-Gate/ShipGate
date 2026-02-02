@@ -47,9 +47,9 @@ export class CommandBus {
     const commandWithMetadata: Command<TPayload> = {
       ...command,
       metadata: {
-        commandId: crypto.randomUUID(),
-        timestamp: Date.now(),
         ...command.metadata,
+        commandId: command.metadata?.commandId ?? crypto.randomUUID(),
+        timestamp: command.metadata?.timestamp ?? Date.now(),
       },
     };
 
@@ -125,9 +125,9 @@ export class QueryBus {
     const queryWithMetadata: Query<TParams> = {
       ...query,
       metadata: {
-        queryId: crypto.randomUUID(),
-        timestamp: Date.now(),
         ...query.metadata,
+        queryId: query.metadata?.queryId ?? crypto.randomUUID(),
+        timestamp: query.metadata?.timestamp ?? Date.now(),
       },
     };
 
@@ -230,7 +230,7 @@ export function queryHandler<TParams, TResult>(
 /**
  * Generate ISL specification for command
  */
-export function commandToISL<TPayload>(type: string, payloadType: string): string {
+export function commandToISL(type: string, payloadType: string): string {
   return `
 command ${type} {
   payload: ${payloadType};
@@ -253,7 +253,7 @@ command ${type} {
 /**
  * Generate ISL specification for query
  */
-export function queryToISL<TParams, TResult>(
+export function queryToISL(
   type: string,
   paramsType: string,
   resultType: string

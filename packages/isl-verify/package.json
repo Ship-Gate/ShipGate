@@ -23,8 +23,9 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@isl-lang/isl-compiler": "workspace:*",
-    "@isl-lang/isl-core": "workspace:*"
+    "@isl-lang/parser": "workspace:*",
+    "@isl-lang/evaluator": "workspace:*",
+    "@isl-lang/codegen-tests": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.1.0",

@@ -95,16 +95,17 @@ export async function parsePython(files: string[]): Promise<PythonParseResult> {
 
   for (const file of files) {
     const content = await fs.promises.readFile(file, 'utf-8');
-    const lines = content.split('\n');
 
     // Parse dataclasses
     const dataclassMatches = content.matchAll(
       /@dataclass(?:\(frozen=(\w+)\))?\s*\nclass\s+(\w+)(?:\(([^)]*)\))?:\s*\n((?:\s+.+\n)*)/g
     );
     for (const match of dataclassMatches) {
-      const frozen = match[1] === 'True';
       const name = match[2];
       const body = match[4];
+      if (!name || !body) continue;
+      
+      const frozen = match[1] === 'True';
       const fields = parseDataclassFields(body);
       const lineNum = getLineNumber(content, match.index ?? 0);
 
@@ -129,8 +130,10 @@ export async function parsePython(files: string[]): Promise<PythonParseResult> {
       if (decorators.includes('dataclass')) continue;
 
       const name = match[2];
-      const bases = match[3]?.split(',').map((b) => b.trim()).filter(Boolean) ?? [];
       const body = match[4];
+      if (!name || !body) continue;
+      
+      const bases = match[3]?.split(',').map((b) => b.trim()).filter(Boolean) ?? [];
       const lineNum = getLineNumber(content, match.index ?? 0);
 
       // Check if it's an Enum
@@ -162,14 +165,16 @@ export async function parsePython(files: string[]): Promise<PythonParseResult> {
       /(?:^|\n)((?:@\w+(?:\([^)]*\))?\s*\n)*)(async\s+)?def\s+(\w+)\s*\(([^)]*)\)(?:\s*->\s*([^:]+))?:\s*\n((?:\s+.+\n)*)/gm
     );
     for (const match of functionMatches) {
+      const name = match[3];
+      const paramsStr = match[4];
+      const body = match[6];
+      if (!name || paramsStr === undefined || !body) continue;
+      
       const decorators = match[1]
         ? match[1].match(/@(\w+)/g)?.map((d) => d.slice(1)) ?? []
         : [];
-      const async = !!match[2];
-      const name = match[3];
-      const paramsStr = match[4];
+      const isAsync = !!match[2];
       const returnType = match[5]?.trim();
-      const body = match[6];
       const lineNum = getLineNumber(content, match.index ?? 0);
 
       // Skip class methods (they'll be parsed with their class)
@@ -180,7 +185,7 @@ export async function parsePython(files: string[]): Promise<PythonParseResult> {
 
       result.functions.push({
         name,
-        async,
+        async: isAsync,
         parameters,
         returnType,
         decorators,
@@ -194,7 +199,11 @@ export async function parsePython(files: string[]): Promise<PythonParseResult> {
     const typeAliasMatches = content.matchAll(/^(\w+)\s*=\s*(TypeVar|Union|Optional|Literal)\[([^\]]+)\]/gm);
     for (const match of typeAliasMatches) {
       const name = match[1];
-      const type = `${match[2]}[${match[3]}]`;
+      const typeWrapper = match[2];
+      const typeArg = match[3];
+      if (!name || !typeWrapper || !typeArg) continue;
+      
+      const type = `${typeWrapper}[${typeArg}]`;
       const lineNum = getLineNumber(content, match.index ?? 0);
 
       result.typeAliases.push({
@@ -214,7 +223,10 @@ function parseDataclassFields(body: string): ParsedDataclassField[] {
 
   for (const match of fieldMatches) {
     const name = match[1];
-    let type = match[2].trim();
+    const typePart = match[2];
+    if (!name || !typePart) continue;
+    
+    let type = typePart.trim();
     const defaultValue = match[3]?.trim();
     const optional = type.includes('Optional') || defaultValue === 'None';
 
@@ -239,7 +251,10 @@ function parseEnumMembers(body: string): string[] {
   const memberMatches = body.matchAll(/\s+(\w+)\s*=/g);
 
   for (const match of memberMatches) {
-    members.push(match[1]);
+    const member = match[1];
+    if (member) {
+      members.push(member);
+    }
   }
 
   return members;
@@ -250,12 +265,14 @@ function parseClassAttributes(body: string): ParsedPythonAttribute[] {
 
   // Look for __init__ assignments
   const initMatch = body.match(/def\s+__init__\s*\([^)]*\):[^]*?(?=\n\s+def|\n(?!\s))/);
-  if (initMatch) {
+  if (initMatch && initMatch[0]) {
     const initBody = initMatch[0];
     const assignMatches = initBody.matchAll(/self\.(\w+)\s*(?::\s*([^=]+))?\s*=\s*(.+)/g);
     for (const match of assignMatches) {
+      const name = match[1];
+      if (!name) continue;
       attributes.push({
-        name: match[1],
+        name,
         type: match[2]?.trim(),
         value: match[3]?.trim(),
       });
@@ -265,10 +282,13 @@ function parseClassAttributes(body: string): ParsedPythonAttribute[] {
   // Look for class-level type annotations
   const annotationMatches = body.matchAll(/^\s{4}(\w+):\s*([^=\n]+)/gm);
   for (const match of annotationMatches) {
-    if (!attributes.some((a) => a.name === match[1])) {
+    const name = match[1];
+    const typePart = match[2];
+    if (!name || !typePart) continue;
+    if (!attributes.some((a) => a.name === name)) {
       attributes.push({
-        name: match[1],
-        type: match[2].trim(),
+        name,
+        type: typePart.trim(),
       });
     }
   }
@@ -283,14 +303,16 @@ function parseClassMethods(body: string, file: string, baseLineNum: number): Par
   );
 
   for (const match of methodMatches) {
+    const name = match[3];
+    const paramsStr = match[4];
+    const methodBody = match[6];
+    if (!name || paramsStr === undefined || !methodBody) continue;
+    
     const decorators = match[1]
       ? match[1].match(/@(\w+)/g)?.map((d) => d.slice(1)) ?? []
       : [];
-    const async = !!match[2];
-    const name = match[3];
-    const paramsStr = match[4];
+    const isAsync = !!match[2];
     const returnType = match[5]?.trim();
-    const methodBody = match[6];
 
     // Skip self parameter
     const parameters = parseParameters(paramsStr).filter((p) => p.name !== 'self' && p.name !== 'cls');
@@ -298,7 +320,7 @@ function parseClassMethods(body: string, file: string, baseLineNum: number): Par
 
     methods.push({
       name,
-      async,
+      async: isAsync,
       parameters,
       returnType,
       decorators,
@@ -326,6 +348,7 @@ function parseParameters(paramsStr: string): ParsedPythonParameter[] {
     const match = trimmed.match(/(\w+)(?:\s*:\s*([^=]+))?(?:\s*=\s*(.+))?/);
     if (match) {
       const name = match[1];
+      if (!name) continue;
       const type = match[2]?.trim();
       const defaultValue = match[3]?.trim();
       const optional = type?.includes('Optional') || defaultValue !== undefined;
@@ -344,7 +367,7 @@ function parseParameters(paramsStr: string): ParsedPythonParameter[] {
 
 function extractDocstring(body: string): string | undefined {
   const match = body.match(/^\s+"""([^]*?)"""/);
-  if (match) {
+  if (match && match[1]) {
     return match[1].trim();
   }
   return undefined;
@@ -363,8 +386,10 @@ export function extractValidationsFromPython(body: string): PythonValidationPatt
   // Look for if statements with raise
   const ifRaiseMatches = body.matchAll(/if\s+([^:]+):\s*\n\s+raise\s+(\w+)\(["']([^"']+)["']\)/g);
   for (const match of ifRaiseMatches) {
+    const condition = match[1];
+    if (!condition) continue;
     validations.push({
-      condition: match[1].trim(),
+      condition: condition.trim(),
       negated: true,
       errorType: match[2],
       errorMessage: match[3],
@@ -374,8 +399,10 @@ export function extractValidationsFromPython(body: string): PythonValidationPatt
   // Look for assert statements
   const assertMatches = body.matchAll(/assert\s+([^,\n]+)(?:,\s*["']([^"']+)["'])?/g);
   for (const match of assertMatches) {
+    const condition = match[1];
+    if (!condition) continue;
     validations.push({
-      condition: match[1].trim(),
+      condition: condition.trim(),
       negated: false,
       errorMessage: match[2],
     });

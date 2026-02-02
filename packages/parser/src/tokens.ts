@@ -28,7 +28,7 @@ export type TokenKind =
   | 'TYPE' | 'ENUM' | 'ENTITY' | 'BEHAVIOR' | 'VIEW' | 'POLICY'
   | 'INVARIANTS' | 'SCENARIOS' | 'CHAOS' | 'COMPOSITION'
   | 'INPUT' | 'OUTPUT' | 'SUCCESS' | 'ERRORS' | 'WHEN' | 'RETRIABLE' | 'RETRY_AFTER' | 'RETURNS'
-  | 'PRECONDITIONS' | 'POSTCONDITIONS' | 'IMPLIES'
+  | 'PRE' | 'POST' | 'PRECONDITIONS' | 'POSTCONDITIONS' | 'IMPLIES'
   | 'TEMPORAL' | 'EVENTUALLY' | 'ALWAYS' | 'WITHIN' | 'NEVER' | 'IMMEDIATELY'
   | 'SECURITY' | 'REQUIRES' | 'RATE_LIMIT' | 'COMPLIANCE'
   | 'OBSERVABILITY' | 'METRICS' | 'TRACES' | 'LOGS' | 'SPAN'
@@ -102,6 +102,10 @@ export const KEYWORDS: Map<string, TokenKind> = new Map([
   ['retriable', 'RETRIABLE'],
   ['retry_after', 'RETRY_AFTER'],
   ['returns', 'RETURNS'],
+  // Shorthand syntax (canonical)
+  ['pre', 'PRE'],
+  ['post', 'POST'],
+  // Verbose syntax (deprecated, but still supported)
   ['preconditions', 'PRECONDITIONS'],
   ['postconditions', 'POSTCONDITIONS'],
   ['implies', 'IMPLIES'],
@@ -217,9 +221,22 @@ export const KEYWORDS: Map<string, TokenKind> = new Map([
   ['any_error', 'ANY'],
 ]);
 
-// Duration units
-export const DURATION_UNITS = ['ms', 'seconds', 'minutes', 'hours', 'days'] as const;
+// Duration units - ordered by length (longest first for proper matching)
+export const DURATION_UNITS = ['seconds', 'minutes', 'hours', 'days', 'ms', 's', 'm', 'h', 'd'] as const;
 export type DurationUnit = typeof DURATION_UNITS[number];
+
+// Map short units to canonical form for normalization
+export const SHORT_UNIT_MAP: Record<string, string> = {
+  's': 'seconds',
+  'm': 'minutes', 
+  'h': 'hours',
+  'd': 'days',
+  'ms': 'ms',
+  'seconds': 'seconds',
+  'minutes': 'minutes',
+  'hours': 'hours',
+  'days': 'days',
+};
 
 // Operator precedence for expression parsing
 export const PRECEDENCE: Record<string, number> = {

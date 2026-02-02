@@ -3,16 +3,14 @@
 // Central registry for federated ISL services
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from './ast';
 import type {
   FederatedService,
   ServiceRegistration,
   SchemaVersion,
   ServiceStatus,
   CrossServiceReference,
-  ServiceMetadata,
 } from './types';
-import { createHash } from 'crypto';
 
 // ============================================================================
 // TYPES
@@ -40,7 +38,7 @@ export class FederationRegistry {
   private services: Map<string, ServiceRegistration> = new Map();
   private references: CrossServiceReference[] = [];
   private storage?: RegistryStorage;
-  private options: Required<RegistryOptions>;
+  private options: Omit<Required<RegistryOptions>, 'storage'> & { storage?: RegistryStorage };
 
   constructor(options: RegistryOptions = {}) {
     this.options = {
@@ -356,7 +354,13 @@ export class FederationRegistry {
 
   private computeSchemaHash(domain: AST.Domain): string {
     const content = JSON.stringify(domain);
-    return createHash('sha256').update(content).digest('hex').slice(0, 16);
+    // Simple hash function (djb2 algorithm)
+    let hash = 5381;
+    for (let i = 0; i < content.length; i++) {
+      hash = ((hash << 5) + hash) + content.charCodeAt(i);
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(16).slice(0, 16).padStart(16, '0');
   }
 
   private validateRegistration(registration: ServiceRegistration): { valid: boolean; errors: string[] } {
@@ -435,10 +439,10 @@ export class FederationRegistry {
   private extractServiceFromImport(importPath: string): string | null {
     // Handle patterns like "@services/auth" or "./auth.isl"
     const match = importPath.match(/@services\/([^/]+)/);
-    if (match) return match[1];
+    if (match && match[1]) return match[1];
     
     const fileMatch = importPath.match(/\.\/([^/.]+)\.isl/);
-    if (fileMatch) return fileMatch[1];
+    if (fileMatch && fileMatch[1]) return fileMatch[1];
     
     return null;
   }

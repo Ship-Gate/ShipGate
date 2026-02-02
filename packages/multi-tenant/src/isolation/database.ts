@@ -45,14 +45,14 @@ export interface DatabasePoolConfig {
 export class DatabaseManager {
   private databases: Map<string, TenantDatabaseInfo> = new Map();
   private connectionPools: Map<string, ConnectionPool> = new Map();
-  private defaultConfig: Partial<DatabaseConfig>;
+  private _defaultConfig: Partial<DatabaseConfig>;
   private poolConfig: DatabasePoolConfig;
 
   constructor(
     defaultConfig: Partial<DatabaseConfig> = {},
     poolConfig: Partial<DatabasePoolConfig> = {}
   ) {
-    this.defaultConfig = defaultConfig;
+    this._defaultConfig = defaultConfig;
     this.poolConfig = {
       minConnections: poolConfig.minConnections ?? 2,
       maxConnections: poolConfig.maxConnections ?? 10,
@@ -212,6 +212,13 @@ DROP USER IF EXISTS ${dbName}_user;
     }
     this.connectionPools.clear();
   }
+
+  /**
+   * Get the default database configuration
+   */
+  getDefaultConfig(): Partial<DatabaseConfig> {
+    return { ...this._defaultConfig };
+  }
 }
 
 // ============================================================================
@@ -342,7 +349,7 @@ export class PooledConnection {
   public createdAt: Date = new Date();
   private _closed = false;
 
-  constructor(private config: DatabaseConfig) {}
+  constructor(private _config: DatabaseConfig) {}
 
   /**
    * Execute a query (placeholder - actual implementation depends on driver)
@@ -352,7 +359,7 @@ export class PooledConnection {
       throw new Error('Connection is closed');
     }
     // Placeholder - actual implementation would use database driver
-    console.log(`[Query] ${sql}`, params);
+    console.log(`[Query@${this._config.database}] ${sql}`, params);
     return {} as T;
   }
 

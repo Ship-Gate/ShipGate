@@ -7,15 +7,17 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./vm": {
+      "types": "./dist/vm/index.d.ts",
       "import": "./dist/vm/index.mjs",
       "require": "./dist/vm/index.js"
     },
     "./scheduler": {
+      "types": "./dist/scheduler/index.d.ts",
       "import": "./dist/scheduler/index.mjs",
       "require": "./dist/scheduler/index.js"
     }
@@ -31,6 +33,7 @@
     "quickjs-emscripten": "^0.29.0"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0",
     "vitest": "^1.0.0"

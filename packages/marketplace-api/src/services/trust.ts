@@ -5,7 +5,14 @@
  * Trust score = f(verifications, deployments, incidents, age)
  */
 
-import { PrismaClient, IncidentSeverity, TrustMetrics } from '@prisma/client';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { PrismaClient } = require('@prisma/client');
+import {
+  IncidentSeverity,
+  TrustMetrics,
+  Verification,
+  Incident,
+} from '../types.js';
 
 const prisma = new PrismaClient();
 
@@ -133,9 +140,10 @@ export async function calculateTrustScore(packageName: string): Promise<TrustRep
   const history = await getTrustHistory(packageName);
 
   // Update stored metrics
+  type VersionWithVerifications = { verifications: Verification[] };
   await updateTrustMetrics(pkg.id, {
     trustScore: overall,
-    verificationCount: pkg.versions.reduce((sum, v) => sum + v.verifications.length, 0),
+    verificationCount: pkg.versions.reduce((sum: number, v: VersionWithVerifications) => sum + v.verifications.length, 0),
   });
 
   return {
@@ -257,7 +265,7 @@ async function calculateIncidentScore(
 
   // Calculate penalty
   const totalPenalty = incidents.reduce(
-    (sum, incident) => sum + INCIDENT_PENALTIES[incident.severity],
+    (sum: number, incident: Incident) => sum + INCIDENT_PENALTIES[incident.severity],
     0
   );
 

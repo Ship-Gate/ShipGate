@@ -24,7 +24,7 @@ export class RedisCache implements CacheBackend {
   private config: Required<RedisCacheConfig>;
   private serializer: Serializer;
   private connected = false;
-  private stats: CacheStats;
+  private _stats: CacheStats;
   
   // In a real implementation, this would be a Redis client
   // private client: RedisClientType;
@@ -52,7 +52,7 @@ export class RedisCache implements CacheBackend {
     
     this.serializer = this.config.serializer;
     
-    this.stats = {
+    this._stats = {
       hits: 0,
       misses: 0,
       sets: 0,
@@ -77,12 +77,12 @@ export class RedisCache implements CacheBackend {
     
     // Real implementation:
     // const data = await this.client.get(prefixedKey);
-    // if (!data) { this.stats.misses++; return undefined; }
-    // this.stats.hits++;
+    // if (!data) { this._stats.misses++; return undefined; }
+    // this._stats.hits++;
     // return this.serializer.deserialize<T>(data);
     
     // Simulated
-    this.stats.misses++;
+    this._stats.misses++;
     return undefined;
   }
   
@@ -107,7 +107,7 @@ export class RedisCache implements CacheBackend {
     //   }
     // }
     
-    this.stats.sets++;
+    this._stats.sets++;
     return true;
   }
   
@@ -118,10 +118,10 @@ export class RedisCache implements CacheBackend {
     
     // Real implementation:
     // const deleted = await this.client.del(prefixedKey);
-    // if (deleted > 0) this.stats.deletes++;
+    // if (deleted > 0) this._stats.deletes++;
     // return deleted > 0;
     
-    this.stats.deletes++;
+    this._stats.deletes++;
     return true;
   }
   
@@ -147,9 +147,9 @@ export class RedisCache implements CacheBackend {
     // for (let i = 0; i < keys.length; i++) {
     //   if (values[i]) {
     //     result.set(keys[i], this.serializer.deserialize<T>(values[i]));
-    //     this.stats.hits++;
+    //     this._stats.hits++;
     //   } else {
-    //     this.stats.misses++;
+    //     this._stats.misses++;
     //   }
     // }
     
@@ -172,7 +172,7 @@ export class RedisCache implements CacheBackend {
     // }
     // await pipeline.exec();
     
-    this.stats.sets += entries.size;
+    this._stats.sets += entries.size;
     return true;
   }
   
@@ -183,10 +183,10 @@ export class RedisCache implements CacheBackend {
     
     // Real implementation:
     // const deleted = await this.client.del(prefixedKeys);
-    // this.stats.deletes += deleted;
+    // this._stats.deletes += deleted;
     // return deleted;
     
-    this.stats.deletes += keys.length;
+    this._stats.deletes += keys.length;
     return keys.length;
   }
   
@@ -223,10 +223,10 @@ export class RedisCache implements CacheBackend {
     // const info = await this.client.info('stats');
     // const keyspace = await this.client.info('keyspace');
     
-    const total = this.stats.hits + this.stats.misses;
+    const total = this._stats.hits + this._stats.misses;
     return {
-      ...this.stats,
-      hitRate: total > 0 ? this.stats.hits / total : 0,
+      ...this._stats,
+      hitRate: total > 0 ? this._stats.hits / total : 0,
     };
   }
   

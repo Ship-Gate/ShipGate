@@ -6,7 +6,7 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { z, ZodError } from 'zod';
-import { IntentCategory } from '@prisma/client';
+import { IntentCategory } from '../types.js';
 import {
   listPackages,
   getPackage,
@@ -21,7 +21,8 @@ import {
   createVersionSchema,
 } from '../services/intent.js';
 
-export const intentsRouter = Router();
+import type { Router as RouterType } from 'express';
+export const intentsRouter: RouterType = Router();
 
 /**
  * Handle async route errors
@@ -128,7 +129,7 @@ intentsRouter.post('/', asyncHandler(async (req, res) => {
  * Get a specific intent package
  */
 intentsRouter.get('/:name', asyncHandler(async (req, res) => {
-  const { name } = req.params;
+  const name = req.params.name as string;
   const pkg = await getPackage(name);
 
   if (!pkg) {
@@ -166,7 +167,7 @@ intentsRouter.get('/:name', asyncHandler(async (req, res) => {
  * Get all versions of a package
  */
 intentsRouter.get('/:name/versions', asyncHandler(async (req, res) => {
-  const { name } = req.params;
+  const name = req.params.name as string;
   const versions = await getPackageVersions(name);
 
   if (versions.length === 0) {
@@ -198,7 +199,8 @@ intentsRouter.get('/:name/versions', asyncHandler(async (req, res) => {
  * Get a specific version
  */
 intentsRouter.get('/:name/versions/:version', asyncHandler(async (req, res) => {
-  const { name, version } = req.params;
+  const name = req.params.name as string;
+  const version = req.params.version as string;
   const ver = await getVersion(name, version);
 
   if (!ver) {
@@ -226,7 +228,7 @@ intentsRouter.get('/:name/versions/:version', asyncHandler(async (req, res) => {
  * Publish a new version
  */
 intentsRouter.post('/:name/versions', asyncHandler(async (req, res) => {
-  const { name } = req.params;
+  const name = req.params.name as string;
 
   try {
     const input = createVersionSchema.parse(req.body);
@@ -271,7 +273,7 @@ intentsRouter.post('/:name/versions', asyncHandler(async (req, res) => {
  * Deprecate a package
  */
 intentsRouter.post('/:name/deprecate', asyncHandler(async (req, res) => {
-  const { name } = req.params;
+  const name = req.params.name as string;
   const { reason } = req.body;
 
   try {
@@ -292,7 +294,7 @@ intentsRouter.post('/:name/deprecate', asyncHandler(async (req, res) => {
  * Star a package
  */
 intentsRouter.post('/:name/star', asyncHandler(async (req, res) => {
-  const { name } = req.params;
+  const name = req.params.name as string;
   const { star = true } = req.body;
 
   try {
@@ -314,7 +316,7 @@ intentsRouter.post('/:name/star', asyncHandler(async (req, res) => {
  * Record a deployment (for analytics/trust)
  */
 intentsRouter.post('/:name/deploy', asyncHandler(async (req, res) => {
-  const { name } = req.params;
+  const name = req.params.name as string;
   const { version, environment, platform } = req.body;
 
   const deploySchema = z.object({

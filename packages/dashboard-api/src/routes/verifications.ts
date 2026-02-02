@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { verificationService } from '../services/verification';
-import { VerificationStatus, TestStatus } from '@prisma/client';
+import type { VerificationStatus, TestStatus } from '../db/types';
 
 const router = Router();
 
@@ -104,7 +104,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
  */
 router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const verification = await verificationService.getById(id);
 
     if (!verification) {
@@ -127,7 +127,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
  */
 router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const input = updateVerificationSchema.parse(req.body);
 
     const verification = await verificationService.update(id, input);
@@ -157,7 +157,7 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
  */
 router.post('/:id/start', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const verification = await verificationService.start(id);
 
     res.json(verification);
@@ -179,7 +179,7 @@ router.post('/:id/start', async (req: Request, res: Response, next: NextFunction
  */
 router.post('/:id/complete', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const input = z.object({
       passed: z.number().int().min(0),
       failed: z.number().int().min(0),
@@ -213,7 +213,7 @@ router.post('/:id/complete', async (req: Request, res: Response, next: NextFunct
  */
 router.post('/:id/cancel', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const verification = await verificationService.cancel(id);
 
     res.json(verification);
@@ -235,7 +235,7 @@ router.post('/:id/cancel', async (req: Request, res: Response, next: NextFunctio
  */
 router.post('/:id/results', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const input = addTestResultSchema.parse(req.body);
 
     const result = await verificationService.addTestResult({
@@ -267,7 +267,7 @@ router.post('/:id/results', async (req: Request, res: Response, next: NextFuncti
  */
 router.get('/:id/results', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const query = z.object({
       page: z.coerce.number().int().min(1).default(1),
       pageSize: z.coerce.number().int().min(1).max(500).default(100),
@@ -301,4 +301,4 @@ router.get('/:id/results', async (req: Request, res: Response, next: NextFunctio
   }
 });
 
-export const verificationsRouter = router;
+export const verificationsRouter: Router = router;

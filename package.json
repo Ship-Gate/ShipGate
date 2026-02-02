@@ -18,8 +18,12 @@
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "turbo build && turbo test && changeset publish",
-    "prepublish-check": "tsx scripts/publish.ts --check",
-    "publish-packages": "tsx scripts/publish.ts"
+    "prepublish-check": "npx tsx scripts/publish.ts --check",
+    "publish-packages": "npx tsx scripts/publish.ts",
+    "demo:ui": "pnpm --filter playwright-showcase dev",
+    "demo:test": "pnpm --filter playwright-showcase test",
+    "demo:test:ui": "pnpm --filter playwright-showcase test:ui",
+    "demo:record": "pnpm --filter playwright-showcase test:record"
   },
   "keywords": [
     "isl",
@@ -35,19 +39,21 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/isl-lang/isl.git"
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
   },
-  "homepage": "https://isl-lang.dev",
+  "homepage": "https://intentlang.dev",
   "bugs": {
-    "url": "https://github.com/isl-lang/isl/issues"
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
   },
+  "packageManager": "pnpm@8.15.0",
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.0",
-    "turbo": "^2.0.0",
-    "tsx": "^4.7.0"
+    "picocolors": "^1.1.1",
+    "tsx": "^4.7.0",
+    "turbo": "^2.0.0"
   }
 }

@@ -1,0 +1,55 @@
+{
+  "name": "@isl-lang/evidence-schema",
+  "version": "1.0.0",
+  "description": "Evidence schema with zod validation and stable canonical serialization for ISL verification reports",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./schema": {
+      "import": "./dist/schema.js",
+      "types": "./dist/schema.d.ts"
+    },
+    "./serialize": {
+      "import": "./dist/serialize.js",
+      "types": "./dist/serialize.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src/"
+  },
+  "keywords": [
+    "isl",
+    "evidence",
+    "schema",
+    "verification",
+    "zod",
+    "validation"
+  ],
+  "author": "mevla",
+  "license": "MIT",
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  }
+}

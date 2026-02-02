@@ -6,7 +6,7 @@
 
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
-import * as artifact from '@actions/artifact';
+import { DefaultArtifactClient } from '@actions/artifact';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 
@@ -242,7 +242,7 @@ export class ISLVerifier {
       // Check if path exists
       const stat = await fs.stat(absolutePath);
       
-      const artifactClient = artifact.default;
+      const artifactClient = new DefaultArtifactClient();
       const files: string[] = [];
 
       if (stat.isDirectory()) {
@@ -261,10 +261,7 @@ export class ISLVerifier {
         const { id, size } = await artifactClient.uploadArtifact(
           'isl-proof-bundle',
           files,
-          path.dirname(absolutePath),
-          {
-            continueOnError: true,
-          }
+          path.dirname(absolutePath)
         );
         core.info(`Uploaded proof bundle (artifact ID: ${id}, size: ${size} bytes)`);
       }

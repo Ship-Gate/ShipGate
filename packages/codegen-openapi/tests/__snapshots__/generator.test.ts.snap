@@ -1,0 +1,91 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Snapshot Tests > should match snapshot for 01-minimal 1`] = `
+{
+  "entityCount": 4,
+  "hasErrorResponse": true,
+  "openapi": "3.1.0",
+  "pathCount": 1,
+}
+`;
+
+exports[`Snapshot Tests > should match snapshot for 02-with-constraints 1`] = `
+{
+  "entityCount": 8,
+  "hasErrorResponse": true,
+  "openapi": "3.1.0",
+  "pathCount": 1,
+}
+`;
+
+exports[`Snapshot Tests > should match snapshot for 03-with-enums 1`] = `
+{
+  "entityCount": 9,
+  "hasErrorResponse": true,
+  "openapi": "3.1.0",
+  "pathCount": 2,
+}
+`;
+
+exports[`Snapshot Tests > should match snapshot for 04-with-behaviors 1`] = `
+{
+  "entityCount": 12,
+  "hasErrorResponse": true,
+  "openapi": "3.1.0",
+  "pathCount": 3,
+}
+`;
+
+exports[`Snapshot Tests > should match snapshot for 05-with-errors 1`] = `
+{
+  "entityCount": 13,
+  "hasErrorResponse": true,
+  "openapi": "3.1.0",
+  "pathCount": 2,
+}
+`;
+
+exports[`Snapshot Tests > should match snapshot for 06-with-nested-types 1`] = `
+{
+  "entityCount": 10,
+  "hasErrorResponse": true,
+  "openapi": "3.1.0",
+  "pathCount": 2,
+}
+`;
+
+exports[`Snapshot Tests > should match snapshot for 07-with-optional-fields 1`] = `
+{
+  "entityCount": 8,
+  "hasErrorResponse": true,
+  "openapi": "3.1.0",
+  "pathCount": 2,
+}
+`;
+
+exports[`Snapshot Tests > should match snapshot for 08-with-auth 1`] = `
+{
+  "entityCount": 15,
+  "hasErrorResponse": true,
+  "openapi": "3.1.0",
+  "pathCount": 3,
+}
+`;
+
+exports[`Snapshot Tests > should match snapshot for 09-with-pagination 1`] = `
+{
+  "entityCount": 13,
+  "hasErrorResponse": true,
+  "openapi": "3.1.0",
+  "pathCount": 3,
+}
+`;
+
+exports[`Snapshot Tests > should match snapshot for 10-full-domain 1`] = `
+{
+  "entityCount": 38,
+  "hasErrorResponse": true,
+  "openapi": "3.1.0",
+  "pathCount": 7,
+}
+`;

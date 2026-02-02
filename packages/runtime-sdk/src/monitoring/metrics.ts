@@ -275,7 +275,7 @@ export class ISLMonitor {
 
   private allLatencies: number[] = [];
 
-  private recordLatency(behavior: string, duration: number): void {
+  private recordLatency(_behavior: string, duration: number): void {
     this.allLatencies.push(duration);
     
     // Keep only last 10000 latencies
@@ -338,7 +338,7 @@ export class ISLMonitor {
     }
   }
 
-  private checkAlerts(violation: Violation): void {
+  private checkAlerts(_violation: Violation): void {
     const rules = this.options.alerts?.rules ?? [];
     
     for (const rule of rules) {

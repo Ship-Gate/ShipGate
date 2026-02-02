@@ -1,0 +1,131 @@
+{
+  "name": "v1-patch-compatibility",
+  "description": "Behavior that MUST remain identical across all v1.x.x versions",
+  "compatibleVersions": ["1.0.0", "1.0.1", "1.0.2", "1.1.0", "1.99.99"],
+  "note": "These tests define the contract. Any version claiming v1.x.x compatibility MUST pass these.",
+  "criticalBehaviors": [
+    {
+      "category": "equality",
+      "tests": [
+        {
+          "expression": "1 == 1",
+          "expected": true,
+          "rationale": "Basic numeric equality must work"
+        },
+        {
+          "expression": "1 == '1'",
+          "expected": false,
+          "rationale": "No type coercion in equality (strict)"
+        },
+        {
+          "expression": "[1,2] == [1,2]",
+          "expected": true,
+          "rationale": "Deep structural equality for arrays"
+        },
+        {
+          "expression": "{a:1} == {a:1}",
+          "expected": true,
+          "rationale": "Deep structural equality for objects"
+        },
+        {
+          "expression": "null == null",
+          "expected": true,
+          "rationale": "Null equality"
+        }
+      ]
+    },
+    {
+      "category": "logical",
+      "tests": [
+        {
+          "expression": "false implies true",
+          "expected": true,
+          "rationale": "Vacuous truth is fundamental to contract semantics"
+        },
+        {
+          "expression": "false implies false",
+          "expected": true,
+          "rationale": "Vacuous truth covers all implications from false"
+        },
+        {
+          "expression": "true implies false",
+          "expected": false,
+          "rationale": "Only case where implication is false"
+        },
+        {
+          "expression": "true iff true",
+          "expected": true,
+          "rationale": "Biconditional: same truth values"
+        },
+        {
+          "expression": "true iff false",
+          "expected": false,
+          "rationale": "Biconditional: different truth values"
+        }
+      ]
+    },
+    {
+      "category": "arithmetic",
+      "tests": [
+        {
+          "expression": "10 / 3",
+          "expected": 3.3333333333333335,
+          "rationale": "IEEE 754 floating point division"
+        },
+        {
+          "expression": "-10 % 3",
+          "expected": -1,
+          "rationale": "Modulo sign follows dividend (JavaScript semantics)"
+        },
+        {
+          "expression": "'a' + 'b'",
+          "expected": "ab",
+          "rationale": "String concatenation"
+        }
+      ]
+    },
+    {
+      "category": "quantifiers",
+      "tests": [
+        {
+          "quantifier": "all",
+          "collection": [],
+          "expected": true,
+          "rationale": "Universal quantifier is vacuously true for empty set"
+        },
+        {
+          "quantifier": "any",
+          "collection": [],
+          "expected": false,
+          "rationale": "Existential quantifier is false for empty set"
+        },
+        {
+          "quantifier": "none",
+          "collection": [],
+          "expected": true,
+          "rationale": "No elements satisfy predicate in empty set"
+        }
+      ]
+    },
+    {
+      "category": "membership",
+      "tests": [
+        {
+          "expression": "'x' in {x: 1}",
+          "expected": true,
+          "rationale": "String key lookup in object"
+        },
+        {
+          "expression": "'lo' in 'hello'",
+          "expected": true,
+          "rationale": "Substring check"
+        },
+        {
+          "expression": "[1,2] in [[1,2], [3,4]]",
+          "expected": true,
+          "rationale": "Deep equality in array membership"
+        }
+      ]
+    }
+  ]
+}

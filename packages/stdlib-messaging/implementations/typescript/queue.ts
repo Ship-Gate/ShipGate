@@ -457,7 +457,7 @@ export class QueueStore {
   processVisibilityTimeouts(): void {
     const now = new Date();
 
-    for (const [queueName, inFlightSet] of this.inFlight) {
+    for (const [, inFlightSet] of this.inFlight) {
       for (const messageId of inFlightSet) {
         const message = this.messageIndex.get(messageId);
         if (message && message.visibleAt && message.visibleAt <= now) {

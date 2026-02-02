@@ -39,10 +39,10 @@ export interface BehaviorResult<T = unknown> {
 export class BehaviorSpan {
   private span: Span;
   private startTime: number;
-  private config: BehaviorSpanConfig;
+  private readonly _config: BehaviorSpanConfig;
 
   constructor(config: BehaviorSpanConfig, parentContext?: Context) {
-    this.config = config;
+    this._config = config;
     this.startTime = Date.now();
 
     const tracer = trace.getTracer('isl-verification', '1.0.0');
@@ -146,6 +146,13 @@ export class BehaviorSpan {
     this.span.setAttribute('isl.duration_ms', duration);
     this.span.end();
   }
+
+  /**
+   * Get the configuration
+   */
+  getConfig(): BehaviorSpanConfig {
+    return this._config;
+  }
 }
 
 /**
@@ -175,7 +182,7 @@ export async function withBehaviorSpan<T>(
  */
 export function TraceBehavior(domain: string, behavior?: string) {
   return function (
-    target: unknown,
+    _target: unknown,
     propertyKey: string,
     descriptor: PropertyDescriptor
   ) {

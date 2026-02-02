@@ -1,22 +1,12 @@
-export {
-  VerificationMetrics,
-  VerificationBatchResult,
-  createVerificationMetrics,
-} from './verification';
+export { VerificationMetrics, createVerificationMetrics } from './verification';
+export type { VerificationBatchResult } from './verification';
 
-export {
-  CoverageMetrics,
+export { CoverageMetrics, createCoverageMetrics } from './coverage';
+export type {
   CoverageData,
   CoverageReport,
   DomainCoverageReport,
-  createCoverageMetrics,
 } from './coverage';
 
-export {
-  SLOMetrics,
-  SLODefinition,
-  SLOMeasurement,
-  SLOStatus,
-  SLOTemplates,
-  createSLOMetrics,
-} from './slo';
+export { SLOMetrics, SLOTemplates, createSLOMetrics } from './slo';
+export type { SLODefinition, SLOMeasurement, SLOStatus } from './slo';

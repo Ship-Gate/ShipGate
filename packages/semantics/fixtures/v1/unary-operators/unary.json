@@ -1,0 +1,82 @@
+{
+  "name": "unary-operators",
+  "description": "V1 unary operator semantics (not, -)",
+  "version": "1.0.0",
+  "frozenForVersion": "1.x.x",
+  "cases": [
+    {
+      "operator": "not",
+      "operand": true,
+      "expected": false,
+      "description": "NOT: true -> false"
+    },
+    {
+      "operator": "not",
+      "operand": false,
+      "expected": true,
+      "description": "NOT: false -> true"
+    },
+    {
+      "operator": "not",
+      "operand": 0,
+      "expected": true,
+      "description": "NOT: falsy number (0)"
+    },
+    {
+      "operator": "not",
+      "operand": 1,
+      "expected": false,
+      "description": "NOT: truthy number"
+    },
+    {
+      "operator": "not",
+      "operand": "",
+      "expected": true,
+      "description": "NOT: empty string"
+    },
+    {
+      "operator": "not",
+      "operand": "hello",
+      "expected": false,
+      "description": "NOT: non-empty string"
+    },
+    {
+      "operator": "not",
+      "operand": null,
+      "expected": true,
+      "description": "NOT: null"
+    },
+    {
+      "operator": "-",
+      "operand": 5,
+      "expected": -5,
+      "description": "Unary minus: positive -> negative"
+    },
+    {
+      "operator": "-",
+      "operand": -5,
+      "expected": 5,
+      "description": "Unary minus: negative -> positive"
+    },
+    {
+      "operator": "-",
+      "operand": 0,
+      "expected": 0,
+      "description": "Unary minus: zero"
+    },
+    {
+      "operator": "-",
+      "operand": 3.14,
+      "expected": -3.14,
+      "description": "Unary minus: decimal"
+    }
+  ],
+  "errorCases": [
+    {
+      "operator": "-",
+      "operand": "hello",
+      "expectedError": "Unary minus requires number",
+      "description": "Unary minus on string throws"
+    }
+  ]
+}

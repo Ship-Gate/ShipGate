@@ -197,7 +197,7 @@ export async function eventuallyAny(
         const result = await p.predicate();
         if (result === true) {
           const duration = now() - startTime;
-          const results: EventuallyResult[] = predicates.map((pred, idx) => ({
+          const results: EventuallyResult[] = predicates.map((_pred, idx) => ({
             success: idx === i,
             duration: idx === i ? duration : 0,
             attempts: attempts[idx] ?? 0,
@@ -222,11 +222,11 @@ export async function eventuallyAny(
   }
   
   const totalDuration = now() - startTime;
-  const results: EventuallyResult[] = predicates.map((p, i) => ({
+  const results: EventuallyResult[] = predicates.map((pred, i) => ({
     success: false,
     duration: totalDuration,
     attempts: attempts[i] ?? 0,
-    error: errors[i]?.message ?? `${p.description ?? 'condition'} did not become true`,
+    error: errors[i]?.message ?? `${pred.description ?? 'condition'} did not become true`,
   }));
   
   return {

@@ -3,7 +3,7 @@
 // ============================================================================
 
 import * as Sentry from '@sentry/node';
-import type { Integration, Client, Event, EventHint } from '@sentry/types';
+import type { Integration, Event, EventHint } from '@sentry/types';
 
 import type { ISLContext, CheckType } from '../types';
 import {
@@ -31,11 +31,8 @@ export class ISLIntegration implements Integration {
   /**
    * Setup the integration
    */
-  setupOnce(
-    addGlobalEventProcessor: (processor: (event: Event, hint?: EventHint) => Event | null) => void,
-    getCurrentHub: () => { getClient: () => Client | undefined }
-  ): void {
-    addGlobalEventProcessor((event, hint) => {
+  setupOnce(): void {
+    Sentry.addEventProcessor((event: Event, hint?: EventHint) => {
       return this.processEvent(event, hint);
     });
   }
@@ -43,7 +40,7 @@ export class ISLIntegration implements Integration {
   /**
    * Process an event and add ISL-specific enrichment
    */
-  private processEvent(event: Event, hint?: EventHint): Event | null {
+  processEvent(event: Event, hint?: EventHint): Event | null {
     const error = hint?.originalException;
 
     // Skip non-ISL events unless they already have ISL context

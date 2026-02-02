@@ -135,7 +135,7 @@ export class SegmentProvider implements AnalyticsProvider {
     };
   }
 
-  private transformContext(context?: Record<string, unknown>): Record<string, unknown> {
+  private transformContext(context?: object): Record<string, unknown> {
     if (!context) return {};
 
     return {

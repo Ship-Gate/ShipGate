@@ -2,7 +2,7 @@
 // Interactive Documentation Generator - Generate interactive components
 // ============================================================================
 
-import type * as AST from '../../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 import type {
   GeneratorOptions,
   GeneratedFile,

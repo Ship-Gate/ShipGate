@@ -15,26 +15,21 @@
  * ```
  */
 
-import type { DomainDeclaration, BehaviorDeclaration } from '@isl-lang/isl-core';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
 import {
   FailureAnalyzer,
   parseVerificationResult,
   type VerificationFailure,
   type AnalysisResult,
-  type FailureType,
-  type RootCauseType,
-  type FixStrategy,
 } from './analyzer.js';
 import {
   CodePatcher,
   mergePatches,
   type Patch,
-  type PatchResult,
   type PatchContext,
 } from './patcher.js';
 import {
   FixValidator,
-  quickValidate,
   type ValidationResult,
 } from './validator.js';
 import {
@@ -44,7 +39,7 @@ import {
   generateErrorPatches,
   generateTemporalPatches,
 } from './strategies/index.js';
-import { AIFixGenerator, isAIAvailable, type AIFixResult } from './ai/generator.js';
+import { AIFixGenerator, isAIAvailable } from './ai/generator.js';
 
 // ============================================================================
 // Main Types
@@ -327,9 +322,6 @@ function generateExplanation(patches: Patch[], analyses: AnalysisResult[]): stri
 // ============================================================================
 // Exports
 // ============================================================================
-
-// Main function
-export { fix };
 
 // Analyzer
 export {

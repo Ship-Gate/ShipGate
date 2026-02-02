@@ -3,13 +3,13 @@
 // ============================================================================
 
 import * as Sentry from '@sentry/node';
-import { ProfilingIntegration } from '@sentry/profiling-node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import type { Integration } from '@sentry/types';
 
 import type { ISLSentryOptions, ISLContext, CheckType } from './types';
 import { DEFAULT_OPTIONS } from './types';
 import { ISLIntegration } from './integrations/isl';
-import { mergeOptions, createFingerprint } from './utils';
+import { createFingerprint } from './utils';
 import {
   isISLError,
   isPreconditionError,
@@ -33,52 +33,52 @@ export function initSentry(options: ISLSentryOptions): void {
     return;
   }
 
-  const mergedOptions = mergeOptions(
-    DEFAULT_OPTIONS as unknown as ISLSentryOptions,
-    options
-  );
+  const mergedOptions: ISLSentryOptions = {
+    ...DEFAULT_OPTIONS,
+    ...options,
+  };
 
   const integrations: Integration[] = [];
 
   // Add ISL integration if enabled
-  if (mergedOptions.enableISLIntegration) {
+  if (mergedOptions.enableISLIntegration !== false) {
     integrations.push(new ISLIntegration());
   }
 
   // Add profiling integration if enabled
   if (mergedOptions.enableProfiling) {
-    integrations.push(new ProfilingIntegration());
+    integrations.push(nodeProfilingIntegration());
   }
 
   Sentry.init({
     dsn: options.dsn,
-    environment: mergedOptions.environment,
+    environment: mergedOptions.environment ?? DEFAULT_OPTIONS.environment,
     release: mergedOptions.release,
 
-    integrations: (defaultIntegrations) => [
+    integrations: (defaultIntegrations: Integration[]) => [
       ...defaultIntegrations,
       ...integrations,
     ],
 
-    tracesSampleRate: mergedOptions.enablePerformance
-      ? mergedOptions.tracesSampleRate
+    tracesSampleRate: mergedOptions.enablePerformance !== false
+      ? (mergedOptions.tracesSampleRate ?? DEFAULT_OPTIONS.tracesSampleRate)
       : 0,
 
     profilesSampleRate: mergedOptions.enableProfiling
-      ? mergedOptions.profilesSampleRate
+      ? (mergedOptions.profilesSampleRate ?? DEFAULT_OPTIONS.profilesSampleRate)
       : 0,
 
     // Apply default tags
     initialScope: {
       tags: {
         'isl.enabled': 'true',
-        'isl.service': mergedOptions.serviceName,
+        'isl.service': mergedOptions.serviceName ?? DEFAULT_OPTIONS.serviceName,
         ...mergedOptions.defaultTags,
       },
     },
 
     // Enrich events with ISL context
-    beforeSend(event, hint) {
+    beforeSend(event: Sentry.ErrorEvent, hint: Sentry.EventHint) {
       // Handle ISL errors specially
       const error = hint?.originalException;
 
@@ -165,7 +165,7 @@ export function initSentry(options: ISLSentryOptions): void {
     },
 
     // Error boundary
-    beforeBreadcrumb(breadcrumb) {
+    beforeBreadcrumb(breadcrumb: Sentry.Breadcrumb) {
       // Filter out noisy breadcrumbs
       if (breadcrumb.category === 'console' && breadcrumb.level === 'debug') {
         return null;
@@ -173,11 +173,11 @@ export function initSentry(options: ISLSentryOptions): void {
       return breadcrumb;
     },
 
-    debug: mergedOptions.debug,
+    debug: mergedOptions.debug ?? DEFAULT_OPTIONS.debug,
   });
 
   initialized = true;
-  currentOptions = mergedOptions;
+  currentOptions = options;
 
   if (options.debug) {
     // eslint-disable-next-line no-console
@@ -264,7 +264,7 @@ export function withISLScope<T>(
   context: Partial<ISLContext>,
   callback: () => T
 ): T {
-  return Sentry.withScope((scope) => {
+  return Sentry.withScope((scope: Sentry.Scope) => {
     scope.setContext('isl', {
       ...context,
       timestamp: context.timestamp ?? Date.now(),

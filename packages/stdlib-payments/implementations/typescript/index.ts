@@ -40,14 +40,12 @@ export {
   BraintreeProvider,
   AdyenProvider,
   SquareProvider,
-  type PaymentProvider,
 } from './providers';
+export type { PaymentProviderAdapter } from './providers';
 
 // Idempotency utilities
-export {
-  IdempotencyManager,
-  type IdempotencyRecord,
-} from './idempotency';
+export type { IdempotencyManager } from './idempotency';
+// IdempotencyRecord is exported from './types'
 
 // PCI compliance utilities
 export {

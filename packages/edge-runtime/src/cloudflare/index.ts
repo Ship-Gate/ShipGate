@@ -8,17 +8,16 @@ import type {
   EdgeBehaviorDefinition,
   EdgeRequestContext,
   EdgeKVStore,
-  CloudflareProperties,
 } from '../types';
 
 /**
  * Cloudflare-specific runtime options
  */
-export interface CloudflareRuntimeOptions extends Partial<EdgeRuntimeOptions> {
+export interface CloudflareRuntimeOptions extends Omit<Partial<EdgeRuntimeOptions>, 'durableObjects'> {
   /** KV namespace binding */
   kvNamespace?: KVNamespace;
 
-  /** Durable Object namespace bindings */
+  /** Durable Object namespace bindings (Cloudflare-specific) */
   durableObjects?: Record<string, DurableObjectNamespace>;
 
   /** R2 bucket binding */
@@ -107,10 +106,14 @@ export function createCloudflareRuntime(
     ? createKVStoreAdapter(options.kvNamespace)
     : undefined;
 
+  // Spread options but exclude durableObjects since CloudflareRuntimeOptions uses
+  // DurableObjectNamespace while EdgeRuntimeOptions uses EdgeDurableObjectConfig
+  const { durableObjects: _durableObjects, ...restOptions } = options;
+  
   return createEdgeRuntime({
     platform: 'cloudflare',
     kvStore,
-    ...options,
+    ...restOptions,
   });
 }
 
@@ -157,7 +160,7 @@ export function createWorkerHandler(
   let runtime: ISLEdgeRuntime | null = null;
 
   return {
-    async fetch(request: Request, env: CloudflareWorkerEnv, ctx: ExecutionContext): Promise<Response> {
+    async fetch(request: Request, env: CloudflareWorkerEnv, _ctx: ExecutionContext): Promise<Response> {
       // Initialize runtime with env bindings on first request
       if (!runtime) {
         runtime = createCloudflareRuntime({
@@ -166,9 +169,6 @@ export function createWorkerHandler(
         });
         runtime.registerBehaviors(behaviors);
       }
-
-      // Add Cloudflare-specific context
-      const cfProps = (request as unknown as { cf?: CloudflareProperties }).cf;
 
       return runtime.handleRequest(request);
     },

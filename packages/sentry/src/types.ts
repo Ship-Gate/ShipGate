@@ -323,3 +323,54 @@ export const DEFAULT_MIDDLEWARE_OPTIONS: Required<Omit<MiddlewareOptions, 'extra
   extractFromPath: false,
   skipPaths: ['/health', '/ready', '/metrics'],
 };
+
+/**
+ * Options for capturing ISL events to Sentry
+ */
+export interface ISLCaptureOptions {
+  /** Severity level for the event */
+  level?: SeverityLevel;
+  /** Additional tags */
+  tags?: Record<string, string>;
+  /** Additional extra data */
+  extra?: Record<string, unknown>;
+  /** Custom fingerprint for grouping */
+  fingerprint?: string[];
+}
+
+/**
+ * Options for sanitizing data before sending to Sentry
+ */
+export interface SanitizeOptions {
+  /** Fields to redact from data */
+  redactFields?: string[];
+  /** Maximum depth for nested objects */
+  maxDepth?: number;
+  /** Maximum string length */
+  maxStringLength?: number;
+}
+
+/**
+ * Express-compatible request type for middleware
+ */
+export interface ISLRequest {
+  method?: string;
+  url?: string;
+  path?: string;
+  headers: Record<string, string | string[] | undefined>;
+  body?: unknown;
+  params?: Record<string, string>;
+}
+
+/**
+ * Express-compatible response type for middleware
+ */
+export interface ISLResponse {
+  statusCode: number;
+  on(event: string, listener: (...args: unknown[]) => void): this;
+}
+
+/**
+ * Express-compatible next function
+ */
+export type NextFunction = (error?: unknown) => void;

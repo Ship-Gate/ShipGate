@@ -380,7 +380,7 @@ function generateTypeORMRepository(entity: NormalizedEntity, context: GeneratorC
 // Helper Functions
 // ============================================
 
-function generateRepositoryIndex(entities: NormalizedEntity[], adapter: string): GeneratedFile {
+function generateRepositoryIndex(entities: NormalizedEntity[], _adapter: string): GeneratedFile {
   const lines: string[] = [];
 
   for (const entity of entities) {

@@ -140,12 +140,16 @@ export function setupProjections(eventStore: EventStore): void {
     const domain: ParsedDomain = { name: '', entities: [], behaviors: [] };
 
     const domainMatch = content.match(/domain\s+(\w+)\s*\{/);
-    if (domainMatch) domain.name = domainMatch[1];
+    if (domainMatch && domainMatch[1]) domain.name = domainMatch[1];
 
     const entityRegex = /entity\s+(\w+)\s*\{([^}]+)\}/g;
     let match;
     while ((match = entityRegex.exec(content)) !== null) {
-      domain.entities.push({ name: match[1], fields: this.parseFields(match[2]) });
+      const name = match[1];
+      const body = match[2];
+      if (name && body) {
+        domain.entities.push({ name, fields: this.parseFields(body) });
+      }
     }
 
     return domain;
@@ -156,7 +160,11 @@ export function setupProjections(eventStore: EventStore): void {
     const fieldRegex = /(\w+)\s*:\s*(\w+)(\?)?/g;
     let match;
     while ((match = fieldRegex.exec(body)) !== null) {
-      fields.push({ name: match[1], type: match[2], optional: match[3] === '?' });
+      const name = match[1];
+      const type = match[2];
+      if (name && type) {
+        fields.push({ name, type, optional: match[3] === '?' });
+      }
     }
     return fields;
   }

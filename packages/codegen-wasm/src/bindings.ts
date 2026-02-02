@@ -3,8 +3,92 @@
 // Generates JavaScript/TypeScript bindings for WebAssembly modules
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
-import type { WasmModule, GeneratedModule } from './types';
+// ============================================================================
+// LOCAL TYPES (simplified ISL AST types for binding generation)
+// ============================================================================
+
+/**
+ * Identifier node
+ */
+interface Identifier {
+  name: string;
+}
+
+/**
+ * String literal node
+ */
+interface StringLiteral {
+  value: string;
+}
+
+/**
+ * Field definition
+ */
+interface FieldDefinition {
+  name: Identifier;
+  type: TypeDefinition;
+  optional?: boolean;
+}
+
+/**
+ * Error reference
+ */
+interface ErrorReference {
+  name: Identifier;
+}
+
+/**
+ * Output block
+ */
+interface OutputBlock {
+  success: TypeDefinition;
+  errors: ErrorReference[];
+}
+
+/**
+ * Input block
+ */
+interface InputBlock {
+  fields: FieldDefinition[];
+}
+
+/**
+ * Type definition (discriminated union)
+ */
+type TypeDefinition =
+  | { kind: 'PrimitiveType'; name: string }
+  | { kind: 'ReferenceType'; name: { parts: Identifier[] } }
+  | { kind: 'ListType'; element: TypeDefinition }
+  | { kind: 'MapType'; key: TypeDefinition; value: TypeDefinition }
+  | { kind: 'OptionalType'; inner: TypeDefinition }
+  | { kind: 'EnumType'; variants: Identifier[] };
+
+/**
+ * Entity definition
+ */
+interface Entity {
+  name: Identifier;
+  fields: FieldDefinition[];
+}
+
+/**
+ * Behavior definition
+ */
+interface Behavior {
+  name: Identifier;
+  description?: StringLiteral;
+  input: InputBlock;
+  output: OutputBlock;
+}
+
+/**
+ * Domain definition
+ */
+interface Domain {
+  name: Identifier;
+  entities: Entity[];
+  behaviors: Behavior[];
+}
 
 // ============================================================================
 // TYPES
@@ -30,7 +114,7 @@ export interface GeneratedBindings {
  * Generate host bindings for a WebAssembly module
  */
 export function generateBindings(
-  domain: AST.Domain,
+  domain: Domain,
   options: BindingsOptions = { language: 'typescript', style: 'class' }
 ): GeneratedBindings {
   if (options.language === 'typescript') {
@@ -44,7 +128,7 @@ export function generateBindings(
 // ============================================================================
 
 function generateTypeScriptBindings(
-  domain: AST.Domain,
+  domain: Domain,
   options: BindingsOptions
 ): GeneratedBindings {
   const lines: string[] = [];
@@ -96,7 +180,7 @@ function generateTypeScriptBindings(
   return { code: lines.join('\n') };
 }
 
-function generateEntityInterface(entity: AST.Entity): string {
+function generateEntityInterface(entity: Entity): string {
   const lines: string[] = [];
   const name = entity.name.name;
 
@@ -112,7 +196,7 @@ function generateEntityInterface(entity: AST.Entity): string {
   return lines.join('\n');
 }
 
-function generateBehaviorTypes(behavior: AST.Behavior): string {
+function generateBehaviorTypes(behavior: Behavior): string {
   const lines: string[] = [];
   const name = behavior.name.name;
 
@@ -128,7 +212,7 @@ function generateBehaviorTypes(behavior: AST.Behavior): string {
 
   // Output type
   const outputType = islTypeToTS(behavior.output.success);
-  const errorTypes = behavior.output.errors.map(e => `'${e.name.name}'`).join(' | ');
+  const errorTypes = behavior.output.errors.map((e: ErrorReference) => `'${e.name.name}'`).join(' | ');
   
   lines.push(`export type ${name}Result =`);
   lines.push(`  | { success: true; data: ${outputType} }`);
@@ -142,7 +226,7 @@ function generateBehaviorTypes(behavior: AST.Behavior): string {
   return lines.join('\n');
 }
 
-function generateErrorTypes(domain: AST.Domain): string {
+function generateErrorTypes(domain: Domain): string {
   const allErrors = new Set<string>();
   
   for (const behavior of domain.behaviors) {
@@ -155,10 +239,10 @@ function generateErrorTypes(domain: AST.Domain): string {
     return "export type DomainError = 'UNKNOWN_ERROR';";
   }
 
-  return `export type DomainError = ${[...allErrors].map(e => `'${e}'`).join(' | ')};`;
+  return `export type DomainError = ${[...allErrors].map((e: string) => `'${e}'`).join(' | ')};`;
 }
 
-function generateRuntimeClass(domain: AST.Domain, options: BindingsOptions): string {
+function generateRuntimeClass(domain: Domain, options: BindingsOptions): string {
   const lines: string[] = [];
   const name = domain.name.name;
 
@@ -250,7 +334,7 @@ function generateRuntimeClass(domain: AST.Domain, options: BindingsOptions): str
   return lines.join('\n');
 }
 
-function generateBehaviorMethod(behavior: AST.Behavior, options: BindingsOptions): string {
+function generateBehaviorMethod(behavior: Behavior, options: BindingsOptions): string {
   const lines: string[] = [];
   const name = behavior.name.name;
   const camelName = name.charAt(0).toLowerCase() + name.slice(1);
@@ -298,7 +382,7 @@ function generateBehaviorMethod(behavior: AST.Behavior, options: BindingsOptions
   return lines.join('\n');
 }
 
-function generateEntityMethods(entity: AST.Entity): string {
+function generateEntityMethods(entity: Entity): string {
   const lines: string[] = [];
   const name = entity.name.name;
 
@@ -325,7 +409,7 @@ function generateEntityMethods(entity: AST.Entity): string {
   return lines.join('\n');
 }
 
-function prepareInputParam(name: string, type: AST.TypeDefinition): { setup?: string; param: string } {
+function prepareInputParam(name: string, type: TypeDefinition): { setup?: string; param: string } {
   switch (type.kind) {
     case 'PrimitiveType':
       switch (type.name) {
@@ -347,7 +431,7 @@ function prepareInputParam(name: string, type: AST.TypeDefinition): { setup?: st
 // ============================================================================
 
 function generateJavaScriptBindings(
-  domain: AST.Domain,
+  domain: Domain,
   options: BindingsOptions
 ): GeneratedBindings {
   const lines: string[] = [];
@@ -435,7 +519,7 @@ function generateJavaScriptBindings(
 // RUNTIME FUNCTIONS (functional style)
 // ============================================================================
 
-function generateRuntimeFunctions(domain: AST.Domain, options: BindingsOptions): string {
+function generateRuntimeFunctions(domain: Domain, _options: BindingsOptions): string {
   const lines: string[] = [];
   
   lines.push('let wasmInstance: WebAssembly.Instance | null = null;');
@@ -495,7 +579,7 @@ export function decodeString(memory: WebAssembly.Memory, ptr: number, len: numbe
 `;
 }
 
-function islTypeToTS(type: AST.TypeDefinition): string {
+function islTypeToTS(type: TypeDefinition): string {
   switch (type.kind) {
     case 'PrimitiveType':
       switch (type.name) {
@@ -509,7 +593,7 @@ function islTypeToTS(type: AST.TypeDefinition): string {
         default: return 'unknown';
       }
     case 'ReferenceType':
-      return type.name.parts.map(p => p.name).join('.');
+      return type.name.parts.map((p: Identifier) => p.name).join('.');
     case 'ListType':
       return `${islTypeToTS(type.element)}[]`;
     case 'MapType':
@@ -517,7 +601,7 @@ function islTypeToTS(type: AST.TypeDefinition): string {
     case 'OptionalType':
       return `${islTypeToTS(type.inner)} | null`;
     case 'EnumType':
-      return type.variants.map(v => `'${v.name.name}'`).join(' | ');
+      return type.variants.map((v: Identifier) => `'${v.name}'`).join(' | ');
     default:
       return 'unknown';
   }

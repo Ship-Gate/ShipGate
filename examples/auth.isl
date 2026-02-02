@@ -119,29 +119,27 @@ domain UserAuthentication {
       }
     }
 
-    preconditions {
+    pre {
       email.is_valid_format
       password.length >= 8
     }
 
-    postconditions {
-      success implies {
-        - Session.exists(result.id)
-        - Session.user_id == User.lookup(email).id
-        - Session.expires_at > now()
-        - Session.ip_address == input.ip_address
-        - User.last_login == now()
-        - User.failed_attempts == 0
-      }
+    post success {
+      - Session.exists(result.id)
+      - Session.user_id == User.lookup(email).id
+      - Session.expires_at > now()
+      - Session.ip_address == input.ip_address
+      - User.last_login == now()
+      - User.failed_attempts == 0
+    }
 
-      INVALID_CREDENTIALS implies {
-        - User.failed_attempts == old(User.failed_attempts)
-        - User.status == LOCKED
-      }
+    post INVALID_CREDENTIALS {
+      - User.failed_attempts == old(User.failed_attempts)
+      - User.status == LOCKED
+    }
 
-      failure implies {
-        - no Session created
-      }
+    post failure {
+      - no Session created
     }
 
     invariants {
@@ -192,14 +190,12 @@ domain UserAuthentication {
       }
     }
 
-    preconditions {
+    pre {
       Session.exists(session_id)
     }
 
-    postconditions {
-      success implies {
-        - Session.lookup(session_id).revoked == true
-      }
+    post success {
+      - Session.lookup(session_id).revoked == true
     }
 
     temporal {
@@ -242,29 +238,27 @@ domain UserAuthentication {
       }
     }
 
-    preconditions {
+    pre {
       email.is_valid_format
       password.length >= 8
       password == confirm_password
       not User.exists_by_email(email)
     }
 
-    postconditions {
-      success implies {
-        - User.exists(result.id)
-        - User.email == input.email
-        - User.status == PENDING_VERIFICATION
-        - User.password_hash != input.password
-        - User.created_at == now()
-      }
+    post success {
+      - User.exists(result.id)
+      - User.email == input.email
+      - User.status == PENDING_VERIFICATION
+      - User.password_hash != input.password
+      - User.created_at == now()
+    }
 
-      EMAIL_ALREADY_EXISTS implies {
-        - User.count == old(User.count)
-      }
+    post EMAIL_ALREADY_EXISTS {
+      - User.count == old(User.count)
+    }
 
-      failure implies {
-        - no User created
-      }
+    post failure {
+      - no User created
     }
 
     invariants {
@@ -324,24 +318,22 @@ domain UserAuthentication {
       }
     }
 
-    preconditions {
+    pre {
       token.is_valid
       new_password.length >= 8
       new_password == confirm_password
     }
 
-    postconditions {
-      success implies {
-        - User.password_hash != old(User.password_hash)
-        - User.password_hash != input.new_password
-        - token is invalidated
-        - all existing sessions revoked
-      }
+    post success {
+      - User.password_hash != old(User.password_hash)
+      - User.password_hash != input.new_password
+      - token is invalidated
+      - all existing sessions revoked
+    }
 
-      failure implies {
-        - User.password_hash == old(User.password_hash)
-        - existing sessions unchanged
-      }
+    post failure {
+      - User.password_hash == old(User.password_hash)
+      - existing sessions unchanged
     }
 
     invariants {
@@ -397,17 +389,15 @@ domain UserAuthentication {
       }
     }
 
-    preconditions {
+    pre {
       session_id.is_valid_format
     }
 
-    postconditions {
-      success implies {
-        - Session.exists(session_id)
-        - Session.revoked == false
-        - Session.expires_at > now()
-        - User.status == ACTIVE
-      }
+    post success {
+      - Session.exists(session_id)
+      - Session.revoked == false
+      - Session.expires_at > now()
+      - User.status == ACTIVE
     }
 
     temporal {

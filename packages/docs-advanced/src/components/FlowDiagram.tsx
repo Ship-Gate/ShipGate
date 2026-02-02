@@ -74,8 +74,8 @@ export function FlowDiagram({
     renderDiagram();
   }, [diagram, theme]);
 
-  const handleZoomIn = () => setScale((s) => Math.min(s + 0.25, 3));
-  const handleZoomOut = () => setScale((s) => Math.max(s - 0.25, 0.5));
+  const handleZoomIn = () => setScale((s: number) => Math.min(s + 0.25, 3));
+  const handleZoomOut = () => setScale((s: number) => Math.max(s - 0.25, 0.5));
   const handleResetZoom = () => setScale(1);
 
   return (

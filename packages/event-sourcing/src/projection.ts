@@ -200,7 +200,7 @@ export const ProjectionPatterns = {
    * Count events by type
    */
   countByType<TState extends Record<string, number>>(
-    eventType: string
+    _eventType: string
   ): ProjectionHandler<TState, unknown> {
     return (state, event) => ({
       ...state,

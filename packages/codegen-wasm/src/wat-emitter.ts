@@ -3,17 +3,98 @@
 // Converts WasmModule to WAT text format
 // ============================================================================
 
-import type {
-  WasmModule,
-  WasmFunction,
-  WasmInstruction,
-  WasmValueType,
-  WasmFunctionType,
-  WasmImport,
-  WasmGlobal,
-  WasmMemory,
-  WasmDataSegment,
-} from './types';
+// ============================================================================
+// INTERNAL TYPES (emitter-specific representation)
+// ============================================================================
+
+/**
+ * Internal function type representation
+ */
+interface WasmFunctionType {
+  params: string[];
+  results: string[];
+}
+
+/**
+ * Internal instruction representation
+ */
+interface WasmInstruction {
+  op: string;
+  label?: string;
+  type?: string;
+  depth?: number;
+  depths?: number[];
+  default?: number;
+  func?: string | number;
+  index?: number;
+  offset?: number;
+  align?: number;
+  value?: number | bigint;
+  [key: string]: unknown;
+}
+
+/**
+ * Internal function representation
+ */
+interface WasmFunction {
+  name: string;
+  type: WasmFunctionType;
+  locals: string[];
+  body: WasmInstruction[];
+  comments?: string[];
+}
+
+/**
+ * Internal import representation
+ */
+interface WasmImport {
+  module: string;
+  name: string;
+  kind: 'func' | 'memory' | 'table' | 'global';
+  type?: WasmFunctionType;
+}
+
+/**
+ * Internal global representation
+ */
+interface WasmGlobal {
+  name: string;
+  type: string;
+  mutable: boolean;
+  init: number | bigint | string;
+}
+
+/**
+ * Internal memory representation
+ */
+interface WasmMemory {
+  name: string;
+  initial: number;
+  maximum?: number;
+  shared?: boolean;
+}
+
+/**
+ * Internal data segment representation
+ */
+interface WasmDataSegment {
+  offset: number;
+  data: Uint8Array | string;
+}
+
+/**
+ * Internal module representation for WAT emission
+ */
+interface WasmModule {
+  name: string;
+  types: WasmFunctionType[];
+  imports: WasmImport[];
+  memories: WasmMemory[];
+  globals: WasmGlobal[];
+  functions: WasmFunction[];
+  exports: { name: string; kind: 'func' | 'memory' | 'table' | 'global'; index: number | string }[];
+  data: WasmDataSegment[];
+}
 
 // ============================================================================
 // TYPES
@@ -48,7 +129,7 @@ export function compileToWat(module: WasmModule): string {
   if (module.types.length > 0) {
     lines.push('');
     lines.push(`${indent(1)};; Types`);
-    module.types.forEach((type, i) => {
+    module.types.forEach((type: WasmFunctionType, i: number) => {
       lines.push(`${indent(1)}(type $type${i} (func ${formatFuncType(type)}))`);
     });
   }
@@ -95,7 +176,7 @@ export function compileToWat(module: WasmModule): string {
     lines.push('');
     lines.push(`${indent(1)};; Exports`);
     for (const exp of module.exports) {
-      const kindMap = { func: 'func', memory: 'memory', table: 'table', global: 'global' };
+      const kindMap: Record<string, string> = { func: 'func', memory: 'memory', table: 'table', global: 'global' };
       lines.push(`${indent(1)}(export "${exp.name}" (${kindMap[exp.kind]} ${exp.index}))`);
     }
   }
@@ -166,8 +247,8 @@ function emitFunction(func: WasmFunction, level: number): string {
   }
 
   // Function signature
-  const params = func.type.params.map((p, i) => `(param $p${i} ${p})`).join(' ');
-  const results = func.type.results.map(r => `(result ${r})`).join(' ');
+  const params = func.type.params.map((p: string, i: number) => `(param $p${i} ${p})`).join(' ');
+  const results = func.type.results.map((r: string) => `(result ${r})`).join(' ');
   const sig = [params, results].filter(Boolean).join(' ');
 
   lines.push(`${indent}(func $${func.name} ${sig}`);
@@ -231,7 +312,7 @@ function emitInstruction(instr: WasmInstruction, level: number): string {
       return `${indent}${instr.op} ${instr.depth}`;
 
     case 'br_table':
-      return `${indent}br_table ${instr.depths.join(' ')} ${instr.default}`;
+      return `${indent}br_table ${(instr.depths ?? []).join(' ')} ${instr.default}`;
 
     case 'call':
       const target = typeof instr.func === 'string' ? `$${instr.func}` : instr.func;
@@ -274,7 +355,7 @@ function emitInstruction(instr: WasmInstruction, level: number): string {
       return `${indent}${instr.op} ${instr.value}`;
 
     case 'i64.const':
-      return `${indent}${instr.op} ${instr.value.toString()}`;
+      return `${indent}${instr.op} ${(instr.value ?? 0).toString()}`;
 
     // All other numeric operations
     case 'i32.add':
@@ -345,8 +426,8 @@ function emitInstruction(instr: WasmInstruction, level: number): string {
 // ============================================================================
 
 function formatFuncType(type: WasmFunctionType): string {
-  const params = type.params.map(p => `(param ${p})`).join(' ');
-  const results = type.results.map(r => `(result ${r})`).join(' ');
+  const params = type.params.map((p: string) => `(param ${p})`).join(' ');
+  const results = type.results.map((r: string) => `(result ${r})`).join(' ');
   return [params, results].filter(Boolean).join(' ');
 }
 
@@ -379,7 +460,7 @@ function bytesToEscapedString(bytes: Uint8Array): string {
  * Compile WAT to WASM binary
  * Note: Requires external tool like wabt's wat2wasm
  */
-export async function compileWatToWasm(wat: string): Promise<Uint8Array> {
+export async function compileWatToWasm(_wat: string): Promise<Uint8Array> {
   // This would typically shell out to wat2wasm or use a WASM tool
   // For now, return a placeholder
   throw new Error('Binary compilation requires wabt or similar tool');

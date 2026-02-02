@@ -109,7 +109,7 @@ export class Telemetry {
    */
   startRequest(
     requestId: string,
-    request: { path: string; method: string }
+    _request: { path: string; method: string }
   ): void {
     if (!this.running) return;
 
@@ -160,7 +160,7 @@ export class Telemetry {
   /**
    * Record policy denied request
    */
-  recordPolicyDenied(requestId: string, reason?: string): void {
+  recordPolicyDenied(requestId: string, _reason?: string): void {
     if (!this.running) return;
     this.counters.policyDenied++;
     this.counters.failed++;
@@ -170,7 +170,7 @@ export class Telemetry {
   /**
    * Record validation failed request
    */
-  recordValidationFailed(requestId: string, result: unknown): void {
+  recordValidationFailed(requestId: string, _result: unknown): void {
     if (!this.running) return;
     this.counters.validationFailed++;
     this.counters.failed++;
@@ -180,7 +180,7 @@ export class Telemetry {
   /**
    * Record circuit open
    */
-  recordCircuitOpen(requestId: string, circuitName: string): void {
+  recordCircuitOpen(requestId: string, _circuitName: string): void {
     if (!this.running) return;
     this.counters.circuitOpen++;
     this.counters.failed++;
@@ -190,7 +190,7 @@ export class Telemetry {
   /**
    * Record postcondition failure
    */
-  recordPostconditionFailed(requestId: string, result: unknown): void {
+  recordPostconditionFailed(_requestId: string, _result: unknown): void {
     if (!this.running) return;
     this.counters.postconditionFailed++;
   }
@@ -198,7 +198,7 @@ export class Telemetry {
   /**
    * Record error
    */
-  recordError(requestId: string, error: unknown): void {
+  recordError(requestId: string, _error: unknown): void {
     if (!this.running) return;
     this.counters.failed++;
     this.activeRequests.delete(requestId);

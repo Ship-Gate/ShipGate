@@ -5,7 +5,7 @@
  */
 
 import { parseISL, type DomainDeclaration } from '@isl-lang/isl-core';
-import type { Violation, VerificationResult, ExecutionContext, VerificationMode } from './types.js';
+import type { Violation, ExecutionContext, VerificationMode } from './types.js';
 import { Sampler } from './sampling/sampler.js';
 
 export interface ClientOptions {

@@ -6,7 +6,7 @@ import { useISLClient } from './useISLClient';
 import type { QueryState, QueryOptions, ISLError } from '../types';
 import { stableKey, deepEqual } from '../utils/helpers';
 
-interface QueryResult<TData, TError> extends QueryState<TData, TError> {
+export interface QueryResult<TData, TError> extends QueryState<TData, TError> {
   refetch: () => Promise<void>;
   invalidate: () => void;
 }

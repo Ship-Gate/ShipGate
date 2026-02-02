@@ -3,7 +3,7 @@
 // Scans TypeScript/JavaScript source code for security vulnerabilities
 // ============================================================================
 
-import { Finding, SourceLocation } from '../severity';
+import { Finding } from '../severity';
 
 // ============================================================================
 // Scanner Interface
@@ -369,13 +369,6 @@ function shouldCheckPattern(
   pattern: VulnerabilityPattern,
   options: TypeScriptScanOptions
 ): boolean {
-  const categoryMap: Record<string, keyof TypeScriptScanOptions> = {
-    injection: 'checkSqlInjection',
-    cryptography: 'checkWeakCrypto',
-    secrets: 'checkHardcodedSecrets',
-    configuration: 'checkInsecureDeserialize',
-  };
-
   // Special handling for specific patterns
   if (pattern.id.startsWith('TS001') || pattern.id.startsWith('TS002')) {
     return options.checkSqlInjection !== false;
@@ -402,7 +395,7 @@ function shouldCheckPattern(
   return true;
 }
 
-function isInComment(line: string, column: number, match: string): boolean {
+function isInComment(line: string, column: number, _match: string): boolean {
   const beforeMatch = line.substring(0, column);
   
   // Single-line comment

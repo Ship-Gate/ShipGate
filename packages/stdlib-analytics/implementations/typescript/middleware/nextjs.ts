@@ -4,7 +4,16 @@
  * Server and client-side analytics for Next.js applications.
  */
 
-import type { NextRequest } from 'next/server';
+// NextRequest type for Next.js server components
+// Using a minimal interface to avoid dependency on next/server types
+interface NextRequest {
+  url: string;
+  headers: Headers;
+  cookies: {
+    get(name: string): { value: string } | undefined;
+  };
+}
+
 import type { Analytics } from '../index';
 import type { Context, PageContext, DeviceContext, CampaignContext } from '../types';
 

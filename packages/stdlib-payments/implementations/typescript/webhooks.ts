@@ -7,6 +7,7 @@ import {
   WebhookProvider,
   WebhookEventType,
   PaymentId,
+  RefundId,
   PaymentStatus,
   RefundStatus,
   Result,
@@ -149,7 +150,7 @@ export class WebhookProcessor {
       payload: input.payload,
       signatureVerified: true,
       paymentId: parsedPayload.paymentId as PaymentId | undefined,
-      refundId: parsedPayload.refundId,
+      refundId: parsedPayload.refundId as RefundId | undefined,
       processed: false,
       retryCount: 0,
       receivedAt: now,
@@ -320,52 +321,52 @@ export class WebhookProcessor {
   }
   
   private parsePayload(provider: WebhookProvider, payload: string): WebhookPayload {
-    const data = JSON.parse(payload);
+    const data = JSON.parse(payload) as unknown;
     
     switch (provider) {
       case WebhookProvider.STRIPE:
-        return this.parseStripePayload(data);
+        return this.parseStripePayload(data as StripeWebhookData);
       case WebhookProvider.BRAINTREE:
-        return this.parseBraintreePayload(data);
+        return this.parseBraintreePayload(data as BraintreeWebhookData);
       case WebhookProvider.ADYEN:
-        return this.parseAdyenPayload(data);
+        return this.parseAdyenPayload(data as AdyenWebhookData);
       case WebhookProvider.SQUARE:
-        return this.parseSquarePayload(data);
+        return this.parseSquarePayload(data as SquareWebhookData);
       default:
         throw new Error(`Unknown provider: ${provider}`);
     }
   }
   
-  private parseStripePayload(data: Record<string, unknown>): WebhookPayload {
-    const object = data.data?.object as Record<string, unknown> ?? {};
+  private parseStripePayload(data: StripeWebhookData): WebhookPayload {
+    const object = data.data?.object ?? {};
     
     return {
-      paymentId: (object.id as string) ?? (object.payment_intent as string),
-      refundId: data.type === 'refund.created' ? (object.id as string) : undefined,
+      paymentId: object.id ?? object.payment_intent,
+      refundId: data.type === 'refund.created' ? object.id : undefined,
       amount: typeof object.amount === 'number' ? object.amount / 100 : undefined,
-      currency: object.currency as string,
-      failureMessage: object.last_payment_error?.message as string,
+      currency: object.currency,
+      failureMessage: object.last_payment_error?.message,
     };
   }
   
-  private parseBraintreePayload(data: Record<string, unknown>): WebhookPayload {
+  private parseBraintreePayload(data: BraintreeWebhookData): WebhookPayload {
     return {
-      paymentId: data.transaction?.id as string,
-      amount: data.transaction?.amount as number,
+      paymentId: data.transaction?.id,
+      amount: data.transaction?.amount,
     };
   }
   
-  private parseAdyenPayload(data: Record<string, unknown>): WebhookPayload {
+  private parseAdyenPayload(data: AdyenWebhookData): WebhookPayload {
     return {
-      paymentId: data.pspReference as string,
-      amount: data.amount?.value as number,
+      paymentId: data.pspReference,
+      amount: data.amount?.value,
     };
   }
   
-  private parseSquarePayload(data: Record<string, unknown>): WebhookPayload {
+  private parseSquarePayload(data: SquareWebhookData): WebhookPayload {
     return {
-      paymentId: data.payment?.id as string,
-      amount: data.payment?.amount_money?.amount as number,
+      paymentId: data.payment?.id,
+      amount: data.payment?.amount_money?.amount,
     };
   }
   
@@ -395,6 +396,45 @@ interface WebhookPayload {
   amount?: number;
   currency?: string;
   failureMessage?: string;
+}
+
+// Provider-specific webhook payload types
+interface StripeWebhookData {
+  type?: string;
+  data?: {
+    object?: {
+      id?: string;
+      payment_intent?: string;
+      amount?: number;
+      currency?: string;
+      last_payment_error?: {
+        message?: string;
+      };
+    };
+  };
+}
+
+interface BraintreeWebhookData {
+  transaction?: {
+    id?: string;
+    amount?: number;
+  };
+}
+
+interface AdyenWebhookData {
+  pspReference?: string;
+  amount?: {
+    value?: number;
+  };
+}
+
+interface SquareWebhookData {
+  payment?: {
+    id?: string;
+    amount_money?: {
+      amount?: number;
+    };
+  };
 }
 
 // ==========================================================================

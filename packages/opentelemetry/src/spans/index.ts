@@ -1,31 +1,31 @@
 export {
   BehaviorSpan,
-  BehaviorSpanConfig,
-  BehaviorResult,
   BehaviorSpanBuilder,
   withBehaviorSpan,
   createBehaviorSpan,
   TraceBehavior,
 } from './behavior';
+export type { BehaviorSpanConfig, BehaviorResult } from './behavior';
 
 export {
   VerificationSpan,
-  VerificationSpanConfig,
-  CheckResult,
-  CoverageMetrics,
-  VerificationResult,
   VerificationSpanBuilder,
   withVerificationSpan,
   createVerificationSpan,
   TraceVerification,
 } from './verification';
+export type {
+  VerificationSpanConfig,
+  CheckResult,
+  CoverageMetrics,
+  VerificationResult,
+} from './verification';
 
 export {
   ChaosSpan,
-  ChaosSpanConfig,
-  ChaosResult,
   ChaosSpanBuilder,
   withChaosSpan,
   createChaosSpan,
   ChaosUtils,
 } from './chaos';
+export type { ChaosSpanConfig, ChaosResult } from './chaos';

@@ -3,8 +3,6 @@
 // @stdlib/primitives
 // ============================================================================
 
-import { ValidationResult, Validator, createValidator } from './validation';
-
 // ============================================================================
 // BRANDED TYPES
 // ============================================================================
@@ -200,7 +198,7 @@ export function luhnCheck(cardNumber: string): boolean {
   let isEven = false;
   
   for (let i = cardNumber.length - 1; i >= 0; i--) {
-    let digit = parseInt(cardNumber[i], 10);
+    let digit = parseInt(cardNumber.charAt(i), 10);
     
     if (isEven) {
       digit *= 2;

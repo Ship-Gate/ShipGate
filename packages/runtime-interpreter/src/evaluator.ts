@@ -6,13 +6,12 @@
 import type {
   Value,
   Expression,
-  Statement,
   Environment,
   ExecutionContext,
   Pattern,
   MatchCase,
 } from './types';
-import { extendEnvironment, lookupBinding, setBinding } from './environment';
+import { extendEnvironment, lookupBinding } from './environment';
 import { InterpreterError, TypeMismatchError, UnhandledEffectError } from './types';
 
 // ============================================================================
@@ -80,8 +79,13 @@ export async function evaluate(
       // old() should be substituted before evaluation
       throw new InterpreterError('old() not substituted');
 
-    case 'result':
-      return lookupBinding('result', env);
+    case 'result': {
+      const result = lookupBinding('result', env);
+      if (result === undefined) {
+        throw new InterpreterError('result is not defined');
+      }
+      return result;
+    }
 
     default:
       throw new InterpreterError(`Unknown expression type: ${(expr as any).tag}`);
@@ -313,7 +317,10 @@ async function evaluateCall(
   if (fnVal.tag === 'function') {
     const callEnv = extendEnvironment(fnVal.closure);
     for (let i = 0; i < fnVal.params.length; i++) {
-      callEnv.bindings.set(fnVal.params[i], argVals[i] ?? { tag: 'unit' });
+      const paramName = fnVal.params[i];
+      if (paramName !== undefined) {
+        callEnv.bindings.set(paramName, argVals[i] ?? { tag: 'unit' });
+      }
     }
     return evaluate(fnVal.body, callEnv, ctx);
   }
@@ -372,7 +379,11 @@ async function evaluateIndex(
     if (i < 0 || i >= collVal.elements.length) {
       throw new InterpreterError(`Index out of bounds: ${i}`);
     }
-    return collVal.elements[i];
+    const element = collVal.elements[i];
+    if (element === undefined) {
+      throw new InterpreterError(`Index out of bounds: ${i}`);
+    }
+    return element;
   }
 
   if (collVal.tag === 'map') {
@@ -505,7 +516,10 @@ function matchPattern(pattern: Pattern, value: Value): Map<string, Value> | null
       }
       const listBindings = new Map<string, Value>();
       for (let i = 0; i < pattern.elements.length; i++) {
-        const elemBindings = matchPattern(pattern.elements[i], value.elements[i]);
+        const patternElem = pattern.elements[i];
+        const valueElem = value.elements[i];
+        if (patternElem === undefined || valueElem === undefined) return null;
+        const elemBindings = matchPattern(patternElem, valueElem);
         if (elemBindings === null) return null;
         for (const [k, v] of elemBindings) listBindings.set(k, v);
       }
@@ -655,10 +669,14 @@ function valuesEqual(a: Value, b: Value): boolean {
       return a.value === (b as typeof a).value;
     case 'uuid':
       return a.value === (b as typeof a).value;
-    case 'list':
+    case 'list': {
       const bList = b as typeof a;
       if (a.elements.length !== bList.elements.length) return false;
-      return a.elements.every((e, i) => valuesEqual(e, bList.elements[i]));
+      return a.elements.every((e, i) => {
+        const bElem = bList.elements[i];
+        return bElem !== undefined && valuesEqual(e, bElem);
+      });
+    }
     case 'record':
     case 'entity':
       const bRec = b as typeof a;

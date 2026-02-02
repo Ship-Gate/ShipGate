@@ -1,5 +1,5 @@
 import { prisma } from '../db/client';
-import { VerificationStatus, TestStatus, Prisma } from '@prisma/client';
+import type { VerificationStatus, TestStatus, Prisma } from '../db/types';
 import { domainService } from './domain';
 
 export interface CreateVerificationInput {

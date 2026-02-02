@@ -110,7 +110,7 @@ export async function executeSaga<TData>(
 
   // Execute forward steps
   for (let i = 0; i < saga.steps.length; i++) {
-    const step = saga.steps[i];
+    const step = saga.steps[i]!;
     const context: SagaContext = {
       sagaId: saga.id,
       stepIndex: i,
@@ -153,7 +153,7 @@ export async function executeSaga<TData>(
     // Parallel compensation
     await Promise.all(
       stepsToCompensate.map(async (stepName) => {
-        const step = saga.steps.find(s => s.name === stepName)!;
+        const step = saga.steps.find((s: SagaStep<TData>) => s.name === stepName)!;
         options?.onCompensating?.(step.name);
         try {
           const context: SagaContext = {
@@ -173,7 +173,7 @@ export async function executeSaga<TData>(
   } else {
     // Sequential compensation (reverse order)
     for (const stepName of stepsToCompensate) {
-      const step = saga.steps.find(s => s.name === stepName)!;
+      const step = saga.steps.find((s: SagaStep<TData>) => s.name === stepName)!;
       options?.onCompensating?.(step.name);
       try {
         const context: SagaContext = {

@@ -77,7 +77,8 @@ export class ContractRunner {
         iterations,
       };
     } catch (error) {
-      const fcError = error as fc.Error<unknown>;
+      // fast-check errors include counterexample and numRuns properties
+      const fcError = error as { counterexample?: unknown; numRuns?: number; message?: string };
       
       return {
         behavior: test.behavior,

@@ -8,6 +8,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Contract, ContractDiff, compareContracts } from './types.js';
 
+export { Contract, ContractDiff, compareContracts };
+
 export interface BrokerOptions {
   /** Storage directory for contracts */
   storageDir: string;
@@ -59,7 +61,7 @@ export class ContractBroker {
             path.join(this.options.storageDir, file),
             'utf-8'
           );
-          const data = JSON.parse(content);
+          const data = JSON.parse(content) as { version: string; contract: Record<string, unknown>; publishedAt: string; tags?: string[] };
           const contract = Contract.fromJSON(data.contract);
           const key = this.getKey(contract.metadata.consumer, contract.metadata.provider);
           
@@ -97,11 +99,11 @@ export class ContractBroker {
     }
 
     const key = this.getKey(contract.metadata.consumer, contract.metadata.provider);
-    const version = options?.version ?? contract.metadata.version;
+    const version = options?.version ?? contract.metadata.version ?? '1.0.0';
     const tags = options?.tags ?? [];
 
     const contractVersion: ContractVersion = {
-      version,
+      version: String(version),
       contract,
       publishedAt: new Date().toISOString(),
       tags,
@@ -178,7 +180,7 @@ export class ContractBroker {
 
     // Filter by tag
     if (query.tag) {
-      results = results.filter((v) => v.tags.includes(query.tag));
+      results = results.filter((v) => v.tags.includes(query.tag!));
     }
 
     // Get latest only
@@ -351,7 +353,7 @@ export class ContractBroker {
       matrix.consumers.push({
         name: consumer,
         versions: consumerVersions.map((v) => ({
-          version: v.version,
+          version: String(v.version),
           publishedAt: v.publishedAt,
           tags: v.tags,
         })),

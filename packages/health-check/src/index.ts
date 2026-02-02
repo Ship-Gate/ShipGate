@@ -155,14 +155,23 @@ export {
 // Main Export: Health Check Generator from ISL
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { ISLDependencyAnalyzer, type AnalyzerConfig } from './analyzer.js';
-import { HealthAggregator } from './aggregator.js';
+import { ISLDependencyAnalyzer, createDependencyAnalyzer, analyzeDomain, type AnalyzerConfig } from './analyzer.js';
+import { HealthAggregator, createHealthAggregator, quickHealthCheck, areCriticalServicesHealthy } from './aggregator.js';
 import {
   createDatabaseCheck,
   createCacheCheck,
   createQueueCheck,
   createExternalApiCheck,
+  createCustomCheck,
 } from './checks/index.js';
+import {
+  KubernetesProbeGenerator,
+  createKubernetesProbes,
+  healthMiddleware,
+  healthRouter,
+  livenessProbe,
+  readinessProbe,
+} from './generators/index.js';
 import type {
   HealthCheckConfig,
   DependencyInfo,

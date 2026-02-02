@@ -3,6 +3,8 @@
 // @isl-lang/interpreter/types
 // ============================================================================
 
+// Note: These imports require @isl-lang/runtime-interpreter to be built first
+// They are re-exported for consumers of this package
 import type {
   Value,
   Expression as RuntimeExpression,

@@ -5,17 +5,13 @@
 // ============================================================================
 
 import { readFile, writeFile } from 'fs/promises';
-import { analyzeChanges, type ChangeAnalysis } from './analyzer';
 import {
-  parseVersion,
   formatVersion,
-  computeNextVersion,
   bumpVersion,
   isValidVersion,
   type SemanticVersion,
-} from './versioner';
-import { generateChangelog, prependToChangelog } from './changelog';
-import { installHooks, removeHooks, checkHooksInstalled, createPreCommitHook, createCommitMsgHook } from './git/hooks';
+} from './versioner.js';
+import { installHooks, removeHooks, checkHooksInstalled, createPreCommitHook, createCommitMsgHook } from './git/hooks.js';
 import {
   createTag,
   deleteTag,
@@ -23,8 +19,7 @@ import {
   getLatestTag,
   pushTags,
   isGitRepo,
-  deriveNextVersion,
-} from './git/tags';
+} from './git/tags.js';
 
 // ============================================================================
 // CLI ENTRY POINT
@@ -93,7 +88,6 @@ async function main(): Promise<void> {
  */
 async function checkCommand(args: string[]): Promise<void> {
   const staged = args.includes('--staged');
-  const json = args.includes('--json');
 
   console.log('🔍 Checking ISL spec changes...\n');
 
@@ -353,7 +347,6 @@ async function hooksCommand(args: string[]): Promise<void> {
 async function analyzeCommand(args: string[]): Promise<void> {
   const oldPath = args[0];
   const newPath = args[1];
-  const json = args.includes('--json');
 
   if (!oldPath || !newPath) {
     console.error('Usage: isl-version analyze <old-spec> <new-spec>');
@@ -363,8 +356,9 @@ async function analyzeCommand(args: string[]): Promise<void> {
   console.log('🔬 Analyzing changes...\n');
 
   try {
-    const oldContent = await readFile(oldPath, 'utf-8');
-    const newContent = await readFile(newPath, 'utf-8');
+    // Read files to verify they exist
+    await readFile(oldPath, 'utf-8');
+    await readFile(newPath, 'utf-8');
 
     console.log(`Comparing: ${oldPath} → ${newPath}`);
     console.log('');

@@ -1,0 +1,19 @@
+{
+  "name": "@isl-lang/gate-action",
+  "version": "0.1.0",
+  "description": "ISL Studio Gate - GitHub Action to block unsafe PRs",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/isl-lang/gate-action"
+  },
+  "keywords": [
+    "github-action",
+    "security",
+    "gate",
+    "isl",
+    "verification"
+  ],
+  "author": "ISL Team",
+  "license": "MIT"
+}

@@ -106,6 +106,7 @@ export function formatProof(proof: Proof): string {
   lines.push('Steps:');
   for (let i = 0; i < proof.steps.length; i++) {
     const step = proof.steps[i];
+    if (!step) continue;
     const status = step.result === 'valid' ? '✓' : step.result === 'invalid' ? '✗' : '?';
     lines.push(`  ${i + 1}. [${status}] ${step.description}`);
     if (step.formula) {
@@ -128,7 +129,7 @@ export function verifyProof(proof: Proof): { valid: boolean; errors: string[] } 
   // Check all steps are valid
   for (let i = 0; i < proof.steps.length; i++) {
     const step = proof.steps[i];
-    if (step.result === 'invalid') {
+    if (step && step.result === 'invalid') {
       errors.push(`Step ${i + 1} is invalid: ${step.description}`);
     }
   }
@@ -151,7 +152,7 @@ export const Tactics = {
   /**
    * Apply modus ponens: A, A => B |- B
    */
-  modusPonens(premise: Formula, implication: Formula): Formula | null {
+  modusPonens(_premise: Formula, implication: Formula): Formula | null {
     if (implication.kind !== 'implies') return null;
     // Check premise matches left side of implication
     // Return right side
@@ -179,7 +180,7 @@ export const Tactics = {
    */
   andElim(conjunction: Formula, index: number): Formula | null {
     if (conjunction.kind !== 'and') return null;
-    return conjunction.args[index];
+    return conjunction.args[index] ?? null;
   },
 
   /**
@@ -194,8 +195,10 @@ export const Tactics = {
    */
   forallElim(universal: Formula, term: Formula): Formula | null {
     if (universal.kind !== 'forall') return null;
+    const firstVar = universal.vars[0];
+    if (!firstVar) return null;
     // Substitute term for bound variable
-    return substituteVariable(universal.body, universal.vars[0].name, term);
+    return substituteVariable(universal.body, firstVar.name, term);
   },
 
   /**
@@ -203,10 +206,12 @@ export const Tactics = {
    */
   existsElim(existential: Formula, freshConstant: string): Formula | null {
     if (existential.kind !== 'exists') return null;
+    const firstVar = existential.vars[0];
+    if (!firstVar) return null;
     return substituteVariable(
       existential.body,
-      existential.vars[0].name,
-      { kind: 'var', name: freshConstant, sort: existential.vars[0].sort }
+      firstVar.name,
+      { kind: 'var', name: freshConstant, sort: firstVar.sort }
     );
   },
 };

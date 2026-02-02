@@ -5,7 +5,6 @@
  */
 
 import * as core from '@actions/core';
-import * as github from '@actions/github';
 
 import { parseInputs, type ActionInputs } from './inputs.js';
 import { ISLChecker } from './checker.js';

@@ -4,8 +4,12 @@
  * Consumer-side contract testing utilities.
  */
 
-import { Contract, Interaction, ContractRequest, ContractResponse, BodyMatcher } from './types.js';
+import { Contract, Interaction, RequestSpec, ResponseSpec, BodyMatcher } from './types.js';
 import { MockProvider } from './mock-provider.js';
+
+// Re-export types for convenience
+export type ContractRequest = RequestSpec;
+export type ContractResponse = ResponseSpec;
 
 export interface ConsumerTestOptions {
   /** Consumer service name */
@@ -22,9 +26,9 @@ export interface InteractionBuilder {
   /** Set provider state */
   given(state: string, params?: Record<string, unknown>): InteractionBuilder;
   /** Set request */
-  withRequest(request: Partial<ContractRequest>): InteractionBuilder;
+  withRequest(request: Partial<RequestSpec>): InteractionBuilder;
   /** Set expected response */
-  willRespondWith(response: Partial<ContractResponse>): InteractionBuilder;
+  willRespondWith(response: Partial<ResponseSpec>): InteractionBuilder;
   /** Set behavior name */
   forBehavior(behavior: string): InteractionBuilder;
   /** Build the interaction */
@@ -68,12 +72,12 @@ export class ConsumerTest {
         interaction.providerState = { name: state, params };
         return builder;
       },
-      withRequest: (request: Partial<ContractRequest>) => {
-        interaction.request = { ...interaction.request!, ...request };
+      withRequest: (request: Partial<RequestSpec>) => {
+        interaction.request = { ...interaction.request!, ...request } as RequestSpec;
         return builder;
       },
-      willRespondWith: (response: Partial<ContractResponse>) => {
-        interaction.response = { ...interaction.response!, ...response };
+      willRespondWith: (response: Partial<ResponseSpec>) => {
+        interaction.response = { ...interaction.response!, ...response } as ResponseSpec;
         return builder;
       },
       forBehavior: (behavior: string) => {

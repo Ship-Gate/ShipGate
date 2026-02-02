@@ -37,6 +37,7 @@ export class DistributedLock {
   private locks = new Map<string, LockHandle>();
   private waiters = new Map<string, Array<{
     owner: NodeId;
+    ttlMs: number;
     resolve: (handle: LockHandle | null) => void;
     timeout: NodeJS.Timeout;
   }>>();
@@ -121,7 +122,7 @@ export class DistributedLock {
         owner: next.owner,
         token: crypto.randomUUID(),
         acquiredAt: new Date(),
-        expiresAt: new Date(Date.now() + 30000), // Default TTL for waiters
+        expiresAt: new Date(Date.now() + next.ttlMs),
       };
       
       this.locks.set(handle.resource, newHandle);
@@ -135,7 +136,7 @@ export class DistributedLock {
    * Extend a lock's TTL.
    */
   async extend(token: string, additionalTtlMs: number): Promise<LockAcquireResult> {
-    for (const [resource, handle] of this.locks) {
+    for (const [_resource, handle] of this.locks) {
       if (handle.token === token) {
         handle.expiresAt = new Date(Date.now() + additionalTtlMs);
         return { success: true, handle };
@@ -191,6 +192,7 @@ export class DistributedLock {
 
       this.waiters.get(resource)!.push({
         owner,
+        ttlMs,
         resolve: (handle) => {
           if (handle) {
             resolve({ success: true, handle });

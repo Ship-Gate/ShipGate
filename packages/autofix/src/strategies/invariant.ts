@@ -134,7 +134,7 @@ function parseInvariantPredicate(predicate: string): InvariantFix | null {
  */
 function findMutations(
   field: string,
-  relatedCode: CodeSegment[],
+  _relatedCode: CodeSegment[],
   implementation: string
 ): Array<{ line: number; code: string; type: 'assignment' | 'increment' | 'decrement' }> {
   const mutations: Array<{ line: number; code: string; type: 'assignment' | 'increment' | 'decrement' }> = [];
@@ -184,7 +184,6 @@ function generateGuardPatches(
 ): Patch[] {
   const patches: Patch[] = [];
   const indent = context.indentation ?? '  ';
-  const fieldName = fix.field.split('.').pop() ?? fix.field;
 
   switch (fix.type) {
     case 'add_guard': {
@@ -287,7 +286,7 @@ ${indent}}
 function generateClampCode(
   field: string,
   constraint: InvariantConstraint,
-  mutation: { line: number; code: string; type: string },
+  _mutation: { line: number; code: string; type: string },
   indent: string
 ): string | null {
   const fieldName = field.split('.').pop() ?? field;

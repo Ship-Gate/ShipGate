@@ -129,7 +129,7 @@ export function mergeGSet<T>(a: GSet<T>, b: GSet<T>): GSet<T> {
 // OR-SET (Observed-Remove Set)
 // ============================================================================
 
-export interface ORSet<T> {
+export interface ORSet<_T = unknown> {
   elements: Map<string, Set<string>>; // element (serialized) -> set of add tags
   tombstones: Map<string, Set<string>>; // element (serialized) -> set of removed tags
 }

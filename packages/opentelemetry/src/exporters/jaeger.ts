@@ -1,4 +1,4 @@
-import { JaegerExporter, JaegerExporterOptions } from '@opentelemetry/exporter-jaeger';
+import { JaegerExporter } from '@opentelemetry/exporter-jaeger';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import {
   BatchSpanProcessor,
@@ -9,11 +9,31 @@ import {
 /**
  * ISL Jaeger exporter configuration
  */
-export interface ISLJaegerConfig extends JaegerExporterOptions {
+export interface ISLJaegerConfig {
   /**
    * Service name for Jaeger
    */
   serviceName: string;
+
+  /**
+   * Jaeger collector endpoint URL (HTTP)
+   */
+  endpoint?: string;
+
+  /**
+   * Jaeger agent host (UDP)
+   */
+  host?: string;
+
+  /**
+   * Jaeger agent port (UDP)
+   */
+  port?: number;
+
+  /**
+   * Maximum UDP packet size
+   */
+  maxPacketSize?: number;
 
   /**
    * Use batch processor (recommended for production)

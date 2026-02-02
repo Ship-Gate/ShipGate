@@ -3,7 +3,8 @@
 // Generates idiomatic Java and Kotlin code from ISL specifications
 // ============================================================================
 
-export { generate, GeneratorOptions, GeneratedFile } from './generator';
+export { generate } from './generator';
+export type { GeneratorOptions, GeneratedFile } from './generator';
 export { generateJavaTypes } from './java/types';
 export { generateJavaRecords } from './java/records';
 export { generateJavaInterfaces } from './java/interfaces';

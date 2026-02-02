@@ -1,0 +1,53 @@
+{
+  "name": "@isl-lang/policy-packs",
+  "version": "0.1.0",
+  "description": "ISL Policy Packs - Pre-built policy rules for common security patterns",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./auth": {
+      "import": "./dist/packs/auth.js",
+      "types": "./dist/packs/auth.d.ts"
+    },
+    "./payments": {
+      "import": "./dist/packs/payments.js",
+      "types": "./dist/packs/payments.d.ts"
+    },
+    "./pii": {
+      "import": "./dist/packs/pii.js",
+      "types": "./dist/packs/pii.d.ts"
+    },
+    "./rate-limit": {
+      "import": "./dist/packs/rate-limit.js",
+      "types": "./dist/packs/rate-limit.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/packs/auth.ts src/packs/payments.ts src/packs/pii.ts src/packs/rate-limit.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@isl-lang/firewall": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "rimraf": "^5.0.5"
+  },
+  "author": "mevla",
+  "license": "MIT"
+}

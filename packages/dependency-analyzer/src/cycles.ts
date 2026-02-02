@@ -81,7 +81,6 @@ export function detectDomainCycles(graph: DependencyGraph): Cycle[] {
   // Find cycles using DFS
   const visited = new Set<string>();
   const stack = new Set<string>();
-  const parent = new Map<string, string>();
 
   function dfs(node: string, path: string[]): void {
     if (stack.has(node)) {

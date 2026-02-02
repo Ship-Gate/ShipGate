@@ -50,19 +50,27 @@ export function translateToFormula(
   }
 
   if (expr.includes(' implies ')) {
-    const [left, right] = expr.split(' implies ');
-    return {
-      kind: 'implies',
-      left: translateToFormula(left.trim(), context),
-      right: translateToFormula(right.trim(), context),
-    };
+    const parts = expr.split(' implies ');
+    const left = parts[0];
+    const right = parts[1];
+    if (left && right) {
+      return {
+        kind: 'implies',
+        left: translateToFormula(left.trim(), context),
+        right: translateToFormula(right.trim(), context),
+      };
+    }
   }
 
   // Handle comparisons
   const comparisonOps = ['!=', '==', '>=', '<=', '>', '<'];
   for (const op of comparisonOps) {
     if (expr.includes(op)) {
-      const [left, right] = expr.split(op);
+      const parts = expr.split(op);
+      const left = parts[0];
+      const right = parts[1];
+      if (left === undefined || right === undefined) continue;
+      
       const leftFormula = translateTerm(left.trim(), context);
       const rightFormula = translateTerm(right.trim(), context);
 
@@ -126,18 +134,26 @@ function translateTerm(term: string, context: VerificationContext): Formula {
   // Field access (e.g., input.email)
   if (t.includes('.')) {
     const parts = t.split('.');
+    const firstName = parts[0];
+    if (!firstName) {
+      return { kind: 'const', value: t };
+    }
+    
     let formula: Formula = {
       kind: 'var',
-      name: parts[0],
+      name: firstName,
       sort: { kind: 'uninterpreted', name: 'Any' },
     };
 
     for (let i = 1; i < parts.length; i++) {
-      formula = {
-        kind: 'app',
-        func: 'field',
-        args: [formula, { kind: 'const', value: parts[i] }],
-      };
+      const part = parts[i];
+      if (part) {
+        formula = {
+          kind: 'app',
+          func: 'field',
+          args: [formula, { kind: 'const', value: part }],
+        };
+      }
     }
 
     return formula;
@@ -161,10 +177,15 @@ function translateExistsExpression(expr: string, context: VerificationContext): 
     return { kind: 'const', value: true };
   }
 
-  const [, entity, conditions] = match;
+  const entity = match[1];
+  const conditions = match[2];
+  if (!entity || !conditions) {
+    return { kind: 'const', value: true };
+  }
+
   const condPairs = conditions.split(',').map((c) => {
-    const [key, value] = c.split(':').map((s) => s.trim());
-    return { key, value };
+    const parts = c.split(':').map((s) => s.trim());
+    return { key: parts[0] ?? '', value: parts[1] ?? '' };
   });
 
   // Create existential formula
@@ -173,18 +194,20 @@ function translateExistsExpression(expr: string, context: VerificationContext): 
     sort: { kind: 'uninterpreted', name: entity },
   };
 
-  const constraints = condPairs.map((pair) => ({
-    kind: 'eq' as const,
-    left: {
-      kind: 'app' as const,
-      func: 'field',
-      args: [
-        { kind: 'var' as const, name: boundVar.name, sort: boundVar.sort },
-        { kind: 'const' as const, value: pair.key },
-      ],
-    },
-    right: translateTerm(pair.value, context),
-  }));
+  const constraints: Formula[] = condPairs
+    .filter((pair) => pair.key && pair.value)
+    .map((pair) => ({
+      kind: 'eq' as const,
+      left: {
+        kind: 'app' as const,
+        func: 'field',
+        args: [
+          { kind: 'var' as const, name: boundVar.name, sort: boundVar.sort },
+          { kind: 'const' as const, value: pair.key },
+        ],
+      } as Formula,
+      right: translateTerm(pair.value, context),
+    }));
 
   return {
     kind: 'exists',
@@ -206,7 +229,11 @@ function translateForallExpression(expr: string, context: VerificationContext): 
     return { kind: 'const', value: true };
   }
 
-  const [, entity, condition] = match;
+  const entity = match[1];
+  const condition = match[2];
+  if (!entity || !condition) {
+    return { kind: 'const', value: true };
+  }
 
   const boundVar: Variable = {
     name: `_${entity.toLowerCase()}`,
@@ -263,12 +290,16 @@ export function translatePostcondition(
 
   // Handle special postcondition syntax
   if (postcond.includes(' implies ')) {
-    const [condition, consequence] = postcond.split(' implies ');
-    return {
-      kind: 'implies',
-      left: translateToFormula(condition.trim(), context),
-      right: translateToFormula(consequence.trim(), context),
-    };
+    const parts = postcond.split(' implies ');
+    const condition = parts[0];
+    const consequence = parts[1];
+    if (condition && consequence) {
+      return {
+        kind: 'implies',
+        left: translateToFormula(condition.trim(), context),
+        right: translateToFormula(consequence.trim(), context),
+      };
+    }
   }
 
   return translateToFormula(postcond, context);

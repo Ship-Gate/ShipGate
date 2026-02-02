@@ -285,7 +285,7 @@ export class SQLGenerator implements DatabaseAdapterGenerator {
 
   private formatDefaultValue(
     defaultValue: DefaultValue,
-    field: NormalizedField,
+    _field: NormalizedField,
     provider: string
   ): string | null {
     switch (defaultValue.kind) {
@@ -330,7 +330,7 @@ export class SQLGenerator implements DatabaseAdapterGenerator {
     }
   }
 
-  private generateIndexes(entity: NormalizedEntity, context: GeneratorContext): string[] {
+  private generateIndexes(entity: NormalizedEntity, _context: GeneratorContext): string[] {
     const lines: string[] = [];
 
     for (const index of entity.indexes) {

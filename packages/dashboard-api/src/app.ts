@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction, Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { domainsRouter } from './routes/domains';
@@ -7,7 +7,7 @@ import { analyticsRouter } from './routes/analytics';
 import { requestLogger, errorLogger, logger } from './middleware/logging';
 import { authenticate, optionalAuth } from './middleware/auth';
 
-export function createApp() {
+export function createApp(): Express {
   const app = express();
 
   // Security middleware

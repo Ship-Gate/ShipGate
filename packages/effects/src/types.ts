@@ -3,6 +3,290 @@
 // Algebraic effects for tracking and controlling side effects
 // ============================================================================
 
+// ============================================================================
+// Runtime Effect Types (Tagged Union Style)
+// ============================================================================
+
+/**
+ * Base effect interface with tag discriminator
+ */
+export interface Effect<T = unknown> {
+  readonly _tag: string;
+  readonly __result?: T;
+}
+
+/**
+ * Any effect (used for type-erased effect handling)
+ */
+export type AnyEffect = 
+  | ReadEffect<unknown>
+  | WriteEffect<unknown>
+  | IOEffect<unknown>
+  | NetworkEffect<unknown>
+  | DatabaseEffect<unknown>
+  | MessageEffect<unknown>
+  | LogEffect
+  | TimeEffect<unknown>
+  | RandomEffect<unknown>
+  | EnvEffect<unknown>
+  | FileSystemEffect<unknown>
+  | ShellEffect<unknown>
+  | SequenceEffect<unknown>
+  | ParallelEffect<unknown>
+  | ConditionalEffect<unknown>
+  | RetryEffect<unknown>
+  | TimeoutEffect<unknown>
+  | CacheEffect<unknown>;
+
+/**
+ * Read effect - read from a source
+ */
+export interface ReadEffect<T> extends Effect<T> {
+  readonly _tag: 'Read';
+  readonly source: string;
+  readonly key?: string;
+}
+
+/**
+ * Write effect - write to a target
+ */
+export interface WriteEffect<T> extends Effect<T> {
+  readonly _tag: 'Write';
+  readonly target: string;
+  readonly key?: string;
+  readonly value: T;
+}
+
+/**
+ * IO effect - general input/output
+ */
+export interface IOEffect<T> extends Effect<T> {
+  readonly _tag: 'IO';
+  readonly operation: string;
+  readonly params?: Record<string, unknown>;
+}
+
+/**
+ * Network effect - HTTP requests
+ */
+export interface NetworkEffect<T> extends Effect<T> {
+  readonly _tag: 'Network';
+  readonly method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
+  readonly url: string;
+  readonly headers?: Record<string, string>;
+  readonly body?: unknown;
+}
+
+/**
+ * Database effect - database operations
+ */
+export interface DatabaseEffect<T> extends Effect<T> {
+  readonly _tag: 'Database';
+  readonly operation: 'query' | 'insert' | 'update' | 'delete' | 'transaction';
+  readonly table?: string;
+  readonly query?: string;
+  readonly params?: unknown[];
+}
+
+/**
+ * Message effect - messaging/events
+ */
+export interface MessageEffect<T> extends Effect<T> {
+  readonly _tag: 'Message';
+  readonly channel: string;
+  readonly topic?: string;
+  readonly payload: unknown;
+}
+
+/**
+ * Log effect - logging
+ */
+export interface LogEffect extends Effect<void> {
+  readonly _tag: 'Log';
+  readonly level: 'debug' | 'info' | 'warn' | 'error';
+  readonly message: string;
+  readonly context?: Record<string, unknown>;
+}
+
+/**
+ * Time effect - time operations
+ */
+export interface TimeEffect<T> extends Effect<T> {
+  readonly _tag: 'Time';
+  readonly operation: 'now' | 'delay' | 'timeout';
+  readonly duration?: number;
+}
+
+/**
+ * Random effect - random number generation
+ */
+export interface RandomEffect<T> extends Effect<T> {
+  readonly _tag: 'Random';
+  readonly type: 'number' | 'uuid' | 'bytes' | 'choice';
+  readonly options?: {
+    min?: number;
+    max?: number;
+    length?: number;
+    choices?: unknown[];
+  };
+}
+
+/**
+ * Environment effect - environment variables
+ */
+export interface EnvEffect<T> extends Effect<T> {
+  readonly _tag: 'Env';
+  readonly variable: string;
+  readonly required?: boolean;
+  readonly default?: T;
+}
+
+/**
+ * File system effect
+ */
+export interface FileSystemEffect<T> extends Effect<T> {
+  readonly _tag: 'FileSystem';
+  readonly operation: 'read' | 'write' | 'delete' | 'exists' | 'list';
+  readonly path: string;
+  readonly content?: unknown;
+}
+
+/**
+ * Shell effect - execute shell commands
+ */
+export interface ShellEffect<T> extends Effect<T> {
+  readonly _tag: 'Shell';
+  readonly command: string;
+  readonly args?: string[];
+  readonly cwd?: string;
+  readonly env?: Record<string, string>;
+}
+
+// ============================================================================
+// Effect Composition Types
+// ============================================================================
+
+/**
+ * Sequence effect - execute effects in order
+ */
+export interface SequenceEffect<T> extends Effect<T> {
+  readonly _tag: 'Sequence';
+  readonly effects: Effect<unknown>[];
+}
+
+/**
+ * Parallel effect - execute effects concurrently
+ */
+export interface ParallelEffect<T> extends Effect<T[]> {
+  readonly _tag: 'Parallel';
+  readonly effects: Effect<unknown>[];
+}
+
+/**
+ * Conditional effect - execute based on condition
+ */
+export interface ConditionalEffect<T> extends Effect<T> {
+  readonly _tag: 'Conditional';
+  readonly condition: Effect<boolean>;
+  readonly onTrue: Effect<T>;
+  readonly onFalse?: Effect<T>;
+}
+
+/**
+ * Retry policy for retry effects
+ */
+export interface RetryPolicy {
+  readonly maxAttempts: number;
+  readonly delay: number;
+  readonly backoff?: 'none' | 'linear' | 'exponential';
+  readonly maxDelay?: number;
+  readonly retryOn?: string[];
+}
+
+/**
+ * Retry effect - retry on failure
+ */
+export interface RetryEffect<T> extends Effect<T> {
+  readonly _tag: 'Retry';
+  readonly effect: Effect<T>;
+  readonly policy: RetryPolicy;
+}
+
+/**
+ * Timeout effect - fail after duration
+ */
+export interface TimeoutEffect<T> extends Effect<T> {
+  readonly _tag: 'Timeout';
+  readonly effect: Effect<T>;
+  readonly duration: number;
+  readonly fallback?: T;
+}
+
+/**
+ * Cache effect - cache result
+ */
+export interface CacheEffect<T> extends Effect<T> {
+  readonly _tag: 'Cache';
+  readonly key: string;
+  readonly effect: Effect<T>;
+  readonly ttl?: number;
+}
+
+// ============================================================================
+// Runtime Types
+// ============================================================================
+
+/**
+ * Effect handler function
+ */
+export type EffectHandler<E extends AnyEffect = AnyEffect, T = unknown> = (effect: E) => T | Promise<T>;
+
+/**
+ * Effect interceptor for cross-cutting concerns
+ */
+export interface EffectInterceptor {
+  before?(effect: AnyEffect): AnyEffect | Promise<AnyEffect>;
+  after?(effect: AnyEffect, result: unknown): unknown | Promise<unknown>;
+  onError?(effect: AnyEffect, error: Error): void | Promise<void>;
+}
+
+/**
+ * Effect runtime configuration
+ */
+export interface EffectRuntime {
+  handlers: Map<string, EffectHandler<AnyEffect, unknown>>;
+  interceptors: EffectInterceptor[];
+  logger?: (effect: AnyEffect, result: unknown) => void;
+}
+
+// ============================================================================
+// Effect Specification Types (for ISL verification)
+// ============================================================================
+
+/**
+ * Effect constraint for specifications
+ */
+export interface EffectConstraint {
+  tag: string;
+  allowed: boolean;
+  maxOccurrences?: number;
+}
+
+/**
+ * Effect specification
+ */
+export interface EffectSpec {
+  name: string;
+  description?: string;
+  effects: EffectConstraint[];
+  forbidden?: string[];
+  required?: string[];
+}
+
+// ============================================================================
+// Algebraic Effect Types (Theory-based)
+// ============================================================================
+
 /**
  * Effect kinds - categorize different types of effects
  */
@@ -25,14 +309,14 @@ export type EffectKind =
   | 'Custom';      // User-defined effects
 
 /**
- * Effect - represents a single effect
+ * Algebraic Effect - represents a single effect definition (for ISL declarations)
  */
-export interface Effect {
+export interface AlgebraicEffect {
   kind: EffectKind;
   name: string;
   description?: string;
   operations: EffectOperation[];
-  handlers?: EffectHandler[];
+  handlers?: AlgebraicEffectHandler[];
 }
 
 /**
@@ -84,9 +368,9 @@ export interface EffectRef {
 }
 
 /**
- * Effect handler - handles effect operations
+ * Algebraic effect handler - handles effect operations (for ISL handlers)
  */
-export interface EffectHandler {
+export interface AlgebraicEffectHandler {
   effect: string;
   operation: string;
   implementation: EffectHandlerImpl;
@@ -143,9 +427,9 @@ export type Stateful<S, T> = Effectful<T, { effects: [{ effect: 'State', operati
 export type WithResource<R, T> = Effectful<T, { effects: [{ effect: 'Resource' }] }>;
 
 /**
- * Effect constraint - ISL syntax for effect bounds
+ * Algebraic effect constraint - ISL syntax for effect bounds
  */
-export interface EffectConstraint {
+export interface AlgebraicEffectBoundConstraint {
   kind: 'EffectConstraint';
   variable: string;
   bounds: EffectBound[];
@@ -224,7 +508,7 @@ export interface ResourceLifecycle<R> {
 export interface EffectScope {
   id: string;
   parent?: EffectScope;
-  handlers: Map<string, EffectHandler>;
+  handlers: Map<string, AlgebraicEffectHandler>;
   resources: Map<string, unknown>;
 }
 
@@ -234,7 +518,7 @@ export interface EffectScope {
 export interface EffectContext {
   scope: EffectScope;
   stack: EffectFrame[];
-  handlers: Map<string, EffectHandler[]>;
+  handlers: Map<string, AlgebraicEffectHandler[]>;
 }
 
 /**

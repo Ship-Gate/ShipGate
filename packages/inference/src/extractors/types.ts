@@ -92,7 +92,7 @@ function extractTypesFromPython(result: PythonParseResult): ExtractedType[] {
       name: dataclass.name,
       fields,
       isEnum: false,
-      sourceLocation: dataclass.location,
+      sourceLocation: { ...dataclass.location, column: 1 },
     });
   }
 
@@ -103,7 +103,7 @@ function extractTypesFromPython(result: PythonParseResult): ExtractedType[] {
       fields: [],
       isEnum: true,
       enumValues: enumDef.members,
-      sourceLocation: enumDef.location,
+      sourceLocation: { ...enumDef.location, column: 1 },
     });
   }
 
@@ -120,7 +120,7 @@ function extractTypesFromPython(result: PythonParseResult): ExtractedType[] {
       name: cls.name,
       fields,
       isEnum: false,
-      sourceLocation: cls.location,
+      sourceLocation: { ...cls.location, column: 1 },
     });
   }
 
@@ -186,13 +186,13 @@ function mapTypeScriptType(tsType: string): string {
 
   // Handle Promise<T>
   const promiseMatch = tsType.match(/Promise<(.+)>/);
-  if (promiseMatch) {
+  if (promiseMatch && promiseMatch[1]) {
     return mapTypeScriptType(promiseMatch[1]);
   }
 
   // Handle Array<T> or T[]
   const arrayMatch = tsType.match(/Array<(.+)>/) || tsType.match(/(.+)\[\]/);
-  if (arrayMatch) {
+  if (arrayMatch && arrayMatch[1]) {
     return `List<${mapTypeScriptType(arrayMatch[1])}>`;
   }
 
@@ -224,13 +224,13 @@ function mapPythonType(pyType: string): string {
 
   // Handle Optional[T]
   const optionalMatch = pyType.match(/Optional\[(.+)\]/);
-  if (optionalMatch) {
+  if (optionalMatch && optionalMatch[1]) {
     return mapPythonType(optionalMatch[1]);
   }
 
   // Handle List[T]
   const listMatch = pyType.match(/(?:List|list)\[(.+)\]/);
-  if (listMatch) {
+  if (listMatch && listMatch[1]) {
     return `List<${mapPythonType(listMatch[1])}>`;
   }
 

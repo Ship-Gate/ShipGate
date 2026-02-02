@@ -5,25 +5,24 @@
 
 import { readFile } from 'node:fs/promises';
 import type {
-  Value,
   Environment,
   ExecutionContext,
   Expression as RuntimeExpression,
+  BinaryOp,
 } from '@isl-lang/runtime-interpreter';
 import { evaluate } from '@isl-lang/runtime-interpreter';
 import type {
   Domain as ASTDomain,
-  Behavior,
   Expression as ASTExpression,
   Statement,
   Scenario,
+  ParseResult,
 } from '@isl-lang/parser';
 import type {
   VerificationOptions,
   VerificationReport,
   BehaviorResult,
   ConditionResult,
-  CheckResult,
   ExecutionPlan,
   BehaviorPlan,
   Bindings,
@@ -33,21 +32,15 @@ import type {
 import {
   DEFAULT_OPTIONS,
   InterpreterError,
-  BindingError,
 } from './types';
 import {
   loadBindings,
   createBindings,
-  toValue,
   fromValue,
-  loadTargetModule,
 } from './bindings';
 import { runWithTimeout } from './sandbox';
 import {
-  executeFunction,
   executeBehavior,
-  captureState,
-  cloneValues,
 } from './executor';
 import { runScenarios, ScenarioContext } from './scenarios';
 
@@ -58,7 +51,7 @@ import { runScenarios, ScenarioContext } from './scenarios';
 export class ISLInterpreter {
   private options: VerificationOptions;
   private domain: ASTDomain | null = null;
-  private parseFn: ((source: string) => ASTDomain) | null = null;
+  private parseFn: ((source: string) => ASTDomain | ParseResult) | null = null;
   private typeCheckFn: ((domain: ASTDomain) => void) | null = null;
   
   constructor(options: Partial<VerificationOptions> = {}) {
@@ -68,7 +61,7 @@ export class ISLInterpreter {
   /**
    * Set the parser function.
    */
-  setParser(parseFn: (source: string) => ASTDomain): void {
+  setParser(parseFn: (source: string) => ASTDomain | ParseResult): void {
     this.parseFn = parseFn;
   }
   
@@ -98,10 +91,23 @@ export class ISLInterpreter {
       }
     }
     
-    this.domain = this.parseFn(source);
+    const parseResult = this.parseFn(source);
+    // Handle both ParseResult (with domain property) and direct Domain return
+    if ('domain' in parseResult) {
+      const result = parseResult as ParseResult;
+      if (!result.success || !result.domain) {
+        throw new InterpreterError(
+          `Parse failed: ${result.errors?.map(e => e.message).join(', ') || 'Unknown error'}`,
+          'PARSE_ERROR'
+        );
+      }
+      this.domain = result.domain;
+    } else {
+      this.domain = parseResult as ASTDomain;
+    }
     
     // Optionally type check
-    if (this.typeCheckFn) {
+    if (this.typeCheckFn && this.domain) {
       this.typeCheckFn(this.domain);
     }
     
@@ -184,7 +190,9 @@ export class ISLInterpreter {
     // Verify postconditions
     const postconditionResults: ConditionResult[] = [];
     for (const pc of behavior.postconditions) {
-      const condition = typeof pc.condition === 'string' ? pc.condition : pc.condition.name;
+      // Note: condition extracted for potential future use in result grouping
+      const _condition = typeof pc.condition === 'string' ? pc.condition : pc.condition.name;
+      void _condition; // Suppress unused variable warning
       const results = await this.verifyConditions(
         pc.predicates,
         'postcondition',
@@ -610,14 +618,14 @@ export class ISLInterpreter {
   /**
    * Convert an AST operator to a runtime operator.
    */
-  private convertOperator(op: string): string {
-    const mapping: Record<string, string> = {
+  private convertOperator(op: string): BinaryOp {
+    const mapping: Record<string, BinaryOp> = {
       'and': '&&',
       'or': '||',
       'implies': '||', // a implies b = !a || b (simplified)
       'iff': '==',
     };
-    return mapping[op] ?? op;
+    return mapping[op] ?? op as BinaryOp;
   }
   
   /**

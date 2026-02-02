@@ -2,23 +2,30 @@
  * ISL codegen-graphql - GraphQL Schema and Resolver Generation
  */
 
-// Schema generation
-export { generateGraphQLSchema } from './schema/generator';
-export type { SchemaGeneratorConfig } from './schema/generator';
+// Main generators
+export { generate, generateGraphQL } from './generator.js';
+export { generateSchema } from './schema.js';
+export { generateResolvers } from './resolvers.js';
+export { generateTypeScriptTypes } from './typescript.js';
+export { generateClientOperations, generateReactHooks } from './client.js';
 
-// Resolver generation
-export { generateResolvers } from './resolvers/generator';
-export type { ResolverGeneratorConfig } from './resolvers/generator';
+// Types
+export type {
+  Domain,
+  Entity,
+  Behavior,
+  Field,
+  TypeDeclaration,
+  Relation,
+  GeneratedFile,
+  GraphQLOptions,
+} from './types.js';
 
-// Type generation
-export { generateTypes } from './types/generator';
-export type { TypeGeneratorConfig } from './types/generator';
-
-// Federation
-export { generateFederatedSchema } from './federation/generator';
-export type { FederationConfig } from './federation/generator';
+// Advanced generators
+export { generateSchema as generateAdvancedSchema, generatePageInfoType } from './generators/schema.js';
+export { generateResolvers as generateAdvancedResolvers } from './generators/resolvers.js';
+export { generateClient } from './generators/client.js';
 
 // Utilities
-export { mapISLTypeToGraphQL, mapISLEnumToGraphQL } from './utils/type-mapper';
-export { generateDataLoaders } from './utils/dataloader';
-export { generateInputValidation } from './utils/validation';
+export { generateDataLoaders } from './utils/dataloader.js';
+export { generateInputValidation, validationTypes, generateValidationMiddleware } from './utils/validation.js';

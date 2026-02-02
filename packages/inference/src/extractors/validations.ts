@@ -94,8 +94,9 @@ function extractFromIfThrow(node: ts.IfStatement, sourceFile: ts.SourceFile): Ex
       hasThrow = true;
       if (n.expression && ts.isNewExpression(n.expression)) {
         const args = n.expression.arguments;
-        if (args && args.length > 0 && ts.isStringLiteral(args[0])) {
-          errorMessage = args[0].text;
+        const firstArg = args?.[0];
+        if (firstArg && ts.isStringLiteral(firstArg)) {
+          errorMessage = firstArg.text;
         }
       }
     }
@@ -123,11 +124,13 @@ function extractFromIfThrow(node: ts.IfStatement, sourceFile: ts.SourceFile): Ex
 }
 
 function extractFromAssert(node: ts.CallExpression, sourceFile: ts.SourceFile): ExtractedValidation | null {
-  if (node.arguments.length === 0) return null;
+  const firstArg = node.arguments[0];
+  if (!firstArg) return null;
 
-  const condition = node.arguments[0].getText(sourceFile);
-  const message = node.arguments.length > 1 && ts.isStringLiteral(node.arguments[1])
-    ? node.arguments[1].text
+  const condition = firstArg.getText(sourceFile);
+  const secondArg = node.arguments[1];
+  const message = secondArg && ts.isStringLiteral(secondArg)
+    ? secondArg.text
     : undefined;
 
   return {
@@ -174,9 +177,12 @@ function analyzePythonBody(body: string): ExtractedValidation[] {
   // Pattern 1: if condition: raise Error("message")
   const ifRaiseMatches = body.matchAll(/if\s+(not\s+)?([^:]+):\s*\n\s+raise\s+\w+\(["']([^"']+)["']\)/g);
   for (const match of ifRaiseMatches) {
-    const negated = !!match[1];
-    const condition = match[2].trim();
+    const conditionPart = match[2];
     const errorMessage = match[3];
+    if (!conditionPart) continue;
+    
+    const negated = !!match[1];
+    const condition = conditionPart.trim();
 
     validations.push({
       condition: convertPythonToISL(condition, !negated),
@@ -189,7 +195,10 @@ function analyzePythonBody(body: string): ExtractedValidation[] {
   // Pattern 2: assert condition, "message"
   const assertMatches = body.matchAll(/assert\s+([^,\n]+)(?:,\s*["']([^"']+)["'])?/g);
   for (const match of assertMatches) {
-    const condition = match[1].trim();
+    const conditionPart = match[1];
+    if (!conditionPart) continue;
+    
+    const condition = conditionPart.trim();
     const message = match[2];
 
     validations.push({

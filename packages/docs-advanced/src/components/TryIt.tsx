@@ -167,7 +167,7 @@ export function TryIt({
           </div>
           <textarea
             value={input}
-            onChange={(e) => {
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
               setInput(e.target.value);
               validateInput(e.target.value);
             }}
@@ -176,7 +176,7 @@ export function TryIt({
           />
           {validationErrors.length > 0 && (
             <div className="mt-2 text-xs text-red-600">
-              {validationErrors.map((err, i) => (
+              {validationErrors.map((err: string, i: number) => (
                 <div key={i}>• {err}</div>
               ))}
             </div>

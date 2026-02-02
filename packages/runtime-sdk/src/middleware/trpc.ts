@@ -210,7 +210,7 @@ export function islMiddleware(options: TRPCMiddlewareOptions) {
 /**
  * Convert tRPC path to behavior name
  */
-function pathToBehaviorName(path: string, type: 'query' | 'mutation' | 'subscription'): string {
+function pathToBehaviorName(path: string, _type: 'query' | 'mutation' | 'subscription'): string {
   // "user.create" -> ["user", "create"]
   const parts = path.split('.');
   const action = parts[parts.length - 1] ?? '';

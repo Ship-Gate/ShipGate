@@ -172,6 +172,8 @@ export class SagaExecutor<T = unknown> {
       // Execute forward steps
       for (let i = 0; i < sagaDef.steps.length; i++) {
         const step = sagaDef.steps[i];
+        if (!step) continue;
+        
         context.stepIndex = i;
 
         const result = await this.executeStep(step, context);
@@ -308,10 +310,9 @@ export class SagaExecutor<T = unknown> {
         stepsToCompensate.map(step => step.compensation(context))
       );
 
-      for (let i = 0; i < results.length; i++) {
-        const result = results[i];
+      for (const result of results) {
         if (result.status === 'rejected') {
-          execution.compensationErrors.push(result.reason);
+          execution.compensationErrors.push(result.reason as Error);
         } else if (result.value.status === 'failed') {
           execution.compensationErrors.push(result.value.error);
         }

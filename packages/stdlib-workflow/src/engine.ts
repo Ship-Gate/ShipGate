@@ -4,30 +4,30 @@
  */
 
 import { v4 as uuid } from 'uuid';
-import {
+import type {
   Workflow,
   WorkflowId,
-  WorkflowStatus,
   Step,
-  StepId,
-  StepStatus,
   StepDefinition,
   StepHandler,
   CompensationHandler,
   StepExecutionContext,
   CompensationContext,
   StepError,
-  WorkflowError,
   WorkflowResult,
   WorkflowProgress,
   WorkflowStatusInfo,
   WorkflowEngineConfig,
   WorkflowEventType,
-  RetryStrategy,
-  FailureAction,
   Logger,
   ListWorkflowsQuery,
   ListWorkflowsResult,
+} from './types';
+import {
+  WorkflowStatus,
+  StepStatus,
+  RetryStrategy,
+  FailureAction,
 } from './types';
 
 // ============================================
@@ -153,12 +153,14 @@ export class WorkflowEngine {
 
     const workflowSteps: Step[] = steps.map((def) => this.createStep(workflowId, def));
 
+    // workflowSteps is guaranteed non-empty by validateWorkflowDefinition
+    const firstStep = workflowSteps[0]!;
     const workflow: Workflow = {
       id: workflowId,
       name,
       description: options.description,
       status: WorkflowStatus.RUNNING,
-      currentStep: workflowSteps[0].id,
+      currentStep: firstStep.id,
       context: options.initialContext ?? {},
       steps: workflowSteps,
       compensationStack: [],
@@ -272,7 +274,9 @@ export class WorkflowEngine {
 
     if (workflow.status === WorkflowStatus.PENDING) {
       workflow.startedAt = new Date();
-      workflow.currentStep = workflow.steps[0].id;
+      // Workflow steps are validated non-empty during creation
+      const firstStep = workflow.steps[0]!;
+      workflow.currentStep = firstStep.id;
     }
 
     workflow.status = WorkflowStatus.RUNNING;

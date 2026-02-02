@@ -1,10 +1,12 @@
+import { MeterProvider } from '@opentelemetry/sdk-metrics';
 import {
-  MeterProvider,
+  Attributes,
+  ObservableResult,
   ObservableGauge,
   Counter,
   Meter,
-} from '@opentelemetry/sdk-metrics';
-import { Attributes, ObservableResult } from '@opentelemetry/api';
+  metrics,
+} from '@opentelemetry/api';
 
 /**
  * Coverage data structure
@@ -38,8 +40,10 @@ export class CoverageMetrics {
   private coverageUpdates: Counter;
 
   constructor(meterProvider?: MeterProvider) {
-    const provider = meterProvider ?? new MeterProvider();
-    this.meter = provider.getMeter('isl-coverage-metrics', '1.0.0');
+    if (meterProvider) {
+      metrics.setGlobalMeterProvider(meterProvider);
+    }
+    this.meter = metrics.getMeter('isl-coverage-metrics', '1.0.0');
 
     // Precondition coverage gauge
     this.preconditionCoverage = this.meter.createObservableGauge(
@@ -157,7 +161,7 @@ export class CoverageMetrics {
     result: ObservableResult,
     type: 'preconditions' | 'postconditions' | 'invariants' | 'behaviors' | 'edgeCases'
   ): void {
-    for (const [key, data] of this.coverageStore) {
+    for (const [_key, data] of this.coverageStore) {
       const attributes: Attributes = {
         domain: data.domain,
         behavior: data.behavior ?? 'all',
@@ -175,7 +179,7 @@ export class CoverageMetrics {
    * Observe total coverage
    */
   private observeTotalCoverage(result: ObservableResult): void {
-    for (const [key, data] of this.coverageStore) {
+    for (const [_key, data] of this.coverageStore) {
       const attributes: Attributes = {
         domain: data.domain,
         behavior: data.behavior ?? 'all',
@@ -202,7 +206,7 @@ export class CoverageMetrics {
   getReport(): CoverageReport {
     const domains: Map<string, AggregatedCoverage> = new Map();
 
-    for (const [key, data] of this.coverageStore) {
+    for (const [_key, data] of this.coverageStore) {
       const existing = domains.get(data.domain);
 
       if (existing) {

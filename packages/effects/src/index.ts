@@ -3,16 +3,46 @@
 // Algebraic effects for tracking and controlling side effects
 // ============================================================================
 
-// Types
+// Runtime Effect Types
+export type {
+  Effect,
+  AnyEffect,
+  ReadEffect,
+  WriteEffect,
+  IOEffect as IOEffectType,
+  NetworkEffect,
+  DatabaseEffect,
+  MessageEffect,
+  LogEffect,
+  TimeEffect as TimeEffectType,
+  RandomEffect as RandomEffectType,
+  EnvEffect,
+  FileSystemEffect,
+  ShellEffect,
+  SequenceEffect,
+  ParallelEffect,
+  ConditionalEffect,
+  RetryPolicy,
+  RetryEffect,
+  TimeoutEffect,
+  CacheEffect,
+  EffectHandler,
+  EffectInterceptor,
+  EffectRuntime,
+  EffectConstraint,
+  EffectSpec,
+} from './types.js';
+
+// Algebraic Effect Types
 export type {
   EffectKind,
-  Effect,
+  AlgebraicEffect,
   EffectOperation,
   EffectParameter,
   EffectType,
   EffectSet,
   EffectRef,
-  EffectHandler,
+  AlgebraicEffectHandler,
   EffectHandlerImpl,
   EffectRow,
   Effectful,
@@ -21,7 +51,7 @@ export type {
   Async,
   Stateful,
   WithResource,
-  EffectConstraint,
+  AlgebraicEffectBoundConstraint,
   EffectBound,
   EffectInference,
   EffectError,

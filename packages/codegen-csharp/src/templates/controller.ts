@@ -2,7 +2,7 @@
 // C# Controller Templates
 // ============================================================================
 
-import type { CSharpClassInfo, CSharpMethodInfo, CSharpGeneratorOptions } from '../types';
+import type { CSharpClassInfo, CSharpGeneratorOptions } from '../types';
 import { generateUsings, generateXmlDoc, generateAttributes } from './model';
 
 /**
@@ -177,8 +177,8 @@ function getEndpointParameters(endpoint: EndpointInfo): string {
  */
 function generateEndpointBody(
   endpoint: EndpointInfo,
-  modelName: string,
-  options: CSharpGeneratorOptions,
+  _modelName: string,
+  _options: CSharpGeneratorOptions,
   indent: string
 ): string {
   const lines: string[] = [];
@@ -273,13 +273,12 @@ function generateMinimalEndpoint(
   endpoint: EndpointInfo,
   modelName: string,
   serviceName: string,
-  routePrefix: string,
+  _routePrefix: string,
   options: CSharpGeneratorOptions
 ): string {
   const route = endpoint.route || '';
   const fullRoute = route.startsWith('/') ? route : `/${route}`;
   
-  const method = endpoint.httpMethod.toLowerCase();
   const handler = generateMinimalHandler(endpoint, modelName, serviceName);
   
   let line = `        group.Map${endpoint.httpMethod.charAt(0) + endpoint.httpMethod.slice(1).toLowerCase()}("${fullRoute}", ${handler})`;

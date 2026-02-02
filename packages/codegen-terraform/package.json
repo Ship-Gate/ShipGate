@@ -25,7 +25,8 @@
   "author": "mevla",
   "license": "MIT",
   "dependencies": {
-    "@isl-lang/isl-core": "workspace:*"
+    "@isl-lang/isl-core": "workspace:*",
+    "@isl-lang/parser": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

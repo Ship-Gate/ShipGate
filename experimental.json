@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "description": "ISL experimental packages configuration. These packages are excluded from default public exports and may have incomplete implementations.",
+  
+  "experimental": {
+    "packages": [
+      "@isl-lang/effect-handlers",
+      "@isl-lang/formal-verification",
+      "@isl-lang/mutation-testing",
+      "@isl-lang/fuzzer"
+    ],
+    "reason": "Advanced features with incomplete implementations or known issues"
+  },
+  
+  "internal": {
+    "packages": [
+      "@isl-lang/visual-editor",
+      "@isl-lang/trace-viewer",
+      "@isl-lang/playground",
+      "@isl-lang/marketplace-web",
+      "@isl-lang/docs",
+      "@isl-lang/diff-viewer",
+      "@isl-lang/dashboard-web",
+      "@isl-lang/audit-viewer"
+    ],
+    "reason": "Internal/private packages not intended for public use (marked private: true)"
+  },
+  
+  "stable": {
+    "core": [
+      "@isl-lang/parser",
+      "@isl-lang/typechecker",
+      "@isl-lang/isl-core",
+      "@isl-lang/errors"
+    ],
+    "cli": [
+      "@isl-lang/cli",
+      "@isl-lang/repl"
+    ],
+    "codegen": [
+      "@isl-lang/isl-compiler",
+      "@isl-lang/codegen-tests",
+      "@isl-lang/codegen-openapi",
+      "@isl-lang/codegen-python",
+      "@isl-lang/codegen-graphql"
+    ],
+    "verification": [
+      "@isl-lang/verifier-runtime",
+      "@isl-lang/isl-verify",
+      "@isl-lang/evidence",
+      "@isl-lang/evidence-html"
+    ],
+    "lsp": [
+      "@isl-lang/lsp-core",
+      "@isl-lang/lsp-server"
+    ],
+    "build": [
+      "@isl-lang/build-runner"
+    ]
+  },
+  
+  "notes": {
+    "effect-handlers": "Has known issues - build/test scripts skip with warning message",
+    "formal-verification": "Theorem proving integration - requires external dependencies",
+    "mutation-testing": "Experimental mutation testing framework",
+    "fuzzer": "Property-based testing / fuzzing - incomplete"
+  }
+}

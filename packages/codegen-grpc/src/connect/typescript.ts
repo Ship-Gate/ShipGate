@@ -2,9 +2,9 @@
 // Connect-RPC TypeScript Generation
 // ============================================================================
 
-import type { Domain, Behavior, Entity } from '@isl-lang/isl-core';
+import type { Domain, Behavior, Entity } from '../types';
 import type { GeneratedFile } from '../generator';
-import { toPascalCase, toCamelCase, toSnakeCase } from '../utils';
+import { toPascalCase, toCamelCase } from '../utils';
 
 // ==========================================================================
 // OPTIONS
@@ -71,10 +71,9 @@ export function generateConnectTypeScript(
 // CONNECT CLIENT GENERATION
 // ==========================================================================
 
-function generateConnectClient(domain: Domain, options: ConnectOptions): string {
+function generateConnectClient(domain: Domain, _options: ConnectOptions): string {
   const domainName = toPascalCase(domain.name.name);
   const serviceName = `${domainName}Service`;
-  const packagePath = options.protoPackage.replace(/\./g, '/');
   
   const lines: string[] = [
     '// ==========================================================================',
@@ -205,7 +204,6 @@ function generateConnectTypedMethod(behavior: Behavior): string {
 
 function generateConnectCrudMethods(entity: Entity): string {
   const entityName = toPascalCase(entity.name.name);
-  const varName = toCamelCase(entity.name.name);
   
   return `
   async create${entityName}(
@@ -283,7 +281,7 @@ function generateConnectCrudMethods(entity: Entity): string {
 // REACT HOOKS GENERATION
 // ==========================================================================
 
-function generateConnectHooks(domain: Domain, options: ConnectOptions): string {
+function generateConnectHooks(domain: Domain, _options: ConnectOptions): string {
   const domainName = toPascalCase(domain.name.name);
   const serviceName = `${domainName}Service`;
   
@@ -431,7 +429,7 @@ export function useDelete${entityName}() {
 // TRANSPORT CONFIGURATION
 // ==========================================================================
 
-function generateTransportConfig(options: ConnectOptions): string {
+function generateTransportConfig(_options: ConnectOptions): string {
   return `// ==========================================================================
 // Transport Configuration
 // Auto-generated from ISL domain definition

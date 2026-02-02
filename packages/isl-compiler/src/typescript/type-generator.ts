@@ -5,16 +5,19 @@
  */
 
 import type {
-  DomainDeclaration,
-  EntityDeclaration,
-  BehaviorDeclaration,
+  Domain,
+  Entity,
+  Behavior,
   TypeDeclaration,
-  EnumDeclaration,
-  FieldDeclaration,
-  TypeExpression,
-  InputBlock,
-  OutputBlock,
-} from '@isl-lang/isl-core';
+  TypeDefinition,
+  Field,
+  InputSpec,
+  OutputSpec,
+  EnumType,
+  ConstrainedType,
+  Constraint,
+  Expression,
+} from '@isl-lang/parser';
 
 export interface GeneratedTypes {
   filename: string;
@@ -43,7 +46,7 @@ export class TypeGenerator {
   /**
    * Generate TypeScript types from an ISL domain
    */
-  generate(domain: DomainDeclaration): GeneratedTypes {
+  generate(domain: Domain): GeneratedTypes {
     this.output = [];
     this.indent = 0;
 
@@ -59,16 +62,20 @@ export class TypeGenerator {
       this.writeLine('');
     }
 
-    // Generate enums first
-    for (const enumDecl of domain.enums) {
-      this.generateEnum(enumDecl);
-      this.writeLine('');
+    // Generate enums first (enums are TypeDeclarations with EnumType definitions)
+    for (const typeDecl of domain.types) {
+      if (typeDecl.definition.kind === 'EnumType') {
+        this.generateEnum(typeDecl.name.name, typeDecl.definition as EnumType);
+        this.writeLine('');
+      }
     }
 
-    // Generate type aliases
+    // Generate type aliases (non-enum types)
     for (const typeDecl of domain.types) {
-      this.generateTypeAlias(typeDecl);
-      this.writeLine('');
+      if (typeDecl.definition.kind !== 'EnumType') {
+        this.generateTypeAlias(typeDecl);
+        this.writeLine('');
+      }
     }
 
     // Generate entity interfaces
@@ -89,15 +96,15 @@ export class TypeGenerator {
     };
   }
 
-  private generateEnum(decl: EnumDeclaration): void {
+  private generateEnum(name: string, enumType: EnumType): void {
     if (this.options.includeComments) {
-      this.writeLine(`/** Enum: ${decl.name.name} */`);
+      this.writeLine(`/** Enum: ${name} */`);
     }
-    this.writeLine(`export enum ${decl.name.name} {`);
+    this.writeLine(`export enum ${name} {`);
     this.indent++;
     
-    for (const variant of decl.variants) {
-      this.writeLine(`${variant.name} = '${variant.name}',`);
+    for (const variant of enumType.variants) {
+      this.writeLine(`${variant.name.name} = '${variant.name.name}',`);
     }
     
     this.indent--;
@@ -109,32 +116,33 @@ export class TypeGenerator {
       this.writeLine(`/** Type: ${decl.name.name} */`);
     }
     
-    const baseType = this.typeExpressionToTS(decl.baseType);
-    this.writeLine(`export type ${decl.name.name} = ${baseType};`);
+    const tsType = this.typeDefinitionToTS(decl.definition);
+    this.writeLine(`export type ${decl.name.name} = ${tsType};`);
     
-    // Generate validation schema if constraints exist
-    if (this.options.includeValidation && decl.constraints.length > 0) {
-      this.writeLine('');
-      this.generateTypeValidation(decl);
+    // Generate validation schema if it's a constrained type
+    if (this.options.includeValidation && decl.definition.kind === 'ConstrainedType') {
+      const constrained = decl.definition as ConstrainedType;
+      if (constrained.constraints.length > 0) {
+        this.writeLine('');
+        this.generateTypeValidation(decl.name.name, constrained.constraints);
+      }
     }
   }
 
-  private generateTypeValidation(decl: TypeDeclaration): void {
-    this.writeLine(`export const ${decl.name.name}Schema = {`);
+  private generateTypeValidation(name: string, constraints: Constraint[]): void {
+    this.writeLine(`export const ${name}Schema = {`);
     this.indent++;
     
-    for (const constraint of decl.constraints) {
-      const value = constraint.value 
-        ? this.expressionToTS(constraint.value)
-        : 'true';
-      this.writeLine(`${constraint.name.name}: ${value},`);
+    for (const constraint of constraints) {
+      const value = this.expressionToTS(constraint.value);
+      this.writeLine(`${constraint.name}: ${value},`);
     }
     
     this.indent--;
     this.writeLine('};');
   }
 
-  private generateEntity(entity: EntityDeclaration): void {
+  private generateEntity(entity: Entity): void {
     if (this.options.includeComments) {
       this.writeLine(`/** Entity: ${entity.name.name} */`);
     }
@@ -162,7 +170,7 @@ export class TypeGenerator {
     this.writeLine('}');
   }
 
-  private generateField(field: FieldDeclaration): void {
+  private generateField(field: Field): void {
     const annotations = this.getFieldAnnotations(field);
     
     if (this.options.includeComments && annotations.length > 0) {
@@ -172,12 +180,12 @@ export class TypeGenerator {
     const isReadonly = this.hasAnnotation(field, 'immutable');
     const readonly = isReadonly ? 'readonly ' : '';
     const optional = field.optional ? '?' : '';
-    const tsType = this.typeExpressionToTS(field.type);
+    const tsType = this.typeDefinitionToTS(field.type);
     
     this.writeLine(`${readonly}${field.name.name}${optional}: ${tsType};`);
   }
 
-  private generateBehaviorTypes(behavior: BehaviorDeclaration): void {
+  private generateBehaviorTypes(behavior: Behavior): void {
     const name = behavior.name.name;
     
     if (this.options.includeComments) {
@@ -203,7 +211,7 @@ export class TypeGenerator {
     this.generateBehaviorFunction(behavior);
   }
 
-  private generateInputType(behaviorName: string, input: InputBlock): void {
+  private generateInputType(behaviorName: string, input: InputSpec): void {
     this.writeLine(`export interface ${behaviorName}Input {`);
     this.indent++;
     
@@ -215,7 +223,7 @@ export class TypeGenerator {
     this.writeLine('}');
   }
 
-  private generateOutputType(behaviorName: string, output: OutputBlock): void {
+  private generateOutputType(behaviorName: string, output: OutputSpec): void {
     // Generate error types
     if (output.errors.length > 0) {
       this.writeLine(`export type ${behaviorName}ErrorCode =`);
@@ -240,7 +248,7 @@ export class TypeGenerator {
     }
 
     // Generate success type
-    const successType = this.typeExpressionToTS(output.success);
+    const successType = this.typeDefinitionToTS(output.success);
     
     // Generate result type
     this.writeLine(`export type ${behaviorName}Result =`);
@@ -254,7 +262,7 @@ export class TypeGenerator {
     this.indent--;
   }
 
-  private generateBehaviorFunction(behavior: BehaviorDeclaration): void {
+  private generateBehaviorFunction(behavior: Behavior): void {
     const name = behavior.name.name;
     const inputType = behavior.input ? `${name}Input` : 'void';
     const outputType = behavior.output ? `${name}Result` : 'void';
@@ -271,30 +279,43 @@ export class TypeGenerator {
     this.writeLine(`export type ${name}Function = (input: ${inputType}) => Promise<${outputType}>;`);
   }
 
-  private typeExpressionToTS(type: TypeExpression): string {
+  /**
+   * Convert ISL TypeDefinition to TypeScript type string
+   */
+  private typeDefinitionToTS(type: TypeDefinition): string {
     switch (type.kind) {
-      case 'SimpleType':
-        return this.simpleTypeToTS(type.name.name);
-      case 'GenericType':
-        const typeArgs = type.typeArguments.map(t => this.typeExpressionToTS(t)).join(', ');
-        return `${type.name.name}<${typeArgs}>`;
-      case 'UnionType':
-        return type.variants.map(v => v.name.name).join(' | ');
-      case 'ObjectType':
+      case 'PrimitiveType':
+        return this.primitiveTypeToTS(type.name);
+      case 'ReferenceType':
+        return type.name.parts.map(p => p.name).join('.');
+      case 'ListType':
+        return `${this.typeDefinitionToTS(type.element)}[]`;
+      case 'MapType':
+        return `Map<${this.typeDefinitionToTS(type.key)}, ${this.typeDefinitionToTS(type.value)}>`;
+      case 'OptionalType':
+        return `${this.typeDefinitionToTS(type.inner)} | null`;
+      case 'StructType':
         const fields = type.fields.map(f => {
           const opt = f.optional ? '?' : '';
-          return `${f.name.name}${opt}: ${this.typeExpressionToTS(f.type)}`;
+          return `${f.name.name}${opt}: ${this.typeDefinitionToTS(f.type)}`;
         }).join('; ');
         return `{ ${fields} }`;
-      case 'ArrayType':
-        return `${this.typeExpressionToTS(type.elementType)}[]`;
+      case 'UnionType':
+        return type.variants.map(v => v.name.name).join(' | ');
+      case 'EnumType':
+        return type.variants.map(v => `'${v.name.name}'`).join(' | ');
+      case 'ConstrainedType':
+        // For constrained types, just use the base type in TS
+        return this.typeDefinitionToTS(type.base);
       default:
         return 'unknown';
     }
   }
 
-  private simpleTypeToTS(name: string): string {
-    // Map ISL built-in types to TypeScript
+  /**
+   * Map ISL primitive type names to TypeScript types
+   */
+  private primitiveTypeToTS(name: string): string {
     const typeMap: Record<string, string> = {
       'String': 'string',
       'Int': 'number',
@@ -317,7 +338,10 @@ export class TypeGenerator {
     return typeMap[name] ?? name;
   }
 
-  private expressionToTS(expr: any): string {
+  /**
+   * Convert ISL expression to TypeScript value
+   */
+  private expressionToTS(expr: Expression): string {
     switch (expr.kind) {
       case 'StringLiteral':
         return `'${expr.value}'`;
@@ -327,16 +351,18 @@ export class TypeGenerator {
         return String(expr.value);
       case 'Identifier':
         return expr.name;
+      case 'NullLiteral':
+        return 'null';
       default:
         return 'unknown';
     }
   }
 
-  private getFieldAnnotations(field: FieldDeclaration): string[] {
+  private getFieldAnnotations(field: Field): string[] {
     return field.annotations.map(a => a.name.name);
   }
 
-  private hasAnnotation(field: FieldDeclaration, name: string): boolean {
+  private hasAnnotation(field: Field, name: string): boolean {
     return field.annotations.some(a => a.name.name.toLowerCase() === name.toLowerCase());
   }
 
@@ -350,9 +376,12 @@ export class TypeGenerator {
  * Generate TypeScript types from an ISL domain
  */
 export function generateTypes(
-  domain: DomainDeclaration,
+  domain: Domain,
   options?: TypeGeneratorOptions
 ): GeneratedTypes {
   const generator = new TypeGenerator(options);
   return generator.generate(domain);
 }
+
+// Re-export types for backward compatibility
+export type { Domain, Entity, Behavior, TypeDeclaration, Field } from '@isl-lang/parser';

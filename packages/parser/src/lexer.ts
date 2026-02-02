@@ -344,20 +344,21 @@ export class Lexer {
       }
     }
 
-    // Check for duration unit
+    // Check for duration unit - try longer units first
     const restOfToken = this.peekWord();
-    if (DURATION_UNITS.some(u => restOfToken.startsWith(u))) {
-      for (const unit of DURATION_UNITS) {
-        if (restOfToken.startsWith(unit)) {
-          // Check if it's actually the unit and not part of a longer word
-          const afterUnit = restOfToken.slice(unit.length);
-          const firstCharAfter = afterUnit[0];
-          if (afterUnit === '' || (firstCharAfter !== undefined && !this.isAlpha(firstCharAfter))) {
-            for (let i = 0; i < unit.length; i++) {
-              value += this.advance();
-            }
-            return this.makeTokenAt('DURATION', 'DURATION_LITERAL', value, startLine, startColumn);
+    // Sort units by length descending to match longest first
+    const sortedUnits = [...DURATION_UNITS].sort((a, b) => b.length - a.length);
+    for (const unit of sortedUnits) {
+      if (restOfToken.startsWith(unit)) {
+        // Check if it's actually the unit and not part of a longer word
+        const afterUnit = restOfToken.slice(unit.length);
+        const firstCharAfter = afterUnit[0];
+        // For short units (s, m, h, d), be more strict - only accept if followed by non-alpha
+        if (afterUnit === '' || (firstCharAfter !== undefined && !this.isAlpha(firstCharAfter) && firstCharAfter !== '_')) {
+          for (let i = 0; i < unit.length; i++) {
+            value += this.advance();
           }
+          return this.makeTokenAt('DURATION', 'DURATION_LITERAL', value, startLine, startColumn);
         }
       }
     }

@@ -7,7 +7,6 @@
 import type {
   HealthCheckConfig,
   CheckResult,
-  HealthStatus,
   KubernetesProbeConfig,
 } from '../types.js';
 import { HealthAggregator } from '../aggregator.js';
@@ -39,7 +38,6 @@ export interface ProbeHandlers {
 export class KubernetesProbeGenerator {
   private aggregator: HealthAggregator;
   private config: Required<KubernetesProbeConfig>;
-  private startTime: number;
   private startupComplete: boolean = false;
 
   constructor(
@@ -57,7 +55,6 @@ export class KubernetesProbeGenerator {
       startupPath: config.startupPath ?? '/health/startup',
       includeStartupProbe: config.includeStartupProbe ?? false,
     };
-    this.startTime = Date.now();
   }
 
   /**
@@ -81,9 +78,6 @@ export class KubernetesProbeGenerator {
    * Should be lightweight and always succeed unless the process is truly dead
    */
   async handleLiveness(): Promise<ProbeResponse> {
-    // Liveness is a simple check - process is alive if we can respond
-    const isAlive = true;
-
     // Optional: Check event loop responsiveness
     const eventLoopLag = await this.measureEventLoopLag();
     const lagThreshold = 5000; // 5 seconds

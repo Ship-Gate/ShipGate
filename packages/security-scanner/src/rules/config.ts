@@ -308,7 +308,7 @@ function getSecretsFix(language: string, secretType: string): string {
     return (
       `# Move to environment variable:\n` +
       `import os\n` +
-      `${secretType.lower().replace(' ', '_')} = os.environ.get('${secretType.upper().replace(' ', '_')}')\n` +
+      `${secretType.toLowerCase().replace(' ', '_')} = os.environ.get('${secretType.toUpperCase().replace(' ', '_')}')\n` +
       `\n` +
       `# Or use a secrets manager:\n` +
       `from aws_secretsmanager import get_secret\n` +

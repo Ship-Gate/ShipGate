@@ -3,8 +3,8 @@
  * Long-running processes that coordinate multiple aggregates
  */
 
-import { DomainEvent, Command, EventHandler } from './types';
-import { EventStore } from './event-store';
+import { DomainEvent, Command } from './types.js';
+import { EventStore, StoredEvent } from './event-store.js';
 
 /**
  * Saga state
@@ -261,6 +261,7 @@ export function saga(): SagaBuilder {
  */
 export class SagaOrchestrator {
   private sagas: Map<string, Saga> = new Map();
+  private unsubscribers: Map<string, () => void> = new Map();
   private eventStore: EventStore;
 
   constructor(eventStore: EventStore) {
@@ -273,20 +274,43 @@ export class SagaOrchestrator {
   async startSaga(saga: Saga, initialData?: Record<string, unknown>): Promise<void> {
     this.sagas.set(saga.id, saga);
 
-    // Subscribe to events
-    this.eventStore.subscribe(
-      `saga_${saga.id}`,
-      async (event) => {
-        await saga.handleEvent(event);
+    // Subscribe to events - convert StoredEvent to DomainEvent
+    const unsubscribe = this.eventStore.subscribeAll(
+      async (event: StoredEvent) => {
+        // Convert StoredEvent to DomainEvent format
+        const domainEvent: DomainEvent = {
+          id: event.id,
+          type: event.type,
+          aggregateId: event.aggregateId,
+          aggregateType: event.aggregateType,
+          data: event.payload,
+          metadata: {
+            correlationId: event.metadata.correlationId ?? '',
+            causationId: event.metadata.causationId,
+            userId: event.metadata.userId,
+          },
+          sequence: event.version,
+          globalSequence: event.version,
+          timestamp: new Date(event.timestamp).getTime(),
+          version: event.version,
+        };
+        
+        await saga.handleEvent(domainEvent);
 
         // Clean up completed/failed sagas
         const state = saga.getState();
         if (state.status === 'completed' || state.status === 'failed') {
           this.sagas.delete(saga.id);
-          this.eventStore.unsubscribe(`saga_${saga.id}`);
+          const unsub = this.unsubscribers.get(saga.id);
+          if (unsub) {
+            unsub();
+            this.unsubscribers.delete(saga.id);
+          }
         }
       }
     );
+    
+    this.unsubscribers.set(saga.id, unsubscribe);
 
     await saga.start(initialData);
   }

@@ -584,7 +584,7 @@ interface PushProvider {
 }
 
 class MockPushProvider implements PushProvider {
-  async send(notification: PushNotification): Promise<PushProviderResult> {
+  async send(_notification: PushNotification): Promise<PushProviderResult> {
     // Simulate provider latency
     await new Promise(resolve => setTimeout(resolve, 5));
     

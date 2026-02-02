@@ -3,7 +3,7 @@
 // Generates executable Jest/Vitest tests from ISL behaviors and scenarios
 // ============================================================================
 
-export { generate } from './generator';
+export { generate } from './generator.js';
 
 // Types
 export type {
@@ -18,21 +18,21 @@ export type {
   ChaosContext,
   PreconditionTest,
   PostconditionTest,
-} from './types';
+} from './types.js';
 
 // Submodules
 export {
   generatePreconditionTests,
   generatePreconditionsDescribeBlock,
   generatePreconditionValidators,
-} from './preconditions';
+} from './preconditions.js';
 
 export {
   generatePostconditionTests,
   generatePostconditionsDescribeBlock,
   generatePostconditionAssertions,
   generateImpliesTests,
-} from './postconditions';
+} from './postconditions.js';
 
 export {
   generateScenarioTests,
@@ -40,21 +40,21 @@ export {
   extractScenarioContext,
   generateScenarioHelpers,
   generateScenarioDataBuilders,
-} from './scenarios';
+} from './scenarios.js';
 
 export {
   generateChaosTests,
   generateAllChaosDescribeBlock,
   generateChaosController,
   extractChaosContext,
-} from './chaos';
+} from './chaos.js';
 
 export {
   compileExpression,
   compileAssertion,
   compileResultCheck,
-} from './expression-compiler';
+} from './expression-compiler.js';
 
 // Templates
-export { getJestTemplate, getJestConfig, getJestSetup } from '../templates/jest';
-export { getVitestTemplate, getVitestConfig, getVitestSetup } from '../templates/vitest';
+export { getJestTemplate, getJestConfig, getJestSetup } from './templates/jest.js';
+export { getVitestTemplate, getVitestConfig, getVitestSetup } from './templates/vitest.js';

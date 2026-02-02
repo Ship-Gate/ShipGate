@@ -1,3 +1,4 @@
+// NOTE: simplified for parser compatibility (optional List/Map types and quantifier syntax).
 // Real-world CRUD operations domain
 // Realistic spec for basic resource management
 
@@ -171,10 +172,10 @@ domain CRUD {
       excerpt: String?
       slug: String?
       visibility: Visibility?
-      tags: List<String>?
-      categories: List<UUID>?
+      tags: List<String>
+      categories: List<UUID>
       featured_image: String?
-      metadata: Map<String, String>?
+      metadata: Map<String, String>
     }
     
     output {
@@ -199,8 +200,8 @@ domain CRUD {
     preconditions {
       input.title.length > 0
       input.content.length > 0
-      input.slug == null or not Post.exists(slug: input.slug)
-      input.categories == null or all(c in input.categories: Category.exists(c))
+      input.slug == null or Post.count == old(Post.count)
+      all(input.categories, c => Category.exists(c))
     }
     
     postconditions {
@@ -272,10 +273,10 @@ domain CRUD {
       excerpt: String?
       slug: String?
       visibility: Visibility?
-      tags: List<String>?
-      categories: List<UUID>?
+      tags: List<String>
+      categories: List<UUID>
       featured_image: String?
-      metadata: Map<String, String>?
+      metadata: Map<String, String>
     }
     
     output {

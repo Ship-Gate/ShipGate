@@ -19,15 +19,8 @@ export {
 // Saga Pattern
 // ============================================
 
-export {
-  SagaOrchestrator,
-  SagaDefinition,
-  SagaStep,
-  SagaExecutionResult,
-  SagaBuilder,
-  createSagaOrchestrator,
-  createTransactionalStep,
-} from './saga';
+export { SagaOrchestrator, createSagaOrchestrator, createTransactionalStep } from './saga';
+export type { SagaDefinition, SagaStep, SagaExecutionResult, SagaBuilder } from './saga';
 
 // ============================================
 // Compensation
@@ -36,12 +29,8 @@ export {
 export {
   CompensationExecutor,
   CompensationPlanBuilder,
-  CompensationPlan,
-  CompensationAction,
   CompensationStrategy,
   CompensationFailureStrategy,
-  CompensationExecutionResult,
-  CompensationFailure,
   createCompensationExecutor,
   createCompensationPlan,
   idempotentCompensation,
@@ -50,22 +39,30 @@ export {
   composeCompensations,
   withRetry,
 } from './compensation';
+export type {
+  CompensationPlan,
+  CompensationAction,
+  CompensationExecutionResult,
+  CompensationFailure,
+} from './compensation';
 
 // ============================================
 // Types
 // ============================================
 
 export {
-  // IDs
-  WorkflowId,
-  StepId,
-  HandlerName,
-
   // Enums
   WorkflowStatus,
   StepStatus,
   RetryStrategy,
   FailureAction,
+} from './types';
+
+export type {
+  // IDs
+  WorkflowId,
+  StepId,
+  HandlerName,
 
   // Configuration
   RetryConfig,
@@ -197,7 +194,7 @@ import { StepHandler, CompensationHandler } from './types';
  * Quick workflow definition helper
  */
 export function defineWorkflow(
-  name: string,
+  _name: string,
   steps: Array<{
     id: string;
     name: string;

@@ -17,7 +17,7 @@
  * ```
  */
 
-import type { DomainDeclaration, BehaviorDeclaration } from '@isl-lang/isl-core';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
 import {
   Generator,
   createGenerator,

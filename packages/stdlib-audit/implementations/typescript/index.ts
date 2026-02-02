@@ -16,7 +16,7 @@ export { CsvExporter } from './exporters/csv';
 export { JsonExporter, NdjsonExporter } from './exporters/json';
 
 // Main audit logger
-export { AuditLogger, createAuditLogger, AuditLoggerOptions } from './logger';
+export { AuditLogger, createAuditLogger, type AuditLoggerOptions } from './logger';
 
 // Utilities
 export { hashEvent, verifyEventChain } from './utils/hashing';

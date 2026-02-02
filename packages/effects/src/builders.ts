@@ -25,7 +25,7 @@ import type {
   TimeoutEffect,
   CacheEffect,
   RetryPolicy,
-} from './types';
+} from './types.js';
 
 /**
  * Create a read effect

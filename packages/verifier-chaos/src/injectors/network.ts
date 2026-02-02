@@ -168,14 +168,14 @@ export class NetworkInjector {
     const original = this.originalFetch!;
 
     return async function interceptedFetch(
-      input: RequestInfo | URL,
+      input: string | URL | Request,
       init?: RequestInit
     ): Promise<Response> {
       const url = typeof input === 'string' 
         ? input 
         : input instanceof URL 
           ? input.toString() 
-          : input.url;
+          : (input as Request).url;
 
       self.state.interceptedRequests++;
 

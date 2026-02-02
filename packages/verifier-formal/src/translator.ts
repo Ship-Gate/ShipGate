@@ -4,13 +4,10 @@
 // ============================================================================
 
 import type * as AST from '../../../master_contracts/ast';
-import { encodeTypes, encodeSorts } from './encoding/types';
+import { encodeSorts } from './encoding/types';
 import { encodeExpression } from './encoding/expressions';
-import { encodeQuantifier } from './encoding/quantifiers';
-import { encodeTemporalProperty } from './encoding/temporal';
 import { Z3Solver, Z3Result } from './solver';
 import { parseCounterexample } from './counterexample';
-import { generateReport } from './report';
 
 // ============================================================================
 // TYPES

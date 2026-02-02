@@ -129,7 +129,7 @@ Response format:
   }
 
   private buildPrompt(context: AIFixContext): string {
-    const { domain, behavior, implementation, failure, analysis } = context;
+    const { behavior, implementation, failure, analysis } = context;
     const sections: string[] = [];
 
     // Header
@@ -197,7 +197,7 @@ Response format:
     return sections.join('\n');
   }
 
-  private getFixInstructions(failureType: string, strategy: FixStrategy): string {
+  private getFixInstructions(_failureType: string, strategy: FixStrategy): string {
     const instructions: Record<string, string> = {
       'add_precondition_check': `Add a validation check at the start of the function that:
 1. Validates the condition specified in the predicate
@@ -329,7 +329,7 @@ Response format:
     });
   }
 
-  private parseResponse(response: string, context: AIFixContext): AIFixResult {
+  private parseResponse(response: string, _context: AIFixContext): AIFixResult {
     try {
       // Extract JSON from response
       const jsonMatch = response.match(/```json\n?([\s\S]*?)\n?```/);

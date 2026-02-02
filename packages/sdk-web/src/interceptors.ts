@@ -2,7 +2,7 @@
 // Request/Response Interceptors
 // ============================================================================
 
-import type { RequestInterceptor, ResponseInterceptor } from './types.js';
+import type { RequestInterceptor, ResponseInterceptor, RequestInitWithUrl } from './types.js';
 
 /**
  * Create a retry interceptor
@@ -18,13 +18,13 @@ export function createRetryInterceptor(options: {
     }
 
     // Clone request for retry
-    const retryRequest = { ...request };
+    const retryRequest: RequestInitWithUrl = { ...request };
     let lastResponse = response;
 
     for (let i = 0; i < options.maxRetries; i++) {
       await new Promise(resolve => setTimeout(resolve, options.retryDelay * (i + 1)));
       
-      const retryResponse = await fetch(retryRequest.url ?? '', retryRequest);
+      const retryResponse = await fetch(retryRequest.url, retryRequest);
       lastResponse = retryResponse;
 
       if (!options.retryableStatuses.includes(retryResponse.status)) {
@@ -64,7 +64,7 @@ export function createLoggingInterceptor(options?: {
     response: async (response, request) => {
       if (opts.logResponse) {
         const logLevel = response.ok ? 'log' : 'error';
-        console[logLevel](`[ISL SDK] ${response.status} ${request.url ?? ''}`, {
+        console[logLevel](`[ISL SDK] ${response.status} ${request.url}`, {
           status: response.status,
           statusText: response.statusText,
         });
@@ -119,15 +119,15 @@ export function createAuthInterceptor(options: {
         const newToken = await refreshPromise;
         
         // Retry original request with new token
-        const retryRequest = {
+        const retryRequest: RequestInitWithUrl = {
           ...request,
           headers: {
-            ...request.headers,
+            ...((request.headers as Record<string, string>) ?? {}),
             Authorization: `Bearer ${newToken}`,
           },
         };
 
-        return fetch(retryRequest.url ?? '', retryRequest);
+        return fetch(retryRequest.url, retryRequest);
       } catch {
         return response;
       }
@@ -158,7 +158,7 @@ export function createTimingInterceptor(onTiming: (url: string, duration: number
         if (startTime) {
           const duration = performance.now() - startTime;
           timings.delete(requestId);
-          onTiming(request.url ?? '', duration);
+          onTiming(request.url, duration);
         }
       }
       return response;
@@ -206,7 +206,7 @@ export function createCacheInterceptor(options: {
     response: async (response, request) => {
       if (request.method !== 'GET' || !response.ok) return response;
 
-      const key = getCacheKey(request.url ?? '', request.method ?? 'GET');
+      const key = getCacheKey(request.url, request.method ?? 'GET');
       
       // Store in memory cache
       cache.set(key, { data: response.clone(), timestamp: Date.now() });

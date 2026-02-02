@@ -284,14 +284,14 @@ describe('Parser', () => {
       expect(behavior?.description?.value).toBe('Authenticate a user');
     });
 
-    it('should parse behavior with preconditions', () => {
+    it('should parse behavior with preconditions (shorthand)', () => {
       const source = `
         domain Test {
           version: "1.0.0"
           behavior Create {
             input { value: Int }
             output { success: Boolean }
-            preconditions {
+            pre {
               input.value > 0
               input.value < 100
             }
@@ -306,13 +306,64 @@ describe('Parser', () => {
       expect(behavior?.preconditions).toHaveLength(2);
     });
 
-    it('should parse behavior with postconditions', () => {
+    it('should parse behavior with postconditions (shorthand)', () => {
       const source = `
         domain Test {
           version: "1.0.0"
           behavior Create {
             input { value: Int }
             output { success: Boolean }
+            post success {
+              result == true
+            }
+          }
+        }
+      `;
+      
+      const result = parse(source);
+      
+      expect(result.success).toBe(true);
+      const behavior = result.domain?.behaviors[0];
+      expect(behavior?.postconditions).toHaveLength(1);
+      expect(behavior?.postconditions[0]?.condition).toBe('success');
+    });
+
+    it('should parse multiple post blocks (shorthand)', () => {
+      const source = `
+        domain Test {
+          version: "1.0.0"
+          behavior Create {
+            input { value: Int }
+            output { success: Boolean }
+            post success {
+              result == true
+            }
+            post failure {
+              no_changes_made == true
+            }
+          }
+        }
+      `;
+      
+      const result = parse(source);
+      
+      expect(result.success).toBe(true);
+      const behavior = result.domain?.behaviors[0];
+      expect(behavior?.postconditions).toHaveLength(2);
+      expect(behavior?.postconditions[0]?.condition).toBe('success');
+      expect(behavior?.postconditions[1]?.condition).toBe('any_error');
+    });
+
+    it('should parse legacy verbose preconditions/postconditions (backward compat)', () => {
+      const source = `
+        domain Test {
+          version: "1.0.0"
+          behavior Create {
+            input { value: Int }
+            output { success: Boolean }
+            preconditions {
+              input.value > 0
+            }
             postconditions {
               success implies {
                 result == true
@@ -326,8 +377,8 @@ describe('Parser', () => {
       
       expect(result.success).toBe(true);
       const behavior = result.domain?.behaviors[0];
+      expect(behavior?.preconditions).toHaveLength(1);
       expect(behavior?.postconditions).toHaveLength(1);
-      expect(behavior?.postconditions[0]?.condition).toBe('success');
     });
 
     it('should parse behavior with errors', () => {
@@ -373,7 +424,7 @@ describe('Parser', () => {
           behavior Check {
             input { a: Int b: Int }
             output { success: Boolean }
-            preconditions {
+            pre {
               a + b > 0
               a * 2 == b
             }
@@ -396,7 +447,7 @@ describe('Parser', () => {
           behavior Check {
             input { user: UUID }
             output { success: Boolean }
-            preconditions {
+            pre {
               User.lookup(input.user).status == ACTIVE
             }
           }
@@ -417,7 +468,7 @@ describe('Parser', () => {
           behavior Check {
             input { id: UUID }
             output { success: Boolean }
-            preconditions {
+            pre {
               User.exists(input.id)
             }
           }
@@ -438,7 +489,7 @@ describe('Parser', () => {
           behavior Check {
             input { items: UUID }
             output { success: Boolean }
-            preconditions {
+            pre {
               all(input.items, item => item.valid)
             }
           }
@@ -459,10 +510,8 @@ describe('Parser', () => {
           behavior Increment {
             input { id: UUID }
             output { success: Boolean }
-            postconditions {
-              success implies {
-                count == old(count) + 1
-              }
+            post success {
+              count == old(count) + 1
             }
           }
         }
@@ -724,7 +773,7 @@ describe('Parser', () => {
           behavior Check {
             input { items: UUID }
             output { success: Boolean }
-            preconditions {
+            pre {
               count(input.items) > 0
               all(input.items, item => item.valid)
               any(input.items, item => item.special)
@@ -746,7 +795,7 @@ describe('Parser', () => {
           behavior Check {
             input { count: Int }
             output { success: Boolean }
-            preconditions {
+            pre {
               input.count > 0
               count == old(count) + 1
             }
@@ -768,7 +817,7 @@ describe('Parser', () => {
           behavior Complex {
             input { id: UUID }
             output { success: Boolean }
-            preconditions {
+            pre {
               User.lookup(input.id).account.balance.amount >= 0
             }
           }
@@ -789,11 +838,9 @@ describe('Parser', () => {
           behavior Transfer {
             input { amount: Decimal }
             output { success: Boolean }
-            postconditions {
-              success implies {
-                result.balance == old(balance) - input.amount
-                result.timestamp > old(timestamp)
-              }
+            post success {
+              result.balance == old(balance) - input.amount
+              result.timestamp > old(timestamp)
             }
           }
         }

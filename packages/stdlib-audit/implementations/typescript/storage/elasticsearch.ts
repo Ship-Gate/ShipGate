@@ -3,19 +3,19 @@
 // @stdlib/audit/storage/elasticsearch
 // ============================================================================
 
-import type {
-  AuditStorage,
-  AuditEvent,
-  AuditEventId,
-  QueryInput,
-  AuditQueryResult,
-  StatsInput,
-  AuditStats,
-  AuditFilters,
-  EventCategory,
-  EventOutcome,
+import {
   SortDirection,
-  Pagination,
+  type AuditStorage,
+  type AuditEvent,
+  type AuditEventId,
+  type QueryInput,
+  type AuditQueryResult,
+  type StatsInput,
+  type AuditStats,
+  type AuditFilters,
+  type EventCategory,
+  type EventOutcome,
+  type Pagination,
 } from '../types';
 
 // ============================================================================

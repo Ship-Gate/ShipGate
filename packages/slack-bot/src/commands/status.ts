@@ -40,7 +40,7 @@ export const registerStatusCommand = {
   ],
 
   async handler(context: CommandContext): Promise<void> {
-    const { args, respond, userId } = context;
+    const { args, respond } = context;
     const domain = args[0];
 
     try {

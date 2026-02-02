@@ -4,10 +4,7 @@
 
 import type {
   PythonGeneratorOptions,
-  PythonClassInfo,
-  PythonFieldInfo,
   PythonTypeInfo,
-  PythonImport,
   GeneratedFile,
   GenerationResult,
 } from './types';
@@ -799,7 +796,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 /**
  * Generate package __init__.py
  */
-function generatePackageInit(domain: ISLDomain, options: PythonGeneratorOptions): string {
+function generatePackageInit(domain: ISLDomain, _options: PythonGeneratorOptions): string {
   return `"""${pascalCase(domain.name)} - Generated from ISL specification"""
 
 __version__ = "0.1.0"

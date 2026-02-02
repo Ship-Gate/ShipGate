@@ -14,8 +14,8 @@ import type {
   EnvEffect,
   FileSystemEffect,
   ShellEffect,
-} from './types';
-import { registerHandler } from './runtime';
+} from './types.js';
+import { registerHandler } from './runtime.js';
 
 /**
  * Register default handlers for a runtime
@@ -31,7 +31,7 @@ export function registerDefaultHandlers(runtime: EffectRuntime): void {
  * Register log effect handler
  */
 export function registerLogHandler(runtime: EffectRuntime): void {
-  registerHandler<LogEffect, void>(runtime, 'Log', async (effect) => {
+  registerHandler<LogEffect, void>(runtime, 'Log', async (effect: LogEffect) => {
     const prefix = `[${effect.level.toUpperCase()}]`;
     const message = effect.context
       ? `${prefix} ${effect.message} ${JSON.stringify(effect.context)}`
@@ -58,7 +58,7 @@ export function registerLogHandler(runtime: EffectRuntime): void {
  * Register time effect handler
  */
 export function registerTimeHandler(runtime: EffectRuntime): void {
-  registerHandler<TimeEffect<unknown>, unknown>(runtime, 'Time', async (effect) => {
+  registerHandler<TimeEffect<unknown>, unknown>(runtime, 'Time', async (effect: TimeEffect<unknown>) => {
     switch (effect.operation) {
       case 'now':
         return Date.now();
@@ -77,7 +77,7 @@ export function registerTimeHandler(runtime: EffectRuntime): void {
  * Register random effect handler
  */
 export function registerRandomHandler(runtime: EffectRuntime): void {
-  registerHandler<RandomEffect<unknown>, unknown>(runtime, 'Random', async (effect) => {
+  registerHandler<RandomEffect<unknown>, unknown>(runtime, 'Random', async (effect: RandomEffect<unknown>) => {
     switch (effect.type) {
       case 'number': {
         const min = effect.options?.min ?? 0;
@@ -105,7 +105,7 @@ export function registerRandomHandler(runtime: EffectRuntime): void {
  * Register environment effect handler
  */
 export function registerEnvHandler(runtime: EffectRuntime): void {
-  registerHandler<EnvEffect<unknown>, unknown>(runtime, 'Env', async (effect) => {
+  registerHandler<EnvEffect<unknown>, unknown>(runtime, 'Env', async (effect: EnvEffect<unknown>) => {
     const value = process.env[effect.variable];
 
     if (value === undefined) {
@@ -123,7 +123,7 @@ export function registerEnvHandler(runtime: EffectRuntime): void {
  * Register network effect handler (Node.js fetch)
  */
 export function registerNetworkHandler(runtime: EffectRuntime): void {
-  registerHandler<NetworkEffect<unknown>, unknown>(runtime, 'Network', async (effect) => {
+  registerHandler<NetworkEffect<unknown>, unknown>(runtime, 'Network', async (effect: NetworkEffect<unknown>) => {
     const response = await fetch(effect.url, {
       method: effect.method,
       headers: effect.headers,
@@ -156,7 +156,7 @@ export function registerFileSystemHandler(
     readdir: (path: string) => Promise<string[]>;
   }
 ): void {
-  registerHandler<FileSystemEffect<unknown>, unknown>(runtime, 'FileSystem', async (effect) => {
+  registerHandler<FileSystemEffect<unknown>, unknown>(runtime, 'FileSystem', async (effect: FileSystemEffect<unknown>) => {
     switch (effect.operation) {
       case 'read':
         return fsModule.readFile(effect.path, 'utf-8');
@@ -193,7 +193,7 @@ export function registerShellHandler(
     ) => Promise<{ stdout: string; stderr: string }>;
   }
 ): void {
-  registerHandler<ShellEffect<unknown>, unknown>(runtime, 'Shell', async (effect) => {
+  registerHandler<ShellEffect<unknown>, unknown>(runtime, 'Shell', async (effect: ShellEffect<unknown>) => {
     const command = effect.args
       ? `${effect.command} ${effect.args.join(' ')}`
       : effect.command;

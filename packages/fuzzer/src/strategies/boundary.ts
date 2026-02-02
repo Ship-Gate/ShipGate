@@ -5,7 +5,7 @@
 
 import { FuzzContext, GeneratedValue, ISLTypeInfo } from '../types.js';
 import { INTEGER_BOUNDARIES, FLOAT_EDGE_CASES } from '../generators/number.js';
-import { SPECIAL_CHARS, UNICODE_EDGE_CASES } from '../generators/string.js';
+import { SPECIAL_CHARS } from '../generators/string.js';
 
 /**
  * Boundary strategy configuration
@@ -27,7 +27,7 @@ export interface BoundaryStrategyConfig {
 export function* generateBoundaryValues(
   typeInfo: ISLTypeInfo,
   ctx: FuzzContext,
-  config: BoundaryStrategyConfig = {}
+  _config: BoundaryStrategyConfig = {}
 ): Generator<GeneratedValue<unknown>> {
   const constraints = typeInfo.constraints ?? ctx.constraints ?? {};
 
@@ -249,7 +249,7 @@ function* generateUUIDBoundaries(): Generator<GeneratedValue<unknown>> {
  * Generate duration boundary values
  */
 function* generateDurationBoundaries(
-  constraints: Record<string, unknown>
+  _constraints: Record<string, unknown>
 ): Generator<GeneratedValue<unknown>> {
   yield { value: 0, category: 'boundary', description: 'Zero duration' };
   yield { value: 1, category: 'boundary', description: 'Minimum duration' };
@@ -305,7 +305,7 @@ function* generateEnumBoundaries(
  * Generate list boundaries
  */
 function* generateListBoundaries(
-  typeInfo: ISLTypeInfo,
+  _typeInfo: ISLTypeInfo,
   constraints: Record<string, unknown>
 ): Generator<GeneratedValue<unknown>> {
   yield { value: [], category: 'boundary', description: 'Empty list' };
@@ -334,7 +334,7 @@ function* generateListBoundaries(
  * Generate map boundaries
  */
 function* generateMapBoundaries(
-  constraints: Record<string, unknown>
+  _constraints: Record<string, unknown>
 ): Generator<GeneratedValue<unknown>> {
   yield { value: {}, category: 'boundary', description: 'Empty map' };
   yield { value: { '': null }, category: 'boundary', description: 'Map with empty key' };

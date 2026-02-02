@@ -385,7 +385,7 @@ export class RestGenerator {
   }
 
   private generateResponses(behavior: BehaviorSpec): Array<{ statusCode: number; description: string; schema?: { $ref: string } }> {
-    const responses = [
+    const responses: Array<{ statusCode: number; description: string; schema?: { $ref: string } }> = [
       { statusCode: 200, description: 'Success', schema: { $ref: `#/components/schemas/${behavior.name}Result` } },
     ];
 

@@ -5,7 +5,6 @@
 import type {
   Behavior,
   Field,
-  OutputSpec,
   ErrorSpec,
   TypeDefinition,
 } from './ast-types.js';
@@ -16,7 +15,6 @@ import {
   toSnakeCase,
   generateJsonTag,
   type GoImports,
-  mergeImports,
   emptyImports,
 } from './types.js';
 
@@ -80,7 +78,7 @@ export function generateServiceInterface(
  */
 function generateInterfaceMethod(
   behavior: Behavior,
-  typeRegistry: Map<string, string>
+  _typeRegistry: Map<string, string>
 ): { code: string; imports: GoImports } {
   const methodName = toGoName(behavior.name.name);
   const inputType = `${methodName}Input`;
@@ -167,7 +165,7 @@ export function generateOutputStruct(
 /**
  * Get the success field name based on type
  */
-function getSuccessTypeName(typeDef: TypeDefinition, typeRegistry: Map<string, string>): string {
+function getSuccessTypeName(typeDef: TypeDefinition, _typeRegistry: Map<string, string>): string {
   switch (typeDef.kind) {
     case 'ReferenceType':
       const parts = typeDef.name.parts.map(p => p.name);
@@ -263,7 +261,7 @@ export function generateErrorType(
 function generateErrorConstructor(
   behaviorName: string,
   errorSpec: ErrorSpec,
-  typeRegistry: Map<string, string>
+  _typeRegistry: Map<string, string>
 ): { code: string; imports: GoImports } {
   const errorName = toGoName(errorSpec.name.name);
   const funcName = `New${behaviorName}${errorName}Error`;

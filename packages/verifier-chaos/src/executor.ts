@@ -75,7 +75,7 @@ export class ChaosExecutor {
    */
   async executeScenario(
     scenario: ParsedChaosScenario,
-    domain: DomainDeclaration,
+    _domain: DomainDeclaration,
     implementation: BehaviorImplementation
   ): Promise<ScenarioResult> {
     const timeline = createTimeline();
@@ -137,8 +137,12 @@ export class ChaosExecutor {
 
       // Update injection stats
       for (let i = 0; i < injectors.length; i++) {
-        result.injections[i].deactivated = true;
-        result.injections[i].stats = this.getInjectorStats(injectors[i]);
+        const injection = result.injections[i];
+        const injector = injectors[i];
+        if (injection && injector) {
+          injection.deactivated = true;
+          injection.stats = this.getInjectorStats(injector);
+        }
       }
 
     } catch (error) {
@@ -258,7 +262,7 @@ export class ChaosExecutor {
    * Get injector statistics
    */
   private getInjectorStats(injector: Injector): Record<string, unknown> {
-    return injector.getState() as Record<string, unknown>;
+    return injector.getState() as unknown as Record<string, unknown>;
   }
 
   /**

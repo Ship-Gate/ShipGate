@@ -15,11 +15,6 @@ import {
 // Markdown Generation Helpers
 // ============================================================================
 
-function getSeverityBadge(severity: Severity): string {
-  const info = SEVERITY_INFO[severity];
-  return `${info.emoji} **${severity.toUpperCase()}**`;
-}
-
 function getSeverityIcon(severity: Severity): string {
   return SEVERITY_INFO[severity].emoji;
 }

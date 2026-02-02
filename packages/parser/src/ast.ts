@@ -636,3 +636,47 @@ export function mergeLocations(start: SourceLocation, end: SourceLocation): Sour
     endColumn: end.endColumn,
   };
 }
+
+// ============================================================================
+// BACKWARD COMPATIBILITY ALIASES
+// These aliases maintain compatibility with packages that used @isl-lang/isl-core
+// ============================================================================
+
+/** @deprecated Use Domain instead */
+export type DomainDeclaration = Domain;
+
+/** @deprecated Use Entity instead */
+export type EntityDeclaration = Entity;
+
+/** @deprecated Use Behavior instead */
+export type BehaviorDeclaration = Behavior;
+
+/** @deprecated Use Field instead */
+export type FieldDeclaration = Field;
+
+/** @deprecated Use TypeDeclaration */
+export type EnumDeclaration = TypeDeclaration;
+
+/** @deprecated Use Expression instead */
+export type ConditionStatement = Expression;
+
+/** @deprecated Use Expression instead */
+export type InvariantStatement = Expression;
+
+/** @deprecated Use TypeDefinition instead */
+export type TypeExpression = TypeDefinition;
+
+/** @deprecated Use InputSpec instead */
+export type InputBlock = InputSpec;
+
+/** @deprecated Use OutputSpec instead */
+export type OutputBlock = OutputSpec;
+
+/** @deprecated Use TemporalSpec instead */
+export type TemporalBlock = TemporalSpec;
+
+/** @deprecated Use TemporalSpec instead */
+export type TemporalRequirement = TemporalSpec;
+
+/** @deprecated Use PostconditionBlock instead */
+export type ConditionBlock = PostconditionBlock;

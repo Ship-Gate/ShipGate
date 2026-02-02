@@ -139,7 +139,7 @@ export type ${lifecycle.entityName}MachineEvent = ${lifecycle.entityName}Event;`
    * Generate XState machine definition
    */
   private generateMachine(lifecycle: ParsedLifecycle): string {
-    const initialState = lifecycle.states.find((s) => s.initial)?.name ?? lifecycle.states[0]?.name;
+    const initialState = lifecycle.states.find((s) => s.initial)?.name ?? lifecycle.states[0]?.name ?? 'initial';
 
     if (this.options.xstateVersion === '5') {
       return this.generateV5Machine(lifecycle, initialState);
@@ -368,8 +368,8 @@ export type ${lifecycle.entityName}Snapshot = SnapshotFrom<typeof ${this.toCamel
     let match;
 
     while ((match = lifecycleRegex.exec(content)) !== null) {
-      const entityName = match[1];
-      const body = match[2];
+      const entityName = match[1]!;
+      const body = match[2]!;
 
       const states = this.parseStates(body);
       const transitions = this.parseTransitions(body);
@@ -385,10 +385,10 @@ export type ${lifecycle.entityName}Snapshot = SnapshotFrom<typeof ${this.toCamel
     const stateRegex = /(\w+)(?:\s*\[([^\]]+)\])?/g;
     const statesMatch = body.match(/states?\s*:\s*\[([^\]]+)\]/);
 
-    if (statesMatch) {
+    if (statesMatch && statesMatch[1]) {
       let match;
       while ((match = stateRegex.exec(statesMatch[1])) !== null) {
-        const name = match[1];
+        const name = match[1]!;
         const annotations = match[2] ?? '';
 
         states.push({
@@ -415,11 +415,11 @@ export type ${lifecycle.entityName}Snapshot = SnapshotFrom<typeof ${this.toCamel
       const actionMatch = annotations.match(/action:\s*(\w+)/);
 
       transitions.push({
-        from: match[1],
-        to: match[3],
-        event: match[2],
+        from: match[1]!,
+        to: match[3]!,
+        event: match[2]!,
         guard: guardMatch?.[1],
-        actions: actionMatch ? [actionMatch[1]] : undefined,
+        actions: actionMatch && actionMatch[1] ? [actionMatch[1]] : undefined,
       });
     }
 

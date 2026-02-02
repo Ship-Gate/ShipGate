@@ -89,7 +89,7 @@ function parsePostconditionPredicate(
   // Pattern: Entity.exists(result.id)
   const existsMatch = predicate.match(/(\w+)\.exists\(result\.(\w+)\)/);
   if (existsMatch) {
-    const [, entity, field] = existsMatch;
+    const [, entity] = existsMatch;
     return {
       type: 'state_update',
       target: `${entity}.create`,
@@ -220,7 +220,7 @@ function generateValueChangePatch(
   confidence: number
 ): Patch[] {
   const patches: Patch[] = [];
-  const { expected, actual, target: fieldPath } = fix;
+  const { expected, target: fieldPath } = fix;
   const field = fieldPath.split('.').pop() ?? fieldPath;
 
   // Find what to replace

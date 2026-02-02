@@ -2,7 +2,10 @@
  * DataLoader Generator - Generate DataLoader setup from ISL AST.
  */
 
-import type { AST, Entity } from '../types/ast';
+import type { AST, ASTEntity, ASTDomain } from '../types.js';
+
+// Type alias for Entity
+type Entity = ASTEntity;
 
 /**
  * DataLoader configuration

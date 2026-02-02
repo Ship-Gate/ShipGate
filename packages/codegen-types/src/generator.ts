@@ -4,13 +4,7 @@
  * Orchestrates generation of TypeScript/Python types and validators from ISL.
  */
 
-import type {
-  DomainDeclaration,
-  EntityDeclaration,
-  TypeDeclaration,
-  EnumDeclaration,
-  BehaviorDeclaration,
-} from '@isl-lang/isl-core';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
 
 import { TypeScriptGenerator } from './typescript.js';
 import { PythonGenerator } from './python.js';

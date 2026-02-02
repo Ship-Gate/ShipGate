@@ -1,0 +1,607 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Auth Domain Snapshots > should generate correct login test structure > auth-login-test 1`] = `
+"import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { Login } from '../src/Login';
+import type { LoginInput, LoginResult } from '../src/types';
+import { createValidInputForLogin, createInvalidInputForLogin } from './helpers/test-utils';
+import { User, Session } from './helpers/fixtures';
+
+/**
+ * Tests for Login behavior
+ * Domain: Auth
+ * Detected strategy: auth
+ * Authenticate user
+ */
+describe('Login', () => {
+  // Test setup
+  let validInput: LoginInput;
+  
+  beforeEach(() => {
+    validInput = createValidInputForLogin();
+  });
+
+  afterEach(() => {
+    // Cleanup if needed
+  });
+
+describe('Preconditions', () => {
+
+    it('Email must be provided and non-empty', async () => {
+      expect(input.email).toBeDefined();
+      expect(input.email.length).toBeGreaterThan(0);
+    });
+  
+
+    it('Should throw for invalid email format', async () => {
+      await expect(behavior(invalidEmailInput)).rejects.toMatchObject({ code: 'INVALID_EMAIL' });
+    });
+  
+
+    it('Password must be at least 8 characters', async () => {
+      expect(input.password.length).toBeGreaterThanOrEqual(8);
+    });
+  
+
+    it('Should reject weak passwords', async () => {
+      await expect(behavior({ ...validInput, password: 'short' })).rejects.toMatchObject({ code: 'WEAK_PASSWORD' });
+    });
+  
+
+  });
+
+describe('Postconditions', () => {
+
+    it('Access token should be present and valid', async () => {
+      expect(result.access_token).toBeDefined();
+      expect(typeof result.access_token).toBe('string');
+      expect(result.access_token.length).toBeGreaterThan(0);
+    });
+  
+
+  });
+
+describe('Error Cases', () => {
+
+    it('Should return INVALID_CREDENTIALS for wrong password', async () => {
+      const wrongPasswordInput = { ...validInput, password: 'wrong_password' };
+      const result = await Login(wrongPasswordInput);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('INVALID_CREDENTIALS');
+      expect(result.retriable).toBe(true);
+    });
+  
+
+    it('Should return ACCOUNT_LOCKED after max failed attempts', async () => {
+      // After 10 failed attempts
+      const result = await Login(validInput);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('ACCOUNT_LOCKED');
+      expect(result.retriable).toBe(true);
+      expect(result.retryAfter).toBeDefined();
+    });
+  
+
+  });
+
+  // No invariants defined
+});"
+`;
+
+exports[`Auth Domain Snapshots > should generate correct register test structure > auth-register-test 1`] = `
+"import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { Register } from '../src/Register';
+import type { RegisterInput, RegisterResult } from '../src/types';
+import { createValidInputForRegister, createInvalidInputForRegister } from './helpers/test-utils';
+import { User } from './helpers/fixtures';
+
+/**
+ * Tests for Register behavior
+ * Domain: Auth
+ * Detected strategy: auth
+ * Register new user
+ */
+describe('Register', () => {
+  // Test setup
+  let validInput: RegisterInput;
+  
+  beforeEach(() => {
+    validInput = createValidInputForRegister();
+  });
+
+  afterEach(() => {
+    // Cleanup if needed
+  });
+
+describe('Preconditions', () => {
+
+    it('Email must be provided and non-empty', async () => {
+      expect(input.email).toBeDefined();
+      expect(input.email.length).toBeGreaterThan(0);
+    });
+  
+
+    it('Should throw for invalid email format', async () => {
+      await expect(behavior(invalidEmailInput)).rejects.toMatchObject({ code: 'INVALID_EMAIL' });
+    });
+  
+
+    it('Password must be at least 8 characters', async () => {
+      expect(input.password.length).toBeGreaterThanOrEqual(8);
+    });
+  
+
+    it('Should reject weak passwords', async () => {
+      await expect(behavior({ ...validInput, password: 'short' })).rejects.toMatchObject({ code: 'WEAK_PASSWORD' });
+    });
+  
+
+  });
+
+  // No postconditions defined
+
+describe('Error Cases', () => {
+
+    it('Should return EMAIL_EXISTS when Email already registered', async () => {
+      const result = await Register(inputForEMAIL_EXISTS());
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('EMAIL_EXISTS');
+      expect(result.retriable).toBe(false);
+    });
+  
+
+    it('Should return WEAK_PASSWORD for insufficient password', async () => {
+      const weakPasswordInput = { ...validInput, password: '123' };
+      const result = await Register(weakPasswordInput);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('WEAK_PASSWORD');
+      expect(result.retriable).toBe(true);
+    });
+  
+
+  });
+
+  // No invariants defined
+});"
+`;
+
+exports[`Helper File Snapshots > should generate correct fixtures > fixtures 1`] = `
+"// Test fixtures for Auth
+// Auto-generated by @isl-lang/test-generator
+
+
+export const userFixture = {
+  id: '00000000-0000-0000-0000-000000000001',
+  email: 'test-value',
+};
+
+export function createUser(overrides?: Partial<typeof userFixture>) {
+  return { ...userFixture, ...overrides };
+}
+
+export const User = {
+  findById: async (id: string) => createUser({ id }),
+  findByEmail: async (email: string) => createUser({ email } as Partial<typeof userFixture>),
+  exists: async (criteria: Record<string, unknown>) => true,
+  count: async (criteria?: Record<string, unknown>) => 1,
+};
+
+
+export const sessionFixture = {
+  id: '00000000-0000-0000-0000-000000000001',
+  token: 'test-value',
+};
+
+export function createSession(overrides?: Partial<typeof sessionFixture>) {
+  return { ...sessionFixture, ...overrides };
+}
+
+export const Session = {
+  findById: async (id: string) => createSession({ id }),
+  findByEmail: async (email: string) => createSession({ email } as Partial<typeof sessionFixture>),
+  exists: async (criteria: Record<string, unknown>) => true,
+  count: async (criteria?: Record<string, unknown>) => 1,
+};"
+`;
+
+exports[`Helper File Snapshots > should generate correct test utilities > test-utils 1`] = `
+"// Test utilities for Auth
+// Auto-generated by @isl-lang/test-generator
+
+import type { LoginInput } from '../src/types';
+
+
+export function createValidInputForLogin(): LoginInput {
+  return {
+    email: 'test-value',
+    password: 'test-value',
+  };
+}
+
+export function createInvalidInputForLogin(): LoginInput {
+  return {
+    email: '',
+    password: '',
+  };
+}
+
+
+export function createInputViolating(condition: string): unknown {
+  // Override this based on the condition being violated
+  return {};
+}
+
+export function captureState(): Record<string, unknown> {
+  return {
+    timestamp: Date.now(),
+  };
+}"
+`;
+
+exports[`Metadata Snapshots > should generate correct metadata structure > metadata-structure 1`] = `
+{
+  "behaviors": [
+    {
+      "assertions": [
+        {
+          "description": "Email must be provided and non-empty",
+          "pattern": "auth.invalid_email",
+          "status": "supported",
+        },
+        {
+          "description": "Should throw for invalid email format",
+          "pattern": "auth.invalid_email",
+          "status": "supported",
+        },
+        {
+          "description": "Should return INVALID_CREDENTIALS for wrong password",
+          "pattern": "auth.invalid_password",
+          "status": "supported",
+        },
+      ],
+      "coverage": {
+        "coveredInvariants": 0,
+        "coveredPostconditions": 0,
+        "coveredPreconditions": 1,
+        "totalInvariants": 0,
+        "totalPostconditions": 0,
+        "totalPreconditions": 1,
+      },
+      "domain": "auth",
+      "name": "Login",
+    },
+  ],
+  "domain": "auth",
+  "openQuestions": [],
+  "stats": {
+    "needsImplAssertions": 0,
+    "openQuestionsCount": 0,
+    "supportedAssertions": 3,
+    "totalAssertions": 3,
+    "totalBehaviors": 1,
+    "unsupportedAssertions": 0,
+  },
+}
+`;
+
+exports[`Payments Domain Snapshots > should generate correct payment test structure > payment-create-test 1`] = `
+"import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { CreatePayment } from '../src/CreatePayment';
+import type { CreatePaymentInput, CreatePaymentResult } from '../src/types';
+import { createValidInputForCreatePayment, createInvalidInputForCreatePayment } from './helpers/test-utils';
+import { Payment } from './helpers/fixtures';
+
+/**
+ * Tests for CreatePayment behavior
+ * Domain: Payment
+ * Detected strategy: payments
+ * Process payment
+ */
+describe('CreatePayment', () => {
+  // Test setup
+  let validInput: CreatePaymentInput;
+  
+  beforeEach(() => {
+    validInput = createValidInputForCreatePayment();
+  });
+
+  afterEach(() => {
+    // Cleanup if needed
+  });
+
+describe('Preconditions', () => {
+
+    it('Payment amount must be positive', async () => {
+      expect(input.amount).toBeGreaterThan(0);
+    });
+  
+
+    it('Should reject zero amount', async () => {
+      const zeroAmountInput = { ...validInput, amount: 0 };
+      const result = await CreatePayment(zeroAmountInput);
+      expect(result.success).toBe(false);
+    });
+  
+
+    it('Should reject negative amount', async () => {
+      const negativeAmountInput = { ...validInput, amount: -10 };
+      const result = await CreatePayment(negativeAmountInput);
+      expect(result.success).toBe(false);
+    });
+  
+
+  });
+
+describe('Postconditions', () => {
+
+    it('Payment status should be COMPLETED or PROCESSING', async () => {
+      expect(['COMPLETED', 'PROCESSING']).toContain(result.status);
+    });
+  
+
+  });
+
+describe('Error Cases', () => {
+
+    it('Should return CARD_DECLINED for declined cards', async () => {
+      const declinedCardInput = { ...validInput, card: { ...validInput.card, number: '4000000000000002' } };
+      const result = await CreatePayment(declinedCardInput);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('CARD_DECLINED');
+      expect(result.retriable).toBe(true);
+    });
+  
+
+    it('Should return INSUFFICIENT_FUNDS when card has insufficient balance', async () => {
+      const insufficientFundsInput = { ...validInput, amount: 999999.99 };
+      const result = await CreatePayment(insufficientFundsInput);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('INSUFFICIENT_FUNDS');
+      expect(result.retriable).toBe(true);
+    });
+  
+
+    it.skip('NEEDS_IMPL: Should handle duplicate idempotency key', async () => {
+      // Implementation hint: Verify your implementation returns error OR same result for duplicate keys
+      // SCAFFOLD: First create a payment with the same idempotency key
+      const firstPayment = await CreatePayment({ ...validInput, idempotency_key: 'duplicate-key' });
+      
+      // Then try with same key
+      const result = await CreatePayment({ ...validInput, idempotency_key: 'duplicate-key' });
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('DUPLICATE_IDEMPOTENCY_KEY');
+      // OR it should return the same payment (idempotent)
+      // expect(result.id).toEqual(firstPayment.id);
+    });
+  
+  });
+
+  // No invariants defined
+});"
+`;
+
+exports[`Payments Domain Snapshots > should generate correct refund test structure > payment-refund-test 1`] = `
+"import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { RefundPayment } from '../src/RefundPayment';
+import type { RefundPaymentInput, RefundPaymentResult } from '../src/types';
+import { createValidInputForRefundPayment, createInvalidInputForRefundPayment } from './helpers/test-utils';
+import { Payment, Refund } from './helpers/fixtures';
+
+/**
+ * Tests for RefundPayment behavior
+ * Domain: Payment
+ * Detected strategy: payments
+ * Refund payment
+ */
+describe('RefundPayment', () => {
+  // Test setup
+  let validInput: RefundPaymentInput;
+  
+  beforeEach(() => {
+    validInput = createValidInputForRefundPayment();
+  });
+
+  afterEach(() => {
+    // Cleanup if needed
+  });
+
+describe('Preconditions', () => {
+
+    it('Payment amount must be positive', async () => {
+      expect(input.amount).toBeGreaterThan(0);
+    });
+  
+
+    it('Should reject zero amount', async () => {
+      const zeroAmountInput = { ...validInput, amount: 0 };
+      const result = await RefundPayment(zeroAmountInput);
+      expect(result.success).toBe(false);
+    });
+  
+
+    it('Should reject negative amount', async () => {
+      const negativeAmountInput = { ...validInput, amount: -10 };
+      const result = await RefundPayment(negativeAmountInput);
+      expect(result.success).toBe(false);
+    });
+  
+
+  });
+
+  // No postconditions defined
+
+describe('Error Cases', () => {
+
+    it('Should return PAYMENT_NOT_FOUND when Payment not found', async () => {
+      const result = await RefundPayment(inputForPAYMENT_NOT_FOUND());
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('PAYMENT_NOT_FOUND');
+      expect(result.retriable).toBe(false);
+    });
+  
+
+    it('Should return REFUND_EXCEEDS_AMOUNT when refund > payment', async () => {
+      const excessiveRefundInput = { ...validInput, amount: originalPayment.amount + 100 };
+      const result = await RefundPayment(excessiveRefundInput);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('REFUND_EXCEEDS_AMOUNT');
+      expect(result.retriable).toBe(false);
+    });
+  
+
+  });
+
+  // No invariants defined
+});"
+`;
+
+exports[`Uploads Domain Snapshots > should generate correct upload test structure > upload-file-test 1`] = `
+"import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { UploadFile } from '../src/UploadFile';
+import type { UploadFileInput, UploadFileResult } from '../src/types';
+import { createValidInputForUploadFile, createInvalidInputForUploadFile } from './helpers/test-utils';
+import { File } from './helpers/fixtures';
+
+/**
+ * Tests for UploadFile behavior
+ * Domain: Storage
+ * Detected strategy: uploads
+ * Upload file to storage
+ */
+describe('UploadFile', () => {
+  // Test setup
+  let validInput: UploadFileInput;
+  
+  beforeEach(() => {
+    validInput = createValidInputForUploadFile();
+  });
+
+  afterEach(() => {
+    // Cleanup if needed
+  });
+
+  // No preconditions defined
+
+describe('Postconditions', () => {
+
+    it('Result should contain valid URL', async () => {
+      expect(result.url).toBeDefined();
+      expect(result.url).not.toBeNull();
+      expect(typeof result.url).toBe('string');
+      expect(result.url.length).toBeGreaterThan(0);
+    });
+  
+
+    it('URL should be valid format', async () => {
+      // Validate URL format
+      expect(() => new URL(result.url)).not.toThrow();
+    });
+  
+
+    it('URL should be accessible (optional integration test)', async () => {
+      // Optionally verify URL is accessible
+      // const response = await fetch(result.url, { method: 'HEAD' });
+      // expect(response.ok).toBe(true);
+    });
+  
+
+  });
+
+describe('Error Cases', () => {
+
+    it('Should return INVALID_FILE_TYPE for unsupported file types', async () => {
+      const invalidTypeInput = { ...validInput, content_type: 'application/x-executable' };
+      const result = await UploadFile(invalidTypeInput);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('INVALID_FILE_TYPE');
+      expect(result.retriable).toBe(false);
+    });
+  
+
+    it('Should return FILE_TOO_LARGE for oversized files', async () => {
+      const largeFileInput = { ...validInput, file: { size: 100 * 1024 * 1024, data: Buffer.alloc(0) } };
+      const result = await UploadFile(largeFileInput);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('FILE_TOO_LARGE');
+      expect(result.retriable).toBe(false);
+    });
+  
+
+  });
+
+  // No invariants defined
+});"
+`;
+
+exports[`Webhooks Domain Snapshots > should generate correct webhook test structure > webhook-receive-test 1`] = `
+"import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { ReceiveWebhook } from '../src/ReceiveWebhook';
+import type { ReceiveWebhookInput, ReceiveWebhookResult } from '../src/types';
+import { createValidInputForReceiveWebhook, createInvalidInputForReceiveWebhook } from './helpers/test-utils';
+import { WebhookLog } from './helpers/fixtures';
+
+/**
+ * Tests for ReceiveWebhook behavior
+ * Domain: Webhooks
+ * Detected strategy: webhooks
+ * Process incoming webhook
+ */
+describe('ReceiveWebhook', () => {
+  // Test setup
+  let validInput: ReceiveWebhookInput;
+  
+  beforeEach(() => {
+    validInput = createValidInputForReceiveWebhook();
+  });
+
+  afterEach(() => {
+    // Cleanup if needed
+  });
+
+  // No preconditions defined
+
+describe('Postconditions', () => {
+
+    it('Event should be marked as processed', async () => {
+      expect(result.processed).toBe(true);
+      expect(result.event_id).toEqual(input.webhook_id);
+    });
+  
+
+  });
+
+describe('Error Cases', () => {
+
+    it('Should return INVALID_SIGNATURE for tampered payloads', async () => {
+      const tamperedPayloadInput = { ...validInput, payload: { ...validInput.payload, amount: 999999 } };
+      const result = await ReceiveWebhook(tamperedPayloadInput);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('INVALID_SIGNATURE');
+      expect(result.retriable).toBe(false);
+    });
+  
+
+    it('Should return INVALID_SIGNATURE for wrong secret', async () => {
+      const wrongSecretSignature = computeHmacSignature(validInput.payload, 'wrong_secret');
+      const result = await ReceiveWebhook({ ...validInput, signature: wrongSecretSignature });
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('INVALID_SIGNATURE');
+    });
+  
+
+    it.skip('NEEDS_IMPL: Should return REPLAY_ATTACK for duplicate webhooks', async () => {
+      // Implementation hint: Ensure your implementation tracks processed webhook IDs
+      // SCAFFOLD: First process the webhook
+      await ReceiveWebhook(validInput);
+      
+      // Then try to process again
+      const result = await ReceiveWebhook(validInput);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('REPLAY_ATTACK');
+    });
+  
+  });
+
+  // No invariants defined
+});"
+`;

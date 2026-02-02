@@ -184,7 +184,7 @@ export class RequestValidator {
     const outputTypeName = this.extractTypeName(behavior.output.success);
     const outputType = this.typeCache.get(`${domainName}:${outputTypeName}`);
 
-    if (outputType?.kind === 'entity') {
+    if (outputType?.kind === 'entity' && outputType.fields) {
       const outputViolations = this.validateFields(
         domainName,
         outputType.fields.map((f) => ({
@@ -355,7 +355,7 @@ export class RequestValidator {
     // Check custom types
     const customType = this.typeCache.get(`${domainName}:${typeName}`);
     
-    if (customType?.kind === 'enum') {
+    if (customType?.kind === 'enum' && customType.variants) {
       if (!customType.variants.includes(value as string)) {
         return {
           type: 'invalid_type',
@@ -375,11 +375,11 @@ export class RequestValidator {
    * Validate preconditions
    */
   private async validatePreconditions(
-    conditions: unknown[],
-    data: Record<string, unknown>
+    _conditions: unknown[],
+    _data: Record<string, unknown>
   ): Promise<ValidationViolation[]> {
     // In a full implementation, this would evaluate ISL expressions
-    // For now, we return no violations
+    // using _conditions against _data. For now, we return no violations.
     return [];
   }
 
@@ -387,10 +387,11 @@ export class RequestValidator {
    * Validate postconditions
    */
   private async validatePostconditions(
-    conditions: unknown[],
-    data: Record<string, unknown>
+    _conditions: unknown[],
+    _data: Record<string, unknown>
   ): Promise<ValidationViolation[]> {
     // In a full implementation, this would evaluate ISL expressions
+    // using _conditions against _data.
     return [];
   }
 

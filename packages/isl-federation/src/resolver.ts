@@ -3,11 +3,10 @@
 // Resolves cross-service references in federated ISL
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from './ast';
 import type {
   CrossServiceReference,
   ResolvedReference,
-  FederatedService,
 } from './types';
 import { FederationRegistry } from './registry';
 
@@ -255,15 +254,18 @@ function extractTypeReferences(
       const parts = type.name.parts.map(p => p.name);
       if (parts.length >= 2) {
         // Qualified reference like "Auth.User"
-        const targetService = parts[0].toLowerCase();
-        const targetType = parts.slice(1).join('.');
-        references.push({
-          sourceService: serviceName,
-          sourcePath: path,
-          targetService,
-          targetType,
-          referenceKind: 'entity-reference',
-        });
+        const firstPart = parts[0];
+        if (firstPart) {
+          const targetService = firstPart.toLowerCase();
+          const targetType = parts.slice(1).join('.');
+          references.push({
+            sourceService: serviceName,
+            sourcePath: path,
+            targetService,
+            targetType,
+            referenceKind: 'entity-reference',
+          });
+        }
       }
       break;
     }
@@ -288,11 +290,11 @@ function extractTypeReferences(
 function extractServiceFromPath(importPath: string): string | null {
   // Handle @services/auth pattern
   const serviceMatch = importPath.match(/@services\/([^/]+)/);
-  if (serviceMatch) return serviceMatch[1];
+  if (serviceMatch && serviceMatch[1]) return serviceMatch[1];
 
   // Handle ./service.isl pattern
   const fileMatch = importPath.match(/\.\/([^/.]+)\.isl$/);
-  if (fileMatch) return fileMatch[1];
+  if (fileMatch && fileMatch[1]) return fileMatch[1];
 
   return null;
 }
@@ -354,10 +356,13 @@ async function resolveTypeDefinition(
     case 'ReferenceType': {
       const parts = type.name.parts.map(p => p.name);
       if (parts.length >= 2) {
-        const serviceName = parts[0].toLowerCase();
-        const typeName = parts.slice(1).join('.');
-        const resolved = await resolver.resolveType(serviceName, typeName);
-        if (resolved) return resolved;
+        const firstPart = parts[0];
+        if (firstPart) {
+          const serviceName = firstPart.toLowerCase();
+          const typeName = parts.slice(1).join('.');
+          const resolved = await resolver.resolveType(serviceName, typeName);
+          if (resolved) return resolved;
+        }
       }
       return type;
     }

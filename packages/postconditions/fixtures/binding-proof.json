@@ -1,0 +1,55 @@
+{
+  "description": "Evidence from static binding proofs",
+  "evidence": [
+    {
+      "type": "BINDING_PROOF",
+      "source": "type-checker/user-create.ts",
+      "description": "Type system proves User.id is always string",
+      "location": {
+        "file": "src/models/user.ts",
+        "line": 15
+      },
+      "metadata": {
+        "proofType": "type-narrowing",
+        "prover": "typescript"
+      }
+    },
+    {
+      "type": "BINDING_PROOF",
+      "source": "formal-verifier/balance.v",
+      "description": "Coq proof: balance >= 0 after deposit",
+      "location": {
+        "file": "proofs/balance.v",
+        "line": 42
+      },
+      "metadata": {
+        "proofType": "formal-verification",
+        "prover": "coq"
+      }
+    }
+  ],
+  "clauses": [
+    {
+      "id": "post-user-id-string",
+      "expression": "typeof(result.id) == 'string'",
+      "description": "User ID must be a string"
+    },
+    {
+      "id": "post-balance-non-negative",
+      "expression": "result.balance >= 0",
+      "description": "Balance must be non-negative after deposit"
+    }
+  ],
+  "expectedResults": [
+    {
+      "clauseId": "post-user-id-string",
+      "status": "PASS",
+      "evidenceType": "BINDING_PROOF"
+    },
+    {
+      "clauseId": "post-balance-non-negative",
+      "status": "PASS",
+      "evidenceType": "BINDING_PROOF"
+    }
+  ]
+}

@@ -4,8 +4,9 @@
 // ============================================================================
 
 export { FederationRegistry, type RegistryOptions } from './registry';
-export { compose, type CompositionOptions, type ComposedSchema } from './composer';
+export { compose, type CompositionOptions } from './composer';
 export { validate, type FederationValidation } from './validator';
 export { resolveReferences, type ReferenceResolver } from './resolver';
 export { generateGateway, type GatewayConfig } from './gateway';
 export * from './types';
+export type * as AST from './ast';

@@ -359,7 +359,7 @@ export function addBreadcrumbs(breadcrumbs: Breadcrumb[]): void {
  * Clear ISL breadcrumbs (requires scope access)
  */
 export function clearISLBreadcrumbs(): void {
-  Sentry.withScope((scope) => {
+  Sentry.withScope((scope: Sentry.Scope) => {
     // Clear breadcrumbs by setting a fresh scope
     scope.clearBreadcrumbs();
   });

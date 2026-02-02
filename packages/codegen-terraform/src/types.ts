@@ -2,7 +2,7 @@
 // Terraform Generator Types
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 
 export type CloudProvider = 'aws' | 'gcp' | 'azure';
 
@@ -36,9 +36,13 @@ export type TerraformValue =
   | number
   | boolean
   | TerraformValue[]
-  | Record<string, TerraformValue>
+  | TerraformObject
   | TerraformReference
   | TerraformExpression;
+
+export interface TerraformObject {
+  [key: string]: TerraformValue;
+}
 
 export interface TerraformReference {
   _type: 'reference';

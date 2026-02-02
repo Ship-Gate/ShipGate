@@ -47,11 +47,15 @@ function getWordAtPosition(text: string, offset: number): string | null {
   let start = offset;
   let end = offset;
 
-  while (start > 0 && /\w/.test(text[start - 1])) {
+  while (start > 0) {
+    const char = text[start - 1];
+    if (!char || !/\w/.test(char)) break;
     start--;
   }
 
-  while (end < text.length && /\w/.test(text[end])) {
+  while (end < text.length) {
+    const char = text[end];
+    if (!char || !/\w/.test(char)) break;
     end++;
   }
 
@@ -63,7 +67,7 @@ function getWordAtPosition(text: string, offset: number): string | null {
 function findLocalDefinition(
   document: TextDocument,
   word: string,
-  position: Position
+  _position: Position
 ): Location | null {
   const text = document.getText();
   const lines = text.split('\n');
@@ -79,6 +83,7 @@ function findLocalDefinition(
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+    if (!line) continue;
 
     for (const pattern of patterns) {
       if (pattern.test(line)) {

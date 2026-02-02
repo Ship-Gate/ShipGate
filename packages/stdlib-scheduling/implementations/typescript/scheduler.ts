@@ -240,6 +240,9 @@ export class WorkflowValidationError extends SchedulingError {
  * Validate a cron expression
  */
 export function isValidCronExpression(expression: string): boolean {
+  if (!expression || !expression.trim()) {
+    return false;
+  }
   try {
     parseExpression(expression);
     return true;
@@ -446,8 +449,8 @@ export class Scheduler {
         }
       }
 
-      // Validate scheduling
-      if (!input.runAt && !input.delay && !input.cron) {
+      // Validate scheduling (delay: 0 is valid, meaning run immediately)
+      if (!input.runAt && input.delay === undefined && !input.cron) {
         return {
           success: false,
           error: new SchedulingError('INVALID_SCHEDULE', 'Must provide runAt, delay, or cron')

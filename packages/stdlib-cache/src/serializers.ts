@@ -2,7 +2,7 @@
  * Cache Serializers - Value serialization for caching.
  */
 
-import type { Serializer } from './types';
+import type { Serializer } from './types.js';
 
 /**
  * JSON serializer

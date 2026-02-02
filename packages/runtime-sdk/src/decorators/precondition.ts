@@ -7,6 +7,14 @@
 import type { ExecutionContext, Violation } from '../types.js';
 import { getBehaviorMetadata } from './behavior.js';
 
+// Augment Reflect with metadata methods (polyfilled at runtime)
+declare global {
+  namespace Reflect {
+    function getMetadata(metadataKey: unknown, target: object, propertyKey?: string | symbol): unknown;
+    function defineMetadata(metadataKey: unknown, metadataValue: unknown, target: object, propertyKey?: string | symbol): void;
+  }
+}
+
 // Symbol to store preconditions
 export const PRECONDITIONS_METADATA = Symbol('isl:preconditions');
 
@@ -46,7 +54,7 @@ export function Precondition<TInput = unknown>(
   ) {
     // Get existing preconditions
     const existing: PreconditionMetadata[] = 
-      Reflect.getMetadata(PRECONDITIONS_METADATA, target, propertyKey) ?? [];
+      (Reflect.getMetadata(PRECONDITIONS_METADATA, target, propertyKey) as PreconditionMetadata[] | undefined) ?? [];
     
     // Add new precondition
     existing.push({ fn: fn as PreconditionFn, description });
@@ -57,7 +65,7 @@ export function Precondition<TInput = unknown>(
     
     descriptor.value = async function (this: unknown, ...args: unknown[]) {
       const preconditions: PreconditionMetadata[] = 
-        Reflect.getMetadata(PRECONDITIONS_METADATA, target, propertyKey) ?? [];
+        (Reflect.getMetadata(PRECONDITIONS_METADATA, target, propertyKey) as PreconditionMetadata[] | undefined) ?? [];
       
       const input = args[0];
       const ctx: ExecutionContext = (args[1] as ExecutionContext) ?? {};
@@ -128,7 +136,7 @@ export function getPreconditions(
   target: object,
   propertyKey: string | symbol
 ): PreconditionMetadata[] {
-  return Reflect.getMetadata(PRECONDITIONS_METADATA, target, propertyKey) ?? [];
+  return (Reflect.getMetadata(PRECONDITIONS_METADATA, target, propertyKey) as PreconditionMetadata[] | undefined) ?? [];
 }
 
 // Extend Reflect polyfill for property keys

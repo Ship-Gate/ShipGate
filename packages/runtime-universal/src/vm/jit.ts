@@ -112,7 +112,7 @@ export class JITCompiler {
   /**
    * Convert a single instruction to JavaScript
    */
-  private instructionToJS(inst: Instruction, index: number, program: BytecodeProgram): string {
+  private instructionToJS(inst: Instruction, _index: number, _program: BytecodeProgram): string {
     switch (inst.opcode) {
       // Stack operations
       case Opcode.PUSH:

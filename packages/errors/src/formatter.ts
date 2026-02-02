@@ -32,19 +32,21 @@ export { DEFAULT_FORMAT_OPTIONS };
 // COLOR CONFIGURATION
 // ============================================================================
 
+type ChalkFn = typeof chalk.red;
+
 interface ColorScheme {
-  error: chalk.Chalk;
-  warning: chalk.Chalk;
-  info: chalk.Chalk;
-  hint: chalk.Chalk;
-  note: chalk.Chalk;
-  help: chalk.Chalk;
-  lineNumber: chalk.Chalk;
-  separator: chalk.Chalk;
-  code: chalk.Chalk;
-  highlight: chalk.Chalk;
-  path: chalk.Chalk;
-  muted: chalk.Chalk;
+  error: ChalkFn;
+  warning: ChalkFn;
+  info: ChalkFn;
+  hint: ChalkFn;
+  note: ChalkFn;
+  help: ChalkFn;
+  lineNumber: ChalkFn;
+  separator: ChalkFn;
+  code: ChalkFn;
+  highlight: ChalkFn;
+  path: ChalkFn;
+  muted: ChalkFn;
 }
 
 const COLORS: ColorScheme = {
@@ -88,7 +90,7 @@ const SEVERITY_LABELS: Record<DiagnosticSeverity, string> = {
   hint: 'hint',
 };
 
-function getSeverityColor(severity: DiagnosticSeverity, colors: ColorScheme): chalk.Chalk {
+function getSeverityColor(severity: DiagnosticSeverity, colors: ColorScheme): ChalkFn {
   return colors[severity];
 }
 

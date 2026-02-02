@@ -229,6 +229,8 @@ export function createCpuCheck(
         const startCpu = startCpus[i];
         const endCpu = endCpus[i];
 
+        if (!startCpu || !endCpu) continue;
+
         const idleDiff = endCpu.times.idle - startCpu.times.idle;
         const totalDiff =
           (endCpu.times.user - startCpu.times.user) +
@@ -290,8 +292,6 @@ export function createEventLoopCheck(
     name,
     critical: options.critical ?? true,
     check: async () => {
-      const start = Date.now();
-      
       // Measure event loop lag
       const lag = await new Promise<number>(resolve => {
         const expected = Date.now() + 1;

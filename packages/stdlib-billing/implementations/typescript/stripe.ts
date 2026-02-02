@@ -558,7 +558,7 @@ export class StripeBillingProvider implements BillingProviderInterface {
         id: line.id,
         description: line.description ?? '',
         quantity: line.quantity ?? 1,
-        unitAmount: (line.unit_amount ?? 0) / 100,
+        unitAmount: ((typeof line.price !== 'string' ? line.price?.unit_amount : null) ?? 0) / 100,
         amount: line.amount / 100,
         periodStart: line.period?.start ? new Date(line.period.start * 1000) : undefined,
         periodEnd: line.period?.end ? new Date(line.period.end * 1000) : undefined,

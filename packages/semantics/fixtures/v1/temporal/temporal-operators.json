@@ -1,0 +1,50 @@
+{
+  "name": "temporal-operators",
+  "description": "V1 temporal operator semantic definitions",
+  "version": "1.0.0",
+  "frozenForVersion": "1.x.x",
+  "operators": [
+    {
+      "operator": "eventually",
+      "requiresDuration": true,
+      "allowsNesting": false,
+      "interpretation": "poll_until_true",
+      "description": "Predicate must become true within duration"
+    },
+    {
+      "operator": "always",
+      "requiresDuration": true,
+      "allowsNesting": false,
+      "interpretation": "assert_invariant",
+      "description": "Predicate must remain true throughout duration"
+    },
+    {
+      "operator": "within",
+      "requiresDuration": true,
+      "allowsNesting": false,
+      "interpretation": "deadline_check",
+      "description": "Operation must complete within duration"
+    },
+    {
+      "operator": "never",
+      "requiresDuration": false,
+      "allowsNesting": false,
+      "interpretation": "assert_never",
+      "description": "Predicate must never become true"
+    },
+    {
+      "operator": "immediately",
+      "requiresDuration": false,
+      "allowsNesting": false,
+      "interpretation": "immediate_check",
+      "description": "Predicate must be true immediately after operation"
+    },
+    {
+      "operator": "response",
+      "requiresDuration": true,
+      "allowsNesting": true,
+      "interpretation": "stimulus_response",
+      "description": "When stimulus occurs, response must follow within duration"
+    }
+  ]
+}

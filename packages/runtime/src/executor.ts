@@ -40,7 +40,7 @@ export interface BehaviorContext {
   /** Domain definition */
   domain: DomainDef;
   /** Call another behavior */
-  call: <T = IslValue>(behaviorName: string, input: Record<string, IslValue>) => Promise<IslResult<T>>;
+  call: <T = IslValue>(behaviorName: string, input: Record<string, IslValue>) => Promise<ExecutionResult<T>>;
   /** Emit custom event */
   emit: (type: string, data: Record<string, IslValue>) => void;
 }
@@ -62,14 +62,9 @@ export interface ExecutionOptions {
 }
 
 /** Execution result with timing */
-export interface ExecutionResult<T = IslValue> extends IslResult<T> {
-  /** Execution duration in milliseconds */
-  durationMs: number;
-  /** Whether preconditions were checked */
-  preconditionsChecked: boolean;
-  /** Whether postconditions were checked */
-  postconditionsChecked: boolean;
-}
+export type ExecutionResult<T = IslValue> = 
+  | { success: true; value: T; durationMs: number; preconditionsChecked: boolean; postconditionsChecked: boolean }
+  | { success: false; error: IslError; durationMs: number; preconditionsChecked: boolean; postconditionsChecked: boolean };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Executor
@@ -94,7 +89,7 @@ export class BehaviorExecutor {
     behaviorName: string,
     handler: BehaviorHandler<TInput, TOutput>
   ): void {
-    this.handlers.set(behaviorName, handler as BehaviorHandler);
+    this.handlers.set(behaviorName, handler as unknown as BehaviorHandler);
   }
 
   /**
@@ -176,7 +171,7 @@ export class BehaviorExecutor {
             message: 'Input validation failed',
             details: { errors: inputValidation.errors as unknown as IslValue },
           };
-          this.emitEvent('behavior:error', context, { behavior: behaviorName, error });
+          this.emitEvent('behavior:error', context, { behavior: behaviorName, error: error as unknown as IslValue });
           return {
             success: false,
             error,
@@ -201,7 +196,7 @@ export class BehaviorExecutor {
             code: 'PRECONDITION_FAILED',
             message: preconditionResult.message ?? 'Precondition check failed',
           };
-          this.emitEvent('behavior:error', context, { behavior: behaviorName, error });
+          this.emitEvent('behavior:error', context, { behavior: behaviorName, error: error as unknown as IslValue });
           return {
             success: false,
             error,
@@ -242,7 +237,7 @@ export class BehaviorExecutor {
             message: 'Output validation failed',
             details: { errors: outputValidation.errors as unknown as IslValue },
           };
-          this.emitEvent('behavior:error', context, { behavior: behaviorName, error });
+          this.emitEvent('behavior:error', context, { behavior: behaviorName, error: error as unknown as IslValue });
           return {
             success: false,
             error,
@@ -267,7 +262,7 @@ export class BehaviorExecutor {
             code: 'POSTCONDITION_FAILED',
             message: postconditionResult.message ?? 'Postcondition check failed',
           };
-          this.emitEvent('behavior:error', context, { behavior: behaviorName, error });
+          this.emitEvent('behavior:error', context, { behavior: behaviorName, error: error as unknown as IslValue });
           return {
             success: false,
             error,
@@ -287,7 +282,7 @@ export class BehaviorExecutor {
       } else {
         this.emitEvent('behavior:error', context, {
           behavior: behaviorName,
-          error: result.error,
+          error: result.error as unknown as IslValue,
         });
       }
 
@@ -303,7 +298,7 @@ export class BehaviorExecutor {
         code: 'EXECUTION_ERROR',
         message: error instanceof Error ? error.message : 'Unknown error',
       };
-      this.emitEvent('behavior:error', context, { behavior: behaviorName, error: islError });
+      this.emitEvent('behavior:error', context, { behavior: behaviorName, error: islError as unknown as IslValue });
       return {
         success: false,
         error: islError,

@@ -23,7 +23,6 @@ import {
   sanitizeOutput,
   sanitizeState,
   createSanitizationOptions,
-  generateExecutionId,
 } from './utils';
 import {
   startBehaviorSpan,
@@ -32,7 +31,6 @@ import {
   recordVerificationToSpan,
 } from './performance/spans';
 import {
-  addBehaviorBreadcrumb,
   addVerificationBreadcrumb,
   addPreconditionBreadcrumb,
   addPostconditionBreadcrumb,
@@ -40,8 +38,6 @@ import {
   addTemporalBreadcrumb,
 } from './breadcrumbs/isl';
 import {
-  pushContext,
-  popContext,
   createISLContext,
   withContextAsync,
 } from './context/isl';
@@ -283,7 +279,7 @@ export class ISLSentry {
             expression: invariant,
             timestamp: Date.now(),
           } satisfies ISLContext,
-          state: sanitizedState as Record<string, unknown> | undefined,
+          isl_state: sanitizedState as Record<string, unknown> | undefined,
         },
         fingerprint: [domain, 'invariant', invariant],
       }
@@ -337,7 +333,7 @@ export class ISLSentry {
     behavior: string,
     checkType: CheckType,
     expression: string,
-    duration?: number
+    _duration?: number
   ): void {
     const breadcrumbFn = {
       precondition: addPreconditionBreadcrumb,

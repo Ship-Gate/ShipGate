@@ -279,10 +279,7 @@ export class RateLimiter {
   private tokens: number;
   private lastRefill: number;
 
-  constructor(
-    private config: RateLimiterConfig,
-    private name: string = 'rate-limiter'
-  ) {
+  constructor(private config: RateLimiterConfig) {
     this.tokens = config.limit;
     this.lastRefill = Date.now();
   }

@@ -6,7 +6,6 @@ import type {
   Domain,
   Behavior,
   Entity,
-  Field,
   TypeDefinition,
 } from '../../../../master_contracts/ast';
 import type { GeneratorOptions } from '../generator';
@@ -65,7 +64,7 @@ export function generateJavaInterfaces(
 // BEHAVIOR METHOD GENERATION
 // ============================================================================
 
-function generateBehaviorMethod(behavior: Behavior, options: GeneratorOptions): string {
+function generateBehaviorMethod(behavior: Behavior, _options: GeneratorOptions): string {
   const lines: string[] = [];
   const methodName = toCamelCase(behavior.name.name);
   const inputType = `${behavior.name.name}Input`;
@@ -91,7 +90,7 @@ function generateBehaviorMethod(behavior: Behavior, options: GeneratorOptions): 
 // ENTITY CRUD METHODS
 // ============================================================================
 
-function generateEntityMethods(entity: Entity, options: GeneratorOptions): string {
+function generateEntityMethods(entity: Entity, _options: GeneratorOptions): string {
   const lines: string[] = [];
   const name = entity.name.name;
   const varName = toCamelCase(name);
@@ -99,7 +98,7 @@ function generateEntityMethods(entity: Entity, options: GeneratorOptions): strin
   // Find ID field
   const idField = entity.fields.find(f => 
     f.name.name === 'id' || 
-    f.annotations.some(a => a.name.name === 'unique' && a.name.name === 'immutable')
+    f.annotations.some(a => a.name.name === 'unique' || a.name.name === 'immutable')
   );
   const idType = idField ? javaType(idField.type) : 'UUID';
 

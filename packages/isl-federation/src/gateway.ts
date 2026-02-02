@@ -3,14 +3,12 @@
 // Generates API gateway configuration from federated ISL services
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from './ast';
 import type {
   FederatedService,
   GatewaySpec,
   GatewayService,
   GatewayRoute,
-  ComposedSchema,
-  RoutingRule,
   RateLimitConfig,
   AuthConfig,
 } from './types';
@@ -130,7 +128,7 @@ function generateRoute(
   };
 }
 
-function parseRateLimit(spec: AST.SecuritySpec): RateLimitConfig | undefined {
+function parseRateLimit(_spec: AST.SecuritySpec): RateLimitConfig | undefined {
   // Parse rate limit from ISL security spec
   // Format: "rate_limit 10/minute per user_id"
   return {
@@ -280,7 +278,10 @@ function generateNginxConfig(spec: GatewaySpec): string {
   lines.push('# Upstream servers');
   for (const service of spec.services) {
     lines.push(`upstream ${service.name} {`);
-    lines.push(`    server ${new URL(service.url).host};`);
+    // Extract host from URL
+    const urlMatch = service.url.match(/^https?:\/\/([^/]+)/);
+    const host = urlMatch ? urlMatch[1] : service.url;
+    lines.push(`    server ${host};`);
     lines.push('}');
     lines.push('');
   }
@@ -379,40 +380,47 @@ function generateEnvoyConfig(spec: GatewaySpec): string {
           ],
         },
       ],
-      clusters: spec.services.map(service => ({
-        name: service.name,
-        connect_timeout: '5s',
-        type: 'LOGICAL_DNS',
-        lb_policy: 'ROUND_ROBIN',
-        load_assignment: {
-          cluster_name: service.name,
-          endpoints: [
-            {
-              lb_endpoints: [
-                {
-                  endpoint: {
-                    address: {
-                      socket_address: {
-                        address: new URL(service.url).hostname,
-                        port_value: parseInt(new URL(service.url).port || '80'),
+      clusters: spec.services.map(service => {
+        // Parse URL to extract hostname and port
+        const urlMatch = service.url.match(/^https?:\/\/([^:/]+)(?::(\d+))?/);
+        const hostname = urlMatch ? urlMatch[1] : service.url;
+        const port = urlMatch && urlMatch[2] ? parseInt(urlMatch[2]) : 80;
+        
+        return {
+          name: service.name,
+          connect_timeout: '5s',
+          type: 'LOGICAL_DNS',
+          lb_policy: 'ROUND_ROBIN',
+          load_assignment: {
+            cluster_name: service.name,
+            endpoints: [
+              {
+                lb_endpoints: [
+                  {
+                    endpoint: {
+                      address: {
+                        socket_address: {
+                          address: hostname,
+                          port_value: port,
+                        },
                       },
                     },
                   },
-                },
-              ],
+                ],
+              },
+            ],
+          },
+          health_checks: [
+            {
+              timeout: '1s',
+              interval: '10s',
+              unhealthy_threshold: 3,
+              healthy_threshold: 2,
+              http_health_check: { path: service.healthCheck },
             },
           ],
-        },
-        health_checks: [
-          {
-            timeout: '1s',
-            interval: '10s',
-            unhealthy_threshold: 3,
-            healthy_threshold: 2,
-            http_health_check: { path: service.healthCheck },
-          },
-        ],
-      })),
+        };
+      }),
     },
   };
 

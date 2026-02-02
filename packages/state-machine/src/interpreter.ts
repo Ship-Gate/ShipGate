@@ -6,7 +6,6 @@
 
 import type {
   StateMachine,
-  StateNode,
   Transition,
   EventObject,
   MachineInstance,

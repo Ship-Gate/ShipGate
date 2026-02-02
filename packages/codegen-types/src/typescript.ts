@@ -15,7 +15,6 @@ import type {
   TypeConstraint,
   InputBlock,
   OutputBlock,
-  ErrorDeclaration,
 } from '@isl-lang/isl-core';
 
 import type { GeneratorOptions } from './generator.js';

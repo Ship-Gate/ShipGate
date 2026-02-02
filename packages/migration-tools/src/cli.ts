@@ -7,7 +7,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { MigrationEngine, detectFormat, type DetectedFormat } from './engine.js';
+import { MigrationEngine, type DetectedFormat } from './engine.js';
 
 interface CLIOptions {
   input: string;
@@ -136,7 +136,7 @@ function parseArgs(args: string[]): CLIOptions {
         break;
 
       default:
-        if (!arg.startsWith('-')) {
+        if (arg && !arg.startsWith('-')) {
           options.input = arg;
         }
     }

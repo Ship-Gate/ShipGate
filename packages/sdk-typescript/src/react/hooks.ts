@@ -9,15 +9,13 @@ import type {
   CreateUserInput,
   UpdateUserInput,
   ListUsersInput,
-  SearchUsersInput,
 } from '../models';
 import type {
   CreateUserResult,
-  GetUserResult,
+  CreateUserError,
   UpdateUserResult,
+  UpdateUserError,
   DeleteUserResult,
-  ListUsersResult,
-  SearchUsersResult,
 } from '../results';
 
 // =============================================================================
@@ -26,7 +24,7 @@ import type {
 
 export interface UseCreateUserOptions {
   onSuccess?: (user: User) => void;
-  onError?: (error: CreateUserResult extends { ok: false; error: infer E } ? E : never) => void;
+  onError?: (error: CreateUserError) => void;
 }
 
 export interface UseGetUserOptions {
@@ -36,7 +34,7 @@ export interface UseGetUserOptions {
 
 export interface UseUpdateUserOptions {
   onSuccess?: (user: User) => void;
-  onError?: (error: UpdateUserResult extends { ok: false; error: infer E } ? E : never) => void;
+  onError?: (error: UpdateUserError) => void;
 }
 
 // =============================================================================
@@ -166,6 +164,7 @@ export function useGetUser(userId: string, options: UseGetUserOptions = {}) {
       const interval = setInterval(fetchUser, refetchInterval);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [refetchInterval, enabled, fetchUser]);
 
   return state;

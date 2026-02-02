@@ -467,7 +467,7 @@ interface EmailProvider {
 }
 
 class MockEmailProvider implements EmailProvider {
-  async send(notification: EmailNotification): Promise<EmailProviderResult> {
+  async send(_notification: EmailNotification): Promise<EmailProviderResult> {
     // Simulate provider latency
     await new Promise(resolve => setTimeout(resolve, 10));
     

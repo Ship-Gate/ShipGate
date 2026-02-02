@@ -3,9 +3,8 @@
 // ============================================================================
 
 import * as Sentry from '@sentry/node';
-import type { IncomingMessage, ServerResponse } from 'http';
 
-import type { MiddlewareOptions, ISLContext } from '../types';
+import type { MiddlewareOptions } from '../types';
 import { DEFAULT_MIDDLEWARE_OPTIONS } from '../types';
 import {
   extractDomainBehavior,
@@ -13,17 +12,17 @@ import {
   generateExecutionId,
   mergeOptions,
 } from '../utils';
-import { startBehaviorSpan, ISL_OPERATIONS } from '../performance/spans';
 import { addBehaviorBreadcrumb } from '../breadcrumbs/isl';
 import { pushContext, popContext, createISLContext } from '../context/isl';
 
 /**
  * Express-compatible request type
  */
-interface ExpressRequest extends IncomingMessage {
+interface ExpressRequest {
   path?: string;
   url?: string;
-  headers: IncomingMessage['headers'];
+  method?: string;
+  headers: Record<string, string | string[] | undefined>;
   body?: unknown;
   params?: Record<string, string>;
 }
@@ -31,9 +30,10 @@ interface ExpressRequest extends IncomingMessage {
 /**
  * Express-compatible response type
  */
-interface ExpressResponse extends ServerResponse {
+interface ExpressResponse {
   statusCode: number;
   on(event: string, listener: (...args: unknown[]) => void): this;
+  end: (...args: unknown[]) => ExpressResponse;
 }
 
 /**
@@ -130,7 +130,7 @@ export function sentryISLMiddleware(
     // Wrap response handling
     const originalEnd = res.end.bind(res);
 
-    res.end = function(...args: Parameters<typeof res.end>): ReturnType<typeof res.end> {
+    res.end = function(...args: unknown[]): ExpressResponse {
       const duration = Date.now() - startTime;
 
       // Pop context

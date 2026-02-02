@@ -2,7 +2,7 @@
 // Sandboxed Execution Runner - Execute implementations safely
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 import type {
   Implementation,
   ExecutionResult,
@@ -11,7 +11,7 @@ import type {
   EntityStoreSnapshot,
   VerificationError,
   LogEntry,
-} from './types';
+} from './types.js';
 
 /**
  * Options for the runner

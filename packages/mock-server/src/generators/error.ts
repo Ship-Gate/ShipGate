@@ -300,7 +300,7 @@ export class ErrorGenerator {
    */
   generateRandomError(): { status: number; body: ErrorResponse } {
     const errors = Array.from(this.predefinedErrors.keys());
-    const randomError = errors[Math.floor(Math.random() * errors.length)];
+    const randomError = errors[Math.floor(Math.random() * errors.length)] ?? 'INTERNAL_ERROR';
     return this.generateError(randomError);
   }
 

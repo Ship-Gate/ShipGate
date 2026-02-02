@@ -70,7 +70,6 @@ export function islMiddleware(options: ExpressMiddlewareOptions): RequestHandler
         spec,
         mode,
         sampling,
-        onViolation,
         debug,
       });
       initPromise = client.init();

@@ -83,7 +83,6 @@ export async function islPlugin(
     spec,
     mode,
     sampling,
-    onViolation,
     debug,
   });
   

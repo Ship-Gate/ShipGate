@@ -7,10 +7,7 @@
 import type {
   DomainDeclaration,
   EntityDeclaration,
-  TypeDeclaration,
-  EnumDeclaration,
   BehaviorDeclaration,
-  FieldDeclaration,
   TypeExpression,
 } from '@isl-lang/isl-core';
 

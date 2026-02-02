@@ -5,12 +5,12 @@
  */
 
 import type { DomainDeclaration, BehaviorDeclaration } from '@isl-lang/isl-core';
-import { AnthropicClient, type AnthropicOptions } from './models/anthropic.js';
-import { OpenAIClient, type OpenAIOptions } from './models/openai.js';
+import { AnthropicClient } from './models/anthropic.js';
+import { OpenAIClient } from './models/openai.js';
 import { getCompleteSystemPrompt, type SystemPromptOptions } from './prompts/system.js';
 import { generateBehaviorPrompt, generateTypesFromDomain, type BehaviorPromptContext } from './prompts/behavior.js';
-import { extractCode, extractPrimaryCode, validateExtraction, type ExtractedCode } from './extraction.js';
-import { validateCode, quickValidate, type ValidationResult, type ValidationOptions } from './validation.js';
+import { extractPrimaryCode, validateExtraction } from './extraction.js';
+import { validateCode, type ValidationResult, type ValidationOptions } from './validation.js';
 
 // ============================================================================
 // Types

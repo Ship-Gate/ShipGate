@@ -2,7 +2,7 @@
 // GraphQL Client Generator
 // ============================================================================
 
-import type { Domain, Behavior, Entity } from './types.js';
+import type { Domain, Behavior, Entity, Field } from './types.js';
 
 /**
  * Generate GraphQL client operations
@@ -37,7 +37,7 @@ function generateFragments(domain: Domain): string {
   if (!domain.entities?.length) return '';
 
   return domain.entities.map(entity => {
-    const fields = Object.keys(entity.properties).join('\n    ');
+    const fields = entity.fields.map((f: Field) => f.name).join('\n    ');
     
     return `export const ${entity.name.toUpperCase()}_FRAGMENT = gql\`
   fragment ${entity.name}Fragment on ${entity.name} {
@@ -54,19 +54,19 @@ function generateFragments(domain: Domain): string {
  * Generate client queries
  */
 function generateClientQueries(domain: Domain): string {
-  const queryBehaviors = domain.behaviors.filter(b => isQueryBehavior(b.name));
+  const queryBehaviors = domain.behaviors.filter((b: Behavior) => isQueryBehavior(b.name));
 
-  const behaviorQueries = queryBehaviors.map(b => {
+  const behaviorQueries = queryBehaviors.map((b: Behavior) => {
     const opName = pascalCase(b.name);
     const funcName = camelCase(b.name);
-    const hasArgs = b.input && Object.keys(b.input).length > 0;
+    const hasArgs = b.inputs && b.inputs.length > 0;
 
     const variables = hasArgs 
-      ? `(${Object.entries(b.input!).map(([name, prop]) => `$${name}: ${mapToGraphQLType(prop.type)}${prop.required !== false ? '!' : ''}`).join(', ')})`
+      ? `(${b.inputs.map((f: Field) => `$${f.name}: ${mapToGraphQLType(f.type)}${!f.optional ? '!' : ''}`).join(', ')})`
       : '';
 
     const args = hasArgs
-      ? `(${Object.keys(b.input!).map(name => `${name}: $${name}`).join(', ')})`
+      ? `(${b.inputs.map((f: Field) => `${f.name}: $${f.name}`).join(', ')})`
       : '';
 
     return `export const ${opName.toUpperCase()}_QUERY = gql\`
@@ -112,12 +112,12 @@ export const LIST_${name.toUpperCase()}S_QUERY = gql\`
  * Generate client mutations
  */
 function generateClientMutations(domain: Domain): string {
-  const mutationBehaviors = domain.behaviors.filter(b => !isQueryBehavior(b.name));
+  const mutationBehaviors = domain.behaviors.filter((b: Behavior) => !isQueryBehavior(b.name));
 
-  const behaviorMutations = mutationBehaviors.map(b => {
+  const behaviorMutations = mutationBehaviors.map((b: Behavior) => {
     const opName = pascalCase(b.name);
     const funcName = camelCase(b.name);
-    const hasInput = b.input && Object.keys(b.input).length > 0;
+    const hasInput = b.inputs && b.inputs.length > 0;
 
     const inputTypeName = `${opName}Input`;
     const variables = hasInput ? `($input: ${inputTypeName}!)` : '';
@@ -242,12 +242,11 @@ function isQueryBehavior(name: string): boolean {
 }
 
 function inferReturnType(behavior: Behavior, domain: Domain): string {
-  if (!behavior.output) return 'Boolean';
-  const entityNames = (domain.entities ?? []).map(e => e.name);
-  for (const name of entityNames) {
-    if (behavior.output[name.toLowerCase()] || behavior.output[name]) {
-      return name;
-    }
+  if (!behavior.outputType) return 'Boolean';
+  const entityNames = (domain.entities ?? []).map((e: Entity) => e.name);
+  // Check if output type matches an entity
+  if (entityNames.includes(behavior.outputType)) {
+    return behavior.outputType;
   }
   return entityNames[0] ?? 'JSON';
 }

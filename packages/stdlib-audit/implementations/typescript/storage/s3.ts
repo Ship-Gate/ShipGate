@@ -3,11 +3,10 @@
 // @stdlib/audit/storage/s3
 // ============================================================================
 
-import type {
-  AuditEvent,
-  AuditFilters,
+import {
   ExportFormat,
   CompressionType,
+  type AuditEvent,
 } from '../types';
 
 // ============================================================================
@@ -108,8 +107,14 @@ export class S3AuditArchive {
       return { success: false, error: 'No events to archive' };
     }
 
-    const timestamp = events[0].timestamp;
-    const key = this.buildKey(timestamp, events[0].category, options.format, options.compression);
+    const firstEvent = events[0];
+    const lastEvent = events[events.length - 1];
+    if (!firstEvent || !lastEvent) {
+      return { success: false, error: 'Invalid events array' };
+    }
+
+    const timestamp = firstEvent.timestamp;
+    const key = this.buildKey(timestamp, firstEvent.category, options.format, options.compression);
 
     // Serialize events
     const content = this.serializeEvents(events, options.format);
@@ -127,8 +132,8 @@ export class S3AuditArchive {
       ContentEncoding: contentEncoding,
       Metadata: {
         'event-count': String(events.length),
-        'timestamp-start': events[0].timestamp.toISOString(),
-        'timestamp-end': events[events.length - 1].timestamp.toISOString(),
+        'timestamp-start': firstEvent.timestamp.toISOString(),
+        'timestamp-end': lastEvent.timestamp.toISOString(),
         ...options.metadata,
       },
     });
@@ -362,29 +367,29 @@ export class S3AuditArchive {
     // Simplified CSV parsing - production should use proper parser
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
-      if (!line.trim()) continue;
+      if (!line || !line.trim()) continue;
       
       // This is a simplified implementation
       // A real implementation would use a proper CSV parser
       const values = line.match(/(?:^|,)("(?:[^"]*(?:""[^"]*)*)"|[^,]*)/g);
       if (!values || values.length < 15) continue;
 
-      const clean = (v: string) => v.replace(/^,?"?|"?$/g, '').replace(/""/g, '"');
+      const clean = (v: string | undefined) => (v ?? '').replace(/^,?"?|"?$/g, '').replace(/""/g, '"');
 
       events.push({
-        id: clean(values[0]) as any,
+        id: clean(values[0]) as unknown as AuditEvent['id'],
         timestamp: new Date(clean(values[1])),
         action: clean(values[2]),
-        category: clean(values[3]) as any,
-        outcome: clean(values[4]) as any,
+        category: clean(values[3]) as AuditEvent['category'],
+        outcome: clean(values[4]) as AuditEvent['outcome'],
         actor: {
-          id: clean(values[5]) as any,
-          type: clean(values[6]) as any,
+          id: clean(values[5]) as unknown as AuditEvent['actor']['id'],
+          type: clean(values[6]) as AuditEvent['actor']['type'],
           name: clean(values[7]) || undefined,
         },
         resource: clean(values[8]) ? {
           type: clean(values[8]),
-          id: clean(values[9]) as any,
+          id: clean(values[9]) as unknown as NonNullable<AuditEvent['resource']>['id'],
         } : undefined,
         source: {
           service: clean(values[10]),
@@ -416,7 +421,7 @@ export class S3AuditArchive {
 
   private async decompress(
     stream: ReadableStream,
-    compression: CompressionType
+    _compression: CompressionType
   ): Promise<string> {
     // In real implementation, read stream and decompress
     // For now, simplified implementation
@@ -426,7 +431,7 @@ export class S3AuditArchive {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      chunks.push(value);
+      if (value) chunks.push(value);
     }
 
     const buffer = Buffer.concat(chunks);

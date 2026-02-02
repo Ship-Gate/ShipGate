@@ -210,12 +210,12 @@ export class ConcurrentInjector {
         timeoutPromise,
       ]);
       results.push(...settled);
-    } catch (error) {
+    } catch {
       // Timeout or other error - collect whatever results we have
       const partialResults = await Promise.allSettled(promises);
       for (let i = 0; i < partialResults.length; i++) {
         const r = partialResults[i];
-        if (r.status === 'fulfilled') {
+        if (r && r.status === 'fulfilled') {
           results.push(r.value);
         } else {
           results.push({
@@ -278,7 +278,6 @@ export class ConcurrentInjector {
     }
 
     // Calculate timeline statistics
-    const startTimes = results.map(r => r.startTime);
     const endTimes = results.map(r => r.endTime);
 
     return {
@@ -316,7 +315,8 @@ export class ConcurrentInjector {
     if (values.length >= 2) {
       const reference = values[0];
       for (let i = 1; i < values.length; i++) {
-        if (!equals(reference, values[i])) {
+        const current = values[i];
+        if (reference !== undefined && current !== undefined && !equals(reference, current)) {
           isIdempotent = false;
           deviations.push(i);
         }

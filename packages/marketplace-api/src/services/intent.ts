@@ -4,9 +4,17 @@
  * Handles CRUD operations for intent packages in the marketplace.
  */
 
-import { PrismaClient, IntentCategory, IntentPackage, IntentVersion } from '@prisma/client';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { PrismaClient } = require('@prisma/client');
 import { z } from 'zod';
 import semver from 'semver';
+import {
+  IntentCategory,
+  IntentPackage,
+  IntentVersion,
+  IntentPackageWithRelations,
+  TrustMetrics,
+} from '../types.js';
 
 const prisma = new PrismaClient();
 
@@ -35,7 +43,7 @@ export type CreatePackageInput = z.infer<typeof createPackageSchema>;
 export type CreateVersionInput = z.infer<typeof createVersionSchema>;
 
 export interface PackageWithLatest extends IntentPackage {
-  latestVersion?: IntentVersion;
+  latestVersion?: IntentVersion | null;
   trustScore?: number;
 }
 
@@ -93,9 +101,9 @@ export async function listPackages(options: ListOptions = {}): Promise<{
   ]);
 
   return {
-    packages: packages.map(pkg => ({
+    packages: packages.map((pkg: IntentPackageWithRelations & { versions: IntentVersion[]; trustMetrics: TrustMetrics | null }) => ({
       ...pkg,
-      latestVersion: pkg.versions[0],
+      latestVersion: pkg.versions[0] ?? null,
       trustScore: pkg.trustMetrics?.trustScore,
       versions: undefined,
       trustMetrics: undefined,

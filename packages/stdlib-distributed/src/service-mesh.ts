@@ -63,7 +63,6 @@ export interface TimeoutConfig {
 
 export class ServiceRegistry {
   private services = new Map<string, Map<string, ServiceInstance>>();
-  private healthCheckIntervals = new Map<string, NodeJS.Timeout>();
 
   /**
    * Register a service instance.
@@ -170,7 +169,7 @@ export class LoadBalancer {
     hashKey?: string
   ): ServiceInstance | null {
     if (instances.length === 0) return null;
-    if (instances.length === 1) return instances[0];
+    if (instances.length === 1) return instances[0] ?? null;
 
     switch (this.strategy) {
       case 'round-robin':
@@ -182,7 +181,7 @@ export class LoadBalancer {
       case 'consistent-hash':
         return this.consistentHash(instances, hashKey ?? '');
       default:
-        return instances[0];
+        return instances[0] ?? null;
     }
   }
 
@@ -202,21 +201,21 @@ export class LoadBalancer {
     this.connectionCounts.set(instanceId, Math.max(0, count - 1));
   }
 
-  private roundRobin(serviceName: string, instances: ServiceInstance[]): ServiceInstance {
+  private roundRobin(serviceName: string, instances: ServiceInstance[]): ServiceInstance | null {
     const counter = this.roundRobinCounters.get(serviceName) ?? 0;
     const index = counter % instances.length;
     this.roundRobinCounters.set(serviceName, counter + 1);
-    return instances[index];
+    return instances[index] ?? null;
   }
 
-  private random(instances: ServiceInstance[]): ServiceInstance {
+  private random(instances: ServiceInstance[]): ServiceInstance | null {
     const index = Math.floor(Math.random() * instances.length);
-    return instances[index];
+    return instances[index] ?? null;
   }
 
-  private leastConnections(instances: ServiceInstance[]): ServiceInstance {
+  private leastConnections(instances: ServiceInstance[]): ServiceInstance | null {
     let minConnections = Infinity;
-    let selected = instances[0];
+    let selected: ServiceInstance | null = instances[0] ?? null;
 
     for (const instance of instances) {
       const connections = this.connectionCounts.get(instance.id) ?? 0;
@@ -229,11 +228,11 @@ export class LoadBalancer {
     return selected;
   }
 
-  private consistentHash(instances: ServiceInstance[], key: string): ServiceInstance {
+  private consistentHash(instances: ServiceInstance[], key: string): ServiceInstance | null {
     // Simple consistent hashing
     const hash = this.hashCode(key);
     const index = Math.abs(hash) % instances.length;
-    return instances[index];
+    return instances[index] ?? null;
   }
 
   private hashCode(str: string): number {
@@ -499,13 +498,13 @@ export class ServiceClient {
   }
 
   private async makeRequest<Req, Resp>(
-    instance: ServiceInstance,
-    method: string,
-    request: Req,
-    timeoutMs: number
+    _instance: ServiceInstance,
+    _method: string,
+    _request: Req,
+    _timeoutMs: number
   ): Promise<Resp> {
     // Stub implementation - in reality, this would use fetch/http/grpc
-    const url = `${instance.endpoint.protocol}://${instance.endpoint.host}:${instance.endpoint.port}${instance.endpoint.path ?? ''}/${method}`;
+    // URL would be constructed as: `${instance.endpoint.protocol}://${instance.endpoint.host}:${instance.endpoint.port}${instance.endpoint.path ?? ''}/${method}`
     
     // Simulated response for demonstration
     return {} as Resp;

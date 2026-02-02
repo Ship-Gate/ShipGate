@@ -4,7 +4,8 @@
  * Create mock providers for consumer testing.
  */
 
-import express, { Express, Request, Response } from 'express';
+import express from 'express';
+import type { Express, Request, Response, NextFunction } from 'express';
 import { Contract, Interaction } from './types.js';
 
 export interface MockProviderOptions {
@@ -44,7 +45,7 @@ export class MockProvider {
     this.app.use(express.json());
 
     if (this.options.verbose) {
-      this.app.use((req, _res, next) => {
+      this.app.use((req: Request, _res: Response, next: NextFunction) => {
         console.log(`[MockProvider] ${req.method} ${req.path}`);
         next();
       });
@@ -78,7 +79,7 @@ export class MockProvider {
     }
 
     // 404 for unknown routes
-    this.app.use((_req, res) => {
+    this.app.use((_req: Request, res: Response) => {
       res.status(404).json({ error: 'No matching interaction found' });
     });
   }
@@ -99,7 +100,10 @@ export class MockProvider {
       // Set response headers
       if (interaction.response.headers) {
         for (const [key, value] of Object.entries(interaction.response.headers)) {
-          res.setHeader(key, value);
+          // Only set string headers, skip ParamSpec objects
+          if (typeof value === 'string') {
+            res.setHeader(key, value);
+          }
         }
       }
 
@@ -136,7 +140,7 @@ export class MockProvider {
   async stop(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this.server) {
-        this.server.close((err) => {
+        this.server.close((err?: Error) => {
           if (err) reject(err);
           else resolve();
         });

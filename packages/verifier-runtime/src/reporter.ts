@@ -2,7 +2,7 @@
 // Results Reporter - Format verification results
 // ============================================================================
 
-import type { VerifyResult, CheckResult, CoverageInfo, TimingInfo } from './types';
+import type { VerifyResult, CheckResult, CoverageInfo, TimingInfo } from './types.js';
 
 /**
  * Report format options

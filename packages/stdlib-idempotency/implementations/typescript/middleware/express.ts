@@ -15,7 +15,6 @@ import {
   computeHttpRequestHash,
   serializeResponse,
   deserializeResponse,
-  parseResponseBody,
 } from '../utils';
 
 // Express types (compatible with express@4 and @5)
@@ -54,7 +53,7 @@ export type ExpressMiddleware = (
   next: NextFunction
 ) => void | Promise<void>;
 
-export interface ExpressIdempotencyOptions extends IdempotencyMiddlewareOptions {
+export interface ExpressIdempotencyOptions extends Omit<IdempotencyMiddlewareOptions, 'keyExtractor' | 'hashFunction'> {
   /** Header name for idempotency key (default: 'Idempotency-Key') */
   keyHeader?: string;
   

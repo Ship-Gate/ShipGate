@@ -316,7 +316,7 @@ export class FileService {
     // Create file record
     const file = await this.fileRepo.create({
       name: input.name,
-      path: this.buildPath(input.folderId, input.name),
+      path: await this.buildPath(input.folderId, input.name),
       mimeType: input.mimeType,
       size: input.size,
       status: FileStatus.UPLOADING,

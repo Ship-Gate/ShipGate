@@ -305,7 +305,7 @@ export interface ExtractedField {
   required: boolean;
   description?: string;
   defaultValue?: unknown;
-  source?: 'path' | 'query' | 'header' | 'body';
+  source?: 'path' | 'query' | 'header' | 'body' | 'cookie';
 }
 
 /**

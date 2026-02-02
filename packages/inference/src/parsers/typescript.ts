@@ -6,7 +6,6 @@
 
 import * as ts from 'typescript';
 import * as fs from 'fs';
-import * as path from 'path';
 
 export interface TypeScriptParseResult {
   language: 'typescript';
@@ -397,14 +396,12 @@ export interface ValidationPattern {
   errorMessage?: string;
 }
 
-function extractErrorMessage(throwStatement: ts.ThrowStatement, sourceFile: ts.SourceFile): string | undefined {
+function extractErrorMessage(throwStatement: ts.ThrowStatement, _sourceFile: ts.SourceFile): string | undefined {
   if (throwStatement.expression && ts.isNewExpression(throwStatement.expression)) {
     const args = throwStatement.expression.arguments;
-    if (args && args.length > 0) {
-      const firstArg = args[0];
-      if (ts.isStringLiteral(firstArg)) {
-        return firstArg.text;
-      }
+    const firstArg = args?.[0];
+    if (firstArg && ts.isStringLiteral(firstArg)) {
+      return firstArg.text;
     }
   }
   return undefined;

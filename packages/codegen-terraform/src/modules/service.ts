@@ -3,7 +3,7 @@
 // Generates a complete microservice infrastructure module
 // ============================================================================
 
-import type * as AST from '../../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 import type { CloudProvider, ComputeRequirements, SecurityRequirements, MonitoringRequirements } from '../types';
 import { generateAwsSnsAlerts, generateAwsCloudWatchAlarm } from '../providers/aws';
 
@@ -223,6 +223,8 @@ function convertDurationToMs(duration: AST.DurationLiteral): number {
       return duration.value * 60 * 60 * 1000;
     case 'days':
       return duration.value * 24 * 60 * 60 * 1000;
+    default:
+      return duration.value;
   }
 }
 

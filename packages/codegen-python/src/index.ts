@@ -180,7 +180,7 @@ export function generate(domain: IslDomain, options: GenerateOptions = {}): Gene
 
   const result: GeneratedPython = {
     models,
-    handlers,
+    handlers: handlers.join('\n'),
     requirements,
   };
 

@@ -1,0 +1,14 @@
+{
+  "name": "@isl-lang/runtime",
+  "version": "0.0.1",
+  "description": "ISL (Intent Specification Language) - Runtime",
+  "main": "index.js",
+  "keywords": ["isl", "intent-specification-language", "runtime"],
+  "author": "guardiavault-oss",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://github.com/guardiavault-oss/ISL-LANG"
+}

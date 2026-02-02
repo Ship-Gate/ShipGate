@@ -1,45 +1,64 @@
 {
   "name": "@isl-lang/codegen-python",
   "version": "0.1.0",
-  "description": "Python code generator for ISL",
-  "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
+  "description": "Python code generator for ISL - generates Pydantic models and FastAPI endpoints",
+  "author": "ISL Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/isl-lang/isl.git",
+    "directory": "packages/codegen-python"
   },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean",
-    "dev": "tsup src/index.ts --format esm --dts --watch",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit"
-  },
-  "devDependencies": {
-    "@types/node": "^20.10.0",
-    "tsup": "^8.0.1",
-    "typescript": "^5.3.3",
-    "vitest": "^1.2.0"
+  "homepage": "https://isl-lang.dev/docs/codegen-python",
+  "bugs": {
+    "url": "https://github.com/isl-lang/isl/issues"
   },
   "keywords": [
     "isl",
     "codegen",
     "python",
-    "code-generation"
+    "code-generation",
+    "pydantic",
+    "fastapi"
   ],
-  "author": "mevla",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  "engines": {
+    "node": ">=18.0.0"
   },
-  "homepage": "https://intentlang.dev",
-  "bugs": {
-    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "prepublishOnly": "pnpm run build && pnpm run test"
+  },
+  "dependencies": {
+    "@isl-lang/parser": "workspace:*",
+    "@isl-lang/typechecker": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
   }
 }

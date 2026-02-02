@@ -5,7 +5,7 @@
  */
 
 import type { Verdict, CoverageMetrics } from './verifier.js';
-import { getVerdictEmoji, getVerdictDescription } from './verifier.js';
+import { getVerdictEmoji } from './verifier.js';
 
 // ============================================================================
 // Types

@@ -286,7 +286,7 @@ export class RegistryClient {
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-          const error = await response.json().catch(() => ({ message: response.statusText }));
+          const error = await response.json().catch(() => ({ message: response.statusText })) as { message?: string };
           throw new RegistryError(error.message ?? response.statusText, response.status);
         }
 

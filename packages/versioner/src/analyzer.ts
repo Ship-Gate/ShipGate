@@ -3,7 +3,7 @@
 // Analyzes differences between two ISL Domain versions
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from './ast-types.js';
 
 // ============================================================================
 // TYPES
@@ -188,8 +188,8 @@ function analyzeTypeChanges(
 
   // Check enum variants
   if (oldType.definition.kind === 'EnumType' && newType.definition.kind === 'EnumType') {
-    const oldVariants = new Set(oldType.definition.variants.map(v => v.name.name));
-    const newVariants = new Set(newType.definition.variants.map(v => v.name.name));
+    const oldVariants = new Set(oldType.definition.variants.map((v: AST.EnumVariant) => v.name.name));
+    const newVariants = new Set(newType.definition.variants.map((v: AST.EnumVariant) => v.name.name));
 
     // Removed variants (BREAKING)
     for (const variant of oldVariants) {
@@ -232,8 +232,8 @@ function analyzeConstraintChanges(
   newType: AST.ConstrainedType
 ): Change[] {
   const changes: Change[] = [];
-  const oldConstraints = new Map(oldType.constraints.map(c => [c.name, c]));
-  const newConstraints = new Map(newType.constraints.map(c => [c.name, c]));
+  const oldConstraints = new Map(oldType.constraints.map((c: AST.Constraint) => [c.name, c] as const));
+  const newConstraints = new Map(newType.constraints.map((c: AST.Constraint) => [c.name, c] as const));
 
   for (const [cname, oldConstraint] of oldConstraints) {
     const newConstraint = newConstraints.get(cname);
@@ -249,8 +249,8 @@ function analyzeConstraintChanges(
       });
     } else {
       // Compare values
-      const oldVal = extractConstraintValue(oldConstraint.value);
-      const newVal = extractConstraintValue(newConstraint.value);
+      const oldVal = extractConstraintValue((oldConstraint as AST.Constraint).value);
+      const newVal = extractConstraintValue((newConstraint as AST.Constraint).value);
       
       if (oldVal !== newVal) {
         const isTightened = isConstraintTightened(cname, oldVal, newVal);
@@ -459,10 +459,10 @@ function analyzeLifecycle(
   const changes: Change[] = [];
   
   const oldTransitions = new Set(
-    oldLifecycle.transitions.map(t => `${t.from.name}->${t.to.name}`)
+    oldLifecycle.transitions.map((t: AST.LifecycleTransition) => `${t.from.name}->${t.to.name}`)
   );
   const newTransitions = new Set(
-    newLifecycle.transitions.map(t => `${t.from.name}->${t.to.name}`)
+    newLifecycle.transitions.map((t: AST.LifecycleTransition) => `${t.from.name}->${t.to.name}`)
   );
 
   // Removed transitions (BREAKING)
@@ -602,8 +602,8 @@ function analyzeInputChanges(
   newInput: AST.InputSpec
 ): Change[] {
   const changes: Change[] = [];
-  const oldFields = new Map(oldInput.fields.map(f => [f.name.name, f]));
-  const newFields = new Map(newInput.fields.map(f => [f.name.name, f]));
+  const oldFields = new Map(oldInput.fields.map((f: AST.Field) => [f.name.name, f] as const));
+  const newFields = new Map(newInput.fields.map((f: AST.Field) => [f.name.name, f] as const));
 
   // Removed input fields (BREAKING)
   for (const [fname, oldField] of oldFields) {
@@ -621,11 +621,12 @@ function analyzeInputChanges(
   // Added input fields
   for (const [fname, newField] of newFields) {
     if (!oldFields.has(fname)) {
+      const field = newField as AST.Field;
       changes.push({
-        type: newField.optional ? 'input-field-added-optional' : 'precondition-added',
-        category: newField.optional ? 'feature' : 'breaking',
+        type: field.optional ? 'input-field-added-optional' : 'precondition-added',
+        category: field.optional ? 'feature' : 'breaking',
         path: `${path}.input.${fname}`,
-        description: `Input field "${fname}" was added${newField.optional ? ' (optional)' : ' (required - breaking)'}`,
+        description: `Input field "${fname}" was added${field.optional ? ' (optional)' : ' (required - breaking)'}`,
         newValue: newField,
       });
     }
@@ -634,15 +635,19 @@ function analyzeInputChanges(
   // Type changes
   for (const [fname, oldField] of oldFields) {
     const newField = newFields.get(fname);
-    if (newField && !typesEqual(oldField.type, newField.type)) {
-      changes.push({
-        type: 'input-field-type-changed',
-        category: 'breaking',
-        path: `${path}.input.${fname}`,
-        description: `Input field "${fname}" type changed`,
-        oldValue: formatType(oldField.type),
-        newValue: formatType(newField.type),
-      });
+    if (newField) {
+      const oldF = oldField as AST.Field;
+      const newF = newField as AST.Field;
+      if (!typesEqual(oldF.type, newF.type)) {
+        changes.push({
+          type: 'input-field-type-changed',
+          category: 'breaking',
+          path: `${path}.input.${fname}`,
+          description: `Input field "${fname}" type changed`,
+          oldValue: formatType(oldF.type),
+          newValue: formatType(newF.type),
+        });
+      }
     }
   }
 
@@ -669,8 +674,8 @@ function analyzeOutputChanges(
   }
 
   // Error changes
-  const oldErrors = new Map(oldOutput.errors.map(e => [e.name.name, e]));
-  const newErrors = new Map(newOutput.errors.map(e => [e.name.name, e]));
+  const oldErrors = new Map(oldOutput.errors.map((e: AST.ErrorSpec) => [e.name.name, e] as const));
+  const newErrors = new Map(newOutput.errors.map((e: AST.ErrorSpec) => [e.name.name, e] as const));
 
   // Removed errors (BREAKING - clients may depend on these)
   for (const [ename] of oldErrors) {
@@ -802,7 +807,7 @@ function formatType(type: AST.TypeDefinition): string {
     case 'PrimitiveType':
       return type.name;
     case 'ReferenceType':
-      return type.name.parts.map(p => p.name).join('.');
+      return type.name.parts.map((p: AST.Identifier) => p.name).join('.');
     case 'ListType':
       return `List<${formatType(type.element)}>`;
     case 'MapType':
@@ -810,7 +815,7 @@ function formatType(type: AST.TypeDefinition): string {
     case 'OptionalType':
       return `${formatType(type.inner)}?`;
     case 'EnumType':
-      return `enum{${type.variants.map(v => v.name.name).join(', ')}}`;
+      return `enum{${type.variants.map((v: AST.EnumVariant) => v.name.name).join(', ')}}`;
     default:
       return type.kind;
   }

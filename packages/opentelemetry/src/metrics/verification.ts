@@ -1,11 +1,12 @@
+import { MeterProvider } from '@opentelemetry/sdk-metrics';
 import {
-  MeterProvider,
+  Attributes,
   Counter,
   Histogram,
   Meter,
-} from '@opentelemetry/sdk-metrics';
-import { Attributes } from '@opentelemetry/api';
-import { VerificationVerdict, CheckType } from '../semantic-attributes';
+  metrics,
+} from '@opentelemetry/api';
+import type { VerificationVerdict, CheckType } from '../semantic-attributes';
 
 /**
  * Verification metrics collector
@@ -25,8 +26,11 @@ export class VerificationMetrics {
   private verificationScore: Histogram;
 
   constructor(meterProvider?: MeterProvider) {
-    const provider = meterProvider ?? new MeterProvider();
-    this.meter = provider.getMeter('isl-verification-metrics', '1.0.0');
+    if (meterProvider) {
+      // Register the provider if provided
+      metrics.setGlobalMeterProvider(meterProvider);
+    }
+    this.meter = metrics.getMeter('isl-verification-metrics', '1.0.0');
 
     // Initialize counters
     this.verificationTotal = this.meter.createCounter('isl_verification_total', {

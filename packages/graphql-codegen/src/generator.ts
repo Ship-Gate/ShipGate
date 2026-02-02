@@ -4,8 +4,6 @@
 
 import type {
   GraphQLGeneratorOptions,
-  GraphQLTypeInfo,
-  GraphQLFieldInfo,
   GeneratedFile,
   GenerationResult,
 } from './types';
@@ -293,7 +291,7 @@ function generateEntityType(entity: ISLEntity, options: GraphQLGeneratorOptions)
 /**
  * Generate input types
  */
-function generateInputTypes(entity: ISLEntity, options: GraphQLGeneratorOptions): string {
+function generateInputTypes(entity: ISLEntity, _options: GraphQLGeneratorOptions): string {
   const lines: string[] = [];
 
   // Create input
@@ -329,7 +327,7 @@ function generateInputTypes(entity: ISLEntity, options: GraphQLGeneratorOptions)
 /**
  * Generate connection type for Relay
  */
-function generateConnectionType(entityName: string, options: GraphQLGeneratorOptions): string {
+function generateConnectionType(entityName: string, _options: GraphQLGeneratorOptions): string {
   return `type ${entityName}Edge {
   node: ${entityName}!
   cursor: String!
@@ -365,8 +363,7 @@ function generateEntityQueries(entity: ISLEntity, options: GraphQLGeneratorOptio
 /**
  * Generate entity mutations
  */
-function generateEntityMutations(entity: ISLEntity, options: GraphQLGeneratorOptions): string {
-  const name = camelCase(entity.name);
+function generateEntityMutations(entity: ISLEntity, _options: GraphQLGeneratorOptions): string {
   const lines: string[] = [];
 
   lines.push(`  create${entity.name}(input: ${entity.name}CreateInput!): ${entity.name}!`);
@@ -379,7 +376,7 @@ function generateEntityMutations(entity: ISLEntity, options: GraphQLGeneratorOpt
 /**
  * Generate entity subscriptions
  */
-function generateEntitySubscriptions(entity: ISLEntity, options: GraphQLGeneratorOptions): string {
+function generateEntitySubscriptions(entity: ISLEntity, _options: GraphQLGeneratorOptions): string {
   const name = camelCase(entity.name);
   const lines: string[] = [];
 
@@ -393,7 +390,7 @@ function generateEntitySubscriptions(entity: ISLEntity, options: GraphQLGenerato
 /**
  * Generate TypeScript types
  */
-function generateTypeScriptTypes(domain: ISLDomain, options: GraphQLGeneratorOptions): string {
+function generateTypeScriptTypes(domain: ISLDomain, _options: GraphQLGeneratorOptions): string {
   const lines: string[] = [];
 
   lines.push('// Generated GraphQL TypeScript Types');
@@ -473,7 +470,7 @@ function generateTypeScriptTypes(domain: ISLDomain, options: GraphQLGeneratorOpt
 /**
  * Generate resolvers
  */
-function generateResolvers(domain: ISLDomain, options: GraphQLGeneratorOptions): string {
+function generateResolvers(domain: ISLDomain, _options: GraphQLGeneratorOptions): string {
   const lines: string[] = [];
 
   lines.push('// Generated GraphQL Resolvers');
@@ -509,7 +506,7 @@ function generateResolvers(domain: ISLDomain, options: GraphQLGeneratorOptions):
 /**
  * Generate entity resolver
  */
-function generateEntityResolver(entity: ISLEntity, options: GraphQLGeneratorOptions): string {
+function generateEntityResolver(entity: ISLEntity, _options: GraphQLGeneratorOptions): string {
   const name = camelCase(entity.name);
   const className = entity.name;
   
@@ -545,7 +542,7 @@ function generateEntityResolver(entity: ISLEntity, options: GraphQLGeneratorOpti
 /**
  * Generate DataLoaders
  */
-function generateDataLoaders(domain: ISLDomain, options: GraphQLGeneratorOptions): string {
+function generateDataLoaders(domain: ISLDomain, _options: GraphQLGeneratorOptions): string {
   const lines: string[] = [];
 
   lines.push('// Generated DataLoaders');
@@ -553,7 +550,6 @@ function generateDataLoaders(domain: ISLDomain, options: GraphQLGeneratorOptions
   lines.push('');
 
   for (const entity of domain.entities) {
-    const name = camelCase(entity.name);
     lines.push(`export const create${entity.name}Loader = (getById: (id: string) => Promise<unknown>) => {`);
     lines.push('  return new DataLoader<string, unknown>(async (ids) => {');
     lines.push('    const items = await Promise.all(ids.map(getById));');
@@ -659,7 +655,7 @@ function generateServerSetup(domain: ISLDomain, options: GraphQLGeneratorOptions
   return generateApolloServerSetup(domain, options);
 }
 
-function generateApolloServerSetup(domain: ISLDomain, options: GraphQLGeneratorOptions): string {
+function generateApolloServerSetup(_domain: ISLDomain, _options: GraphQLGeneratorOptions): string {
   return `// Apollo Server Setup
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
@@ -697,7 +693,7 @@ start();
 `;
 }
 
-function generateYogaServerSetup(domain: ISLDomain, options: GraphQLGeneratorOptions): string {
+function generateYogaServerSetup(_domain: ISLDomain, _options: GraphQLGeneratorOptions): string {
   return `// GraphQL Yoga Server Setup
 import { createServer } from 'node:http';
 import { createYoga, createSchema } from 'graphql-yoga';

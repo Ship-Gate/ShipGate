@@ -1,0 +1,67 @@
+{
+  "name": "@isl-lang/build-runner",
+  "version": "0.1.0",
+  "description": "ISL build runner - end-to-end compilation pipeline with deterministic output",
+  "author": "ISL Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/isl-lang/isl.git",
+    "directory": "packages/build-runner"
+  },
+  "homepage": "https://isl-lang.dev/docs/build-runner",
+  "bugs": {
+    "url": "https://github.com/isl-lang/isl/issues"
+  },
+  "keywords": [
+    "isl",
+    "build",
+    "runner",
+    "codegen",
+    "testgen",
+    "verification"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@isl-lang/parser": "workspace:*",
+    "@isl-lang/typechecker": "workspace:*",
+    "@isl-lang/isl-compiler": "workspace:*",
+    "@isl-lang/codegen-tests": "workspace:*",
+    "@isl-lang/verifier-runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  }
+}

@@ -14,11 +14,8 @@ import type {
 import {
   mapType,
   toGoName,
-  toSnakeCase,
-  toScreamingSnakeCase,
   generateJsonTag,
   type GoImports,
-  mergeImports,
   emptyImports,
 } from './types.js';
 

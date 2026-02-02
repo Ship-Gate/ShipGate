@@ -4,8 +4,6 @@
  * Marks a class as implementing an ISL behavior.
  */
 
-import type { ExecutionContext } from '../types.js';
-
 // Symbol to store behavior metadata
 export const BEHAVIOR_METADATA = Symbol('isl:behavior');
 

@@ -3,7 +3,7 @@
 // Computes the next version based on change analysis
 // ============================================================================
 
-import type { ChangeAnalysis } from './analyzer';
+import type { ChangeAnalysis } from './analyzer.js';
 
 // ============================================================================
 // TYPES

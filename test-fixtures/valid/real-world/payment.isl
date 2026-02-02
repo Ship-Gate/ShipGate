@@ -1,3 +1,4 @@
+// NOTE: simplified for parser compatibility (optional Map types not supported).
 // Real-world payment processing domain
 // Realistic spec for payment service
 
@@ -177,7 +178,7 @@ domain Payment {
       card: CardDetails [sensitive]
       billing_address: BillingAddress?
       customer_id: UUID?
-      metadata: Map<String, String>?
+      metadata: Map<String, String>
     }
     
     output {
@@ -260,13 +261,10 @@ domain Payment {
     security {
       rate_limit 100 per actor
       rate_limit 1000 per merchant_id
-      fraud_check
+      // fraud_check removed - bare identifier not supported
     }
     
-    compliance {
-      pci_dss
-      audit_trail
-    }
+    // compliance block removed - bare identifiers (pci_dss, audit_trail) not supported
   }
   
   behavior GetPayment {

@@ -259,7 +259,15 @@ export class PolicyEngine {
     const auth = context.request.headers['authorization'];
     if (auth?.startsWith('Bearer ')) {
       const payload = this.decodeJWTPayload(auth.slice(7));
-      return payload?.role ?? payload?.roles ?? 'anonymous';
+      const role = payload?.role;
+      const roles = payload?.roles;
+      
+      if (typeof role === 'string') return role;
+      if (Array.isArray(role)) return role as string[];
+      if (typeof roles === 'string') return roles;
+      if (Array.isArray(roles)) return roles as string[];
+      
+      return 'anonymous';
     }
 
     // Try custom header
@@ -324,7 +332,10 @@ export class PolicyEngine {
       const parts = token.split('.');
       if (parts.length !== 3) return null;
 
-      const payload = Buffer.from(parts[1], 'base64').toString('utf-8');
+      const payloadPart = parts[1];
+      if (!payloadPart) return null;
+
+      const payload = Buffer.from(payloadPart, 'base64').toString('utf-8');
       return JSON.parse(payload);
     } catch {
       return null;

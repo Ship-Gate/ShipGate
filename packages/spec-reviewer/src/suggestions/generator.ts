@@ -161,7 +161,7 @@ function generateEntitySuggestions(
  */
 function generateBehaviorSuggestions(
   behavior: BehaviorDeclaration,
-  domain: DomainDeclaration
+  _domain: DomainDeclaration
 ): Suggestion[] {
   const suggestions: Suggestion[] = [];
   const behaviorName = behavior.name.name;
@@ -267,7 +267,7 @@ function generateDomainSuggestions(domain: DomainDeclaration): Suggestion[] {
       category: 'domain',
       title: 'Add domain version',
       description: 'Specify a semantic version for API evolution tracking.',
-      location: domain.span ? { line: domain.span.line, column: domain.span.column } : undefined,
+      location: domain.span ? { line: domain.span.start.line, column: domain.span.start.column } : undefined,
       suggestedCode: 'version: "1.0.0"',
       confidence: 0.9,
       priority: 'medium',
@@ -310,7 +310,7 @@ function generateDomainSuggestions(domain: DomainDeclaration): Suggestion[] {
 function templateToSuggestion(
   template: SuggestionTemplate,
   context: TemplateContext,
-  span?: { line: number; column: number },
+  span?: { start: { line: number; column: number } },
   priority: 'high' | 'medium' | 'low' = 'medium'
 ): Suggestion {
   return {
@@ -318,7 +318,7 @@ function templateToSuggestion(
     category: template.category,
     title: template.title,
     description: template.description,
-    location: span,
+    location: span ? { line: span.start.line, column: span.start.column } : undefined,
     suggestedCode: template.generateCode?.(context),
     confidence: template.confidence,
     priority,

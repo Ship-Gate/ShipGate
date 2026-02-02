@@ -16,6 +16,8 @@ export {
   type SymbolKind,
   type ContextType,
   type CompletionContext,
+  type CompletionKind,
+  type CodeActionKind,
   DiagnosticSeverity,
 } from './types';
 

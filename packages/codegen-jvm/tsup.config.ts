@@ -1,11 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: {
-    index: 'src/index.ts',
-    'java/index': 'src/java/types.ts',
-    'kotlin/index': 'src/kotlin/types.ts',
-  },
+  entry: ['src/index.ts'],
   format: ['esm', 'cjs'],
   dts: true,
   splitting: false,

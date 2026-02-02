@@ -12,7 +12,7 @@ import * as yup from './libraries/yup';
  * Generate runtime validators from ISL domain
  */
 export function generate(
-  domain: AST.Domain,
+  domain: AST.DomainDeclaration,
   options: GenerateOptions
 ): GeneratedFile[] {
   const files: GeneratedFile[] = [];
@@ -32,7 +32,7 @@ export function generate(
  * Generate Zod validators
  */
 function generateZodValidators(
-  domain: AST.Domain,
+  domain: AST.DomainDeclaration,
   options: GenerateOptions
 ): GeneratedFile[] {
   const files: GeneratedFile[] = [];
@@ -40,12 +40,10 @@ function generateZodValidators(
   const exports: string[] = [];
 
   // Generate enum validators
-  for (const typeDecl of domain.types || []) {
-    if (typeDecl.definition.kind === 'enum') {
-      const validator = zod.generateZodEnum(typeDecl, options);
-      validators.push(validator);
-      exports.push(`${validator.name}Schema`);
-    }
+  for (const enumDecl of domain.enums || []) {
+    const validator = zod.generateZodEnum(enumDecl, options);
+    validators.push(validator);
+    exports.push(`${validator.name}Schema`);
   }
 
   // Generate entity validators
@@ -98,7 +96,7 @@ function generateZodValidators(
     for (const entity of domain.entities || []) {
       if (entity.invariants && entity.invariants.length > 0) {
         for (const invariant of entity.invariants) {
-          lines.push(zod.generateZodRefinement(invariant, `${entity.name}Schema`));
+          lines.push(zod.generateZodRefinement(invariant, `${entity.name.name}Schema`));
           lines.push('');
         }
       }
@@ -125,7 +123,7 @@ function generateZodValidators(
  * Generate Yup validators
  */
 function generateYupValidators(
-  domain: AST.Domain,
+  domain: AST.DomainDeclaration,
   options: GenerateOptions
 ): GeneratedFile[] {
   const files: GeneratedFile[] = [];
@@ -133,12 +131,10 @@ function generateYupValidators(
   const exports: string[] = [];
 
   // Generate enum validators
-  for (const typeDecl of domain.types || []) {
-    if (typeDecl.definition.kind === 'enum') {
-      const validator = yup.generateYupEnum(typeDecl, options);
-      validators.push(validator);
-      exports.push(`${validator.name}Schema`);
-    }
+  for (const enumDecl of domain.enums || []) {
+    const validator = yup.generateYupEnum(enumDecl, options);
+    validators.push(validator);
+    exports.push(`${validator.name}Schema`);
   }
 
   // Generate entity validators

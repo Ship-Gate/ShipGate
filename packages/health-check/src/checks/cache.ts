@@ -114,7 +114,7 @@ async function checkRedis(config: CacheCheckConfig, start: number): Promise<Chec
  */
 function parseRedisInfoValue(info: string, key: string): string | undefined {
   const match = info.match(new RegExp(`${key}:(.+?)\\r?\\n`));
-  return match ? match[1].trim() : undefined;
+  return match?.[1]?.trim();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -123,14 +123,16 @@ function parseRedisInfoValue(info: string, key: string): string | undefined {
 
 async function checkMemcached(config: CacheCheckConfig, start: number): Promise<CheckResult> {
   try {
-    const Memcached = (await import('memcached')).default;
+    // Dynamic import with type assertion for optional dependency
+    const memcachedModule = await import('memcached') as { default: new (server: string, options: { timeout: number }) => { stats: (cb: (err: Error | null, stats: unknown[]) => void) => void; end: () => void } };
+    const Memcached = memcachedModule.default;
     
     return new Promise((resolve) => {
       const memcached = new Memcached(`${config.host ?? 'localhost'}:${config.port ?? 11211}`, {
         timeout: config.timeout ?? 2000,
       });
 
-      memcached.stats((err, stats) => {
+      memcached.stats((err: Error | null, stats: unknown[]) => {
         const latency = Date.now() - start;
 
         if (err) {

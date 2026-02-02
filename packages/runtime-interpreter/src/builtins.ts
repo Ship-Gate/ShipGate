@@ -6,6 +6,15 @@
 import type { Value, Environment, NativeFunction, EffectHandler } from './types';
 import { InterpreterError, TypeMismatchError } from './types';
 
+// Helper to safely get an argument from the args array
+function getArg(args: Value[], index: number, name?: string): Value {
+  const value = args[index];
+  if (value === undefined) {
+    throw new InterpreterError(`Missing argument${name ? ` '${name}'` : ''} at index ${index}`);
+  }
+  return value;
+}
+
 // ============================================================================
 // BUILT-IN FUNCTIONS
 // ============================================================================
@@ -99,27 +108,33 @@ export const builtinFunctions: Map<string, NativeFunction> = new Map([
 // TYPE CHECKING FUNCTIONS
 // ============================================================================
 
-function typeOf([value]: Value[]): Value {
+function typeOf(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   return { tag: 'string', value: value.tag };
 }
 
-function isSome([value]: Value[]): Value {
+function isSome(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   if (value.tag !== 'option') throw new TypeMismatchError('option', value.tag);
   return { tag: 'boolean', value: value.value !== null };
 }
 
-function isNone([value]: Value[]): Value {
+function isNone(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   if (value.tag !== 'option') throw new TypeMismatchError('option', value.tag);
   return { tag: 'boolean', value: value.value === null };
 }
 
-function unwrap([value]: Value[]): Value {
+function unwrap(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   if (value.tag !== 'option') throw new TypeMismatchError('option', value.tag);
   if (value.value === null) throw new InterpreterError('Unwrap called on None');
   return value.value;
 }
 
-function unwrapOr([value, defaultVal]: Value[]): Value {
+function unwrapOr(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
+  const defaultVal = getArg(args, 1, 'default');
   if (value.tag !== 'option') throw new TypeMismatchError('option', value.tag);
   return value.value ?? defaultVal;
 }
@@ -128,7 +143,8 @@ function unwrapOr([value, defaultVal]: Value[]): Value {
 // STRING FUNCTIONS
 // ============================================================================
 
-function len([value]: Value[]): Value {
+function len(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   if (value.tag === 'string') {
     return { tag: 'int', value: BigInt(value.value.length) };
   }
@@ -149,12 +165,15 @@ function concat(values: Value[]): Value {
   return { tag: 'string', value: strings.join('') };
 }
 
-function trim([value]: Value[]): Value {
+function trim(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   if (value.tag !== 'string') throw new TypeMismatchError('string', value.tag);
   return { tag: 'string', value: value.value.trim() };
 }
 
-function split([str, delimiter]: Value[]): Value {
+function split(args: Value[]): Value {
+  const str = getArg(args, 0, 'str');
+  const delimiter = getArg(args, 1, 'delimiter');
   if (str.tag !== 'string') throw new TypeMismatchError('string', str.tag);
   if (delimiter.tag !== 'string') throw new TypeMismatchError('string', delimiter.tag);
   return {
@@ -163,7 +182,9 @@ function split([str, delimiter]: Value[]): Value {
   };
 }
 
-function join([list, separator]: Value[]): Value {
+function join(args: Value[]): Value {
+  const list = getArg(args, 0, 'list');
+  const separator = getArg(args, 1, 'separator');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   if (separator.tag !== 'string') throw new TypeMismatchError('string', separator.tag);
   const strings = list.elements.map(e => {
@@ -173,45 +194,59 @@ function join([list, separator]: Value[]): Value {
   return { tag: 'string', value: strings.join(separator.value) };
 }
 
-function upper([value]: Value[]): Value {
+function upper(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   if (value.tag !== 'string') throw new TypeMismatchError('string', value.tag);
   return { tag: 'string', value: value.value.toUpperCase() };
 }
 
-function lower([value]: Value[]): Value {
+function lower(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   if (value.tag !== 'string') throw new TypeMismatchError('string', value.tag);
   return { tag: 'string', value: value.value.toLowerCase() };
 }
 
-function containsStr([str, substr]: Value[]): Value {
+function containsStr(args: Value[]): Value {
+  const str = getArg(args, 0, 'str');
+  const substr = getArg(args, 1, 'substr');
   if (str.tag !== 'string') throw new TypeMismatchError('string', str.tag);
   if (substr.tag !== 'string') throw new TypeMismatchError('string', substr.tag);
   return { tag: 'boolean', value: str.value.includes(substr.value) };
 }
 
-function startsWith([str, prefix]: Value[]): Value {
+function startsWith(args: Value[]): Value {
+  const str = getArg(args, 0, 'str');
+  const prefix = getArg(args, 1, 'prefix');
   if (str.tag !== 'string') throw new TypeMismatchError('string', str.tag);
   if (prefix.tag !== 'string') throw new TypeMismatchError('string', prefix.tag);
   return { tag: 'boolean', value: str.value.startsWith(prefix.value) };
 }
 
-function endsWith([str, suffix]: Value[]): Value {
+function endsWith(args: Value[]): Value {
+  const str = getArg(args, 0, 'str');
+  const suffix = getArg(args, 1, 'suffix');
   if (str.tag !== 'string') throw new TypeMismatchError('string', str.tag);
   if (suffix.tag !== 'string') throw new TypeMismatchError('string', suffix.tag);
   return { tag: 'boolean', value: str.value.endsWith(suffix.value) };
 }
 
-function replace([str, from, to]: Value[]): Value {
+function replace(args: Value[]): Value {
+  const str = getArg(args, 0, 'str');
+  const from = getArg(args, 1, 'from');
+  const to = getArg(args, 2, 'to');
   if (str.tag !== 'string') throw new TypeMismatchError('string', str.tag);
   if (from.tag !== 'string') throw new TypeMismatchError('string', from.tag);
   if (to.tag !== 'string') throw new TypeMismatchError('string', to.tag);
   return { tag: 'string', value: str.value.replaceAll(from.value, to.value) };
 }
 
-function substring([str, start, end]: Value[]): Value {
+function substring(args: Value[]): Value {
+  const str = getArg(args, 0, 'str');
+  const start = getArg(args, 1, 'start');
   if (str.tag !== 'string') throw new TypeMismatchError('string', str.tag);
   if (start.tag !== 'int') throw new TypeMismatchError('int', start.tag);
   const s = Number(start.value);
+  const end = args[2];
   const e = end?.tag === 'int' ? Number(end.value) : undefined;
   return { tag: 'string', value: str.value.substring(s, e) };
 }
@@ -220,7 +255,8 @@ function substring([str, start, end]: Value[]): Value {
 // MATH FUNCTIONS
 // ============================================================================
 
-function abs([value]: Value[]): Value {
+function abs(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   if (value.tag === 'int') {
     return { tag: 'int', value: value.value < 0n ? -value.value : value.value };
   }
@@ -232,7 +268,7 @@ function abs([value]: Value[]): Value {
 
 function min(values: Value[]): Value {
   if (values.length === 0) throw new InterpreterError('min requires at least one argument');
-  let minVal = values[0];
+  let minVal = getArg(values, 0);
   for (const v of values.slice(1)) {
     if (compareValues(v, minVal) < 0) minVal = v;
   }
@@ -241,34 +277,40 @@ function min(values: Value[]): Value {
 
 function max(values: Value[]): Value {
   if (values.length === 0) throw new InterpreterError('max requires at least one argument');
-  let maxVal = values[0];
+  let maxVal = getArg(values, 0);
   for (const v of values.slice(1)) {
     if (compareValues(v, maxVal) > 0) maxVal = v;
   }
   return maxVal;
 }
 
-function floor([value]: Value[]): Value {
+function floor(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   if (value.tag !== 'float') throw new TypeMismatchError('float', value.tag);
   return { tag: 'int', value: BigInt(Math.floor(value.value)) };
 }
 
-function ceil([value]: Value[]): Value {
+function ceil(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   if (value.tag !== 'float') throw new TypeMismatchError('float', value.tag);
   return { tag: 'int', value: BigInt(Math.ceil(value.value)) };
 }
 
-function round([value]: Value[]): Value {
+function round(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   if (value.tag !== 'float') throw new TypeMismatchError('float', value.tag);
   return { tag: 'int', value: BigInt(Math.round(value.value)) };
 }
 
-function sqrt([value]: Value[]): Value {
+function sqrt(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   if (value.tag !== 'float') throw new TypeMismatchError('float', value.tag);
   return { tag: 'float', value: Math.sqrt(value.value) };
 }
 
-function pow([base, exp]: Value[]): Value {
+function pow(args: Value[]): Value {
+  const base = getArg(args, 0, 'base');
+  const exp = getArg(args, 1, 'exp');
   if (base.tag === 'int' && exp.tag === 'int') {
     return { tag: 'int', value: base.value ** exp.value };
   }
@@ -283,51 +325,67 @@ function pow([base, exp]: Value[]): Value {
 // LIST FUNCTIONS
 // ============================================================================
 
-function head([list]: Value[]): Value {
+function head(args: Value[]): Value {
+  const list = getArg(args, 0, 'list');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   if (list.elements.length === 0) throw new InterpreterError('head of empty list');
-  return list.elements[0];
+  const first = list.elements[0];
+  if (first === undefined) throw new InterpreterError('head of empty list');
+  return first;
 }
 
-function tail([list]: Value[]): Value {
+function tail(args: Value[]): Value {
+  const list = getArg(args, 0, 'list');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   return { tag: 'list', elements: list.elements.slice(1) };
 }
 
-function last([list]: Value[]): Value {
+function last(args: Value[]): Value {
+  const list = getArg(args, 0, 'list');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   if (list.elements.length === 0) throw new InterpreterError('last of empty list');
-  return list.elements[list.elements.length - 1];
+  const lastElem = list.elements[list.elements.length - 1];
+  if (lastElem === undefined) throw new InterpreterError('last of empty list');
+  return lastElem;
 }
 
-function init([list]: Value[]): Value {
+function init(args: Value[]): Value {
+  const list = getArg(args, 0, 'list');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   return { tag: 'list', elements: list.elements.slice(0, -1) };
 }
 
-function take([list, n]: Value[]): Value {
+function take(args: Value[]): Value {
+  const list = getArg(args, 0, 'list');
+  const n = getArg(args, 1, 'n');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   if (n.tag !== 'int') throw new TypeMismatchError('int', n.tag);
   return { tag: 'list', elements: list.elements.slice(0, Number(n.value)) };
 }
 
-function drop([list, n]: Value[]): Value {
+function drop(args: Value[]): Value {
+  const list = getArg(args, 0, 'list');
+  const n = getArg(args, 1, 'n');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   if (n.tag !== 'int') throw new TypeMismatchError('int', n.tag);
   return { tag: 'list', elements: list.elements.slice(Number(n.value)) };
 }
 
-function reverse([list]: Value[]): Value {
+function reverse(args: Value[]): Value {
+  const list = getArg(args, 0, 'list');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   return { tag: 'list', elements: [...list.elements].reverse() };
 }
 
-function sort([list]: Value[]): Value {
+function sort(args: Value[]): Value {
+  const list = getArg(args, 0, 'list');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   return { tag: 'list', elements: [...list.elements].sort(compareValues) };
 }
 
-function filterFn([list, predicate]: Value[], env: Environment): Value {
+function filterFn(args: Value[], _env: Environment): Value {
+  const list = getArg(args, 0, 'list');
+  const predicate = getArg(args, 1, 'predicate');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   if (predicate.tag !== 'function' && predicate.tag !== 'native') {
     throw new TypeMismatchError('function', predicate.tag);
@@ -336,7 +394,9 @@ function filterFn([list, predicate]: Value[], env: Environment): Value {
   return { tag: 'list', elements: list.elements };
 }
 
-function mapFn([list, fn]: Value[], env: Environment): Value {
+function mapFn(args: Value[], _env: Environment): Value {
+  const list = getArg(args, 0, 'list');
+  const fn = getArg(args, 1, 'fn');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   if (fn.tag !== 'function' && fn.tag !== 'native') {
     throw new TypeMismatchError('function', fn.tag);
@@ -345,42 +405,54 @@ function mapFn([list, fn]: Value[], env: Environment): Value {
   return { tag: 'list', elements: list.elements };
 }
 
-function fold([list, initial, fn]: Value[], env: Environment): Value {
+function fold(args: Value[], _env: Environment): Value {
+  const list = getArg(args, 0, 'list');
+  const initial = getArg(args, 1, 'initial');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   // Simplified
   return initial;
 }
 
-function find([list, predicate]: Value[]): Value {
+function find(args: Value[]): Value {
+  const list = getArg(args, 0, 'list');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   // Simplified
   return { tag: 'option', value: null };
 }
 
-function any([list, predicate]: Value[]): Value {
+function any(args: Value[]): Value {
+  const list = getArg(args, 0, 'list');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   // Simplified
   return { tag: 'boolean', value: false };
 }
 
-function all([list, predicate]: Value[]): Value {
+function all(args: Value[]): Value {
+  const list = getArg(args, 0, 'list');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   // Simplified
   return { tag: 'boolean', value: true };
 }
 
-function zip([list1, list2]: Value[]): Value {
+function zip(args: Value[]): Value {
+  const list1 = getArg(args, 0, 'list1');
+  const list2 = getArg(args, 1, 'list2');
   if (list1.tag !== 'list') throw new TypeMismatchError('list', list1.tag);
   if (list2.tag !== 'list') throw new TypeMismatchError('list', list2.tag);
   const length = Math.min(list1.elements.length, list2.elements.length);
   const elements: Value[] = [];
   for (let i = 0; i < length; i++) {
-    elements.push({ tag: 'list', elements: [list1.elements[i], list2.elements[i]] });
+    const e1 = list1.elements[i];
+    const e2 = list2.elements[i];
+    if (e1 !== undefined && e2 !== undefined) {
+      elements.push({ tag: 'list', elements: [e1, e2] });
+    }
   }
   return { tag: 'list', elements };
 }
 
-function flatten([list]: Value[]): Value {
+function flatten(args: Value[]): Value {
+  const list = getArg(args, 0, 'list');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   const elements: Value[] = [];
   for (const e of list.elements) {
@@ -393,7 +465,8 @@ function flatten([list]: Value[]): Value {
   return { tag: 'list', elements };
 }
 
-function distinct([list]: Value[]): Value {
+function distinct(args: Value[]): Value {
+  const list = getArg(args, 0, 'list');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   const seen = new Set<string>();
   const elements: Value[] = [];
@@ -407,7 +480,8 @@ function distinct([list]: Value[]): Value {
   return { tag: 'list', elements };
 }
 
-function groupBy([list, keyFn]: Value[]): Value {
+function groupBy(args: Value[]): Value {
+  const list = getArg(args, 0, 'list');
   if (list.tag !== 'list') throw new TypeMismatchError('list', list.tag);
   // Simplified
   return { tag: 'map', entries: new Map() };
@@ -417,7 +491,8 @@ function groupBy([list, keyFn]: Value[]): Value {
 // MAP FUNCTIONS
 // ============================================================================
 
-function keys([map]: Value[]): Value {
+function keys(args: Value[]): Value {
+  const map = getArg(args, 0, 'map');
   if (map.tag !== 'map') throw new TypeMismatchError('map', map.tag);
   return {
     tag: 'list',
@@ -425,12 +500,14 @@ function keys([map]: Value[]): Value {
   };
 }
 
-function values([map]: Value[]): Value {
+function values(args: Value[]): Value {
+  const map = getArg(args, 0, 'map');
   if (map.tag !== 'map') throw new TypeMismatchError('map', map.tag);
   return { tag: 'list', elements: Array.from(map.entries.values()) };
 }
 
-function entries([map]: Value[]): Value {
+function entries(args: Value[]): Value {
+  const map = getArg(args, 0, 'map');
   if (map.tag !== 'map') throw new TypeMismatchError('map', map.tag);
   return {
     tag: 'list',
@@ -441,19 +518,25 @@ function entries([map]: Value[]): Value {
   };
 }
 
-function hasKey([map, key]: Value[]): Value {
+function hasKey(args: Value[]): Value {
+  const map = getArg(args, 0, 'map');
+  const key = getArg(args, 1, 'key');
   if (map.tag !== 'map') throw new TypeMismatchError('map', map.tag);
   if (key.tag !== 'string') throw new TypeMismatchError('string', key.tag);
   return { tag: 'boolean', value: map.entries.has(key.value) };
 }
 
-function get([map, key]: Value[]): Value {
+function get(args: Value[]): Value {
+  const map = getArg(args, 0, 'map');
+  const key = getArg(args, 1, 'key');
   if (map.tag !== 'map') throw new TypeMismatchError('map', map.tag);
   if (key.tag !== 'string') throw new TypeMismatchError('string', key.tag);
   return { tag: 'option', value: map.entries.get(key.value) ?? null };
 }
 
-function merge([map1, map2]: Value[]): Value {
+function merge(args: Value[]): Value {
+  const map1 = getArg(args, 0, 'map1');
+  const map2 = getArg(args, 1, 'map2');
   if (map1.tag !== 'map') throw new TypeMismatchError('map', map1.tag);
   if (map2.tag !== 'map') throw new TypeMismatchError('map', map2.tag);
   return { tag: 'map', entries: new Map([...map1.entries, ...map2.entries]) };
@@ -463,11 +546,13 @@ function merge([map1, map2]: Value[]): Value {
 // CONVERSION FUNCTIONS
 // ============================================================================
 
-function toString([value]: Value[]): Value {
+function toString(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   return { tag: 'string', value: valueToString(value) };
 }
 
-function toInt([value]: Value[]): Value {
+function toInt(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   if (value.tag === 'string') {
     return { tag: 'int', value: BigInt(value.value) };
   }
@@ -477,7 +562,8 @@ function toInt([value]: Value[]): Value {
   throw new TypeMismatchError('string or float', value.tag);
 }
 
-function toFloat([value]: Value[]): Value {
+function toFloat(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   if (value.tag === 'string') {
     return { tag: 'float', value: parseFloat(value.value) };
   }
@@ -487,7 +573,8 @@ function toFloat([value]: Value[]): Value {
   throw new TypeMismatchError('string or int', value.tag);
 }
 
-function parseJson([str]: Value[]): Value {
+function parseJson(args: Value[]): Value {
+  const str = getArg(args, 0, 'str');
   if (str.tag !== 'string') throw new TypeMismatchError('string', str.tag);
   try {
     const parsed = JSON.parse(str.value);
@@ -497,7 +584,8 @@ function parseJson([str]: Value[]): Value {
   }
 }
 
-function toJson([value]: Value[]): Value {
+function toJson(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   return { tag: 'string', value: JSON.stringify(valueToJson(value)) };
 }
 
@@ -515,25 +603,32 @@ function todayFn(): Value {
   return { tag: 'timestamp', value: today };
 }
 
-function parseTimestamp([str]: Value[]): Value {
+function parseTimestamp(args: Value[]): Value {
+  const str = getArg(args, 0, 'str');
   if (str.tag !== 'string') throw new TypeMismatchError('string', str.tag);
   return { tag: 'timestamp', value: new Date(str.value) };
 }
 
-function formatTimestamp([ts, format]: Value[]): Value {
+function formatTimestamp(args: Value[]): Value {
+  const ts = getArg(args, 0, 'ts');
+  // format argument is available but not used in simplified implementation
   if (ts.tag !== 'timestamp') throw new TypeMismatchError('timestamp', ts.tag);
   // Simplified - would use proper date formatting
   return { tag: 'string', value: ts.value.toISOString() };
 }
 
-function addDuration([ts, duration]: Value[]): Value {
+function addDuration(args: Value[]): Value {
+  const ts = getArg(args, 0, 'ts');
+  const duration = getArg(args, 1, 'duration');
   if (ts.tag !== 'timestamp') throw new TypeMismatchError('timestamp', ts.tag);
   if (duration.tag !== 'duration') throw new TypeMismatchError('duration', duration.tag);
   const ms = durationToMs(duration);
   return { tag: 'timestamp', value: new Date(ts.value.getTime() + ms) };
 }
 
-function diffDuration([ts1, ts2]: Value[]): Value {
+function diffDuration(args: Value[]): Value {
+  const ts1 = getArg(args, 0, 'ts1');
+  const ts2 = getArg(args, 1, 'ts2');
   if (ts1.tag !== 'timestamp') throw new TypeMismatchError('timestamp', ts1.tag);
   if (ts2.tag !== 'timestamp') throw new TypeMismatchError('timestamp', ts2.tag);
   const ms = Math.abs(ts1.value.getTime() - ts2.value.getTime());
@@ -563,19 +658,25 @@ function uuidV7(): Value {
 // DEBUG FUNCTIONS
 // ============================================================================
 
-function printFn([value]: Value[]): Value {
+function printFn(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
+  // Using console.log only for debug purposes
+  // eslint-disable-next-line no-console
   console.log(valueToString(value));
   return { tag: 'unit' };
 }
 
-function debugFn([value]: Value[]): Value {
+function debugFn(args: Value[]): Value {
+  const value = getArg(args, 0, 'value');
   console.log(JSON.stringify(value, null, 2));
   return { tag: 'unit' };
 }
 
-function assertFn([condition, message]: Value[]): Value {
+function assertFn(args: Value[]): Value {
+  const condition = getArg(args, 0, 'condition');
   if (condition.tag !== 'boolean') throw new TypeMismatchError('boolean', condition.tag);
   if (!condition.value) {
+    const message = args[1];
     const msg = message?.tag === 'string' ? message.value : 'Assertion failed';
     throw new InterpreterError(msg);
   }
@@ -670,14 +771,18 @@ export function createBuiltinEffectHandlers(): EffectHandler[] {
   return [
     {
       effect: 'Console',
-      operations: new Map([
-        ['print', ([msg]) => {
+      operations: new Map<string, NativeFunction>([
+        ['print', (args: Value[]) => {
+          const msg = getArg(args, 0, 'msg');
           if (msg.tag !== 'string') throw new TypeMismatchError('string', msg.tag);
+          // eslint-disable-next-line no-console
           console.log(msg.value);
           return { tag: 'unit' };
         }],
-        ['error', ([msg]) => {
+        ['error', (args: Value[]) => {
+          const msg = getArg(args, 0, 'msg');
           if (msg.tag !== 'string') throw new TypeMismatchError('string', msg.tag);
+          // eslint-disable-next-line no-console
           console.error(msg.value);
           return { tag: 'unit' };
         }],
@@ -685,7 +790,7 @@ export function createBuiltinEffectHandlers(): EffectHandler[] {
     },
     {
       effect: 'Time',
-      operations: new Map([
+      operations: new Map<string, NativeFunction>([
         ['now', () => ({ tag: 'timestamp', value: new Date() })],
         ['today', () => {
           const today = new Date();
@@ -696,11 +801,13 @@ export function createBuiltinEffectHandlers(): EffectHandler[] {
     },
     {
       effect: 'Random',
-      operations: new Map([
+      operations: new Map<string, NativeFunction>([
         ['uuid', () => ({ tag: 'uuid', value: crypto.randomUUID() })],
-        ['int', ([min, max]) => {
-          const minVal = Number((min as any).value);
-          const maxVal = Number((max as any).value);
+        ['int', (args: Value[]) => {
+          const min = getArg(args, 0, 'min');
+          const max = getArg(args, 1, 'max');
+          const minVal = min.tag === 'int' ? Number(min.value) : 0;
+          const maxVal = max.tag === 'int' ? Number(max.value) : 100;
           return { tag: 'int', value: BigInt(Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal) };
         }],
       ]),

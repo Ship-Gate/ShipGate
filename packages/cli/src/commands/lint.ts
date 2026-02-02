@@ -9,7 +9,7 @@ import { readFile, access } from 'fs/promises';
 import { resolve, relative } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
-import { parseISL, type DomainDeclaration } from '@isl-lang/isl-core';
+import { parse as parseISL, type Domain as DomainDeclaration } from '@isl-lang/parser';
 import { output, type DiagnosticError } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
 import { findSimilarFiles, formatCount } from '../utils.js';
@@ -342,7 +342,7 @@ export async function lint(file: string, options: LintOptions = {}): Promise<Lin
     const source = await readFile(filePath, 'utf-8');
     spinner && (spinner.text = 'Parsing...');
     
-    const { ast, errors: parseErrors } = parseISL(source, filePath);
+    const { domain: ast, errors: parseErrors } = parseISL(source, filePath);
     
     if (parseErrors.length > 0 || !ast) {
       spinner?.fail('Parse failed - cannot lint invalid ISL');

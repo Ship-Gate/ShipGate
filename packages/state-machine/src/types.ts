@@ -48,8 +48,8 @@ export interface StateNode<
  */
 export interface Transition<
   TState extends string = string,
-  TContext = unknown,
-  TEvent extends string = string
+  _TContext = unknown,
+  _TEvent extends string = string
 > {
   target?: TState;
   guard?: GuardRef;

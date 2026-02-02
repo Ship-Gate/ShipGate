@@ -181,7 +181,6 @@ export class FeatureFlagProvider {
    * Update a flag locally
    */
   updateFlag(flag: FeatureFlag): void {
-    const previous = this.flags.get(flag.key);
     this.flags.set(flag.key, { ...flag, updatedAt: new Date().toISOString() });
     this.buildBehaviorGates();
     this.clearCache(flag.key);
@@ -228,7 +227,7 @@ export class FeatureFlagProvider {
         throw new Error(`Failed to fetch flags: ${response.statusText}`);
       }
 
-      const remoteFlags: FeatureFlag[] = await response.json();
+      const remoteFlags = (await response.json()) as FeatureFlag[];
       
       for (const flag of remoteFlags) {
         // In hybrid mode, remote overrides local

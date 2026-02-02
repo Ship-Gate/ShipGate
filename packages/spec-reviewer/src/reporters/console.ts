@@ -4,7 +4,7 @@
  * Formats review results for terminal output.
  */
 
-import type { ReviewResult, Issue, Suggestion, CategoryResult } from '../reviewer.js';
+import type { ReviewResult, Issue, Suggestion } from '../reviewer.js';
 
 export interface ConsoleReporterOptions {
   colors?: boolean;

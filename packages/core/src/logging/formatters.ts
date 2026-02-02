@@ -137,22 +137,28 @@ export function formatPretty(event: ISLLogEvent, options: FormatOptions = {}): s
   const opts = { ...DEFAULT_FORMAT_OPTIONS, ...options };
   const parts: string[] = [];
   
+  // Extract with defaults
+  const colors = opts.colors ?? true;
+  const timestamps = opts.timestamps ?? true;
+  const inlineData = opts.inlineData ?? true;
+  const maxDataLength = opts.maxDataLength ?? 80;
+  
   // Timestamp
-  if (opts.timestamps) {
-    parts.push(colorize(formatTime(event.timestamp), COLORS.dim, opts.colors));
+  if (timestamps) {
+    parts.push(colorize(formatTime(event.timestamp), COLORS.dim, colors));
   }
   
   // Level badge
   const levelColor = LEVEL_COLORS[event.level];
   const badge = LEVEL_BADGES[event.level];
-  parts.push(colorize(badge, levelColor, opts.colors));
+  parts.push(colorize(badge, levelColor, colors));
   
   // Subsystem tag
   const subsystemShort = SUBSYSTEM_SHORT[event.subsystem] || event.subsystem.slice(0, 3).toUpperCase();
-  parts.push(colorize(`[${subsystemShort}]`, COLORS.magenta, opts.colors));
+  parts.push(colorize(`[${subsystemShort}]`, COLORS.magenta, colors));
   
   // Event name
-  parts.push(colorize(event.event, COLORS.blue, opts.colors));
+  parts.push(colorize(event.event, COLORS.blue, colors));
   
   // Message
   parts.push(event.message);
@@ -162,19 +168,19 @@ export function formatPretty(event: ISLLogEvent, options: FormatOptions = {}): s
     const durationStr = event.durationMs >= 1000 
       ? `${(event.durationMs / 1000).toFixed(2)}s`
       : `${event.durationMs}ms`;
-    parts.push(colorize(`(${durationStr})`, COLORS.dim, opts.colors));
+    parts.push(colorize(`(${durationStr})`, COLORS.dim, colors));
   }
   
   // Correlation ID (if present)
   if (event.correlationId) {
-    parts.push(colorize(`cid=${event.correlationId.slice(0, 8)}`, COLORS.dim, opts.colors));
+    parts.push(colorize(`cid=${event.correlationId.slice(0, 8)}`, COLORS.dim, colors));
   }
   
   // Inline data
-  if (opts.inlineData && event.data) {
-    const dataStr = formatInlineData(event.data, opts.maxDataLength);
+  if (inlineData && event.data) {
+    const dataStr = formatInlineData(event.data, maxDataLength);
     if (dataStr) {
-      parts.push(colorize(dataStr, COLORS.dim, opts.colors));
+      parts.push(colorize(dataStr, COLORS.dim, colors));
     }
   }
   

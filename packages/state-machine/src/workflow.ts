@@ -4,7 +4,7 @@
  * Execute complex workflows based on ISL behavior chains.
  */
 
-import { StateMachine, StateMachineConfig, createStateMachine } from './machine.js';
+// Note: StateMachine types from ./machine.js not currently used but available for future expansion
 
 export interface WorkflowOptions {
   /** Maximum retries for failed steps */
@@ -171,7 +171,8 @@ export class WorkflowEngine {
       context.data = { ...context.data, ...resumeData };
     }
 
-    const workflow = this.workflows.get(context.workflowId.split('-')[0]);
+    const workflowIdPart = context.workflowId.split('-')[0];
+    const workflow = workflowIdPart ? this.workflows.get(workflowIdPart) : undefined;
     if (!workflow) {
       throw new Error('Workflow definition not found');
     }
@@ -348,7 +349,7 @@ export class WorkflowEngine {
    */
   private async executeWait(
     step: WorkflowStep,
-    context: WorkflowContext
+    _context: WorkflowContext
   ): Promise<WorkflowStepResult> {
     await this.sleep(step.waitDuration ?? 0);
     return { success: true };

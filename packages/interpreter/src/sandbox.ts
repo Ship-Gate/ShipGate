@@ -3,7 +3,7 @@
 // @isl-lang/interpreter/sandbox
 // ============================================================================
 
-import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
+import { Worker } from 'node:worker_threads';
 import type { SandboxOptions, SandboxResult } from './types';
 import { SandboxError, TimeoutError } from './types';
 
@@ -32,7 +32,6 @@ export async function runInSandbox<T>(
   options: Partial<SandboxOptions> = {}
 ): Promise<SandboxResult<T>> {
   const opts = { ...DEFAULT_SANDBOX_OPTIONS, ...options };
-  const startTime = performance.now();
   
   // For now, we use a simpler approach with timeouts
   // Full sandbox with worker threads is more complex but can be added

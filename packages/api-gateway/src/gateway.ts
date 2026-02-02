@@ -5,12 +5,12 @@
  */
 
 import { parseISL, type DomainDeclaration } from '@isl-lang/isl-core';
-import { RouteHandler, type Route, type RouteMatch } from './router.js';
+import { RouteHandler, type RouteMatch } from './router.js';
 import { RequestValidator, type ValidationResult } from './validator.js';
-import { ResponseTransformer, type TransformResult } from './transformer.js';
+import { ResponseTransformer } from './transformer.js';
 import { RateLimiter, type RateLimitConfig } from './rate-limiter.js';
 import { CircuitBreaker, type CircuitBreakerConfig, type CircuitState } from './circuit-breaker.js';
-import { PolicyEngine, type Policy, type PolicyDecision } from './policy.js';
+import { PolicyEngine, type Policy } from './policy.js';
 import { Telemetry, type TelemetryConfig } from './telemetry.js';
 
 export interface GatewayOptions {
@@ -325,12 +325,11 @@ export class ISLGateway {
     route: RouteMatch,
     request: GatewayRequest
   ): Promise<unknown> {
-    const url = `${upstream.url}${request.path}`;
-    const timeout = upstream.timeout ?? this.options.timeout ?? 30000;
-
-    // In a real implementation, this would make an HTTP request
-    // For now, we simulate the upstream call
-    return new Promise((resolve, reject) => {
+    // In a real implementation, this would make an HTTP request to:
+    // `${upstream.url}${request.path}` with timeout: upstream.timeout ?? this.options.timeout ?? 30000
+    // For now, we simulate the upstream call.
+    void upstream;
+    return new Promise((resolve) => {
       setTimeout(() => {
         // Simulate successful response
         resolve({

@@ -39,7 +39,7 @@ interface AlertConfig {
  */
 export function registerAlertEvents(app: App): void {
   // Handle alert acknowledgment action
-  app.action('acknowledge_alert', async ({ ack, body, client, respond }) => {
+  app.action('acknowledge_alert', async ({ ack, body, client }) => {
     await ack();
 
     const actionBody = body as any;
@@ -127,7 +127,7 @@ export function registerAlertEvents(app: App): void {
   });
 
   // Handle snooze submission
-  app.view('snooze_alert_submit', async ({ ack, body, view }) => {
+  app.view('snooze_alert_submit', async ({ ack, view }) => {
     await ack();
 
     const values = view.state.values;
@@ -184,7 +184,6 @@ export async function sendAlert(
  */
 function buildAlertBlocks(alert: AlertEvent): any[] {
   const emoji = getSeverityEmoji(alert.severity);
-  const color = getSeverityColor(alert.severity);
 
   const blocks: any[] = [
     {
@@ -412,12 +411,3 @@ function getSeverityEmoji(severity: AlertSeverity): string {
   }
 }
 
-function getSeverityColor(severity: AlertSeverity): string {
-  switch (severity) {
-    case 'critical': return '#dc3545';
-    case 'high': return '#fd7e14';
-    case 'medium': return '#ffc107';
-    case 'low': return '#28a745';
-    default: return '#6c757d';
-  }
-}

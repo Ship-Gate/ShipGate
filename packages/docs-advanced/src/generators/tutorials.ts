@@ -2,7 +2,7 @@
 // Tutorial Generator - Generate step-by-step tutorials
 // ============================================================================
 
-import type * as AST from '../../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 import type {
   Tutorial,
   TutorialStep,

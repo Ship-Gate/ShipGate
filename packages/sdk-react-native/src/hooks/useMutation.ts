@@ -11,7 +11,7 @@ import type {
 } from '../types';
 import { invalidateQueries, setQueryData } from './useQuery';
 
-interface MutationResult<TInput, TData, TError> extends MutationState<TData, TError> {
+export interface MutationResult<TInput, TData, TError> extends MutationState<TData, TError> {
   mutate: (input: TInput) => Promise<void>;
   mutateAsync: (input: TInput) => Promise<TData>;
   reset: () => void;

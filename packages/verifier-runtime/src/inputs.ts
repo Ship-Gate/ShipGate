@@ -2,8 +2,8 @@
 // Test Input Generator - Generate valid, boundary, and invalid test inputs
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
-import type { GeneratedInput, InputCategory } from './types';
+import type * as AST from '@isl-lang/parser';
+import type { GeneratedInput, InputCategory } from './types.js';
 
 /**
  * Generate test inputs for a behavior based on its input specification

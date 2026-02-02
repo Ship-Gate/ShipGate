@@ -8,7 +8,7 @@ import type {
   RateLimiterConfig,
   BehaviorResilienceConfig,
 } from './types';
-import { CircuitBreaker, CircuitOpenError } from './circuit-breaker';
+import { CircuitBreaker } from './circuit-breaker';
 
 /**
  * Bulkhead implementation - Limits concurrent executions
@@ -308,8 +308,8 @@ export class RateLimitExceededError extends Error {
 export function createBehaviorPolicy<T>(
   config: BehaviorResilienceConfig
 ): ResiliencePolicyExecutor<T> {
-  return new ResiliencePolicyExecutor<T>({
-    ...config.policy,
+  const policy: ResiliencePolicy<T> = {
+    ...(config.policy as ResiliencePolicy<T>),
     circuitBreaker: config.policy.circuitBreaker
       ? {
           ...config.policy.circuitBreaker,
@@ -328,5 +328,6 @@ export function createBehaviorPolicy<T>(
           name: `${config.domain}.${config.behavior}`,
         }
       : undefined,
-  });
+  };
+  return new ResiliencePolicyExecutor<T>(policy);
 }

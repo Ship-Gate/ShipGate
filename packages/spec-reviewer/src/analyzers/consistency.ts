@@ -4,7 +4,7 @@
  * Checks for internal consistency issues in the spec.
  */
 
-import type { DomainDeclaration, BehaviorDeclaration, EntityDeclaration } from '@isl-lang/isl-core';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
 
 export interface ConsistencyIssue {
   id: string;
@@ -113,7 +113,7 @@ function checkTypeReferences(domain: DomainDeclaration, typeRegistry: Set<string
           severity: 'critical',
           title: `Undefined type "${typeName}"`,
           description: `Field "${field.name.name}" in entity "${entity.name.name}" references undefined type "${typeName}".`,
-          location: field.span ? { line: field.span.line, column: field.span.column } : undefined,
+          location: field.span ? { line: field.span.start.line, column: field.span.start.column } : undefined,
           fix: `Define type "${typeName}" or use an existing type.`,
         });
       }
@@ -131,7 +131,7 @@ function checkTypeReferences(domain: DomainDeclaration, typeRegistry: Set<string
             severity: 'critical',
             title: `Undefined type "${typeName}" in behavior input`,
             description: `Input field references undefined type "${typeName}" in behavior "${behavior.name.name}".`,
-            location: field.span ? { line: field.span.line, column: field.span.column } : undefined,
+            location: field.span ? { line: field.span.start.line, column: field.span.start.column } : undefined,
           });
         }
       }
@@ -189,7 +189,7 @@ function checkEntityReferences(domain: DomainDeclaration): ConsistencyIssue[] {
               severity: 'critical',
               title: `Undefined entity "${ref}" in precondition`,
               description: `Behavior "${behavior.name.name}" references undefined entity "${ref}".`,
-              location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+              location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
             });
           }
         }
@@ -212,7 +212,9 @@ function extractEntityReferences(condition: unknown): string[] {
   let match;
   
   while ((match = pattern.exec(str)) !== null) {
-    refs.push(match[1]);
+    if (match[1]) {
+      refs.push(match[1]);
+    }
   }
   
   return refs;
@@ -260,7 +262,7 @@ function checkErrorCodeUniqueness(domain: DomainDeclaration): ConsistencyIssue[]
             severity: 'warning',
             title: `Duplicate error code "${code}"`,
             description: `Behavior "${behavior.name.name}" defines error code "${code}" multiple times.`,
-            location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+            location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
             fix: `Remove duplicate error code or use distinct codes.`,
           });
         }
@@ -289,7 +291,7 @@ function checkInvariantConsistency(domain: DomainDeclaration): ConsistencyIssue[
         severity: 'warning',
         title: `Duplicate invariant block name "${invariantBlock.name.name}"`,
         description: 'Invariant block names should be unique within a domain.',
-        location: invariantBlock.span ? { line: invariantBlock.span.line, column: invariantBlock.span.column } : undefined,
+        location: invariantBlock.span ? { line: invariantBlock.span.start.line, column: invariantBlock.span.start.column } : undefined,
       });
     }
     names.add(invariantBlock.name.name);
@@ -323,9 +325,15 @@ function checkLifecycleConsistency(domain: DomainDeclaration): ConsistencyIssue[
 
     for (const transition of transitions) {
       if (transition.states.length >= 2) {
-        sourceStates.add(transition.states[0].name);
+        const firstState = transition.states[0];
+        if (firstState) {
+          sourceStates.add(firstState.name);
+        }
         for (let i = 1; i < transition.states.length; i++) {
-          targetStates.add(transition.states[i].name);
+          const state = transition.states[i];
+          if (state) {
+            targetStates.add(state.name);
+          }
         }
       }
     }
@@ -340,7 +348,7 @@ function checkLifecycleConsistency(domain: DomainDeclaration): ConsistencyIssue[
         severity: 'warning',
         title: `Entity "${entity.name.name}" has multiple initial states`,
         description: `States ${initialStates.join(', ')} appear to be initial states. Consider having a single initial state.`,
-        location: entity.span ? { line: entity.span.line, column: entity.span.column } : undefined,
+        location: entity.span ? { line: entity.span.start.line, column: entity.span.start.column } : undefined,
       });
     }
   }

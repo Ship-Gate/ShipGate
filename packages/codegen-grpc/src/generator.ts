@@ -2,7 +2,7 @@
 // Main gRPC/Proto Generator
 // ============================================================================
 
-import type { Domain } from '@isl-lang/isl-core';
+import type { Domain } from './types';
 import { generateProtoTypes, collectTypeImports } from './proto/types';
 import { generateProtoMessages } from './proto/messages';
 import { generateProtoServices, generateCrudService } from './proto/services';

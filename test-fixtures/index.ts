@@ -191,6 +191,10 @@ domain TypesOnly {
 }`,
 } as const;
 
+// Re-export xfail utilities
+export * from './xfail.js';
+export * from './xfail-harness.js';
+
 // Export expected error codes for validation
 export const EXPECTED_ERRORS = {
   syntaxErrors: {

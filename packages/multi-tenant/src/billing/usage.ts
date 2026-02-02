@@ -5,7 +5,7 @@
  */
 
 import { TenantContext } from '../context.js';
-import type { Tenant, PlanType, TenantLimits } from '../tenant.js';
+import type { Tenant, PlanType } from '../tenant.js';
 
 // ============================================================================
 // Types
@@ -215,9 +215,9 @@ export class UsageTracker {
     return `${year}-${month}`;
   }
 
-  private createStorage(type: 'memory' | 'redis' | 'database'): UsageStorage {
+  private createStorage(_type: 'memory' | 'redis' | 'database'): UsageStorage {
     // Default to in-memory storage
-    // Real implementations would use Redis or database
+    // Real implementations would use Redis or database based on _type
     return new InMemoryUsageStorage();
   }
 }

@@ -5,13 +5,12 @@
  * Handles eventually, within (latency), and always (invariant) checks.
  */
 
-import type { DomainDeclaration, Behavior, TemporalSpec, DurationLiteral } from '@isl-lang/isl-core';
-import { eventually, eventuallyWithin, type EventuallyResult } from './properties/eventually.js';
+import type { DomainDeclaration, TemporalRequirement, DurationLiteral } from '@isl-lang/isl-core';
+import { eventuallyWithin, type EventuallyResult } from './properties/eventually.js';
 import { within, type WithinResult } from './properties/within.js';
-import { always, alwaysFor, type AlwaysResult } from './properties/always.js';
+import { alwaysFor, type AlwaysResult } from './properties/always.js';
 import { toMilliseconds, formatDuration } from './timing.js';
 import type { LatencyStats } from './percentiles.js';
-import type { Histogram } from './histogram.js';
 
 // Re-export property checkers for direct use
 export { eventually, eventuallyWithin } from './properties/eventually.js';
@@ -69,7 +68,7 @@ export interface VerifyResult {
 
 export interface TemporalPropertyResult {
   /** The temporal spec being verified */
-  spec: TemporalSpec;
+  spec: TemporalRequirement;
   /** Property type */
   type: 'eventually' | 'within' | 'always' | 'never';
   /** Whether this property was verified */
@@ -160,7 +159,8 @@ export async function verify(
   }
   
   // Get temporal specs from behavior
-  const temporalSpecs = behavior.temporal;
+  const temporalBlock = behavior.temporal;
+  const temporalSpecs = temporalBlock?.requirements ?? [];
   
   if (temporalSpecs.length === 0) {
     return {
@@ -186,7 +186,7 @@ export async function verify(
       temporalResults.push(result);
     } catch (error) {
       errors.push({
-        property: formatTemporalSpec(spec),
+        property: formatTemporalRequirement(spec),
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
@@ -233,20 +233,20 @@ export async function verify(
  * Verify a single temporal specification
  */
 async function verifyTemporalSpec(
-  spec: TemporalSpec,
+  spec: TemporalRequirement,
   implementation: string,
   options: VerifyOptions
 ): Promise<TemporalPropertyResult> {
   const timeout = options.timeout ?? 30000;
   const sampleCount = options.sampleCount ?? 100;
-  const description = formatTemporalSpec(spec);
+  const description = formatTemporalRequirement(spec);
   
   // Create a predicate evaluator from the spec
   // In a real implementation, this would compile the ISL expression
   // For now, we provide a mock predicate
   const predicate = createPredicateFromSpec(spec, implementation, options);
   
-  switch (spec.operator) {
+  switch (spec.type) {
     case 'eventually': {
       const durationMs = spec.duration ? durationToMs(spec.duration) : timeout;
       const result = await eventuallyWithin(
@@ -272,7 +272,7 @@ async function verifyTemporalSpec(
       }
       
       const thresholdMs = durationToMs(spec.duration);
-      const percentile = spec.percentile ?? 99;
+      const percentile = spec.percentile ? parsePercentile(spec.percentile) : 99;
       
       const result = await within(
         predicate as () => Promise<unknown>,
@@ -336,8 +336,28 @@ async function verifyTemporalSpec(
       };
     }
     
+    case 'immediately': {
+      // 'immediately' is like 'within' with a very short timeout
+      const durationMs = spec.duration ? durationToMs(spec.duration) : 100;
+      const result = await eventuallyWithin(
+        predicate,
+        durationMs,
+        'ms',
+        { description }
+      );
+      
+      return {
+        spec,
+        type: 'eventually', // Treat immediately as a variant of eventually
+        success: result.success,
+        duration: result.duration,
+        details: result,
+        description,
+      };
+    }
+    
     default: {
-      throw new Error(`Unknown temporal operator: ${(spec as TemporalSpec).operator}`);
+      throw new Error(`Unknown temporal operator: ${(spec as TemporalRequirement).type}`);
     }
   }
 }
@@ -348,7 +368,7 @@ async function verifyTemporalSpec(
  * the ISL expression into executable code
  */
 function createPredicateFromSpec(
-  spec: TemporalSpec,
+  _spec: TemporalRequirement,
   implementation: string,
   options: VerifyOptions
 ): () => Promise<boolean> {
@@ -356,7 +376,7 @@ function createPredicateFromSpec(
   if (options.executor) {
     return async () => {
       const result = await options.executor!(implementation, {});
-      // In a real implementation, evaluate spec.predicate against result
+      // In a real implementation, evaluate spec.condition against result
       return result !== undefined && result !== null;
     };
   }
@@ -368,24 +388,45 @@ function createPredicateFromSpec(
 }
 
 /**
- * Convert DurationLiteral to milliseconds
+ * Convert short duration unit to long unit name
  */
-function durationToMs(duration: DurationLiteral): number {
-  return toMilliseconds(duration.value, duration.unit);
+function convertDurationUnit(unit: 'ms' | 's' | 'm' | 'h' | 'd'): 'ms' | 'seconds' | 'minutes' | 'hours' | 'days' {
+  switch (unit) {
+    case 'ms': return 'ms';
+    case 's': return 'seconds';
+    case 'm': return 'minutes';
+    case 'h': return 'hours';
+    case 'd': return 'days';
+  }
 }
 
 /**
- * Format a temporal spec as a human-readable string
+ * Convert DurationLiteral to milliseconds
  */
-function formatTemporalSpec(spec: TemporalSpec): string {
-  const parts: string[] = [spec.operator];
+function durationToMs(duration: DurationLiteral): number {
+  return toMilliseconds(duration.value, convertDurationUnit(duration.unit));
+}
+
+/**
+ * Parse percentile string (e.g., "p99" or "99") to number
+ */
+function parsePercentile(percentile: string): number {
+  const cleaned = percentile.replace(/^p/i, '');
+  return parseFloat(cleaned);
+}
+
+/**
+ * Format a temporal requirement as a human-readable string
+ */
+function formatTemporalRequirement(spec: TemporalRequirement): string {
+  const parts: string[] = [spec.type];
   
   if (spec.duration) {
-    parts.push(`${spec.duration.value} ${spec.duration.unit}`);
+    parts.push(`${spec.duration.value}${spec.duration.unit}`);
   }
   
   if (spec.percentile) {
-    parts.push(`(p${spec.percentile})`);
+    parts.push(`(${spec.percentile})`);
   }
   
   return parts.join(' ');

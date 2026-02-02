@@ -15,6 +15,56 @@ let client: LanguageClient | undefined;
 let statusBar: StatusBarManager | undefined;
 let outputChannel: vscode.OutputChannel;
 
+// ============================================================================
+// Optional Feature Detection (defensive imports)
+// ============================================================================
+
+interface BuildOrchestratorService {
+  buildAndGenerate(specPath: string, options?: object): Promise<{ success: boolean; files?: string[]; error?: string }>;
+}
+
+interface EvidenceViewProvider {
+  show(report: unknown): void;
+  dispose(): void;
+}
+
+let buildOrchestrator: BuildOrchestratorService | undefined;
+let evidenceViewProvider: EvidenceViewProvider | undefined;
+let hasBuildOrchestrator = false;
+let hasEvidenceView = false;
+
+/**
+ * Try to load optional BuildOrchestratorService
+ */
+async function loadBuildOrchestrator(): Promise<void> {
+  try {
+    const module = await import('@isl-lang/core/build-orchestrator');
+    if (module.BuildOrchestratorService) {
+      buildOrchestrator = new module.BuildOrchestratorService();
+      hasBuildOrchestrator = true;
+    }
+  } catch {
+    // Not installed - this is fine
+    hasBuildOrchestrator = false;
+  }
+}
+
+/**
+ * Try to load optional EvidenceView components
+ */
+async function loadEvidenceView(context: vscode.ExtensionContext): Promise<void> {
+  try {
+    const module = await import('./webviews/isl-studio/EvidenceViewProvider');
+    if (module.EvidenceViewProvider) {
+      evidenceViewProvider = new module.EvidenceViewProvider(context);
+      hasEvidenceView = true;
+    }
+  } catch {
+    // Not available - this is fine
+    hasEvidenceView = false;
+  }
+}
+
 /**
  * Extension activation
  */
@@ -29,6 +79,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   // Register all commands
   registerCommands(context, () => client, outputChannel);
+
+  // Register additional commands with defensive feature loading
+  await registerIntegrationCommands(context);
 
   // Start language server if enabled
   const config = vscode.workspace.getConfiguration('isl');
@@ -80,6 +133,104 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 }
 
 /**
+ * Register integration commands with defensive feature loading
+ */
+async function registerIntegrationCommands(context: vscode.ExtensionContext): Promise<void> {
+  // Try to load optional features (non-blocking)
+  loadBuildOrchestrator().catch(() => {/* ignore */});
+  loadEvidenceView(context).catch(() => {/* ignore */});
+
+  // Register Generate & Build command
+  context.subscriptions.push(
+    vscode.commands.registerCommand('isl.generateAndBuild', async () => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor || editor.document.languageId !== 'isl') {
+        vscode.window.showWarningMessage('Please open an ISL file first');
+        return;
+      }
+
+      if (!hasBuildOrchestrator || !buildOrchestrator) {
+        vscode.window.showErrorMessage(
+          'Build Orchestrator is not installed. Install @isl-lang/core for this feature.'
+        );
+        outputChannel.appendLine('Generate & Build: Feature not installed');
+        return;
+      }
+
+      try {
+        outputChannel.appendLine(`Generate & Build: ${editor.document.fileName}`);
+        outputChannel.show(true);
+
+        const result = await buildOrchestrator.buildAndGenerate(editor.document.fileName);
+        
+        if (result.success) {
+          const fileCount = result.files?.length ?? 0;
+          vscode.window.showInformationMessage(
+            `Build complete: ${fileCount} file${fileCount === 1 ? '' : 's'} generated`
+          );
+          outputChannel.appendLine(`Build complete: ${fileCount} files generated`);
+        } else {
+          vscode.window.showErrorMessage(`Build failed: ${result.error}`);
+          outputChannel.appendLine(`Build failed: ${result.error}`);
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        vscode.window.showErrorMessage(`Build error: ${message}`);
+        outputChannel.appendLine(`Build error: ${message}`);
+      }
+    })
+  );
+
+  // Register Open Evidence View command
+  context.subscriptions.push(
+    vscode.commands.registerCommand('isl.openEvidenceView', async () => {
+      if (!hasEvidenceView || !evidenceViewProvider) {
+        vscode.window.showErrorMessage(
+          'Evidence View is not available. This feature requires additional components.'
+        );
+        outputChannel.appendLine('Open Evidence View: Feature not installed');
+        return;
+      }
+
+      try {
+        // Try to get the latest verification report for the current file
+        const editor = vscode.window.activeTextEditor;
+        if (editor && editor.document.languageId === 'isl') {
+          outputChannel.appendLine(`Opening Evidence View for: ${editor.document.fileName}`);
+          
+          // Get verification report from LSP if available
+          if (client) {
+            try {
+              const report = await client.sendRequest<unknown>(
+                'isl/getEvidenceReport',
+                { uri: editor.document.uri.toString() }
+              );
+              if (report) {
+                evidenceViewProvider.show(report);
+                return;
+              }
+            } catch {
+              // LSP request not supported, show empty view
+            }
+          }
+        }
+
+        // Show empty/placeholder view
+        evidenceViewProvider.show(null);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        vscode.window.showErrorMessage(`Evidence View error: ${message}`);
+        outputChannel.appendLine(`Evidence View error: ${message}`);
+      }
+    })
+  );
+
+  outputChannel.appendLine(
+    `Integration commands registered (BuildOrchestrator: ${hasBuildOrchestrator}, EvidenceView: ${hasEvidenceView})`
+  );
+}
+
+/**
  * Extension deactivation
  */
 export async function deactivate(): Promise<void> {
@@ -90,6 +241,10 @@ export async function deactivate(): Promise<void> {
   if (statusBar) {
     statusBar.dispose();
     statusBar = undefined;
+  }
+  if (evidenceViewProvider) {
+    evidenceViewProvider.dispose();
+    evidenceViewProvider = undefined;
   }
 }
 

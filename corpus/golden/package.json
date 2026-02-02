@@ -1,0 +1,19 @@
+{
+  "name": "@isl/golden-corpus",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Golden corpus for ISL regression testing",
+  "type": "module",
+  "scripts": {
+    "test": "npx tsx runner.ts",
+    "test:verbose": "npx tsx runner.ts --verbose"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

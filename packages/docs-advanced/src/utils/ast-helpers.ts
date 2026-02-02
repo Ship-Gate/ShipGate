@@ -2,7 +2,7 @@
 // AST Helper Functions
 // ============================================================================
 
-import type * as AST from '../../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 
 /**
  * Convert an expression to string representation

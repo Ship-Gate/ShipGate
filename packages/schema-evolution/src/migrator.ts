@@ -328,7 +328,7 @@ export class SchemaMigrator {
       // Find all migrations from this version
       for (const key of this.migrators.keys()) {
         const [fromVer, toVer] = key.split('->');
-        if (fromVer === version && !visited.has(toVer)) {
+        if (fromVer === version && toVer && !visited.has(toVer)) {
           queue.push({ version: toVer, path: [...path, key] });
         }
       }
@@ -340,12 +340,12 @@ export class SchemaMigrator {
   // Helper methods
   private extractFieldName(path: string): string {
     const parts = path.split('.');
-    return parts[parts.length - 1];
+    return parts[parts.length - 1] ?? '';
   }
 
   private extractEntityName(path: string): string {
     const match = path.match(/entities\.(\w+)/);
-    return match ? match[1] : '';
+    return match?.[1] ?? '';
   }
 }
 

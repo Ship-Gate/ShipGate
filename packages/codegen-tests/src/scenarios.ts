@@ -3,9 +3,9 @@
 // Converts ISL scenarios to executable test cases
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
-import { compileExpression, compileAssertion } from './expression-compiler';
-import type { ScenarioContext, TestFramework } from './types';
+import type * as AST from '@isl-lang/parser';
+import { compileExpression, compileAssertion } from './expression-compiler.js';
+import type { ScenarioContext, TestFramework } from './types.js';
 
 /**
  * Generate tests from scenario blocks

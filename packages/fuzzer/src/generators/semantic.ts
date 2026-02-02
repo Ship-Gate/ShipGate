@@ -3,9 +3,9 @@
 // Domain-aware fuzzing based on ISL specifications
 // ============================================================================
 
-import { FuzzContext, GeneratedValue, ISLTypeInfo, ISLFieldInfo, ISLBehaviorInfo } from '../types.js';
-import { generateStrings, INJECTION_PAYLOADS } from './string.js';
-import { generateIntegers, generateFloats, INTEGER_BOUNDARIES } from './number.js';
+import { FuzzContext, GeneratedValue, ISLTypeInfo, ISLBehaviorInfo } from '../types.js';
+import { generateStrings } from './string.js';
+import { generateIntegers, generateFloats } from './number.js';
 
 /**
  * Generate values based on ISL type information
@@ -16,7 +16,7 @@ export function* generateForType(
 ): Generator<GeneratedValue<unknown>> {
   switch (typeInfo.kind) {
     case 'PrimitiveType':
-      yield* generateForPrimitive(typeInfo.name, ctx);
+      yield* generateForPrimitive(typeInfo.name ?? 'String', ctx);
       break;
     
     case 'ConstrainedType':
@@ -100,7 +100,7 @@ function* generateForPrimitive(
 /**
  * Generate timestamp edge cases
  */
-function* generateTimestamps(ctx: FuzzContext): Generator<GeneratedValue<unknown>> {
+function* generateTimestamps(_ctx: FuzzContext): Generator<GeneratedValue<unknown>> {
   // Standard dates
   yield { value: new Date(), category: 'valid', description: 'Current time' };
   yield { value: new Date(0), category: 'boundary', description: 'Unix epoch' };
@@ -136,7 +136,7 @@ function* generateTimestamps(ctx: FuzzContext): Generator<GeneratedValue<unknown
 /**
  * Generate UUID edge cases
  */
-function* generateUUIDs(ctx: FuzzContext): Generator<GeneratedValue<unknown>> {
+function* generateUUIDs(_ctx: FuzzContext): Generator<GeneratedValue<unknown>> {
   // Valid UUIDs
   yield { value: '00000000-0000-0000-0000-000000000000', category: 'boundary', description: 'Nil UUID' };
   yield { value: 'ffffffff-ffff-ffff-ffff-ffffffffffff', category: 'boundary', description: 'Max UUID' };
@@ -161,7 +161,7 @@ function* generateUUIDs(ctx: FuzzContext): Generator<GeneratedValue<unknown>> {
 /**
  * Generate duration edge cases
  */
-function* generateDurations(ctx: FuzzContext): Generator<GeneratedValue<unknown>> {
+function* generateDurations(_ctx: FuzzContext): Generator<GeneratedValue<unknown>> {
   // Boundary values
   yield { value: 0, category: 'boundary', description: 'Zero duration' };
   yield { value: 1, category: 'boundary', description: 'Minimum duration' };
@@ -208,7 +208,7 @@ function* generateForConstrained(
  */
 function* generateForEnum(
   variants: string[],
-  ctx: FuzzContext
+  _ctx: FuzzContext
 ): Generator<GeneratedValue<unknown>> {
   // All valid variants
   for (const variant of variants) {
@@ -262,7 +262,7 @@ function* generateForList(
  * Generate values for map types
  */
 function* generateForMap(
-  keyType: ISLTypeInfo,
+  _keyType: ISLTypeInfo,
   valueType: ISLTypeInfo,
   ctx: FuzzContext
 ): Generator<GeneratedValue<unknown>> {

@@ -1,0 +1,78 @@
+{
+  "name": "membership-operator",
+  "description": "V1 membership operator semantics (in)",
+  "version": "1.0.0",
+  "frozenForVersion": "1.x.x",
+  "cases": [
+    {
+      "operator": "in",
+      "left": 2,
+      "right": [1, 2, 3],
+      "expected": true,
+      "description": "Number in array: present"
+    },
+    {
+      "operator": "in",
+      "left": 5,
+      "right": [1, 2, 3],
+      "expected": false,
+      "description": "Number in array: absent"
+    },
+    {
+      "operator": "in",
+      "left": "b",
+      "right": ["a", "b", "c"],
+      "expected": true,
+      "description": "String in array: present"
+    },
+    {
+      "operator": "in",
+      "left": "hello",
+      "right": "hello world",
+      "expected": true,
+      "description": "Substring in string: present"
+    },
+    {
+      "operator": "in",
+      "left": "xyz",
+      "right": "hello world",
+      "expected": false,
+      "description": "Substring in string: absent"
+    },
+    {
+      "operator": "in",
+      "left": "name",
+      "right": {"name": "John", "age": 30},
+      "expected": true,
+      "description": "Key in object: present"
+    },
+    {
+      "operator": "in",
+      "left": "email",
+      "right": {"name": "John", "age": 30},
+      "expected": false,
+      "description": "Key in object: absent"
+    },
+    {
+      "operator": "in",
+      "left": [1, 2],
+      "right": [[1, 2], [3, 4]],
+      "expected": true,
+      "description": "Array in array: deep equality"
+    },
+    {
+      "operator": "in",
+      "left": {"a": 1},
+      "right": [{"a": 1}, {"b": 2}],
+      "expected": true,
+      "description": "Object in array: deep equality"
+    },
+    {
+      "operator": "in",
+      "left": 1,
+      "right": 123,
+      "expected": false,
+      "description": "Invalid collection type returns false"
+    }
+  ]
+}

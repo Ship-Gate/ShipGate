@@ -4,7 +4,7 @@
 // ============================================================================
 
 import { parse, type ParseResult, type Domain, type SourceLocation, type ASTNode } from '@isl-lang/parser';
-import { TypeChecker, type TypeCheckResult, type Diagnostic as TypeDiagnostic } from '@isl-lang/typechecker';
+import { TypeChecker, type Diagnostic as TypeDiagnostic } from '@isl-lang/typechecker';
 import type { ISLDiagnostic, ISLSymbolInfo, SymbolKind } from './types';
 import { DiagnosticSeverity } from './types';
 
@@ -430,7 +430,7 @@ export class ISLAnalyzer {
   // Semantic Analysis
   // ============================================================================
 
-  private analyzeSemantics(domain: Domain, filePath: string): ISLDiagnostic[] {
+  private analyzeSemantics(domain: Domain, _filePath: string): ISLDiagnostic[] {
     const diagnostics: ISLDiagnostic[] = [];
 
     // Check for behaviors without postconditions

@@ -1,0 +1,41 @@
+{
+  "domain": "UserDomain",
+  "behaviors": [
+    {
+      "name": "CreateUser",
+      "preconditions": [
+        { "expression": "input.email.length > 0" },
+        { "expression": "input.email.contains('@')" }
+      ],
+      "postconditions": [
+        { "expression": "result.email == input.email" },
+        { "expression": "result.active == true" },
+        { "expression": "result.id != null" }
+      ],
+      "invariants": [],
+      "security": [],
+      "temporal": []
+    },
+    {
+      "name": "DeleteUser",
+      "preconditions": [
+        { "expression": "input.userId != null" },
+        { "expression": "User.exists(id: input.userId)" }
+      ],
+      "postconditions": [
+        { "expression": "not User.exists(id: input.userId)" }
+      ],
+      "invariants": [],
+      "security": [],
+      "temporal": []
+    }
+  ],
+  "invariants": [
+    {
+      "name": "UserIntegrity",
+      "predicates": [
+        "all(u in User, u.email.contains('@'))"
+      ]
+    }
+  ]
+}

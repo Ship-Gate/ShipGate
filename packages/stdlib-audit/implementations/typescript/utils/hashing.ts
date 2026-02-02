@@ -81,6 +81,7 @@ export function verifyEventChain(events: AuditEvent[]): ChainVerificationResult 
 
   for (let i = 0; i < sorted.length; i++) {
     const event = sorted[i];
+    if (!event) continue;
 
     // Verify individual event hash
     if (event.hash && !verifyEventHash(event)) {
@@ -105,12 +106,15 @@ export function verifyEventChain(events: AuditEvent[]): ChainVerificationResult 
     lastHash = event.hash ?? null;
   }
 
+  const firstEvent = sorted[0];
+  const lastEvent = sorted[sorted.length - 1];
+
   return {
     valid: errors.length === 0,
     errors,
     chainLength: sorted.length,
-    firstEventId: sorted[0].id,
-    lastEventId: sorted[sorted.length - 1].id,
+    firstEventId: firstEvent?.id,
+    lastEventId: lastEvent?.id,
   };
 }
 
@@ -137,7 +141,7 @@ export function buildMerkleTree(events: AuditEvent[]): MerkleTree {
     const nextLevel: string[] = [];
     
     for (let i = 0; i < currentLevel.length; i += 2) {
-      const left = currentLevel[i];
+      const left = currentLevel[i] ?? '';
       const right = currentLevel[i + 1] ?? left; // Duplicate last if odd
       const combined = createHash('sha256')
         .update(left + right)
@@ -150,7 +154,7 @@ export function buildMerkleTree(events: AuditEvent[]): MerkleTree {
   }
 
   return {
-    root: currentLevel[0],
+    root: currentLevel[0] ?? '',
     levels,
     leaves,
   };
@@ -166,12 +170,16 @@ export function getMerkleProof(tree: MerkleTree, index: number): MerkleProof {
   for (let level = 0; level < tree.levels.length - 1; level++) {
     const isRight = currentIndex % 2 === 1;
     const siblingIndex = isRight ? currentIndex - 1 : currentIndex + 1;
+    const currentLevelArray = tree.levels[level];
     
-    if (siblingIndex < tree.levels[level].length) {
-      proof.push({
-        hash: tree.levels[level][siblingIndex],
-        position: isRight ? 'left' : 'right',
-      });
+    if (currentLevelArray && siblingIndex < currentLevelArray.length) {
+      const siblingHash = currentLevelArray[siblingIndex];
+      if (siblingHash) {
+        proof.push({
+          hash: siblingHash,
+          position: isRight ? 'left' : 'right',
+        });
+      }
     }
     
     currentIndex = Math.floor(currentIndex / 2);
@@ -180,7 +188,7 @@ export function getMerkleProof(tree: MerkleTree, index: number): MerkleProof {
   return {
     root: tree.root,
     proof,
-    leafHash: tree.leaves[index],
+    leafHash: tree.leaves[index] ?? '',
     leafIndex: index,
   };
 }

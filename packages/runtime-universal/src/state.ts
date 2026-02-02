@@ -58,7 +58,24 @@ export class StateManager {
    * Set state from snapshot
    */
   setState(snapshot: StateSnapshot): void {
-    this.entities = snapshot.entities;
+    // Restore entities from snapshot
+    this.entities = new Map();
+    for (const [key, entity] of snapshot.entities) {
+      let type: string;
+      let id: string;
+      if (key.includes(':')) {
+        const parts = key.split(':');
+        type = parts[0] ?? entity.type;
+        id = parts[1] ?? entity.id;
+      } else {
+        type = entity.type;
+        id = entity.id;
+      }
+      if (!this.entities.has(type)) {
+        this.entities.set(type, new Map());
+      }
+      this.entities.get(type)!.set(id, entity);
+    }
     this.version = snapshot.version;
     this.createSnapshot();
   }
@@ -199,7 +216,24 @@ export class StateManager {
     }
 
     if (closestSnapshot) {
-      this.entities = closestSnapshot.entities;
+      // Restore entities from closest snapshot
+      this.entities = new Map();
+      for (const [key, entity] of closestSnapshot.entities) {
+        let type: string;
+        let id: string;
+        if (key.includes(':')) {
+          const parts = key.split(':');
+          type = parts[0] ?? entity.type;
+          id = parts[1] ?? entity.id;
+        } else {
+          type = entity.type;
+          id = entity.id;
+        }
+        if (!this.entities.has(type)) {
+          this.entities.set(type, new Map());
+        }
+        this.entities.get(type)!.set(id, entity);
+      }
       this.version = closestSnapshot.version;
     } else {
       // Reset to initial state
@@ -274,7 +308,7 @@ export class StateManager {
       entityChanges.get(key)!.push(change);
     }
 
-    for (const [key, entityHistory] of entityChanges) {
+    for (const [_key, entityHistory] of entityChanges) {
       const first = entityHistory[0]!;
       const last = entityHistory[entityHistory.length - 1]!;
 
@@ -528,24 +562,25 @@ export const ImmutableOps = {
    * Merge objects deeply
    */
   merge<T extends Record<string, unknown>>(...objects: Partial<T>[]): T {
-    return objects.reduce((acc, obj) => {
+    const result: Record<string, unknown> = {};
+    for (const obj of objects) {
       for (const [key, value] of Object.entries(obj)) {
         if (
           typeof value === 'object' &&
           value !== null &&
           !Array.isArray(value) &&
-          typeof acc[key] === 'object' &&
-          acc[key] !== null
+          typeof result[key] === 'object' &&
+          result[key] !== null
         ) {
-          acc[key] = this.merge(
-            acc[key] as Record<string, unknown>,
+          result[key] = this.merge(
+            result[key] as Record<string, unknown>,
             value as Record<string, unknown>
-          ) as T[keyof T];
+          );
         } else {
-          acc[key] = value as T[keyof T];
+          result[key] = value;
         }
       }
-      return acc;
-    }, {} as T);
+    }
+    return result as T;
   },
 };

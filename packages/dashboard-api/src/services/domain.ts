@@ -1,5 +1,5 @@
 import { prisma } from '../db/client';
-import { DomainStatus, Prisma } from '@prisma/client';
+import type { DomainStatus, Prisma } from '../db/types';
 
 export interface CreateDomainInput {
   name: string;

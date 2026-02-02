@@ -141,12 +141,13 @@ function buildPageContext(req: Request): PageContext {
   const protocol = req.protocol || 'https';
   const host = req.get('host') || '';
   const url = `${protocol}://${host}${req.originalUrl}`;
+  const referrer = req.headers['referer'] || req.headers['referrer'];
 
   return {
     path: req.path,
     url,
     search: req.url.includes('?') ? req.url.split('?')[1] : undefined,
-    referrer: req.headers['referer'] || req.headers['referrer'],
+    referrer: Array.isArray(referrer) ? referrer[0] : referrer,
   };
 }
 
@@ -183,7 +184,7 @@ function buildReferrerContext(req: Request): { url?: string } | undefined {
     return undefined;
   }
 
-  return { url: referrer };
+  return { url: Array.isArray(referrer) ? referrer[0] : referrer };
 }
 
 // Helper functions

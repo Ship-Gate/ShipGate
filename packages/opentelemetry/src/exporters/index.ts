@@ -1,14 +1,13 @@
 export {
-  ISLJaegerConfig,
   createJaegerExporter,
   createJaegerProcessor,
   configureJaegerProvider,
   defaultJaegerConfig,
   jaegerConfigFromEnv,
 } from './jaeger';
+export type { ISLJaegerConfig } from './jaeger';
 
 export {
-  ISLZipkinConfig,
   createZipkinExporter,
   createZipkinProcessor,
   configureZipkinProvider,
@@ -16,10 +15,9 @@ export {
   zipkinConfigFromEnv,
   ZipkinURLs,
 } from './zipkin';
+export type { ISLZipkinConfig } from './zipkin';
 
 export {
-  ISLOTLPConfig,
-  OTLPProtocol,
   createOTLPTraceExporter,
   createOTLPProcessor,
   createOTLPMetricExporter,
@@ -30,3 +28,4 @@ export {
   otlpConfigFromEnv,
   OTLPBackends,
 } from './otlp';
+export type { ISLOTLPConfig, OTLPProtocol } from './otlp';

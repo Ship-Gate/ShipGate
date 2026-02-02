@@ -3,11 +3,11 @@
 // Generates property-based tests using fast-check from ISL domains
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
-import type { GenerateOptions, GeneratedFile, ArbitraryDefinition, PropertyDefinition } from './types';
-import { generateAllArbitraries, generateEntityArbitrary, generateInputArbitrary } from './arbitraries';
-import { generateAllProperties, generateEntityInvariantProperties, generatePostconditionProperties } from './properties';
-import { generateAllShrinkers, generateShrinkerUtils } from './shrinking';
+import type * as AST from '../../../master_contracts/ast.js';
+import type { GenerateOptions, GeneratedFile, ArbitraryDefinition, PropertyDefinition } from './types.js';
+import { generateAllArbitraries, generateEntityArbitrary, generateInputArbitrary } from './arbitraries.js';
+import { generateAllProperties, generateEntityInvariantProperties, generatePostconditionProperties } from './properties.js';
+import { generateAllShrinkers, generateShrinkerUtils } from './shrinking.js';
 import {
   getFastCheckTemplate,
   generatePropertyTest,
@@ -15,7 +15,7 @@ import {
   generateArbitraryDeclaration,
   generateImports,
   generateTestFileContent,
-} from './templates/fastcheck';
+} from './templates/fastcheck.js';
 
 /**
  * Generate property-based test files from an ISL domain

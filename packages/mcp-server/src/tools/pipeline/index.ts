@@ -10,6 +10,9 @@ export {
   formatMCPResponse,
 } from './pipeline-tools.js';
 
+// Re-export gate tool
+export { handleGate } from './gate-tool.js';
+
 // Re-export types
 export type {
   BuildInput,
@@ -28,5 +31,16 @@ export type {
   PipelineToolName,
 } from './pipeline-types.js';
 
+// Re-export gate types
+export type {
+  GateInput,
+  GateResult,
+  GateDecision,
+  EvidenceManifest,
+  EvidenceResults,
+  ClauseResult,
+} from './gate-types.js';
+
 // Re-export schemas
 export { PIPELINE_TOOL_SCHEMAS } from './pipeline-types.js';
+export { GATE_TOOL_SCHEMA } from './gate-types.js';

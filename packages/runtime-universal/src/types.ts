@@ -293,7 +293,7 @@ export interface RuntimePlugin {
  * Runtime API exposed to plugins
  */
 export interface RuntimeAPI {
-  execute<T>(behavior: string, input: Record<string, unknown>): Promise<ExecutionResult<T>>;
+  execute<T>(domain: string, behavior: string, input: Record<string, unknown>, actor: Actor): Promise<ExecutionResult<T>>;
   getState(): StateSnapshot;
   setState(state: StateSnapshot): void;
   subscribe(event: RuntimeEventType, handler: (event: RuntimeEvent) => void): () => void;

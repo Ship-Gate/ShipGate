@@ -5,18 +5,34 @@
  */
 
 import type {
-  DomainDeclaration,
-  EntityDeclaration,
-  BehaviorDeclaration,
-  FieldDeclaration,
-} from '@isl-lang/isl-core';
-
-import type {
   GraphQLGeneratorOptions,
   ResolverFramework,
-  ResolverDefinition,
-  ResolverMap,
 } from '../types.js';
+
+// Simple types for this generator
+interface DomainDeclaration {
+  name: string;
+  entities: EntityDeclaration[];
+  behaviors: BehaviorDeclaration[];
+}
+
+interface EntityDeclaration {
+  name: string;
+  fields: FieldDeclaration[];
+}
+
+interface BehaviorDeclaration {
+  name: string;
+  description?: string;
+  postconditions?: { conditions?: unknown[] };
+  input?: { fields: FieldDeclaration[] };
+}
+
+interface FieldDeclaration {
+  name: string;
+  type: string;
+  optional?: boolean;
+}
 
 /**
  * Generate resolvers for a domain
@@ -53,7 +69,7 @@ function generateApolloResolvers(
   // Imports
   lines.push(`/**
  * GraphQL Resolvers
- * Generated from ISL domain: ${domain.name.name}
+ * Generated from ISL domain: ${domain.name}
  */
 
 import { GraphQLResolveInfo } from 'graphql';
@@ -66,7 +82,7 @@ export interface Context {
 
 // Data sources - implement these based on your data layer
 export interface DataSources {
-${domain.entities.map(e => `  ${toCamelCase(e.name.name)}Service: ${e.name.name}Service;`).join('\n')}
+${domain.entities.map(e => `  ${toCamelCase(e.name)}Service: ${e.name}Service;`).join('\n')}
 }
 
 // Service interfaces
@@ -117,7 +133,7 @@ ${domain.entities.map(e => generateServiceInterface(e)).join('\n\n')}
   for (const entity of domain.entities) {
     const relationFields = entity.fields.filter(f => isRelationField(f, domain));
     if (relationFields.length > 0) {
-      lines.push(`  ${entity.name.name}: {`);
+      lines.push(`  ${entity.name}: {`);
       for (const field of relationFields) {
         lines.push(generateRelationResolver(entity, field, domain, options));
       }
@@ -134,7 +150,7 @@ ${domain.entities.map(e => generateServiceInterface(e)).join('\n\n')}
  * Generate service interface for entity
  */
 function generateServiceInterface(entity: EntityDeclaration): string {
-  const name = entity.name.name;
+  const name = entity.name;
   
   return `export interface ${name}Service {
   findById(id: string): Promise<${name} | null>;
@@ -153,7 +169,7 @@ function generateEntityQueryResolvers(
   entity: EntityDeclaration,
   options: Partial<GraphQLGeneratorOptions>
 ): string {
-  const name = entity.name.name;
+  const name = entity.name;
   const fieldName = toCamelCase(name);
   const pluralName = pluralize(fieldName);
   const serviceName = `${fieldName}Service`;
@@ -203,7 +219,7 @@ function generateEntityMutationResolvers(
   entity: EntityDeclaration,
   options: Partial<GraphQLGeneratorOptions>
 ): string {
-  const name = entity.name.name;
+  const name = entity.name;
   const fieldName = toCamelCase(name);
   const serviceName = `${fieldName}Service`;
   
@@ -245,19 +261,19 @@ function generateBehaviorResolver(
   type: 'query' | 'mutation',
   options: Partial<GraphQLGeneratorOptions>
 ): string {
-  const fieldName = toCamelCase(behavior.name.name);
+  const fieldName = toCamelCase(behavior.name);
   
   // Generate args type from input block
   let argsType = 'unknown';
   let argsDestructure = '';
   if (behavior.input?.fields && behavior.input.fields.length > 0) {
-    const argNames = behavior.input.fields.map(f => f.name.name);
+    const argNames = behavior.input.fields.map(f => f.name);
     argsDestructure = `{ ${argNames.join(', ')} }`;
     argsType = `{ ${argNames.map(n => `${n}: any`).join('; ')} }`;
   }
   
-  const description = behavior.description?.value 
-    ? `// ${behavior.description.value}` 
+  const description = behavior.description 
+    ? `// ${behavior.description}` 
     : '';
   
   return `    ${description}
@@ -267,8 +283,8 @@ function generateBehaviorResolver(
       { dataSources, userId }: Context,
       info: GraphQLResolveInfo
     ) => {
-      // TODO: Implement ${behavior.name.name} logic
-      // Preconditions: ${behavior.preconditions?.conditions?.map(c => 'check condition').join(', ') || 'none'}
+      // TODO: Implement ${behavior.name} logic
+      // Preconditions: check input validation
       // Postconditions: ${behavior.postconditions?.conditions?.map(c => 'verify condition').join(', ') || 'none'}
       throw new Error('Not implemented: ${fieldName}');
     },
@@ -282,8 +298,8 @@ function generateSubscriptionResolver(
   behavior: BehaviorDeclaration,
   options: Partial<GraphQLGeneratorOptions>
 ): string {
-  const fieldName = toCamelCase(behavior.name.name);
-  const topic = toSnakeCase(behavior.name.name).toUpperCase();
+  const fieldName = toCamelCase(behavior.name);
+  const topic = toSnakeCase(behavior.name).toUpperCase();
   
   return `    ${fieldName}: {
       subscribe: (_: unknown, args: unknown, { pubsub }: Context) => {
@@ -302,11 +318,11 @@ function generateRelationResolver(
   domain: DomainDeclaration,
   options: Partial<GraphQLGeneratorOptions>
 ): string {
-  const fieldName = field.name.name;
+  const fieldName = field.name;
   const relatedType = getBaseTypeName(field.type);
   const relatedService = `${toCamelCase(relatedType)}Service`;
   
-  return `    ${fieldName}: async (parent: ${entity.name.name}, _: unknown, { dataSources }: Context) => {
+  return `    ${fieldName}: async (parent: ${entity.name}, _: unknown, { dataSources }: Context) => {
       // Resolve ${fieldName} relation
       const id = parent.${fieldName}Id || parent.${fieldName};
       if (!id) return null;
@@ -327,7 +343,7 @@ function generateYogaResolvers(
   
   lines.push(`/**
  * GraphQL Yoga Resolvers
- * Generated from ISL domain: ${domain.name.name}
+ * Generated from ISL domain: ${domain.name}
  */
 
 import { createSchema, createYoga } from 'graphql-yoga';
@@ -362,7 +378,7 @@ function generatePothosResolvers(
   
   lines.push(`/**
  * Pothos Schema Builder
- * Generated from ISL domain: ${domain.name.name}
+ * Generated from ISL domain: ${domain.name}
  */
 
 import SchemaBuilder from '@pothos/core';
@@ -423,7 +439,7 @@ function generateTypeGraphQLResolvers(
   
   lines.push(`/**
  * TypeGraphQL Resolvers
- * Generated from ISL domain: ${domain.name.name}
+ * Generated from ISL domain: ${domain.name}
  */
 
 import {
@@ -452,7 +468,7 @@ import {
 // ============================================
 
 function generateYogaQueryResolver(entity: EntityDeclaration): string {
-  const name = entity.name.name;
+  const name = entity.name;
   const fieldName = toCamelCase(name);
   
   return `      ${fieldName}: async (_, { id }, context) => {
@@ -464,7 +480,7 @@ function generateYogaQueryResolver(entity: EntityDeclaration): string {
 }
 
 function generateYogaMutationResolver(entity: EntityDeclaration): string {
-  const name = entity.name.name;
+  const name = entity.name;
   const fieldName = toCamelCase(name);
   
   return `      create${name}: async (_, { input }, context) => {
@@ -479,10 +495,10 @@ function generateYogaMutationResolver(entity: EntityDeclaration): string {
 }
 
 function generatePothosType(entity: EntityDeclaration, domain: DomainDeclaration): string {
-  const name = entity.name.name;
+  const name = entity.name;
   
   const fields = entity.fields.map(f => {
-    const fieldName = f.name.name;
+    const fieldName = f.name;
     const fieldType = getPothosFieldType(f);
     const nullable = f.optional ? 'true' : 'false';
     return `    ${fieldName}: t.expose('${fieldName}', { type: ${fieldType}, nullable: ${nullable} }),`;
@@ -499,7 +515,7 @@ ${fields}
 }
 
 function generatePothosQueries(entity: EntityDeclaration): string {
-  const name = entity.name.name;
+  const name = entity.name;
   const fieldName = toCamelCase(name);
   
   return `// ${name} queries
@@ -528,7 +544,7 @@ builder.queryField('${pluralize(fieldName)}', (t) =>
 }
 
 function generatePothosMutations(entity: EntityDeclaration): string {
-  const name = entity.name.name;
+  const name = entity.name;
   const fieldName = toCamelCase(name);
   
   return `// ${name} mutations
@@ -546,7 +562,7 @@ builder.mutationField('create${name}', (t) =>
 }
 
 function generateTypeGraphQLResolver(entity: EntityDeclaration, domain: DomainDeclaration): string {
-  const name = entity.name.name;
+  const name = entity.name;
   const fieldName = toCamelCase(name);
   
   return `@Resolver(of => ${name})
@@ -611,30 +627,40 @@ function pluralize(str: string): string {
   return str + 's';
 }
 
-function getBaseTypeName(type: any): string {
-  if (type.kind === 'SimpleType') return type.name.name;
-  if (type.kind === 'ArrayType') return getBaseTypeName(type.elementType);
-  if (type.kind === 'GenericType' && type.typeArguments?.length > 0) {
-    return getBaseTypeName(type.typeArguments[0]);
+function getBaseTypeName(type: string): string {
+  // Handle generic types like List<T>, Set<T>, Optional<T>
+  const genericMatch = type.match(/^(\w+)<(.+)>$/);
+  if (genericMatch) {
+    const [, containerType, innerType] = genericMatch;
+    if (containerType === 'List' || containerType === 'Set' || containerType === 'Optional') {
+      return getBaseTypeName(innerType);
+    }
+    return containerType;
   }
-  return 'String';
+  
+  // Handle array types like String[]
+  if (type.endsWith('[]')) {
+    return getBaseTypeName(type.slice(0, -2));
+  }
+  
+  return type;
 }
 
 function isRelationField(field: FieldDeclaration, domain: DomainDeclaration): boolean {
   const typeName = getBaseTypeName(field.type);
-  return domain.entities.some(e => e.name.name === typeName);
+  return domain.entities.some(e => e.name === typeName);
 }
 
 function hasSideEffects(behavior: BehaviorDeclaration): boolean {
   if (behavior.postconditions?.conditions) return true;
-  const name = behavior.name.name.toLowerCase();
+  const name = behavior.name.toLowerCase();
   return name.startsWith('create') || name.startsWith('update') || 
          name.startsWith('delete') || name.startsWith('add') ||
          name.startsWith('remove') || name.startsWith('set');
 }
 
 function isSubscription(behavior: BehaviorDeclaration): boolean {
-  const name = behavior.name.name.toLowerCase();
+  const name = behavior.name.toLowerCase();
   return name.startsWith('on') || name.includes('subscribe') || name.includes('watch');
 }
 

@@ -2,7 +2,7 @@
 // Redis Cache Implementation
 // ============================================================================
 
-import type { ICache, CacheOptions, CacheStats, RedisConfig, Serializer } from './types.js';
+import type { ICache, SetOptions, CacheStats, RedisConfig, Serializer } from './types.js';
 
 /**
  * Redis cache configuration
@@ -25,7 +25,7 @@ export interface RedisCacheConfig extends RedisConfig {
 export class RedisCache implements ICache {
   private config: Required<RedisCacheConfig>;
   private client: RedisClient | null = null;
-  private stats = { hits: 0, misses: 0 };
+  private stats = { hits: 0, misses: 0, sets: 0, deletes: 0, evictions: 0 };
 
   constructor(config: RedisCacheConfig = {}) {
     this.config = {
@@ -70,7 +70,7 @@ export class RedisCache implements ICache {
     return this.config.serializer.deserialize<T>(data);
   }
 
-  async set<T>(key: string, value: T, options?: CacheOptions): Promise<void> {
+  async set<T>(key: string, value: T, options?: SetOptions): Promise<void> {
     await this.ensureConnected();
 
     const fullKey = this.prefixKey(key);
@@ -87,6 +87,8 @@ export class RedisCache implements ICache {
     if (options?.tags?.length) {
       await this.addToTags(fullKey, options.tags);
     }
+    
+    this.stats.sets++;
   }
 
   async delete(key: string): Promise<boolean> {
@@ -94,6 +96,9 @@ export class RedisCache implements ICache {
     
     const fullKey = this.prefixKey(key);
     const result = await this.client!.del(fullKey);
+    if (result > 0) {
+      this.stats.deletes++;
+    }
     return result > 0;
   }
 
@@ -133,8 +138,11 @@ export class RedisCache implements ICache {
     return {
       hits: this.stats.hits,
       misses: this.stats.misses,
+      sets: this.stats.sets,
+      deletes: this.stats.deletes,
       hitRate: total > 0 ? this.stats.hits / total : 0,
       size: info.keys ?? 0,
+      evictions: this.stats.evictions,
       memory: info.usedMemory ?? 0,
     };
   }
@@ -174,7 +182,7 @@ export class RedisCache implements ICache {
   /**
    * Set multiple keys (MSET with TTL via pipeline)
    */
-  async mset<T>(entries: Array<{ key: string; value: T; options?: CacheOptions }>): Promise<void> {
+  async mset<T>(entries: Array<{ key: string; value: T; options?: SetOptions }>): Promise<void> {
     await this.ensureConnected();
     
     const pipeline = this.client!.pipeline();
@@ -223,7 +231,7 @@ export class RedisCache implements ICache {
   async getOrSet<T>(
     key: string,
     factory: () => Promise<T>,
-    options?: CacheOptions
+    options?: SetOptions
   ): Promise<T> {
     const cached = await this.get<T>(key);
     

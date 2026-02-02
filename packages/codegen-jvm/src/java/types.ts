@@ -11,8 +11,6 @@ import type {
   UnionType,
   Constraint,
   Field,
-  RegexLiteral,
-  NumberLiteral,
 } from '../../../../master_contracts/ast';
 import type { GeneratorOptions } from '../generator';
 
@@ -109,7 +107,7 @@ export function generateJavaTypes(
 function generateConstrainedType(
   name: string,
   def: ConstrainedType,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const baseType = javaBaseType(def.base);
   const lines: string[] = [];
@@ -220,7 +218,7 @@ public @interface Valid${name} {
 function generateEnumType(
   name: string,
   def: EnumType,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const lines: string[] = [];
 
@@ -229,11 +227,14 @@ function generateEnumType(
   const variants = def.variants.map((v, idx) => {
     const comma = idx < def.variants.length - 1 ? ',' : '';
     if (v.value) {
-      // Enum with explicit value
-      if (v.value.kind === 'NumberLiteral') {
-        return `    ${v.name.name}(${v.value.value})${comma}`;
-      } else if (v.value.kind === 'StringLiteral') {
-        return `    ${v.name.name}("${v.value.value}")${comma}`;
+      // Enum with explicit value - use litKind from Literal type
+      if (v.value.litKind === 'number') {
+        // Cast to access runtime value property
+        const numValue = (v.value as unknown as { value: number }).value;
+        return `    ${v.name.name}(${numValue})${comma}`;
+      } else if (v.value.litKind === 'string') {
+        const strValue = (v.value as unknown as { value: string }).value;
+        return `    ${v.name.name}("${strValue}")${comma}`;
       }
     }
     return `    ${v.name.name}${comma}`;
@@ -245,7 +246,7 @@ function generateEnumType(
   const hasValues = def.variants.some(v => v.value);
   if (hasValues) {
     const firstValue = def.variants.find(v => v.value)?.value;
-    const valueType = firstValue?.kind === 'NumberLiteral' ? 'int' : 'String';
+    const valueType = firstValue?.litKind === 'number' ? 'int' : 'String';
     
     lines.push('    ;');
     lines.push('');
@@ -271,7 +272,7 @@ function generateEnumType(
 function generateStructType(
   name: string,
   def: StructType,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const lines: string[] = [];
 
@@ -298,7 +299,7 @@ function generateStructType(
 function generateUnionType(
   name: string,
   def: UnionType,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const lines: string[] = [];
 
@@ -331,7 +332,7 @@ function generateUnionType(
 function generateTypeAlias(
   name: string,
   def: TypeDefinition,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const baseType = javaBaseType(def);
   return `public record ${name}(${baseType} value) {

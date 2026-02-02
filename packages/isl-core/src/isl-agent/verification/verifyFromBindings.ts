@@ -4,7 +4,6 @@
 
 import type {
   BindingEntry,
-  ParsedBindings,
   ClauseResult,
   ClauseStatus,
   HeuristicMatch,

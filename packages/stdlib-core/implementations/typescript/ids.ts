@@ -127,19 +127,19 @@ export function isValidISBN10(value: string): boolean {
 function validateEAN13Checksum(code: string): boolean {
   let sum = 0;
   for (let i = 0; i < 12; i++) {
-    sum += parseInt(code[i]) * (i % 2 === 0 ? 1 : 3);
+    sum += parseInt(code.charAt(i), 10) * (i % 2 === 0 ? 1 : 3);
   }
   const checkDigit = (10 - (sum % 10)) % 10;
-  return checkDigit === parseInt(code[12]);
+  return checkDigit === parseInt(code.charAt(12), 10);
 }
 
 function validateUPCAChecksum(code: string): boolean {
   let sum = 0;
   for (let i = 0; i < 11; i++) {
-    sum += parseInt(code[i]) * (i % 2 === 0 ? 3 : 1);
+    sum += parseInt(code.charAt(i), 10) * (i % 2 === 0 ? 3 : 1);
   }
   const checkDigit = (10 - (sum % 10)) % 10;
-  return checkDigit === parseInt(code[11]);
+  return checkDigit === parseInt(code.charAt(11), 10);
 }
 
 function validateISBN13Checksum(code: string): boolean {
@@ -149,10 +149,10 @@ function validateISBN13Checksum(code: string): boolean {
 function validateISBN10Checksum(code: string): boolean {
   let sum = 0;
   for (let i = 0; i < 9; i++) {
-    sum += parseInt(code[i]) * (10 - i);
+    sum += parseInt(code.charAt(i), 10) * (10 - i);
   }
-  const lastChar = code[9];
-  const lastValue = lastChar === 'X' ? 10 : parseInt(lastChar);
+  const lastChar = code.charAt(9);
+  const lastValue = lastChar === 'X' ? 10 : parseInt(lastChar, 10);
   sum += lastValue;
   return sum % 11 === 0;
 }
@@ -174,12 +174,12 @@ function validateORCIDChecksum(orcid: string): boolean {
   const digits = orcid.replace(/-/g, '');
   let total = 0;
   for (let i = 0; i < 15; i++) {
-    total = (total + parseInt(digits[i])) * 2;
+    total = (total + parseInt(digits.charAt(i), 10)) * 2;
   }
   const remainder = total % 11;
   const checkDigit = (12 - remainder) % 11;
   const expected = checkDigit === 10 ? 'X' : checkDigit.toString();
-  return digits[15] === expected;
+  return digits.charAt(15) === expected;
 }
 
 export function isValidStripeCustomerId(value: string): boolean {
@@ -231,8 +231,8 @@ export function generateUUID(): UUID {
   }
   
   // Set version (4) and variant (RFC4122)
-  bytes[6] = (bytes[6] & 0x0f) | 0x40;
-  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  bytes[6] = (bytes[6]! & 0x0f) | 0x40;
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80;
   
   const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}` as UUID;
@@ -267,9 +267,9 @@ export function generateULID(): ULID {
   // Encode randomness (last 16 characters)
   let randomPart = '';
   for (let i = 0; i < 10; i++) {
-    randomPart += ULID_ENCODING[randomBytes[i] % 32];
+    randomPart += ULID_ENCODING[randomBytes[i]! % 32];
     if (i % 2 === 1 && i < 9) {
-      randomPart += ULID_ENCODING[Math.floor(randomBytes[i] / 32)];
+      randomPart += ULID_ENCODING[Math.floor(randomBytes[i]! / 32)];
     }
   }
   randomPart = randomPart.slice(0, 16);
@@ -301,7 +301,7 @@ export function generateShortId(length: number = 10): ShortId {
   }
   
   for (let i = 0; i < length; i++) {
-    result += SHORT_ID_CHARS[bytes[i] % SHORT_ID_CHARS.length];
+    result += SHORT_ID_CHARS[bytes[i]! % SHORT_ID_CHARS.length];
   }
   
   return result as ShortId;
@@ -320,7 +320,7 @@ export function generateHumanCode(length: number = 6): string {
   }
   
   for (let i = 0; i < length; i++) {
-    result += HUMAN_CODE_CHARS[bytes[i] % HUMAN_CODE_CHARS.length];
+    result += HUMAN_CODE_CHARS[bytes[i]! % HUMAN_CODE_CHARS.length];
   }
   
   return result;
@@ -363,7 +363,7 @@ export function bytesToUUID(bytes: Uint8Array): UUID {
 export function ulidToTimestamp(ulid: ULID): number {
   let timestamp = 0;
   for (let i = 0; i < 10; i++) {
-    timestamp = timestamp * 32 + ULID_ENCODING.indexOf(ulid[i].toUpperCase());
+    timestamp = timestamp * 32 + ULID_ENCODING.indexOf(ulid.charAt(i).toUpperCase());
   }
   return timestamp;
 }

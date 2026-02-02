@@ -16,6 +16,10 @@
   "dependencies": {
     "@isl-lang/stdlib-core": "workspace:*"
   },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  },
   "license": "MIT",
   "author": "mevla",
   "repository": {

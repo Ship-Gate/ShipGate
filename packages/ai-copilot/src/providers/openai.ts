@@ -94,7 +94,7 @@ Provide ${request.maxCompletions ?? 3} possible completions.`;
 
   async streamGenerate(
     prompt: string,
-    context?: ConversationContext,
+    context: ConversationContext | undefined,
     onChunk: (chunk: string) => void
   ): Promise<GenerationResult> {
     if (!this.client) {

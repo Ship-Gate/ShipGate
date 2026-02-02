@@ -121,8 +121,6 @@ export class ISLAlerter {
     if (!this.running) return;
 
     for (const rule of this.options.rules) {
-      const ruleId = rule.id ?? rule.condition;
-      
       if (this.evaluateCondition(rule.condition, metrics)) {
         await this.triggerAlert(rule, metrics);
       }

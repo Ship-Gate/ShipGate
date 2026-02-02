@@ -1,0 +1,16 @@
+{
+  "name": "isl-gate-demo",
+  "version": "1.0.0",
+  "description": "5-minute demo of the ISL SHIP/NO-SHIP gate",
+  "type": "module",
+  "scripts": {
+    "gate:broken": "npx @isl-lang/cli gate spec.isl --impl broken.ts --output ./evidence-broken",
+    "gate:fixed": "npx @isl-lang/cli gate spec.isl --impl fixed.ts --output ./evidence-fixed",
+    "gate:broken:json": "npx @isl-lang/cli gate spec.isl --impl broken.ts --format json",
+    "gate:fixed:json": "npx @isl-lang/cli gate spec.isl --impl fixed.ts --format json",
+    "demo": "npm run gate:broken || true && echo '' && npm run gate:fixed",
+    "clean": "rm -rf evidence-broken evidence-fixed"
+  },
+  "keywords": ["isl", "gate", "verification", "demo"],
+  "license": "MIT"
+}

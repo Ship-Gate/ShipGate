@@ -85,9 +85,11 @@ export class Prover {
       // If negation is SAT, original is INVALID (with counterexample)
       switch (result.status) {
         case 'valid':
-          return { status: 'invalid', counterexample: result.counterexample! };
-        case 'invalid':
+          // Negation is UNSAT, so original property is VALID
           return { status: 'valid' };
+        case 'invalid':
+          // Negation is SAT, so original property is INVALID with the counterexample
+          return { status: 'invalid', counterexample: result.counterexample };
         default:
           return result;
       }

@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "1.0.0",
+  "verdict": "NO_SHIP",
+  "summary": {
+    "totalClauses": 4,
+    "passedClauses": 2,
+    "partialClauses": 1,
+    "failedClauses": 1,
+    "passRate": 50,
+    "totalDurationMs": 230
+  },
+  "metadata": {
+    "contractName": "PaymentProcessor",
+    "contractFile": "contracts/payments.isl",
+    "verifierVersion": "1.0.0",
+    "gitCommit": "def4567890123",
+    "gitBranch": "feature/payments",
+    "buildId": "ci-12345"
+  },
+  "clauses": [
+    {
+      "id": "pay-001",
+      "name": "Valid payment succeeds",
+      "status": "PASS",
+      "evidence": [
+        {
+          "type": "assertion",
+          "description": "Payment created with status COMPLETED"
+        }
+      ],
+      "durationMs": 60
+    },
+    {
+      "id": "pay-002",
+      "name": "Insufficient funds rejected",
+      "status": "PASS",
+      "evidence": [
+        {
+          "type": "postcondition",
+          "description": "Error code is INSUFFICIENT_FUNDS"
+        }
+      ],
+      "durationMs": 55
+    },
+    {
+      "id": "pay-003",
+      "name": "Idempotency key prevents duplicates",
+      "status": "PARTIAL",
+      "description": "Duplicate requests with same idempotency key should return cached result",
+      "evidence": [
+        {
+          "type": "trace",
+          "description": "Second request returned 200 but created new record",
+          "location": {
+            "file": "src/payments/process.ts",
+            "line": 87,
+            "column": 5,
+            "snippet": "const payment = await db.payments.create(data);"
+          }
+        }
+      ],
+      "durationMs": 65
+    },
+    {
+      "id": "pay-004",
+      "name": "Refund reverses payment",
+      "status": "FAIL",
+      "description": "Full refund should reverse the original payment amount",
+      "evidence": [
+        {
+          "type": "assertion",
+          "description": "Refund amount does not match original payment",
+          "location": {
+            "file": "src/payments/refund.ts",
+            "line": 42
+          }
+        }
+      ],
+      "durationMs": 50,
+      "error": "Expected refund amount 100.00, got 99.50"
+    }
+  ],
+  "assumptions": [
+    {
+      "id": "assume-pay-001",
+      "description": "Payment gateway is available and responsive",
+      "risk": "low"
+    },
+    {
+      "id": "assume-pay-002",
+      "description": "Database transactions are ACID compliant",
+      "rationale": "Using PostgreSQL with default settings",
+      "risk": "low"
+    }
+  ],
+  "openQuestions": [
+    {
+      "id": "question-001",
+      "question": "Should partial refunds be supported?",
+      "context": "Current implementation only supports full refunds",
+      "suggestedActions": [
+        "Review product requirements",
+        "Check competitor implementations"
+      ],
+      "priority": "medium"
+    },
+    {
+      "id": "question-002",
+      "question": "What is the expected behavior for currency conversion?",
+      "priority": "high"
+    }
+  ],
+  "reproCommands": [
+    {
+      "description": "Run all payment tests",
+      "command": "pnpm test:payments",
+      "workingDirectory": "packages/payments"
+    },
+    {
+      "description": "Run failing refund test specifically",
+      "command": "pnpm vitest run refund.test.ts",
+      "workingDirectory": "packages/payments",
+      "env": {
+        "DEBUG": "true",
+        "LOG_LEVEL": "verbose"
+      }
+    }
+  ]
+}

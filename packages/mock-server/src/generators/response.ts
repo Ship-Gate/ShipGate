@@ -30,13 +30,18 @@ interface ParsedField {
 
 export class ResponseGenerator {
   private dataGenerator: DataGenerator;
-  private state: MockState;
+  private _state: MockState;
   private mergeInput: boolean;
 
   constructor(options: GeneratorOptions) {
     this.dataGenerator = options.dataGenerator;
-    this.state = options.state;
+    this._state = options.state;
     this.mergeInput = options.mergeInput ?? true;
+  }
+
+  /** Get the state manager (for future use) */
+  get state(): MockState {
+    return this._state;
   }
 
   /**
@@ -206,7 +211,9 @@ export class ResponseGenerator {
 
         // Check if it's a Map type
         if (type.startsWith('Map<')) {
-          const [keyType, valueType] = type.slice(4, -1).split(',').map((t) => t.trim());
+          const parts = type.slice(4, -1).split(',').map((t) => t.trim());
+          const keyType = parts[0] ?? 'String';
+          const valueType = parts[1] ?? 'String';
           const result: Record<string, unknown> = {};
           const count = this.dataGenerator.integer(1, 3);
           for (let i = 0; i < count; i++) {

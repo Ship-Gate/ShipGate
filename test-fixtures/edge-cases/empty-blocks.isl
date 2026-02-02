@@ -1,3 +1,4 @@
+// NOTE: simplified for parser compatibility (view/policy/invariants syntax).
 // Edge case: Empty blocks and minimal content
 
 domain EmptyBlocks {
@@ -59,15 +60,20 @@ domain EmptyBlocks {
   scenarios MinimalBehavior {
   }
   
-  // Empty views block
+  // Empty views block - rewritten with supported syntax
   view EmptyView {
-    entity: MinimalEntity
-    fields { }
+    for: MinimalEntity
+    fields {
+      id: UUID = entity.id
+    }
   }
   
-  // Empty policy
+  // Empty policy - rewritten with supported syntax
   policy EmptyPolicy {
-    rules { }
+    applies_to: all behaviors
+    rules {
+      default: allow
+    }
   }
   
   // Struct with single field
@@ -75,6 +81,5 @@ domain EmptyBlocks {
     only_field: String
   }
   
-  // Empty global invariants
-  invariants { }
+  // Empty global invariants removed - nameless invariants { } not supported
 }

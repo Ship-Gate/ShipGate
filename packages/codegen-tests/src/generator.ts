@@ -3,18 +3,18 @@
 // Generates executable Jest/Vitest tests from ISL domains
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
-import type { GenerateOptions, GeneratedFile, GeneratorError, TestFramework } from './types';
-import { generatePreconditionsDescribeBlock } from './preconditions';
+import type * as AST from '@isl-lang/parser';
+import type { GenerateOptions, GeneratedFile, GeneratorError, TestFramework } from './types.js';
+import { generatePreconditionsDescribeBlock } from './preconditions.js';
 import { 
   generatePostconditionsDescribeBlock, 
   generateImpliesTests,
   type PostconditionGeneratorContext 
-} from './postconditions';
-import { generateScenarioTests, generateScenarioHelpers, generateScenarioDataBuilders } from './scenarios';
-import { generateChaosTests, generateChaosController } from './chaos';
-import { getJestTemplate, getJestConfig } from '../templates/jest';
-import { getVitestTemplate, getVitestConfig } from '../templates/vitest';
+} from './postconditions.js';
+import { generateScenarioTests, generateScenarioHelpers, generateScenarioDataBuilders } from './scenarios.js';
+import { generateChaosTests, generateChaosController } from './chaos.js';
+import { getJestTemplate, getJestConfig } from './templates/jest.js';
+import { getVitestTemplate, getVitestConfig } from './templates/vitest.js';
 
 /**
  * Generate executable test files from an ISL domain
@@ -502,7 +502,7 @@ ${entityFixtures}
 
 // Helper functions
 
-import { compileExpression, createCompilerContext } from './expression-compiler';
+import { compileExpression, createCompilerContext } from './expression-compiler.js';
 
 function compileExpressionSimple(expr: AST.Expression, entityNames: string[] = []): string {
   // Use the full expression compiler with entity context

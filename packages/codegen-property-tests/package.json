@@ -2,8 +2,8 @@
   "name": "@isl-lang/codegen-property-tests",
   "version": "0.1.0",
   "description": "Generate property-based tests using fast-check from ISL specifications",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/packages/codegen-property-tests/src/index.js",
+  "types": "dist/packages/codegen-property-tests/src/index.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "vitest run",

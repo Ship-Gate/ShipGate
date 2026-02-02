@@ -4,7 +4,7 @@
  * Build Slack Block Kit UI components for messages.
  */
 
-import { formatScore, formatDuration, formatPercentage } from '../utils/format.js';
+import { formatScore, formatDuration } from '../utils/format.js';
 import { createProgressBar, createComparisonBar } from '../utils/charts.js';
 
 // ============================================================================

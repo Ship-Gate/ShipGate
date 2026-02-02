@@ -3,12 +3,13 @@
 // @isl-lang/interpreter/scenarios
 // ============================================================================
 
-import type { Value, Environment, ExecutionContext } from '@isl-lang/runtime-interpreter';
+import type { Value, Environment } from '@isl-lang/runtime-interpreter';
 import type {
   Scenario,
   Statement,
-  ASTExpression,
-  ScenarioBlock,
+  Expression as ASTExpression,
+  Identifier,
+  MapEntry,
 } from '@isl-lang/parser';
 import type {
   ScenarioResult,
@@ -18,7 +19,6 @@ import type {
   ScenarioTestData,
   VerificationOptions,
 } from './types';
-import { InterpreterError } from './types';
 import { toValue, fromValue } from './bindings';
 import { cloneValues } from './executor';
 
@@ -226,7 +226,6 @@ async function evaluateAssertions(
   const env = ctx.createEnvironment(ctx.bindings);
   
   for (const assertion of assertions) {
-    const startTime = performance.now();
     const exprStr = stringifyExpression(assertion);
     
     try {
@@ -372,7 +371,7 @@ function stringifyExpression(expr: ASTExpression): string {
     case 'Identifier':
       return expr.name;
     case 'QualifiedName':
-      return expr.parts.map((p) => p.name).join('.');
+      return expr.parts.map((p: Identifier) => p.name).join('.');
     case 'StringLiteral':
       return `"${expr.value}"`;
     case 'NumberLiteral':
@@ -402,11 +401,11 @@ function stringifyExpression(expr: ASTExpression): string {
     case 'QuantifierExpr':
       return `${expr.quantifier} ${expr.variable.name} in ${stringifyExpression(expr.collection)}: ${stringifyExpression(expr.predicate)}`;
     case 'LambdaExpr':
-      return `(${expr.params.map((p) => p.name).join(', ')}) => ${stringifyExpression(expr.body)}`;
+      return `(${expr.params.map((p: Identifier) => p.name).join(', ')}) => ${stringifyExpression(expr.body)}`;
     case 'ListExpr':
       return `[${expr.elements.map(stringifyExpression).join(', ')}]`;
     case 'MapExpr':
-      return `{${expr.entries.map((e) => `${stringifyExpression(e.key)}: ${stringifyExpression(e.value)}`).join(', ')}}`;
+      return `{${expr.entries.map((e: MapEntry) => `${stringifyExpression(e.key)}: ${stringifyExpression(e.value)}`).join(', ')}}`;
     default:
       return '<expression>';
   }

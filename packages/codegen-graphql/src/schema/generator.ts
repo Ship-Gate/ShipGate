@@ -2,8 +2,30 @@
  * GraphQL Schema Generator - Generate SDL from ISL AST.
  */
 
-import type { AST } from '../types/ast';
-import { mapISLTypeToGraphQL } from '../utils/type-mapper';
+import type { AST, ASTEntity, ASTBehavior, ASTField } from '../types.js';
+
+/**
+ * Map ISL type to GraphQL type
+ */
+function mapISLTypeToGraphQL(type: string, optional?: boolean): string {
+  const typeMap: Record<string, string> = {
+    String: 'String',
+    Int: 'Int',
+    Float: 'Float',
+    Boolean: 'Boolean',
+    ID: 'ID',
+    UUID: 'ID',
+    DateTime: 'DateTime',
+    Timestamp: 'DateTime',
+    Decimal: 'Float',
+    Email: 'String',
+    URL: 'String',
+    JSON: 'JSON',
+  };
+  
+  const gqlType = typeMap[type] ?? type;
+  return optional ? gqlType : `${gqlType}!`;
+}
 
 /**
  * Schema generator configuration
@@ -270,9 +292,10 @@ function generateQueryType(ast: AST, cfg: Required<SchemaGeneratorConfig>): stri
         const fieldName = behaviorToQueryField(behavior.name);
         const resultType = `${behavior.name}${cfg.resultSuffix}`;
         
-        if (behavior.input?.fields?.length > 0) {
-          const args = behavior.input.fields
-            .map((f: any) => `${f.name}: ${mapISLTypeToGraphQL(f.type, f.optional)}`)
+        const inputFields = behavior.input?.fields;
+        if (inputFields && inputFields.length > 0) {
+          const args = inputFields
+            .map((f: ASTField) => `${f.name}: ${mapISLTypeToGraphQL(f.type, f.optional)}`)
             .join(', ');
           lines.push(`  ${fieldName}(${args}): ${resultType}!`);
         } else {
@@ -310,7 +333,8 @@ function generateMutationType(ast: AST, cfg: Required<SchemaGeneratorConfig>): s
         const inputType = `${behavior.name}${cfg.inputSuffix}`;
         const resultType = `${behavior.name}${cfg.resultSuffix}`;
 
-        if (behavior.input?.fields?.length > 0) {
+        const mutationInputFields = behavior.input?.fields;
+        if (mutationInputFields && mutationInputFields.length > 0) {
           lines.push(`  ${fieldName}(input: ${inputType}!): ${resultType}!`);
         } else {
           lines.push(`  ${fieldName}: ${resultType}!`);

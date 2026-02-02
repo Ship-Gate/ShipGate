@@ -246,7 +246,6 @@ export class QuotaManager {
 
     const config = this.quotas.get(name);
     if (config) {
-      const tenant = TenantContext.getTenant();
       await this.enforcer.enforceAndIncrement(config.metric, amount);
     }
   }

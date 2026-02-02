@@ -2,8 +2,8 @@
 // Custom Proto Options Generation
 // ============================================================================
 
-import type { Behavior, SecuritySpec, ComplianceSpec } from '@isl-lang/isl-core';
-import { toPascalCase, toSnakeCase } from '../utils';
+import type { Behavior, SecuritySpec } from '../types';
+// toPascalCase and toSnakeCase removed - not currently used
 
 // ==========================================================================
 // CUSTOM OPTIONS
@@ -280,8 +280,8 @@ export function generateMethodOptions(
   }
   
   // Security options
-  if (options.generateSecurityOptions && behavior.security.length > 0) {
-    const securityOpts = extractSecurityOptions(behavior.security);
+  if (options.generateSecurityOptions && behavior.security && behavior.security.requirements.length > 0) {
+    const securityOpts = extractSecurityOptions(behavior.security.requirements);
     if (securityOpts) {
       methodOptions.push('option (isl.options.security) = {');
       methodOptions.push(`  requires_authentication: ${securityOpts.requiresAuth}`);
@@ -295,8 +295,9 @@ export function generateMethodOptions(
     }
   }
   
-  // Audit options
-  if (options.generateAuditOptions && behavior.observability?.logs) {
+  // Audit options - based on behavior having security requirements
+  // (observability is not part of BehaviorDeclaration)
+  if (options.generateAuditOptions) {
     methodOptions.push('option (isl.options.audit) = {');
     methodOptions.push('  enabled: true');
     methodOptions.push('};');

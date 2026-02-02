@@ -27,7 +27,7 @@ export class MemoryCache implements CacheBackend {
   
   private cache: Map<string, CacheEntry> = new Map();
   private config: Required<MemoryCacheConfig>;
-  private stats: CacheStats;
+  private _stats: CacheStats;
   private cleanupTimer?: NodeJS.Timeout;
   private eventHandlers: CacheEventHandler[] = [];
   private serializer: Serializer;
@@ -47,7 +47,7 @@ export class MemoryCache implements CacheBackend {
     
     this.serializer = this.config.serializer;
     
-    this.stats = {
+    this._stats = {
       hits: 0,
       misses: 0,
       sets: 0,
@@ -139,8 +139,8 @@ export class MemoryCache implements CacheBackend {
     };
     
     this.cache.set(prefixedKey, entry);
-    this.stats.sets++;
-    this.stats.size = this.cache.size;
+    this._stats.sets++;
+    this._stats.size = this.cache.size;
     
     this.emit({ type: 'set', key, ttl });
     
@@ -152,8 +152,8 @@ export class MemoryCache implements CacheBackend {
     const deleted = this.cache.delete(prefixedKey);
     
     if (deleted) {
-      this.stats.deletes++;
-      this.stats.size = this.cache.size;
+      this._stats.deletes++;
+      this._stats.size = this.cache.size;
       this.emit({ type: 'delete', key });
     }
     
@@ -205,7 +205,7 @@ export class MemoryCache implements CacheBackend {
   
   async clear(): Promise<void> {
     this.cache.clear();
-    this.stats.size = 0;
+    this._stats.size = 0;
     this.emit({ type: 'clear' });
   }
   
@@ -228,10 +228,10 @@ export class MemoryCache implements CacheBackend {
   }
   
   async stats(): Promise<CacheStats> {
-    const total = this.stats.hits + this.stats.misses;
+    const total = this._stats.hits + this._stats.misses;
     return {
-      ...this.stats,
-      hitRate: total > 0 ? this.stats.hits / total : 0,
+      ...this._stats,
+      hitRate: total > 0 ? this._stats.hits / total : 0,
     };
   }
   
@@ -252,7 +252,7 @@ export class MemoryCache implements CacheBackend {
       }
     }
     
-    this.stats.size = this.cache.size;
+    this._stats.size = this.cache.size;
     return count;
   }
   
@@ -326,8 +326,8 @@ export class MemoryCache implements CacheBackend {
     
     if (keyToEvict) {
       this.cache.delete(keyToEvict);
-      this.stats.evictions++;
-      this.stats.size = this.cache.size;
+      this._stats.evictions++;
+      this._stats.size = this.cache.size;
       this.emit({ 
         type: 'evict', 
         key: this.unprefixKey(keyToEvict), 
@@ -394,7 +394,7 @@ export class MemoryCache implements CacheBackend {
       }
     }
     
-    this.stats.size = this.cache.size;
+    this._stats.size = this.cache.size;
   }
   
   private estimateSize(value: unknown): number {
@@ -404,12 +404,12 @@ export class MemoryCache implements CacheBackend {
   }
   
   private recordHit(key: string): void {
-    this.stats.hits++;
+    this._stats.hits++;
     this.emit({ type: 'get', key, hit: true });
   }
   
   private recordMiss(key: string): void {
-    this.stats.misses++;
+    this._stats.misses++;
     this.emit({ type: 'get', key, hit: false });
   }
   

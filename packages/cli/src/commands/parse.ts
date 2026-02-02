@@ -9,7 +9,7 @@ import { readFile, access } from 'fs/promises';
 import { resolve, relative } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
-import { parseISL, type DomainDeclaration } from '@isl-lang/isl-core';
+import { parse as parseISL, type Domain as DomainDeclaration } from '@isl-lang/parser';
 import { output, type DiagnosticError } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
 import { findSimilarFiles, formatCodeSnippet } from '../utils.js';
@@ -186,7 +186,7 @@ export async function parse(file: string, options: ParseOptions = {}): Promise<P
     const source = await readFile(filePath, 'utf-8');
     spinner && (spinner.text = 'Parsing...');
     
-    const { ast, errors: parseErrors } = parseISL(source, filePath);
+    const { domain: ast, errors: parseErrors } = parseISL(source, filePath);
     
     // Convert parse errors to diagnostics
     for (const error of parseErrors) {

@@ -318,7 +318,7 @@ function* generateUrlFuzz(): Generator<GeneratedValue<string>> {
 /**
  * Fuzz a specific format (regex)
  */
-function* fuzzFormat(format: string): Generator<GeneratedValue<string>> {
+function* fuzzFormat(_format: string): Generator<GeneratedValue<string>> {
   // Generate strings that almost match but fail
   yield { value: '', category: 'format', description: 'Empty for format' };
   yield { value: ' ', category: 'format', description: 'Whitespace for format' };

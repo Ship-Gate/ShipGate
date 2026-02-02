@@ -121,7 +121,7 @@ export interface VerificationMetadata {
  */
 export interface EvidenceClauseResult extends ClauseResult {
   /** Clause type (precondition, postcondition, invariant, etc.) */
-  clauseType?: 'precondition' | 'postcondition' | 'invariant' | 'effect' | 'constraint';
+  clauseType?: 'precondition' | 'postcondition' | 'invariant' | 'effect' | 'constraint' | 'policy' | 'unknown';
   /** Execution trace for this clause */
   trace?: string;
   /** Actual value observed */

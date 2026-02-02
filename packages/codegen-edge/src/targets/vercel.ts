@@ -2,7 +2,11 @@
 // Vercel Edge Functions Code Generator
 // ============================================================================
 
-import type * as AST from '../../../../master_contracts/ast';
+import type {
+  DomainDeclaration,
+  BehaviorDeclaration,
+  TypeExpression,
+} from '@isl-lang/isl-core';
 import type {
   GeneratedEdgeCode,
   EdgeFile,
@@ -16,7 +20,7 @@ import type { EdgeGenOptions } from '../generator';
 // ============================================================================
 
 export function generateVercel(
-  domain: AST.Domain,
+  domain: DomainDeclaration,
   options: EdgeGenOptions
 ): GeneratedEdgeCode {
   const files: EdgeFile[] = [];
@@ -26,7 +30,7 @@ export function generateVercel(
     files.push({
       path: `api/${toKebabCase(behavior.name.name)}/route.ts`,
       type: 'handler',
-      content: generateRouteHandler(behavior, domain),
+      content: generateRouteHandler(behavior),
     });
   }
 
@@ -41,7 +45,7 @@ export function generateVercel(
   files.push({
     path: 'vercel.json',
     type: 'config',
-    content: generateVercelConfig(domain, options),
+    content: generateVercelConfig(domain),
   });
 
   // Generate edge-config client
@@ -58,8 +62,8 @@ export function generateVercel(
     content: generateKVClient(),
   });
 
-  const config = generateEdgeConfig(domain, options);
-  const manifest = generateManifest(domain, options);
+  const config = generateEdgeConfig(domain);
+  const manifest = generateManifest(domain);
 
   return { files, config, manifest };
 }
@@ -68,9 +72,10 @@ export function generateVercel(
 // ROUTE HANDLERS
 // ============================================================================
 
-function generateRouteHandler(behavior: AST.Behavior, domain: AST.Domain): string {
+function generateRouteHandler(behavior: BehaviorDeclaration): string {
   const lines: string[] = [];
   const name = behavior.name.name;
+  const inputFields = behavior.input?.fields ?? [];
 
   lines.push(`// ${name} Edge Function`);
   lines.push("import { NextRequest, NextResponse } from 'next/server';");
@@ -83,7 +88,7 @@ function generateRouteHandler(behavior: AST.Behavior, domain: AST.Domain): strin
 
   // Input type
   lines.push(`interface ${name}Input {`);
-  for (const field of behavior.input.fields) {
+  for (const field of inputFields) {
     const tsType = islTypeToTS(field.type);
     const optional = field.optional ? '?' : '';
     lines.push(`  ${field.name.name}${optional}: ${tsType};`);
@@ -124,7 +129,7 @@ function generateRouteHandler(behavior: AST.Behavior, domain: AST.Domain): strin
   lines.push(`function validate(input: ${name}Input): string[] {`);
   lines.push('  const errors: string[] = [];');
   
-  for (const field of behavior.input.fields) {
+  for (const field of inputFields) {
     if (!field.optional) {
       lines.push(`  if (input.${field.name.name} === undefined) {`);
       lines.push(`    errors.push('${field.name.name} is required');`);
@@ -142,7 +147,7 @@ function generateRouteHandler(behavior: AST.Behavior, domain: AST.Domain): strin
 // MIDDLEWARE
 // ============================================================================
 
-function generateMiddleware(domain: AST.Domain, options: EdgeGenOptions): string {
+function generateMiddleware(domain: DomainDeclaration, options: EdgeGenOptions): string {
   const lines: string[] = [];
 
   lines.push('// ============================================================================');
@@ -300,13 +305,15 @@ export async function deleteEntity(type: string, id: string): Promise<void> {
 // CONFIG FILES
 // ============================================================================
 
-function generateVercelConfig(domain: AST.Domain, options: EdgeGenOptions): string {
+function generateVercelConfig(domain: DomainDeclaration): string {
+  const version = domain.version?.value ?? '0.0.0';
+  
   const config = {
     $schema: 'https://openapi.vercel.sh/vercel.json',
     buildCommand: 'next build',
     framework: 'nextjs',
     functions: Object.fromEntries(
-      domain.behaviors.map(b => [
+      domain.behaviors.map((b: BehaviorDeclaration) => [
         `api/${toKebabCase(b.name.name)}/route.ts`,
         {
           runtime: 'edge',
@@ -316,19 +323,19 @@ function generateVercelConfig(domain: AST.Domain, options: EdgeGenOptions): stri
     ),
     env: {
       DOMAIN_NAME: domain.name.name,
-      DOMAIN_VERSION: domain.version.value,
+      DOMAIN_VERSION: version,
     },
   };
 
   return JSON.stringify(config, null, 2);
 }
 
-function generateEdgeConfig(domain: AST.Domain, options: EdgeGenOptions): EdgeConfig {
+function generateEdgeConfig(domain: DomainDeclaration): EdgeConfig {
   return {
     target: 'vercel-edge',
     entrypoint: 'middleware.ts',
     bindings: [{ name: 'KV', type: 'kv', config: {} }],
-    routes: domain.behaviors.map(b => ({
+    routes: domain.behaviors.map((b: BehaviorDeclaration) => ({
       pattern: `/api/${toKebabCase(b.name.name)}`,
       handler: `api/${toKebabCase(b.name.name)}/route.ts`,
       method: 'POST',
@@ -337,12 +344,14 @@ function generateEdgeConfig(domain: AST.Domain, options: EdgeGenOptions): EdgeCo
   };
 }
 
-function generateManifest(domain: AST.Domain, options: EdgeGenOptions): EdgeManifest {
+function generateManifest(domain: DomainDeclaration): EdgeManifest {
+  const version = domain.version?.value ?? '0.0.0';
+  
   return {
     name: toKebabCase(domain.name.name),
-    version: domain.version.value,
+    version,
     target: 'vercel-edge',
-    behaviors: domain.behaviors.map(b => ({
+    behaviors: domain.behaviors.map((b: BehaviorDeclaration) => ({
       name: b.name.name,
       route: `/api/${toKebabCase(b.name.name)}`,
       method: 'POST',
@@ -367,22 +376,27 @@ function toKebabCase(str: string): string {
   return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
-function islTypeToTS(type: AST.TypeDefinition): string {
+function islTypeToTS(type: TypeExpression): string {
   switch (type.kind) {
-    case 'PrimitiveType':
-      switch (type.name) {
+    case 'SimpleType':
+      switch (type.name.name) {
         case 'String': return 'string';
         case 'Int': return 'number';
         case 'Decimal': return 'number';
         case 'Boolean': return 'boolean';
         case 'Timestamp': return 'Date | string';
         case 'UUID': return 'string';
-        default: return 'unknown';
+        default: return type.name.name;
       }
-    case 'ListType':
-      return `${islTypeToTS(type.element)}[]`;
-    case 'OptionalType':
-      return `${islTypeToTS(type.inner)} | null`;
+    case 'ArrayType':
+      return type.elementType ? `${islTypeToTS(type.elementType)}[]` : 'unknown[]';
+    case 'GenericType': {
+      const typeArgs = type.typeArguments ?? [];
+      if (type.name.name === 'Optional' && typeArgs.length === 1 && typeArgs[0]) {
+        return `${islTypeToTS(typeArgs[0])} | null`;
+      }
+      return 'unknown';
+    }
     default:
       return 'unknown';
   }

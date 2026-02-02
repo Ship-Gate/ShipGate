@@ -1,4 +1,6 @@
 domain Test {
+  version: "1.0.0"
+  
   entity User {
     id: UUID [immutable]
   }

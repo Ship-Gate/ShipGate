@@ -244,11 +244,11 @@ export class ISLAnalyzer {
     const lines = text.split('\n');
 
     let currentDomain: DomainNode | null = null;
-    let currentNode: ISLNode | null = null;
     let braceDepth = 0;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+      if (!line) continue;
       const trimmed = line.trim();
 
       // Track brace depth
@@ -257,7 +257,7 @@ export class ISLAnalyzer {
 
       // Domain declaration
       const domainMatch = trimmed.match(/^domain\s+(\w+)\s*{?/);
-      if (domainMatch) {
+      if (domainMatch && domainMatch[1]) {
         currentDomain = {
           type: 'domain',
           name: domainMatch[1],
@@ -276,7 +276,7 @@ export class ISLAnalyzer {
 
       // Type declaration
       const typeMatch = trimmed.match(/^type\s+(\w+)\s*=?\s*(\w+)?\s*{?/);
-      if (typeMatch && currentDomain) {
+      if (typeMatch && typeMatch[1] && currentDomain) {
         const typeNode: TypeNode = {
           type: 'type',
           name: typeMatch[1],
@@ -293,7 +293,7 @@ export class ISLAnalyzer {
 
       // Entity declaration
       const entityMatch = trimmed.match(/^entity\s+(\w+)\s*{?/);
-      if (entityMatch && currentDomain) {
+      if (entityMatch && entityMatch[1] && currentDomain) {
         const entityNode: EntityNode = {
           type: 'entity',
           name: entityMatch[1],
@@ -310,7 +310,7 @@ export class ISLAnalyzer {
 
       // Behavior declaration
       const behaviorMatch = trimmed.match(/^behavior\s+(\w+)\s*{?/);
-      if (behaviorMatch && currentDomain) {
+      if (behaviorMatch && behaviorMatch[1] && currentDomain) {
         const behaviorNode: BehaviorNode = {
           type: 'behavior',
           name: behaviorMatch[1],

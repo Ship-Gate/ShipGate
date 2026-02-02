@@ -6,15 +6,10 @@ import type {
   TypeDefinition,
   PrimitiveType,
   ConstrainedType,
-  EnumType,
-  StructType,
-  UnionType,
   ListType,
   MapType,
   OptionalType,
   ReferenceType,
-  Constraint,
-  Field,
   Annotation,
 } from './ast-types.js';
 

@@ -2,8 +2,8 @@
 // C# Service Templates
 // ============================================================================
 
-import type { CSharpClassInfo, CSharpMethodInfo, CSharpGeneratorOptions } from '../types';
-import { generateUsings, generateXmlDoc, generateAttributes } from './model';
+import type { CSharpClassInfo, CSharpGeneratorOptions } from '../types';
+import { generateUsings, generateXmlDoc } from './model';
 
 /**
  * Generate service interface

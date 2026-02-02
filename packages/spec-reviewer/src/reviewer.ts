@@ -5,12 +5,12 @@
  */
 
 import type { DomainDeclaration } from '@isl-lang/isl-core';
-import { analyzeCompleteness, type CompletenessResult } from './analyzers/completeness.js';
-import { analyzeConsistency, type ConsistencyResult } from './analyzers/consistency.js';
-import { analyzeSecurity, type SecurityResult } from './analyzers/security.js';
-import { analyzePerformance, type PerformanceResult } from './analyzers/performance.js';
-import { analyzeNaming, type NamingResult } from './analyzers/naming.js';
-import { analyzeBestPractices, type BestPracticesResult } from './analyzers/best-practices.js';
+import { analyzeCompleteness } from './analyzers/completeness.js';
+import { analyzeConsistency } from './analyzers/consistency.js';
+import { analyzeSecurity } from './analyzers/security.js';
+import { analyzePerformance } from './analyzers/performance.js';
+import { analyzeNaming } from './analyzers/naming.js';
+import { analyzeBestPractices } from './analyzers/best-practices.js';
 import { generateSuggestions, type Suggestion as GeneratedSuggestion } from './suggestions/generator.js';
 import { AIClient, type AIClientConfig, type AIReviewResult } from './ai/client.js';
 
@@ -370,8 +370,8 @@ export class SpecReviewer {
       'info': 1,
     };
 
-    const minLevel = severityOrder[this.options.minSeverity];
-    return issues.filter(i => severityOrder[i.severity] >= minLevel);
+    const minLevel = severityOrder[this.options.minSeverity] ?? 1;
+    return issues.filter(i => (severityOrder[i.severity] ?? 0) >= minLevel);
   }
 
   /**

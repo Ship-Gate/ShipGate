@@ -4,7 +4,7 @@
  * Base class for event-sourced aggregates.
  */
 
-import { EventStore, StoredEvent, EventMetadata } from './event-store.js';
+import { EventStore, EventMetadata } from './event-store.js';
 
 export interface AggregateOptions {
   /** Event store instance */
@@ -116,7 +116,10 @@ export class Aggregate<TState = Record<string, unknown>> {
     );
 
     // Update version
-    this.root.version = events[events.length - 1].version;
+    const lastEvent = events[events.length - 1];
+    if (lastEvent) {
+      this.root.version = lastEvent.version;
+    }
 
     // Clear uncommitted events
     this.root.uncommittedEvents = [];

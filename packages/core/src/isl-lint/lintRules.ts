@@ -135,7 +135,7 @@ export const ambiguousActorRule: LintRule = {
               `  }`,
           }));
         }
-      } else {
+      } else if (behavior.actors) {
         // Check for actors without constraints
         for (const actor of behavior.actors) {
           if (actor.constraints.length === 0) {

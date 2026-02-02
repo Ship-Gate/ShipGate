@@ -3,9 +3,9 @@
 // Pure random input generation
 // ============================================================================
 
-import { FuzzContext, GeneratedValue, ISLTypeInfo, createRng } from '../types.js';
-import { generateStrings, mutateString } from '../generators/string.js';
-import { generateIntegers, generateFloats, mutateNumber } from '../generators/number.js';
+import { FuzzContext, GeneratedValue, createRng } from '../types.js';
+import { mutateString } from '../generators/string.js';
+import { mutateNumber } from '../generators/number.js';
 import { mutateObject, mutateArray } from '../generators/structure.js';
 
 /**

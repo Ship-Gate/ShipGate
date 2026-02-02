@@ -489,7 +489,7 @@ export class TestGenerator {
             params: {
               ...baseParams,
               [field.name]: { type: 'literal', value: this.generateBoundaryValue(field, value, 'at') },
-            },
+            } as Record<string, TestValue>,
           },
           expected: { outcome: 'success' },
           tags: ['boundary', 'min'],
@@ -542,7 +542,7 @@ export class TestGenerator {
             params: {
               ...baseParams,
               [field.name]: { type: 'literal', value: this.generateBoundaryValue(field, value, 'at') },
-            },
+            } as Record<string, TestValue>,
           },
           expected: { outcome: 'success' },
           tags: ['boundary', 'max'],

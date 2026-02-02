@@ -4,7 +4,14 @@
  * Full-text search and discovery for intent packages.
  */
 
-import { PrismaClient, IntentCategory } from '@prisma/client';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { PrismaClient } = require('@prisma/client');
+import {
+  IntentCategory,
+  IntentPackageWithRelations,
+  IntentVersion,
+  TrustMetrics,
+} from '../types.js';
 
 const prisma = new PrismaClient();
 
@@ -74,9 +81,15 @@ export async function searchPackages(options: SearchOptions): Promise<{
     },
   });
 
+  // Define the package type returned by Prisma query
+  type PackageWithVersionsAndMetrics = IntentPackageWithRelations & {
+    versions: IntentVersion[];
+    trustMetrics: TrustMetrics | null;
+  };
+
   // Score and filter packages
   const scored = packages
-    .map(pkg => {
+    .map((pkg: PackageWithVersionsAndMetrics) => {
       const matchedOn: string[] = [];
       let matchScore = 0;
 
@@ -157,9 +170,9 @@ export async function searchPackages(options: SearchOptions): Promise<{
         matchedOn,
       };
     })
-    .filter(r => r.matchScore > 0)
-    .filter(r => minTrustScore === undefined || r.trustScore >= minTrustScore)
-    .sort((a, b) => b.matchScore - a.matchScore);
+    .filter((r: SearchResult) => r.matchScore > 0)
+    .filter((r: SearchResult) => minTrustScore === undefined || r.trustScore >= minTrustScore)
+    .sort((a: SearchResult, b: SearchResult) => b.matchScore - a.matchScore);
 
   return {
     results: scored.slice(offset, offset + limit),
@@ -201,7 +214,7 @@ export async function getTrendingPackages(options: TrendingOptions = {}): Promis
     take: limit * 2, // Get more to filter
   });
 
-  const packageNames = deployments.map(d => d.packageName);
+  const packageNames = deployments.map((d: { packageName: string; _count: { id: number } }) => d.packageName);
 
   // Fetch package details
   const packages = await prisma.intentPackage.findMany({
@@ -221,11 +234,16 @@ export async function getTrendingPackages(options: TrendingOptions = {}): Promis
 
   // Score by recent activity
   const trendingScores = new Map(
-    deployments.map(d => [d.packageName, d._count.id])
+    deployments.map((d: { packageName: string; _count: { id: number } }) => [d.packageName, d._count.id])
   );
 
+  type TrendingPackage = IntentPackageWithRelations & {
+    versions: IntentVersion[];
+    trustMetrics: TrustMetrics | null;
+  };
+
   return packages
-    .map(pkg => ({
+    .map((pkg: TrendingPackage) => ({
       name: pkg.name,
       displayName: pkg.displayName,
       description: pkg.description,
@@ -239,7 +257,7 @@ export async function getTrendingPackages(options: TrendingOptions = {}): Promis
       matchScore: trendingScores.get(pkg.name) ?? 0,
       matchedOn: ['trending'],
     }))
-    .sort((a, b) => b.matchScore - a.matchScore)
+    .sort((a: SearchResult, b: SearchResult) => b.matchScore - a.matchScore)
     .slice(0, limit);
 }
 
@@ -263,7 +281,12 @@ export async function getPackagesByCategory(category: IntentCategory, limit = 10
     take: limit,
   });
 
-  return packages.map(pkg => ({
+  type CategoryPackage = IntentPackageWithRelations & {
+    versions: IntentVersion[];
+    trustMetrics: TrustMetrics | null;
+  };
+
+  return packages.map((pkg: CategoryPackage) => ({
     name: pkg.name,
     displayName: pkg.displayName,
     description: pkg.description,
@@ -317,9 +340,14 @@ export async function getRelatedPackages(packageName: string, limit = 5): Promis
     take: limit * 2,
   });
 
+  type RelatedPackage = IntentPackageWithRelations & {
+    versions: IntentVersion[];
+    trustMetrics: TrustMetrics | null;
+  };
+
   // Score by similarity
   return packages
-    .map(related => {
+    .map((related: RelatedPackage) => {
       let score = 0;
       
       // Same category
@@ -352,7 +380,7 @@ export async function getRelatedPackages(packageName: string, limit = 5): Promis
         matchedOn: ['related'],
       };
     })
-    .sort((a, b) => b.matchScore - a.matchScore)
+    .sort((a: SearchResult, b: SearchResult) => b.matchScore - a.matchScore)
     .slice(0, limit);
 }
 
@@ -370,5 +398,5 @@ export async function suggestPackages(prefix: string, limit = 10): Promise<strin
     take: limit,
   });
 
-  return packages.map(p => p.name);
+  return packages.map((p: { name: string }) => p.name);
 }

@@ -3,17 +3,16 @@
 // ============================================================================
 
 import type {
-  Effect,
+  AlgebraicEffect,
   EffectSet,
   EffectRef,
-  EffectHandler,
+  AlgebraicEffectHandler,
   EffectContext,
   EffectScope,
   EffectFrame,
   EffectAlgebra,
   EffectInference,
   EffectError,
-  EffectOperation,
 } from './types.js';
 
 /**
@@ -103,7 +102,7 @@ export function createContext(): EffectContext {
  */
 export function registerHandler(
   ctx: EffectContext,
-  handler: EffectHandler
+  handler: AlgebraicEffectHandler
 ): void {
   const key = `${handler.effect}.${handler.operation}`;
   const handlers = ctx.handlers.get(key) ?? [];
@@ -119,7 +118,7 @@ export function findHandler(
   ctx: EffectContext,
   effect: string,
   operation: string
-): EffectHandler | undefined {
+): AlgebraicEffectHandler | undefined {
   const key = `${effect}.${operation}`;
   
   // Search current scope and parents
@@ -166,7 +165,7 @@ export async function perform<T>(
  * Execute a handler
  */
 async function executeHandler<T>(
-  handler: EffectHandler,
+  handler: AlgebraicEffectHandler,
   args: unknown[],
   ctx: EffectContext
 ): Promise<T> {
@@ -206,7 +205,7 @@ async function executeHandler<T>(
  */
 export async function runWith<T>(
   computation: () => T | Promise<T>,
-  handlers: EffectHandler[],
+  handlers: AlgebraicEffectHandler[],
   parentCtx?: EffectContext
 ): Promise<T> {
   const ctx = parentCtx ?? createContext();
@@ -265,7 +264,7 @@ export function inferEffects(ast: unknown): EffectInference {
  */
 export function checkEffectsHandled(
   required: EffectSet,
-  provided: EffectHandler[]
+  provided: AlgebraicEffectHandler[]
 ): EffectError[] {
   const errors: EffectError[] = [];
   const handledEffects = new Set(provided.map(h => h.effect));
@@ -286,7 +285,7 @@ export function checkEffectsHandled(
 /**
  * Validate effect handlers
  */
-export function validateHandlers(handlers: EffectHandler[]): EffectError[] {
+export function validateHandlers(handlers: AlgebraicEffectHandler[]): EffectError[] {
   const errors: EffectError[] = [];
   const seen = new Set<string>();
 

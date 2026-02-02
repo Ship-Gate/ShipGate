@@ -242,8 +242,8 @@ export class DiagnosticBuilder {
       title,
       edits: [{
         range: {
-          start: { line: startLine, character: startCol },
-          end: { line: endLine, character: endCol },
+          start: { line: startLine, column: startCol },
+          end: { line: endLine, column: endCol },
         },
         newText,
       }],

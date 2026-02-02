@@ -5,7 +5,7 @@
  */
 
 import { parseISL, type DomainDeclaration } from '@isl-lang/isl-core';
-import type { Contract, ContractBehavior } from './broker.js';
+import { Contract, ContractBehavior } from './types.js';
 
 export interface VerificationOptions {
   /** Strict mode - fail on any mismatch */
@@ -109,7 +109,7 @@ export class ContractVerifier {
       return {
         valid: false,
         contract,
-        domain: contract.domain,
+        domain: contract.metadata?.domain ?? 'unknown',
         results: [],
         errors: [{
           type: 'missing_behavior',
@@ -189,7 +189,7 @@ export class ContractVerifier {
     }
 
     // Check for behaviors in contract not in domain
-    const contractBehaviorNames = new Set(contract.spec.behaviors.map((b) => b.name));
+    const contractBehaviorNames = new Set(contract.spec.behaviors.map((b: ContractBehavior) => b.name));
     for (const [name] of domainBehaviors) {
       if (!contractBehaviorNames.has(name)) {
         warnings.push({

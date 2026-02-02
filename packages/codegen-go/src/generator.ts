@@ -4,11 +4,8 @@
 
 import type {
   Domain,
-  Entity,
-  Behavior,
   TypeDeclaration,
   EnumType,
-  StructType,
   UnionType,
   ConstrainedType,
   RegexLiteral,
@@ -18,7 +15,6 @@ import {
   toGoName,
   toSnakeCase,
   type GoImports,
-  mergeImports,
   emptyImports,
 } from './types.js';
 
@@ -34,12 +30,6 @@ import {
   generateServiceInterface,
   generateBehaviorTypes,
 } from './interfaces.js';
-
-import {
-  generateStructValidator,
-  generateRegexValidator,
-  generateValidatorRegistration,
-} from './validation.js';
 
 import { renderValidationHelpers, renderRegexValidator } from './templates/validation.tmpl.js';
 
@@ -181,7 +171,7 @@ function generateTypesFile(
  */
 function generateTypeAlias(
   typeDecl: TypeDeclaration,
-  typeRegistry: Map<string, string>
+  _typeRegistry: Map<string, string>
 ): { code: string; imports: GoImports } {
   const imports = emptyImports();
   const def = typeDecl.definition;
@@ -318,18 +308,18 @@ function generateInterfacesFile(
 function generateValidationFile(
   domain: Domain,
   packageName: string,
-  typeRegistry: Map<string, string>
+  _typeRegistry: Map<string, string>
 ): GeneratedFile | null {
-  const customValidators: { name: string; funcName: string; pattern: string; code: string }[] = [];
-  const types: { name: string; hasCustomValidation: boolean }[] = [];
+  const customValidators: { Name: string; FuncName: string; Pattern?: string; Code: string }[] = [];
+  const types: { Name: string; HasCustomValidation: boolean }[] = [];
 
   // Collect types that need validation
   for (const entity of domain.entities) {
-    types.push({ name: toGoName(entity.name.name), hasCustomValidation: false });
+    types.push({ Name: toGoName(entity.name.name), HasCustomValidation: false });
   }
 
   for (const behavior of domain.behaviors) {
-    types.push({ name: `${toGoName(behavior.name.name)}Input`, hasCustomValidation: false });
+    types.push({ Name: `${toGoName(behavior.name.name)}Input`, HasCustomValidation: false });
   }
 
   // Look for regex patterns in constrained types

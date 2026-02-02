@@ -147,11 +147,11 @@ export class SpecFederation {
     return response.text();
   }
 
-  private parseSpec(raw: string): SpecAST {
+  private parseSpec(_raw: string): SpecAST {
     return { domains: [], types: [], imports: [] };
   }
 
-  private extractMetadata(raw: string): SpecMetadata {
+  private extractMetadata(_raw: string): SpecMetadata {
     return { name: 'unknown', version: '0.0.0' };
   }
 

@@ -5,17 +5,35 @@
  */
 
 import type {
-  DomainDeclaration,
-  EntityDeclaration,
-  BehaviorDeclaration,
-  FieldDeclaration,
-} from '@isl-lang/isl-core';
-
-import type {
   GraphQLGeneratorOptions,
   ClientFramework,
   ClientOutput,
 } from '../types.js';
+
+// Simple types for this generator
+interface DomainDeclaration {
+  name: string;
+  entities: EntityDeclaration[];
+  behaviors: BehaviorDeclaration[];
+}
+
+interface EntityDeclaration {
+  name: string;
+  fields: FieldDeclaration[];
+}
+
+interface BehaviorDeclaration {
+  name: string;
+  postconditions?: { conditions?: unknown[] };
+  input?: { fields: FieldDeclaration[] };
+}
+
+interface FieldDeclaration {
+  name: string;
+  type: string;
+  optional?: boolean;
+  computed?: boolean;
+}
 
 /**
  * Generate GraphQL client code
@@ -46,7 +64,7 @@ function generateQueryDocuments(
   
   lines.push(`/**
  * GraphQL Query Documents
- * Generated from ISL domain: ${domain.name.name}
+ * Generated from ISL domain: ${domain.name}
  */
 
 import { gql } from 'graphql-tag';
@@ -54,7 +72,7 @@ import { gql } from 'graphql-tag';
   
   // Generate queries for each entity
   for (const entity of domain.entities) {
-    const name = entity.name.name;
+    const name = entity.name;
     const fieldName = toCamelCase(name);
     const pluralName = pluralize(fieldName);
     const fragmentName = `${name}Fragment`;
@@ -130,7 +148,7 @@ function generateMutationDocuments(
   
   lines.push(`/**
  * GraphQL Mutation Documents
- * Generated from ISL domain: ${domain.name.name}
+ * Generated from ISL domain: ${domain.name}
  */
 
 import { gql } from 'graphql-tag';
@@ -138,7 +156,7 @@ import { gql } from 'graphql-tag';
   
   // Generate CRUD mutations for each entity
   for (const entity of domain.entities) {
-    const name = entity.name.name;
+    const name = entity.name;
     const fragmentName = `${name}Fragment`;
     
     // Create mutation
@@ -195,7 +213,7 @@ function generateFragmentDocuments(
   
   lines.push(`/**
  * GraphQL Fragment Documents
- * Generated from ISL domain: ${domain.name.name}
+ * Generated from ISL domain: ${domain.name}
  */
 
 import { gql } from 'graphql-tag';
@@ -217,7 +235,7 @@ function generateEntityFragment(
   domain: DomainDeclaration,
   options: Partial<GraphQLGeneratorOptions>
 ): string {
-  const name = entity.name.name;
+  const name = entity.name;
   const fragmentName = `${name}Fragment`;
   
   // Generate field selections
@@ -226,11 +244,11 @@ function generateEntityFragment(
     // Skip computed fields for now (they might need special handling)
     if (field.computed) continue;
     
-    const fieldName = field.name.name;
+    const fieldName = field.name;
     const typeName = getBaseTypeName(field.type);
     
     // Check if it's a relation
-    const isRelation = domain.entities.some(e => e.name.name === typeName);
+    const isRelation = domain.entities.some(e => e.name === typeName);
     
     if (isRelation) {
       // Include just the ID for relations by default
@@ -256,7 +274,7 @@ function generateBehaviorQueryDocument(
   behavior: BehaviorDeclaration,
   options: Partial<GraphQLGeneratorOptions>
 ): string {
-  const name = behavior.name.name;
+  const name = behavior.name;
   const fieldName = toCamelCase(name);
   const constName = toConstantCase(name);
   
@@ -266,7 +284,7 @@ function generateBehaviorQueryDocument(
   
   if (behavior.input?.fields) {
     for (const field of behavior.input.fields) {
-      const argName = field.name.name;
+      const argName = field.name;
       const argType = islTypeToGraphQLType(field.type);
       const required = field.optional ? '' : '!';
       args.push(`$${argName}: ${argType}${required}`);
@@ -293,7 +311,7 @@ function generateBehaviorMutationDocument(
   behavior: BehaviorDeclaration,
   options: Partial<GraphQLGeneratorOptions>
 ): string {
-  const name = behavior.name.name;
+  const name = behavior.name;
   const fieldName = toCamelCase(name);
   const constName = toConstantCase(name);
   
@@ -303,7 +321,7 @@ function generateBehaviorMutationDocument(
   
   if (behavior.input?.fields) {
     for (const field of behavior.input.fields) {
-      const argName = field.name.name;
+      const argName = field.name;
       const argType = islTypeToGraphQLType(field.type);
       const required = field.optional ? '' : '!';
       args.push(`$${argName}: ${argType}${required}`);
@@ -334,13 +352,13 @@ function generateOperationTypes(
   
   lines.push(`/**
  * GraphQL Operation Types
- * Generated from ISL domain: ${domain.name.name}
+ * Generated from ISL domain: ${domain.name}
  */
 `);
   
   // Generate types for each entity
   for (const entity of domain.entities) {
-    const name = entity.name.name;
+    const name = entity.name;
     const fieldName = toCamelCase(name);
     const pluralName = pluralize(fieldName);
     
@@ -430,7 +448,7 @@ function generateApolloHooks(
   
   lines.push(`/**
  * Apollo Client Hooks
- * Generated from ISL domain: ${domain.name.name}
+ * Generated from ISL domain: ${domain.name}
  */
 
 import { useQuery, useMutation, useSubscription } from '@apollo/client';
@@ -443,7 +461,7 @@ import * as Types from './types';
 `);
   
   for (const entity of domain.entities) {
-    const name = entity.name.name;
+    const name = entity.name;
     const fieldName = toCamelCase(name);
     const pluralName = pluralize(fieldName);
     const constName = toConstantCase(name);
@@ -540,7 +558,7 @@ function generateUrqlHooks(
   
   lines.push(`/**
  * URQL Hooks
- * Generated from ISL domain: ${domain.name.name}
+ * Generated from ISL domain: ${domain.name}
  */
 
 import { useQuery, useMutation } from 'urql';
@@ -550,7 +568,7 @@ import * as Types from './types';
 `);
   
   for (const entity of domain.entities) {
-    const name = entity.name.name;
+    const name = entity.name;
     const fieldName = toCamelCase(name);
     const pluralName = pluralize(fieldName);
     const constName = toConstantCase(name);
@@ -604,7 +622,7 @@ function generateReactQueryHooks(
   
   lines.push(`/**
  * React Query + GraphQL Request Hooks
- * Generated from ISL domain: ${domain.name.name}
+ * Generated from ISL domain: ${domain.name}
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -618,12 +636,12 @@ const graphqlClient = new GraphQLClient(process.env.GRAPHQL_ENDPOINT || '/graphq
 
 // Query keys
 export const queryKeys = {
-${domain.entities.map(e => `  ${toCamelCase(e.name.name)}: (id?: string) => ['${e.name.name}', id] as const,`).join('\n')}
+${domain.entities.map(e => `  ${toCamelCase(e.name)}: (id?: string) => ['${e.name}', id] as const,`).join('\n')}
 };
 `);
   
   for (const entity of domain.entities) {
-    const name = entity.name.name;
+    const name = entity.name;
     const fieldName = toCamelCase(name);
     const pluralName = pluralize(fieldName);
     
@@ -725,16 +743,26 @@ function pluralize(str: string): string {
   return str + 's';
 }
 
-function getBaseTypeName(type: any): string {
-  if (type.kind === 'SimpleType') return type.name.name;
-  if (type.kind === 'ArrayType') return getBaseTypeName(type.elementType);
-  if (type.kind === 'GenericType' && type.typeArguments?.length > 0) {
-    return getBaseTypeName(type.typeArguments[0]);
+function getBaseTypeName(type: string): string {
+  // Handle generic types like List<T>, Set<T>, Optional<T>
+  const genericMatch = type.match(/^(\w+)<(.+)>$/);
+  if (genericMatch) {
+    const [, containerType, innerType] = genericMatch;
+    if (containerType === 'List' || containerType === 'Set' || containerType === 'Optional') {
+      return getBaseTypeName(innerType);
+    }
+    return containerType;
   }
-  return 'String';
+  
+  // Handle array types like String[]
+  if (type.endsWith('[]')) {
+    return getBaseTypeName(type.slice(0, -2));
+  }
+  
+  return type;
 }
 
-function islTypeToGraphQLType(type: any): string {
+function islTypeToGraphQLType(type: string): string {
   const typeName = getBaseTypeName(type);
   const typeMap: Record<string, string> = {
     String: 'String',
@@ -752,13 +780,13 @@ function islTypeToGraphQLType(type: any): string {
 
 function hasSideEffects(behavior: BehaviorDeclaration): boolean {
   if (behavior.postconditions?.conditions) return true;
-  const name = behavior.name.name.toLowerCase();
+  const name = behavior.name.toLowerCase();
   return name.startsWith('create') || name.startsWith('update') || 
          name.startsWith('delete') || name.startsWith('add') ||
          name.startsWith('remove') || name.startsWith('set');
 }
 
 function isSubscription(behavior: BehaviorDeclaration): boolean {
-  const name = behavior.name.name.toLowerCase();
+  const name = behavior.name.toLowerCase();
   return name.startsWith('on') || name.includes('subscribe') || name.includes('watch');
 }

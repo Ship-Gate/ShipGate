@@ -25,7 +25,7 @@ export type { ISLClientConfig, RetryConfig, VerificationConfig } from './config'
 
 // Models
 export {
-  User,
+  type User,
   UserStatus,
   UserRole,
   SortOrder,

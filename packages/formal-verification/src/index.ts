@@ -4,49 +4,68 @@
  * Mathematical proof generation and verification for ISL specifications.
  */
 
-export {
-  TheoremProver,
-  prove,
-  type Theorem,
-  type Proof,
-  type ProofResult,
-  type ProverOptions,
-} from './prover.js';
+// Types
+export type {
+  VerificationResult,
+  Proof,
+  ProofMethod,
+  ProofStep,
+  Counterexample,
+  ExecutionTrace,
+  TraceStep,
+  VerificationTarget,
+  VerificationContext,
+  Formula,
+  Sort,
+  Variable,
+  VerifierConfig,
+  ISLSpecification,
+  ISLType,
+  ISLConstraint,
+  ISLEntity,
+  ISLField,
+  ISLBehavior,
+  ISLOutput,
+  ISLError,
+  ISLInvariant,
+} from './types.js';
 
-export {
-  SymbolicExecutor,
-  execute,
-  type SymbolicState,
-  type ExecutionPath,
-  type PathCondition,
-} from './symbolic.js';
+export { defaultConfig } from './types.js';
 
+// Contract translation
 export {
-  InvariantChecker,
-  checkInvariant,
-  type InvariantResult,
-  type CounterExample,
-} from './invariant.js';
-
-export {
-  ContractVerifier,
-  verifyContract,
-  type ContractProof,
-  type WeakestPrecondition,
+  translateToFormula,
+  translatePrecondition,
+  translatePostcondition,
 } from './contracts.js';
 
+// Proof generation
 export {
-  ModelChecker,
-  checkModel,
-  type ModelCheckResult,
-  type StateSpace,
-  type Trace,
-} from './model-checker.js';
+  ProofBuilder,
+  formatProof,
+  verifyProof,
+  Tactics,
+} from './proofs.js';
 
+// SMT Solver
 export {
   SMTSolver,
-  solve,
-  type SMTFormula,
   type SMTResult,
-  type Assignment,
+  type SMTStats,
 } from './smt.js';
+
+// Invariant checking
+export {
+  InvariantChecker,
+  InvariantInference,
+  createInvariantChecker,
+  createInvariantInference,
+  type InductiveCheckResult,
+} from './invariants.js';
+
+// Verifier
+export {
+  Verifier,
+  createVerifier,
+  type VerificationReport,
+} from './verifier.js';

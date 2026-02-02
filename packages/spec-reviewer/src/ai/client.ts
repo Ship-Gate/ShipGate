@@ -4,7 +4,7 @@
  * Interface for LLM-powered spec analysis.
  */
 
-import { getPromptById, fillPromptTemplate, type ReviewPrompt } from './prompts.js';
+import { getPromptById, fillPromptTemplate } from './prompts.js';
 
 // ============================================================================
 // TYPES
@@ -194,8 +194,8 @@ export class AIClient {
       throw new Error(`Anthropic API error: ${error}`);
     }
 
-    const data = await response.json();
-    return data.content[0]?.text ?? '';
+    const data = await response.json() as { content?: Array<{ text?: string }> };
+    return data.content?.[0]?.text ?? '';
   }
 
   private async callOpenAI(system: string, user: string): Promise<string> {
@@ -225,8 +225,8 @@ export class AIClient {
       throw new Error(`OpenAI API error: ${error}`);
     }
 
-    const data = await response.json();
-    return data.choices[0]?.message?.content ?? '';
+    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+    return data.choices?.[0]?.message?.content ?? '';
   }
 
   private async mockReview(spec: string): Promise<string> {

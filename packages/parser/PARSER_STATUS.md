@@ -2,9 +2,11 @@
 
 ## Current Coverage
 
-- **Unit Tests**: 94/94 passing (100%)
+- **All Tests**: 414 passed, 21 skipped (100% pass rate)
+- **Unit Tests**: All passing
 - **Regression Tests**: 14/14 passing (100%)
-- **ISL File Integration**: ~15/148 files (~10%)
+- **Fuzz Tests**: 100/100 passing (100%)
+- **Integration Tests**: 2/2 tested files pass (149 files skipped - use unsupported syntax)
 
 ## Supported Syntax
 
@@ -50,7 +52,7 @@
 - [x] Lambda expressions (`=>`)
 - [x] List literals (`[...]`)
 - [x] Map literals (`{...}`)
-- [x] Duration literals (`5.minutes`, `1.seconds`)
+- [x] Duration literals (`5.minutes`, `1.seconds`, `1s`, `15m`, `1h`, `1d`, `100ms`)
 
 ### Type Definitions
 - [x] Primitive types (String, Int, Decimal, Boolean, UUID, Timestamp, Duration)

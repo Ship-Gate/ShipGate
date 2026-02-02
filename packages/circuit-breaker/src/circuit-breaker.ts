@@ -213,7 +213,8 @@ export class CircuitBreaker {
   private getConsecutiveSuccesses(): number {
     let count = 0;
     for (let i = this.recentCalls.length - 1; i >= 0; i--) {
-      if (this.recentCalls[i].success) {
+      const call = this.recentCalls[i];
+      if (call && call.success) {
         count++;
       } else {
         break;

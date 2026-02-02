@@ -6,16 +6,13 @@
 
 import type {
   VerificationResult,
-  VerificationTarget,
   VerifierConfig,
-  defaultConfig,
   ISLSpecification,
   ISLBehavior,
   ISLInvariant,
   Formula,
-  Counterexample,
-  Proof,
 } from './types';
+import { defaultConfig } from './types';
 import { SMTSolver } from './smt';
 import { translateToFormula, translatePrecondition, translatePostcondition } from './contracts';
 
@@ -142,7 +139,7 @@ export class Verifier {
   async verifyTypeConstraints(
     typeName: string,
     constraints: { kind: string; value: unknown }[],
-    spec: ISLSpecification
+    _spec: ISLSpecification
   ): Promise<VerificationResult> {
     // Build formula from constraints
     const formulas: Formula[] = [];

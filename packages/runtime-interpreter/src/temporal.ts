@@ -169,7 +169,7 @@ export class TemporalChecker {
   }
 
   private async checkAlways(
-    name: string,
+    _name: string,
     state: TemporalPropertyState,
     property: Extract<TemporalProperty, { tag: 'always' }>,
     event: TemporalEvent,
@@ -198,7 +198,7 @@ export class TemporalChecker {
   }
 
   private async checkEventually(
-    name: string,
+    _name: string,
     state: TemporalPropertyState,
     property: Extract<TemporalProperty, { tag: 'eventually' }>,
     event: TemporalEvent,
@@ -239,7 +239,7 @@ export class TemporalChecker {
   }
 
   private async checkResponse(
-    name: string,
+    _name: string,
     state: TemporalPropertyState,
     property: Extract<TemporalProperty, { tag: 'response' }>,
     event: TemporalEvent,
@@ -299,7 +299,7 @@ export class TemporalChecker {
   }
 
   private async checkPrecedence(
-    name: string,
+    _name: string,
     state: TemporalPropertyState,
     property: Extract<TemporalProperty, { tag: 'precedence' }>,
     event: TemporalEvent,
@@ -344,12 +344,12 @@ export class TemporalChecker {
   }
 
   private async checkSequence(
-    name: string,
-    state: TemporalPropertyState,
-    property: Extract<TemporalProperty, { tag: 'sequence' }>,
-    event: TemporalEvent,
-    env: Environment,
-    ctx: ExecutionContext
+    _name: string,
+    _state: TemporalPropertyState,
+    _property: Extract<TemporalProperty, { tag: 'sequence' }>,
+    _event: TemporalEvent,
+    _env: Environment,
+    _ctx: ExecutionContext
   ): Promise<void> {
     // Simplified sequence checking
     // Real implementation would track position in sequence

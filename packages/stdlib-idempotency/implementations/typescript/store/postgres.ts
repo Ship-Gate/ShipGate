@@ -189,14 +189,14 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
 
     const result = await this.client.query<DbRecord>(sql, [key]);
 
-    if (result.rows.length === 0) {
+    const record = result.rows[0];
+    if (!record) {
       return {
         found: false,
         requestMismatch: false,
       };
     }
 
-    const record = result.rows[0];
     const requestMismatch = record.request_hash !== input.requestHash;
 
     return {
@@ -218,7 +218,8 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
   async startProcessing(input: StartProcessingInput): Promise<LockResult> {
     await this.initialize();
 
-    const validatedKey = validateKey(input.key, this.config.maxKeyLength);
+    // Validate the key format
+    validateKey(input.key, this.config.maxKeyLength);
     const key = this.getKey(input.key);
     const lockToken = generateLockToken();
     const lockTimeout = input.lockTimeout ?? this.config.lockTimeout;
@@ -277,16 +278,16 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
       lockExpiresAt,
     ]);
 
+    const record = result.rows[0];
+
     // No existing record and insert succeeded
-    if (result.rows.length === 0 || result.rows[0]._action === 'inserted') {
+    if (!record || record._action === 'inserted') {
       return {
         acquired: true,
         lockToken: lockToken as LockToken,
         lockExpiresAt,
       };
     }
-
-    const record = result.rows[0];
 
     // Check for request mismatch
     if (record.request_hash !== input.requestHash) {
@@ -403,8 +404,9 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
     }
 
     const result = await this.client.query<DbRecord>(sql, values);
+    const record = result.rows[0];
 
-    if (result.rows.length === 0) {
+    if (!record) {
       throw new IdempotencyException(
         input.lockToken
           ? IdempotencyErrorCode.LOCK_ACQUISITION_FAILED
@@ -413,7 +415,7 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
       );
     }
 
-    return this.mapRecord(result.rows[0]);
+    return this.mapRecord(record);
   }
 
   // ============================================================================
@@ -515,14 +517,14 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
         [key]
       );
 
-      if (checkResult.rows.length === 0) {
+      const record = checkResult.rows[0];
+      if (!record) {
         throw new IdempotencyException(
           IdempotencyErrorCode.RECORD_NOT_FOUND,
           `Record not found for key: ${input.key}`
         );
       }
 
-      const record = checkResult.rows[0];
       if (record.lock_token !== input.lockToken) {
         throw new IdempotencyException(
           IdempotencyErrorCode.LOCK_ACQUISITION_FAILED,
@@ -594,10 +596,11 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
         `;
 
         const result = await this.client.query(deleteSql, [...values, remainingLimit]);
+        const rowCount = result.rowCount ?? 0;
         
-        if (result.rowCount === 0) break;
+        if (rowCount === 0) break;
         
-        deletedCount += result.rowCount;
+        deletedCount += rowCount;
         batchesProcessed++;
       }
     } else {
@@ -607,7 +610,8 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
         WHERE ${whereClause}
       `;
       const result = await this.client.query<{ count: string }>(countSql, values);
-      deletedCount = parseInt(result.rows[0].count, 10);
+      const countRow = result.rows[0];
+      deletedCount = countRow ? parseInt(countRow.count, 10) : 0;
     }
 
     // Get stats about remaining records
@@ -619,10 +623,11 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
       WHERE expires_at > NOW()
     `;
     const statsResult = await this.client.query<{ oldest: Date; next_expiration: Date }>(statsSql);
+    const statsRow = statsResult.rows[0];
 
-    if (statsResult.rows.length > 0 && statsResult.rows[0].oldest) {
-      oldestRemaining = statsResult.rows[0].oldest;
-      nextExpiration = statsResult.rows[0].next_expiration;
+    if (statsRow?.oldest) {
+      oldestRemaining = statsRow.oldest;
+      nextExpiration = statsRow.next_expiration;
     }
 
     return {
@@ -648,12 +653,13 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
     `;
 
     const result = await this.client.query<DbRecord>(sql, [internalKey]);
+    const record = result.rows[0];
 
-    if (result.rows.length === 0) {
+    if (!record) {
       return null;
     }
 
-    return this.mapRecord(result.rows[0]);
+    return this.mapRecord(record);
   }
 
   async delete(key: string): Promise<boolean> {
@@ -663,7 +669,7 @@ export class PostgresIdempotencyStore implements IdempotencyStore {
     const sql = `DELETE FROM ${this.tableName} WHERE key = $1`;
     const result = await this.client.query(sql, [internalKey]);
 
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async healthCheck(): Promise<boolean> {

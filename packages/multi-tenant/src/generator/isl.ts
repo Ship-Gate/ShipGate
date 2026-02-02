@@ -4,7 +4,7 @@
  * Transforms ISL domains to be multi-tenant aware.
  */
 
-import type { IsolationStrategy, PlanType } from '../tenant.js';
+import type { IsolationStrategy } from '../tenant.js';
 
 // ============================================================================
 // Types
@@ -51,7 +51,7 @@ export function generateTenantAwareISL(
   domainName: string,
   config: MultiTenantConfig
 ): TenantAwareTransform {
-  const { isolation, identifier, tenantEntity = true, autoInjectTenantId = true } = config;
+  const { identifier, tenantEntity = true } = config;
 
   const result: TenantAwareTransform = {
     entities: [],
@@ -60,7 +60,8 @@ export function generateTenantAwareISL(
     tenant: '',
   };
 
-  // Add Tenant types
+  // Add Tenant types with domain prefix
+  result.types.push(`// Types for domain: ${domainName}`);
   result.types.push(...generateTenantTypes());
 
   // Add Tenant entity if enabled
@@ -92,7 +93,7 @@ function generateTenantTypes(): string[] {
  */
 function generateTenantEntity(identifier: string): string {
   return `entity Tenant {
-    id: UUID [immutable, unique]
+    id: UUID [immutable, unique]  // Referenced as: ${identifier}
     name: String { max_length: 100 }
     slug: String { pattern: /^[a-z0-9-]+$/ } [unique]
     plan: PlanType

@@ -310,8 +310,8 @@ function analyzeEntityOrphanStatus(
  */
 function analyzeBehaviorOrphanStatus(
   node: DependencyNode,
-  dependents: string[],
-  graph: DependencyGraph
+  _dependents: string[],
+  _graph: DependencyGraph
 ): { isOrphan: boolean; reason: string; confidence: 'low' | 'medium' | 'high' } {
   // Behaviors are often entry points, so having no dependents is normal
   // Check for other indicators of being unused
@@ -350,7 +350,7 @@ function analyzeBehaviorOrphanStatus(
 function analyzeTypeOrphanStatus(
   node: DependencyNode,
   dependents: string[],
-  graph: DependencyGraph
+  _graph: DependencyGraph
 ): { isOrphan: boolean; reason: string; confidence: 'low' | 'medium' | 'high' } {
   // No dependents
   if (dependents.length === 0) {

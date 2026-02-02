@@ -8,7 +8,7 @@
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Types
+// Types - Scheduler
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type {
@@ -16,29 +16,22 @@ export type {
   JobId,
   WorkflowId,
   JobStatus,
-  WorkflowStatus,
-  StepStatus,
   Priority,
   
   // Entities
   Job,
-  Workflow,
-  WorkflowStep,
   Schedule,
   
   // Value objects
   RetryPolicy,
   JobResult,
   ScheduleConfig,
-  WorkflowStepInput,
   
   // Input/Output types
   ScheduleJobInput,
   ScheduleJobOutput,
   CancelJobInput,
   CancelJobOutput,
-  RunWorkflowInput,
-  RunWorkflowOutput,
   RetryJobInput,
   RetryJobOutput,
   
@@ -49,8 +42,31 @@ export type {
   // Event types
   SchedulerEvent,
   JobEvent,
-  WorkflowEvent,
 } from './scheduler.js';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Types - Workflow
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type {
+  // Core types
+  WorkflowStatus,
+  StepStatus,
+  
+  // Entities
+  Workflow,
+  WorkflowStep,
+  
+  // Value objects
+  WorkflowStepInput,
+  
+  // Input/Output types
+  RunWorkflowInput,
+  RunWorkflowOutput,
+  
+  // Event types
+  WorkflowEvent,
+} from './workflow.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Scheduler

@@ -8,23 +8,20 @@ import type {
   ConstrainedType,
   EnumType,
   StructType,
-  UnionType,
-  ListType,
-  MapType,
-  OptionalType,
-  ReferenceType,
+  UnionTypeDefinition as UnionType,
   TypeDeclaration,
-  Constraint,
   NumberLiteral,
+  StringLiteral,
   RegexLiteral,
-} from '@isl-lang/isl-core';
+  ConstraintDefinition,
+} from '../types';
+import { toTypeDefinition } from '../types';
 import {
   toScreamingSnakeCase,
   toSnakeCase,
   toPascalCase,
   escapeRegexForProto,
   fieldNumbers,
-  protoComment,
 } from '../utils';
 
 // ==========================================================================
@@ -99,28 +96,43 @@ function generateTypeDeclaration(
   const name = toPascalCase(decl.name.name);
   const imports = new Set<string>();
   
+  // Convert AST TypeDeclaration to TypeDefinition
+  let definition = toTypeDefinition(decl.baseType);
+  
+  // Apply constraints if present
+  if (decl.constraints.length > 0) {
+    definition = {
+      kind: 'ConstrainedType',
+      base: definition,
+      constraints: decl.constraints.map((c) => ({
+        name: c.name.name,
+        value: c.value as NumberLiteral | StringLiteral | RegexLiteral,
+      })),
+    };
+  }
+  
   // Handle different type definitions
-  switch (decl.definition.kind) {
+  switch (definition.kind) {
     case 'EnumType':
       return {
         name,
-        definition: generateEnum(name, decl.definition, options),
+        definition: generateEnum(name, definition as EnumType, options),
         imports,
         isWrapper: false,
       };
     
     case 'StructType':
-      return generateStructType(name, decl.definition, options);
+      return generateStructType(name, definition as StructType, options);
     
     case 'UnionType':
-      return generateUnionType(name, decl.definition, options);
+      return generateUnionType(name, definition as UnionType, options);
     
     case 'ConstrainedType':
-      return generateConstrainedWrapper(name, decl.definition, options);
+      return generateConstrainedWrapper(name, definition as ConstrainedType, options);
     
     case 'PrimitiveType':
       // Primitives with wrappers
-      return generatePrimitiveWrapper(name, decl.definition, options);
+      return generatePrimitiveWrapper(name, definition as PrimitiveType, options);
     
     default:
       return null;
@@ -216,7 +228,7 @@ function generateUnionType(
     const variantLines: string[] = [`message ${variantName} {`];
     const fieldNums = fieldNumbers();
     
-    for (const field of variant.fields) {
+    for (const field of variant.fields ?? []) {
       const fieldNum = fieldNums.next().value;
       const { protoType, fieldImports } = resolveType(field.type, options);
       fieldImports.forEach(i => imports.add(i));
@@ -291,7 +303,7 @@ function generateConstrainedWrapper(
 function generatePrimitiveWrapper(
   name: string,
   primitive: PrimitiveType,
-  options: ProtoTypeOptions
+  _options: ProtoTypeOptions
 ): GeneratedProtoType {
   const imports = new Set<string>();
   const protoType = PRIMITIVE_PROTO_TYPES[primitive.name] ?? 'string';
@@ -411,7 +423,7 @@ function generateValidationRules(type: TypeDefinition, optional: boolean): strin
   return `[(validate.rules).${rules.join(', ')}]`;
 }
 
-function generateConstraintValidation(constraints: Constraint[]): string | null {
+function generateConstraintValidation(constraints: ConstraintDefinition[]): string | null {
   const rules: string[] = [];
   let ruleType = 'string';
   

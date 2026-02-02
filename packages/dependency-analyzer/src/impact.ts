@@ -4,7 +4,7 @@
  * Analyze the impact of changes to ISL specifications.
  */
 
-import type { DependencyGraph, DependencyNode, DependencyEdge } from './analyzer.js';
+import type { DependencyGraph, DependencyNode } from './analyzer.js';
 
 export type ChangeType = 
   | 'add'
@@ -230,7 +230,7 @@ function calculateImpacts(
   changeType: ChangeType,
   changedNode: DependencyNode,
   dependentNode: DependencyNode,
-  graph: DependencyGraph
+  _graph: DependencyGraph
 ): ImpactDetail[] {
   const impacts: ImpactDetail[] = [];
 
@@ -300,7 +300,7 @@ function calculateImpacts(
  */
 function calculateIndirectImpacts(
   changeType: ChangeType,
-  node: DependencyNode,
+  _node: DependencyNode,
   distance: number
 ): ImpactDetail[] {
   const impacts: ImpactDetail[] = [];

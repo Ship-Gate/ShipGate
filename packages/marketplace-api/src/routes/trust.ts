@@ -6,7 +6,7 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { z, ZodError } from 'zod';
-import { IncidentSeverity } from '@prisma/client';
+import { IncidentSeverity } from '../types.js';
 import {
   calculateTrustScore,
   reportIncident,
@@ -14,7 +14,8 @@ import {
   compareTrust,
 } from '../services/trust.js';
 
-export const trustRouter = Router();
+import type { Router as RouterType } from 'express';
+export const trustRouter: RouterType = Router();
 
 /**
  * Handle async route errors
@@ -40,7 +41,7 @@ function formatZodError(error: ZodError): { field: string; message: string }[] {
  * Get trust score for a package
  */
 trustRouter.get('/:name/trust', asyncHandler(async (req, res) => {
-  const { name } = req.params;
+  const name = req.params.name as string;
 
   try {
     const report = await calculateTrustScore(name);
@@ -102,7 +103,7 @@ trustRouter.get('/:name/trust', asyncHandler(async (req, res) => {
  * Get a trust badge (for embedding)
  */
 trustRouter.get('/:name/trust/badge', asyncHandler(async (req, res) => {
-  const { name } = req.params;
+  const name = req.params.name as string;
   const { format = 'json' } = req.query;
 
   try {
@@ -152,7 +153,7 @@ trustRouter.get('/:name/trust/badge', asyncHandler(async (req, res) => {
  * Report an incident affecting trust
  */
 trustRouter.post('/:name/trust/incident', asyncHandler(async (req, res) => {
-  const { name } = req.params;
+  const name = req.params.name as string;
 
   const incidentSchema = z.object({
     severity: z.nativeEnum(IncidentSeverity),
@@ -202,7 +203,7 @@ trustRouter.post('/:name/trust/incident', asyncHandler(async (req, res) => {
  * Resolve an incident
  */
 trustRouter.post('/trust/incidents/:id/resolve', asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   try {
     await resolveIncident(id);

@@ -11,7 +11,7 @@ export {
   findBehavior,
   getBehaviorNames,
   type VerifyOptions,
-} from './verifier';
+} from './verifier.js';
 
 // Types
 export type {
@@ -42,21 +42,21 @@ export type {
   // Implementation interface
   Implementation,
   ImplementationLoader,
-} from './types';
+} from './types.js';
 
 // Expression evaluation
 export {
   evaluate,
   expressionToString,
   EvaluationError,
-} from './expressions';
+} from './expressions.js';
 
 // Input generation
 export {
   generateInputs,
   generateQuickInput,
   generateScenarioInputs,
-} from './inputs';
+} from './inputs.js';
 
 // Check functions
 export {
@@ -84,7 +84,7 @@ export {
   getFailedInvariants,
   formatInvariantResults,
   groupInvariantsByType,
-} from './checks';
+} from './checks/index.js';
 
 // Runner
 export {
@@ -95,7 +95,7 @@ export {
   Runner,
   InMemoryEntityStore,
   type RunnerOptions,
-} from './runner';
+} from './runner.js';
 
 // Reporter
 export {
@@ -103,4 +103,4 @@ export {
   generateSummaryReport,
   type ReportFormat,
   type ReportOptions,
-} from './reporter';
+} from './reporter.js';

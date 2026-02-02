@@ -4,12 +4,7 @@
 
 import type {
   DomainDeclaration,
-  EntityDeclaration,
-  EnumDeclaration,
-  FieldDeclaration,
   TypeExpression,
-  Annotation,
-  TypeConstraint,
 } from '@isl-lang/isl-core';
 
 // ============================================

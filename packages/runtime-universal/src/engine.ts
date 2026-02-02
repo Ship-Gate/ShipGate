@@ -19,7 +19,6 @@ import {
   VerificationResult,
   ConditionResult,
   AppliedEffect,
-  StateChange,
   ExecutionError,
 } from './types';
 import { ISLSandbox } from './sandbox';
@@ -194,7 +193,7 @@ export class UniversalRuntime {
       }
 
       // Execute behavior logic
-      const { output, effects } = await this.executeBehaviorLogic(behaviorDef, context);
+      const { output } = await this.executeBehaviorLogic(behaviorDef, context);
 
       // Apply effects
       const appliedEffects = await this.applyEffects(behaviorDef.effects, context);
@@ -426,7 +425,7 @@ export class UniversalRuntime {
   }
 
   private async executeBehaviorLogic(
-    behavior: BehaviorDefinition,
+    _behavior: BehaviorDefinition,
     context: ExecutionContext
   ): Promise<{ output: unknown; effects: AppliedEffect[] }> {
     // In a real implementation, this would execute the behavior's logic
@@ -562,7 +561,7 @@ export class UniversalRuntime {
   }
 
   private registerBuiltinEffects(): void {
-    this.effectHandlers.set('create', async (effect, context) => {
+    this.effectHandlers.set('create', async (effect, _context) => {
       const entity = this.stateManager.createEntity(effect.target, {});
       return {
         type: 'create',
@@ -573,7 +572,7 @@ export class UniversalRuntime {
       };
     });
 
-    this.effectHandlers.set('update', async (effect, context) => {
+    this.effectHandlers.set('update', async (effect, _context) => {
       return {
         type: 'update',
         target: effect.target,
@@ -582,7 +581,7 @@ export class UniversalRuntime {
       };
     });
 
-    this.effectHandlers.set('delete', async (effect, context) => {
+    this.effectHandlers.set('delete', async (effect, _context) => {
       return {
         type: 'delete',
         target: effect.target,

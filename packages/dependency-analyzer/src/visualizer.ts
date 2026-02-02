@@ -299,7 +299,7 @@ function groupByDomain(nodes: DependencyNode[]): Map<string, DependencyNode[]> {
 /**
  * Render a Mermaid node
  */
-function renderMermaidNode(node: DependencyNode, opts: VisualizationOptions): string {
+function renderMermaidNode(node: DependencyNode, _opts: VisualizationOptions): string {
   const id = sanitizeId(node.id);
   const shape = getMermaidShape(node.type);
   const label = node.name;
@@ -362,7 +362,7 @@ function getMermaidArrow(type: string): string {
 /**
  * Render a D2 node
  */
-function renderD2Node(node: DependencyNode, opts: VisualizationOptions): string {
+function renderD2Node(node: DependencyNode, _opts: VisualizationOptions): string {
   const id = sanitizeD2Id(node.id);
   const shape = getD2Shape(node.type);
   return `${id}: ${node.name} { shape: ${shape}; class: ${node.type} }`;
@@ -423,7 +423,7 @@ function getD2Arrow(type: string): string {
 function renderDotNode(
   node: DependencyNode,
   color: string,
-  opts: VisualizationOptions
+  _opts: VisualizationOptions
 ): string {
   const id = sanitizeDotId(node.id);
   const shape = getDotShape(node.type);

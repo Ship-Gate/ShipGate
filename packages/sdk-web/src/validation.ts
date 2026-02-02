@@ -1,7 +1,7 @@
 /**
  * Client-side Validation utilities
  */
-import { z } from 'zod';
+import { z, type ZodIssue } from 'zod';
 import type { ValidationResult } from './types';
 
 /**
@@ -17,7 +17,7 @@ export function createValidator<T>(
     }
     return {
       valid: false,
-      errors: result.error.errors.map(err => ({
+      errors: result.error.errors.map((err: ZodIssue) => ({
         field: err.path.join('.'),
         message: err.message,
       })),

@@ -2,7 +2,7 @@
  * User Service - User operations with verification.
  */
 
-import type { ISLClientConfig } from '../config';
+import type { RetryConfig, VerificationConfig, InterceptorsConfig } from '../config';
 import type {
   User,
   CreateUserInput,
@@ -23,14 +23,28 @@ import { ok, err, CreateUserErrors, GetUserErrors } from '../results';
 import { RuntimeChecker } from '../verification';
 
 /**
+ * Resolved service config type
+ */
+interface ServiceConfig {
+  baseUrl: string;
+  authToken: string | undefined;
+  timeout: number;
+  fetch: typeof fetch | undefined;
+  retry: Required<RetryConfig>;
+  verification: Required<VerificationConfig>;
+  interceptors: InterceptorsConfig | undefined;
+  headers: Record<string, string> | undefined;
+}
+
+/**
  * User service for user-related operations
  */
 export class UserService {
-  private readonly config: Required<ISLClientConfig>;
+  private readonly config: ServiceConfig;
   private readonly checker: RuntimeChecker;
   private readonly fetchFn: typeof fetch;
 
-  constructor(config: Required<ISLClientConfig>) {
+  constructor(config: ServiceConfig) {
     this.config = config;
     this.checker = new RuntimeChecker(config.verification);
     this.fetchFn = config.fetch ?? globalThis.fetch;

@@ -1,0 +1,69 @@
+{
+  "description": "Evidence from heuristic/pattern matching analysis",
+  "evidence": [
+    {
+      "type": "HEURISTIC_MATCH",
+      "source": "static-analyzer/api-routes.ts",
+      "description": "Pattern suggests post-response-format: JSON response structure matches API spec",
+      "metadata": {
+        "confidence": 0.75,
+        "pattern": "json-response",
+        "analyzer": "schema-matcher"
+      }
+    },
+    {
+      "type": "HEURISTIC_MATCH",
+      "source": "code-review/naming.ts",
+      "description": "Function naming suggests post-validation-error returns validation result",
+      "metadata": {
+        "confidence": 0.6,
+        "pattern": "naming-convention",
+        "analyzer": "naming-analyzer"
+      }
+    },
+    {
+      "type": "HEURISTIC_MATCH",
+      "source": "dependency-graph/email.ts",
+      "description": "Dependency analysis suggests post-email-sent email service is called",
+      "metadata": {
+        "confidence": 0.7,
+        "pattern": "dependency-call",
+        "analyzer": "call-graph"
+      }
+    }
+  ],
+  "clauses": [
+    {
+      "id": "post-response-format",
+      "expression": "typeof(result) == 'object'",
+      "description": "Response must be a JSON object"
+    },
+    {
+      "id": "post-validation-error",
+      "expression": "error.validationErrors != null",
+      "description": "Validation error must include error details"
+    },
+    {
+      "id": "post-email-sent",
+      "expression": "sideEffects.emailSent == true",
+      "description": "Email must be sent after registration"
+    }
+  ],
+  "expectedResults": [
+    {
+      "clauseId": "post-response-format",
+      "status": "PARTIAL",
+      "evidenceType": "HEURISTIC_MATCH"
+    },
+    {
+      "clauseId": "post-validation-error",
+      "status": "PARTIAL",
+      "evidenceType": "HEURISTIC_MATCH"
+    },
+    {
+      "clauseId": "post-email-sent",
+      "status": "PARTIAL",
+      "evidenceType": "HEURISTIC_MATCH"
+    }
+  ]
+}

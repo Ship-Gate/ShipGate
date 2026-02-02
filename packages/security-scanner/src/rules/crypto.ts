@@ -9,22 +9,11 @@ import {
   Finding,
   RuleContext,
   Field,
-  Entity,
 } from '../severity';
 
 // ============================================================================
 // Pattern Definitions
 // ============================================================================
-
-const WEAK_CRYPTO_ALGORITHMS = [
-  'md5',
-  'sha1',
-  'des',
-  '3des',
-  'rc4',
-  'rc2',
-  'blowfish',
-];
 
 const INSECURE_RANDOM_PATTERNS = [
   {
@@ -82,19 +71,6 @@ const WEAK_CRYPTO_PATTERNS = [
   },
 ];
 
-const HARDCODED_IV_PATTERNS = [
-  {
-    pattern: /iv\s*[:=]\s*["'][a-zA-Z0-9+/=]+["']/gi,
-    name: 'Hardcoded IV',
-    cwe: 'CWE-329',
-  },
-  {
-    pattern: /initialization_vector\s*[:=]\s*["'][a-zA-Z0-9+/=]+["']/gi,
-    name: 'Hardcoded initialization vector',
-    cwe: 'CWE-329',
-  },
-];
-
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -130,13 +106,6 @@ function hasEncryptionAnnotation(field: Field): boolean {
   return field.annotations.some((a) => {
     const name = a.name.name.toLowerCase();
     return name === 'encrypted' || name === 'encrypt';
-  });
-}
-
-function hasSecretAnnotation(field: Field): boolean {
-  return field.annotations.some((a) => {
-    const name = a.name.name.toLowerCase();
-    return name === 'secret' || name === 'sensitive' || name === 'never_log';
   });
 }
 

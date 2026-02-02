@@ -3,7 +3,14 @@
 // Transforms ISL domains into database migrations
 // ============================================================================
 
-import type * as AST from '@isl-lang/isl-core';
+import type {
+  DomainDeclaration,
+  EntityDeclaration,
+  FieldDeclaration,
+  TypeDeclaration,
+  TypeExpression,
+  Annotation,
+} from '@isl-lang/isl-core';
 import type {
   GenerateOptions,
   GeneratedFile,
@@ -22,7 +29,7 @@ import * as mysql from './dialects/mysql';
  * Generate database migrations from ISL domain
  */
 export function generate(
-  domain: AST.Domain,
+  domain: DomainDeclaration,
   options: GenerateOptions
 ): GeneratedFile[] {
   const files: GeneratedFile[] = [];
@@ -66,20 +73,18 @@ export function generate(
 /**
  * Extract schema from ISL domain
  */
-function extractSchema(domain: AST.Domain, options: GenerateOptions): SchemaSnapshot {
+function extractSchema(domain: DomainDeclaration, options: GenerateOptions): SchemaSnapshot {
   const tables: TableDefinition[] = [];
   const enums: EnumDefinition[] = [];
   const indexes: IndexDefinition[] = [];
   const constraints: ConstraintDefinition[] = [];
 
-  // Extract enums from type declarations
-  for (const typeDecl of domain.types || []) {
-    if (typeDecl.definition.kind === 'enum') {
-      enums.push({
-        name: typeDecl.name,
-        values: typeDecl.definition.values.map((v) => v.name),
-      });
-    }
+  // Extract enums from enum declarations
+  for (const enumDecl of domain.enums || []) {
+    enums.push({
+      name: enumDecl.name.name,
+      values: enumDecl.variants.map((v) => v.name),
+    });
   }
 
   // Extract tables from entities
@@ -99,11 +104,11 @@ function extractSchema(domain: AST.Domain, options: GenerateOptions): SchemaSnap
  * Extract table definition from entity
  */
 function extractTableFromEntity(
-  entity: AST.Entity,
-  domain: AST.Domain,
+  entity: EntityDeclaration,
+  domain: DomainDeclaration,
   options: GenerateOptions
 ): TableDefinition {
-  const tableName = toSnakeCase(entity.name);
+  const tableName = toSnakeCase(entity.name.name);
   const columns: ColumnDefinition[] = [];
   const tableIndexes: IndexDefinition[] = [];
   const tableConstraints: ConstraintDefinition[] = [];
@@ -114,15 +119,15 @@ function extractTableFromEntity(
     columns.push(column);
 
     // Check for primary key
-    const isPK = field.annotations?.some((a) => a.name === 'primary' || a.name === 'id');
-    const isImmutableId = field.name === 'id' && field.annotations?.some((a) => a.name === 'immutable');
+    const isPK = field.annotations?.some((a: Annotation) => a.name.name === 'primary' || a.name.name === 'id');
+    const isImmutableId = field.name.name === 'id' && field.annotations?.some((a: Annotation) => a.name.name === 'immutable');
     
     if (isPK || isImmutableId) {
       primaryKey.push(column.name);
     }
 
     // Check for unique constraint
-    if (field.annotations?.some((a) => a.name === 'unique')) {
+    if (field.annotations?.some((a: Annotation) => a.name.name === 'unique')) {
       tableConstraints.push({
         name: `${tableName}_${column.name}_unique`,
         table: tableName,
@@ -132,7 +137,7 @@ function extractTableFromEntity(
     }
 
     // Check for indexed annotation
-    if (field.annotations?.some((a) => a.name === 'indexed')) {
+    if (field.annotations?.some((a: Annotation) => a.name.name === 'indexed')) {
       tableIndexes.push({
         name: `idx_${tableName}_${column.name}`,
         table: tableName,
@@ -141,8 +146,9 @@ function extractTableFromEntity(
     }
 
     // Check for foreign key (reference to another entity)
-    if (field.type.kind === 'reference') {
-      const refEntity = domain.entities?.find((e) => e.name === field.type.name);
+    if (isEntityReference(field.type, domain)) {
+      const typeName = getTypeName(field.type);
+      const refEntity = domain.entities?.find((e: EntityDeclaration) => e.name.name === typeName);
       if (refEntity) {
         tableConstraints.push({
           name: `fk_${tableName}_${column.name}`,
@@ -150,7 +156,7 @@ function extractTableFromEntity(
           type: 'foreign_key',
           columns: [column.name],
           references: {
-            table: toSnakeCase(refEntity.name),
+            table: toSnakeCase(refEntity.name.name),
             column: 'id',
             onDelete: 'RESTRICT',
             onUpdate: 'CASCADE',
@@ -198,24 +204,25 @@ function extractTableFromEntity(
  * Extract column definition from field
  */
 function extractColumnFromField(
-  field: AST.Field,
-  domain: AST.Domain,
+  field: FieldDeclaration,
+  domain: DomainDeclaration,
   options: GenerateOptions
 ): ColumnDefinition {
-  const columnName = toSnakeCase(field.name);
-  let columnType = resolveColumnType(field.type, domain);
-  let nullable = field.optional || false;
+  const columnName = toSnakeCase(field.name.name);
+  const columnType = resolveColumnType(field.type, domain);
+  const nullable = field.optional || false;
   let defaultValue: string | undefined;
 
   // Handle annotations
   for (const annotation of field.annotations || []) {
-    if (annotation.name === 'default' && annotation.args) {
-      defaultValue = formatDefaultValue(annotation.args[0]);
+    if (annotation.name.name === 'default' && annotation.value) {
+      defaultValue = formatDefaultValue(getExpressionValue(annotation.value));
     }
   }
 
   // UUID fields often have auto-generation
-  if (field.type.kind === 'primitive' && field.type.name === 'UUID') {
+  const typeName = getTypeName(field.type);
+  if (typeName === 'UUID') {
     if (options.dialect === 'postgresql') {
       defaultValue = defaultValue || 'gen_random_uuid()';
     }
@@ -226,32 +233,53 @@ function extractColumnFromField(
     type: columnType,
     nullable,
     default: defaultValue,
-    primaryKey: field.name === 'id',
-    unique: field.annotations?.some((a) => a.name === 'unique'),
+    primaryKey: field.name.name === 'id',
+    unique: field.annotations?.some((a: Annotation) => a.name.name === 'unique'),
   };
 }
 
 /**
  * Resolve column type from ISL type expression
  */
-function resolveColumnType(type: AST.TypeExpression, domain: AST.Domain): string {
+function resolveColumnType(type: TypeExpression, domain: DomainDeclaration): string {
   switch (type.kind) {
-    case 'primitive':
-      return type.name;
-    case 'reference':
+    case 'SimpleType': {
+      const typeName = type.name.name;
       // Check if it's an enum
-      const typeDecl = domain.types?.find((t) => t.name === type.name);
-      if (typeDecl?.definition.kind === 'enum') {
-        return type.name; // Will be handled as enum
+      const enumDecl = domain.enums?.find((e) => e.name.name === typeName);
+      if (enumDecl) {
+        return typeName; // Will be handled as enum
       }
-      // Otherwise it's a foreign key reference - use UUID
-      return 'UUID';
-    case 'optional':
-      return resolveColumnType(type.innerType, domain);
-    case 'list':
+      // Check if it's a reference to an entity
+      const entityDecl = domain.entities?.find((e) => e.name.name === typeName);
+      if (entityDecl) {
+        return 'UUID'; // Foreign key reference
+      }
+      // Primitive type
+      return typeName;
+    }
+    case 'GenericType': {
+      const genericName = type.name.name;
+      // Handle Optional<T>
+      if (genericName === 'Optional' && type.typeArguments.length > 0) {
+        return resolveColumnType(type.typeArguments[0], domain);
+      }
+      // Handle Map<K,V> or other generic types as JSON
+      if (genericName === 'Map' || genericName === 'Record') {
+        return 'JSON';
+      }
+      // Handle List<T>
+      if (genericName === 'List' || genericName === 'Array') {
+        return 'JSON';
+      }
+      return 'JSON';
+    }
+    case 'ArrayType':
       return 'JSON'; // Store arrays as JSON
-    case 'map':
-      return 'JSON'; // Store maps as JSON
+    case 'UnionType':
+      return 'JSON'; // Store unions as JSON
+    case 'ObjectType':
+      return 'JSON'; // Store objects as JSON
     default:
       return 'String';
   }
@@ -286,7 +314,7 @@ function diffSchemas(oldSchema: SchemaSnapshot, newSchema: SchemaSnapshot): Migr
       changes.push({
         type: 'create_enum',
         target: newEnum.name,
-        details: { values: newEnum.values },
+        details: { name: newEnum.name, values: newEnum.values },
       });
     }
   }
@@ -451,7 +479,11 @@ function generateMigrationFromChanges(
     switch (change.type) {
       case 'create_enum':
         if (dialect === 'postgresql') {
-          lines.push(postgres.generateCreateEnum(change.details as EnumDefinition, options));
+          const enumDef: EnumDefinition = {
+            name: change.details.name as string,
+            values: change.details.values as string[],
+          };
+          lines.push(postgres.generateCreateEnum(enumDef, options));
         }
         break;
       case 'create_table':
@@ -576,4 +608,58 @@ function toSnakeCase(str: string): string {
     .replace(/([A-Z])/g, '_$1')
     .toLowerCase()
     .replace(/^_/, '');
+}
+
+/**
+ * Get the name from a type expression
+ */
+function getTypeName(type: TypeExpression): string {
+  switch (type.kind) {
+    case 'SimpleType':
+      return type.name.name;
+    case 'GenericType':
+      return type.name.name;
+    case 'ArrayType':
+      return 'Array';
+    case 'UnionType':
+      return 'Union';
+    case 'ObjectType':
+      return 'Object';
+    default:
+      return 'Unknown';
+  }
+}
+
+/**
+ * Check if a type is a reference to an entity (foreign key)
+ */
+function isEntityReference(type: TypeExpression, domain: DomainDeclaration): boolean {
+  if (type.kind === 'SimpleType') {
+    const typeName = type.name.name;
+    // Check if it references an entity
+    return domain.entities?.some((e) => e.name.name === typeName) ?? false;
+  }
+  return false;
+}
+
+/**
+ * Extract value from an expression (for defaults)
+ */
+function getExpressionValue(expr: unknown): unknown {
+  if (typeof expr !== 'object' || expr === null) {
+    return expr;
+  }
+  const node = expr as { kind?: string; value?: unknown; name?: string };
+  switch (node.kind) {
+    case 'StringLiteral':
+    case 'NumberLiteral':
+    case 'BooleanLiteral':
+      return node.value;
+    case 'NullLiteral':
+      return null;
+    case 'Identifier':
+      return node.name;
+    default:
+      return String(expr);
+  }
 }

@@ -1,16 +1,16 @@
 import * as Sentry from '@sentry/node';
-import type { VerifyResult, ISLCaptureOptions, SanitizeOptions } from './types';
-import { trackBehavior, trackVerification } from './performance/spans';
-import { trackVerificationResult } from './integrations/verification';
-import { trackPreconditionFailure, PreconditionError } from './integrations/precondition';
-import { trackPostconditionFailure, PostconditionError } from './integrations/postcondition';
-import { trackInvariantViolation, InvariantError } from './integrations/invariant';
-import { sanitizeInput, sanitizeOutput, sanitizeState } from './context/isl';
+import type { VerifyResult, SanitizeOptions } from './types';
+import { startBehaviorSpan, recordVerificationToSpan } from './performance/spans';
+import { recordVerification } from './integrations/verification';
+import { trackPreconditionFailure } from './integrations/precondition';
+import { trackPostconditionFailure } from './integrations/postcondition';
+import { trackInvariantViolation } from './integrations/invariant';
+import { sanitizeInput, sanitizeOutput, sanitizeState } from './utils';
 import {
   addBehaviorBreadcrumb,
   addVerificationBreadcrumb,
-  addVerificationCheckBreadcrumbs,
 } from './breadcrumbs/isl';
+import { PreconditionError, PostconditionError, InvariantError } from './errors';
 
 /**
  * ISLSentry - Main class for ISL Sentry integration
@@ -24,12 +24,12 @@ export class ISLSentry {
     domain: string,
     behavior: string,
     fn: () => Promise<T>,
-    options?: {
+    _options?: {
       addBreadcrumbs?: boolean;
       captureErrors?: boolean;
     }
   ): Promise<T> {
-    return trackBehavior(domain, behavior, fn, options);
+    return startBehaviorSpan({ domain, behavior }, fn);
   }
 
   /**
@@ -42,22 +42,18 @@ export class ISLSentry {
       addCheckBreadcrumbs?: boolean;
     }
   ): void {
-    const { addBreadcrumbs = true, addCheckBreadcrumbs = true } = options ?? {};
+    const { addBreadcrumbs = true } = options ?? {};
 
     // Add breadcrumbs
     if (addBreadcrumbs) {
       addVerificationBreadcrumb(result);
     }
 
-    if (addCheckBreadcrumbs) {
-      addVerificationCheckBreadcrumbs(result);
-    }
-
     // Track with span
-    trackVerification(result);
+    recordVerificationToSpan(result);
 
     // Track result (captures error if unsafe)
-    trackVerificationResult(result);
+    recordVerification(result);
   }
 
   /**
@@ -67,10 +63,9 @@ export class ISLSentry {
     domain: string,
     behavior: string,
     precondition: string,
-    input: unknown,
-    options?: ISLCaptureOptions & SanitizeOptions
-  ): string {
-    return trackPreconditionFailure(domain, behavior, precondition, input, options);
+    input?: unknown
+  ): void {
+    trackPreconditionFailure(domain, behavior, precondition, input);
   }
 
   /**
@@ -80,17 +75,15 @@ export class ISLSentry {
     domain: string,
     behavior: string,
     postcondition: string,
-    input: unknown,
-    output: unknown,
-    options?: ISLCaptureOptions & SanitizeOptions
-  ): string {
-    return trackPostconditionFailure(
+    input?: unknown,
+    output?: unknown
+  ): void {
+    trackPostconditionFailure(
       domain,
       behavior,
       postcondition,
       input,
-      output,
-      options
+      output
     );
   }
 
@@ -101,7 +94,7 @@ export class ISLSentry {
     domain: string,
     invariant: string,
     state: unknown,
-    options?: ISLCaptureOptions & SanitizeOptions
+    options?: SanitizeOptions
   ): string {
     return trackInvariantViolation(domain, invariant, state, options);
   }
@@ -112,10 +105,10 @@ export class ISLSentry {
   static addBehaviorBreadcrumb(
     domain: string,
     behavior: string,
-    message?: string,
+    phase: 'start' | 'end' | 'error',
     data?: Record<string, unknown>
   ): void {
-    addBehaviorBreadcrumb(domain, behavior, message, data);
+    addBehaviorBreadcrumb(domain, behavior, phase, data);
   }
 
   /**
@@ -206,7 +199,7 @@ export class ISLSentry {
     },
     fn: () => Promise<T>
   ): Promise<T> {
-    return Sentry.withScope(async (scope) => {
+    return Sentry.withScope(async (scope: Sentry.Scope) => {
       scope.setTag('isl.domain', context.domain);
       if (context.behavior) {
         scope.setTag('isl.behavior', context.behavior);
@@ -227,7 +220,12 @@ export class ISLSentry {
     input: unknown,
     options?: SanitizeOptions
   ): unknown {
-    return sanitizeInput(input, options);
+    return sanitizeInput(
+      input,
+      options?.redactFields,
+      options?.maxDepth,
+      options?.maxStringLength
+    );
   }
 
   /**
@@ -237,7 +235,12 @@ export class ISLSentry {
     output: unknown,
     options?: SanitizeOptions
   ): unknown {
-    return sanitizeOutput(output, options);
+    return sanitizeOutput(
+      output,
+      options?.redactFields,
+      options?.maxDepth,
+      options?.maxStringLength
+    );
   }
 
   /**
@@ -247,7 +250,12 @@ export class ISLSentry {
     state: unknown,
     options?: SanitizeOptions
   ): unknown {
-    return sanitizeState(state, options);
+    return sanitizeState(
+      state,
+      options?.redactFields,
+      options?.maxDepth,
+      options?.maxStringLength
+    );
   }
 }
 

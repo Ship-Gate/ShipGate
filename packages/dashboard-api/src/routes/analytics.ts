@@ -123,13 +123,13 @@ router.get('/overview', async (_req: Request, res: Response, next: NextFunction)
 
     // Process verification counts
     const verificationStatsResult = {
-      total: verificationStats._count.id,
+      total: verificationStats._count.id ?? 0,
       passed: 0,
       failed: 0,
       running: 0,
       pending: 0,
-      averageDuration: verificationStats._avg.duration,
-      averageCoverage: verificationStats._avg.coverage,
+      averageDuration: verificationStats._avg.duration ?? null,
+      averageCoverage: verificationStats._avg.coverage ?? null,
     };
     for (const item of verificationCounts) {
       const count = item._count.status;
@@ -164,15 +164,15 @@ router.get('/overview', async (_req: Request, res: Response, next: NextFunction)
 
     // Process recent activity
     const recentActivity: OverviewStats['recentActivity'] = [
-      ...recentVerifications.map(v => ({
+      ...(recentVerifications as Array<{ id: string; status: string; domain?: { name: string }; updatedAt: Date }>).map((v) => ({
         id: v.id,
         type: 'verification' as const,
         action: v.status === 'RUNNING' ? 'started' : v.status === 'PASSED' || v.status === 'FAILED' ? 'completed' : 'created',
-        domainName: v.domain.name,
+        domainName: v.domain?.name ?? 'Unknown',
         timestamp: v.updatedAt,
         status: v.status,
       })),
-      ...recentDomains.map(d => ({
+      ...(recentDomains as Array<{ id: string; name: string; createdAt: Date; status: string }>).map((d) => ({
         id: d.id,
         type: 'domain' as const,
         action: 'created',
@@ -250,7 +250,7 @@ router.get('/trends', async (req: Request, res: Response, next: NextFunction) =>
     }> = {};
 
     for (const v of verifications) {
-      const dateKey = v.createdAt.toISOString().split('T')[0];
+      const dateKey = v.createdAt.toISOString().split('T')[0]!;
       if (!dailyStats[dateKey]) {
         dailyStats[dateKey] = {
           date: dateKey,
@@ -260,10 +260,11 @@ router.get('/trends', async (req: Request, res: Response, next: NextFunction) =>
           avgCoverage: [],
         };
       }
-      dailyStats[dateKey].total++;
-      if (v.status === 'PASSED') dailyStats[dateKey].passed++;
-      if (v.status === 'FAILED') dailyStats[dateKey].failed++;
-      if (v.coverage !== null) dailyStats[dateKey].avgCoverage.push(v.coverage);
+      const stats = dailyStats[dateKey]!;
+      stats.total++;
+      if (v.status === 'PASSED') stats.passed++;
+      if (v.status === 'FAILED') stats.failed++;
+      if (v.coverage !== null) stats.avgCoverage.push(v.coverage);
     }
 
     const trends = Object.values(dailyStats).map(day => ({
@@ -289,7 +290,7 @@ router.get('/trends', async (req: Request, res: Response, next: NextFunction) =>
  */
 router.get('/domains/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     const domain = await prisma.domain.findUnique({
       where: { id },
@@ -356,7 +357,7 @@ router.get('/domains/:id', async (req: Request, res: Response, next: NextFunctio
         name: domain.name,
         status: domain.status,
         trustScore: domain.trustScore,
-        verificationCount: domain._count.verifications,
+        verificationCount: (domain as unknown as { _count?: { verifications: number } })._count?.verifications ?? 0,
       },
       averageDuration: verificationStats._avg.duration,
       averageCoverage: verificationStats._avg.coverage,
@@ -369,4 +370,4 @@ router.get('/domains/:id', async (req: Request, res: Response, next: NextFunctio
   }
 });
 
-export const analyticsRouter = router;
+export const analyticsRouter: Router = router;

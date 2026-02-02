@@ -16,7 +16,7 @@ export interface AIProvider {
   complete(request: CompletionRequest): Promise<CompletionResult>;
   streamGenerate(
     prompt: string,
-    context?: ConversationContext,
+    context: ConversationContext | undefined,
     onChunk: (chunk: string) => void
   ): Promise<GenerationResult>;
   countTokens(text: string): number;
@@ -32,7 +32,7 @@ export abstract class BaseProvider implements AIProvider {
   abstract complete(request: CompletionRequest): Promise<CompletionResult>;
   abstract streamGenerate(
     prompt: string,
-    context?: ConversationContext,
+    context: ConversationContext | undefined,
     onChunk: (chunk: string) => void
   ): Promise<GenerationResult>;
   abstract countTokens(text: string): number;

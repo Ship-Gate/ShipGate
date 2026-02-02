@@ -4,7 +4,7 @@
 // ============================================================================
 
 import { writeFile, readFile, chmod, mkdir, access, constants } from 'fs/promises';
-import { join, dirname } from 'path';
+import { join } from 'path';
 
 // ============================================================================
 // TYPES

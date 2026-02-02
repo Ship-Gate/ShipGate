@@ -3,7 +3,7 @@
 // Generates property-based tests using fast-check from ISL specifications
 // ============================================================================
 
-export { generate } from './generator';
+export { generate } from './generator.js';
 
 // Types
 export type {
@@ -14,7 +14,7 @@ export type {
   ConstraintInfo,
   TypeMapping,
   ShrinkerDefinition,
-} from './types';
+} from './types.js';
 
 // Arbitraries
 export {
@@ -23,7 +23,7 @@ export {
   generateEntityArbitrary,
   generateInputArbitrary,
   generateAllArbitraries,
-} from './arbitraries';
+} from './arbitraries.js';
 
 // Properties
 export {
@@ -35,14 +35,14 @@ export {
   generateIdempotencyProperty,
   generateRoundTripProperty,
   generateAllProperties,
-} from './properties';
+} from './properties.js';
 
 // Shrinking
 export {
   generateShrinker,
   generateShrinkerUtils,
   generateAllShrinkers,
-} from './shrinking';
+} from './shrinking.js';
 
 // Templates
 export {
@@ -58,4 +58,4 @@ export {
   generateChainedArbitrary,
   generateImports,
   generateTestFileContent,
-} from './templates/fastcheck';
+} from './templates/fastcheck.js';

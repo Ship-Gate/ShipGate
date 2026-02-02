@@ -2,13 +2,16 @@
 // Cloudflare Workers/Pages Code Generator
 // ============================================================================
 
-import type * as AST from '../../../../master_contracts/ast';
+import type {
+  DomainDeclaration,
+  BehaviorDeclaration,
+  TypeExpression,
+} from '@isl-lang/isl-core';
 import type {
   GeneratedEdgeCode,
   EdgeFile,
   EdgeConfig,
   EdgeManifest,
-  CloudflareWorkerConfig,
 } from '../types';
 import type { EdgeGenOptions } from '../generator';
 
@@ -17,7 +20,7 @@ import type { EdgeGenOptions } from '../generator';
 // ============================================================================
 
 export function generateCloudflare(
-  domain: AST.Domain,
+  domain: DomainDeclaration,
   options: EdgeGenOptions
 ): GeneratedEdgeCode {
   const files: EdgeFile[] = [];
@@ -36,13 +39,13 @@ export function generateCloudflare(
       files.push({
         path: `functions/api/${toKebabCase(behavior.name.name)}.ts`,
         type: 'handler',
-        content: generatePagesHandler(behavior, domain),
+        content: generatePagesHandler(behavior),
       });
     } else {
       files.push({
         path: `src/handlers/${toKebabCase(behavior.name.name)}.ts`,
         type: 'handler',
-        content: generateWorkerHandler(behavior, domain, options),
+        content: generateWorkerHandler(behavior),
       });
     }
   }
@@ -59,7 +62,7 @@ export function generateCloudflare(
     files.push({
       path: 'src/durable-objects/entity-store.ts',
       type: 'handler',
-      content: generateDurableObject(domain),
+      content: generateDurableObject(),
     });
   }
 
@@ -74,7 +77,7 @@ export function generateCloudflare(
 // ============================================================================
 
 function generateMainHandler(
-  domain: AST.Domain,
+  domain: DomainDeclaration,
   options: EdgeGenOptions,
   isPages: boolean
 ): string {
@@ -149,13 +152,10 @@ function generateMainHandler(
 // BEHAVIOR HANDLERS
 // ============================================================================
 
-function generateWorkerHandler(
-  behavior: AST.Behavior,
-  domain: AST.Domain,
-  options: EdgeGenOptions
-): string {
+function generateWorkerHandler(behavior: BehaviorDeclaration): string {
   const lines: string[] = [];
   const name = behavior.name.name;
+  const inputFields = behavior.input?.fields ?? [];
 
   lines.push(`// Handler for ${name}`);
   lines.push('');
@@ -166,7 +166,7 @@ function generateWorkerHandler(
 
   // Input/Output types
   lines.push(`export interface ${name}Input {`);
-  for (const field of behavior.input.fields) {
+  for (const field of inputFields) {
     const tsType = islTypeToTS(field.type);
     const optional = field.optional ? '?' : '';
     lines.push(`  ${field.name.name}${optional}: ${tsType};`);
@@ -177,8 +177,8 @@ function generateWorkerHandler(
   // Handler function
   lines.push(`export async function handle${name}(`);
   lines.push('  request: Request,');
-  lines.push('  env: Env,');
-  lines.push('  ctx: ExecutionContext');
+  lines.push('  _env: Env,');
+  lines.push('  _ctx: ExecutionContext');
   lines.push('): Promise<Response> {');
   lines.push('  try {');
   lines.push('    // Parse request body');
@@ -192,9 +192,10 @@ function generateWorkerHandler(
   lines.push('');
 
   // Generate precondition checks
-  if (behavior.preconditions.length > 0) {
+  const preconditions = behavior.preconditions?.conditions ?? [];
+  if (preconditions.length > 0) {
     lines.push('    // Precondition checks');
-    for (let i = 0; i < behavior.preconditions.length; i++) {
+    for (let i = 0; i < preconditions.length; i++) {
       lines.push(`    // TODO: Implement precondition ${i + 1}`);
     }
     lines.push('');
@@ -218,7 +219,7 @@ function generateWorkerHandler(
   return lines.join('\n');
 }
 
-function generatePagesHandler(behavior: AST.Behavior, domain: AST.Domain): string {
+function generatePagesHandler(behavior: BehaviorDeclaration): string {
   const lines: string[] = [];
   const name = behavior.name.name;
 
@@ -248,7 +249,7 @@ function generatePagesHandler(behavior: AST.Behavior, domain: AST.Domain): strin
 // DURABLE OBJECTS
 // ============================================================================
 
-function generateDurableObject(domain: AST.Domain): string {
+function generateDurableObject(): string {
   const lines: string[] = [];
 
   lines.push('// ============================================================================');
@@ -315,9 +316,10 @@ function generateDurableObject(domain: AST.Domain): string {
 // CONFIG FILES
 // ============================================================================
 
-function generateWranglerConfig(domain: AST.Domain, options: EdgeGenOptions): string {
+function generateWranglerConfig(domain: DomainDeclaration, options: EdgeGenOptions): string {
   const lines: string[] = [];
   const name = toKebabCase(domain.name.name);
+  const version = domain.version?.value ?? '0.0.0';
 
   lines.push(`name = "${name}"`);
   lines.push('main = "src/index.ts"');
@@ -355,12 +357,14 @@ function generateWranglerConfig(domain: AST.Domain, options: EdgeGenOptions): st
   // Environment variables
   lines.push('[vars]');
   lines.push(`DOMAIN_NAME = "${domain.name.name}"`);
-  lines.push(`DOMAIN_VERSION = "${domain.version.value}"`);
+  lines.push(`DOMAIN_VERSION = "${version}"`);
 
   return lines.join('\n');
 }
 
-function generateEdgeConfig(domain: AST.Domain, options: EdgeGenOptions): EdgeConfig {
+function generateEdgeConfig(domain: DomainDeclaration, options: EdgeGenOptions): EdgeConfig {
+  const version = domain.version?.value ?? '0.0.0';
+  
   return {
     target: options.target,
     entrypoint: 'src/index.ts',
@@ -368,24 +372,26 @@ function generateEdgeConfig(domain: AST.Domain, options: EdgeGenOptions): EdgeCo
       { name: 'KV', type: 'kv', config: {} },
       ...(options.storageBackend === 'd1' ? [{ name: 'DB', type: 'd1' as const, config: {} }] : []),
     ],
-    routes: domain.behaviors.map(b => ({
+    routes: domain.behaviors.map((b: BehaviorDeclaration) => ({
       pattern: `/api/${toKebabCase(b.name.name)}`,
       handler: `handle${b.name.name}`,
       method: 'POST',
     })),
     environment: {
       DOMAIN_NAME: domain.name.name,
-      DOMAIN_VERSION: domain.version.value,
+      DOMAIN_VERSION: version,
     },
   };
 }
 
-function generateManifest(domain: AST.Domain, options: EdgeGenOptions): EdgeManifest {
+function generateManifest(domain: DomainDeclaration, options: EdgeGenOptions): EdgeManifest {
+  const version = domain.version?.value ?? '0.0.0';
+  
   return {
     name: toKebabCase(domain.name.name),
-    version: domain.version.value,
+    version,
     target: options.target,
-    behaviors: domain.behaviors.map(b => ({
+    behaviors: domain.behaviors.map((b: BehaviorDeclaration) => ({
       name: b.name.name,
       route: `/api/${toKebabCase(b.name.name)}`,
       method: 'POST',
@@ -408,10 +414,10 @@ function generateManifest(domain: AST.Domain, options: EdgeGenOptions): EdgeMani
 // HELPERS
 // ============================================================================
 
-function hasStatefulEntities(domain: AST.Domain): boolean {
-  return domain.entities.some(e => 
-    e.fields.some(f => 
-      f.annotations.some(a => 
+function hasStatefulEntities(domain: DomainDeclaration): boolean {
+  return domain.entities.some((e) => 
+    e.fields.some((f) => 
+      f.annotations.some((a) => 
         a.name.name === 'persistent' || a.name.name === 'stateful'
       )
     )
@@ -422,22 +428,27 @@ function toKebabCase(str: string): string {
   return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
-function islTypeToTS(type: AST.TypeDefinition): string {
+function islTypeToTS(type: TypeExpression): string {
   switch (type.kind) {
-    case 'PrimitiveType':
-      switch (type.name) {
+    case 'SimpleType':
+      switch (type.name.name) {
         case 'String': return 'string';
         case 'Int': return 'number';
         case 'Decimal': return 'number';
         case 'Boolean': return 'boolean';
         case 'Timestamp': return 'Date | string';
         case 'UUID': return 'string';
-        default: return 'unknown';
+        default: return type.name.name;
       }
-    case 'ListType':
-      return `${islTypeToTS(type.element)}[]`;
-    case 'OptionalType':
-      return `${islTypeToTS(type.inner)} | null | undefined`;
+    case 'ArrayType':
+      return type.elementType ? `${islTypeToTS(type.elementType)}[]` : 'unknown[]';
+    case 'GenericType': {
+      const typeArgs = type.typeArguments ?? [];
+      if (type.name.name === 'Optional' && typeArgs.length === 1 && typeArgs[0]) {
+        return `${islTypeToTS(typeArgs[0])} | null | undefined`;
+      }
+      return 'unknown';
+    }
     default:
       return 'unknown';
   }

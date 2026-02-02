@@ -10,7 +10,6 @@ import type {
   EdgeBehaviorHandler,
   EdgeVerificationResult,
   EdgeCheckResult,
-  EdgeKVStore,
 } from './types';
 import { DEFAULT_OPTIONS } from './types';
 
@@ -324,7 +323,6 @@ export class ISLEdgeRuntime {
    * Extract context from request
    */
   private extractContext(request: Request): EdgeRequestContext {
-    const url = new URL(request.url);
     const headers: Record<string, string> = {};
 
     request.headers.forEach((value, key) => {

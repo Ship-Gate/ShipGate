@@ -392,6 +392,7 @@ export class GraphQLConverter {
 
     while ((match = typeRegex.exec(sdl)) !== null) {
       const [, name, body] = match;
+      if (!name || !body) continue;
       const fields = GraphQLConverter.parseFields(body);
 
       if (name === 'Query') {
@@ -411,6 +412,7 @@ export class GraphQLConverter {
     const enumRegex = /enum\s+(\w+)\s*\{([^}]+)\}/g;
     while ((match = enumRegex.exec(sdl)) !== null) {
       const [, name, body] = match;
+      if (!name || !body) continue;
       const values = body
         .split('\n')
         .map((l) => l.trim())
@@ -437,6 +439,7 @@ export class GraphQLConverter {
       const match = line.match(/(\w+)(?:\([^)]*\))?\s*:\s*(.+)/);
       if (match) {
         const [, name, typeStr] = match;
+        if (!name || !typeStr) continue;
         fields.push({
           name,
           type: GraphQLConverter.parseTypeString(typeStr),

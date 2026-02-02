@@ -229,17 +229,23 @@ function resolveFieldType(type: import('@isl-lang/isl-core').TypeExpression, enu
       const genericName = type.name.name;
       if (genericName === 'List' || genericName === 'Set' || genericName === 'Array') {
         if (type.typeArguments.length > 0) {
-          const elementType = resolveFieldType(type.typeArguments[0], enumNames);
-          return {
-            ...elementType,
-            isArray: true,
-          };
+          const typeArg = type.typeArguments[0];
+          if (typeArg) {
+            const elementType = resolveFieldType(typeArg, enumNames);
+            return {
+              ...elementType,
+              isArray: true,
+            };
+          }
         }
       }
 
       // Handle Optional<T>
       if (genericName === 'Optional' && type.typeArguments.length > 0) {
-        return resolveFieldType(type.typeArguments[0], enumNames);
+        const typeArg = type.typeArguments[0];
+        if (typeArg) {
+          return resolveFieldType(typeArg, enumNames);
+        }
       }
 
       // Default to JSON for complex types
@@ -381,7 +387,7 @@ function extractConstraints(field: FieldDeclaration): FieldConstraints {
 function resolveDefaultValue(
   field: FieldDeclaration,
   fieldType: FieldType,
-  annotations: Set<string>,
+  _annotations: Set<string>,
   isPrimaryKey: boolean
 ): DefaultValue | undefined {
   // Check for explicit default value
@@ -450,8 +456,11 @@ export function toCase(str: string, casing: 'snake' | 'camel' | 'pascal', plural
 
   // Pluralize last word if requested
   if (pluralize && words.length > 0) {
-    const last = words[words.length - 1];
-    words[words.length - 1] = pluralizeWord(last);
+    const lastIndex = words.length - 1;
+    const last = words[lastIndex];
+    if (last !== undefined) {
+      words[lastIndex] = pluralizeWord(last);
+    }
   }
 
   switch (casing) {

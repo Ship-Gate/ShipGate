@@ -17,7 +17,7 @@ import { kotlinTypeFromDef } from './types';
 
 export function generateKotlinSealed(
   behavior: Behavior,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const name = behavior.name.name;
   const lines: string[] = [];
@@ -135,7 +135,7 @@ function generateResultExtensions(
 
 export function generateKotlinExceptions(
   behavior: Behavior,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const name = behavior.name.name;
   const lines: string[] = [];
@@ -168,7 +168,7 @@ export function generateKotlinExceptions(
 
 export function generateResultBuilders(
   behavior: Behavior,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const name = behavior.name.name;
   const lines: string[] = [];
@@ -208,7 +208,7 @@ export function generateResultBuilders(
 export function generateKotlinUnionSealed(
   name: string,
   variants: { name: string; fields: Field[] }[],
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const lines: string[] = [];
 

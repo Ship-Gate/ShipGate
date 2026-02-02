@@ -217,7 +217,7 @@ export const CommandMiddleware = {
    * Timing middleware
    */
   timing(): CommandMiddleware {
-    return async (command, next) => {
+    return async (_command, next) => {
       const start = Date.now();
       const result = await next();
       const duration = Date.now() - start;
@@ -236,7 +236,7 @@ export const CommandMiddleware = {
    * Retry middleware
    */
   retry(maxRetries: number = 3, delay: number = 100): CommandMiddleware {
-    return async (command, next) => {
+    return async (_command, next) => {
       let lastError: Error | undefined;
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {

@@ -3,21 +3,21 @@
  */
 
 import type {
-  Cache,
-  CacheEntry,
-  CacheResult,
+  CacheBackend,
   CacheStats,
   SetOptions,
-} from '../types';
-import { InMemoryCache, type InMemoryCacheConfig } from './memory';
-import { RedisCache, type RedisCacheConfig } from './redis';
+  MemoryCacheConfig,
+  RedisCacheConfig,
+} from '../types.js';
+import { MemoryCache } from './memory.js';
+import { RedisCache } from './redis.js';
 
 /**
  * Cache level configuration
  */
 export type CacheLevel =
-  | { readonly type: 'memory' } & InMemoryCacheConfig
-  | { readonly type: 'redis' } & RedisCacheConfig;
+  | ({ readonly type: 'memory' } & MemoryCacheConfig)
+  | ({ readonly type: 'redis' } & RedisCacheConfig);
 
 /**
  * Multi-level cache configuration
@@ -32,8 +32,10 @@ export interface MultiLevelCacheConfig {
 /**
  * Multi-level cache with automatic tier population
  */
-export class MultiLevelCache<T = unknown> implements Cache<T> {
-  private readonly caches: Cache<T>[];
+export class MultiLevelCache implements CacheBackend {
+  name = 'multi-level';
+  
+  private readonly caches: CacheBackend[];
   private readonly config: MultiLevelCacheConfig;
 
   constructor(config: MultiLevelCacheConfig) {
@@ -44,39 +46,36 @@ export class MultiLevelCache<T = unknown> implements Cache<T> {
 
     this.caches = config.levels.map((level) => {
       if (level.type === 'memory') {
-        return new InMemoryCache<T>(level);
+        return new MemoryCache(level);
       } else {
-        return new RedisCache<T>(level);
+        return new RedisCache(level);
       }
     });
   }
 
-  async get(key: string): Promise<CacheResult<T>> {
+  async get<T = unknown>(key: string): Promise<T | undefined> {
     // Try each level from L1 to LN
     for (let i = 0; i < this.caches.length; i++) {
-      const result = await this.caches[i].get(key);
+      const value = await this.caches[i].get<T>(key);
       
-      if (result.ok) {
+      if (value !== undefined) {
         // Populate lower levels
         if (this.config.populateOnHit && i > 0) {
-          await this.populateLowerLevels(key, result.data.value, i);
+          await this.populateLowerLevels(key, value, i);
         }
-        return result;
+        return value;
       }
     }
 
-    // Miss on all levels
-    return {
-      ok: false,
-      error: { code: 'KEY_NOT_FOUND', message: 'Key not found in any cache level' },
-    };
+    return undefined;
   }
 
-  async set(key: string, value: T, options?: SetOptions): Promise<void> {
+  async set<T = unknown>(key: string, value: T, options?: SetOptions): Promise<boolean> {
     // Set in all levels
-    await Promise.all(
+    const results = await Promise.all(
       this.caches.map((cache) => cache.set(key, value, options))
     );
+    return results.every(Boolean);
   }
 
   async delete(key: string): Promise<boolean> {
@@ -101,29 +100,13 @@ export class MultiLevelCache<T = unknown> implements Cache<T> {
     await Promise.all(this.caches.map((cache) => cache.clear()));
   }
 
-  async getOrSet(
-    key: string,
-    factory: () => Promise<T>,
-    options?: SetOptions
-  ): Promise<T> {
-    const result = await this.get(key);
-    
-    if (result.ok) {
-      return result.data.value;
-    }
-
-    const value = await factory();
-    await this.set(key, value, options);
-    return value;
-  }
-
-  async mget(keys: readonly string[]): Promise<Map<string, T>> {
+  async mget<T = unknown>(keys: string[]): Promise<Map<string, T>> {
     const result = new Map<string, T>();
     const remainingKeys = [...keys];
 
     // Try each level
     for (let i = 0; i < this.caches.length && remainingKeys.length > 0; i++) {
-      const levelResult = await this.caches[i].mget(remainingKeys);
+      const levelResult = await this.caches[i].mget<T>(remainingKeys);
       
       for (const [key, value] of levelResult) {
         result.set(key, value);
@@ -144,10 +127,28 @@ export class MultiLevelCache<T = unknown> implements Cache<T> {
     return result;
   }
 
-  async mset(entries: Map<string, T>, options?: SetOptions): Promise<void> {
-    await Promise.all(
+  async mset<T = unknown>(entries: Map<string, T>, options?: SetOptions): Promise<boolean> {
+    const results = await Promise.all(
       this.caches.map((cache) => cache.mset(entries, options))
     );
+    return results.every(Boolean);
+  }
+
+  async mdelete(keys: string[]): Promise<number> {
+    let maxDeleted = 0;
+    for (const cache of this.caches) {
+      const deleted = await cache.mdelete(keys);
+      maxDeleted = Math.max(maxDeleted, deleted);
+    }
+    return maxDeleted;
+  }
+
+  async keys(pattern?: string): Promise<string[]> {
+    // Get keys from all levels and deduplicate
+    const allKeysArrays = await Promise.all(
+      this.caches.map((cache) => cache.keys(pattern))
+    );
+    return [...new Set(allKeysArrays.flat())];
   }
 
   async stats(): Promise<CacheStats> {
@@ -156,13 +157,14 @@ export class MultiLevelCache<T = unknown> implements Cache<T> {
     );
 
     // Aggregate stats from all levels
-    return allStats.reduce(
-      (acc, stats) => ({
+    const aggregated = allStats.reduce<CacheStats>(
+      (acc: CacheStats, stats: CacheStats) => ({
         hits: acc.hits + stats.hits,
         misses: acc.misses + stats.misses,
         sets: acc.sets + stats.sets,
         deletes: acc.deletes + stats.deletes,
         size: acc.size + stats.size,
+        evictions: acc.evictions + stats.evictions,
         memoryUsage: (acc.memoryUsage ?? 0) + (stats.memoryUsage ?? 0),
         hitRate: 0, // Calculated below
       }),
@@ -172,10 +174,15 @@ export class MultiLevelCache<T = unknown> implements Cache<T> {
         sets: 0,
         deletes: 0,
         size: 0,
+        evictions: 0,
         memoryUsage: 0,
         hitRate: 0,
       }
     );
+
+    const total = aggregated.hits + aggregated.misses;
+    aggregated.hitRate = total > 0 ? aggregated.hits / total : 0;
+    return aggregated;
   }
 
   async close(): Promise<void> {
@@ -185,7 +192,7 @@ export class MultiLevelCache<T = unknown> implements Cache<T> {
   /**
    * Get a specific cache level
    */
-  getLevel(index: number): Cache<T> | undefined {
+  getLevel(index: number): CacheBackend | undefined {
     return this.caches[index];
   }
 
@@ -196,13 +203,13 @@ export class MultiLevelCache<T = unknown> implements Cache<T> {
     return this.caches.length;
   }
 
-  private async populateLowerLevels(
+  private async populateLowerLevels<T>(
     key: string,
     value: T,
     hitLevel: number
   ): Promise<void> {
     // Populate L1 through L(hitLevel-1)
-    const promises: Promise<void>[] = [];
+    const promises: Promise<boolean>[] = [];
     
     for (let i = 0; i < hitLevel; i++) {
       promises.push(this.caches[i].set(key, value));
@@ -215,8 +222,8 @@ export class MultiLevelCache<T = unknown> implements Cache<T> {
 /**
  * Create a multi-level cache
  */
-export function createMultiLevelCache<T = unknown>(
+export function createMultiLevelCache(
   config: MultiLevelCacheConfig
-): MultiLevelCache<T> {
-  return new MultiLevelCache<T>(config);
+): MultiLevelCache {
+  return new MultiLevelCache(config);
 }

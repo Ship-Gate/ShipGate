@@ -103,8 +103,6 @@ function checkMissingSecurityBlocks(domain: DomainDeclaration): SecurityIssue[] 
   const issues: SecurityIssue[] = [];
 
   for (const behavior of domain.behaviors) {
-    const name = behavior.name.name.toLowerCase();
-    
     // State-changing behaviors should have security blocks
     if (isSecuritySensitiveBehavior(behavior) && !behavior.security) {
       issues.push({
@@ -112,7 +110,7 @@ function checkMissingSecurityBlocks(domain: DomainDeclaration): SecurityIssue[] 
         severity: 'warning',
         title: `Behavior "${behavior.name.name}" lacks security block`,
         description: 'Security-sensitive behaviors should define authentication, authorization, or rate limiting.',
-        location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+        location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
         fix: 'Add a security block with appropriate requirements.',
         cwe: 'CWE-862',  // Missing Authorization
       });
@@ -145,7 +143,7 @@ function checkSensitiveDataHandling(domain: DomainDeclaration): SecurityIssue[] 
               severity: 'critical',
               title: `Sensitive field "${fieldName}" not marked as [secret]`,
               description: `Field "${fieldName}" in entity "${entity.name.name}" appears to contain ${type} data but is not annotated as [secret].`,
-              location: field.span ? { line: field.span.line, column: field.span.column } : undefined,
+              location: field.span ? { line: field.span.start.line, column: field.span.start.column } : undefined,
               fix: `Add [secret] annotation to field "${fieldName}".`,
               cwe: 'CWE-312',  // Cleartext Storage of Sensitive Information
             });
@@ -180,7 +178,7 @@ function checkPIIAnnotations(domain: DomainDeclaration): SecurityIssue[] {
               severity: 'warning',
               title: `PII field "${fieldName}" not marked as [pii]`,
               description: `Field "${fieldName}" appears to contain ${type} (PII) but is not annotated. This may impact GDPR/CCPA compliance.`,
-              location: field.span ? { line: field.span.line, column: field.span.column } : undefined,
+              location: field.span ? { line: field.span.start.line, column: field.span.start.column } : undefined,
               fix: `Add [pii] annotation to field "${fieldName}".`,
               cwe: 'CWE-359',  // Privacy Violation
             });
@@ -212,7 +210,7 @@ function checkRateLimiting(domain: DomainDeclaration): SecurityIssue[] {
           severity: 'info',
           title: `Behavior "${behavior.name.name}" has no rate limiting`,
           description: 'Public-facing behaviors should have rate limiting to prevent abuse.',
-          location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+          location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
           fix: 'Add rate_limit requirement to security block.',
           cwe: 'CWE-770',  // Allocation of Resources Without Limits
         });
@@ -244,7 +242,7 @@ function checkAuthRequirements(domain: DomainDeclaration): SecurityIssue[] {
           severity: 'warning',
           title: `State-modifying behavior "${behavior.name.name}" has no auth requirements`,
           description: 'Behaviors that modify state should require authentication or authorization.',
-          location: behavior.span ? { line: behavior.span.line, column: behavior.span.column } : undefined,
+          location: behavior.span ? { line: behavior.span.start.line, column: behavior.span.start.column } : undefined,
           fix: 'Add actors block or security requirements.',
           cwe: 'CWE-306',  // Missing Authentication
         });
@@ -282,7 +280,7 @@ function checkInjectionVulnerabilities(domain: DomainDeclaration): SecurityIssue
               severity: 'warning',
               title: `Potential injection vulnerability in "${field.name.name}"`,
               description: `Input field "${field.name.name}" in "${behavior.name.name}" accepts string input without validation. Ensure proper sanitization if used in queries.`,
-              location: field.span ? { line: field.span.line, column: field.span.column } : undefined,
+              location: field.span ? { line: field.span.start.line, column: field.span.start.column } : undefined,
               fix: 'Add validation constraints or use parameterized queries.',
               cwe: 'CWE-89',  // SQL Injection
             });
@@ -311,7 +309,7 @@ function checkInputValidation(domain: DomainDeclaration): SecurityIssue[] {
             severity: 'info',
             title: `Unbounded string input "${field.name.name}"`,
             description: 'String inputs without length constraints could lead to resource exhaustion.',
-            location: field.span ? { line: field.span.line, column: field.span.column } : undefined,
+            location: field.span ? { line: field.span.start.line, column: field.span.start.column } : undefined,
             fix: 'Add max_length constraint to the field.',
             cwe: 'CWE-400',  // Resource Exhaustion
           });
@@ -324,7 +322,7 @@ function checkInputValidation(domain: DomainDeclaration): SecurityIssue[] {
             severity: 'info',
             title: `Unbounded numeric input "${field.name.name}"`,
             description: 'Numeric inputs for resource allocation should have bounds.',
-            location: field.span ? { line: field.span.line, column: field.span.column } : undefined,
+            location: field.span ? { line: field.span.start.line, column: field.span.start.column } : undefined,
             fix: 'Add min/max constraints to the field.',
           });
         }
@@ -355,7 +353,7 @@ function checkInsecureDefaults(domain: DomainDeclaration): SecurityIssue[] {
             severity: 'warning',
             title: `Insecure default for "${field.name.name}"`,
             description: `Field "${field.name.name}" has a potentially insecure default value. Security features should be enabled by default.`,
-            location: field.span ? { line: field.span.line, column: field.span.column } : undefined,
+            location: field.span ? { line: field.span.start.line, column: field.span.start.column } : undefined,
             fix: 'Review and change the default value to a secure setting.',
             cwe: 'CWE-1188',  // Insecure Default Initialization
           });

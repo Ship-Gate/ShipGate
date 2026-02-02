@@ -9,15 +9,12 @@ import type {
   Environment,
   ExecutionContext,
   BehaviorDefinition,
-  EntityDefinition,
-  StackFrame,
   TraceEntry,
   ContractMode,
   EntityStore,
 } from './types';
 import { evaluate } from './evaluator';
-import { createEnvironment, extendEnvironment, lookupBinding } from './environment';
-import { checkPreconditions, checkPostconditions, checkInvariants } from './contracts';
+import { createEnvironment, extendEnvironment } from './environment';
 import { InterpreterError, ContractViolationError } from './types';
 
 // ============================================================================

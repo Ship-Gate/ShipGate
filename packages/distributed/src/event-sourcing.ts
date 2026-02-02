@@ -99,7 +99,7 @@ export class AggregateRepository<TState, TEvent extends DomainEvent> {
     // Check for concurrent modification
     const existingEvents = await this.eventStore.getEvents(aggregateId);
     const currentVersion = existingEvents.length > 0
-      ? existingEvents[existingEvents.length - 1].metadata.version
+      ? existingEvents[existingEvents.length - 1]!.metadata.version
       : 0;
 
     if (currentVersion !== expectedVersion) {
@@ -201,7 +201,7 @@ export class ProjectionRunner<TState> {
   /**
    * Apply an event to the projection
    */
-  private applyEvent(event: DomainEvent): void {
+  private applyEvent(event: DomainEvent<unknown>): void {
     const handler = this.projection.handlers[event.type];
     if (handler) {
       this.state = handler(this.state, event);
@@ -343,7 +343,7 @@ export class SnapshottingAggregateRepository<TState, TEvent extends DomainEvent>
   async save(aggregateId: string, events: TEvent[], expectedVersion: number): Promise<void> {
     const existingEvents = await this.eventStore.getEvents(aggregateId);
     const currentVersion = existingEvents.length > 0
-      ? existingEvents[existingEvents.length - 1].metadata.version
+      ? existingEvents[existingEvents.length - 1]!.metadata.version
       : 0;
 
     if (currentVersion !== expectedVersion) {

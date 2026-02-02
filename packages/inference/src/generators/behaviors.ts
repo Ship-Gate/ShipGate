@@ -228,10 +228,10 @@ function enhanceErrors(
 
 function enhanceParameter(
   param: ExtractedParameter,
-  validations: ExtractedValidation[]
+  _validations: ExtractedValidation[]
 ): ExtractedParameter {
-  // Look for validation that adds constraints
-  const paramValidation = validations.find((v) => v.field === param.name);
+  // TODO: Use validations to add annotations based on constraints
+  // const paramValidation = validations.find((v) => v.field === param.name);
 
   return {
     ...param,

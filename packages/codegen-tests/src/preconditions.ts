@@ -3,9 +3,9 @@
 // Converts ISL preconditions to validation test cases
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
-import { compileExpression, compileAssertion } from './expression-compiler';
-import type { PreconditionTest, TestFramework } from './types';
+import type * as AST from '@isl-lang/parser';
+import { compileExpression, compileAssertion } from './expression-compiler.js';
+import type { PreconditionTest, TestFramework } from './types.js';
 
 /**
  * Generate precondition validation tests for a behavior

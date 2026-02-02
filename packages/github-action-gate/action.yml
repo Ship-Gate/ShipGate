@@ -1,0 +1,155 @@
+name: 'ISL Studio Gate'
+description: 'Block unsafe PRs with evidence. SHIP or NO_SHIP verdict on every change.'
+author: 'ISL Team'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  mode:
+    description: 'Gate mode: check (PR comment only) or enforce (block merge)'
+    required: false
+    default: 'enforce'
+  threshold:
+    description: 'Minimum score to pass (0-100)'
+    required: false
+    default: '70'
+  config-path:
+    description: 'Path to .islstudio/config.json'
+    required: false
+    default: '.islstudio/config.json'
+  fail-on:
+    description: 'Fail on: any, blocker, none'
+    required: false
+    default: 'blocker'
+
+outputs:
+  verdict:
+    description: 'SHIP or NO_SHIP'
+  score:
+    description: 'Score out of 100'
+  violations:
+    description: 'Number of violations found'
+  evidence-path:
+    description: 'Path to evidence directory'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Run ISL Gate
+      id: gate
+      shell: bash
+      run: |
+        npx islstudio gate --ci --output json > ${{ runner.temp }}/gate-result.json 2>&1 || true
+        
+        VERDICT=$(cat ${{ runner.temp }}/gate-result.json | jq -r '.verdict // "ERROR"')
+        SCORE=$(cat ${{ runner.temp }}/gate-result.json | jq -r '.score // 0')
+        VIOLATIONS=$(cat ${{ runner.temp }}/gate-result.json | jq -r '.violations | length // 0')
+        BLOCKERS=$(cat ${{ runner.temp }}/gate-result.json | jq -r '.summary.blockers // 0')
+        
+        echo "verdict=$VERDICT" >> $GITHUB_OUTPUT
+        echo "score=$SCORE" >> $GITHUB_OUTPUT
+        echo "violations=$VIOLATIONS" >> $GITHUB_OUTPUT
+        echo "evidence-path=.islstudio/evidence" >> $GITHUB_OUTPUT
+        
+        # Determine if we should fail
+        FAIL_ON="${{ inputs.fail-on }}"
+        SHOULD_FAIL=false
+        
+        if [ "$FAIL_ON" = "any" ] && [ "$VIOLATIONS" -gt 0 ]; then
+          SHOULD_FAIL=true
+        elif [ "$FAIL_ON" = "blocker" ] && [ "$BLOCKERS" -gt 0 ]; then
+          SHOULD_FAIL=true
+        fi
+        
+        if [ "${{ inputs.mode }}" = "enforce" ] && [ "$SHOULD_FAIL" = "true" ]; then
+          echo "::error::ISL Gate: $VERDICT (score: $SCORE/100, blockers: $BLOCKERS)"
+          exit 1
+        fi
+
+    - name: Post PR Comment
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const resultPath = '${{ runner.temp }}/gate-result.json';
+          
+          let result;
+          try {
+            result = JSON.parse(fs.readFileSync(resultPath, 'utf8'));
+          } catch (e) {
+            result = { verdict: 'ERROR', score: 0, violations: [], summary: { blockers: 0, warnings: 0 } };
+          }
+          
+          const emoji = result.verdict === 'SHIP' ? '✅' : '🛑';
+          const violations = result.violations || [];
+          
+          let body = `## ${emoji} ISL Gate: ${result.verdict}\n\n`;
+          body += `**Score:** ${result.score}/100\n\n`;
+          
+          if (violations.length > 0) {
+            body += `### Violations (${violations.length})\n\n`;
+            body += `| Severity | Rule | File | Message |\n`;
+            body += `|----------|------|------|--------|\n`;
+            
+            for (const v of violations.slice(0, 10)) {
+              const severity = v.tier === 'hard_block' ? '🛑 Blocker' : v.tier === 'soft_block' ? '⚠️ Warning' : 'ℹ️ Info';
+              const file = v.filePath ? `\`${v.filePath}\`` : '-';
+              body += `| ${severity} | \`${v.ruleId}\` | ${file} | ${v.message} |\n`;
+            }
+            
+            if (violations.length > 10) {
+              body += `\n*...and ${violations.length - 10} more violations*\n`;
+            }
+            
+            body += `\n### How to Fix\n\n`;
+            body += `Run locally with fix guidance:\n`;
+            body += `\`\`\`bash\nnpx islstudio gate --explain\n\`\`\`\n`;
+          } else {
+            body += `✨ No violations found. Safe to merge!\n`;
+          }
+          
+          body += `\n---\n`;
+          body += `📦 Evidence fingerprint: \`${result.fingerprint || 'N/A'}\`\n`;
+          body += `🔗 [View evidence artifact](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})\n`;
+          
+          // Find existing comment
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          
+          const botComment = comments.find(c => c.body?.includes('ISL Gate:'));
+          
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: body,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body,
+            });
+          }
+
+    - name: Upload Evidence
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: isl-evidence-${{ github.run_number }}
+        path: .islstudio/evidence/
+        retention-days: 30
+        if-no-files-found: ignore

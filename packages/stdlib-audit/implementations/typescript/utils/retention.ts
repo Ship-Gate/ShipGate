@@ -3,11 +3,11 @@
 // @stdlib/audit/utils/retention
 // ============================================================================
 
-import type {
-  AuditStorage,
-  RetentionPolicy,
+import {
   EventCategory,
-  AuditEvent,
+  type AuditStorage,
+  type RetentionPolicy,
+  type AuditEvent,
 } from '../types';
 
 // ============================================================================

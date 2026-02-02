@@ -4,7 +4,7 @@
  * Formats review results as Markdown for documentation.
  */
 
-import type { ReviewResult, Issue, Suggestion, CategoryResult } from '../reviewer.js';
+import type { ReviewResult, Issue, Suggestion } from '../reviewer.js';
 
 export interface MarkdownReporterOptions {
   includeTableOfContents?: boolean;

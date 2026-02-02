@@ -202,7 +202,8 @@ export class DataGenerator {
       from: from ?? new Date('2020-01-01'),
       to: to ?? new Date(),
     });
-    return date.toISOString().split('T')[0];
+    const parts = date.toISOString().split('T');
+    return parts[0] ?? date.toISOString();
   }
 
   timestamp(from?: Date, to?: Date): string {

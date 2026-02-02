@@ -4,11 +4,8 @@
 // ============================================================================
 
 import {
-  User,
-  Session,
   UserId,
   SessionId,
-  Email,
   UserStatus,
   SessionStatus,
   RevocationReason,
@@ -37,7 +34,6 @@ import {
   SessionRepository,
   PasswordResetTokenRepository,
   EventEmitter,
-  PasswordResetToken,
 } from './types';
 
 import {
@@ -46,13 +42,11 @@ import {
   validatePasswordStrength,
   validateEmail,
   normalizeEmail,
-  createUser,
   incrementFailedAttempts,
   resetFailedAttempts,
   updateLastLogin,
   updatePassword,
   isUserLocked,
-  canUserLogin,
   InMemoryUserRepository,
 } from './user';
 
@@ -60,8 +54,6 @@ import {
   createSession,
   revokeSession,
   hashToken,
-  verifyToken,
-  isSessionValid,
   InMemorySessionRepository,
 } from './session';
 
@@ -327,8 +319,8 @@ export class AuthService {
       if (activeSessionCount >= this.config.maxConcurrentSessions) {
         // Revoke oldest session
         const activeSessions = await this.sessionRepo.findActiveByUserId(user.id);
-        if (activeSessions.length > 0) {
-          const oldestSession = activeSessions[activeSessions.length - 1];
+        const oldestSession = activeSessions[activeSessions.length - 1];
+        if (oldestSession) {
           await this.sessionRepo.update(oldestSession.id, {
             status: SessionStatus.REVOKED,
             revokedAt: new Date(),

@@ -70,12 +70,11 @@ export function createCoverageState(): CoverageState {
  */
 export function* generateCoverageGuided(
   corpus: CorpusEntry[],
-  coverageState: CoverageState,
+  _coverageState: CoverageState,
   ctx: FuzzContext,
   config: CoverageStrategyConfig = {}
 ): Generator<GeneratedValue<unknown>> {
   const rng = ctx.rng ?? createRng(config.seed ?? Date.now().toString());
-  const energyMultiplier = config.energyMultiplier ?? 2;
   const minEnergy = config.minEnergy ?? 1;
   const maxEnergy = config.maxEnergy ?? 100;
 
@@ -248,7 +247,7 @@ export function generateCoverageReport(
  * Check if an input provides new coverage
  */
 export function providesNewCoverage(
-  input: unknown,
+  _input: unknown,
   coverageBits: Set<string>,
   state: CoverageState
 ): boolean {

@@ -204,7 +204,7 @@ export class ComplianceAnalyzer {
     });
 
     // Check for authorization/roles
-    const hasAuthz = domain.actors && domain.actors.length > 0;
+    const hasAuthz = !!(domain.actors && domain.actors.length > 0);
     controls.push({
       category: 'Access Control',
       control: 'Role-Based Access Control',

@@ -4,7 +4,6 @@
 // ============================================================================
 
 import * as YAML from 'yaml';
-import type * as AST from '@isl-lang/isl-core';
 import type {
   GenerateOptions,
   GeneratedFile,
@@ -20,11 +19,97 @@ import type {
   OpenAPITag,
 } from './types';
 
+// Simplified ISL AST types for this generator
+// These are compatible with both the old and new AST structures
+interface Domain {
+  name: string;
+  version: string;
+  entities?: Entity[];
+  types?: TypeDeclaration[];
+  behaviors?: Behavior[];
+  scenarios?: unknown[];
+  policies?: unknown[];
+  annotations?: unknown[];
+}
+
+interface Entity {
+  name: string;
+  fields: Field[];
+  invariants?: unknown[];
+  annotations?: Annotation[];
+}
+
+interface TypeDeclaration {
+  name: string;
+  definition?: {
+    kind: 'enum' | 'struct' | 'primitive';
+    name?: string;
+    values?: { name: string }[];
+    fields?: Field[];
+  };
+  // New AST structure
+  baseType?: TypeExpression;
+  constraints?: TypeConstraint[];
+  annotations?: Annotation[];
+}
+
+interface Field {
+  name: string;
+  type: TypeExpression;
+  optional: boolean;
+  annotations?: Annotation[];
+  constraints?: TypeConstraint[];
+}
+
+interface TypeConstraint {
+  kind?: string;
+  name?: string | { name: string };
+  value?: unknown;
+}
+
+interface Annotation {
+  name: string | { name: string };
+  value?: unknown;
+}
+
+interface Behavior {
+  name: string;
+  description?: string;
+  input?: {
+    fields: Field[];
+  };
+  output?: {
+    success?: TypeExpression;
+    errors?: ErrorDefinition[];
+  };
+  preconditions?: unknown[];
+  postconditions?: unknown[];
+  annotations?: Annotation[];
+}
+
+interface ErrorDefinition {
+  name: string | { name: string };
+  fields?: Field[];
+  when?: string;
+  retriable?: boolean;
+}
+
+type TypeExpression =
+  | { kind: 'primitive'; name: string }
+  | { kind: 'reference'; name: string }
+  | { kind: 'list'; elementType: TypeExpression }
+  | { kind: 'map'; keyType?: TypeExpression; valueType: TypeExpression }
+  | { kind: 'optional'; innerType: TypeExpression }
+  | { kind: 'union'; variants: TypeExpression[] }
+  | { kind: 'SimpleType'; name: string | { name: string } }
+  | { kind: 'GenericType'; name: string | { name: string }; typeArguments: TypeExpression[] }
+  | { kind: 'ObjectType'; fields: Field[] };
+
 /**
  * Generate OpenAPI specification from ISL domain
  */
 export function generate(
-  domain: AST.Domain,
+  domain: Domain,
   options: GenerateOptions = {}
 ): GeneratedFile[] {
   const spec = buildOpenAPISpec(domain, options);
@@ -47,7 +132,7 @@ export function generate(
 /**
  * Build OpenAPI specification from ISL domain
  */
-function buildOpenAPISpec(domain: AST.Domain, options: GenerateOptions): OpenAPISpec {
+function buildOpenAPISpec(domain: Domain, options: GenerateOptions): OpenAPISpec {
   const version = options.version || '3.1';
   const basePath = options.basePath || '';
 
@@ -89,11 +174,13 @@ function buildOpenAPISpec(domain: AST.Domain, options: GenerateOptions): OpenAPI
   const schemas = spec.components!.schemas!;
 
   for (const typeDecl of domain.types || []) {
-    schemas[typeDecl.name] = buildSchemaFromType(typeDecl, options);
+    const typeName = typeof typeDecl.name === 'string' ? typeDecl.name : (typeDecl.name as { name: string }).name;
+    schemas[typeName] = buildSchemaFromType(typeDecl, options);
   }
 
   for (const entity of domain.entities || []) {
-    schemas[entity.name] = buildSchemaFromEntity(entity, options);
+    const entityName = typeof entity.name === 'string' ? entity.name : (entity.name as { name: string }).name;
+    schemas[entityName] = buildSchemaFromEntity(entity, options);
   }
 
   // Generate paths from behaviors
@@ -127,7 +214,8 @@ function buildOpenAPISpec(domain: AST.Domain, options: GenerateOptions): OpenAPI
     // Add error schemas
     if (behavior.output?.errors) {
       for (const error of behavior.output.errors) {
-        schemas[`${behavior.name}Error${error.name}`] = buildErrorSchema(error, options);
+        const errorName = typeof error.name === 'string' ? error.name : error.name.name;
+        schemas[`${behavior.name}Error${errorName}`] = buildErrorSchema(error, options);
       }
     }
   }
@@ -200,7 +288,7 @@ function buildOpenAPISpec(domain: AST.Domain, options: GenerateOptions): OpenAPI
 /**
  * Build security scheme from auth config
  */
-function buildSecurityScheme(auth: GenerateOptions['auth'][0]): OpenAPISecurityScheme {
+function buildSecurityScheme(auth: NonNullable<GenerateOptions['auth']>[0]): OpenAPISecurityScheme {
   switch (auth.type) {
     case 'apiKey':
       return {
@@ -248,32 +336,47 @@ function buildSecurityScheme(auth: GenerateOptions['auth'][0]): OpenAPISecurityS
 /**
  * Build schema from ISL type declaration
  */
-function buildSchemaFromType(typeDecl: AST.TypeDeclaration, options: GenerateOptions): OpenAPISchema {
+function buildSchemaFromType(typeDecl: TypeDeclaration, options: GenerateOptions): OpenAPISchema {
+  const typeName = typeof typeDecl.name === 'string' ? typeDecl.name : (typeDecl.name as { name: string }).name;
   const schema: OpenAPISchema = {
-    title: typeDecl.name,
+    title: typeName,
   };
 
-  if (typeDecl.definition.kind === 'enum') {
-    schema.type = 'string';
-    schema.enum = typeDecl.definition.values.map((v) => v.name);
-  } else if (typeDecl.definition.kind === 'struct') {
-    schema.type = 'object';
-    schema.properties = {};
-    schema.required = [];
+  // Handle old-style definition
+  if (typeDecl.definition) {
+    if (typeDecl.definition.kind === 'enum') {
+      schema.type = 'string';
+      schema.enum = typeDecl.definition.values?.map((v) => v.name) || [];
+    } else if (typeDecl.definition.kind === 'struct') {
+      schema.type = 'object';
+      schema.properties = {};
+      schema.required = [];
 
-    for (const field of typeDecl.definition.fields) {
-      schema.properties[field.name] = buildSchemaFromTypeExpr(field.type, options);
-      if (!field.optional) {
-        schema.required.push(field.name);
+      for (const field of typeDecl.definition.fields || []) {
+        const fieldSchema = buildSchemaFromTypeExpr(field.type, options);
+        // Apply field-level constraints
+        if (field.constraints) {
+          applyTypeConstraints(fieldSchema, field.constraints);
+        }
+        schema.properties[field.name] = fieldSchema;
+        if (!field.optional) {
+          schema.required.push(field.name);
+        }
       }
+    } else if (typeDecl.definition.kind === 'primitive') {
+      Object.assign(schema, mapPrimitiveToSchema(typeDecl.definition.name || ''));
     }
-  } else if (typeDecl.definition.kind === 'primitive') {
-    Object.assign(schema, mapPrimitiveToSchema(typeDecl.definition.name));
   }
 
-  // Apply constraints
+  // Handle new-style AST with baseType
+  if (typeDecl.baseType) {
+    const baseSchema = buildSchemaFromTypeExpr(typeDecl.baseType, options);
+    Object.assign(schema, baseSchema);
+  }
+
+  // Apply constraints (handle both old and new format)
   if (typeDecl.constraints) {
-    applyConstraints(schema, typeDecl.constraints);
+    applyTypeConstraints(schema, typeDecl.constraints);
   }
 
   return schema;
@@ -282,31 +385,44 @@ function buildSchemaFromType(typeDecl: AST.TypeDeclaration, options: GenerateOpt
 /**
  * Build schema from ISL entity
  */
-function buildSchemaFromEntity(entity: AST.Entity, options: GenerateOptions): OpenAPISchema {
+function buildSchemaFromEntity(entity: Entity, options: GenerateOptions): OpenAPISchema {
+  const entityName = typeof entity.name === 'string' ? entity.name : (entity.name as { name: string }).name;
   const schema: OpenAPISchema = {
     type: 'object',
-    title: entity.name,
+    title: entityName,
     properties: {},
     required: [],
   };
 
   for (const field of entity.fields) {
+    const fieldName = typeof field.name === 'string' ? field.name : (field.name as { name: string }).name;
     const fieldSchema = buildSchemaFromTypeExpr(field.type, options);
 
     // Handle annotations
     for (const annotation of field.annotations || []) {
-      if (annotation.name === 'immutable') {
+      const annotationName = typeof annotation.name === 'string' 
+        ? annotation.name 
+        : annotation.name.name;
+      if (annotationName === 'immutable') {
         fieldSchema.readOnly = true;
       }
-      if (annotation.name === 'sensitive') {
+      if (annotationName === 'sensitive' || annotationName === 'secret') {
         fieldSchema.writeOnly = true;
+      }
+      if (annotationName === 'unique') {
+        fieldSchema.description = (fieldSchema.description || '') + ' Must be unique.';
       }
     }
 
-    schema.properties![field.name] = fieldSchema;
+    // Apply field-level constraints
+    if (field.constraints) {
+      applyTypeConstraints(fieldSchema, field.constraints);
+    }
+
+    schema.properties![fieldName] = fieldSchema;
 
     if (!field.optional) {
-      schema.required!.push(field.name);
+      schema.required!.push(fieldName);
     }
   }
 
@@ -316,13 +432,77 @@ function buildSchemaFromEntity(entity: AST.Entity, options: GenerateOptions): Op
 /**
  * Build schema from ISL type expression
  */
-function buildSchemaFromTypeExpr(type: AST.TypeExpression, options: GenerateOptions): OpenAPISchema {
+function buildSchemaFromTypeExpr(type: TypeExpression, options: GenerateOptions): OpenAPISchema {
   switch (type.kind) {
     case 'primitive':
       return mapPrimitiveToSchema(type.name);
 
     case 'reference':
       return { $ref: `#/components/schemas/${type.name}` };
+
+    case 'SimpleType': {
+      const name = typeof type.name === 'string' ? type.name : type.name.name;
+      // Check if it's a primitive
+      const primitiveSchema = mapPrimitiveToSchema(name);
+      if (primitiveSchema.type !== 'string' || primitiveSchema.format) {
+        return primitiveSchema;
+      }
+      // Assume it's a reference
+      return { $ref: `#/components/schemas/${name}` };
+    }
+
+    case 'GenericType': {
+      const name = typeof type.name === 'string' ? type.name : type.name.name;
+      if (name === 'List' || name === 'Array') {
+        return {
+          type: 'array',
+          items: type.typeArguments[0] 
+            ? buildSchemaFromTypeExpr(type.typeArguments[0], options)
+            : { type: 'object' },
+        };
+      }
+      if (name === 'Map') {
+        return {
+          type: 'object',
+          additionalProperties: type.typeArguments[1]
+            ? buildSchemaFromTypeExpr(type.typeArguments[1], options)
+            : { type: 'string' },
+        };
+      }
+      if (name === 'Optional') {
+        const innerSchema = type.typeArguments[0]
+          ? buildSchemaFromTypeExpr(type.typeArguments[0], options)
+          : { type: 'object' };
+        if (options.version === '3.1') {
+          if (innerSchema.type && !innerSchema.$ref) {
+            return { ...innerSchema, type: [innerSchema.type as string, 'null'] };
+          }
+          return { oneOf: [innerSchema, { type: 'null' }] };
+        }
+        return { ...innerSchema, nullable: true };
+      }
+      return { $ref: `#/components/schemas/${name}` };
+    }
+
+    case 'ObjectType': {
+      const schema: OpenAPISchema = {
+        type: 'object',
+        properties: {},
+        required: [],
+      };
+      for (const field of type.fields || []) {
+        const fieldName = typeof field.name === 'string' ? field.name : (field.name as { name: string }).name;
+        const fieldSchema = buildSchemaFromTypeExpr(field.type, options);
+        if (field.constraints) {
+          applyTypeConstraints(fieldSchema, field.constraints);
+        }
+        schema.properties![fieldName] = fieldSchema;
+        if (!field.optional) {
+          schema.required!.push(fieldName);
+        }
+      }
+      return schema;
+    }
 
     case 'list':
       return {
@@ -336,7 +516,7 @@ function buildSchemaFromTypeExpr(type: AST.TypeExpression, options: GenerateOpti
         additionalProperties: buildSchemaFromTypeExpr(type.valueType, options),
       };
 
-    case 'optional':
+    case 'optional': {
       const innerSchema = buildSchemaFromTypeExpr(type.innerType, options);
       if (options.version === '3.1') {
         // OpenAPI 3.1 uses JSON Schema's type array
@@ -348,6 +528,7 @@ function buildSchemaFromTypeExpr(type: AST.TypeExpression, options: GenerateOpti
         // OpenAPI 3.0 uses nullable
         return { ...innerSchema, nullable: true };
       }
+    }
 
     case 'union':
       return {
@@ -386,9 +567,9 @@ function mapPrimitiveToSchema(name: string): OpenAPISchema {
 }
 
 /**
- * Apply ISL constraints to OpenAPI schema
+ * Apply ISL constraints to OpenAPI schema (legacy format)
  */
-function applyConstraints(schema: OpenAPISchema, constraints: AST.Constraint[]): void {
+function applyConstraints(schema: OpenAPISchema, constraints: { kind: string; value: unknown }[]): void {
   for (const constraint of constraints) {
     switch (constraint.kind) {
       case 'min':
@@ -404,10 +585,93 @@ function applyConstraints(schema: OpenAPISchema, constraints: AST.Constraint[]):
         schema.maxLength = constraint.value as number;
         break;
       case 'pattern':
-        schema.pattern = (constraint.value as RegExp).source;
+        if (constraint.value instanceof RegExp) {
+          schema.pattern = constraint.value.source;
+        } else if (typeof constraint.value === 'string') {
+          schema.pattern = constraint.value;
+        }
         break;
       case 'format':
-        schema.pattern = (constraint.value as RegExp).source;
+        if (constraint.value instanceof RegExp) {
+          schema.pattern = constraint.value.source;
+        } else if (typeof constraint.value === 'string') {
+          schema.format = constraint.value;
+        }
+        break;
+    }
+  }
+}
+
+/**
+ * Apply TypeConstraint objects to OpenAPI schema (new AST format)
+ */
+function applyTypeConstraints(schema: OpenAPISchema, constraints: TypeConstraint[]): void {
+  for (const constraint of constraints) {
+    // Handle new AST format with name as object or string
+    const constraintName = constraint.name 
+      ? (typeof constraint.name === 'string' ? constraint.name : constraint.name.name)
+      : constraint.kind;
+    
+    // Extract value - handle NumberLiteral, StringLiteral, etc.
+    let value = constraint.value;
+    if (value && typeof value === 'object' && 'value' in value) {
+      value = (value as { value: unknown }).value;
+    }
+    
+    switch (constraintName?.toLowerCase()) {
+      case 'min':
+        if (typeof value === 'number') {
+          schema.minimum = value;
+        }
+        break;
+      case 'max':
+        if (typeof value === 'number') {
+          schema.maximum = value;
+        }
+        break;
+      case 'min_length':
+      case 'minlength':
+        if (typeof value === 'number') {
+          schema.minLength = value;
+        }
+        break;
+      case 'max_length':
+      case 'maxlength':
+        if (typeof value === 'number') {
+          schema.maxLength = value;
+        }
+        break;
+      case 'pattern':
+        if (typeof value === 'string') {
+          schema.pattern = value;
+        } else if (value instanceof RegExp) {
+          schema.pattern = value.source;
+        }
+        break;
+      case 'format':
+        if (typeof value === 'string') {
+          schema.format = value;
+          // Also map common formats to patterns if needed
+          if (value === 'email') {
+            schema.format = 'email';
+          } else if (value === 'uri' || value === 'url') {
+            schema.format = 'uri';
+          } else if (value === 'uuid') {
+            schema.format = 'uuid';
+          }
+        }
+        break;
+      case 'precision':
+        // Decimal precision doesn't map directly to OpenAPI, add to description
+        if (typeof value === 'number') {
+          schema.description = (schema.description || '') + ` Decimal precision: ${value}.`;
+        }
+        break;
+      case 'unique':
+        schema.description = (schema.description || '') + ' Must be unique.';
+        break;
+      case 'immutable':
+        schema.readOnly = true;
         break;
     }
   }
@@ -417,8 +681,8 @@ function applyConstraints(schema: OpenAPISchema, constraints: AST.Constraint[]):
  * Build operation from ISL behavior
  */
 function buildOperationFromBehavior(
-  behavior: AST.Behavior,
-  domain: AST.Domain,
+  behavior: Behavior,
+  domain: Domain,
   basePath: string,
   options: GenerateOptions
 ): { path: string; method: string; operation: OpenAPIOperation } {
@@ -478,12 +742,13 @@ function buildOperationFromBehavior(
   // Error responses
   if (behavior.output?.errors) {
     for (const error of behavior.output.errors) {
-      const statusCode = inferErrorStatusCode(error.name);
+      const errorName = typeof error.name === 'string' ? error.name : error.name.name;
+      const statusCode = inferErrorStatusCode(errorName);
       operation.responses[statusCode] = {
-        description: error.name.replace(/_/g, ' '),
+        description: errorName.replace(/_/g, ' '),
         content: {
           'application/json': {
-            schema: { $ref: `#/components/schemas/${behavior.name}Error${error.name}` },
+            schema: { $ref: `#/components/schemas/${behavior.name}Error${errorName}` },
           },
         },
       };
@@ -491,9 +756,9 @@ function buildOperationFromBehavior(
   }
 
   // Standard error responses
-  operation.responses['400'] = { $ref: '#/components/responses/BadRequest' } as OpenAPIResponse;
-  operation.responses['401'] = { $ref: '#/components/responses/Unauthorized' } as OpenAPIResponse;
-  operation.responses['500'] = { $ref: '#/components/responses/InternalError' } as OpenAPIResponse;
+  operation.responses['400'] = { $ref: '#/components/responses/BadRequest' };
+  operation.responses['401'] = { $ref: '#/components/responses/Unauthorized' };
+  operation.responses['500'] = { $ref: '#/components/responses/InternalError' };
 
   return { path, method: httpMethod, operation };
 }
@@ -501,7 +766,7 @@ function buildOperationFromBehavior(
 /**
  * Build input schema from behavior
  */
-function buildInputSchema(behavior: AST.Behavior, options: GenerateOptions): OpenAPISchema {
+function buildInputSchema(behavior: Behavior, options: GenerateOptions): OpenAPISchema {
   if (!behavior.input) {
     return { type: 'object' };
   }
@@ -514,9 +779,27 @@ function buildInputSchema(behavior: AST.Behavior, options: GenerateOptions): Ope
   };
 
   for (const field of behavior.input.fields) {
-    schema.properties![field.name] = buildSchemaFromTypeExpr(field.type, options);
+    const fieldName = typeof field.name === 'string' ? field.name : (field.name as { name: string }).name;
+    const fieldSchema = buildSchemaFromTypeExpr(field.type, options);
+    
+    // Apply field-level constraints
+    if (field.constraints) {
+      applyTypeConstraints(fieldSchema, field.constraints);
+    }
+    
+    // Handle annotations
+    for (const annotation of field.annotations || []) {
+      const annotationName = typeof annotation.name === 'string' 
+        ? annotation.name 
+        : annotation.name.name;
+      if (annotationName === 'sensitive' || annotationName === 'secret') {
+        fieldSchema.writeOnly = true;
+      }
+    }
+    
+    schema.properties![fieldName] = fieldSchema;
     if (!field.optional) {
-      schema.required!.push(field.name);
+      schema.required!.push(fieldName);
     }
   }
 
@@ -526,7 +809,7 @@ function buildInputSchema(behavior: AST.Behavior, options: GenerateOptions): Ope
 /**
  * Build output schema from behavior
  */
-function buildOutputSchema(behavior: AST.Behavior, options: GenerateOptions): OpenAPISchema | null {
+function buildOutputSchema(behavior: Behavior, options: GenerateOptions): OpenAPISchema | null {
   if (!behavior.output?.success) {
     return null;
   }
@@ -537,7 +820,7 @@ function buildOutputSchema(behavior: AST.Behavior, options: GenerateOptions): Op
 /**
  * Build success response schema
  */
-function buildSuccessResponseSchema(behavior: AST.Behavior, options: GenerateOptions): OpenAPISchema {
+function buildSuccessResponseSchema(behavior: Behavior, options: GenerateOptions): OpenAPISchema {
   if (!behavior.output?.success) {
     return { type: 'object' };
   }
@@ -548,11 +831,32 @@ function buildSuccessResponseSchema(behavior: AST.Behavior, options: GenerateOpt
     return { $ref: `#/components/schemas/${successType.name}` };
   }
 
+  if (successType.kind === 'SimpleType') {
+    const name = typeof successType.name === 'string' ? successType.name : successType.name.name;
+    const primitiveSchema = mapPrimitiveToSchema(name);
+    if (primitiveSchema.type !== 'string' || primitiveSchema.format) {
+      return primitiveSchema;
+    }
+    return { $ref: `#/components/schemas/${name}` };
+  }
+
   if (successType.kind === 'list') {
     return {
       type: 'array',
       items: buildSchemaFromTypeExpr(successType.elementType, options),
     };
+  }
+
+  if (successType.kind === 'GenericType') {
+    const name = typeof successType.name === 'string' ? successType.name : successType.name.name;
+    if (name === 'List' || name === 'Array') {
+      return {
+        type: 'array',
+        items: successType.typeArguments[0] 
+          ? buildSchemaFromTypeExpr(successType.typeArguments[0], options)
+          : { type: 'object' },
+      };
+    }
   }
 
   return buildSchemaFromTypeExpr(successType, options);
@@ -561,12 +865,13 @@ function buildSuccessResponseSchema(behavior: AST.Behavior, options: GenerateOpt
 /**
  * Build error schema
  */
-function buildErrorSchema(error: AST.ErrorDefinition, options: GenerateOptions): OpenAPISchema {
+function buildErrorSchema(error: ErrorDefinition, options: GenerateOptions): OpenAPISchema {
+  const errorName = typeof error.name === 'string' ? error.name : error.name.name;
   const schema: OpenAPISchema = {
     type: 'object',
-    title: error.name,
+    title: errorName,
     properties: {
-      code: { type: 'string', const: error.name },
+      code: { type: 'string', const: errorName },
       message: { type: 'string' },
     },
     required: ['code', 'message'],
@@ -579,7 +884,8 @@ function buildErrorSchema(error: AST.ErrorDefinition, options: GenerateOptions):
     };
 
     for (const field of error.fields) {
-      schema.properties!['details']!.properties![field.name] = buildSchemaFromTypeExpr(
+      const fieldName = typeof field.name === 'string' ? field.name : (field.name as { name: string }).name;
+      schema.properties!['details']!.properties![fieldName] = buildSchemaFromTypeExpr(
         field.type,
         options
       );
@@ -594,7 +900,7 @@ function buildErrorSchema(error: AST.ErrorDefinition, options: GenerateOptions):
  */
 function extractPathParameters(
   path: string,
-  behavior: AST.Behavior,
+  behavior: Behavior,
   options: GenerateOptions
 ): OpenAPIParameter[] {
   const params: OpenAPIParameter[] = [];
@@ -602,7 +908,10 @@ function extractPathParameters(
 
   for (const param of pathParams) {
     const paramName = param.slice(1);
-    const field = behavior.input?.fields.find((f) => f.name === paramName);
+    const field = behavior.input?.fields.find((f) => {
+      const fieldName = typeof f.name === 'string' ? f.name : (f.name as { name: string }).name;
+      return fieldName === paramName;
+    });
 
     params.push({
       name: paramName,
@@ -621,7 +930,7 @@ function extractPathParameters(
  * Extract query parameters from behavior input
  */
 function extractQueryParameters(
-  behavior: AST.Behavior,
+  behavior: Behavior,
   options: GenerateOptions
 ): OpenAPIParameter[] {
   if (!behavior.input) return [];
@@ -629,14 +938,22 @@ function extractQueryParameters(
   const params: OpenAPIParameter[] = [];
 
   for (const field of behavior.input.fields) {
+    const fieldName = typeof field.name === 'string' ? field.name : (field.name as { name: string }).name;
     // Skip fields that are likely path params
-    if (['id', 'userId', 'entityId'].includes(field.name)) continue;
+    if (['id', 'userId', 'entityId'].includes(fieldName)) continue;
+
+    const paramSchema = buildSchemaFromTypeExpr(field.type, options);
+    
+    // Apply constraints to query parameter schema
+    if (field.constraints) {
+      applyTypeConstraints(paramSchema, field.constraints);
+    }
 
     params.push({
-      name: field.name,
+      name: fieldName,
       in: 'query',
       required: !field.optional,
-      schema: buildSchemaFromTypeExpr(field.type, options),
+      schema: paramSchema,
     });
   }
 
@@ -646,14 +963,15 @@ function extractQueryParameters(
 /**
  * Build tags from domain
  */
-function buildTags(domain: AST.Domain): OpenAPITag[] {
+function buildTags(domain: Domain): OpenAPITag[] {
   const tags: OpenAPITag[] = [];
 
   // Add a tag for each entity
   for (const entity of domain.entities || []) {
+    const entityName = typeof entity.name === 'string' ? entity.name : (entity.name as { name: string }).name;
     tags.push({
-      name: entity.name,
-      description: `Operations related to ${entity.name}`,
+      name: entityName,
+      description: `Operations related to ${entityName}`,
     });
   }
 
@@ -712,16 +1030,20 @@ function inferPath(name: string): string {
 /**
  * Infer tag from behavior name
  */
-function inferTag(name: string, domain: AST.Domain): string {
+function inferTag(name: string, domain: Domain): string {
   const match = name.match(/^(Get|Create|Update|Delete|List|Find|Search|Add|Remove)(.+)$/i);
 
   if (match) {
     const [, , resource] = match;
     // Find matching entity
-    const entity = (domain.entities || []).find(
-      (e) => e.name.toLowerCase() === resource.toLowerCase()
-    );
-    if (entity) return entity.name;
+    const entity = (domain.entities || []).find((e) => {
+      const entityName = typeof e.name === 'string' ? e.name : (e.name as { name: string }).name;
+      return entityName.toLowerCase() === resource.toLowerCase();
+    });
+    if (entity) {
+      const entityName = typeof entity.name === 'string' ? entity.name : (entity.name as { name: string }).name;
+      return entityName;
+    }
   }
 
   return domain.name;

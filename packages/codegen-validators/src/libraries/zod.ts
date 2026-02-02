@@ -21,24 +21,40 @@ export function generateZodSchema(
  */
 export function generateZodType(type: AST.TypeExpression, options: GenerateOptions): string {
   switch (type.kind) {
-    case 'primitive':
-      return generateZodPrimitive(type.name, options);
+    case 'SimpleType':
+      // Could be a primitive type or a reference to another type
+      return generateZodPrimitive(type.name.name, options);
 
-    case 'reference':
-      return `${type.name}Schema`;
-
-    case 'list':
+    case 'ArrayType':
       return `z.array(${generateZodType(type.elementType, options)})`;
 
-    case 'map':
-      return `z.record(${generateZodType(type.keyType, options)}, ${generateZodType(type.valueType, options)})`;
+    case 'GenericType': {
+      const typeName = type.name.name;
+      if (typeName === 'List' || typeName === 'Array') {
+        return `z.array(${generateZodType(type.typeArguments[0], options)})`;
+      }
+      if (typeName === 'Map' || typeName === 'Record') {
+        const keyType = generateZodType(type.typeArguments[0], options);
+        const valueType = generateZodType(type.typeArguments[1], options);
+        return `z.record(${keyType}, ${valueType})`;
+      }
+      if (typeName === 'Optional' || typeName === 'Maybe') {
+        return `${generateZodType(type.typeArguments[0], options)}.optional()`;
+      }
+      // Reference to a generic type
+      return `${typeName}Schema`;
+    }
 
-    case 'optional':
-      return `${generateZodType(type.innerType, options)}.optional()`;
-
-    case 'union':
-      const variants = type.variants.map((v) => generateZodType(v, options));
+    case 'UnionType':
+      const variants = type.variants.map((v) => `z.literal('${v.name.name}')`);
       return `z.union([${variants.join(', ')}])`;
+
+    case 'ObjectType':
+      // Inline object type
+      const fields = type.fields.map((f) => 
+        `${f.name.name}: ${generateZodType(f.type, options)}`
+      ).join(', ');
+      return `z.object({ ${fields} })`;
 
     default:
       return 'z.unknown()';
@@ -75,13 +91,15 @@ function generateZodPrimitive(name: string, options: GenerateOptions): string {
  * Generate Zod schema for entity
  */
 export function generateZodEntity(
-  entity: AST.Entity,
+  entity: AST.EntityDeclaration,
   options: GenerateOptions
 ): ValidatorDefinition {
   const fields: string[] = [];
+  const entityName = entity.name.name;
 
   for (const field of entity.fields) {
     let fieldSchema = generateZodType(field.type, options);
+    const fieldName = field.name.name;
 
     // Apply constraints from annotations
     fieldSchema = applyZodConstraints(fieldSchema, field, options);
@@ -93,40 +111,37 @@ export function generateZodEntity(
       }
     }
 
-    fields.push(`  ${field.name}: ${fieldSchema}`);
+    fields.push(`  ${fieldName}: ${fieldSchema}`);
   }
 
-  const schemaCode = `export const ${entity.name}Schema = z.object({\n${fields.join(',\n')}\n});`;
+  const schemaCode = `export const ${entityName}Schema = z.object({\n${fields.join(',\n')}\n});`;
 
   const typeCode = options.brandedTypes
-    ? `export type ${entity.name} = z.infer<typeof ${entity.name}Schema>;`
-    : `export type ${entity.name} = z.infer<typeof ${entity.name}Schema>;`;
+    ? `export type ${entityName} = z.infer<typeof ${entityName}Schema>;`
+    : `export type ${entityName} = z.infer<typeof ${entityName}Schema>;`;
 
   return {
-    name: entity.name,
+    name: entityName,
     schemaCode,
     typeCode,
-    description: `Validator for ${entity.name} entity`,
+    description: `Validator for ${entityName} entity`,
   };
 }
 
 /**
  * Generate Zod schema for enum
  */
-export function generateZodEnum(typeDecl: AST.TypeDeclaration, options: GenerateOptions): ValidatorDefinition {
-  if (typeDecl.definition.kind !== 'enum') {
-    throw new Error(`Expected enum type, got ${typeDecl.definition.kind}`);
-  }
-
-  const values = typeDecl.definition.values.map((v) => `'${v.name}'`).join(', ');
-  const schemaCode = `export const ${typeDecl.name}Schema = z.enum([${values}]);`;
-  const typeCode = `export type ${typeDecl.name} = z.infer<typeof ${typeDecl.name}Schema>;`;
+export function generateZodEnum(enumDecl: AST.EnumDeclaration, options: GenerateOptions): ValidatorDefinition {
+  const enumName = enumDecl.name.name;
+  const values = enumDecl.variants.map((v) => `'${v.name}'`).join(', ');
+  const schemaCode = `export const ${enumName}Schema = z.enum([${values}]);`;
+  const typeCode = `export type ${enumName} = z.infer<typeof ${enumName}Schema>;`;
 
   return {
-    name: typeDecl.name,
+    name: enumName,
     schemaCode,
     typeCode,
-    description: `Enum validator for ${typeDecl.name}`,
+    description: `Enum validator for ${enumName}`,
   };
 }
 
@@ -134,35 +149,37 @@ export function generateZodEnum(typeDecl: AST.TypeDeclaration, options: Generate
  * Generate Zod schema for behavior input
  */
 export function generateZodBehaviorInput(
-  behavior: AST.Behavior,
+  behavior: AST.BehaviorDeclaration,
   options: GenerateOptions
 ): ValidatorDefinition | null {
   if (!behavior.input || behavior.input.fields.length === 0) {
     return null;
   }
 
+  const behaviorName = behavior.name.name;
   const fields: string[] = [];
 
   for (const field of behavior.input.fields) {
     let fieldSchema = generateZodType(field.type, options);
+    const fieldName = field.name.name;
     fieldSchema = applyZodConstraints(fieldSchema, field, options);
 
     if (field.optional) {
       fieldSchema = `${fieldSchema}.optional()`;
     }
 
-    fields.push(`  ${field.name}: ${fieldSchema}`);
+    fields.push(`  ${fieldName}: ${fieldSchema}`);
   }
 
-  const schemaName = `${behavior.name}InputSchema`;
+  const schemaName = `${behaviorName}InputSchema`;
   const schemaCode = `export const ${schemaName} = z.object({\n${fields.join(',\n')}\n});`;
-  const typeCode = `export type ${behavior.name}Input = z.infer<typeof ${schemaName}>;`;
+  const typeCode = `export type ${behaviorName}Input = z.infer<typeof ${schemaName}>;`;
 
   return {
     name: schemaName,
     schemaCode,
     typeCode,
-    description: `Input validator for ${behavior.name}`,
+    description: `Input validator for ${behaviorName}`,
   };
 }
 
@@ -171,37 +188,40 @@ export function generateZodBehaviorInput(
  */
 function applyZodConstraints(
   schema: string,
-  field: AST.Field,
+  field: AST.FieldDeclaration,
   options: GenerateOptions
 ): string {
   let result = schema;
+  const fieldName = field.name.name;
 
   for (const annotation of field.annotations || []) {
-    switch (annotation.name) {
+    const annotationName = annotation.name.name;
+    const annotationValue = annotation.value;
+    switch (annotationName) {
       case 'minLength':
-        if (annotation.args?.[0]) {
-          result = `${result}.min(${annotation.args[0]})`;
+        if (annotationValue && annotationValue.kind === 'NumberLiteral') {
+          result = `${result}.min(${annotationValue.value})`;
         }
         break;
       case 'maxLength':
-        if (annotation.args?.[0]) {
-          result = `${result}.max(${annotation.args[0]})`;
+        if (annotationValue && annotationValue.kind === 'NumberLiteral') {
+          result = `${result}.max(${annotationValue.value})`;
         }
         break;
       case 'min':
-        if (annotation.args?.[0]) {
-          result = `${result}.min(${annotation.args[0]})`;
+        if (annotationValue && annotationValue.kind === 'NumberLiteral') {
+          result = `${result}.min(${annotationValue.value})`;
         }
         break;
       case 'max':
-        if (annotation.args?.[0]) {
-          result = `${result}.max(${annotation.args[0]})`;
+        if (annotationValue && annotationValue.kind === 'NumberLiteral') {
+          result = `${result}.max(${annotationValue.value})`;
         }
         break;
       case 'pattern':
       case 'regex':
-        if (annotation.args?.[0]) {
-          result = `${result}.regex(${annotation.args[0]})`;
+        if (annotationValue && annotationValue.kind === 'StringLiteral') {
+          result = `${result}.regex(${annotationValue.value})`;
         }
         break;
       case 'positive':
@@ -224,7 +244,6 @@ function applyZodConstraints(
 
   // Add custom error messages
   if (options.includeMessages) {
-    const fieldName = field.name;
     if (schema.includes('z.string()')) {
       result = result.replace(
         'z.string()',
@@ -246,12 +265,12 @@ function applyZodConstraints(
  * Generate Zod refinement from ISL invariant
  */
 export function generateZodRefinement(
-  invariant: AST.Invariant,
+  invariant: AST.InvariantStatement,
   schemaName: string
 ): string {
   // Convert ISL expression to JavaScript predicate
   const predicate = compileInvariantToPredicate(invariant.expression);
-  const message = invariant.message || 'Validation failed';
+  const message = invariant.description?.value || 'Validation failed';
 
   return `export const ${schemaName}WithInvariants = ${schemaName}.refine(
   (data) => ${predicate},
@@ -264,29 +283,59 @@ export function generateZodRefinement(
  */
 function compileInvariantToPredicate(expr: AST.Expression): string {
   switch (expr.kind) {
-    case 'binary':
+    case 'BinaryExpression': {
       const left = compileInvariantToPredicate(expr.left);
       const right = compileInvariantToPredicate(expr.right);
       const op = mapOperator(expr.operator);
       return `(${left} ${op} ${right})`;
+    }
 
-    case 'unary':
+    case 'ComparisonExpression': {
+      const left = compileInvariantToPredicate(expr.left);
+      const right = compileInvariantToPredicate(expr.right);
+      const op = mapOperator(expr.operator);
+      return `(${left} ${op} ${right})`;
+    }
+
+    case 'LogicalExpression': {
+      const left = compileInvariantToPredicate(expr.left);
+      const right = compileInvariantToPredicate(expr.right);
+      const op = mapOperator(expr.operator);
+      return `(${left} ${op} ${right})`;
+    }
+
+    case 'UnaryExpression': {
       const operand = compileInvariantToPredicate(expr.operand);
       if (expr.operator === 'not') {
         return `!(${operand})`;
       }
       return operand;
+    }
 
-    case 'member':
-      return `data.${expr.path.join('.')}`;
+    case 'MemberExpression': {
+      const obj = compileInvariantToPredicate(expr.object);
+      return `${obj}.${expr.property.name}`;
+    }
 
-    case 'literal':
-      if (typeof expr.value === 'string') {
-        return `"${expr.value}"`;
-      }
+    case 'CallExpression': {
+      const callee = compileInvariantToPredicate(expr.callee);
+      const args = expr.arguments.map(compileInvariantToPredicate).join(', ');
+      return `${callee}(${args})`;
+    }
+
+    case 'StringLiteral':
+      return `"${expr.value}"`;
+
+    case 'NumberLiteral':
       return String(expr.value);
 
-    case 'identifier':
+    case 'BooleanLiteral':
+      return String(expr.value);
+
+    case 'NullLiteral':
+      return 'null';
+
+    case 'Identifier':
       return `data.${expr.name}`;
 
     default:

@@ -3,7 +3,48 @@
 // Optimizes WAT/WASM for size and performance
 // ============================================================================
 
-import type { WasmModule, WasmFunction, WasmInstruction } from './types';
+// ============================================================================
+// INTERNAL TYPES (optimizer-specific representation)
+// ============================================================================
+
+/**
+ * Internal instruction representation for optimization passes
+ */
+interface WasmInstruction {
+  op: string;
+  func?: string | number;
+  index?: number;
+  value?: number;
+  depths?: number[];
+  default?: number;
+  type?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Internal function representation for optimization passes
+ */
+interface WasmFunction {
+  name: string;
+  body: WasmInstruction[];
+  export?: boolean;
+  type: { params: string[]; results: string[] };
+}
+
+/**
+ * Internal module representation for optimization passes
+ */
+interface WasmModule {
+  name: string;
+  functions: WasmFunction[];
+  globals: { name: string; type: string; mutable: boolean; init: number | bigint }[];
+  exports: { name: string; kind: string; index: number }[];
+  imports: { module: string; name: string; kind: string }[];
+  start?: number;
+  memories: unknown[];
+  tables: unknown[];
+  data: unknown[];
+}
 
 // ============================================================================
 // TYPES
@@ -140,7 +181,7 @@ function eliminateDeadCode(module: WasmModule): { module: WasmModule; removedCou
             changed = true;
           }
         }
-        if (instr.op === 'global.get' || instr.op === 'global.set') {
+        if ((instr.op === 'global.get' || instr.op === 'global.set') && instr.index !== undefined) {
           usedGlobals.add(instr.index);
         }
       }
@@ -148,8 +189,8 @@ function eliminateDeadCode(module: WasmModule): { module: WasmModule; removedCou
   }
 
   const originalCount = module.functions.length;
-  const filteredFunctions = module.functions.filter(f => usedFunctions.has(f.name));
-  const filteredGlobals = module.globals.filter((_, i) => usedGlobals.has(i));
+  const filteredFunctions = module.functions.filter((f: WasmFunction) => usedFunctions.has(f.name));
+  const filteredGlobals = module.globals.filter((_: unknown, i: number) => usedGlobals.has(i));
 
   return {
     module: {
@@ -168,11 +209,11 @@ function eliminateDeadCode(module: WasmModule): { module: WasmModule; removedCou
 function foldConstants(module: WasmModule): { module: WasmModule; foldedCount: number } {
   let foldedCount = 0;
 
-  const optimizedFunctions = module.functions.map(func => {
+  const optimizedFunctions = module.functions.map((func: WasmFunction) => {
     const optimizedBody: WasmInstruction[] = [];
     
     for (let i = 0; i < func.body.length; i++) {
-      const curr = func.body[i];
+      const curr = func.body[i]!;
       const prev = optimizedBody[optimizedBody.length - 1];
       const prev2 = optimizedBody[optimizedBody.length - 2];
 
@@ -180,13 +221,15 @@ function foldConstants(module: WasmModule): { module: WasmModule; foldedCount: n
       if (
         curr.op === 'i32.add' &&
         prev?.op === 'i32.const' &&
-        prev2?.op === 'i32.const'
+        prev2?.op === 'i32.const' &&
+        prev.value !== undefined &&
+        prev2.value !== undefined
       ) {
         optimizedBody.pop();
         optimizedBody.pop();
         optimizedBody.push({
           op: 'i32.const',
-          value: prev2.value + prev.value,
+          value: (prev2.value as number) + (prev.value as number),
         });
         foldedCount++;
         continue;
@@ -196,13 +239,15 @@ function foldConstants(module: WasmModule): { module: WasmModule; foldedCount: n
       if (
         curr.op === 'i32.mul' &&
         prev?.op === 'i32.const' &&
-        prev2?.op === 'i32.const'
+        prev2?.op === 'i32.const' &&
+        prev.value !== undefined &&
+        prev2.value !== undefined
       ) {
         optimizedBody.pop();
         optimizedBody.pop();
         optimizedBody.push({
           op: 'i32.const',
-          value: prev2.value * prev.value,
+          value: (prev2.value as number) * (prev.value as number),
         });
         foldedCount++;
         continue;
@@ -248,17 +293,17 @@ function foldConstants(module: WasmModule): { module: WasmModule; foldedCount: n
 // ============================================================================
 
 function optimizeLocals(module: WasmModule): WasmModule {
-  const optimizedFunctions = module.functions.map(func => {
+  const optimizedFunctions = module.functions.map((func: WasmFunction) => {
     // Track local usage
     const localUsage = new Map<number, { reads: number; writes: number }>();
     
     for (const instr of func.body) {
-      if (instr.op === 'local.get') {
+      if (instr.op === 'local.get' && instr.index !== undefined) {
         const usage = localUsage.get(instr.index) ?? { reads: 0, writes: 0 };
         usage.reads++;
         localUsage.set(instr.index, usage);
       }
-      if (instr.op === 'local.set' || instr.op === 'local.tee') {
+      if ((instr.op === 'local.set' || instr.op === 'local.tee') && instr.index !== undefined) {
         const usage = localUsage.get(instr.index) ?? { reads: 0, writes: 0 };
         usage.writes++;
         localUsage.set(instr.index, usage);
@@ -266,8 +311,8 @@ function optimizeLocals(module: WasmModule): WasmModule {
     }
 
     // Remove unused local.set where local is never read
-    const optimizedBody = func.body.filter((instr, i) => {
-      if (instr.op === 'local.set') {
+    const optimizedBody = func.body.filter((instr: WasmInstruction, _i: number) => {
+      if (instr.op === 'local.set' && instr.index !== undefined) {
         const usage = localUsage.get(instr.index);
         if (usage && usage.reads === 0) {
           // Replace with drop
@@ -288,11 +333,11 @@ function optimizeLocals(module: WasmModule): WasmModule {
 // ============================================================================
 
 function optimizeStack(module: WasmModule): WasmModule {
-  const optimizedFunctions = module.functions.map(func => {
+  const optimizedFunctions = module.functions.map((func: WasmFunction) => {
     const optimizedBody: WasmInstruction[] = [];
     
     for (let i = 0; i < func.body.length; i++) {
-      const curr = func.body[i];
+      const curr = func.body[i]!;
       const prev = optimizedBody[optimizedBody.length - 1];
 
       // Remove push followed by drop
@@ -305,6 +350,7 @@ function optimizeStack(module: WasmModule): WasmModule {
       if (
         curr.op === 'local.get' &&
         prev?.op === 'local.set' &&
+        curr.index !== undefined &&
         curr.index === prev.index
       ) {
         optimizedBody.pop();
@@ -351,7 +397,7 @@ function inlineSmallFunctions(
 
   let inlinedCount = 0;
 
-  const optimizedFunctions = module.functions.map(func => {
+  const optimizedFunctions = module.functions.map((func: WasmFunction) => {
     const optimizedBody: WasmInstruction[] = [];
     
     for (const instr of func.body) {
@@ -381,7 +427,7 @@ function inlineSmallFunctions(
 // ============================================================================
 
 function peepholeOptimize(module: WasmModule): WasmModule {
-  const optimizedFunctions = module.functions.map(func => {
+  const optimizedFunctions = module.functions.map((func: WasmFunction) => {
     let optimizedBody = [...func.body];
     let changed = true;
 
@@ -390,7 +436,7 @@ function peepholeOptimize(module: WasmModule): WasmModule {
       const newBody: WasmInstruction[] = [];
 
       for (let i = 0; i < optimizedBody.length; i++) {
-        const curr = optimizedBody[i];
+        const curr = optimizedBody[i]!;
         const next = optimizedBody[i + 1];
 
         // Remove nop
@@ -405,7 +451,7 @@ function peepholeOptimize(module: WasmModule): WasmModule {
           // Skip until end or block/loop
           while (
             i + 1 < optimizedBody.length &&
-            !['end', 'else', 'block', 'loop'].includes(optimizedBody[i + 1].op)
+            !['end', 'else', 'block', 'loop'].includes(optimizedBody[i + 1]!.op)
           ) {
             i++;
             changed = true;

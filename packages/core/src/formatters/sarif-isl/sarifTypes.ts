@@ -36,7 +36,7 @@ export interface SarifRun {
   /** Artifacts analyzed */
   readonly artifacts?: SarifArtifact[];
   /** Original URI base IDs */
-  readonly originalUriBaseIds?: Record<string, SarifArtifactLocation>;
+  originalUriBaseIds?: Record<string, SarifArtifactLocation>;
 }
 
 /**
@@ -453,9 +453,9 @@ export interface SarifSuppression {
  */
 export interface SarifPropertyBag {
   /** Additional tags */
-  readonly tags?: string[];
+  tags?: string[];
   /** Any additional properties */
-  readonly [key: string]: unknown;
+  [key: string]: unknown;
 }
 
 // =============================================================================

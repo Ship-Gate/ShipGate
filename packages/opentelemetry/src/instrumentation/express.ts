@@ -180,7 +180,7 @@ export function islExpressMiddleware(
           if (typeof encoding === 'function') {
             return originalEnd(chunk, encoding);
           }
-          return originalEnd(chunk, encoding, callback);
+          return originalEnd(chunk, encoding ?? 'utf8', callback);
         } as Response['end'];
 
         // Handle errors
@@ -212,8 +212,8 @@ export function islExpressErrorHandler(): (
 ) => void {
   return (
     err: Error,
-    req: Request,
-    res: Response,
+    _req: Request,
+    _res: Response,
     next: NextFunction
   ): void => {
     const span = trace.getActiveSpan();
@@ -265,7 +265,7 @@ export function traceBehavior(
       if (typeof encoding === 'function') {
         return originalEnd(chunk, encoding);
       }
-      return originalEnd(chunk, encoding, callback);
+      return originalEnd(chunk, encoding ?? 'utf8', callback);
     } as Response['end'];
 
     context.with(
@@ -305,7 +305,7 @@ export function traceVerification(
       if (typeof encoding === 'function') {
         return originalEnd(chunk, encoding);
       }
-      return originalEnd(chunk, encoding, callback);
+      return originalEnd(chunk, encoding ?? 'utf8', callback);
     } as Response['end'];
 
     context.with(
@@ -318,7 +318,7 @@ export function traceVerification(
 /**
  * Create ISL headers for outgoing requests
  */
-export function createISLRequestHeaders(req: Request): Record<string, string> {
+export function createISLRequestHeaders(_req: Request): Record<string, string> {
   const islContext = getISLContext();
   if (!islContext) return {};
 

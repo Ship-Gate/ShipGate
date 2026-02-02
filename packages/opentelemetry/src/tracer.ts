@@ -67,10 +67,10 @@ export interface CoverageResult {
 export class ISLTracer {
   private tracer: Tracer;
   private provider: NodeTracerProvider;
-  private config: ISLTracerConfig;
+  private readonly _config: ISLTracerConfig;
 
   constructor(config: ISLTracerConfig) {
-    this.config = config;
+    this._config = config;
 
     // Create resource with ISL attributes
     const resource = new Resource({
@@ -411,6 +411,13 @@ export class ISLTracer {
     if (span) {
       span.setAttribute(key, value);
     }
+  }
+
+  /**
+   * Get the tracer configuration
+   */
+  getConfig(): ISLTracerConfig {
+    return this._config;
   }
 }
 

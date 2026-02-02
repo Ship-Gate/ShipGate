@@ -2,8 +2,8 @@
 // Expression Evaluator - Runtime evaluation of ISL expressions
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
-import type { EvaluationContext, EntityInstance } from './types';
+import type * as AST from '@isl-lang/parser';
+import type { EvaluationContext, EntityInstance } from './types.js';
 
 /**
  * Evaluate an ISL expression in the given context
@@ -248,7 +248,7 @@ function evaluateBinaryExpr(expr: AST.BinaryExpr, ctx: EvaluationContext): unkno
         return right.includes(left);
       }
       if (typeof right === 'object' && right !== null) {
-        return left in right;
+        return String(left) in right;
       }
       return false;
     default:
@@ -672,7 +672,7 @@ function evaluateQuantifierExpr(expr: AST.QuantifierExpr, ctx: EvaluationContext
           innerCtx.variables.set(variable, item);
           return Boolean(evaluate(expr.predicate, innerCtx));
         })
-        .reduce((acc, item) => acc + (item as number), 0);
+        .reduce((acc: number, item) => acc + (item as number), 0);
 
     case 'filter':
       return items.filter((item) => {

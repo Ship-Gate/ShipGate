@@ -5,8 +5,6 @@
  * Multi-channel notification system: email, SMS, push notifications.
  */
 
-import { randomUUID } from 'crypto';
-
 // ============================================================================
 // TEMPLATE TYPES & STORE
 // ============================================================================
@@ -96,8 +94,15 @@ export class TemplateStore {
       throw new TemplateError('MISSING_SUBJECT', 'Email template requires subject');
     }
 
-    // Extract variables from body
+    // Extract variables from body and subject
     const detectedVars = this.extractVariables(input.body);
+    if (input.subject) {
+      for (const v of this.extractVariables(input.subject)) {
+        if (!detectedVars.includes(v)) {
+          detectedVars.push(v);
+        }
+      }
+    }
     const declaredVars = input.variables ?? [];
     
     // Validate all detected variables are declared
@@ -192,8 +197,9 @@ export class TemplateStore {
     let match;
     
     while ((match = regex.exec(body)) !== null) {
-      if (!variables.includes(match[1])) {
-        variables.push(match[1]);
+      const varName = match[1];
+      if (varName && !variables.includes(varName)) {
+        variables.push(varName);
       }
     }
     
@@ -280,8 +286,9 @@ export function validateTemplate(input: {
   let match;
   
   while ((match = regex.exec(input.body)) !== null) {
-    if (!detectedVariables.includes(match[1])) {
-      detectedVariables.push(match[1]);
+    const varName = match[1];
+    if (varName && !detectedVariables.includes(varName)) {
+      detectedVariables.push(varName);
     }
   }
 
@@ -308,9 +315,42 @@ export function validateTemplate(input: {
 // RE-EXPORT CHANNEL IMPLEMENTATIONS
 // ============================================================================
 
-export * from './email.js';
-export * from './sms.js';
-export * from './push.js';
+// Re-export from channel implementations (avoiding duplicate exports)
+export { 
+  emailStore, 
+  EmailStore, 
+  EmailError,
+  type Email,
+  type Attachment,
+  type BounceType,
+  type EmailNotification,
+  type SendEmailInput,
+  type SendEmailDirectInput,
+} from './email.js';
+
+export { 
+  smsStore, 
+  SMSStore, 
+  SMSError,
+  type Phone,
+  type SMSNotification,
+  type SendSMSInput,
+  type SendSMSDirectInput,
+  type SendVerificationSMSInput,
+  type VerificationResult,
+} from './sms.js';
+
+export { 
+  pushStore, 
+  PushStore, 
+  PushError,
+  type DeviceToken,
+  type PushPlatform,
+  type PushNotification,
+  type SendPushInput,
+  type SendPushDirectInput,
+  type DeviceRegistration,
+} from './push.js';
 
 // ============================================================================
 // UNIFIED NOTIFICATION TYPES
@@ -458,6 +498,7 @@ export async function BatchSend(input: {
 
   for (let i = 0; i < input.recipients.length; i++) {
     const recipient = input.recipients[i];
+    if (!recipient) continue;
     
     // Merge shared variables with recipient-specific
     const variables = {

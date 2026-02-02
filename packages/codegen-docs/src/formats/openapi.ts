@@ -497,6 +497,7 @@ interface SchemaObject {
   nullable?: boolean;
   enum?: string[];
   uniqueItems?: boolean;
+  default?: unknown;
 }
 
 interface SecurityScheme {

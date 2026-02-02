@@ -8,7 +8,6 @@ import {
   MemoryIdempotencyStore,
   createMemoryStore,
   RecordStatus,
-  IdempotencyErrorCode,
   IdempotencyException,
 } from '../implementations/typescript';
 
@@ -166,6 +165,7 @@ describe('MemoryIdempotencyStore', () => {
         key: 'test-key',
         requestHash: 'hash123',
       });
+      expect(first.acquired).toBe(true);
 
       await store.record({
         key: 'test-key',

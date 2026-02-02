@@ -6,7 +6,6 @@
 
 import type { CommandContext } from './verify.js';
 import { buildComparisonBlocks, buildErrorBlocks } from '../views/blocks.js';
-import { createComparisonChart } from '../utils/charts.js';
 
 // ============================================================================
 // Types
@@ -50,7 +49,7 @@ export const registerCompareCommand = {
   ],
 
   async handler(context: CommandContext): Promise<void> {
-    const { args, respond, userId } = context;
+    const { args, respond } = context;
 
     const v1 = args[0];
     const v2 = args[1];
@@ -96,7 +95,7 @@ export const registerCompareCommand = {
 async function getComparison(
   v1: string,
   v2: string,
-  domain?: string
+  _domain?: string
 ): Promise<ComparisonResult> {
   // TODO: Integrate with actual ISL verification service
   // For now, return mock data

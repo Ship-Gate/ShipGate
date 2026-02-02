@@ -100,7 +100,7 @@ export function registerVerificationEvents(app: App): void {
   });
 
   // Handle rerun verification action
-  app.action('rerun_verification', async ({ ack, body, client, respond }) => {
+  app.action('rerun_verification', async ({ ack, body, respond }) => {
     await ack();
 
     const actionBody = body as any;

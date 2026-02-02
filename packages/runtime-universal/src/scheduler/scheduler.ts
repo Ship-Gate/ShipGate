@@ -3,7 +3,7 @@
  * Manages execution of ISL behaviors with priorities and concurrency control
  */
 
-import { ExecutionContext, ExecutionResult, Actor } from '../types';
+import { ExecutionResult, Actor } from '../types';
 
 /**
  * Scheduler configuration

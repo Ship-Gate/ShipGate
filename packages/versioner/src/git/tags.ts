@@ -4,8 +4,8 @@
 // ============================================================================
 
 import { spawn } from 'child_process';
-import type { SemanticVersion } from '../versioner';
-import { formatVersion, parseVersion, compareVersions } from '../versioner';
+import type { SemanticVersion } from '../versioner.js';
+import { formatVersion, parseVersion, compareVersions } from '../versioner.js';
 
 // ============================================================================
 // TYPES

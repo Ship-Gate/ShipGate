@@ -123,17 +123,17 @@ export function BreakingChanges({
                       </p>
 
                       {/* Value change display */}
-                      {(change.oldValue || change.newValue) && (
+                      {(change.oldValue !== undefined || change.newValue !== undefined) && (
                         <div className="mt-2 flex items-center gap-2 text-xs font-mono">
-                          {change.oldValue && (
+                          {change.oldValue !== undefined && (
                             <span className="px-2 py-1 bg-red-100 text-red-800 rounded">
                               {String(change.oldValue)}
                             </span>
                           )}
-                          {change.oldValue && change.newValue && (
+                          {change.oldValue !== undefined && change.newValue !== undefined && (
                             <ArrowRight className="w-3 h-3 text-gray-400" />
                           )}
-                          {change.newValue && (
+                          {change.newValue !== undefined && (
                             <span className="px-2 py-1 bg-green-100 text-green-800 rounded">
                               {String(change.newValue)}
                             </span>

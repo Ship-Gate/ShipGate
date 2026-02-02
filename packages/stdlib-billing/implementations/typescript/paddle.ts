@@ -38,7 +38,7 @@ import {
   BillingService,
   BillingError,
 } from './index.js';
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 
 // ============================================================================
 // CONFIGURATION

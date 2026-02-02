@@ -25,10 +25,22 @@
   ],
   "author": "mevla",
   "license": "MIT",
+  "dependencies": {
+    "zod": "^3.22.0"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
     "typescript": "^5.3.0",
     "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   },
   "repository": {
     "type": "git",

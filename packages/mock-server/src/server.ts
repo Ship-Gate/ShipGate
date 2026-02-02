@@ -6,9 +6,7 @@
 
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import bodyParser from 'body-parser';
 import * as fs from 'fs';
-import * as path from 'path';
 import { MockState } from './state.js';
 import { ResponseGenerator } from './generators/response.js';
 import { DataGenerator } from './generators/data.js';
@@ -65,7 +63,7 @@ export class MockServer {
   private state: MockState;
   private responseGenerator: ResponseGenerator;
   private dataGenerator: DataGenerator;
-  private errorGenerator: ErrorGenerator;
+  private _errorGenerator: ErrorGenerator;
   private scenarioManager: ScenarioManager;
   private recordingManager: RecordingManager;
   private domain: ParsedDomain;
@@ -94,7 +92,7 @@ export class MockServer {
       dataGenerator: this.dataGenerator,
       state: this.state,
     });
-    this.errorGenerator = new ErrorGenerator();
+    this._errorGenerator = new ErrorGenerator();
     this.scenarioManager = new ScenarioManager({ scenarios: this.options.scenarios });
     this.recordingManager = new RecordingManager(this.options.recording);
 
@@ -123,7 +121,7 @@ export class MockServer {
 
     // Extract domain name
     const domainMatch = content.match(/domain\s+(\w+)\s*\{/);
-    if (domainMatch) {
+    if (domainMatch?.[1]) {
       domain.name = domainMatch[1];
     }
 
@@ -131,8 +129,8 @@ export class MockServer {
     const entityRegex = /entity\s+(\w+)\s*\{([^}]+)\}/g;
     let entityMatch;
     while ((entityMatch = entityRegex.exec(content)) !== null) {
-      const name = entityMatch[1];
-      const body = entityMatch[2];
+      const name = entityMatch[1] ?? '';
+      const body = entityMatch[2] ?? '';
       const fields = this.parseFields(body);
       domain.entities.push({ name, fields });
     }
@@ -141,8 +139,8 @@ export class MockServer {
     const behaviorRegex = /behavior\s+(\w+)\s*\{([\s\S]*?)(?=\n\s*(?:behavior|entity|enum|type|invariants|\}))/g;
     let behaviorMatch;
     while ((behaviorMatch = behaviorRegex.exec(content)) !== null) {
-      const name = behaviorMatch[1];
-      const body = behaviorMatch[2];
+      const name = behaviorMatch[1] ?? '';
+      const body = behaviorMatch[2] ?? '';
       const behavior = this.parseBehavior(name, body);
       domain.behaviors.push(behavior);
     }
@@ -151,8 +149,8 @@ export class MockServer {
     const enumRegex = /enum\s+(\w+)\s*\{([^}]+)\}/g;
     let enumMatch;
     while ((enumMatch = enumRegex.exec(content)) !== null) {
-      const name = enumMatch[1];
-      const body = enumMatch[2];
+      const name = enumMatch[1] ?? '';
+      const body = enumMatch[2] ?? '';
       const values = body.match(/\b[A-Z][A-Z0-9_]+\b/g) ?? [];
       domain.enums.push({ name, values });
     }
@@ -167,8 +165,8 @@ export class MockServer {
 
     while ((match = fieldRegex.exec(body)) !== null) {
       fields.push({
-        name: match[1],
-        type: match[2],
+        name: match[1] ?? '',
+        type: match[2] ?? 'String',
         optional: match[3] === '?',
         annotations: match[4]?.split(',').map((a) => a.trim()) ?? [],
       });
@@ -187,24 +185,24 @@ export class MockServer {
 
     // Extract description
     const descMatch = body.match(/description\s*:\s*"([^"]+)"/);
-    if (descMatch) {
+    if (descMatch?.[1]) {
       behavior.description = descMatch[1];
     }
 
     // Extract input
     const inputMatch = body.match(/input\s*\{([^}]+)\}/);
-    if (inputMatch) {
+    if (inputMatch?.[1]) {
       behavior.input = this.parseFields(inputMatch[1]);
     }
 
     // Extract output
     const outputMatch = body.match(/output\s*\{([\s\S]*?)\n\s*\}/);
-    if (outputMatch) {
+    if (outputMatch?.[1]) {
       const outputBody = outputMatch[1];
 
       // Success type
       const successMatch = outputBody.match(/success\s*:\s*(\w+)/);
-      if (successMatch) {
+      if (successMatch?.[1]) {
         behavior.output.success = successMatch[1];
       }
 
@@ -213,8 +211,8 @@ export class MockServer {
       let errorMatch;
       while ((errorMatch = errorRegex.exec(outputBody)) !== null) {
         behavior.output.errors.push({
-          name: errorMatch[1],
-          description: errorMatch[2],
+          name: errorMatch[1] ?? '',
+          description: errorMatch[2] ?? '',
         });
       }
     }
@@ -230,8 +228,8 @@ export class MockServer {
     }
 
     // Body parsing
-    this.app.use(bodyParser.json());
-    this.app.use(bodyParser.urlencoded({ extended: true }));
+    this.app.use(express.json());
+    this.app.use(express.urlencoded({ extended: true }));
 
     // Request logging
     if (this.options.logging) {
@@ -364,12 +362,13 @@ export class MockServer {
   private setupBehaviorRoute(behavior: ParsedBehavior): void {
     const routePath = this.getBehaviorPath(behavior.name);
 
-    this.app.post(routePath, async (req: Request, res: Response) => {
+    this.app.post(routePath, async (req: Request, res: Response): Promise<void> => {
       try {
         // Check for active scenario override
         const scenarioResponse = this.scenarioManager.getResponse(behavior.name, req.body);
         if (scenarioResponse !== undefined) {
-          return res.json(scenarioResponse);
+          res.json(scenarioResponse);
+          return;
         }
 
         // Check for behavior override
@@ -539,6 +538,10 @@ export class MockServer {
 
   getRecordingManager(): RecordingManager {
     return this.recordingManager;
+  }
+
+  getErrorGenerator(): ErrorGenerator {
+    return this._errorGenerator;
   }
 }
 

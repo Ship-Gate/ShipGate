@@ -16,14 +16,15 @@
   ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
-    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "build:no-dts": "tsup src/index.ts --format esm --clean",
+    "dev": "tsup src/index.ts --format esm --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@isl-lang/isl-core": "workspace:*"
+    "@isl-lang/parser": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.1",

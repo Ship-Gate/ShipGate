@@ -3,7 +3,7 @@
 // Minimize crashing inputs to find the smallest reproducing case
 // ============================================================================
 
-import { MinimizeResult, FuzzTarget, createRng } from './types.js';
+import { MinimizeResult, FuzzTarget } from './types.js';
 
 /**
  * Minimizer configuration

@@ -4,8 +4,6 @@ import {
   SpanStatusCode,
   SpanKind,
   Attributes,
-  Context,
-  Span,
 } from '@opentelemetry/api';
 import type {
   ServerUnaryCall,
@@ -205,11 +203,14 @@ export function traceUnaryCall<TRequest, TResponse>(
             flags?
           ) => {
             if (error) {
+              const errorMessage = 'message' in error ? String(error.message) : 'Unknown error';
               span.setStatus({
                 code: SpanStatusCode.ERROR,
-                message: error.message,
+                message: errorMessage,
               });
-              span.recordException(error);
+              if (error instanceof Error) {
+                span.recordException(error);
+              }
             } else {
               span.setStatus({ code: SpanStatusCode.OK });
             }
@@ -275,11 +276,14 @@ export function traceClientStreamingCall<TRequest, TResponse>(
           span.setAttribute('rpc.grpc.message_count', messageCount);
 
           if (error) {
+            const errorMessage = 'message' in error ? String(error.message) : 'Unknown error';
             span.setStatus({
               code: SpanStatusCode.ERROR,
-              message: error.message,
+              message: errorMessage,
             });
-            span.recordException(error);
+            if (error instanceof Error) {
+              span.recordException(error);
+            }
           } else {
             span.setStatus({ code: SpanStatusCode.OK });
           }

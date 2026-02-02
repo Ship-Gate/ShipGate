@@ -127,8 +127,8 @@ export class InMemoryServiceRegistry implements ServiceRegistry {
   }
 
   private async performHealthCheck(
-    service: ServiceRegistration,
-    check: HealthCheck
+    _service: ServiceRegistration,
+    _check: HealthCheck
   ): Promise<boolean> {
     // In production, actually perform the health check
     // This is a simplified version

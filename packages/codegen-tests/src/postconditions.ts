@@ -3,14 +3,14 @@
 // Converts ISL postconditions to result assertion tests
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 import { 
   compileExpression, 
   compileAssertion, 
   createCompilerContext,
   type CompilerContext 
-} from './expression-compiler';
-import type { PostconditionTest, TestFramework } from './types';
+} from './expression-compiler.js';
+import type { PostconditionTest, TestFramework } from './types.js';
 
 // ============================================================================
 // CONTEXT TYPES

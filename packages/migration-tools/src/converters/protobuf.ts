@@ -279,6 +279,7 @@ export class ProtobufConverter {
 
     while ((match = messageRegex.exec(content)) !== null) {
       const [, name, body] = match;
+      if (!name || !body) continue;
       const fields = ProtobufConverter.parseFields(body);
       messages.push({ name, fields });
     }
@@ -287,6 +288,7 @@ export class ProtobufConverter {
     const enumRegex = /enum\s+(\w+)\s*\{([^}]+)\}/g;
     while ((match = enumRegex.exec(content)) !== null) {
       const [, name, body] = match;
+      if (!name || !body) continue;
       const values = ProtobufConverter.parseEnumValues(body);
       enums.push({ name, values });
     }
@@ -295,6 +297,7 @@ export class ProtobufConverter {
     const serviceRegex = /service\s+(\w+)\s*\{([^}]+)\}/g;
     while ((match = serviceRegex.exec(content)) !== null) {
       const [, name, body] = match;
+      if (!name || !body) continue;
       const methods = ProtobufConverter.parseMethods(body);
       services.push({ name, methods });
     }
@@ -313,6 +316,7 @@ export class ProtobufConverter {
       const match = line.match(/(optional|required|repeated)?\s*(\w+)\s+(\w+)\s*=\s*(\d+)/);
       if (match) {
         const [, label, type, name, number] = match;
+        if (!type || !name || !number) continue;
         fields.push({
           name,
           type,
@@ -334,7 +338,7 @@ export class ProtobufConverter {
 
     for (const line of lines) {
       const match = line.match(/(\w+)\s*=\s*(\d+)/);
-      if (match) {
+      if (match && match[1] && match[2]) {
         values.push({
           name: match[1],
           number: parseInt(match[2], 10),
@@ -355,6 +359,7 @@ export class ProtobufConverter {
 
     while ((match = regex.exec(body)) !== null) {
       const [, name, clientStream, requestType, serverStream, responseType] = match;
+      if (!name || !requestType || !responseType) continue;
       methods.push({
         name,
         requestType,

@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply text-gray-800 antialiased;
+    background: transparent;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl shadow-sm;
+  }
+  
+  .btn-primary {
+    @apply px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white font-medium rounded-lg transition-all shadow-md hover:shadow-lg;
+  }
+  
+  .btn-secondary {
+    @apply px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-colors border border-gray-200 shadow-sm;
+  }
+
+  .code-block {
+    @apply bg-gray-50 rounded-lg p-4 font-mono text-sm overflow-x-auto border border-gray-200 text-gray-800;
+  }
+}
+
+/* Trust score gauge animation */
+.trust-gauge-circle {
+  stroke-dasharray: 283;
+  stroke-dashoffset: 283;
+  animation: fillGauge 1.5s ease-out forwards;
+}
+
+@keyframes fillGauge {
+  to {
+    stroke-dashoffset: var(--score-offset);
+  }
+}
+
+/* Typing animation */
+.typing-cursor::after {
+  content: '|';
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* Step indicator animation */
+.step-active {
+  @apply relative;
+}
+
+.step-active::before {
+  content: '';
+  @apply absolute -inset-1 bg-intent-500/20 rounded-lg animate-pulse;
+}

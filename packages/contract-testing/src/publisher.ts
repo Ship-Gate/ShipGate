@@ -4,7 +4,8 @@
  * Publish contracts to a broker or CI/CD pipeline.
  */
 
-import type { Contract, ContractBroker } from './broker.js';
+import { Contract } from './types.js';
+import type { ContractBroker } from './broker.js';
 
 export interface PublishOptions {
   /** Broker instance */
@@ -52,27 +53,32 @@ export class ContractPublisher {
     options: Partial<PublishOptions> = {}
   ): Promise<PublishResult> {
     try {
-      // Update metadata
-      if (options.version) {
-        contract.metadata.version = options.version;
-      }
-      if (options.branch) {
-        contract.metadata.branch = options.branch;
-      }
-      if (options.commitHash) {
-        contract.metadata.commitHash = options.commitHash;
-      }
-      if (options.tags) {
-        contract.metadata.tags = options.tags;
+      // Update metadata if provided
+      if (contract.metadata) {
+        if (options.version) {
+          contract.metadata.version = options.version;
+        }
+        if (options.branch) {
+          contract.metadata.branch = options.branch;
+        }
+        if (options.commitHash) {
+          contract.metadata.commitHash = options.commitHash;
+        }
+        if (options.tags) {
+          contract.metadata.tags = options.tags;
+        }
       }
 
       // Publish to broker
-      const contractId = await this.broker.publish(contract);
+      await this.broker.publish(contract, { version: options.version, tags: options.tags });
+
+      // Generate contract ID
+      const contractId = `${contract.metadata?.consumer ?? 'unknown'}-${contract.metadata?.provider ?? 'unknown'}-${contract.metadata?.version ?? '1.0.0'}`;
 
       return {
         success: true,
         contractId,
-        version: contract.metadata.version,
+        version: contract.metadata?.version,
       };
     } catch (error) {
       return {
@@ -130,10 +136,10 @@ export class ContractPublisher {
     const breakingChanges: string[] = [];
 
     // Get existing contract
-    const existing = await this.broker.getContract(
-      contract.consumer,
-      contract.provider
-    );
+    const consumer = contract.metadata?.consumer ?? '';
+    const provider = contract.metadata?.provider ?? '';
+    
+    const existing = await this.broker.getLatest(consumer, provider);
 
     if (!existing) {
       return { canPublish: true, breakingChanges: [] };
@@ -142,7 +148,7 @@ export class ContractPublisher {
     // Check for removed behaviors
     for (const oldBehavior of existing.spec.behaviors) {
       const newBehavior = contract.spec.behaviors.find(
-        (b) => b.name === oldBehavior.name
+        (b: { name: string }) => b.name === oldBehavior.name
       );
 
       if (!newBehavior) {
@@ -206,32 +212,38 @@ export function contractFromInteractions(
     }
   }
 
-  return {
-    id: `${consumer}-${provider}-${Date.now()}`,
-    consumer,
-    provider,
-    domain,
-    spec: {
-      behaviors: Array.from(behaviorsMap.entries()).map(([name, data]) => ({
-        name,
-        input: data.input,
-        output: data.output,
-      })),
-      types: [],
-      interactions: interactions.map((i, idx) => ({
-        id: `interaction-${idx}`,
-        description: `${i.behavior} interaction`,
-        request: {
-          behavior: i.behavior,
-          input: i.input,
-        },
-        response: {
-          status: 'success' as const,
-          output: i.output,
-        },
-      })),
+  const contract = new Contract(
+    {
+      version,
+      consumer,
+      provider,
+      domain,
+      generatedAt: new Date().toISOString(),
+      islVersion: '1.0.0',
     },
-    metadata: { version },
-    createdAt: new Date(),
+    []
+  );
+
+  contract.spec = {
+    behaviors: Array.from(behaviorsMap.entries()).map(([name, data]) => ({
+      name,
+      input: data.input,
+      output: data.output,
+    })),
+    types: [],
+    interactions: interactions.map((i, idx) => ({
+      id: `interaction-${idx}`,
+      description: `${i.behavior} interaction`,
+      request: {
+        behavior: i.behavior,
+        input: i.input,
+      },
+      response: {
+        status: 'success' as const,
+        output: i.output,
+      },
+    })),
   };
+
+  return contract;
 }

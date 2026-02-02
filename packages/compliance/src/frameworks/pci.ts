@@ -5,7 +5,7 @@
  * industry data security standard compliance.
  */
 
-import type { FrameworkControl, ISLMapping, ControlMapping, Domain, ControlStatus, ComplianceEvidence } from '../types';
+import type { FrameworkControl, ISLMapping, ControlMapping, Domain, ControlStatus, ComplianceEvidence, RiskLevel } from '../types';
 
 export const PCI_REQUIREMENTS: FrameworkControl[] = [
   // Requirement 3: Protect Stored Cardholder Data

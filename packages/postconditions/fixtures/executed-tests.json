@@ -1,0 +1,82 @@
+{
+  "description": "Evidence from executed tests with coverage",
+  "evidence": [
+    {
+      "type": "EXECUTED_TEST",
+      "source": "tests/auth.test.ts",
+      "description": "Test verifies login returns session token",
+      "location": {
+        "file": "tests/auth.test.ts",
+        "line": 25
+      },
+      "coverage": 95,
+      "metadata": {
+        "passed": true,
+        "testName": "should return session token on successful login"
+      }
+    },
+    {
+      "type": "EXECUTED_TEST",
+      "source": "tests/auth.test.ts",
+      "description": "Test verifies error status on invalid credentials",
+      "location": {
+        "file": "tests/auth.test.ts",
+        "line": 45
+      },
+      "coverage": 90,
+      "metadata": {
+        "passed": true,
+        "testName": "should return error on invalid credentials"
+      }
+    },
+    {
+      "type": "EXECUTED_TEST",
+      "source": "tests/user.test.ts",
+      "description": "Test checks post-create-user returns email",
+      "location": {
+        "file": "tests/user.test.ts",
+        "line": 30
+      },
+      "coverage": 50,
+      "metadata": {
+        "passed": true,
+        "testName": "should create user with email"
+      }
+    }
+  ],
+  "clauses": [
+    {
+      "id": "post-login-session",
+      "expression": "result.session != null",
+      "description": "Login must return session token"
+    },
+    {
+      "id": "post-login-error",
+      "expression": "error.status == 'unauthorized'",
+      "description": "Invalid login must return unauthorized",
+      "category": "error"
+    },
+    {
+      "id": "post-create-user",
+      "expression": "result.email == input.email",
+      "description": "Created user must have the input email"
+    }
+  ],
+  "expectedResults": [
+    {
+      "clauseId": "post-login-session",
+      "status": "PASS",
+      "evidenceType": "EXECUTED_TEST"
+    },
+    {
+      "clauseId": "post-login-error",
+      "status": "PASS",
+      "evidenceType": "EXECUTED_TEST"
+    },
+    {
+      "clauseId": "post-create-user",
+      "status": "PARTIAL",
+      "evidenceType": "EXECUTED_TEST"
+    }
+  ]
+}

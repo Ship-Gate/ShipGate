@@ -128,7 +128,7 @@ export interface TraceStep {
  * Prover configuration
  */
 export interface ProverConfig {
-  solver: 'z3' | 'cvc5' | 'yices' | 'builtin';
+  solver?: 'z3' | 'cvc5' | 'yices' | 'builtin';
   timeout?: number;
   incremental?: boolean;
   produceProofs?: boolean;

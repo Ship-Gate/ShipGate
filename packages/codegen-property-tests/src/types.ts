@@ -2,8 +2,6 @@
 // Property Test Generator Types
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
-
 export interface GenerateOptions {
   iterations?: number;
   seed?: number;

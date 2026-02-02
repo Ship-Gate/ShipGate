@@ -6,7 +6,6 @@ import type {
   Entity,
   Field,
   TypeDefinition,
-  Annotation,
 } from '../../../../master_contracts/ast';
 import type { GeneratorOptions } from '../generator';
 
@@ -118,7 +117,7 @@ function generateFieldAnnotations(field: Field, options: GeneratorOptions): stri
 // VALIDATION GENERATION
 // ============================================================================
 
-function generateValidations(entity: Entity, options: GeneratorOptions): string[] {
+function generateValidations(entity: Entity, _options: GeneratorOptions): string[] {
   const validations: string[] = [];
 
   // Add null checks for non-optional fields

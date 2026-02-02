@@ -1,6 +1,7 @@
 # Simple test domain
 
 domain SimpleAuth {
+  version: "1.0.0"
 
   enum UserStatus {
     ACTIVE
@@ -30,16 +31,14 @@ domain SimpleAuth {
       }
     }
 
-    preconditions {
+    pre {
       email.is_valid
       password.length >= 8
     }
 
-    postconditions {
-      success implies {
-        - User.exists(result.id)
-        - User.email == input.email
-      }
+    post success {
+      - User.exists(result.id)
+      - User.email == input.email
     }
 
     invariants {

@@ -10,7 +10,9 @@ export default defineConfig({
     ids: 'implementations/typescript/ids.ts',
   },
   format: ['esm', 'cjs'],
-  dts: true,
+  dts: {
+    resolve: true,
+  },
   splitting: false,
   sourcemap: true,
   clean: true,

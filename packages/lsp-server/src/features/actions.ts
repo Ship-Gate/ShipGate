@@ -1,13 +1,34 @@
 // ============================================================================
 // ISL Code Action Provider
-// Quick fixes and refactoring actions
+// Quick fixes and refactoring actions with enhanced quickfix support
 // ============================================================================
 
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { Range, CodeActionContext } from 'vscode-languageserver';
+import type { Range, CodeActionContext, Diagnostic } from 'vscode-languageserver';
 import { CodeAction, CodeActionKind, TextEdit } from 'vscode-languageserver';
 import type { ISLDocumentManager } from '../documents';
 import { DiagnosticSeverity } from '@isl-lang/lsp-core';
+
+// ============================================================================
+// Quickfix Data Types (from semantic linter)
+// ============================================================================
+
+interface QuickfixData {
+  type: string;
+  behaviorName?: string;
+  behaviorLocation?: { line: number; column: number; endLine: number; endColumn: number };
+  typeName?: string;
+  entityName?: string;
+  fieldName?: string;
+  symbolName?: string;
+  originalName?: string;
+  availableBehaviors?: string[];
+  availableExports?: string[];
+  suggestedConstraints?: string[];
+  preconditionCount?: number;
+  fields?: string[];
+  [key: string]: unknown;
+}
 
 export class ISLCodeActionProvider {
   constructor(private documentManager: ISLDocumentManager) {}
@@ -23,15 +44,93 @@ export class ISLCodeActionProvider {
 
     // Process diagnostics to generate quick fixes
     for (const diagnostic of context.diagnostics) {
-      // Missing postcondition
+      // Extract quickfix data if available
+      const data = diagnostic.data as QuickfixData | undefined;
+
+      // Missing postcondition (ISL1001)
       if (diagnostic.code === 'ISL1001') {
-        const behaviorName = this.extractBehaviorName(lines, diagnostic.range.start.line);
+        const behaviorName = data?.behaviorName || this.extractBehaviorName(lines, diagnostic.range.start.line);
         if (behaviorName) {
           actions.push(this.createAddPostconditionAction(document, diagnostic.range, behaviorName));
         }
       }
 
-      // Unknown type - suggest creating it
+      // Precondition without error (ISL1002)
+      if (diagnostic.code === 'ISL1002' && data?.behaviorName) {
+        actions.push(this.createAddErrorCaseForPreconditionAction(document, diagnostic.range, data.behaviorName));
+      }
+
+      // Unused type (ISL1003)
+      if (diagnostic.code === 'ISL1003' && data?.typeName) {
+        actions.push(this.createRemoveUnusedTypeAction(document, diagnostic.range, data.typeName));
+      }
+
+      // Undefined behavior reference (ISL1004)
+      if (diagnostic.code === 'ISL1004' && data?.availableBehaviors) {
+        for (const behavior of data.availableBehaviors.slice(0, 3)) {
+          actions.push(this.createRenameToBehaviorAction(document, diagnostic.range, data.behaviorName || '', behavior));
+        }
+      }
+
+      // Missing description (ISL1010)
+      if (diagnostic.code === 'ISL1010' && data?.behaviorName) {
+        actions.push(this.createAddDescriptionAction(document, diagnostic.range, data.behaviorName));
+      }
+
+      // Entity without id (ISL1011)
+      if (diagnostic.code === 'ISL1011' && data?.entityName) {
+        actions.push(this.createAddIdFieldAction(document, diagnostic.range, data.entityName));
+      }
+
+      // No temporal constraints (ISL1012)
+      if (diagnostic.code === 'ISL1012' && data?.behaviorName) {
+        actions.push(this.createAddTemporalAction(document, diagnostic.range, data.behaviorName));
+      }
+
+      // No scenarios (ISL1013)
+      if (diagnostic.code === 'ISL1013' && data?.behaviorName) {
+        actions.push(this.createGenerateScenarioAction(document, data.behaviorName, diagnostic.range));
+      }
+
+      // Sensitive field unprotected (ISL1020)
+      if (diagnostic.code === 'ISL1020' && data?.suggestedConstraints) {
+        actions.push(this.createAddConstraintsAction(document, diagnostic.range, data.fieldName || '', data.suggestedConstraints));
+      }
+
+      // No authentication (ISL1021)
+      if (diagnostic.code === 'ISL1021' && data?.behaviorName) {
+        actions.push(this.createAddSecurityAction(document, diagnostic.range, data.behaviorName));
+      }
+
+      // Unbounded list (ISL1030)
+      if (diagnostic.code === 'ISL1030' && data?.typeName) {
+        actions.push(this.createAddMaxSizeAction(document, diagnostic.range, data.typeName));
+      }
+
+      // Missing pagination (ISL1031)
+      if (diagnostic.code === 'ISL1031' && data?.behaviorName) {
+        actions.push(this.createAddPaginationAction(document, diagnostic.range, data.behaviorName));
+      }
+
+      // Unresolved import (ISL2001)
+      if (diagnostic.code === 'ISL2001') {
+        // Suggest creating the file
+        actions.push(this.createFileAction(document, diagnostic));
+      }
+
+      // Unknown export (ISL2002)
+      if (diagnostic.code === 'ISL2002' && data?.availableExports) {
+        for (const exp of data.availableExports.slice(0, 3)) {
+          actions.push(this.createReplaceImportAction(document, diagnostic.range, data.symbolName || '', exp));
+        }
+      }
+
+      // Unused import (ISL2003)
+      if (diagnostic.code === 'ISL2003') {
+        actions.push(this.createRemoveImportAction(document, diagnostic.range, data?.symbolName || ''));
+      }
+
+      // Unknown type - suggest creating it (legacy)
       if (diagnostic.code === 'ISL002' || diagnostic.message.includes('Unknown type')) {
         const typeName = this.extractTypeName(diagnostic.message);
         if (typeName) {
@@ -447,6 +546,472 @@ ${indent}}
         changes: {
           [document.uri]: [
             TextEdit.insert({ line: insertLine, character: 0 }, crudBehaviors),
+          ],
+        },
+      },
+    };
+  }
+
+  // ============================================================================
+  // New Quick Fix Actions for Semantic Linter
+  // ============================================================================
+
+  private createAddErrorCaseForPreconditionAction(
+    document: TextDocument,
+    range: Range,
+    behaviorName: string
+  ): CodeAction {
+    const text = document.getText();
+    const lines = text.split('\n');
+
+    // Find the output block's errors section or end of output
+    let insertLine = range.start.line;
+    let inBehavior = false;
+    let inOutput = false;
+    let braceDepth = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i] || '';
+      if (line.includes(`behavior ${behaviorName}`)) inBehavior = true;
+      if (inBehavior) {
+        if (line.trim() === 'output {') inOutput = true;
+        if (inOutput) {
+          braceDepth += (line.match(/\{/g) || []).length;
+          braceDepth -= (line.match(/\}/g) || []).length;
+          if (braceDepth === 0) {
+            insertLine = i;
+            break;
+          }
+        }
+      }
+    }
+
+    const errorBlock = `
+      errors {
+        PRECONDITION_FAILED {
+          when: "Precondition not met"
+          retriable: false
+        }
+      }
+`;
+
+    return {
+      title: 'Add error case for precondition failure',
+      kind: CodeActionKind.QuickFix,
+      edit: {
+        changes: {
+          [document.uri]: [
+            TextEdit.insert({ line: insertLine, character: 0 }, errorBlock),
+          ],
+        },
+      },
+    };
+  }
+
+  private createRemoveUnusedTypeAction(
+    document: TextDocument,
+    range: Range,
+    typeName: string
+  ): CodeAction {
+    const text = document.getText();
+    const lines = text.split('\n');
+
+    // Find the full type declaration
+    let startLine = range.start.line;
+    let endLine = range.start.line;
+    let braceDepth = 0;
+    let found = false;
+
+    for (let i = startLine; i < lines.length; i++) {
+      const line = lines[i] || '';
+      braceDepth += (line.match(/\{/g) || []).length;
+      braceDepth -= (line.match(/\}/g) || []).length;
+      if (braceDepth === 0 && found) {
+        endLine = i;
+        break;
+      }
+      if (braceDepth > 0) found = true;
+    }
+
+    return {
+      title: `Remove unused type '${typeName}'`,
+      kind: CodeActionKind.QuickFix,
+      edit: {
+        changes: {
+          [document.uri]: [
+            TextEdit.del({
+              start: { line: startLine, character: 0 },
+              end: { line: endLine + 1, character: 0 },
+            }),
+          ],
+        },
+      },
+    };
+  }
+
+  private createRenameToBehaviorAction(
+    document: TextDocument,
+    range: Range,
+    currentName: string,
+    targetName: string
+  ): CodeAction {
+    return {
+      title: `Change to '${targetName}'`,
+      kind: CodeActionKind.QuickFix,
+      edit: {
+        changes: {
+          [document.uri]: [TextEdit.replace(range, targetName)],
+        },
+      },
+    };
+  }
+
+  private createAddDescriptionAction(
+    document: TextDocument,
+    range: Range,
+    behaviorName: string
+  ): CodeAction {
+    const text = document.getText();
+    const lines = text.split('\n');
+
+    // Find the line after "behavior X {"
+    let insertLine = range.start.line + 1;
+    for (let i = range.start.line; i < lines.length; i++) {
+      const line = lines[i] || '';
+      if (line.includes(`behavior ${behaviorName}`) && line.includes('{')) {
+        insertLine = i + 1;
+        break;
+      }
+    }
+
+    return {
+      title: `Add description to '${behaviorName}'`,
+      kind: CodeActionKind.QuickFix,
+      isPreferred: true,
+      edit: {
+        changes: {
+          [document.uri]: [
+            TextEdit.insert(
+              { line: insertLine, character: 0 },
+              `    description: "TODO: Add description for ${behaviorName}"\n\n`
+            ),
+          ],
+        },
+      },
+    };
+  }
+
+  private createAddIdFieldAction(
+    document: TextDocument,
+    range: Range,
+    entityName: string
+  ): CodeAction {
+    const text = document.getText();
+    const lines = text.split('\n');
+
+    // Find the line after "entity X {"
+    let insertLine = range.start.line + 1;
+    for (let i = range.start.line; i < lines.length; i++) {
+      const line = lines[i] || '';
+      if (line.includes(`entity ${entityName}`) && line.includes('{')) {
+        insertLine = i + 1;
+        break;
+      }
+    }
+
+    return {
+      title: `Add 'id' field to '${entityName}'`,
+      kind: CodeActionKind.QuickFix,
+      isPreferred: true,
+      edit: {
+        changes: {
+          [document.uri]: [
+            TextEdit.insert(
+              { line: insertLine, character: 0 },
+              `    id: UUID\n`
+            ),
+          ],
+        },
+      },
+    };
+  }
+
+  private createAddTemporalAction(
+    document: TextDocument,
+    range: Range,
+    behaviorName: string
+  ): CodeAction {
+    const text = document.getText();
+    const lines = text.split('\n');
+
+    // Find the end of the behavior
+    let insertLine = range.start.line;
+    let braceDepth = 0;
+    let inBehavior = false;
+
+    for (let i = range.start.line; i < lines.length; i++) {
+      const line = lines[i] || '';
+      if (line.includes(`behavior ${behaviorName}`)) inBehavior = true;
+      if (inBehavior) {
+        braceDepth += (line.match(/\{/g) || []).length;
+        braceDepth -= (line.match(/\}/g) || []).length;
+        if (braceDepth === 0 && inBehavior) {
+          insertLine = i;
+          break;
+        }
+      }
+    }
+
+    const temporalBlock = `
+    temporal {
+      response within 500.ms (p99)
+    }
+`;
+
+    return {
+      title: `Add temporal constraints to '${behaviorName}'`,
+      kind: CodeActionKind.QuickFix,
+      edit: {
+        changes: {
+          [document.uri]: [
+            TextEdit.insert({ line: insertLine, character: 0 }, temporalBlock),
+          ],
+        },
+      },
+    };
+  }
+
+  private createAddConstraintsAction(
+    document: TextDocument,
+    range: Range,
+    fieldName: string,
+    suggestedConstraints: string[]
+  ): CodeAction {
+    const text = document.getText();
+    const lines = text.split('\n');
+    const line = lines[range.start.line] || '';
+
+    // Find the type after the colon
+    const match = line.match(/:\s*(\w+)/);
+    if (!match) {
+      return {
+        title: `Add constraints to '${fieldName}'`,
+        kind: CodeActionKind.QuickFix,
+        edit: { changes: {} },
+      };
+    }
+
+    const constraints = suggestedConstraints.join(', ');
+    const newLine = line.replace(
+      /:\s*(\w+)/,
+      `: $1 { ${constraints} }`
+    );
+
+    return {
+      title: `Add security constraints to '${fieldName}'`,
+      kind: CodeActionKind.QuickFix,
+      edit: {
+        changes: {
+          [document.uri]: [
+            TextEdit.replace(
+              {
+                start: { line: range.start.line, character: 0 },
+                end: { line: range.start.line, character: line.length },
+              },
+              newLine
+            ),
+          ],
+        },
+      },
+    };
+  }
+
+  private createAddSecurityAction(
+    document: TextDocument,
+    range: Range,
+    behaviorName: string
+  ): CodeAction {
+    const text = document.getText();
+    const lines = text.split('\n');
+
+    // Find the end of the behavior
+    let insertLine = range.start.line;
+    let braceDepth = 0;
+    let inBehavior = false;
+
+    for (let i = range.start.line; i < lines.length; i++) {
+      const line = lines[i] || '';
+      if (line.includes(`behavior ${behaviorName}`)) inBehavior = true;
+      if (inBehavior) {
+        braceDepth += (line.match(/\{/g) || []).length;
+        braceDepth -= (line.match(/\}/g) || []).length;
+        if (braceDepth === 0 && inBehavior) {
+          insertLine = i;
+          break;
+        }
+      }
+    }
+
+    const securityBlock = `
+    security {
+      requires authentication
+    }
+`;
+
+    return {
+      title: `Add security requirements to '${behaviorName}'`,
+      kind: CodeActionKind.QuickFix,
+      edit: {
+        changes: {
+          [document.uri]: [
+            TextEdit.insert({ line: insertLine, character: 0 }, securityBlock),
+          ],
+        },
+      },
+    };
+  }
+
+  private createAddMaxSizeAction(
+    document: TextDocument,
+    range: Range,
+    typeName: string
+  ): CodeAction {
+    const text = document.getText();
+    const lines = text.split('\n');
+    const line = lines[range.start.line] || '';
+
+    // Add max_size constraint to list type
+    const newLine = line.replace(
+      /List<([^>]+)>/,
+      'List<$1> { max_size: 1000 }'
+    );
+
+    return {
+      title: `Add max_size constraint to '${typeName}'`,
+      kind: CodeActionKind.QuickFix,
+      edit: {
+        changes: {
+          [document.uri]: [
+            TextEdit.replace(
+              {
+                start: { line: range.start.line, character: 0 },
+                end: { line: range.start.line, character: line.length },
+              },
+              newLine
+            ),
+          ],
+        },
+      },
+    };
+  }
+
+  private createAddPaginationAction(
+    document: TextDocument,
+    range: Range,
+    behaviorName: string
+  ): CodeAction {
+    const text = document.getText();
+    const lines = text.split('\n');
+
+    // Find the input block
+    let insertLine = range.start.line;
+    let inBehavior = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i] || '';
+      if (line.includes(`behavior ${behaviorName}`)) inBehavior = true;
+      if (inBehavior && line.trim() === 'input {') {
+        insertLine = i + 1;
+        break;
+      }
+    }
+
+    const paginationFields = `      page: Int { min: 1, default: 1 }
+      pageSize: Int { min: 1, max: 100, default: 20 }
+`;
+
+    return {
+      title: `Add pagination to '${behaviorName}'`,
+      kind: CodeActionKind.QuickFix,
+      edit: {
+        changes: {
+          [document.uri]: [
+            TextEdit.insert({ line: insertLine, character: 0 }, paginationFields),
+          ],
+        },
+      },
+    };
+  }
+
+  private createFileAction(document: TextDocument, diagnostic: Diagnostic): CodeAction {
+    return {
+      title: 'Create missing file',
+      kind: CodeActionKind.QuickFix,
+      command: {
+        title: 'Create ISL File',
+        command: 'isl.createFile',
+        arguments: [diagnostic.data],
+      },
+    };
+  }
+
+  private createReplaceImportAction(
+    document: TextDocument,
+    range: Range,
+    currentName: string,
+    targetName: string
+  ): CodeAction {
+    return {
+      title: `Import '${targetName}' instead`,
+      kind: CodeActionKind.QuickFix,
+      edit: {
+        changes: {
+          [document.uri]: [TextEdit.replace(range, targetName)],
+        },
+      },
+    };
+  }
+
+  private createRemoveImportAction(
+    document: TextDocument,
+    range: Range,
+    symbolName: string
+  ): CodeAction {
+    const text = document.getText();
+    const lines = text.split('\n');
+    const line = lines[range.start.line] || '';
+
+    // Check if this is the only import item on the line
+    const importMatch = line.match(/imports\s*\{([^}]+)\}/);
+    if (importMatch) {
+      const items = importMatch[1]?.split(',').map(s => s.trim()) || [];
+      if (items.length === 1) {
+        // Remove the entire import line
+        return {
+          title: `Remove unused import '${symbolName}'`,
+          kind: CodeActionKind.QuickFix,
+          edit: {
+            changes: {
+              [document.uri]: [
+                TextEdit.del({
+                  start: { line: range.start.line, character: 0 },
+                  end: { line: range.start.line + 1, character: 0 },
+                }),
+              ],
+            },
+          },
+        };
+      }
+    }
+
+    // Just remove the import item
+    return {
+      title: `Remove unused import '${symbolName}'`,
+      kind: CodeActionKind.QuickFix,
+      edit: {
+        changes: {
+          [document.uri]: [
+            TextEdit.replace(range, ''),
           ],
         },
       },

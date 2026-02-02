@@ -6,13 +6,13 @@ import type {
   Entity,
   Field,
   LifecycleSpec,
-} from '@isl-lang/isl-core';
+} from '../types';
+import { toTypeDefinition } from '../types';
 import {
   toSnakeCase,
   toPascalCase,
   toScreamingSnakeCase,
   fieldNumbers,
-  protoComment,
 } from '../utils';
 import { resolveType, type ProtoTypeOptions } from './types';
 
@@ -120,7 +120,9 @@ function generateFieldDefinition(
   options: ProtoMessageOptions,
   imports: Set<string>
 ): string {
-  const { protoType, fieldImports } = resolveType(field.type, options);
+  // Convert AST TypeExpression to TypeDefinition
+  const typeDef = toTypeDefinition(field.type);
+  const { protoType, fieldImports } = resolveType(typeDef, options);
   fieldImports.forEach(i => imports.add(i));
   
   const fieldName = toSnakeCase(field.name.name);
@@ -210,19 +212,25 @@ function generateFieldValidation(
     }
   }
   
+  // Convert to TypeDefinition for proper type checking
+  const typeDef = toTypeDefinition(field.type);
+  
   // Required check (non-optional message fields)
-  if (!field.optional && field.type.kind === 'ReferenceType') {
+  if (!field.optional && typeDef.kind === 'ReferenceType') {
     rules.push('required = true');
   }
   
-  // Handle constrained types
-  if (field.type.kind === 'ConstrainedType') {
-    const base = field.type.base;
-    if (base.kind === 'PrimitiveType') {
-      ruleType = getPrimitiveValidateType(base.name);
+  // Handle constrained types from field constraints
+  if (field.constraints.length > 0) {
+    // Get base type for validation
+    if (field.type.kind === 'SimpleType') {
+      ruleType = getPrimitiveValidateType(field.type.name.name);
       
-      for (const constraint of field.type.constraints) {
-        const rule = constraintToValidateRule(constraint, ruleType);
+      for (const constraint of field.constraints) {
+        const rule = constraintToValidateRule({
+          name: constraint.name.name,
+          value: constraint.value as { kind: string; value?: unknown; pattern?: string },
+        }, ruleType);
         if (rule) rules.push(rule);
       }
     }
@@ -297,11 +305,13 @@ function generateLifecycleEnum(entityName: string, lifecycle: LifecycleSpec): st
   const enumName = `${entityName}Status`;
   const prefix = toScreamingSnakeCase(enumName);
   
-  // Collect unique states
+  // Collect unique states from all transitions
+  // Each transition has states: Identifier[] representing the path
   const states = new Set<string>();
   for (const transition of lifecycle.transitions) {
-    states.add(transition.from.name);
-    states.add(transition.to.name);
+    for (const state of transition.states) {
+      states.add(state.name);
+    }
   }
   
   const lines: string[] = [`enum ${enumName} {`];
@@ -321,7 +331,7 @@ function generateLifecycleEnum(entityName: string, lifecycle: LifecycleSpec): st
 /**
  * Generate field mask message for partial updates
  */
-function generateFieldMask(entityName: string, fields: Field[]): string {
+function generateFieldMask(entityName: string, _fields: Field[]): string {
   const lines: string[] = [
     `// Field mask for ${entityName} updates`,
     `message ${entityName}FieldMask {`,

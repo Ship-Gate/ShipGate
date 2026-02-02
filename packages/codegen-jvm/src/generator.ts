@@ -9,20 +9,14 @@ import type {
   Behavior,
   Field,
   TypeDefinition,
-  EnumType,
-  StructType,
-  UnionType,
 } from '../../../master_contracts/ast';
 
 import { generateJavaTypes, generateJavaTypeImports } from './java/types';
 import { generateJavaRecords } from './java/records';
-import { generateJavaInterfaces } from './java/interfaces';
-import { generateJavaValidation } from './java/validation';
 import { generateSpringController, generateSpringConfig } from './java/spring';
 import { generateKotlinTypes, generateKotlinTypeImports } from './kotlin/types';
 import { generateKotlinDataClasses } from './kotlin/dataclass';
 import { generateKotlinSealed } from './kotlin/sealed';
-import { generateKotlinCoroutines } from './kotlin/coroutines';
 
 // ============================================================================
 // TYPES
@@ -71,7 +65,6 @@ function generateJava(
   packagePath: string
 ): GeneratedFile[] {
   const files: GeneratedFile[] = [];
-  const javaVersion = options.javaVersion ?? 17;
   const framework = options.framework ?? 'none';
 
   // Generate custom types (value objects)
@@ -142,7 +135,6 @@ function generateKotlin(
   packagePath: string
 ): GeneratedFile[] {
   const files: GeneratedFile[] = [];
-  const useSuspend = options.useSuspend ?? true;
 
   // Generate types file (all value classes in one file)
   const typesContent = generateKotlinTypesFile(domain, options);
@@ -203,7 +195,7 @@ function generateJavaTypeFile(
 
 function generateJavaEntityFile(
   entity: Entity,
-  domain: Domain,
+  _domain: Domain,
   options: GeneratorOptions
 ): string {
   const lines: string[] = [];
@@ -227,12 +219,11 @@ function generateJavaEntityFile(
 
 function generateJavaBehaviorTypes(
   behavior: Behavior,
-  domain: Domain,
+  _domain: Domain,
   options: GeneratorOptions
 ): string {
   const lines: string[] = [];
   const pkg = options.package;
-  const name = behavior.name.name;
 
   lines.push(`package ${pkg}.behaviors;`);
   lines.push('');
@@ -274,7 +265,7 @@ function generateJavaInputRecord(behavior: Behavior, options: GeneratorOptions):
   return lines.join('\n');
 }
 
-function generateJavaResultSealed(behavior: Behavior, options: GeneratorOptions): string {
+function generateJavaResultSealed(behavior: Behavior, _options: GeneratorOptions): string {
   const name = behavior.name.name;
   const lines: string[] = [];
 
@@ -362,12 +353,11 @@ function generateKotlinEntitiesFile(domain: Domain, options: GeneratorOptions): 
 
 function generateKotlinBehaviorFile(
   behavior: Behavior,
-  domain: Domain,
+  _domain: Domain,
   options: GeneratorOptions
 ): string {
   const lines: string[] = [];
   const pkg = options.package;
-  const name = behavior.name.name;
 
   lines.push(`package ${pkg}.behaviors`);
   lines.push('');
@@ -386,7 +376,7 @@ function generateKotlinBehaviorFile(
   return lines.join('\n');
 }
 
-function generateKotlinInputClass(behavior: Behavior, options: GeneratorOptions): string {
+function generateKotlinInputClass(behavior: Behavior, _options: GeneratorOptions): string {
   const name = behavior.name.name;
   const fields = behavior.input.fields;
   const lines: string[] = [];
@@ -546,8 +536,4 @@ function toCamelCase(str: string): string {
 
 function toPascalCase(str: string): string {
   return str.split('_').map(s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()).join('');
-}
-
-function toSnakeCase(str: string): string {
-  return str.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
 }

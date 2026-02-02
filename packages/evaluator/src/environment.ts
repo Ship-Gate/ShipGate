@@ -393,15 +393,15 @@ export class SnapshotEntityStore implements EntityStore {
   }
 
   create(): EntityInstance {
-    throw new Error('Cannot create entities in snapshot store');
+    throw new Error('Snapshot store is read-only: cannot create entities');
   }
 
   update(): void {
-    throw new Error('Cannot update entities in snapshot store');
+    throw new Error('Snapshot store is read-only: cannot update entities');
   }
 
   delete(): void {
-    throw new Error('Cannot delete entities in snapshot store');
+    throw new Error('Snapshot store is read-only: cannot delete entities');
   }
 
   snapshot(): EntityStoreSnapshot {

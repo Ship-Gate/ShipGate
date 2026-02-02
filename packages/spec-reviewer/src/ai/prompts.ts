@@ -261,7 +261,7 @@ export function fillPromptTemplate(prompt: ReviewPrompt, spec: string): string {
  * Create custom prompt
  */
 export function createCustomPrompt(
-  category: string,
+  _category: string,
   focus: string,
   spec: string
 ): { system: string; user: string } {

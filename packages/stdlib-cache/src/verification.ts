@@ -2,7 +2,7 @@
  * Cache Verification - Runtime contract verification for cache operations.
  */
 
-import type { Cache, CacheEntry, SetOptions } from './types';
+import type { Cache, CacheEntry, SetOptions } from './types.js';
 
 /**
  * Verification configuration
@@ -81,10 +81,10 @@ export class CacheVerifier<T> {
         entry.key
       );
 
-      if (entry.expiresAt) {
+      if (entry.expiresAt !== undefined) {
         this.checkPostcondition(
           'Get',
-          entry.expiresAt > new Date(),
+          entry.expiresAt > Date.now(),
           'Entry must not be expired',
           'future date',
           entry.expiresAt

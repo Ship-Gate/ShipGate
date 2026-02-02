@@ -13,7 +13,6 @@ import {
   Severity,
   SEVERITY_INFO,
   calculateSummary,
-  createEmptyScanResult,
 } from './severity';
 import { ALL_RULES, RULE_REGISTRY } from './rules';
 import { scanImplementation, SupportedLanguage } from './impl-scanner';
@@ -248,9 +247,11 @@ export async function fullScan(
   implementation: string,
   language: SupportedLanguage = 'typescript'
 ): Promise<ScanResult> {
+  // Map 'javascript' to 'typescript' since they use the same scanner
+  const implLanguage = language === 'javascript' ? 'typescript' : language;
   const scanner = new SecurityScanner({
     scanImplementations: true,
-    implementationLanguage: language,
+    implementationLanguage: implLanguage,
   });
   return scanner.scan(domain, implementation);
 }

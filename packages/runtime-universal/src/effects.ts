@@ -213,13 +213,16 @@ export interface EffectMiddleware {
  */
 export const LoggingMiddleware: EffectMiddleware = {
   name: 'logging',
-  async before(effect, context) {
+  async before(effect, _context) {
+    // eslint-disable-next-line no-console
     console.log(`[Effect] Starting: ${effect.type} on ${effect.target}`);
   },
-  async after(effect, context, result) {
+  async after(effect, _context, result) {
+    // eslint-disable-next-line no-console
     console.log(`[Effect] Completed: ${effect.type} on ${effect.target} - ${result.success}`);
   },
-  async onError(effect, context, error) {
+  async onError(effect, _context, error) {
+    // eslint-disable-next-line no-console
     console.error(`[Effect] Error: ${effect.type} on ${effect.target} - ${error.message}`);
   },
 };
@@ -232,7 +235,7 @@ export function createMetricsMiddleware(
 ): EffectMiddleware {
   return {
     name: 'metrics',
-    async before(effect, context) {
+    async before(_effect, context) {
       (context as ExecutionContext & { _effectStart: number })._effectStart = Date.now();
     },
     async after(effect, context, result) {

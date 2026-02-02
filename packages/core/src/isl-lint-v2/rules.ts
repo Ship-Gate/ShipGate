@@ -402,7 +402,7 @@ export const ambiguousActorRule: LintRule = {
             })
           );
         }
-      } else {
+      } else if (behavior.actors) {
         // Check for actors without constraints
         for (let j = 0; j < behavior.actors.length; j++) {
           const actor = behavior.actors[j];
@@ -861,7 +861,7 @@ function createErrorSpec(name: string, when: string, retriable: boolean): ASTNod
     when: { kind: 'StringLiteral', value: when, location: createDefaultLocation() },
     retriable,
     location: createDefaultLocation(),
-  };
+  } as ASTNode;
 }
 
 function createValidationPrecondition(category: keyof typeof SECURITY_PATTERNS): Expression {
@@ -920,7 +920,7 @@ function createTemporalSpec(
     predicate: { kind: 'BooleanLiteral', value: true, location: createDefaultLocation() },
     duration: { kind: 'DurationLiteral', value, unit, location: createDefaultLocation() },
     location: createDefaultLocation(),
-  };
+  } as ASTNode;
 }
 
 // ============================================================================

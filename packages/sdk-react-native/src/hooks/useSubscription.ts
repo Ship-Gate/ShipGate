@@ -195,12 +195,14 @@ export function usePresence<TUser = { id: string; name: string }>(
       switch (data.type) {
         case 'join':
           if (data.user) {
-            setMembers(m => [...m.filter(u => (u as { id?: string }).id !== (data.user as { id?: string }).id), data.user]);
+            const user = data.user;
+            setMembers(m => [...m.filter(u => (u as { id?: string }).id !== (user as { id?: string }).id), user]);
           }
           break;
         case 'leave':
           if (data.user) {
-            setMembers(m => m.filter(u => (u as { id?: string }).id !== (data.user as { id?: string }).id));
+            const user = data.user;
+            setMembers(m => m.filter(u => (u as { id?: string }).id !== (user as { id?: string }).id));
           }
           break;
         case 'sync':

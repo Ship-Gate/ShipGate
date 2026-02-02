@@ -59,7 +59,7 @@ export function generateKotlinTypes(
 function generateValueClass(
   name: string,
   def: ConstrainedType,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const baseType = kotlinBaseType(def.base);
   const lines: string[] = [];
@@ -148,24 +148,27 @@ function generateKotlinValidations(constraints: Constraint[], varName: string): 
 function generateEnumClass(
   name: string,
   def: EnumType,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const lines: string[] = [];
   const hasValues = def.variants.some(v => v.value);
 
   if (hasValues) {
     const firstValue = def.variants.find(v => v.value)?.value;
-    const valueType = firstValue?.kind === 'NumberLiteral' ? 'Int' : 'String';
+    const valueType = firstValue?.litKind === 'number' ? 'Int' : 'String';
 
     lines.push(`enum class ${name}(val value: ${valueType}) {`);
 
     const variants = def.variants.map((v, idx) => {
       const comma = idx < def.variants.length - 1 ? ',' : ';';
       if (v.value) {
-        if (v.value.kind === 'NumberLiteral') {
-          return `    ${v.name.name}(${v.value.value})${comma}`;
-        } else if (v.value.kind === 'StringLiteral') {
-          return `    ${v.name.name}("${v.value.value}")${comma}`;
+        // Use litKind from Literal type to determine value type
+        if (v.value.litKind === 'number') {
+          const numValue = (v.value as unknown as { value: number }).value;
+          return `    ${v.name.name}(${numValue})${comma}`;
+        } else if (v.value.litKind === 'string') {
+          const strValue = (v.value as unknown as { value: string }).value;
+          return `    ${v.name.name}("${strValue}")${comma}`;
         }
       }
       return `    ${v.name.name}${comma}`;
@@ -194,7 +197,7 @@ function generateEnumClass(
 function generateDataClassFromStruct(
   name: string,
   def: StructType,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const lines: string[] = [];
 
@@ -221,7 +224,7 @@ function generateDataClassFromStruct(
 function generateSealedClassFromUnion(
   name: string,
   def: UnionType,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const lines: string[] = [];
 
@@ -254,7 +257,7 @@ function generateSealedClassFromUnion(
 function generateTypeAlias(
   name: string,
   def: TypeDefinition,
-  options: GeneratorOptions
+  _options: GeneratorOptions
 ): string {
   const baseType = kotlinBaseType(def);
   return `typealias ${name} = ${baseType}`;

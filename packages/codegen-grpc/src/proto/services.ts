@@ -9,13 +9,14 @@ import type {
   ErrorSpec,
   InputSpec,
   OutputSpec,
-} from '@isl-lang/isl-core';
+  TypeDefinition,
+} from '../types';
+import { toTypeDefinition } from '../types';
 import {
   toSnakeCase,
   toPascalCase,
   toScreamingSnakeCase,
   fieldNumbers,
-  protoComment,
 } from '../utils';
 import { resolveType, type ProtoTypeOptions } from './types';
 
@@ -150,7 +151,7 @@ function generateService(
     rpcImports.forEach(i => imports.add(i));
     
     // Generate error message if needed
-    if (options.generateErrorMessages && behavior.output.errors.length > 0) {
+    if (options.generateErrorMessages && behavior.output && behavior.output.errors.length > 0) {
       const errorMsg = generateErrorMessage(behavior.name.name, behavior.output.errors);
       messages.push(errorMsg);
     }
@@ -197,13 +198,21 @@ function generateBehaviorRpc(
   const rpcImports = new Set<string>();
   const behaviorName = toPascalCase(behavior.name.name);
   
-  // Generate request message
-  const requestMsg = generateRequestMessage(behavior.name.name, behavior.input, options, rpcImports);
+  // Generate request message (use empty input if not defined)
+  const emptySpan = { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 0, offset: 0 } };
+  const input: InputSpec = behavior.input ?? { kind: 'InputBlock', fields: [], span: emptySpan };
+  const requestMsg = generateRequestMessage(behavior.name.name, input, options, rpcImports);
   
-  // Generate response message
+  // Generate response message (use empty output if not defined)
+  const output: OutputSpec = behavior.output ?? { 
+    kind: 'OutputBlock', 
+    success: { kind: 'SimpleType', name: { kind: 'Identifier', name: 'Boolean', span: emptySpan }, span: emptySpan }, 
+    errors: [],
+    span: emptySpan
+  };
   const responseMsg = generateResponseMessage(
     behavior.name.name,
-    behavior.output,
+    output,
     options,
     rpcImports
   );
@@ -245,12 +254,14 @@ function generateBehaviorRpc(
  */
 function isIdempotentBehavior(behavior: Behavior): boolean {
   // Check for idempotency_key in input
-  for (const field of behavior.input.fields) {
-    if (
-      field.name.name === 'idempotency_key' ||
-      field.name.name === 'idempotencyKey'
-    ) {
-      return true;
+  if (behavior.input) {
+    for (const field of behavior.input.fields) {
+      if (
+        field.name.name === 'idempotency_key' ||
+        field.name.name === 'idempotencyKey'
+      ) {
+        return true;
+      }
     }
   }
   
@@ -275,7 +286,9 @@ function generateRequestMessage(
   
   for (const field of input.fields) {
     const fieldNum = fieldNums.next().value;
-    const { protoType, fieldImports } = resolveType(field.type, options);
+    // Convert AST TypeExpression to TypeDefinition
+    const typeDef = toTypeDefinition(field.type);
+    const { protoType, fieldImports } = resolveType(typeDef, options);
     fieldImports.forEach(i => imports.add(i));
     
     const fieldName = toSnakeCase(field.name.name);
@@ -308,11 +321,14 @@ function getFieldValidationRules(field: Field): string | null {
     }
   }
   
+  // Convert to TypeDefinition for proper type checking
+  const typeDef = toTypeDefinition(field.type);
+  
   // Required check
   if (!field.optional) {
-    if (field.type.kind === 'PrimitiveType' && field.type.name === 'String') {
+    if (typeDef.kind === 'PrimitiveType' && typeDef.name === 'String') {
       rules.push('string.min_len = 1');
-    } else if (field.type.kind === 'ReferenceType') {
+    } else if (typeDef.kind === 'ReferenceType') {
       rules.push('message.required = true');
     }
   }
@@ -337,10 +353,11 @@ function generateResponseMessage(
   // Use oneof for result (success or error)
   lines.push('  oneof result {');
   
-  // Success case
-  const { protoType: successType, fieldImports } = resolveType(output.success, options);
+  // Success case - convert TypeExpression to TypeDefinition
+  const successTypeDef = toTypeDefinition(output.success);
+  const { protoType: successType, fieldImports } = resolveType(successTypeDef, options);
   fieldImports.forEach(i => imports.add(i));
-  const successFieldName = toSnakeCase(getSuccessFieldName(output.success));
+  const successFieldName = toSnakeCase(getSuccessFieldName(successTypeDef));
   lines.push(`    ${successType} ${successFieldName} = 1;`);
   
   // Error case
@@ -355,8 +372,8 @@ function generateResponseMessage(
   return lines.join('\n');
 }
 
-function getSuccessFieldName(successType: { kind: string; name?: { parts?: Array<{ name: string }> } }): string {
-  if (successType.kind === 'ReferenceType' && successType.name?.parts) {
+function getSuccessFieldName(successType: TypeDefinition): string {
+  if (successType.kind === 'ReferenceType') {
     return successType.name.parts[successType.name.parts.length - 1].name;
   }
   return 'data';
@@ -504,7 +521,9 @@ function generateCreateRequestMessage(
     }
     
     const fieldNum = fieldNums.next().value;
-    const { protoType, fieldImports } = resolveType(field.type, options);
+    // Convert AST TypeExpression to TypeDefinition
+    const typeDef = toTypeDefinition(field.type);
+    const { protoType, fieldImports } = resolveType(typeDef, options);
     fieldImports.forEach(i => imports.add(i));
     
     const fieldName = toSnakeCase(field.name.name);
@@ -563,7 +582,9 @@ function generateUpdateRequestMessage(
     }
     
     const fieldNum = fieldNums.next().value;
-    const { protoType, fieldImports } = resolveType(field.type, options);
+    // Convert AST TypeExpression to TypeDefinition
+    const typeDef = toTypeDefinition(field.type);
+    const { protoType, fieldImports } = resolveType(typeDef, options);
     fieldImports.forEach(i => imports.add(i));
     
     const fieldName = toSnakeCase(field.name.name);

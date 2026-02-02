@@ -9,7 +9,7 @@ import * as core from '@actions/core';
 import type { ActionInputs } from './inputs.js';
 import type { ActionReport, Diagnostic } from './reporter.js';
 import { formatDuration } from './reporter.js';
-import { getVerdictEmoji, getVerdictDescription } from './verifier.js';
+import { getVerdictEmoji } from './verifier.js';
 
 // ============================================================================
 // Summary Generator

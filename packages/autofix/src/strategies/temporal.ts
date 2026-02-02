@@ -59,7 +59,7 @@ export function generateTemporalPatches(
  */
 function parseTemporalPredicate(
   predicate: string,
-  expected?: unknown,
+  _expected?: unknown,
   actual?: unknown
 ): TemporalFix | null {
   // Pattern: response within 200ms or within 1.seconds
@@ -157,7 +157,7 @@ function toMilliseconds(value: number, unit: 'ms' | 's' | 'm'): number {
  * Find async operations in the code
  */
 function findAsyncOperations(
-  relatedCode: CodeSegment[],
+  _relatedCode: CodeSegment[],
   implementation: string
 ): Array<{ line: number; code: string; operation: string }> {
   const operations: Array<{ line: number; code: string; operation: string }> = [];
@@ -197,11 +197,10 @@ function findAsyncOperations(
 function generateTimeoutPatches(
   fix: TemporalFix,
   asyncOps: Array<{ line: number; code: string; operation: string }>,
-  context: PatchContext,
+  _context: PatchContext,
   confidence: number
 ): Patch[] {
   const patches: Patch[] = [];
-  const indent = context.indentation ?? '  ';
   const timeout = fix.targetDuration ?? 5000;
 
   // Add timeout utility function at the top (if not exists)
@@ -227,7 +226,7 @@ const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
   for (const op of asyncOps.slice(0, 3)) { // Limit to first 3 to avoid over-patching
     const awaitMatch = op.code.match(/(await\s+)([^;]+)/);
     if (awaitMatch) {
-      const [, awaitKeyword, expression] = awaitMatch;
+      const [, , expression] = awaitMatch;
       patches.push({
         type: 'replace',
         file: 'implementation',
@@ -252,7 +251,7 @@ const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
 function generateRetryPatches(
   fix: TemporalFix,
   asyncOps: Array<{ line: number; code: string; operation: string }>,
-  context: PatchContext,
+  _context: PatchContext,
   confidence: number
 ): Patch[] {
   const patches: Patch[] = [];
@@ -320,7 +319,7 @@ const withRetry = async <T>(
 function generateCachePatches(
   fix: TemporalFix,
   asyncOps: Array<{ line: number; code: string; operation: string }>,
-  context: PatchContext,
+  _context: PatchContext,
   confidence: number
 ): Patch[] {
   const patches: Patch[] = [];
@@ -384,7 +383,7 @@ const withCache = async <T>(
  * Generate optimization patches
  */
 function generateOptimizationPatches(
-  fix: TemporalFix,
+  _fix: TemporalFix,
   asyncOps: Array<{ line: number; code: string; operation: string }>,
   context: PatchContext,
   confidence: number

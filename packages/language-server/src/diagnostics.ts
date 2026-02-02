@@ -5,7 +5,6 @@
 import {
   Diagnostic,
   DiagnosticSeverity,
-  Range,
 } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { ISLAnalyzer, ParseError } from './analyzer';
@@ -20,8 +19,6 @@ export function getDiagnostics(
   settings: ISLSettings
 ): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
-  const text = document.getText();
-  const lines = text.split('\n');
 
   // Parse and analyze document
   const parsed = analyzer.analyzeDocument(document);
@@ -61,8 +58,8 @@ function getSeverity(severity: ParseError['severity']): DiagnosticSeverity {
 
 function runLintChecks(
   document: TextDocument,
-  analyzer: ISLAnalyzer,
-  settings: ISLSettings
+  _analyzer: ISLAnalyzer,
+  _settings: ISLSettings
 ): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
   const text = document.getText();
@@ -70,10 +67,11 @@ function runLintChecks(
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+    if (!line) continue;
 
     // Check for TODO comments
     const todoMatch = line.match(/\/\/\s*(TODO|FIXME|HACK):/i);
-    if (todoMatch) {
+    if (todoMatch && todoMatch[1]) {
       diagnostics.push({
         severity: DiagnosticSeverity.Information,
         range: {
@@ -90,11 +88,12 @@ function runLintChecks(
       // Look ahead for description
       let hasDescription = false;
       for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
-        if (lines[j].includes('description:')) {
+        const nextLine = lines[j];
+        if (nextLine?.includes('description:')) {
           hasDescription = true;
           break;
         }
-        if (lines[j].includes('input') || lines[j].includes('output')) {
+        if (nextLine?.includes('input') || nextLine?.includes('output')) {
           break;
         }
       }
@@ -116,7 +115,7 @@ function runLintChecks(
     if (line.includes('password') || line.includes('secret')) {
       if (!line.includes('[secret]') && !line.includes('[never_log]')) {
         const match = line.match(/(password|secret)/i);
-        if (match) {
+        if (match && match[0]) {
           diagnostics.push({
             severity: DiagnosticSeverity.Warning,
             range: {

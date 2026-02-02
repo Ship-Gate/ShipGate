@@ -123,7 +123,7 @@ export const missingFieldsStrategy: RepairStrategy = {
     for (const arrayName of requiredArrays) {
       if (isMissing(ast[arrayName])) {
         const key = arrayName as keyof Domain;
-        (ast as Record<string, unknown>)[key] = [];
+        (ast as unknown as Record<string, unknown>)[key] = [];
         repairs.push({
           id: ctx.generateId(),
           category: 'missing-field',
@@ -399,7 +399,7 @@ export const missingFieldsStrategy: RepairStrategy = {
 
       for (const arrayName of behaviorArrays) {
         if (isMissing(behavior[arrayName])) {
-          (behavior as Record<string, unknown>)[arrayName] = [];
+          (behavior as unknown as Record<string, unknown>)[arrayName] = [];
           repairs.push({
             id: ctx.generateId(),
             category: 'missing-field',

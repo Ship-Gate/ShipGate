@@ -13,7 +13,6 @@ import {
   SessionStatus,
   RevocationReason,
   SessionRepository,
-  AuthConfig,
   DEFAULT_AUTH_CONFIG,
   AuthException,
   AuthErrorCode,

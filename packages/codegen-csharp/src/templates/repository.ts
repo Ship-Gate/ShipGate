@@ -149,7 +149,6 @@ function generateEFGetById(modelName: string, options: CSharpGeneratorOptions): 
 function generateEFFind(modelName: string, options: CSharpGeneratorOptions): string {
   const async_ = options.asyncMethods;
   const ct = async_ ? ', CancellationToken cancellationToken = default' : '';
-  const ctArg = async_ ? ', cancellationToken' : '';
 
   return `    public ${async_ ? 'async Task<IEnumerable<' + modelName + '>>' : 'IEnumerable<' + modelName + '>'} FindAsync(Func<${modelName}, bool> predicate${ct})
     {
@@ -183,7 +182,7 @@ function generateEFUpdate(modelName: string, options: CSharpGeneratorOptions): s
     }`;
 }
 
-function generateEFDelete(modelName: string, options: CSharpGeneratorOptions): string {
+function generateEFDelete(_modelName: string, options: CSharpGeneratorOptions): string {
   const async_ = options.asyncMethods;
   const ct = async_ ? ', CancellationToken cancellationToken = default' : '';
   const ctArg = async_ ? 'cancellationToken' : '';
@@ -199,7 +198,7 @@ function generateEFDelete(modelName: string, options: CSharpGeneratorOptions): s
     }`;
 }
 
-function generateEFExists(modelName: string, options: CSharpGeneratorOptions): string {
+function generateEFExists(_modelName: string, options: CSharpGeneratorOptions): string {
   const async_ = options.asyncMethods;
   const ct = async_ ? ', CancellationToken cancellationToken = default' : '';
   const ctArg = async_ ? 'cancellationToken' : '';
@@ -210,7 +209,7 @@ function generateEFExists(modelName: string, options: CSharpGeneratorOptions): s
     }`;
 }
 
-function generateEFCount(modelName: string, options: CSharpGeneratorOptions): string {
+function generateEFCount(_modelName: string, options: CSharpGeneratorOptions): string {
   const async_ = options.asyncMethods;
   const ct = async_ ? 'CancellationToken cancellationToken = default' : '';
   const ctArg = async_ ? 'cancellationToken' : '';

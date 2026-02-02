@@ -62,11 +62,11 @@ function extractTypeScriptTestCase(
 
   // Extract test name from the first string argument or function name
   const testNameMatch = bodyText.match(/(?:test|it|describe)\s*\(\s*['"`]([^'"`]+)['"`]/);
-  const testName = testNameMatch ? testNameMatch[1] : func.name;
+  const testName = (testNameMatch && testNameMatch[1]) ? testNameMatch[1] : func.name;
 
   // Extract function being tested
   const functionNameMatch = bodyText.match(/(?:await\s+)?(\w+)\s*\(/);
-  const functionName = functionNameMatch ? functionNameMatch[1] : 'unknown';
+  const functionName = (functionNameMatch && functionNameMatch[1]) ? functionNameMatch[1] : 'unknown';
 
   // Extract input values from calls
   const inputs = extractInputsFromTest(bodyText);
@@ -89,18 +89,20 @@ function extractInputsFromTest(bodyText: string): Record<string, unknown> {
 
   // Extract object literals passed to functions
   const objectMatch = bodyText.match(/\(\s*\{([^}]+)\}\s*\)/);
-  if (objectMatch) {
+  if (objectMatch && objectMatch[1]) {
     const props = objectMatch[1].matchAll(/(\w+)\s*:\s*(['"`]?)([^,}'"]+)\2/g);
     for (const prop of props) {
       const key = prop[1];
-      const value = prop[3].trim();
-      inputs[key] = isNumeric(value) ? Number(value) : value;
+      const value = prop[3];
+      if (key && value) {
+        inputs[key] = isNumeric(value.trim()) ? Number(value.trim()) : value.trim();
+      }
     }
   }
 
   // Extract simple string/number arguments
   const simpleArgsMatch = bodyText.match(/\(\s*['"`]([^'"`]+)['"`](?:\s*,\s*['"`]([^'"`]+)['"`])?\s*\)/);
-  if (simpleArgsMatch) {
+  if (simpleArgsMatch && simpleArgsMatch[1]) {
     if (!Object.keys(inputs).length) {
       inputs['arg1'] = simpleArgsMatch[1];
       if (simpleArgsMatch[2]) {
@@ -124,9 +126,14 @@ function extractExpectations(bodyText: string): {
   // Extract expect().toBe/toEqual assertions
   const expectMatches = bodyText.matchAll(/expect\(([^)]+)\)\.(\w+)\(([^)]*)\)/g);
   for (const match of expectMatches) {
-    const actual = match[1].trim();
-    const matcher = match[2];
-    const expected = match[3].trim();
+    const actualPart = match[1];
+    const matcherPart = match[2];
+    const expectedPart = match[3];
+    if (!actualPart || !matcherPart) continue;
+    
+    const actual = actualPart.trim();
+    const matcher = matcherPart;
+    const expected = expectedPart?.trim() ?? '';
 
     assertions.push(`${actual} ${matcherToOperator(matcher)} ${expected}`);
 
@@ -154,7 +161,9 @@ function extractExpectations(bodyText: string): {
   for (const match of assertMatches) {
     const type = match[1] ?? 'true';
     const args = match[2];
-    assertions.push(`assert.${type}(${args})`);
+    if (args) {
+      assertions.push(`assert.${type}(${args})`);
+    }
   }
 
   return { expectedOutput, expectedError, assertions };
@@ -229,7 +238,7 @@ function extractPythonTestCase(func: {
 
   // Extract function being tested
   const funcCallMatch = func.body.match(/(?:await\s+)?(\w+)\s*\(/);
-  const functionName = funcCallMatch ? funcCallMatch[1] : 'unknown';
+  const functionName = (funcCallMatch && funcCallMatch[1]) ? funcCallMatch[1] : 'unknown';
 
   // Extract inputs
   const inputs = extractPythonInputs(func.body);
@@ -241,12 +250,15 @@ function extractPythonTestCase(func: {
   // assert statements
   const assertMatches = func.body.matchAll(/assert\s+([^,\n]+)/g);
   for (const match of assertMatches) {
-    assertions.push(match[1].trim());
+    const assertion = match[1];
+    if (assertion) {
+      assertions.push(assertion.trim());
+    }
   }
 
   // pytest.raises
   const raisesMatch = func.body.match(/pytest\.raises\((\w+)\)/);
-  if (raisesMatch) {
+  if (raisesMatch && raisesMatch[1]) {
     expectedError = raisesMatch[1];
   }
 
@@ -266,11 +278,13 @@ function extractPythonInputs(body: string): Record<string, unknown> {
   const kwargMatches = body.matchAll(/(\w+)\s*=\s*(['"]?)([^,)'"]+)\2/g);
   for (const match of kwargMatches) {
     const key = match[1];
+    const value = match[3];
+    if (!key || !value) continue;
     // Skip common non-input patterns
     if (['assert', 'return', 'raise', 'await'].includes(key)) continue;
 
-    const value = match[3].trim();
-    inputs[key] = isNumeric(value) ? Number(value) : value;
+    const trimmedValue = value.trim();
+    inputs[key] = isNumeric(trimmedValue) ? Number(trimmedValue) : trimmedValue;
   }
 
   return inputs;

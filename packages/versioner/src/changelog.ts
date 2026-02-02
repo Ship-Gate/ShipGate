@@ -3,9 +3,9 @@
 // Generates changelog entries from change analysis
 // ============================================================================
 
-import type { ChangeAnalysis, Change } from './analyzer';
-import type { SemanticVersion } from './versioner';
-import { formatVersion } from './versioner';
+import type { ChangeAnalysis, Change } from './analyzer.js';
+import type { SemanticVersion } from './versioner.js';
+import { formatVersion } from './versioner.js';
 
 // ============================================================================
 // TYPES
@@ -121,7 +121,7 @@ function generateMarkdownChangelog(
   return lines.join('\n');
 }
 
-function formatMarkdownChange(change: Change, options: ChangelogOptions): string {
+function formatMarkdownChange(change: Change, _options: ChangelogOptions): string {
   const scope = extractScope(change.path);
   const scopeStr = scope ? `**${scope}**: ` : '';
   const description = change.description;
@@ -151,7 +151,7 @@ function generateConventionalChangelog(
   version: string,
   date: string,
   analysis: ChangeAnalysis,
-  options: ChangelogOptions
+  _options: ChangelogOptions
 ): string {
   const lines: string[] = [];
   
@@ -244,7 +244,7 @@ function generateJsonChangelog(
   version: string,
   date: string,
   analysis: ChangeAnalysis,
-  options: ChangelogOptions
+  _options: ChangelogOptions
 ): string {
   const entry: ChangelogEntry = {
     version,

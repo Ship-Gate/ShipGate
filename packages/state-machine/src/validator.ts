@@ -136,7 +136,7 @@ export class StateValidator {
   private validateState(
     state: StateConfig,
     errors: ValidationError[],
-    warnings: ValidationWarning[]
+    _warnings: ValidationWarning[]
   ): void {
     if (!state.name) {
       errors.push({
@@ -161,7 +161,7 @@ export class StateValidator {
     transition: TransitionConfig,
     stateNames: Set<string>,
     errors: ValidationError[],
-    warnings: ValidationWarning[]
+    _warnings: ValidationWarning[]
   ): void {
     if (!transition.event) {
       errors.push({

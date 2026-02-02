@@ -8,8 +8,7 @@ import type {
   CompletionItem,
   CompletionKind,
   ISLContext,
-  Position,
-} from './types';
+} from './types.js';
 
 // ============================================================================
 // TYPES
@@ -179,7 +178,7 @@ function isDomainLevel(code: string): boolean {
 // KEYWORD COMPLETIONS
 // ============================================================================
 
-function getKeywordCompletions(context: CompletionContext): CompletionItem[] {
+function getKeywordCompletions(_context: CompletionContext): CompletionItem[] {
   const keywords = [
     { label: 'entity', detail: 'Define a domain entity', snippet: 'entity ${1:Name} {\n  $0\n}' },
     { label: 'behavior', detail: 'Define a behavior', snippet: 'behavior ${1:Name} {\n  $0\n}' },
@@ -285,7 +284,7 @@ function getTypeCompletions(context: CompletionContext): CompletionItem[] {
 
 async function getFieldCompletions(
   context: CompletionContext,
-  provider: AIProvider
+  _provider: AIProvider
 ): Promise<CompletionItem[]> {
   const items: CompletionItem[] = [];
   const entityName = context.semanticContext?.currentEntity?.name.name;
@@ -344,7 +343,7 @@ function getCommonFieldsForEntity(entityName: string): Array<{ name: string; typ
 // CONSTRAINT COMPLETIONS
 // ============================================================================
 
-function getConstraintCompletions(context: CompletionContext): CompletionItem[] {
+function getConstraintCompletions(_context: CompletionContext): CompletionItem[] {
   const constraints = [
     { label: 'minLength', snippet: 'minLength(${1:1})' },
     { label: 'maxLength', snippet: 'maxLength(${1:100})' },
@@ -374,7 +373,7 @@ function getConstraintCompletions(context: CompletionContext): CompletionItem[] 
 // ENTITY MEMBER COMPLETIONS
 // ============================================================================
 
-function getEntityMemberCompletions(context: CompletionContext): CompletionItem[] {
+function getEntityMemberCompletions(_context: CompletionContext): CompletionItem[] {
   return [
     { label: 'field', kind: 'snippet', detail: 'Add a field', insertText: '${1:name}: ${2:Type}' },
     { label: 'invariant', kind: 'keyword', detail: 'Add an invariant', insertText: 'invariant ${1:name}: ${0}' },
@@ -387,7 +386,7 @@ function getEntityMemberCompletions(context: CompletionContext): CompletionItem[
 // BEHAVIOR SECTION COMPLETIONS
 // ============================================================================
 
-function getBehaviorSectionCompletions(context: CompletionContext): CompletionItem[] {
+function getBehaviorSectionCompletions(_context: CompletionContext): CompletionItem[] {
   return [
     { label: 'input', kind: 'keyword', detail: 'Define input fields', insertText: 'input {\n  ${0}\n}' },
     { label: 'output', kind: 'keyword', detail: 'Define output', insertText: 'output {\n  success: ${1:Type}\n  error: ${2:ErrorType}\n}' },
@@ -404,8 +403,8 @@ function getBehaviorSectionCompletions(context: CompletionContext): CompletionIt
 // ============================================================================
 
 async function getExpressionCompletions(
-  context: CompletionContext,
-  provider: AIProvider
+  _context: CompletionContext,
+  _provider: AIProvider
 ): Promise<CompletionItem[]> {
   const items: CompletionItem[] = [];
 
@@ -440,7 +439,7 @@ async function getExpressionCompletions(
 // ANNOTATION COMPLETIONS
 // ============================================================================
 
-function getAnnotationCompletions(context: CompletionContext): CompletionItem[] {
+function getAnnotationCompletions(_context: CompletionContext): CompletionItem[] {
   const annotations = [
     { label: '@deprecated', detail: 'Mark as deprecated', snippet: '@deprecated("${1:reason}")' },
     { label: '@description', detail: 'Add description', snippet: '@description("${1:text}")' },
@@ -468,7 +467,7 @@ function getAnnotationCompletions(context: CompletionContext): CompletionItem[] 
 // SNIPPET COMPLETIONS
 // ============================================================================
 
-function getSnippetCompletions(context: CompletionContext): CompletionItem[] {
+function getSnippetCompletions(_context: CompletionContext): CompletionItem[] {
   const snippets = [
     {
       label: 'entity-full',

@@ -2,9 +2,9 @@
 // Go gRPC Stub Generation
 // ============================================================================
 
-import type { Domain, Behavior, Entity, Field } from '@isl-lang/isl-core';
+import type { Domain, Behavior, Entity } from '../types';
 import type { GeneratedFile } from '../generator';
-import { toPascalCase, toCamelCase, toSnakeCase } from '../utils';
+import { toPascalCase, toSnakeCase } from '../utils';
 
 // ==========================================================================
 // OPTIONS
@@ -368,10 +368,11 @@ function generateGoStruct(entity: Entity): string {
   return lines.join('\n');
 }
 
-function islTypeToGo(type: { kind: string; name?: string | { parts?: Array<{ name: string }> }; element?: unknown; inner?: unknown; key?: unknown; value?: unknown }): string {
+function islTypeToGo(type: { kind: string; name?: { name: string }; elementType?: unknown; typeArguments?: Array<{ kind: string; name?: { name: string } }> }): string {
   switch (type.kind) {
-    case 'PrimitiveType':
-      switch (type.name) {
+    case 'SimpleType': {
+      const typeName = type.name?.name ?? '';
+      switch (typeName) {
         case 'String':
         case 'UUID':
           return 'string';
@@ -386,19 +387,33 @@ function islTypeToGo(type: { kind: string; name?: string | { parts?: Array<{ nam
         case 'Duration':
           return 'time.Duration';
         default:
-          return 'interface{}';
+          // Reference to another type
+          return '*' + toPascalCase(typeName);
       }
-    case 'ReferenceType':
-      if (typeof type.name === 'object' && type.name?.parts) {
-        return '*' + type.name.parts.map(p => toPascalCase(p.name)).join('');
+    }
+    case 'GenericType': {
+      const typeName = type.name?.name ?? '';
+      if (typeName === 'List' || typeName === 'Array') {
+        const elemType = type.typeArguments?.[0];
+        return `[]${elemType ? islTypeToGo(elemType) : 'interface{}'}`;
       }
+      if (typeName === 'Map') {
+        const keyType = type.typeArguments?.[0];
+        const valType = type.typeArguments?.[1];
+        return `map[${keyType ? islTypeToGo(keyType) : 'string'}]${valType ? islTypeToGo(valType) : 'interface{}'}`;
+      }
+      if (typeName === 'Optional') {
+        const innerType = type.typeArguments?.[0];
+        return `*${innerType ? islTypeToGo(innerType) : 'interface{}'}`;
+      }
+      return '*' + toPascalCase(typeName);
+    }
+    case 'ArrayType':
+      return `[]${islTypeToGo(type.elementType as { kind: string })}`;
+    case 'UnionType':
       return 'interface{}';
-    case 'ListType':
-      return `[]${islTypeToGo(type.element as { kind: string })}`;
-    case 'OptionalType':
-      return `*${islTypeToGo(type.inner as { kind: string })}`;
-    case 'MapType':
-      return `map[${islTypeToGo(type.key as { kind: string })}]${islTypeToGo(type.value as { kind: string })}`;
+    case 'ObjectType':
+      return 'map[string]interface{}';
     default:
       return 'interface{}';
   }

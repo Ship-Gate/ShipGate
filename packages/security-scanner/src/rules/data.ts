@@ -64,28 +64,6 @@ function isPasswordField(field: Field): boolean {
   return name.includes('password') || name.includes('passwd') || name.includes('pwd');
 }
 
-function getFieldType(field: Field): string {
-  if (field.type.kind === 'ReferenceType') {
-    return (field.type as any).name?.parts?.[0]?.name || 'Unknown';
-  }
-  if (field.type.kind === 'PrimitiveType') {
-    return (field.type as any).name || 'Unknown';
-  }
-  return field.type.kind;
-}
-
-function isListType(field: Field): boolean {
-  return field.type.kind === 'ListType';
-}
-
-function hasMaxLengthConstraint(field: Field): boolean {
-  // Check annotations for max_length
-  return field.annotations.some((a) => {
-    const name = a.name.name.toLowerCase();
-    return name === 'max_length' || name === 'maxlength' || name === 'limit';
-  });
-}
-
 // ============================================================================
 // SEC003: Sensitive Data in Logs
 // ============================================================================

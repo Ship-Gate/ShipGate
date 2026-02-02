@@ -26,10 +26,8 @@ export class VerificationIntegration implements Integration {
   /**
    * Setup the integration
    */
-  setupOnce(
-    addGlobalEventProcessor: (processor: (event: Event, hint?: EventHint) => Event | null) => void
-  ): void {
-    addGlobalEventProcessor((event, hint) => {
+  setupOnce(): void {
+    Sentry.addEventProcessor((event: Event, hint?: EventHint) => {
       return this.processEvent(event, hint);
     });
   }
@@ -37,7 +35,7 @@ export class VerificationIntegration implements Integration {
   /**
    * Process verification-related events
    */
-  private processEvent(event: Event, _hint?: EventHint): Event | null {
+  processEvent(event: Event, _hint?: EventHint): Event | null {
     // Check if this is a verification event
     const verificationContext = event.contexts?.verification as
       | Record<string, unknown>

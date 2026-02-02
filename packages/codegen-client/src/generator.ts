@@ -21,7 +21,7 @@ import { generateGoClient, generateGoTypes } from './languages/go';
  * Generate API client from ISL domain
  */
 export function generate(
-  domain: AST.Domain,
+  domain: AST.DomainDeclaration,
   options: GenerateOptions
 ): GeneratedFile[] {
   const files: GeneratedFile[] = [];
@@ -89,7 +89,7 @@ export function generate(
     }
 
     case 'go': {
-      const packageName = options.packageName || toSnakeCase(domain.name);
+      const packageName = options.packageName || toSnakeCase(domain.name.name);
       
       if (options.splitFiles) {
         files.push({
@@ -117,7 +117,7 @@ export function generate(
 /**
  * Build client configuration from ISL domain
  */
-function buildClientConfig(domain: AST.Domain, options: GenerateOptions): ClientConfig {
+function buildClientConfig(domain: AST.DomainDeclaration, options: GenerateOptions): ClientConfig {
   const types: TypeDefinition[] = [];
   const methods: ClientMethod[] = [];
 
@@ -136,7 +136,7 @@ function buildClientConfig(domain: AST.Domain, options: GenerateOptions): Client
     // Add input type
     if (behavior.input) {
       types.push({
-        name: `${behavior.name}Input`,
+        name: `${behavior.name.name}Input`,
         kind: 'interface',
         fields: behavior.input.fields.map(convertFieldToDefinition),
       });
@@ -150,13 +150,13 @@ function buildClientConfig(domain: AST.Domain, options: GenerateOptions): Client
       }
     }
 
-    // Add error types
+    // Add error types - note: ErrorDeclaration doesn't have fields
     if (behavior.output?.errors) {
       for (const error of behavior.output.errors) {
         types.push({
-          name: `${behavior.name}Error${error.name}`,
+          name: `${behavior.name.name}Error${error.name.name}`,
           kind: 'interface',
-          fields: error.fields?.map(convertFieldToDefinition) || [],
+          fields: [],
         });
       }
     }
@@ -166,7 +166,7 @@ function buildClientConfig(domain: AST.Domain, options: GenerateOptions): Client
   }
 
   // Determine class name
-  const className = `${domain.name}Client`;
+  const className = `${domain.name.name}Client`;
 
   return {
     className,
@@ -181,35 +181,29 @@ function buildClientConfig(domain: AST.Domain, options: GenerateOptions): Client
  * Convert ISL type declaration to TypeDefinition
  */
 function convertTypeDeclaration(typeDecl: AST.TypeDeclaration): TypeDefinition {
-  // Handle enum types
-  if (typeDecl.definition.kind === 'enum') {
-    return {
-      name: typeDecl.name,
-      kind: 'enum',
-      values: typeDecl.definition.values.map((v) => v.name),
-    };
-  }
+  const baseType = typeDecl.baseType;
 
-  // Handle struct/object types
-  if (typeDecl.definition.kind === 'struct') {
+  // Handle object types (structs)
+  if (baseType.kind === 'ObjectType') {
     return {
-      name: typeDecl.name,
+      name: typeDecl.name.name,
       kind: 'interface',
-      fields: typeDecl.definition.fields.map(convertFieldToDefinition),
+      fields: baseType.fields.map(convertFieldToDefinition),
     };
   }
 
-  // Handle alias types
-  if (typeDecl.definition.kind === 'primitive' || typeDecl.definition.kind === 'reference') {
+  // Handle union types
+  if (baseType.kind === 'UnionType') {
     return {
-      name: typeDecl.name,
-      kind: 'type',
-      fields: [],
+      name: typeDecl.name.name,
+      kind: 'enum',
+      values: baseType.variants.map((v) => v.name.name),
     };
   }
 
+  // Handle alias types (simple, generic, array)
   return {
-    name: typeDecl.name,
+    name: typeDecl.name.name,
     kind: 'type',
     fields: [],
   };
@@ -218,9 +212,9 @@ function convertTypeDeclaration(typeDecl: AST.TypeDeclaration): TypeDefinition {
 /**
  * Convert ISL entity to TypeDefinition
  */
-function convertEntityToType(entity: AST.Entity): TypeDefinition {
+function convertEntityToType(entity: AST.EntityDeclaration): TypeDefinition {
   return {
-    name: entity.name,
+    name: entity.name.name,
     kind: 'interface',
     fields: entity.fields.map(convertFieldToDefinition),
   };
@@ -229,9 +223,9 @@ function convertEntityToType(entity: AST.Entity): TypeDefinition {
 /**
  * Convert ISL field to FieldDefinition
  */
-function convertFieldToDefinition(field: AST.Field): FieldDefinition {
+function convertFieldToDefinition(field: AST.FieldDeclaration): FieldDefinition {
   return {
-    name: field.name,
+    name: field.name.name,
     type: resolveTypeName(field.type),
     optional: field.optional || false,
     description: undefined, // Could extract from annotations
@@ -241,21 +235,21 @@ function convertFieldToDefinition(field: AST.Field): FieldDefinition {
 /**
  * Convert behavior output to type definition
  */
-function convertOutputToType(behavior: AST.Behavior): TypeDefinition | null {
+function convertOutputToType(behavior: AST.BehaviorDeclaration): TypeDefinition | null {
   if (!behavior.output) return null;
 
   const successType = behavior.output.success;
   if (!successType) return null;
 
-  // If it's a reference to an entity, don't create a new type
-  if (successType.kind === 'reference') {
+  // If it's a simple type reference to an entity, don't create a new type
+  if (successType.kind === 'SimpleType') {
     return null;
   }
 
   return {
-    name: `${behavior.name}Output`,
+    name: `${behavior.name.name}Output`,
     kind: 'interface',
-    fields: successType.kind === 'struct'
+    fields: successType.kind === 'ObjectType'
       ? successType.fields.map(convertFieldToDefinition)
       : [],
   };
@@ -264,26 +258,26 @@ function convertOutputToType(behavior: AST.Behavior): TypeDefinition | null {
 /**
  * Convert ISL behavior to client method
  */
-function convertBehaviorToMethod(behavior: AST.Behavior): ClientMethod {
+function convertBehaviorToMethod(behavior: AST.BehaviorDeclaration): ClientMethod {
   const httpMethod = inferHttpMethod(behavior);
   const path = inferApiPath(behavior);
 
   return {
-    name: toCamelCase(behavior.name),
+    name: toCamelCase(behavior.name.name),
     httpMethod,
     path,
-    description: behavior.description,
-    inputType: behavior.input ? `${behavior.name}Input` : 'void',
+    description: behavior.description?.value,
+    inputType: behavior.input ? `${behavior.name.name}Input` : 'void',
     outputType: inferOutputType(behavior),
-    errorTypes: behavior.output?.errors?.map((e) => e.name) || [],
+    errorTypes: behavior.output?.errors?.map((e: AST.ErrorDeclaration) => e.name.name) || [],
   };
 }
 
 /**
  * Infer HTTP method from behavior
  */
-function inferHttpMethod(behavior: AST.Behavior): HttpMethod {
-  const name = behavior.name.toLowerCase();
+function inferHttpMethod(behavior: AST.BehaviorDeclaration): HttpMethod {
+  const name = behavior.name.name.toLowerCase();
 
   if (name.startsWith('get') || name.startsWith('list') || name.startsWith('find') || name.startsWith('search')) {
     return 'GET';
@@ -308,8 +302,8 @@ function inferHttpMethod(behavior: AST.Behavior): HttpMethod {
 /**
  * Infer API path from behavior
  */
-function inferApiPath(behavior: AST.Behavior): string {
-  const name = behavior.name;
+function inferApiPath(behavior: AST.BehaviorDeclaration): string {
+  const name = behavior.name.name;
 
   // Extract resource name from behavior name
   // e.g., CreateUser -> /users, GetUserById -> /users/:id
@@ -344,18 +338,18 @@ function inferApiPath(behavior: AST.Behavior): string {
 /**
  * Infer output type name
  */
-function inferOutputType(behavior: AST.Behavior): string {
+function inferOutputType(behavior: AST.BehaviorDeclaration): string {
   if (!behavior.output?.success) {
     return 'void';
   }
 
   const success = behavior.output.success;
 
-  if (success.kind === 'reference') {
-    return success.name;
+  if (success.kind === 'SimpleType') {
+    return success.name.name;
   }
 
-  return `${behavior.name}Output`;
+  return `${behavior.name.name}Output`;
 }
 
 /**
@@ -363,18 +357,31 @@ function inferOutputType(behavior: AST.Behavior): string {
  */
 function resolveTypeName(type: AST.TypeExpression): string {
   switch (type.kind) {
-    case 'primitive':
-      return mapPrimitiveType(type.name);
-    case 'reference':
-      return type.name;
-    case 'list':
+    case 'SimpleType':
+      return mapPrimitiveType(type.name.name);
+    case 'GenericType': {
+      const typeName = type.name.name;
+      // Handle common generic types
+      if (typeName === 'List' || typeName === 'Array') {
+        return `${resolveTypeName(type.typeArguments[0])}[]`;
+      }
+      if (typeName === 'Map' || typeName === 'Record') {
+        return `Record<${resolveTypeName(type.typeArguments[0])}, ${resolveTypeName(type.typeArguments[1])}>`;
+      }
+      if (typeName === 'Optional') {
+        return `${resolveTypeName(type.typeArguments[0])} | null`;
+      }
+      // Generic type with arguments
+      const args = type.typeArguments.map(resolveTypeName).join(', ');
+      return `${typeName}<${args}>`;
+    }
+    case 'ArrayType':
       return `${resolveTypeName(type.elementType)}[]`;
-    case 'map':
-      return `Record<${resolveTypeName(type.keyType)}, ${resolveTypeName(type.valueType)}>`;
-    case 'optional':
-      return `${resolveTypeName(type.innerType)}?`;
-    case 'union':
-      return type.variants.map(resolveTypeName).join(' | ');
+    case 'UnionType':
+      return type.variants.map((v) => v.name.name).join(' | ');
+    case 'ObjectType':
+      // Inline object type
+      return 'object';
     default:
       return 'unknown';
   }

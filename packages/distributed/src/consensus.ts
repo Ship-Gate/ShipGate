@@ -5,7 +5,6 @@
 
 import {
   ClusterNode,
-  NodeRole,
   LogEntry,
   RaftState,
   ClusterConfig,
@@ -317,7 +316,7 @@ export class RaftConsensus<T = unknown> {
       this.state.lastApplied++;
       const entry = this.state.log[this.state.lastApplied - 1];
       if (entry && this.onApply) {
-        this.onApply(entry);
+        this.onApply(entry as LogEntry<T>);
       }
     }
   }

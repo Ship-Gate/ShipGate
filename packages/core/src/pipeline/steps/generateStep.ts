@@ -19,7 +19,7 @@ import type { GenerateStepResult, PipelineState } from '../pipelineTypes.js';
  * @returns Path to generated file
  */
 async function generateStubTestFile(ast: Domain, tempDir: string): Promise<string> {
-  const domainName = ast.name?.value || 'unnamed';
+  const domainName = ast.name?.name || 'unnamed';
   const fileName = `${domainName.toLowerCase()}.stub.ts`;
   const filePath = path.join(tempDir, fileName);
 
@@ -38,12 +38,12 @@ export const invariantCount = ${ast.invariants.length};
 
 // Entity names
 export const entities = [
-${ast.entities.map((e) => `  '${e.name?.value || 'unnamed'}',`).join('\n')}
+${ast.entities.map((e) => `  '${e.name?.name || 'unnamed'}',`).join('\n')}
 ];
 
 // Behavior names
 export const behaviors = [
-${ast.behaviors.map((b) => `  '${b.name?.value || 'unnamed'}',`).join('\n')}
+${ast.behaviors.map((b) => `  '${b.name?.name || 'unnamed'}',`).join('\n')}
 ];
 `;
 
@@ -116,7 +116,7 @@ export async function runGenerateStep(state: PipelineState): Promise<GenerateSte
     // Generate metadata JSON
     const metadataFile = path.join(tempDir, 'metadata.json');
     const metadata = {
-      domainName: state.ast.name?.value,
+      domainName: state.ast.name?.name,
       version: state.ast.version?.value,
       entityCount: state.ast.entities.length,
       behaviorCount: state.ast.behaviors.length,

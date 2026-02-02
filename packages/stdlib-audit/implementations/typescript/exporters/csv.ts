@@ -3,13 +3,13 @@
 // @stdlib/audit/exporters/csv
 // ============================================================================
 
-import type {
-  AuditExporter,
-  AuditEvent,
+import {
   ExportFormat,
-  ExportOptions,
-  ExportOutput,
   CompressionType,
+  type AuditExporter,
+  type AuditEvent,
+  type ExportOptions,
+  type ExportOutput,
 } from '../types';
 import { maskPii, redactPii } from '../utils/pii';
 

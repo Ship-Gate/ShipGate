@@ -3,9 +3,7 @@
 // Caches parse results and provides incremental updates
 // ============================================================================
 
-import { parse, type ParseResult, type Domain } from '@isl-lang/parser';
-import type { AnalysisResult } from './analyzer';
-import { ISLAnalyzer } from './analyzer';
+import { ISLAnalyzer, type AnalysisResult } from './analyzer';
 
 // ============================================================================
 // Parse Cache Entry

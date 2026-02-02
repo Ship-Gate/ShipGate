@@ -30,9 +30,9 @@ export async function generateErrorCatalog(
   config: CatalogConfig
 ): Promise<GeneratorOutput[]> {
   const extractor = new ErrorExtractor();
-  const errors = await extractor.extractFromGlob(config.inputGlob);
+  const result = await extractor.extractFromGlob(config.inputGlob);
 
-  const catalog = new ErrorCatalog(errors, {
+  const catalog = new ErrorCatalog(result.errors, {
     groupBy: config.groupBy ?? 'domain',
     sortBy: config.sortBy ?? 'code',
   });

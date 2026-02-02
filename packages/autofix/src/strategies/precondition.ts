@@ -184,9 +184,6 @@ function findInsertLocation(
 function generateCheckCode(fix: PreconditionFix, context: PatchContext): string {
   const indent = context.indentation ?? '  ';
   
-  // Determine if it's an async check
-  const isAsync = fix.check.includes('await');
-  
   // Generate appropriate error throwing
   const errorCode = context.useCustomErrors
     ? `throw new BehaviorError({ code: '${fix.errorType}', message: '${fix.errorMessage}', retriable: false });`

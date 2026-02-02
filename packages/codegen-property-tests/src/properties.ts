@@ -3,8 +3,8 @@
 // Converts ISL invariants and postconditions to property tests
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
-import type { PropertyDefinition } from './types';
+import type * as AST from '../../../master_contracts/ast.js';
+import type { PropertyDefinition } from './types.js';
 
 /**
  * Generate property tests for entity invariants

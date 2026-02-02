@@ -3,9 +3,9 @@
 // Converts ISL chaos scenarios to failure injection tests
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
-import { compileExpression, compileAssertion } from './expression-compiler';
-import type { ChaosContext, TestFramework } from './types';
+import type * as AST from '@isl-lang/parser';
+import { compileExpression, compileAssertion } from './expression-compiler.js';
+import type { ChaosContext, TestFramework } from './types.js';
 
 /**
  * Generate chaos tests from chaos blocks

@@ -5,7 +5,7 @@
  * This is a stub implementation that generates clause results from the AST.
  */
 
-import type { Domain, Behavior, Entity, InvariantBlock } from '@isl-lang/parser';
+import type { Domain } from '@isl-lang/parser';
 import type {
   VerifyStepResult,
   PipelineState,
@@ -28,14 +28,14 @@ function extractClausesFromAst(ast: Domain): ClauseInfo[] {
 
   // Extract entity constraints
   for (const entity of ast.entities) {
-    const entityName = entity.name?.value || 'UnknownEntity';
+    const entityName = entity.name?.name || 'UnknownEntity';
 
     // Field constraints
     for (let i = 0; i < entity.fields.length; i++) {
       const field = entity.fields[i];
       if (!field) continue;
 
-      const fieldName = field.name?.value || `field${i}`;
+      const fieldName = field.name?.name || `field${i}`;
 
       // Check if field has constraints
       if (field.type && 'constraints' in field.type) {
@@ -51,57 +51,50 @@ function extractClausesFromAst(ast: Domain): ClauseInfo[] {
 
   // Extract behavior clauses
   for (const behavior of ast.behaviors) {
-    const behaviorName = behavior.name?.value || 'UnknownBehavior';
-    const entityName = behavior.on?.value;
+    const behaviorName = behavior.name?.name || 'UnknownBehavior';
 
     // Preconditions
     for (let i = 0; i < (behavior.preconditions?.length ?? 0); i++) {
-      const pre = behavior.preconditions?.[i];
       clauses.push({
         clauseId: `${behaviorName}.pre.${i + 1}`,
         clauseType: 'precondition',
-        source: pre?.toString() || `Precondition ${i + 1}`,
-        entityName,
+        source: `Precondition ${i + 1}`,
         behaviorName,
       });
     }
 
     // Postconditions
     for (let i = 0; i < (behavior.postconditions?.length ?? 0); i++) {
-      const post = behavior.postconditions?.[i];
       clauses.push({
         clauseId: `${behaviorName}.post.${i + 1}`,
         clauseType: 'postcondition',
-        source: post?.toString() || `Postcondition ${i + 1}`,
-        entityName,
+        source: `Postcondition ${i + 1}`,
         behaviorName,
       });
     }
 
-    // Effects
-    for (let i = 0; i < (behavior.effects?.length ?? 0); i++) {
-      const effect = behavior.effects?.[i];
+    // Behavior invariants
+    for (let i = 0; i < (behavior.invariants?.length ?? 0); i++) {
       clauses.push({
-        clauseId: `${behaviorName}.effect.${i + 1}`,
-        clauseType: 'effect',
-        source: effect?.toString() || `Effect ${i + 1}`,
-        entityName,
+        clauseId: `${behaviorName}.inv.${i + 1}`,
+        clauseType: 'invariant',
+        source: `Behavior invariant ${i + 1}`,
         behaviorName,
       });
     }
   }
 
-  // Extract invariants
+  // Extract global invariants
   for (let blockIdx = 0; blockIdx < ast.invariants.length; blockIdx++) {
     const block = ast.invariants[blockIdx];
-    if (!block?.invariants) continue;
+    if (!block?.predicates) continue;
 
-    for (let i = 0; i < block.invariants.length; i++) {
-      const inv = block.invariants[i];
+    const blockName = block.name?.name || `block${blockIdx + 1}`;
+    for (let i = 0; i < block.predicates.length; i++) {
       clauses.push({
-        clauseId: `invariant.${blockIdx + 1}.${i + 1}`,
+        clauseId: `invariant.${blockName}.${i + 1}`,
         clauseType: 'invariant',
-        source: inv?.label?.value || `Invariant ${i + 1}`,
+        source: `Global invariant ${i + 1}`,
       });
     }
   }

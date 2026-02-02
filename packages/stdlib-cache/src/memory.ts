@@ -2,7 +2,7 @@
 // In-Memory Cache Implementation
 // ============================================================================
 
-import type { ICache, CacheOptions, CacheStats, CacheEntry } from './types.js';
+import type { ICache, SetOptions, CacheStats, CacheEntry } from './types.js';
 
 /**
  * Memory cache configuration
@@ -27,7 +27,7 @@ export class MemoryCache implements ICache {
   private cache: Map<string, CacheEntry<unknown>> = new Map();
   private accessOrder: string[] = [];
   private config: Required<MemoryCacheConfig>;
-  private stats = { hits: 0, misses: 0 };
+  private stats = { hits: 0, misses: 0, sets: 0, deletes: 0, evictions: 0 };
   private cleanupTimer?: ReturnType<typeof setInterval>;
 
   constructor(config: MemoryCacheConfig = {}) {
@@ -66,21 +66,25 @@ export class MemoryCache implements ICache {
     return entry.value as T;
   }
 
-  async set<T>(key: string, value: T, options?: CacheOptions): Promise<void> {
+  async set<T>(key: string, value: T, options?: SetOptions): Promise<void> {
     // Evict if at capacity
     while (this.cache.size >= this.config.maxSize) {
       this.evictLRU();
     }
 
+    const now = Date.now();
     const entry: CacheEntry<T> = {
       value,
       ttl: options?.ttl ?? this.config.defaultTTL,
-      createdAt: Date.now(),
+      createdAt: now,
+      lastAccessedAt: now,
+      accessCount: 0,
       tags: options?.tags,
     };
 
     this.cache.set(key, entry);
     this.updateAccessOrder(key);
+    this.stats.sets++;
   }
 
   async delete(key: string): Promise<boolean> {
@@ -90,6 +94,7 @@ export class MemoryCache implements ICache {
       const entry = this.cache.get(key);
       this.cache.delete(key);
       this.removeFromAccessOrder(key);
+      this.stats.deletes++;
       
       if (entry) {
         this.config.onEvict(key, entry.value);
@@ -134,8 +139,11 @@ export class MemoryCache implements ICache {
     return {
       hits: this.stats.hits,
       misses: this.stats.misses,
+      sets: this.stats.sets,
+      deletes: this.stats.deletes,
       hitRate: total > 0 ? this.stats.hits / total : 0,
       size: this.cache.size,
+      evictions: this.stats.evictions,
       memory: this.estimateMemoryUsage(),
     };
   }
@@ -164,7 +172,7 @@ export class MemoryCache implements ICache {
   /**
    * Set multiple keys
    */
-  async mset<T>(entries: Array<{ key: string; value: T; options?: CacheOptions }>): Promise<void> {
+  async mset<T>(entries: Array<{ key: string; value: T; options?: SetOptions }>): Promise<void> {
     for (const { key, value, options } of entries) {
       await this.set(key, value, options);
     }
@@ -176,7 +184,7 @@ export class MemoryCache implements ICache {
   async getOrSet<T>(
     key: string,
     factory: () => Promise<T>,
-    options?: CacheOptions
+    options?: SetOptions
   ): Promise<T> {
     const cached = await this.get<T>(key);
     
@@ -224,6 +232,7 @@ export class MemoryCache implements ICache {
     if (lruKey) {
       const entry = this.cache.get(lruKey);
       this.cache.delete(lruKey);
+      this.stats.evictions++;
       
       if (entry) {
         this.config.onEvict(lruKey, entry.value);

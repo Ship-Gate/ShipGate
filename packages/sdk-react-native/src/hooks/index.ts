@@ -10,7 +10,9 @@ export {
   getQueryData,
   setQueryData,
 } from './useQuery';
+export type { QueryResult } from './useQuery';
 
 export { useMutation, createValidatedMutation } from './useMutation';
+export type { MutationResult } from './useMutation';
 
 export { useSubscription, usePresence } from './useSubscription';

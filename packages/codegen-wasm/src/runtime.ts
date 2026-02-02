@@ -73,7 +73,7 @@ export class ISLWASMRuntime {
     const imports = this.buildImports();
 
     // Compile and instantiate
-    const module = await WebAssembly.compile(binary);
+    const module = await WebAssembly.compile(binary.buffer as ArrayBuffer);
     this.instance = await WebAssembly.instantiate(module, imports);
 
     // Extract exports
@@ -211,7 +211,7 @@ export class ISLWASMRuntime {
   private buildImports(): WebAssembly.Imports {
     return {
       env: {
-        memory: this.memory,
+        memory: this.memory!,
         log: (ptr: number) => {
           const msg = this.readString(ptr);
           console.log('[WASM]', msg);

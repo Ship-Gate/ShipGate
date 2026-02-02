@@ -7,13 +7,18 @@
 
 // Core types and severity
 export {
-  Severity,
-  SeverityInfo,
   SEVERITY_INFO,
   compareSeverity,
   getSeverityFromScore,
-  SecurityCategory,
   CATEGORY_INFO,
+  calculateSummary,
+  createEmptyScanResult,
+} from './severity';
+
+export type {
+  Severity,
+  SeverityInfo,
+  SecurityCategory,
   SourceLocation,
   Finding,
   ScanSummary,
@@ -22,8 +27,6 @@ export {
   SecurityRule,
   RuleChecker,
   RuleContext,
-  calculateSummary,
-  createEmptyScanResult,
   // Domain types for ISL AST
   Domain,
   Entity,
@@ -35,7 +38,6 @@ export {
 // Scanner
 export {
   SecurityScanner,
-  ScannerOptions,
   scan,
   scanWithRules,
   quickScan,
@@ -43,6 +45,10 @@ export {
   scanSource,
   runCI,
   assertSecure,
+} from './scanner';
+
+export type {
+  ScannerOptions,
   CIResult,
 } from './scanner';
 
@@ -55,8 +61,6 @@ export {
   getRulesBySeverity,
   getRuleMetadata,
   getRuleSummary,
-  RuleMetadata,
-  RuleSummary,
   // Individual rule sets
   authRules,
   injectionRules,
@@ -76,12 +80,22 @@ export {
   SEC010_InsecureRandomness,
 } from './rules';
 
+export type {
+  RuleMetadata,
+  RuleSummary,
+} from './rules';
+
 // Implementation scanners
 export {
   scanImplementation,
   scanTypeScript,
   scanPython,
   detectLanguage,
+  getTotalPatternCount,
+  getPatternCountByLanguage,
+} from './impl-scanner';
+
+export type {
   SupportedLanguage,
   ImplementationScanOptions,
   ImplementationScanResult,
@@ -89,32 +103,33 @@ export {
   TypeScriptScanResult,
   PythonScanOptions,
   PythonScanResult,
-  getTotalPatternCount,
-  getPatternCountByLanguage,
 } from './impl-scanner';
 
 // Reporters
 export {
   generateReport,
-  OutputFormat,
-  ReportOptions,
   getFormatExtension,
   getFormatMimeType,
   // SARIF
   generateSarif,
   generateSarifString,
   generateFullSarif,
-  SarifOptions,
   // JSON
   generateJsonReport,
   generateJsonString,
   generateMinimalJson,
-  JsonReport,
-  JsonReportOptions,
   // Markdown
   generateMarkdownReport,
   generateMarkdownSummary,
   generateGitHubMarkdown,
+} from './reporters';
+
+export type {
+  OutputFormat,
+  ReportOptions,
+  SarifOptions,
+  JsonReport,
+  JsonReportOptions,
   MarkdownOptions,
 } from './reporters';
 

@@ -53,7 +53,7 @@ export class FlagEvaluator {
     // Return default variant
     if (flag.variants && flag.variants.length > 0) {
       const defaultVariant = flag.variants.find(v => v.key === flag.defaultVariant) 
-        ?? flag.variants[0];
+        ?? flag.variants[0]!;
       
       return {
         flagKey: flag.key,
@@ -329,7 +329,8 @@ export class FlagEvaluator {
       }
     }
 
-    return variants[variants.length - 1];
+    // This is safe because selectVariantByWeight is only called when variants.length > 0
+    return variants[variants.length - 1]!;
   }
 
   /**

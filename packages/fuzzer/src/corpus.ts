@@ -6,8 +6,7 @@
 import { 
   CorpusEntry, 
   CorpusStats, 
-  FuzzCategory, 
-  createRng 
+  FuzzCategory,
 } from './types.js';
 
 /**

@@ -1,0 +1,47 @@
+{
+  "name": "@isl-lang/verified-build",
+  "version": "0.1.0",
+  "description": "ISL Verified Build - Single-package SDK for code verification",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --clean --external @isl-lang/gate --external @isl-lang/evidence --external @isl-lang/firewall --external @isl-lang/policy-packs",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@isl-lang/gate": "workspace:*",
+    "@isl-lang/evidence": "workspace:*",
+    "@isl-lang/firewall": "workspace:*",
+    "@isl-lang/policy-packs": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "rimraf": "^5.0.5"
+  },
+  "keywords": [
+    "isl",
+    "verification",
+    "security",
+    "code-review",
+    "ai-safety"
+  ],
+  "author": "mevla",
+  "license": "MIT"
+}

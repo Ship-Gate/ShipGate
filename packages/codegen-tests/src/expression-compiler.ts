@@ -2,7 +2,7 @@
 // Expression Compiler - Converts ISL expressions to TypeScript assertions
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 
 // ============================================================================
 // COMPILER CONTEXT

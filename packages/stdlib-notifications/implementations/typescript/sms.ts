@@ -513,7 +513,7 @@ interface SMSProvider {
 }
 
 class MockSMSProvider implements SMSProvider {
-  async send(notification: SMSNotification): Promise<SMSProviderResult> {
+  async send(_notification: SMSNotification): Promise<SMSProviderResult> {
     // Simulate provider latency
     await new Promise(resolve => setTimeout(resolve, 10));
     

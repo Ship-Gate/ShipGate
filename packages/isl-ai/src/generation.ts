@@ -3,13 +3,12 @@
 // Generate ISL specifications from natural language
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
 import type {
   AIProvider,
   GenerationConfig,
   GeneratedComponent,
   ISLContext,
-} from './types';
+} from './types.js';
 
 // ============================================================================
 // TYPES
@@ -65,7 +64,7 @@ export async function generate(
 async function generateDomain(
   request: GenerationRequest,
   provider: AIProvider,
-  context?: ISLContext
+  _context?: ISLContext
 ): Promise<GeneratedSpec> {
   const prompt = `Generate a complete ISL domain specification based on:
 
@@ -201,7 +200,7 @@ Respond with only the ISL behavior definition.`;
 async function generateType(
   request: GenerationRequest,
   provider: AIProvider,
-  context?: ISLContext
+  _context?: ISLContext
 ): Promise<GeneratedSpec> {
   const prompt = `Generate an ISL type definition:
 
@@ -299,7 +298,7 @@ function extractComponents(code: string): GeneratedComponent[] {
   for (const match of entityMatches) {
     components.push({
       kind: 'entity',
-      name: match[1],
+      name: match[1] ?? 'Unknown',
       code: match[0],
       confidence: 0.85,
     });
@@ -310,7 +309,7 @@ function extractComponents(code: string): GeneratedComponent[] {
   for (const match of behaviorMatches) {
     components.push({
       kind: 'behavior',
-      name: match[1],
+      name: match[1] ?? 'Unknown',
       code: match[0],
       confidence: 0.8,
     });
@@ -321,7 +320,7 @@ function extractComponents(code: string): GeneratedComponent[] {
   for (const match of typeMatches) {
     components.push({
       kind: 'type',
-      name: match[1],
+      name: match[1] ?? 'Unknown',
       code: match[0],
       confidence: 0.9,
     });
@@ -332,7 +331,7 @@ function extractComponents(code: string): GeneratedComponent[] {
   for (const match of policyMatches) {
     components.push({
       kind: 'policy',
-      name: match[1],
+      name: match[1] ?? 'Unknown',
       code: match[0],
       confidence: 0.85,
     });
@@ -381,16 +380,14 @@ export async function generateBatch(
     results.push(result);
 
     // Update context with generated types
-    if (result.components.length > 0) {
-      const newContext = context || { semanticContext: { availableTypes: [], availableEntities: [], availableBehaviors: [] } };
-      
+    if (result.components.length > 0 && context?.semanticContext) {
       for (const component of result.components) {
         if (component.kind === 'entity') {
-          newContext.semanticContext!.availableEntities.push(component.name);
+          context.semanticContext.availableEntities.push(component.name);
         } else if (component.kind === 'type') {
-          newContext.semanticContext!.availableTypes.push(component.name);
+          context.semanticContext.availableTypes.push(component.name);
         } else if (component.kind === 'behavior') {
-          newContext.semanticContext!.availableBehaviors.push(component.name);
+          context.semanticContext.availableBehaviors.push(component.name);
         }
       }
     }

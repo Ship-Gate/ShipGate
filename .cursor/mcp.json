@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "isl": {
+      "command": "node",
+      "args": ["packages/mcp-server/dist/index.js"],
+      "env": {},
+      "description": "ISL Language Server - provides tools for checking, generating, and verifying ISL specifications"
+    }
+  }
+}

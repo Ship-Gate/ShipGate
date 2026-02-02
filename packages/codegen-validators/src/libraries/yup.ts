@@ -21,25 +21,39 @@ export function generateYupSchema(
  */
 export function generateYupType(type: AST.TypeExpression, options: GenerateOptions): string {
   switch (type.kind) {
-    case 'primitive':
-      return generateYupPrimitive(type.name, options);
+    case 'SimpleType':
+      // Could be a primitive type or a reference to another type
+      return generateYupPrimitive(type.name.name, options);
 
-    case 'reference':
-      return `${type.name}Schema`;
-
-    case 'list':
+    case 'ArrayType':
       return `yup.array().of(${generateYupType(type.elementType, options)})`;
 
-    case 'map':
-      return `yup.object()`;
+    case 'GenericType': {
+      const typeName = type.name.name;
+      if (typeName === 'List' || typeName === 'Array') {
+        return `yup.array().of(${generateYupType(type.typeArguments[0], options)})`;
+      }
+      if (typeName === 'Map' || typeName === 'Record') {
+        return `yup.object()`;
+      }
+      if (typeName === 'Optional' || typeName === 'Maybe') {
+        return `${generateYupType(type.typeArguments[0], options)}.nullable()`;
+      }
+      // Reference to a generic type
+      return `${typeName}Schema`;
+    }
 
-    case 'optional':
-      return `${generateYupType(type.innerType, options)}.nullable()`;
-
-    case 'union':
+    case 'UnionType':
       // Yup doesn't have native union support, use mixed with oneOf
-      const variants = type.variants.map((v) => generateYupType(v, options));
+      const variants = type.variants.map((v) => `'${v.name.name}'`);
       return `yup.mixed().oneOf([${variants.join(', ')}])`;
+
+    case 'ObjectType':
+      // Inline object type
+      const fields = type.fields.map((f) => 
+        `${f.name.name}: ${generateYupType(f.type, options)}`
+      ).join(', ');
+      return `yup.object({ ${fields} })`;
 
     default:
       return 'yup.mixed()';
@@ -78,13 +92,15 @@ function generateYupPrimitive(name: string, options: GenerateOptions): string {
  * Generate Yup schema for entity
  */
 export function generateYupEntity(
-  entity: AST.Entity,
+  entity: AST.EntityDeclaration,
   options: GenerateOptions
 ): ValidatorDefinition {
   const fields: string[] = [];
+  const entityName = entity.name.name;
 
   for (const field of entity.fields) {
     let fieldSchema = generateYupType(field.type, options);
+    const fieldName = field.name.name;
 
     // Apply constraints from annotations
     fieldSchema = applyYupConstraints(fieldSchema, field, options);
@@ -96,37 +112,34 @@ export function generateYupEntity(
       fieldSchema = `${fieldSchema}.notRequired()`;
     }
 
-    fields.push(`  ${field.name}: ${fieldSchema}`);
+    fields.push(`  ${fieldName}: ${fieldSchema}`);
   }
 
-  const schemaCode = `export const ${entity.name}Schema = yup.object({\n${fields.join(',\n')}\n});`;
-  const typeCode = `export type ${entity.name} = yup.InferType<typeof ${entity.name}Schema>;`;
+  const schemaCode = `export const ${entityName}Schema = yup.object({\n${fields.join(',\n')}\n});`;
+  const typeCode = `export type ${entityName} = yup.InferType<typeof ${entityName}Schema>;`;
 
   return {
-    name: entity.name,
+    name: entityName,
     schemaCode,
     typeCode,
-    description: `Validator for ${entity.name} entity`,
+    description: `Validator for ${entityName} entity`,
   };
 }
 
 /**
  * Generate Yup schema for enum
  */
-export function generateYupEnum(typeDecl: AST.TypeDeclaration, options: GenerateOptions): ValidatorDefinition {
-  if (typeDecl.definition.kind !== 'enum') {
-    throw new Error(`Expected enum type, got ${typeDecl.definition.kind}`);
-  }
-
-  const values = typeDecl.definition.values.map((v) => `'${v.name}'`).join(', ');
-  const schemaCode = `export const ${typeDecl.name}Schema = yup.string().oneOf([${values}]);`;
-  const typeCode = `export type ${typeDecl.name} = yup.InferType<typeof ${typeDecl.name}Schema>;`;
+export function generateYupEnum(enumDecl: AST.EnumDeclaration, options: GenerateOptions): ValidatorDefinition {
+  const enumName = enumDecl.name.name;
+  const values = enumDecl.variants.map((v) => `'${v.name}'`).join(', ');
+  const schemaCode = `export const ${enumName}Schema = yup.string().oneOf([${values}]);`;
+  const typeCode = `export type ${enumName} = yup.InferType<typeof ${enumName}Schema>;`;
 
   return {
-    name: typeDecl.name,
+    name: enumName,
     schemaCode,
     typeCode,
-    description: `Enum validator for ${typeDecl.name}`,
+    description: `Enum validator for ${enumName}`,
   };
 }
 
@@ -134,35 +147,37 @@ export function generateYupEnum(typeDecl: AST.TypeDeclaration, options: Generate
  * Generate Yup schema for behavior input
  */
 export function generateYupBehaviorInput(
-  behavior: AST.Behavior,
+  behavior: AST.BehaviorDeclaration,
   options: GenerateOptions
 ): ValidatorDefinition | null {
   if (!behavior.input || behavior.input.fields.length === 0) {
     return null;
   }
 
+  const behaviorName = behavior.name.name;
   const fields: string[] = [];
 
   for (const field of behavior.input.fields) {
     let fieldSchema = generateYupType(field.type, options);
+    const fieldName = field.name.name;
     fieldSchema = applyYupConstraints(fieldSchema, field, options);
 
     if (!field.optional) {
       fieldSchema = `${fieldSchema}.required()`;
     }
 
-    fields.push(`  ${field.name}: ${fieldSchema}`);
+    fields.push(`  ${fieldName}: ${fieldSchema}`);
   }
 
-  const schemaName = `${behavior.name}InputSchema`;
+  const schemaName = `${behaviorName}InputSchema`;
   const schemaCode = `export const ${schemaName} = yup.object({\n${fields.join(',\n')}\n});`;
-  const typeCode = `export type ${behavior.name}Input = yup.InferType<typeof ${schemaName}>;`;
+  const typeCode = `export type ${behaviorName}Input = yup.InferType<typeof ${schemaName}>;`;
 
   return {
     name: schemaName,
     schemaCode,
     typeCode,
-    description: `Input validator for ${behavior.name}`,
+    description: `Input validator for ${behaviorName}`,
   };
 }
 
@@ -171,52 +186,55 @@ export function generateYupBehaviorInput(
  */
 function applyYupConstraints(
   schema: string,
-  field: AST.Field,
+  field: AST.FieldDeclaration,
   options: GenerateOptions
 ): string {
   let result = schema;
+  const fieldName = field.name.name;
 
   for (const annotation of field.annotations || []) {
-    switch (annotation.name) {
+    const annotationName = annotation.name.name;
+    const annotationValue = annotation.value;
+    switch (annotationName) {
       case 'minLength':
-        if (annotation.args?.[0]) {
+        if (annotationValue && annotationValue.kind === 'NumberLiteral') {
           const msg = options.includeMessages 
-            ? `, '${field.name} must be at least ${annotation.args[0]} characters'`
+            ? `, '${fieldName} must be at least ${annotationValue.value} characters'`
             : '';
-          result = `${result}.min(${annotation.args[0]}${msg})`;
+          result = `${result}.min(${annotationValue.value}${msg})`;
         }
         break;
       case 'maxLength':
-        if (annotation.args?.[0]) {
+        if (annotationValue && annotationValue.kind === 'NumberLiteral') {
           const msg = options.includeMessages
-            ? `, '${field.name} must be at most ${annotation.args[0]} characters'`
+            ? `, '${fieldName} must be at most ${annotationValue.value} characters'`
             : '';
-          result = `${result}.max(${annotation.args[0]}${msg})`;
+          result = `${result}.max(${annotationValue.value}${msg})`;
         }
         break;
       case 'min':
-        if (annotation.args?.[0]) {
+        if (annotationValue && annotationValue.kind === 'NumberLiteral') {
           const msg = options.includeMessages
-            ? `, '${field.name} must be at least ${annotation.args[0]}'`
+            ? `, '${fieldName} must be at least ${annotationValue.value}'`
             : '';
-          result = `${result}.min(${annotation.args[0]}${msg})`;
+          result = `${result}.min(${annotationValue.value}${msg})`;
         }
         break;
       case 'max':
-        if (annotation.args?.[0]) {
+        if (annotationValue && annotationValue.kind === 'NumberLiteral') {
           const msg = options.includeMessages
-            ? `, '${field.name} must be at most ${annotation.args[0]}'`
+            ? `, '${fieldName} must be at most ${annotationValue.value}'`
             : '';
-          result = `${result}.max(${annotation.args[0]}${msg})`;
+          result = `${result}.max(${annotationValue.value}${msg})`;
         }
         break;
       case 'pattern':
       case 'regex':
-        if (annotation.args?.[0]) {
+        if (annotationValue && annotationValue.kind === 'StringLiteral') {
           const msg = options.includeMessages
-            ? `, '${field.name} has invalid format'`
+            ? `, '${fieldName} has invalid format'`
             : '';
-          result = `${result}.matches(${annotation.args[0]}${msg})`;
+          result = `${result}.matches(${annotationValue.value}${msg})`;
         }
         break;
       case 'positive':

@@ -90,9 +90,11 @@ export class RecordingManager {
     // Build index for quick lookup
     for (let i = 0; i < this.replayRecordings.length; i++) {
       const recording = this.replayRecordings[i];
-      const key = this.getRecordingKey(recording);
-      if (!this.replayIndex.has(key)) {
-        this.replayIndex.set(key, i);
+      if (recording) {
+        const key = this.getRecordingKey(recording);
+        if (!this.replayIndex.has(key)) {
+          this.replayIndex.set(key, i);
+        }
       }
     }
   }
@@ -220,6 +222,10 @@ export class RecordingManager {
     }
 
     const recording = this.replayRecordings[index];
+
+    if (!recording) {
+      return undefined;
+    }
 
     // If body matching is needed
     if (body !== undefined && recording.request !== undefined) {

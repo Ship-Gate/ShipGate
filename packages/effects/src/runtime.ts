@@ -5,8 +5,8 @@
  */
 
 import type {
-  Effect,
   AnyEffect,
+  Effect,
   EffectHandler,
   EffectRuntime,
   EffectInterceptor,
@@ -16,7 +16,7 @@ import type {
   RetryEffect,
   TimeoutEffect,
   CacheEffect,
-} from './types';
+} from './types.js';
 
 /**
  * Default effect handlers

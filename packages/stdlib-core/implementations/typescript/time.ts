@@ -292,7 +292,7 @@ export function parseTimeOfDay(value: string): TimeOfDay {
   if (!match) {
     throw new Error(`Invalid time format: ${value}`);
   }
-  return createTimeOfDay(parseInt(match[1]), parseInt(match[2]), parseInt(match[3]));
+  return createTimeOfDay(parseInt(match[1]!, 10), parseInt(match[2]!, 10), parseInt(match[3]!, 10));
 }
 
 // ============================================================================

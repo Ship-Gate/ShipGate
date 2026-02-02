@@ -67,7 +67,7 @@ export {
 // BEHAVIOR IMPLEMENTATIONS
 // ============================================================================
 
-import { queueStore, createMessage, type Message } from './queue.js';
+import { queueStore, type Message } from './queue.js';
 import { pubSubStore } from './pubsub.js';
 
 /**
@@ -158,8 +158,9 @@ export async function Consume(input: {
 }): Promise<{ success: true; data: Message[] } | { success: false; error: string; code: string }> {
   try {
     // Long polling simulation
-    if (input.waitTime && input.waitTime > 0) {
-      await new Promise(resolve => setTimeout(resolve, Math.min(input.waitTime, 20000)));
+    const waitTime = input.waitTime ?? 0;
+    if (waitTime > 0) {
+      await new Promise(resolve => setTimeout(resolve, Math.min(waitTime, 20000)));
     }
     
     const messages = queueStore.consume(

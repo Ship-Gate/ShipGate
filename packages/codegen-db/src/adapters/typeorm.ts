@@ -15,7 +15,7 @@ import { toCase } from '../generator.js';
 
 export class TypeORMGenerator implements DatabaseAdapterGenerator {
   generateSchema(context: GeneratorContext): GeneratedFile[] {
-    const { entities, enums, options } = context;
+    const { entities, enums } = context;
     const files: GeneratedFile[] = [];
 
     // Generate enum file
@@ -67,14 +67,13 @@ export class TypeORMGenerator implements DatabaseAdapterGenerator {
 
   private generateEntityFile(
     entity: NormalizedEntity,
-    enums: NormalizedEnum[],
+    _enums: NormalizedEnum[],
     context: GeneratorContext
   ): string {
     const lines: string[] = [];
-    const enumNames = new Set(enums.map(e => e.name));
 
     // Imports
-    lines.push(...this.generateImports(entity, enumNames, context));
+    lines.push(...this.generateImports(entity, context));
     lines.push('');
 
     // Entity decorator
@@ -121,7 +120,6 @@ export class TypeORMGenerator implements DatabaseAdapterGenerator {
 
   private generateImports(
     entity: NormalizedEntity,
-    enumNames: Set<string>,
     context: GeneratorContext
   ): string[] {
     const typeormImports = new Set<string>(['Entity', 'Column']);

@@ -87,7 +87,7 @@ function checkDomainNaming(domain: DomainDeclaration): NamingIssue[] {
       severity: 'warning',
       title: `Domain name "${name}" should be PascalCase`,
       description: 'Domain names should use PascalCase convention.',
-      location: domain.name.span ? { line: domain.name.span.line, column: domain.name.span.column } : undefined,
+      location: domain.name.span ? { line: domain.name.span.start.line, column: domain.name.span.start.column } : undefined,
       suggestedName: toPascalCase(name),
     });
   }
@@ -100,7 +100,7 @@ function checkDomainNaming(domain: DomainDeclaration): NamingIssue[] {
       severity: 'info',
       title: `Domain name "${name}" is too generic`,
       description: 'Consider using a more specific domain name that describes the business context.',
-      location: domain.name.span ? { line: domain.name.span.line, column: domain.name.span.column } : undefined,
+      location: domain.name.span ? { line: domain.name.span.start.line, column: domain.name.span.start.column } : undefined,
     });
   }
 
@@ -123,7 +123,7 @@ function checkEntityNaming(domain: DomainDeclaration): NamingIssue[] {
         severity: 'warning',
         title: `Entity name "${name}" should be PascalCase`,
         description: 'Entity names should use PascalCase convention.',
-        location: entity.name.span ? { line: entity.name.span.line, column: entity.name.span.column } : undefined,
+        location: entity.name.span ? { line: entity.name.span.start.line, column: entity.name.span.start.column } : undefined,
         suggestedName: toPascalCase(name),
       });
     }
@@ -135,7 +135,7 @@ function checkEntityNaming(domain: DomainDeclaration): NamingIssue[] {
         severity: 'info',
         title: `Entity name "${name}" appears to be plural`,
         description: 'Entity names should typically be singular nouns (e.g., "User" not "Users").',
-        location: entity.name.span ? { line: entity.name.span.line, column: entity.name.span.column } : undefined,
+        location: entity.name.span ? { line: entity.name.span.start.line, column: entity.name.span.start.column } : undefined,
         suggestedName: toSingular(name),
       });
     }
@@ -147,7 +147,7 @@ function checkEntityNaming(domain: DomainDeclaration): NamingIssue[] {
         severity: 'info',
         title: `Entity name "${name}" has procedural suffix`,
         description: 'Entity names should represent domain concepts, not process roles.',
-        location: entity.name.span ? { line: entity.name.span.line, column: entity.name.span.column } : undefined,
+        location: entity.name.span ? { line: entity.name.span.start.line, column: entity.name.span.start.column } : undefined,
       });
     }
   }
@@ -171,7 +171,7 @@ function checkBehaviorNaming(domain: DomainDeclaration): NamingIssue[] {
         severity: 'warning',
         title: `Behavior name "${name}" should be PascalCase`,
         description: 'Behavior names should use PascalCase convention.',
-        location: behavior.name.span ? { line: behavior.name.span.line, column: behavior.name.span.column } : undefined,
+        location: behavior.name.span ? { line: behavior.name.span.start.line, column: behavior.name.span.start.column } : undefined,
         suggestedName: toPascalCase(name),
       });
     }
@@ -183,7 +183,7 @@ function checkBehaviorNaming(domain: DomainDeclaration): NamingIssue[] {
         severity: 'info',
         title: `Behavior name "${name}" should start with a verb`,
         description: 'Behavior names should describe actions (e.g., "CreateUser", "ProcessPayment").',
-        location: behavior.name.span ? { line: behavior.name.span.line, column: behavior.name.span.column } : undefined,
+        location: behavior.name.span ? { line: behavior.name.span.start.line, column: behavior.name.span.start.column } : undefined,
       });
     }
 
@@ -195,7 +195,7 @@ function checkBehaviorNaming(domain: DomainDeclaration): NamingIssue[] {
         severity: 'warning',
         title: `Behavior name "${name}" is too vague`,
         description: 'Use specific action names that describe what the behavior does.',
-        location: behavior.name.span ? { line: behavior.name.span.line, column: behavior.name.span.column } : undefined,
+        location: behavior.name.span ? { line: behavior.name.span.start.line, column: behavior.name.span.start.column } : undefined,
       });
     }
   }
@@ -219,7 +219,7 @@ function checkTypeNaming(domain: DomainDeclaration): NamingIssue[] {
         severity: 'warning',
         title: `Type name "${name}" should be PascalCase`,
         description: 'Type names should use PascalCase convention.',
-        location: type.name.span ? { line: type.name.span.line, column: type.name.span.column } : undefined,
+        location: type.name.span ? { line: type.name.span.start.line, column: type.name.span.start.column } : undefined,
         suggestedName: toPascalCase(name),
       });
     }
@@ -231,7 +231,7 @@ function checkTypeNaming(domain: DomainDeclaration): NamingIssue[] {
         severity: 'info',
         title: `Type name "${name}" uses Hungarian notation`,
         description: 'Avoid Hungarian notation prefixes in type names.',
-        location: type.name.span ? { line: type.name.span.line, column: type.name.span.column } : undefined,
+        location: type.name.span ? { line: type.name.span.start.line, column: type.name.span.start.column } : undefined,
       });
     }
   }
@@ -256,7 +256,7 @@ function checkFieldNaming(domain: DomainDeclaration): NamingIssue[] {
           severity: 'warning',
           title: `Field name "${name}" in "${entity.name.name}" has inconsistent casing`,
           description: 'Field names should use camelCase or snake_case consistently.',
-          location: field.name.span ? { line: field.name.span.line, column: field.name.span.column } : undefined,
+          location: field.name.span ? { line: field.name.span.start.line, column: field.name.span.start.column } : undefined,
           suggestedName: toCamelCase(name),
         });
       }
@@ -268,7 +268,7 @@ function checkFieldNaming(domain: DomainDeclaration): NamingIssue[] {
           severity: 'info',
           title: `Boolean field "${name}" could have a clearer name`,
           description: 'Boolean fields should read as yes/no questions (e.g., "isActive", "hasAccess").',
-          location: field.name.span ? { line: field.name.span.line, column: field.name.span.column } : undefined,
+          location: field.name.span ? { line: field.name.span.start.line, column: field.name.span.start.column } : undefined,
           suggestedName: `is${toPascalCase(name)}`,
         });
       }
@@ -280,7 +280,7 @@ function checkFieldNaming(domain: DomainDeclaration): NamingIssue[] {
           severity: 'info',
           title: `Field name "${name}" contains abbreviation`,
           description: 'Consider using full words for clarity (e.g., "quantity" instead of "qty").',
-          location: field.name.span ? { line: field.name.span.line, column: field.name.span.column } : undefined,
+          location: field.name.span ? { line: field.name.span.start.line, column: field.name.span.start.column } : undefined,
         });
       }
     }
@@ -307,7 +307,7 @@ function checkErrorNaming(domain: DomainDeclaration): NamingIssue[] {
             severity: 'info',
             title: `Error code "${name}" should be SCREAMING_SNAKE_CASE`,
             description: 'Error codes should use SCREAMING_SNAKE_CASE convention.',
-            location: error.name.span ? { line: error.name.span.line, column: error.name.span.column } : undefined,
+            location: error.name.span ? { line: error.name.span.start.line, column: error.name.span.start.column } : undefined,
             suggestedName: toScreamingSnakeCase(name),
           });
         }
@@ -334,7 +334,7 @@ function checkEnumNaming(domain: DomainDeclaration): NamingIssue[] {
         severity: 'warning',
         title: `Enum name "${name}" should be PascalCase`,
         description: 'Enum type names should use PascalCase convention.',
-        location: enumDecl.name.span ? { line: enumDecl.name.span.line, column: enumDecl.name.span.column } : undefined,
+        location: enumDecl.name.span ? { line: enumDecl.name.span.start.line, column: enumDecl.name.span.start.column } : undefined,
         suggestedName: toPascalCase(name),
       });
     }
@@ -348,7 +348,7 @@ function checkEnumNaming(domain: DomainDeclaration): NamingIssue[] {
           severity: 'info',
           title: `Enum variant "${variantName}" has inconsistent casing`,
           description: 'Enum variants should use SCREAMING_SNAKE_CASE or PascalCase.',
-          location: enumDecl.span ? { line: enumDecl.span.line, column: enumDecl.span.column } : undefined,
+          location: enumDecl.span ? { line: enumDecl.span.start.line, column: enumDecl.span.start.column } : undefined,
         });
       }
     }

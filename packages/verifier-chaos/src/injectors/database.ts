@@ -183,7 +183,7 @@ export class DatabaseInjector {
     };
 
     const error = new Error(errors[this.config.failureType]);
-    (error as Record<string, unknown>).code = this.config.failureType.toUpperCase();
+    (error as unknown as Record<string, unknown>).code = this.config.failureType.toUpperCase();
     return error;
   }
 

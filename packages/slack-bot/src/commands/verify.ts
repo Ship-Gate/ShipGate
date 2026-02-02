@@ -4,9 +4,9 @@
  * Run ISL verification on a domain and behavior.
  */
 
-import type { RespondFn, WebClient } from '@slack/bolt';
+import type { RespondFn } from '@slack/bolt';
+import type { WebClient } from '@slack/web-api';
 import { buildVerificationResultBlocks, buildErrorBlocks } from '../views/blocks.js';
-import { formatVerdict, formatScore, formatDuration } from '../utils/format.js';
 
 // ============================================================================
 // Types
@@ -141,7 +141,7 @@ function parseFlags(args: string[]): VerifyFlags {
  */
 async function runVerification(
   domain: string,
-  behavior: string | undefined,
+  _behavior: string | undefined,
   _flags: VerifyFlags
 ): Promise<VerificationResult> {
   // Simulate verification delay

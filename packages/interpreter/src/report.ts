@@ -10,7 +10,6 @@ import type {
   ScenarioResult,
   ConditionResult,
   CheckResult,
-  ReportFormat,
   ReportOptions,
 } from './types';
 
@@ -133,7 +132,19 @@ function formatCheckResult(result: CheckResult): object {
 // TERMINAL REPORT (Pretty output)
 // ============================================================================
 
-const COLORS = {
+type ColorScheme = {
+  reset: string;
+  bold: string;
+  dim: string;
+  red: string;
+  green: string;
+  yellow: string;
+  blue: string;
+  cyan: string;
+  gray: string;
+};
+
+const COLORS: ColorScheme = {
   reset: '\x1b[0m',
   bold: '\x1b[1m',
   dim: '\x1b[2m',
@@ -143,6 +154,18 @@ const COLORS = {
   blue: '\x1b[34m',
   cyan: '\x1b[36m',
   gray: '\x1b[90m',
+};
+
+const NO_COLORS: ColorScheme = {
+  reset: '',
+  bold: '',
+  dim: '',
+  red: '',
+  green: '',
+  yellow: '',
+  blue: '',
+  cyan: '',
+  gray: '',
 };
 
 const SYMBOLS = {
@@ -157,7 +180,7 @@ const SYMBOLS = {
  * Generate a terminal report with colors.
  */
 export function generateTerminalReport(report: VerificationReport, colors: boolean = true): string {
-  const c = colors ? COLORS : Object.fromEntries(Object.keys(COLORS).map((k) => [k, '']));
+  const c: ColorScheme = colors ? COLORS : NO_COLORS;
   const lines: string[] = [];
   
   // Header
@@ -267,7 +290,7 @@ export function generateTerminalReport(report: VerificationReport, colors: boole
 function formatConditionLine(
   cond: ConditionResult,
   prefix: string,
-  c: typeof COLORS
+  c: ColorScheme
 ): string {
   const statusColor = cond.result.status === 'passed' ? c.green : c.red;
   const statusSymbol = cond.result.status === 'passed' ? SYMBOLS.check : SYMBOLS.cross;

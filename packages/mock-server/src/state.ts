@@ -244,8 +244,20 @@ export class MockState {
       const bVal = (b as Record<string, unknown>)[field];
 
       let comparison = 0;
-      if (aVal < bVal) comparison = -1;
-      if (aVal > bVal) comparison = 1;
+      // Compare values - handle strings, numbers, and dates
+      if (aVal === bVal) {
+        comparison = 0;
+      } else if (aVal === null || aVal === undefined) {
+        comparison = 1;
+      } else if (bVal === null || bVal === undefined) {
+        comparison = -1;
+      } else if (typeof aVal === 'string' && typeof bVal === 'string') {
+        comparison = aVal.localeCompare(bVal);
+      } else if (typeof aVal === 'number' && typeof bVal === 'number') {
+        comparison = aVal - bVal;
+      } else {
+        comparison = String(aVal).localeCompare(String(bVal));
+      }
 
       return order === 'desc' ? -comparison : comparison;
     });

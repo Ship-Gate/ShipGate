@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/node';
 import type { ISLCaptureOptions, SanitizeOptions } from '../types';
-import { sanitizeState } from '../context/isl';
+import { sanitizeState } from '../utils';
 
 /**
  * Custom error class for invariant violations
@@ -33,7 +33,12 @@ export function trackInvariantViolation(
     invariant
   );
 
-  const sanitizedState = sanitizeState(state, options);
+  const sanitizedState = sanitizeState(
+    state,
+    options?.redactFields,
+    options?.maxDepth,
+    options?.maxStringLength
+  );
 
   // Add breadcrumb for the violation
   Sentry.addBreadcrumb({
@@ -62,7 +67,7 @@ export function trackInvariantViolation(
         expression: invariant,
         timestamp: Date.now(),
       },
-      state: sanitizedState as Record<string, unknown>,
+      isl_state: sanitizedState as Record<string, unknown>,
     },
     extra: options?.extra,
     fingerprint: options?.fingerprint ?? [domain, 'invariant', invariant],

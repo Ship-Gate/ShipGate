@@ -1,14 +1,25 @@
 {
-  "name": "isl-vscode",
+  "name": "isl-lang",
   "displayName": "ISL - Intent Specification Language",
   "description": "Language support for Intent Specification Language (.isl) files - syntax highlighting, LSP, code generation, and more",
   "version": "0.1.0",
-  "publisher": "intentos",
+  "publisher": "isl-lang",
   "license": "MIT",
+  "author": "ISL Team",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/isl-lang/isl.git",
+    "directory": "packages/vscode"
+  },
+  "homepage": "https://isl-lang.dev",
+  "bugs": {
+    "url": "https://github.com/isl-lang/isl/issues"
+  },
   "galleryBanner": {
     "color": "#1E1E1E",
     "theme": "dark"
   },
+  "icon": "icons/isl-icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -27,14 +38,6 @@
     "design-by-contract",
     "formal-methods"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
-  },
-  "bugs": {
-    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
-  },
-  "homepage": "https://intentlang.dev",
   "main": "./dist/extension.js",
   "activationEvents": [
     "onLanguage:isl",
@@ -250,17 +253,19 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build",
+    "vscode:prepublish": "pnpm run build",
     "build": "node esbuild.js --production",
     "watch": "node esbuild.js --watch",
     "lint": "eslint src --ext ts",
     "typecheck": "tsc --noEmit",
     "test": "node ./out/test/runTest.js",
+    "clean": "rimraf dist out",
     "package": "vsce package --no-dependencies",
     "publish": "vsce publish --no-dependencies",
-    "generate-icon": "node scripts/generate-icon.js"
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
+    "@isl-lang/lsp-server": "workspace:*",
     "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
@@ -268,7 +273,7 @@
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^2.22.0",
     "esbuild": "^0.19.8",
-    "sharp": "^0.34.5",
+    "rimraf": "^5.0.5",
     "typescript": "^5.3.0"
   }
 }

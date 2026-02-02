@@ -146,7 +146,10 @@ function calculateStatistics(findings: Finding[]): JsonStatistics {
 
   for (const finding of findings) {
     // By severity
-    bySeverity[finding.severity]++;
+    const currentCount = bySeverity[finding.severity];
+    if (currentCount !== undefined) {
+      bySeverity[finding.severity] = currentCount + 1;
+    }
 
     // By category
     byCategory[finding.category] = (byCategory[finding.category] || 0) + 1;

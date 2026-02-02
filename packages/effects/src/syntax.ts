@@ -3,7 +3,7 @@
 // Effect annotations and syntax for ISL
 // ============================================================================
 
-import type { Effect, EffectSet, EffectRef } from './types.js';
+import type { AlgebraicEffect, EffectSet } from './types.js';
 
 /**
  * ISL syntax for effect declarations
@@ -142,7 +142,7 @@ export function parseEffectAnnotation(signature: string): ISLEffectAnnotation | 
 /**
  * Generate ISL syntax from Effect definition
  */
-export function generateISLSyntax(effect: Effect): string {
+export function generateISLSyntax(effect: AlgebraicEffect): string {
   const lines: string[] = [];
 
   if (effect.description) {

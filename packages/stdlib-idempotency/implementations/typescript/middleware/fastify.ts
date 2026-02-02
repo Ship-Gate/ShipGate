@@ -51,7 +51,7 @@ export interface FastifyInstance {
   decorateReply(name: string, value: unknown): void;
 }
 
-export interface FastifyPluginOptions extends IdempotencyMiddlewareOptions {
+export interface FastifyPluginOptions extends Omit<IdempotencyMiddlewareOptions, 'keyExtractor' | 'hashFunction'> {
   /** Header name for idempotency key (default: 'idempotency-key') */
   keyHeader?: string;
   
@@ -83,14 +83,12 @@ export interface FastifyPluginOptions extends IdempotencyMiddlewareOptions {
   retryInterval?: number;
 }
 
-// Extend FastifyRequest with our properties
-declare module 'fastify' {
-  interface FastifyRequest {
-    idempotencyKey?: string;
-    idempotencyLockToken?: LockToken;
-    idempotencyRequestHash?: string;
-    idempotencyReplayed?: boolean;
-  }
+// Extended request type with idempotency properties
+interface FastifyRequestWithIdempotency extends FastifyRequest {
+  idempotencyKey?: string;
+  idempotencyLockToken?: LockToken;
+  idempotencyRequestHash?: string;
+  idempotencyReplayed?: boolean;
 }
 
 interface IdempotencyContext {
@@ -99,12 +97,20 @@ interface IdempotencyContext {
   requestHash: string;
 }
 
-const DEFAULT_OPTIONS = {
+const DEFAULT_OPTIONS: {
+  keyHeader: string;
+  replayHeader: string;
+  methods: string[];
+  requireKey: boolean;
+  concurrentRequestHandling: 'wait' | 'reject';
+  maxWaitTime: number;
+  retryInterval: number;
+} = {
   keyHeader: 'idempotency-key',
   replayHeader: 'idempotency-replayed',
   methods: ['POST', 'PUT', 'PATCH'],
   requireKey: false,
-  concurrentRequestHandling: 'reject' as const,
+  concurrentRequestHandling: 'reject',
   maxWaitTime: 30000,
   retryInterval: 100,
 };
@@ -206,7 +212,7 @@ export async function idempotencyPlugin(
         // Handle completed request (replay)
         if (lockResult.existingStatus === RecordStatus.COMPLETED && lockResult.existingResponse) {
           await replayResponse(reply, lockResult.existingResponse, config);
-          (request as FastifyRequest).idempotencyReplayed = true;
+          (request as FastifyRequestWithIdempotency).idempotencyReplayed = true;
           
           if (options.onReplay) {
             options.onReplay(key, lockResult.existingResponse);
@@ -220,7 +226,7 @@ export async function idempotencyPlugin(
             const result = await waitForCompletion(store, key, requestHash, config);
             if (result) {
               await replayResponse(reply, result, config);
-              (request as FastifyRequest).idempotencyReplayed = true;
+              (request as FastifyRequestWithIdempotency).idempotencyReplayed = true;
               return;
             }
           }
@@ -237,9 +243,9 @@ export async function idempotencyPlugin(
       }
 
       // Store context for response recording
-      (request as FastifyRequest).idempotencyKey = key;
-      (request as FastifyRequest).idempotencyLockToken = lockResult.lockToken;
-      (request as FastifyRequest).idempotencyRequestHash = requestHash;
+      (request as FastifyRequestWithIdempotency).idempotencyKey = key;
+      (request as FastifyRequestWithIdempotency).idempotencyLockToken = lockResult.lockToken;
+      (request as FastifyRequestWithIdempotency).idempotencyRequestHash = requestHash;
 
       requestContexts.set(request.id, {
         key,
@@ -267,7 +273,7 @@ export async function idempotencyPlugin(
   fastify.addHook('onSend', async (request, reply, payload) => {
     const context = requestContexts.get(request.id);
     
-    if (!context || (request as FastifyRequest).idempotencyReplayed) {
+    if (!context || (request as FastifyRequestWithIdempotency).idempotencyReplayed) {
       return payload;
     }
 
@@ -328,12 +334,13 @@ export async function idempotencyPlugin(
     }
 
     try {
+      const errorObj = error instanceof Error ? error : new Error(String(error));
       await store.releaseLock({
         key: context.key,
         lockToken: context.lockToken,
         markFailed: true,
-        errorCode: error.name || 'HANDLER_ERROR',
-        errorMessage: error.message,
+        errorCode: errorObj.name || 'HANDLER_ERROR',
+        errorMessage: errorObj.message,
       });
     } catch {
       // Ignore release errors
@@ -534,8 +541,8 @@ export function createIdempotencyHandler(options: FastifyPluginOptions) {
       }
     }
 
-    (request as FastifyRequest).idempotencyKey = key;
-    (request as FastifyRequest).idempotencyLockToken = lockResult.lockToken;
-    (request as FastifyRequest).idempotencyRequestHash = requestHash;
+    (request as FastifyRequestWithIdempotency).idempotencyKey = key;
+    (request as FastifyRequestWithIdempotency).idempotencyLockToken = lockResult.lockToken;
+    (request as FastifyRequestWithIdempotency).idempotencyRequestHash = requestHash;
   };
 }

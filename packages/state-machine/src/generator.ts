@@ -59,7 +59,7 @@ export class StateMachineGenerator {
     }
 
     // Generate for the first lifecycle (or merge multiple)
-    const lifecycle = lifecycles[0];
+    const lifecycle = lifecycles[0]!;
     const config = this.generateConfig(lifecycle);
 
     switch (this.options.format) {
@@ -246,8 +246,8 @@ export function can${lifecycle.entityName}(
     let match;
 
     while ((match = lifecycleRegex.exec(content)) !== null) {
-      const entityName = match[1];
-      const body = match[2];
+      const entityName = match[1]!;
+      const body = match[2]!;
 
       const states = this.parseStates(body);
       const transitions = this.parseTransitions(body);
@@ -258,8 +258,8 @@ export function can${lifecycle.entityName}(
     // Also check for entity-level lifecycle
     const entityLifecycleRegex = /entity\s+(\w+)\s*\{[\s\S]*?lifecycle\s*\{([\s\S]*?)\n\s*\}/g;
     while ((match = entityLifecycleRegex.exec(content)) !== null) {
-      const entityName = match[1];
-      const body = match[2];
+      const entityName = match[1]!;
+      const body = match[2]!;
 
       const states = this.parseStates(body);
       const transitions = this.parseTransitions(body);
@@ -282,8 +282,8 @@ export function can${lifecycle.entityName}(
 
     if (statesMatch) {
       let match;
-      while ((match = stateRegex.exec(statesMatch[1])) !== null) {
-        const name = match[1];
+      while ((match = stateRegex.exec(statesMatch[1]!)) !== null) {
+        const name = match[1]!;
         const annotations = match[2] ?? '';
 
         states.push({
@@ -296,12 +296,12 @@ export function can${lifecycle.entityName}(
 
     // Also match state: name -> name -> name syntax
     const flowMatch = body.match(/flow\s*:\s*(.+)/);
-    if (flowMatch) {
+    if (flowMatch && flowMatch[1]) {
       const flow = flowMatch[1];
       const stateNames = flow.split('->').map((s) => s.trim());
 
       for (let i = 0; i < stateNames.length; i++) {
-        const name = stateNames[i];
+        const name = stateNames[i]!;
         if (!states.find((s) => s.name === name)) {
           states.push({
             name,
@@ -331,9 +331,9 @@ export function can${lifecycle.entityName}(
       const actionMatch = annotations.match(/action:\s*(\w+)/);
 
       transitions.push({
-        from: match[1],
-        to: match[3],
-        event: match[2],
+        from: match[1]!,
+        to: match[3]!,
+        event: match[2]!,
         guard: guardMatch?.[1],
         action: actionMatch?.[1],
       });
@@ -343,9 +343,9 @@ export function can${lifecycle.entityName}(
     const whenRegex = /when\s*:\s*"(\w+)"\s*transitions?\s*:\s*(\w+)\s*->\s*(\w+)/g;
     while ((match = whenRegex.exec(body)) !== null) {
       transitions.push({
-        from: match[2],
-        to: match[3],
-        event: match[1],
+        from: match[2]!,
+        to: match[3]!,
+        event: match[1]!,
       });
     }
 

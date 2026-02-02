@@ -3,19 +3,18 @@
 // @stdlib/audit/storage/postgres
 // ============================================================================
 
-import type {
-  AuditStorage,
-  AuditEvent,
-  AuditEventId,
-  QueryInput,
-  AuditQueryResult,
-  StatsInput,
-  AuditStats,
-  AuditFilters,
-  EventCategory,
-  EventOutcome,
-  ActorType,
+import {
   SortDirection,
+  type AuditStorage,
+  type AuditEvent,
+  type AuditEventId,
+  type QueryInput,
+  type AuditQueryResult,
+  type StatsInput,
+  type AuditStats,
+  type AuditFilters,
+  type EventCategory,
+  type EventOutcome,
 } from '../types';
 
 // ============================================================================

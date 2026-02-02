@@ -3,16 +3,16 @@
 // Main generator that converts ISL Domain to edge-optimized code
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type {
+  DomainDeclaration,
+  EntityDeclaration,
+  TypeExpression,
+  DurationLiteral,
+} from '@isl-lang/isl-core';
 import type {
   EdgeTarget,
   GeneratedEdgeCode,
   EdgeFile,
-  EdgeConfig,
-  EdgeManifest,
-  EdgeBinding,
-  EdgeRoute,
-  EdgeLimits,
 } from './types';
 import { generateCloudflare } from './targets/cloudflare';
 import { generateDeno } from './targets/deno';
@@ -49,7 +49,7 @@ export interface EdgeGenResult {
  * Generate edge-optimized code from ISL domain
  */
 export function generate(
-  domain: AST.Domain,
+  domain: DomainDeclaration,
   options: EdgeGenOptions
 ): EdgeGenResult {
   const errors: string[] = [];
@@ -105,17 +105,19 @@ export function generate(
 // VALIDATION
 // ============================================================================
 
-function validateForEdge(domain: AST.Domain): { errors: string[]; warnings: string[] } {
+function validateForEdge(domain: DomainDeclaration): { errors: string[]; warnings: string[] } {
   const errors: string[] = [];
   const warnings: string[] = [];
 
   // Check for edge-incompatible features
   for (const behavior of domain.behaviors) {
     // Check for long-running operations
-    for (const temporal of behavior.temporal) {
-      if (temporal.type === 'timeout') {
+    const temporalRequirements = behavior.temporal?.requirements ?? [];
+    for (const temporal of temporalRequirements) {
+      if (temporal.type === 'within') {
         // Parse timeout duration
-        const timeout = parseDuration(temporal.duration);
+        const duration = temporal.duration;
+        const timeout = duration ? parseDurationLiteral(duration) : 0;
         if (timeout > 30000) {
           warnings.push(
             `Behavior ${behavior.name.name} has timeout > 30s which exceeds edge limits`
@@ -141,23 +143,21 @@ function validateForEdge(domain: AST.Domain): { errors: string[]; warnings: stri
   return { errors, warnings };
 }
 
-function parseDuration(duration: string): number {
-  const match = duration.match(/^(\d+)(ms|s|m|h)?$/);
-  if (!match) return 0;
-  
-  const value = parseInt(match[1]);
-  const unit = match[2] || 'ms';
+function parseDurationLiteral(duration: DurationLiteral): number {
+  const value = duration.value;
+  const unit = duration.unit;
   
   switch (unit) {
     case 'ms': return value;
     case 's': return value * 1000;
     case 'm': return value * 60 * 1000;
     case 'h': return value * 60 * 60 * 1000;
+    case 'd': return value * 24 * 60 * 60 * 1000;
     default: return value;
   }
 }
 
-function estimateEntitySize(entity: AST.Entity): number {
+function estimateEntitySize(entity: EntityDeclaration): number {
   let size = 0;
   for (const field of entity.fields) {
     size += estimateFieldSize(field.type);
@@ -165,10 +165,10 @@ function estimateEntitySize(entity: AST.Entity): number {
   return size;
 }
 
-function estimateFieldSize(type: AST.TypeDefinition): number {
+function estimateFieldSize(type: TypeExpression): number {
   switch (type.kind) {
-    case 'PrimitiveType':
-      switch (type.name) {
+    case 'SimpleType':
+      switch (type.name.name) {
         case 'String': return 256; // Average string size
         case 'Int': return 8;
         case 'Decimal': return 8;
@@ -177,12 +177,18 @@ function estimateFieldSize(type: AST.TypeDefinition): number {
         case 'Timestamp': return 8;
         default: return 64;
       }
-    case 'ListType':
-      return estimateFieldSize(type.element) * 10; // Assume 10 items avg
-    case 'MapType':
-      return (estimateFieldSize(type.key) + estimateFieldSize(type.value)) * 5;
-    case 'OptionalType':
-      return estimateFieldSize(type.inner);
+    case 'ArrayType':
+      return estimateFieldSize(type.elementType) * 10; // Assume 10 items avg
+    case 'GenericType':
+      // Handle Map<K, V> type
+      if (type.name.name === 'Map' && type.typeArguments.length === 2) {
+        const keyArg = type.typeArguments[0];
+        const valueArg = type.typeArguments[1];
+        if (keyArg && valueArg) {
+          return (estimateFieldSize(keyArg) + estimateFieldSize(valueArg)) * 5;
+        }
+      }
+      return 64;
     default:
       return 64;
   }
@@ -192,7 +198,7 @@ function estimateFieldSize(type: AST.TypeDefinition): number {
 // SHARED UTILITIES
 // ============================================================================
 
-function generateSharedUtils(domain: AST.Domain, options: EdgeGenOptions): EdgeFile[] {
+function generateSharedUtils(domain: DomainDeclaration, options: EdgeGenOptions): EdgeFile[] {
   const files: EdgeFile[] = [];
 
   // Types file
@@ -206,7 +212,7 @@ function generateSharedUtils(domain: AST.Domain, options: EdgeGenOptions): EdgeF
   files.push({
     path: 'validation.ts',
     type: 'middleware',
-    content: generateValidationUtils(domain),
+    content: generateValidationUtils(),
   });
 
   // Response utilities
@@ -237,7 +243,7 @@ function generateSharedUtils(domain: AST.Domain, options: EdgeGenOptions): EdgeF
   return files;
 }
 
-function generateTypesFile(domain: AST.Domain): string {
+function generateTypesFile(domain: DomainDeclaration): string {
   const lines: string[] = [];
 
   lines.push('// ============================================================================');
@@ -260,8 +266,9 @@ function generateTypesFile(domain: AST.Domain): string {
 
   // Generate behavior input/output types
   for (const behavior of domain.behaviors) {
+    const inputFields = behavior.input?.fields ?? [];
     lines.push(`export interface ${behavior.name.name}Input {`);
-    for (const field of behavior.input.fields) {
+    for (const field of inputFields) {
       const tsType = islTypeToTS(field.type);
       const optional = field.optional ? '?' : '';
       lines.push(`  ${field.name.name}${optional}: ${tsType};`);
@@ -269,15 +276,17 @@ function generateTypesFile(domain: AST.Domain): string {
     lines.push('}');
     lines.push('');
 
-    const outputType = islTypeToTS(behavior.output.success);
-    lines.push(`export type ${behavior.name.name}Output = ${outputType};`);
-    lines.push('');
+    if (behavior.output?.success) {
+      const outputType = islTypeToTS(behavior.output.success);
+      lines.push(`export type ${behavior.name.name}Output = ${outputType};`);
+      lines.push('');
+    }
   }
 
   return lines.join('\n');
 }
 
-function generateValidationUtils(domain: AST.Domain): string {
+function generateValidationUtils(): string {
   return `
 // Validation utilities for edge runtime
 export class ValidationError extends Error {
@@ -537,7 +546,7 @@ export function getRateLimitKey(request: Request, by: 'ip' | 'user' | 'api-key')
 // TESTS
 // ============================================================================
 
-function generateTests(domain: AST.Domain, options: EdgeGenOptions): EdgeFile[] {
+function generateTests(domain: DomainDeclaration, _options: EdgeGenOptions): EdgeFile[] {
   const lines: string[] = [];
 
   lines.push('// ============================================================================');
@@ -592,26 +601,42 @@ function emptyCode(target: EdgeTarget): GeneratedEdgeCode {
   };
 }
 
-function islTypeToTS(type: AST.TypeDefinition): string {
+function islTypeToTS(type: TypeExpression): string {
   switch (type.kind) {
-    case 'PrimitiveType':
-      switch (type.name) {
+    case 'SimpleType':
+      switch (type.name.name) {
         case 'String': return 'string';
         case 'Int': return 'number';
         case 'Decimal': return 'number';
         case 'Boolean': return 'boolean';
         case 'Timestamp': return 'Date';
         case 'UUID': return 'string';
-        default: return 'unknown';
+        default: return type.name.name;
       }
-    case 'ReferenceType':
-      return type.name.parts.map(p => p.name).join('.');
-    case 'ListType':
-      return `${islTypeToTS(type.element)}[]`;
-    case 'MapType':
-      return `Map<${islTypeToTS(type.key)}, ${islTypeToTS(type.value)}>`;
-    case 'OptionalType':
-      return `${islTypeToTS(type.inner)} | null`;
+    case 'GenericType': {
+      const typeArgs = type.typeArguments ?? [];
+      if (type.name.name === 'List' && typeArgs.length === 1 && typeArgs[0]) {
+        return `${islTypeToTS(typeArgs[0])}[]`;
+      }
+      if (type.name.name === 'Map' && typeArgs.length === 2 && typeArgs[0] && typeArgs[1]) {
+        return `Map<${islTypeToTS(typeArgs[0])}, ${islTypeToTS(typeArgs[1])}>`;
+      }
+      if (type.name.name === 'Optional' && typeArgs.length === 1 && typeArgs[0]) {
+        return `${islTypeToTS(typeArgs[0])} | null`;
+      }
+      return 'unknown';
+    }
+    case 'ArrayType':
+      return type.elementType ? `${islTypeToTS(type.elementType)}[]` : 'unknown[]';
+    case 'UnionType':
+      return type.variants.map(v => `'${v.name.name}'`).join(' | ');
+    case 'ObjectType': {
+      const fields = type.fields.map(f => {
+        const opt = f.optional ? '?' : '';
+        return `${f.name.name}${opt}: ${islTypeToTS(f.type)}`;
+      });
+      return `{ ${fields.join('; ')} }`;
+    }
     default:
       return 'unknown';
   }

@@ -169,7 +169,7 @@ export abstract class Generator {
    */
   async generateAndWrite(
     domain: DomainDeclaration,
-    options: GeneratorOptions & WriteOptions = {}
+    options: GeneratorOptions & Partial<WriteOptions> = {}
   ): Promise<GenerationResult> {
     const result = await this.generate(domain, options);
 

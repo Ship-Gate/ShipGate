@@ -11,7 +11,6 @@ import type {
   Annotation,
   NumberLiteral,
   StringLiteral,
-  RegexLiteral,
 } from './ast-types.js';
 
 /**

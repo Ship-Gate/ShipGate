@@ -11,16 +11,17 @@ import type {
   BehaviorDefinition,
   EntityDefinition,
   InvariantDefinition,
+  ContractMode,
 } from './types';
 import { evaluate } from './evaluator';
 import { extendEnvironment } from './environment';
 import { ContractViolationError } from './types';
 
 // ============================================================================
-// CONTRACT MODES
+// CONTRACT MODES (re-export from types for convenience)
 // ============================================================================
 
-export type ContractMode = 'check' | 'assume' | 'skip';
+export type { ContractMode };
 
 export interface ContractConfig {
   mode: ContractMode;
@@ -421,7 +422,7 @@ export function assumeContract(
 /**
  * Decorator to add precondition checking to a function.
  */
-export function requires(condition: string) {
+export function requires(_condition: string) {
   return function (
     _target: any,
     _propertyKey: string,
@@ -440,7 +441,7 @@ export function requires(condition: string) {
 /**
  * Decorator to add postcondition checking to a function.
  */
-export function ensures(condition: string) {
+export function ensures(_condition: string) {
   return function (
     _target: any,
     _propertyKey: string,
@@ -459,7 +460,7 @@ export function ensures(condition: string) {
 /**
  * Decorator to add invariant checking to a class.
  */
-export function invariant(condition: string) {
+export function invariant(_condition: string) {
   return function (constructor: Function) {
     // Add invariant checking to all methods
     return constructor;

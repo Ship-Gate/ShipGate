@@ -3,18 +3,15 @@
 // @isl-lang/interpreter/executor
 // ============================================================================
 
-import type { Value, Environment, ExecutionContext } from '@isl-lang/runtime-interpreter';
+import type { Value } from '@isl-lang/runtime-interpreter';
 import type {
   TargetFunction,
-  TargetModule,
   Bindings,
-  SandboxOptions,
-  SandboxResult,
   VerificationOptions,
 } from './types';
-import { InterpreterError, TimeoutError } from './types';
+import { InterpreterError } from './types';
 import { toValue, fromValue, loadTargetModule } from './bindings';
-import { runInSandbox, runWithTimeout } from './sandbox';
+import { runWithTimeout } from './sandbox';
 
 // ============================================================================
 // STATE CAPTURE
@@ -186,8 +183,6 @@ export async function executeFunction(
   bindings: Bindings,
   options: VerificationOptions
 ): Promise<ExecutionResult> {
-  const startTime = performance.now();
-  
   // Capture pre-state
   const preState = captureState(bindings);
   bindings.old = cloneValues(bindings.pre);
@@ -345,7 +340,7 @@ export function valuesEqual(a: Value, b: Value): boolean {
     case 'list': {
       const bList = b as typeof a;
       if (a.elements.length !== bList.elements.length) return false;
-      return a.elements.every((e, i) => valuesEqual(e, bList.elements[i]!));
+      return a.elements.every((e: Value, i: number) => valuesEqual(e, bList.elements[i]!));
     }
     case 'map': {
       const bMap = b as typeof a;

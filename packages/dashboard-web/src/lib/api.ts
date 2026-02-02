@@ -42,7 +42,7 @@ export interface VerificationResult {
 export interface BehaviorResult {
   behaviorId: string
   behaviorName: string
-  verdict: 'pass' | 'fail' | 'skip' | 'error'
+  verdict: 'pass' | 'fail' | 'partial' | 'skip' | 'error'
   duration: number
   tests: TestResult[]
 }

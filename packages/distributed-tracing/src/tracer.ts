@@ -24,8 +24,6 @@ import { Resource } from '@opentelemetry/resources';
 
 import type {
   TracingConfig,
-  BehaviorSpan,
-  BehaviorContext,
   ConditionResult,
   TraceContext,
   SpanKind,
@@ -378,9 +376,9 @@ export class ISLTracer {
 
     const sorted = [...this.durations].sort((a, b) => a - b);
     this.metrics.averageDuration = sorted.reduce((a, b) => a + b, 0) / sorted.length;
-    this.metrics.p50Duration = sorted[Math.floor(sorted.length * 0.5)];
-    this.metrics.p95Duration = sorted[Math.floor(sorted.length * 0.95)];
-    this.metrics.p99Duration = sorted[Math.floor(sorted.length * 0.99)];
+    this.metrics.p50Duration = sorted[Math.floor(sorted.length * 0.5)] ?? 0;
+    this.metrics.p95Duration = sorted[Math.floor(sorted.length * 0.95)] ?? 0;
+    this.metrics.p99Duration = sorted[Math.floor(sorted.length * 0.99)] ?? 0;
 
     // Keep only last 10000 durations
     if (this.durations.length > 10000) {

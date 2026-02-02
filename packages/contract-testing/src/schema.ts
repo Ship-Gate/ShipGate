@@ -4,7 +4,13 @@
  * Validate data against ISL-derived JSON schemas.
  */
 
-import Ajv, { ValidateFunction, ErrorObject } from 'ajv';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+import AjvDefault from 'ajv';
+import type { ValidateFunction, ErrorObject } from 'ajv';
+
+// Get the actual Ajv constructor
+const Ajv = AjvDefault.default ?? AjvDefault;
+type AjvInstance = InstanceType<typeof Ajv>;
 
 export interface ValidationResult {
   valid: boolean;
@@ -36,7 +42,7 @@ export interface JSONSchema {
 }
 
 export class SchemaValidator {
-  private ajv: Ajv;
+  private ajv: AjvInstance;
   private validators: Map<string, ValidateFunction>;
 
   constructor() {

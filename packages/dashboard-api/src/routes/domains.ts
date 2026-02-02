@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { domainService } from '../services/domain';
-import { DomainStatus } from '@prisma/client';
+import type { DomainStatus } from '../db/types';
 
 const router = Router();
 
@@ -86,7 +86,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
  */
 router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const domain = await domainService.getById(id);
 
     if (!domain) {
@@ -109,7 +109,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
  */
 router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const input = updateDomainSchema.parse(req.body);
 
     const domain = await domainService.update(id, input);
@@ -139,7 +139,7 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
  */
 router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     await domainService.delete(id);
     
     res.status(204).send();
@@ -161,7 +161,7 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
  */
 router.get('/:id/verifications', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const query = z.object({
       page: z.coerce.number().int().min(1).default(1),
       pageSize: z.coerce.number().int().min(1).max(100).default(20),
@@ -195,4 +195,4 @@ router.get('/:id/verifications', async (req: Request, res: Response, next: NextF
   }
 });
 
-export const domainsRouter = router;
+export const domainsRouter: Router = router;

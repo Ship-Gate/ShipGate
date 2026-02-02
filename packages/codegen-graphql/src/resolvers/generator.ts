@@ -18,17 +18,16 @@ export interface ResolverGeneratorConfig {
  * Generate resolvers from ISL AST
  */
 export function generateResolvers(
-  ast: any,
+  ast: unknown,
   config: ResolverGeneratorConfig = {}
 ): string {
-  const cfg = {
-    framework: 'apollo',
-    typescript: true,
-    verification: true,
-    dataLoader: true,
-    errorHandling: true,
-    contextType: 'Context',
-    ...config,
+  const cfg: Required<ResolverGeneratorConfig> = {
+    framework: config.framework ?? 'apollo',
+    typescript: config.typescript ?? true,
+    verification: config.verification ?? true,
+    dataLoader: config.dataLoader ?? true,
+    errorHandling: config.errorHandling ?? true,
+    contextType: config.contextType ?? 'Context',
   };
 
   const lines: string[] = [];
@@ -38,7 +37,7 @@ export function generateResolvers(
   return lines.join('\n');
 }
 
-function generateImports(cfg: ResolverGeneratorConfig): string {
+function generateImports(cfg: Required<ResolverGeneratorConfig>): string {
   const imports: string[] = [];
   if (cfg.typescript) {
     imports.push("import type { Resolvers } from './generated/types';");
@@ -49,7 +48,7 @@ function generateImports(cfg: ResolverGeneratorConfig): string {
   return imports.join('\n');
 }
 
-function generateResolversObject(ast: any, cfg: ResolverGeneratorConfig): string {
+function generateResolversObject(ast: unknown, cfg: Required<ResolverGeneratorConfig>): string {
   return `export const resolvers: Resolvers = {
   Query: {
     // Generated query resolvers

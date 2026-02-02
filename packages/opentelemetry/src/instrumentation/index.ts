@@ -1,14 +1,13 @@
 export {
-  ExpressInstrumentationOptions,
   islExpressMiddleware,
   islExpressErrorHandler,
   traceBehavior,
   traceVerification,
   createISLRequestHeaders,
 } from './express';
+export type { ExpressInstrumentationOptions } from './express';
 
 export {
-  FastifyInstrumentationOptions,
   islFastifyPlugin,
   registerISLPlugin,
   createBehaviorHook,
@@ -18,10 +17,9 @@ export {
   getISLContextFromRequest,
   runInRequestContext,
 } from './fastify';
+export type { FastifyInstrumentationOptions } from './fastify';
 
 export {
-  GrpcInstrumentationOptions,
-  GrpcCall,
   extractISLContextFromMetadata,
   injectISLContextToMetadata,
   traceUnaryCall,
@@ -30,3 +28,4 @@ export {
   traceBidiStreamingCall,
   traceService,
 } from './grpc';
+export type { GrpcInstrumentationOptions, GrpcCall } from './grpc';

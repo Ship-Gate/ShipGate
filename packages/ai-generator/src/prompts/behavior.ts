@@ -10,7 +10,6 @@ import type {
   EntityDeclaration,
   Expression,
   TypeExpression,
-  FieldDeclaration,
 } from '@isl-lang/isl-core';
 
 export interface BehaviorPromptContext {

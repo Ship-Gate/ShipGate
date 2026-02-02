@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "1.0.0",
+  "verdict": "SHIP",
+  "summary": {
+    "totalClauses": 3,
+    "passedClauses": 3,
+    "partialClauses": 0,
+    "failedClauses": 0,
+    "passRate": 100,
+    "totalDurationMs": 150
+  },
+  "metadata": {
+    "contractName": "UserAuthentication",
+    "contractFile": "contracts/auth.isl",
+    "verifierVersion": "1.0.0",
+    "gitCommit": "abc1234567890",
+    "gitBranch": "main"
+  },
+  "clauses": [
+    {
+      "id": "auth-001",
+      "name": "Valid credentials return token",
+      "status": "PASS",
+      "description": "When valid username and password are provided, a JWT token is returned",
+      "evidence": [
+        {
+          "type": "assertion",
+          "description": "Response contains valid JWT",
+          "location": {
+            "file": "src/auth/login.ts",
+            "line": 42,
+            "snippet": "return { token: jwt.sign(payload, secret) }"
+          }
+        }
+      ],
+      "durationMs": 50
+    },
+    {
+      "id": "auth-002",
+      "name": "Invalid credentials return 401",
+      "status": "PASS",
+      "description": "When invalid credentials are provided, HTTP 401 is returned",
+      "evidence": [
+        {
+          "type": "postcondition",
+          "description": "Status code is 401",
+          "location": {
+            "file": "src/auth/login.ts",
+            "line": 38
+          }
+        }
+      ],
+      "durationMs": 45
+    },
+    {
+      "id": "auth-003",
+      "name": "Rate limiting enforced",
+      "status": "PASS",
+      "description": "After 5 failed attempts, further attempts are blocked for 15 minutes",
+      "evidence": [
+        {
+          "type": "invariant",
+          "description": "Rate limit counter increments correctly"
+        }
+      ],
+      "durationMs": 55
+    }
+  ],
+  "assumptions": [
+    {
+      "id": "assume-001",
+      "description": "JWT secret is properly secured in environment variables",
+      "rationale": "Cannot verify runtime environment configuration",
+      "risk": "medium"
+    }
+  ],
+  "openQuestions": [],
+  "reproCommands": [
+    {
+      "description": "Run authentication tests",
+      "command": "pnpm test:auth",
+      "workingDirectory": "packages/auth"
+    }
+  ]
+}

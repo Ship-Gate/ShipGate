@@ -1,0 +1,8 @@
+{
+  "parseSuccess": true,
+  "checkSuccess": true,
+  "minDomains": 1,
+  "minEntities": 1,
+  "minBehaviors": 3,
+  "notes": "CRUD specs should have at least 3 behaviors (Create, Read, Update/Delete)"
+}

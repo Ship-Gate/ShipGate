@@ -3,7 +3,7 @@
 // Composes multiple federated services into a unified schema
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from './ast';
 import type {
   FederatedService,
   ComposedSchema,
@@ -12,6 +12,9 @@ import type {
   RoutingRule,
   CompositionResult,
 } from './types';
+
+// Re-export ComposedSchema for index.ts
+export type { ComposedSchema } from './types';
 
 // ============================================================================
 // TYPES
@@ -180,9 +183,11 @@ function detectTypeConflict(
 ): SchemaConflict | null {
   // Check if definitions are compatible
   const first = definitions[0];
+  if (!first) return null;
   
   for (let i = 1; i < definitions.length; i++) {
     const current = definitions[i];
+    if (!current) continue;
     if (!areTypesCompatible(first.type.definition, current.type.definition)) {
       return {
         type: 'type-mismatch',
@@ -270,18 +275,20 @@ function resolveDefinitions<T>(
   definitions: Array<{ type: T; service: string }>,
   strategy: 'first' | 'last' | 'error' | 'merge'
 ): { type: T; service: string } | null {
+  if (definitions.length === 0) return null;
+  
   switch (strategy) {
     case 'first':
-      return definitions[0];
+      return definitions[0] ?? null;
     case 'last':
-      return definitions[definitions.length - 1];
+      return definitions[definitions.length - 1] ?? null;
     case 'error':
-      return definitions.length === 1 ? definitions[0] : null;
+      return definitions.length === 1 ? (definitions[0] ?? null) : null;
     case 'merge':
       // For types, we'd need type-specific merge logic
-      return definitions[0];
+      return definitions[0] ?? null;
     default:
-      return definitions[0];
+      return definitions[0] ?? null;
   }
 }
 

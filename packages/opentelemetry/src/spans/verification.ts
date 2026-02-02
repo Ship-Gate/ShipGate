@@ -64,12 +64,12 @@ export interface VerificationResult {
 export class VerificationSpan {
   private span: Span;
   private startTime: number;
-  private config: VerificationSpanConfig;
+  private readonly _config: VerificationSpanConfig;
   private checks: CheckResult[] = [];
   private coverage?: CoverageMetrics;
 
   constructor(config: VerificationSpanConfig, parentContext?: Context) {
-    this.config = config;
+    this._config = config;
     this.startTime = Date.now();
 
     const tracer = trace.getTracer('isl-verification', '1.0.0');
@@ -322,6 +322,13 @@ export class VerificationSpan {
       duration,
     };
   }
+
+  /**
+   * Get the configuration
+   */
+  getConfig(): VerificationSpanConfig {
+    return this._config;
+  }
 }
 
 /**
@@ -351,7 +358,7 @@ export async function withVerificationSpan<T>(
  */
 export function TraceVerification(domain: string, behavior?: string) {
   return function (
-    target: unknown,
+    _target: unknown,
     propertyKey: string,
     descriptor: PropertyDescriptor
   ) {

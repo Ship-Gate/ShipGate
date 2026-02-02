@@ -82,6 +82,42 @@ export interface ProviderRefundResult {
 // STRIPE PROVIDER
 // ==========================================================================
 
+// Stripe API response types
+interface StripePaymentMethod {
+  type: string;
+  card?: {
+    brand: string;
+    last4: string;
+    exp_month: number;
+    exp_year: number;
+    fingerprint?: string;
+  };
+}
+
+interface StripePaymentIntent {
+  id: string;
+  status: string;
+  next_action?: {
+    redirect_to_url?: {
+      url: string;
+    };
+  };
+}
+
+interface StripeError {
+  type: string;
+  code?: string;
+  message?: string;
+}
+
+interface StripeErrorResponse {
+  error: StripeError;
+}
+
+interface StripeRefund {
+  id: string;
+}
+
 export interface StripeConfig {
   secretKey: string;
   webhookSecret: string;
@@ -104,9 +140,9 @@ export class StripeProvider implements PaymentProviderAdapter {
         return null;
       }
       
-      const data = await response.json();
+      const data = await response.json() as StripePaymentMethod;
       
-      if (data.type === 'card') {
+      if (data.type === 'card' && data.card) {
         return {
           type: 'card',
           token,
@@ -135,11 +171,12 @@ export class StripeProvider implements PaymentProviderAdapter {
         metadata: input.metadata,
       }, input.idempotencyKey);
       
-      const data = await response.json();
-      
       if (!response.ok) {
-        return this.mapStripeError(data.error);
+        const errorData = await response.json() as StripeErrorResponse;
+        return this.mapStripeError(errorData.error);
       }
+      
+      const data = await response.json() as StripePaymentIntent;
       
       if (data.status === 'requires_action') {
         return {
@@ -178,7 +215,7 @@ export class StripeProvider implements PaymentProviderAdapter {
       );
       
       if (!response.ok) {
-        const data = await response.json();
+        const data = await response.json() as StripeErrorResponse;
         return {
           success: false,
           errorCode: PaymentErrorCode.PROCESSING_ERROR,
@@ -207,16 +244,17 @@ export class StripeProvider implements PaymentProviderAdapter {
         reason: input.reason ?? 'requested_by_customer',
       }, input.idempotencyKey);
       
-      const data = await response.json();
-      
       if (!response.ok) {
+        const errorData = await response.json() as StripeErrorResponse;
         return {
           success: false,
-          errorCode: data.error?.code,
-          errorMessage: data.error?.message ?? 'Refund failed',
-          retriable: data.error?.type === 'api_error',
+          errorCode: errorData.error?.code,
+          errorMessage: errorData.error?.message ?? 'Refund failed',
+          retriable: errorData.error?.type === 'api_error',
         };
       }
+      
+      const data = await response.json() as StripeRefund;
       
       return {
         success: true,

@@ -8,7 +8,7 @@ export * from './typescript/index.js';
 export * from './tests/index.js';
 export * from './imports.js';
 
-import type { DomainDeclaration } from '@isl-lang/isl-core';
+import type { DomainDeclaration } from '@isl-lang/parser';
 import { generateTypes, type GeneratedTypes, type TypeGeneratorOptions } from './typescript/index.js';
 import { generateTests, type GeneratedTests, type TestGeneratorOptions } from './tests/index.js';
 import { resolveImports, getAvailableLibraries, getLibraryInfo } from './imports.js';
