@@ -135,12 +135,10 @@ export interface ProofLink {
 // ============================================================================
 
 const TEMPLATES = {
-  // Next.js API route
+  // Next.js API route - INTENTIONALLY MISSING INTENTS (for self-healing demo)
   'nextjs-api-route': (behavior: BehaviorAST, ctx: RepoContext) => `
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-${behavior.intents.some(i => i.tag === 'rate-limit-required') ? "import { rateLimit } from '@/lib/rate-limit';" : ''}
-${behavior.intents.some(i => i.tag === 'audit-required') ? "import { audit } from '@/lib/audit';" : ''}
 
 // Input validation schema (from ISL preconditions)
 const ${behavior.name}Schema = z.object({
@@ -148,16 +146,9 @@ ${behavior.input.map(f => `  ${f.name}: ${zodType(f)},`).join('\n')}
 });
 
 export async function POST(request: NextRequest) {
-${behavior.intents.some(i => i.tag === 'rate-limit-required') ? `
-  // @intent rate-limit-required
-  const rateLimitResult = await rateLimit(request);
-  if (!rateLimitResult.success) {
-    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
-  }
-` : ''}
-
   try {
     const body = await request.json();
+    console.log('Processing ${behavior.name}:', body.email);  // BUG: logging PII
     
     // Validate input (ISL preconditions)
     const validationResult = ${behavior.name}Schema.safeParse(body);
@@ -175,15 +166,6 @@ ${behavior.intents.some(i => i.tag === 'rate-limit-required') ? `
 ${behavior.postconditions.map(p => `    // - ${p.predicates.map(pred => pred.source).join(', ')}`).join('\n')}
     
     const result = await ${camelCase(behavior.name)}(input);
-    
-${behavior.intents.some(i => i.tag === 'audit-required') ? `
-    // @intent audit-required
-    await audit({
-      action: '${behavior.name}',
-      userId: result.userId,
-      metadata: { /* redacted input */ },
-    });
-` : ''}
 
     return NextResponse.json(result);
   } catch (error) {
@@ -466,11 +448,24 @@ export class ISLGenerator {
         content = (template as (ast: ISLAST) => string)(ast);
       } else {
         // Find the behavior for this file
-        const behaviorName = planned.path.split('/').pop()?.replace('.ts', '').replace('.test', '');
+        // For Next.js: src/app/api/user-login/route.ts -> user-login
+        // For Express: src/routes/user-login.ts -> user-login
+        const pathParts = planned.path.split('/');
+        let behaviorName: string | undefined;
+        
+        if (planned.path.includes('/api/') && planned.path.endsWith('route.ts')) {
+          // Next.js style: get the folder name before route.ts
+          behaviorName = pathParts[pathParts.length - 2];
+        } else {
+          // Express style: get the filename
+          behaviorName = pathParts.pop()?.replace('.ts', '').replace('.test', '');
+        }
+        
         const behavior = ast.behaviors.find(b => 
           kebabCase(b.name) === behaviorName || 
           kebabCase(b.name) === behaviorName?.replace('.test', '')
         );
+        
         if (behavior) {
           content = (template as (behavior: BehaviorAST, ctx: RepoContext) => string)(behavior, this.repoContext);
           
