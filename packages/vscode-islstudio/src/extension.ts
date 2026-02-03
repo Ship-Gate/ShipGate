@@ -1,42 +1,35 @@
 /**
  * ISL Studio VS Code Extension
  * 
- * Non-negotiable UX:
- * - Status pill: SHIP / NO_SHIP + score
- * - Problems panel diagnostics + click → "Explain + Fix"
- * - "Run Gate on Changed Files" command (fast)
- * - "Use Baseline / Create Baseline" command
+ * Control surface for ISL:
+ * - Set intent blocks
+ * - Run gate changed-only
+ * - Run heal until ship
+ * - View violations and proof bundles
  */
 
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { ISLStudioTreeProvider } from './sidebar';
+import { HealUIPanel } from './heal-ui';
+import { runGate, GateResult, Violation } from './gate-runner';
+import { findAllIntentBlocks, IntentBlock } from './intent-manager';
+import { findProofBundles, viewProofBundle, ProofBundle } from './proof-bundle-manager';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
-// Diagnostic collection for ISL violations
+// Global state
 let diagnosticCollection: vscode.DiagnosticCollection;
 let statusBarItem: vscode.StatusBarItem;
 let outputChannel: vscode.OutputChannel;
+let treeProvider: ISLStudioTreeProvider;
+let currentGateResult: GateResult | null = null;
+let extensionContext: vscode.ExtensionContext;
 
 // Store current results for explain
 let currentViolations: Map<string, Violation[]> = new Map();
-
-interface Violation {
-  ruleId: string;
-  message: string;
-  filePath: string;
-  line: number;
-  tier: 'hard_block' | 'soft_block' | 'warn';
-  suggestion?: string;
-}
-
-interface GateResult {
-  verdict: 'SHIP' | 'NO_SHIP';
-  score: number;
-  violations: Violation[];
-}
 
 export function activate(context: vscode.ExtensionContext) {
   outputChannel = vscode.window.createOutputChannel('ISL Studio');
@@ -55,15 +48,34 @@ export function activate(context: vscode.ExtensionContext) {
   statusBarItem.tooltip = 'Click to run ISL Gate';
   context.subscriptions.push(statusBarItem);
 
+  // Create sidebar tree view
+  treeProvider = new ISLStudioTreeProvider();
+  context.subscriptions.push(
+    vscode.window.createTreeView('islstudioSidebar', {
+      treeDataProvider: treeProvider,
+      showCollapseAll: true,
+    })
+  );
+
+  // Refresh sidebar periodically
+  const refreshInterval = setInterval(async () => {
+    await refreshSidebar();
+  }, 30000); // Every 30 seconds
+  context.subscriptions.push({ dispose: () => clearInterval(refreshInterval) });
+
   // Register all commands
   context.subscriptions.push(
-    vscode.commands.registerCommand('islstudio.runGate', () => runGate(false)),
-    vscode.commands.registerCommand('islstudio.runGateChangedOnly', () => runGate(true)),
+    vscode.commands.registerCommand('islstudio.runGate', () => handleRunGate(false)),
+    vscode.commands.registerCommand('islstudio.runGateChangedOnly', () => handleRunGate(true)),
+    vscode.commands.registerCommand('islstudio.healUntilShip', () => handleHealUntilShip()),
+    vscode.commands.registerCommand('islstudio.setIntentBlocks', () => handleSetIntentBlocks()),
     vscode.commands.registerCommand('islstudio.explainRule', explainRule),
     vscode.commands.registerCommand('islstudio.createBaseline', createBaseline),
     vscode.commands.registerCommand('islstudio.useBaseline', useBaseline),
     vscode.commands.registerCommand('islstudio.init', initProject),
-    vscode.commands.registerCommand('islstudio.showOutput', () => outputChannel.show())
+    vscode.commands.registerCommand('islstudio.showOutput', () => outputChannel.show()),
+    vscode.commands.registerCommand('islstudio.viewProofBundle', (bundlePath: string) => viewProofBundle(bundlePath)),
+    vscode.commands.registerCommand('islstudio.refreshSidebar', () => refreshSidebar())
   );
 
   // Register code action provider for quick fixes
@@ -100,38 +112,13 @@ export function activate(context: vscode.ExtensionContext) {
 // Gate Execution
 // ============================================================================
 
-async function runGate(changedOnly: boolean) {
-  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-  if (!workspaceFolder) {
-    vscode.window.showErrorMessage('No workspace folder open');
-    return;
-  }
-
+async function handleRunGate(changedOnly: boolean) {
   updateStatusBar('running');
-  outputChannel.appendLine(`\n[${new Date().toISOString()}] Running ISL Gate...`);
+  outputChannel.appendLine(`\n[${new Date().toISOString()}] Running ISL Gate (${changedOnly ? 'changed files only' : 'all files'})...`);
 
   try {
-    const cwd = workspaceFolder.uri.fsPath;
-    const changedFlag = changedOnly ? '--changed-only' : '';
-    const cmd = `npx islstudio@0.1.2 gate --ci --output json ${changedFlag}`;
-    
-    outputChannel.appendLine(`Command: ${cmd}`);
-    
-    const { stdout, stderr } = await execAsync(cmd, { cwd, timeout: 60000 });
-    
-    if (stderr) {
-      outputChannel.appendLine(`stderr: ${stderr}`);
-    }
-
-    // Parse result
-    let result: GateResult;
-    try {
-      result = JSON.parse(stdout);
-    } catch {
-      outputChannel.appendLine(`Failed to parse: ${stdout}`);
-      updateStatusBar('error');
-      return;
-    }
+    const result = await runGate(changedOnly, outputChannel);
+    currentGateResult = result;
 
     outputChannel.appendLine(`Result: ${result.verdict} (${result.score}/100)`);
     outputChannel.appendLine(`Violations: ${result.violations.length}`);
@@ -142,15 +129,22 @@ async function runGate(changedOnly: boolean) {
     // Update status bar
     updateStatusBar(result.verdict, result.score, result.violations.length);
 
+    // Update sidebar
+    treeProvider.updateGateResult(result);
+    await refreshSidebar();
+
     // Show notification for NO_SHIP
     if (result.verdict === 'NO_SHIP') {
       const action = await vscode.window.showWarningMessage(
         `ISL Gate: NO_SHIP (${result.score}/100) - ${result.violations.length} violation(s)`,
         'Show Problems',
+        'Heal Until Ship',
         'Show Output'
       );
       if (action === 'Show Problems') {
         vscode.commands.executeCommand('workbench.actions.view.problems');
+      } else if (action === 'Heal Until Ship') {
+        handleHealUntilShip();
       } else if (action === 'Show Output') {
         outputChannel.show();
       }
@@ -189,7 +183,7 @@ async function runGateOnFile(filePath: string) {
     
     // Update status if violations found
     if (violations.length > 0) {
-      const hasErrors = violations.some(v => v.tier === 'hard_block');
+      const hasErrors = violations.some(v => v.severity === 'critical' || v.severity === 'high');
       updateStatusBar(hasErrors ? 'NO_SHIP' : 'WARN', undefined, violations.length);
     }
     
@@ -218,10 +212,9 @@ function quickCheck(content: string, filePath: string): Violation[] {
       violations.push({
         ruleId: 'auth/bypass-detected',
         message: 'Auth bypass pattern detected - authentication may be disabled',
-        filePath,
+        file: filePath,
         line: lineNum,
-        tier: 'hard_block',
-        suggestion: 'Remove auth bypass code. Use test tokens for testing instead.',
+        severity: 'critical',
       });
     }
 
@@ -230,10 +223,9 @@ function quickCheck(content: string, filePath: string): Violation[] {
       violations.push({
         ruleId: 'auth/hardcoded-credentials',
         message: 'Potential hardcoded credentials detected',
-        filePath,
+        file: filePath,
         line: lineNum,
-        tier: 'hard_block',
-        suggestion: 'Move secrets to environment variables (process.env.SECRET)',
+        severity: 'critical',
       });
     }
 
@@ -242,10 +234,9 @@ function quickCheck(content: string, filePath: string): Violation[] {
       violations.push({
         ruleId: 'pii/logged-sensitive-data',
         message: 'Sensitive data may be logged',
-        filePath,
+        file: filePath,
         line: lineNum,
-        tier: 'hard_block',
-        suggestion: 'Remove PII from logs or mask sensitive fields',
+        severity: 'critical',
       });
     }
 
@@ -254,10 +245,9 @@ function quickCheck(content: string, filePath: string): Violation[] {
       violations.push({
         ruleId: 'pii/console-in-production',
         message: 'console.log should be removed in production code',
-        filePath,
+        file: filePath,
         line: lineNum,
-        tier: 'soft_block',
-        suggestion: 'Use a proper logger or remove before production',
+        severity: 'medium',
       });
     }
 
@@ -268,10 +258,9 @@ function quickCheck(content: string, filePath: string): Violation[] {
         violations.push({
           ruleId: 'rate-limit/auth-endpoint',
           message: 'Auth endpoint may lack rate limiting',
-          filePath,
+          file: filePath,
           line: lineNum,
-          tier: 'soft_block',
-          suggestion: 'Add rate limiting middleware (e.g., express-rate-limit)',
+          severity: 'high',
         });
       }
     }
@@ -291,7 +280,7 @@ function updateDiagnostics(violations: Violation[]) {
   // Group by file
   const byFile = new Map<string, Violation[]>();
   for (const v of violations) {
-    const file = v.filePath || 'unknown';
+    const file = v.file || 'unknown';
     if (!byFile.has(file)) {
       byFile.set(file, []);
     }
@@ -300,10 +289,15 @@ function updateDiagnostics(violations: Violation[]) {
 
   // Create diagnostics per file
   for (const [file, fileViolations] of byFile) {
-    const uri = vscode.Uri.file(file);
-    const diagnostics = fileViolations.map(v => createDiagnostic(v));
-    diagnosticCollection.set(uri, diagnostics);
-    currentViolations.set(file, fileViolations);
+    try {
+      const uri = vscode.Uri.file(file);
+      const diagnostics = fileViolations.map(v => createDiagnostic(v));
+      diagnosticCollection.set(uri, diagnostics);
+      currentViolations.set(file, fileViolations);
+    } catch (error) {
+      // Skip invalid file paths
+      outputChannel.appendLine(`Warning: Could not create diagnostics for ${file}`);
+    }
   }
 }
 
@@ -311,11 +305,13 @@ function createDiagnostic(v: Violation): vscode.Diagnostic {
   const line = Math.max(0, (v.line || 1) - 1);
   const range = new vscode.Range(line, 0, line, 1000);
 
-  const severity = v.tier === 'hard_block'
+  const severity = v.severity === 'critical'
     ? vscode.DiagnosticSeverity.Error
-    : v.tier === 'soft_block'
+    : v.severity === 'high'
     ? vscode.DiagnosticSeverity.Warning
-    : vscode.DiagnosticSeverity.Information;
+    : v.severity === 'medium'
+    ? vscode.DiagnosticSeverity.Information
+    : vscode.DiagnosticSeverity.Hint;
 
   const diagnostic = new vscode.Diagnostic(range, v.message, severity);
   diagnostic.source = 'ISL Studio';
@@ -497,6 +493,100 @@ async function initProject() {
 }
 
 // ============================================================================
+// Heal Until Ship
+// ============================================================================
+
+async function handleHealUntilShip() {
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  if (!workspaceFolder) {
+    vscode.window.showErrorMessage('No workspace folder open');
+    return;
+  }
+
+  // Show heal UI panel
+  const panel = HealUIPanel.createOrShow(context.extensionUri);
+  
+  outputChannel.appendLine('\nStarting heal until ship...');
+  outputChannel.show();
+
+  try {
+    const cwd = workspaceFolder.uri.fsPath;
+    
+    // Run heal command via CLI
+    const cmd = `npx islstudio@latest heal --max-iterations 8 --verbose`;
+    
+    outputChannel.appendLine(`Command: ${cmd}`);
+    
+    // For now, show a message that this requires ISL pipeline integration
+    vscode.window.showInformationMessage(
+      'Heal Until Ship: This feature requires ISL pipeline integration. Running gate first...'
+    );
+    
+    // Run gate first to show current state
+    await handleRunGate(true);
+    
+    // TODO: Integrate with ISL pipeline healer
+    // const healer = new SemanticHealer(...);
+    // const result = await healer.heal();
+    
+  } catch (error: any) {
+    outputChannel.appendLine(`Error: ${error.message}`);
+    vscode.window.showErrorMessage(`Heal failed: ${error.message}`);
+  }
+}
+
+// ============================================================================
+// Set Intent Blocks
+// ============================================================================
+
+async function handleSetIntentBlocks() {
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  if (!workspaceFolder) {
+    vscode.window.showErrorMessage('No workspace folder open');
+    return;
+  }
+
+  outputChannel.appendLine('\nFinding intent blocks...');
+  
+  try {
+    const blocks = await findAllIntentBlocks();
+    treeProvider.updateIntentBlocks(blocks);
+    await refreshSidebar();
+    
+    vscode.window.showInformationMessage(
+      `Found ${blocks.length} intent blocks`
+    );
+  } catch (error: any) {
+    vscode.window.showErrorMessage(`Failed to find intent blocks: ${error.message}`);
+  }
+}
+
+// ============================================================================
+// Refresh Sidebar
+// ============================================================================
+
+async function refreshSidebar() {
+  try {
+    // Refresh intent blocks
+    const blocks = await findAllIntentBlocks();
+    treeProvider.updateIntentBlocks(blocks);
+    
+    // Refresh proof bundles
+    const bundles = await findProofBundles();
+    treeProvider.updateProofBundles(bundles);
+    
+    // Refresh gate result if available
+    if (currentGateResult) {
+      treeProvider.updateGateResult(currentGateResult);
+    }
+    
+    treeProvider.refresh();
+  } catch (error) {
+    // Silently fail - sidebar refresh is not critical
+  }
+}
+
+// ============================================================================
 // Code Actions (Quick Fixes)
 // ============================================================================
 
@@ -526,6 +616,17 @@ class ISLCodeActionProvider implements vscode.CodeActionProvider {
         arguments: [ruleId],
       };
       actions.push(explainAction);
+
+      // Heal action
+      const healAction = new vscode.CodeAction(
+        `ISL: Heal Until Ship`,
+        vscode.CodeActionKind.QuickFix
+      );
+      healAction.command = {
+        command: 'islstudio.healUntilShip',
+        title: 'Heal Until Ship',
+      };
+      actions.push(healAction);
 
       // Suppress action
       const suppressAction = new vscode.CodeAction(

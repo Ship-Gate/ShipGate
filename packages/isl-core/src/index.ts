@@ -40,10 +40,16 @@ export * from './fmt/index.js';
 export * from './lint/index.js';
 
 // ============================================================================
-// Import Resolution APIs
+// Import Resolution APIs (Legacy)
 // ============================================================================
 
 export * from './imports/index.js';
+
+// ============================================================================
+// Module Resolution System
+// ============================================================================
+
+export * as modules from './modules/index.js';
 
 // ============================================================================
 // Verification APIs
@@ -61,12 +67,28 @@ export * as testgen from './testgen/index.js';
 // High-Level Convenience APIs
 // ============================================================================
 
-import { tokenize, type LexerError } from './lexer/index.js';
+import { tokenize, type LexerError, type Token } from './lexer/index.js';
 import { parse as parseTokens, type ParseError } from './parser/index.js';
 import { check as typeCheck, type CheckResult, type CheckOptions } from './check/index.js';
 import { format as formatAST, type FormatOptions } from './fmt/index.js';
 import { lint as lintAST, type LintResult, type LintOptions } from './lint/index.js';
 import type { DomainDeclaration } from './ast/index.js';
+
+// ============================================================================
+// Lexer Result
+// ============================================================================
+
+export interface LexResult {
+  tokens: Token[];
+  errors: LexerError[];
+}
+
+/**
+ * Lex ISL source code into tokens
+ */
+export function lexISL(source: string, filename?: string): LexResult {
+  return tokenize(source, filename);
+}
 
 // ============================================================================
 // Parse Result

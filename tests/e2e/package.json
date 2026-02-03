@@ -12,6 +12,7 @@
   "dependencies": {
     "@isl-lang/parser": "workspace:*",
     "@isl-lang/isl-verify": "workspace:*",
-    "@isl-lang/codegen-tests": "workspace:*"
+    "@isl-lang/codegen-tests": "workspace:*",
+    "next": "^14.1.0"
   }
 }

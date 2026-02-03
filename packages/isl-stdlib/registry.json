@@ -1,0 +1,355 @@
+{
+  "$schema": "./registry.schema.json",
+  "version": "1.0.0",
+  "description": "ISL Standard Library Canonical Registry",
+  "generated": "2026-02-03T00:26:36.820Z",
+  "stdlibRoot": "stdlib",
+  "modules": {
+    "stdlib-auth": {
+      "name": "@isl-lang/stdlib-auth",
+      "version": "1.0.0",
+      "description": "Authentication and authorization (OAuth, sessions, rate limiting)",
+      "category": "security",
+      "status": "implemented",
+      "entryPoint": "auth/oauth-login.isl",
+      "exports": {
+        ".": "auth/oauth-login.isl",
+        "/oauth-login": "auth/oauth-login.isl",
+        "/password-reset": "auth/password-reset.isl",
+        "/rate-limit-login": "auth/rate-limit-login.isl",
+        "/session-create": "auth/session-create.isl"
+      },
+      "files": [
+        {
+          "path": "auth/oauth-login.isl",
+          "contentHash": "2a5c3d73da5aa742a29e8d9e479afcef8325f9f2fe3581523845492ef8064f32"
+        },
+        {
+          "path": "auth/password-reset.isl",
+          "contentHash": "988efc8a963d000eb4a645b9de1671c62e9448472268d26ebd8aa740097b5e09"
+        },
+        {
+          "path": "auth/rate-limit-login.isl",
+          "contentHash": "8761ff4417c4e00ca04201c096f5821202414e7235310670dbca01e23ee2d1f6"
+        },
+        {
+          "path": "auth/session-create.isl",
+          "contentHash": "ec5695854a84f6c3940501ac91d49d1d1523b03265a0a2f8db04c80ba948d373"
+        }
+      ],
+      "moduleHash": "0c057caa19f6779d09c1eda414994cdc707eb901d208f648776010597b64761a",
+      "provides": {
+        "entities": [
+          "OAuthCredential",
+          "PasswordResetRequest",
+          "LoginAttempt",
+          "RateLimitBucket",
+          "LoginBlock",
+          "Session"
+        ],
+        "behaviors": [
+          "InitiateOAuth",
+          "ExchangeOAuthCode",
+          "RefreshOAuthToken",
+          "RevokeOAuthCredential",
+          "RequestPasswordReset",
+          "ValidateResetToken",
+          "ResetPassword",
+          "CheckPasswordStrength",
+          "CheckLoginRateLimit",
+          "RecordLoginAttempt",
+          "BlockIdentifier",
+          "UnblockIdentifier",
+          "GetLoginAttemptHistory",
+          "ResetRateLimit",
+          "CreateSession",
+          "ValidateSession",
+          "RevokeSession",
+          "RevokeAllUserSessions",
+          "CleanupExpiredSessions"
+        ],
+        "enums": [
+          "OAuthProvider",
+          "PasswordStrength",
+          "RateLimitAction"
+        ],
+        "types": [
+          "OAuthProvider",
+          "OAuthCode",
+          "OAuthState",
+          "AccessToken",
+          "RefreshToken",
+          "OAuthScope",
+          "ResetToken",
+          "Password",
+          "PasswordStrength",
+          "RateLimitKey",
+          "RateLimitWindow",
+          "RateLimitAction",
+          "SessionId",
+          "SessionToken",
+          "DeviceFingerprint",
+          "SessionDuration"
+        ]
+      },
+      "dependencies": [],
+      "peerDependencies": [],
+      "keywords": [
+        "auth",
+        "authentication",
+        "oauth",
+        "session",
+        "login",
+        "security"
+      ]
+    },
+    "stdlib-payments": {
+      "name": "@isl-lang/stdlib-payments",
+      "version": "1.0.0",
+      "description": "PCI-compliant payment processing (payments, refunds, subscriptions, webhooks)",
+      "category": "business",
+      "status": "implemented",
+      "entryPoint": "payments/process-payment.isl",
+      "exports": {
+        ".": "payments/process-payment.isl",
+        "/process-payment": "payments/process-payment.isl",
+        "/process-refund": "payments/process-refund.isl",
+        "/subscription-create": "payments/subscription-create.isl",
+        "/webhook-handle": "payments/webhook-handle.isl"
+      },
+      "files": [
+        {
+          "path": "payments/process-payment.isl",
+          "contentHash": "f03e73df122428d33a1d6eae8ed92c0f54a333c80f34594dfe9f4558614d6e2a"
+        },
+        {
+          "path": "payments/process-refund.isl",
+          "contentHash": "0942eef359321cb1345577f9c27517b76b9de985f3bdb794830c40457f8dc7bb"
+        },
+        {
+          "path": "payments/subscription-create.isl",
+          "contentHash": "69b25d87f64d2ae03fdf454e3cb84ace6f7160d418616960e83a3ddf7fba05f1"
+        },
+        {
+          "path": "payments/webhook-handle.isl",
+          "contentHash": "111179fd18be77245c74a956224814b5d3cead059a32953459abf8316babd9d2"
+        }
+      ],
+      "moduleHash": "d2ab2b72d20a6fad6946aa2e63d8fd7c8f97f0124b221aef82553654bc65f5bd",
+      "provides": {
+        "entities": [
+          "Payment",
+          "PaymentCard",
+          "Refund",
+          "Plan",
+          "Subscription",
+          "SubscriptionInvoice",
+          "WebhookEvent",
+          "WebhookEndpoint"
+        ],
+        "behaviors": [
+          "CreatePayment",
+          "ProcessPaymentIntent",
+          "CancelPayment",
+          "GetPayment",
+          "ListCustomerPayments",
+          "CreateRefund",
+          "ProcessRefundIntent",
+          "CancelRefund",
+          "GetRefund",
+          "ListPaymentRefunds",
+          "CalculateRefundableAmount",
+          "CreateSubscription",
+          "CancelSubscription",
+          "PauseSubscription",
+          "ResumeSubscription",
+          "ChangePlan",
+          "GetSubscription",
+          "RenewSubscription",
+          "ReceiveWebhook",
+          "ProcessWebhook",
+          "HandlePaymentSucceeded",
+          "HandlePaymentFailed",
+          "HandleSubscriptionEvent",
+          "HandleDisputeCreated",
+          "RetryFailedWebhook"
+        ],
+        "enums": [
+          "Currency",
+          "PaymentMethod",
+          "PaymentStatus",
+          "CardBrand",
+          "RefundStatus",
+          "RefundReason",
+          "BillingInterval",
+          "SubscriptionStatus",
+          "WebhookProvider",
+          "WebhookEventType",
+          "WebhookStatus"
+        ],
+        "types": [
+          "PaymentId",
+          "Money",
+          "Currency",
+          "PaymentMethod",
+          "PaymentStatus",
+          "CardBrand",
+          "RefundId",
+          "RefundStatus",
+          "RefundReason",
+          "SubscriptionId",
+          "BillingInterval",
+          "SubscriptionStatus",
+          "WebhookId",
+          "WebhookProvider",
+          "WebhookEventType",
+          "WebhookStatus"
+        ]
+      },
+      "dependencies": [],
+      "peerDependencies": [
+        "stdlib-auth"
+      ],
+      "keywords": [
+        "payments",
+        "pci",
+        "stripe",
+        "subscriptions",
+        "billing",
+        "refunds"
+      ]
+    },
+    "stdlib-uploads": {
+      "name": "@isl-lang/stdlib-uploads",
+      "version": "1.0.0",
+      "description": "File upload, storage, and MIME validation",
+      "category": "storage",
+      "status": "implemented",
+      "entryPoint": "uploads/store-blob.isl",
+      "exports": {
+        ".": "uploads/store-blob.isl",
+        "/store-blob": "uploads/store-blob.isl",
+        "/upload-image": "uploads/upload-image.isl",
+        "/validate-mime": "uploads/validate-mime.isl"
+      },
+      "files": [
+        {
+          "path": "uploads/store-blob.isl",
+          "contentHash": "5c131d29b3610faa2f45cf4aadf3bcfadf6d93cfa77ddd44f87d481f9f69e4ae"
+        },
+        {
+          "path": "uploads/upload-image.isl",
+          "contentHash": "89c204e919d5aabb15dc62f804c093e4d22608935b729a1535617d13118bc6ba"
+        },
+        {
+          "path": "uploads/validate-mime.isl",
+          "contentHash": "51e08701cbc82fc6ea1cefc27bd15525aa775e816315aca5ef0f724d0a282a4a"
+        }
+      ],
+      "moduleHash": "2f34825b5a1024a98f4f132ed01a552c916f0ade87fa0374890cc903262f8a1f",
+      "provides": {
+        "entities": [
+          "Blob",
+          "StorageBucket",
+          "UploadPart",
+          "Image",
+          "ImageUploadSession",
+          "MimeTypeDefinition",
+          "ValidationLog"
+        ],
+        "behaviors": [
+          "StoreBlob",
+          "InitiateMultipartUpload",
+          "UploadPart",
+          "CompleteMultipartUpload",
+          "AbortMultipartUpload",
+          "GetBlob",
+          "GetBlobContent",
+          "GeneratePresignedUrl",
+          "DeleteBlob",
+          "CopyBlob",
+          "ListBlobs",
+          "InitiateImageUpload",
+          "CompleteImageUpload",
+          "UploadImageDirect",
+          "ResizeImage",
+          "DeleteImage",
+          "GetImage",
+          "ListUserImages",
+          "ValidateMimeType",
+          "CheckFileSafety",
+          "ValidateImageMime",
+          "ValidateDocumentMime",
+          "GetMimeTypeInfo",
+          "DetectMimeFromExtension",
+          "ValidateMimeConsistency"
+        ],
+        "enums": [
+          "StorageProvider",
+          "StorageClass",
+          "ImageFormat",
+          "ThumbnailSize",
+          "FileCategory",
+          "ValidationResult"
+        ],
+        "types": [
+          "BlobId",
+          "StorageProvider",
+          "StorageClass",
+          "ByteSize",
+          "ContentHash",
+          "PresignedUrlDuration",
+          "ImageId",
+          "ImageFormat",
+          "ImageSize",
+          "ImageQuality",
+          "ThumbnailSize",
+          "MimeType",
+          "FileCategory",
+          "ValidationResult"
+        ]
+      },
+      "dependencies": [],
+      "peerDependencies": [],
+      "keywords": [
+        "files",
+        "uploads",
+        "storage",
+        "s3",
+        "blobs",
+        "mime"
+      ]
+    }
+  },
+  "categories": {
+    "security": {
+      "name": "Security",
+      "description": "Authentication, authorization, and security patterns",
+      "modules": [
+        "stdlib-auth"
+      ]
+    },
+    "business": {
+      "name": "Business Logic",
+      "description": "Payments, billing, and SaaS patterns",
+      "modules": [
+        "stdlib-payments"
+      ]
+    },
+    "storage": {
+      "name": "Storage",
+      "description": "File storage and management",
+      "modules": [
+        "stdlib-uploads"
+      ]
+    }
+  },
+  "importAliases": {
+    "@isl/stdlib-auth": "stdlib-auth",
+    "@isl/auth": "stdlib-auth",
+    "@isl/stdlib-payments": "stdlib-payments",
+    "@isl/payments": "stdlib-payments",
+    "@isl/stdlib-uploads": "stdlib-uploads",
+    "@isl/uploads": "stdlib-uploads"
+  }
+}

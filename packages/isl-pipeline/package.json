@@ -6,7 +6,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "isl-pipeline": "./dist/cli.js"
+    "isl-pipeline": "./dist/cli.js",
+    "isl-performance": "./dist/performance/cli.js"
   },
   "exports": {
     ".": {
@@ -16,16 +17,21 @@
   },
   "files": ["dist"],
   "scripts": {
-    "build": "tsup src/index.ts src/cli.ts --format esm --dts --clean",
-    "dev": "tsup src/index.ts src/cli.ts --format esm --dts --watch",
+    "build": "tsup src/index.ts src/cli.ts src/performance/cli.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts src/cli.ts src/performance/cli.ts --format esm --dts --watch",
     "demo": "tsx demo.ts",
+    "demo:login": "tsx demo-login/run.ts",
+    "demo:login:failure": "tsx demo-login/failure-mode.ts",
     "cli": "tsx src/cli.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "benchmark": "tsx src/performance/cli.ts benchmark",
+    "perf:regression": "tsx src/performance/cli.ts regression"
   },
   "dependencies": {
     "@isl-lang/translator": "workspace:*",
     "@isl-lang/generator": "workspace:*",
-    "@isl-lang/proof": "workspace:*"
+    "@isl-lang/proof": "workspace:*",
+    "picocolors": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

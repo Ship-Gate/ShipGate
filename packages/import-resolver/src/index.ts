@@ -24,6 +24,34 @@ export * from './errors.js';
 export { ImportResolver, resolveImports } from './resolver.js';
 export { Bundler, bundleModules, createEmptyBundle, type BundlerOptions } from './bundler.js';
 
+// Stdlib registry
+export {
+  StdlibRegistryManager,
+  getStdlibRegistry,
+  createStdlibRegistry,
+  resetStdlibRegistry,
+  type StdlibModule,
+  type StdlibRegistry,
+  type ResolvedStdlibModule,
+} from './stdlib-registry.js';
+
+// Module graph builder
+export {
+  ModuleGraphBuilder,
+  buildModuleGraph,
+  getMergedAST,
+  hasCircularDependencies,
+  formatGraphDebug,
+  type AliasedImport,
+  type GraphModule,
+  type ModuleGraph,
+  type ModuleGraphDebug,
+  type ModuleGraphOptions,
+  type UseStatementSpec,
+  type ASTCache,
+  type ASTCacheEntry,
+} from './module-graph.js';
+
 /**
  * Options for the high-level resolve and bundle API
  */

@@ -32,6 +32,11 @@ import {
   fmt, printFmtResult, getFmtExitCode,
   lint, printLintResult, getLintExitCode,
   gate, printGateResult, getGateExitCode,
+  heal, printHealResult, getHealExitCode,
+  verifyProof, printProofVerifyResult, getProofVerifyExitCode,
+  createPolicyBundle, printCreateBundleResult, getCreateBundleExitCode,
+  verifyPolicyBundle, printVerifyBundleResult, getVerifyBundleExitCode,
+  watch,
 } from './commands/index.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -48,6 +53,9 @@ const COMMANDS = [
   'parse', 'check', 'gen', 'verify', 'repl', 'init', 'fmt', 'lint',
   'generate', 'build', // aliases
   'gate', // SHIP/NO-SHIP gate
+  'heal', // Auto-fix violations
+  'proof', // Proof verification
+  'watch', // Watch mode
   'vibecheck', // integration command
 ];
 
@@ -174,6 +182,7 @@ program
   .command('check [files...]')
   .description('Parse and type check ISL files')
   .option('-w, --watch', 'Watch for changes')
+  .option('--debug', 'Print resolved imports debug info')
   .action(async (files: string[], options) => {
     const opts = program.opts();
     const result = await check(files, {
@@ -181,6 +190,7 @@ program
       quiet: opts.format === 'quiet',
       watch: options.watch,
       config: opts.config,
+      debug: options.debug,
     });
     
     if (opts.format === 'json') {
@@ -192,6 +202,7 @@ program
           errors: f.errors,
           warnings: f.warnings,
           stats: f.stats,
+          imports: f.imports,
         })),
         totalErrors: result.totalErrors,
         totalWarnings: result.totalWarnings,
@@ -275,12 +286,51 @@ program
 program
   .command('verify <spec>')
   .description('Verify an implementation against an ISL specification')
-  .requiredOption('-i, --impl <file>', 'Implementation file to verify')
+  .option('-i, --impl <file>', 'Implementation file to verify')
+  .option('--proof <bundleDir>', 'Verify using proof bundle (instead of --impl)')
   .option('-t, --timeout <ms>', 'Test timeout in milliseconds', '30000')
   .option('-s, --min-score <score>', 'Minimum trust score to pass', '70')
   .option('-d, --detailed', 'Show detailed breakdown')
+  .option('--smt', 'Enable SMT verification for preconditions/postconditions')
+  .option('--smt-timeout <ms>', 'SMT solver timeout in milliseconds', '5000')
+  .option('--pbt', 'Enable property-based testing')
+  .option('--pbt-tests <num>', 'Number of PBT test iterations', '100')
+  .option('--pbt-seed <seed>', 'PBT random seed for reproducibility')
+  .option('--pbt-max-shrinks <num>', 'Maximum PBT shrinking iterations', '100')
   .action(async (spec: string, options) => {
     const opts = program.opts();
+    
+    // Handle proof bundle verification
+    if (options.proof) {
+      try {
+        const { verifyProof, formatProofVerificationResult } = await import('@isl-lang/proof');
+        const result = await verifyProof(options.proof, {
+          bundleDir: options.proof,
+          verbose: opts.verbose,
+          format: opts.format === 'json' ? 'json' : 'pretty',
+        });
+        
+        const output = formatProofVerificationResult(result, {
+          format: opts.format === 'json' ? 'json' : 'pretty',
+        });
+        console.log(output);
+        
+        process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
+        return;
+      } catch (error) {
+        console.error(chalk.red(`Error verifying proof bundle: ${error instanceof Error ? error.message : String(error)}`));
+        process.exit(ExitCode.ISL_ERROR);
+        return;
+      }
+    }
+    
+    // Regular verification (requires --impl)
+    if (!options.impl) {
+      console.error(chalk.red('Error: --impl is required when not using --proof'));
+      process.exit(ExitCode.USAGE_ERROR);
+      return;
+    }
+    
     const result = await verify(spec, {
       impl: options.impl,
       timeout: parseInt(options.timeout),
@@ -288,6 +338,12 @@ program
       detailed: options.detailed,
       format: opts.format === 'json' ? 'json' : 'text',
       verbose: opts.verbose,
+      smt: options.smt,
+      smtTimeout: options.smtTimeout ? parseInt(options.smtTimeout) : undefined,
+      pbt: options.pbt,
+      pbtTests: options.pbtTests ? parseInt(options.pbtTests) : undefined,
+      pbtSeed: options.pbtSeed ? parseInt(options.pbtSeed) : undefined,
+      pbtMaxShrinks: options.pbtMaxShrinks ? parseInt(options.pbtMaxShrinks) : undefined,
     });
     
     printVerifyResult(result, {
@@ -395,8 +451,8 @@ program
 // ─────────────────────────────────────────────────────────────────────────────
 
 program
-  .command('build <spec>')
-  .description('Full ISL build pipeline: parse → check → codegen → testgen → verify → evidence')
+  .command('build <pattern>')
+  .description('Full ISL build pipeline: parse → check → codegen → testgen → verify → evidence\n  Supports glob patterns: specs/**/*.isl')
   .option('-o, --output <dir>', 'Output directory', './generated')
   .option('-t, --target <target>', 'Code generation target (typescript)', 'typescript')
   .option('--test-framework <framework>', 'Test framework (vitest, jest)', 'vitest')
@@ -404,9 +460,25 @@ program
   .option('--no-html', 'Skip HTML report generation')
   .option('--no-chaos', 'Skip chaos test generation')
   .option('--no-helpers', 'Skip helper file generation')
-  .action(async (spec: string, options) => {
+  .action(async (pattern: string, options) => {
     const opts = program.opts();
     const isJson = opts.format === 'json';
+    
+    // Resolve pattern to files
+    const { glob } = await import('glob');
+    const specFiles = await glob(pattern, { ignore: ['node_modules/**', '.git/**'] });
+    
+    if (specFiles.length === 0) {
+      const error = `No ISL files found matching pattern: ${pattern}`;
+      if (!isJson) {
+        console.error(chalk.red(`Error: ${error}`));
+        console.log(chalk.gray('Try: isl build specs/**/*.isl'));
+      } else {
+        console.log(JSON.stringify({ success: false, error }, null, 2));
+      }
+      process.exit(ExitCode.USAGE_ERROR);
+      return;
+    }
     
     // Dynamically import build-runner to avoid startup cost when not used
     let buildRunner: typeof import('@isl-lang/build-runner');
@@ -426,22 +498,47 @@ program
     if (!isJson) {
       console.log('');
       console.log(chalk.bold.cyan('🔧 ISL Build Pipeline'));
-      console.log(chalk.gray(`  Spec: ${spec}`));
+      console.log(chalk.gray(`  Pattern: ${pattern}`));
+      console.log(chalk.gray(`  Files: ${specFiles.length}`));
       console.log(chalk.gray(`  Output: ${options.output}`));
       console.log('');
     }
 
-    try {
-      const result = await buildRunner.run({
-        specPath: spec,
-        outDir: options.output,
-        target: options.target as 'typescript',
-        testFramework: options.testFramework as 'vitest' | 'jest',
-        verify: options.verify,
-        htmlReport: options.html,
-        includeChaosTests: options.chaos,
-        includeHelpers: options.helpers,
-      });
+    // Build each spec file
+    const results = [];
+    let allSuccess = true;
+    
+    for (const spec of specFiles) {
+      try {
+        if (!isJson && specFiles.length > 1) {
+          console.log(chalk.gray(`Building ${spec}...`));
+        }
+        
+        const result = await buildRunner.run({
+          specPath: spec,
+          outDir: options.output,
+          target: options.target as 'typescript',
+          testFramework: options.testFramework as 'vitest' | 'jest',
+          verify: options.verify,
+          htmlReport: options.html,
+          includeChaosTests: options.chaos,
+          includeHelpers: options.helpers,
+        });
+        
+        results.push({ spec, result });
+        if (!result.success) {
+          allSuccess = false;
+        }
+      } catch (error) {
+        allSuccess = false;
+        const message = error instanceof Error ? error.message : String(error);
+        results.push({ spec, result: { success: false, errors: [{ message, stage: 'build' }] } });
+      }
+    }
+
+    // Aggregate results
+    if (specFiles.length === 1) {
+      const { result } = results[0]!;
 
       if (!result.success) {
         if (!isJson) {
@@ -518,14 +615,40 @@ program
       }
 
       process.exit(ExitCode.SUCCESS);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+    } else {
+      // Multiple files - show summary
       if (!isJson) {
-        console.error(chalk.red(`Build error: ${message}`));
+        const successCount = results.filter(r => r.result.success).length;
+        console.log('');
+        console.log(chalk.bold(allSuccess ? '✓ All builds complete!' : '✗ Some builds failed'));
+        console.log(chalk.gray(`  Success: ${successCount}/${specFiles.length}`));
+        console.log('');
+        
+        for (const { spec, result } of results) {
+          if (!result.success) {
+            console.log(chalk.red(`  ✗ ${spec}`));
+            for (const error of result.errors || []) {
+              const location = error.file ? `${error.file}${error.line ? `:${error.line}` : ''}` : '';
+              console.log(chalk.red(`    [${error.stage}] ${error.message}${location ? ` at ${location}` : ''}`));
+            }
+          } else {
+            console.log(chalk.green(`  ✓ ${spec}`));
+          }
+        }
+        console.log('');
       } else {
-        console.log(JSON.stringify({ success: false, error: message }, null, 2));
+        console.log(JSON.stringify({
+          success: allSuccess,
+          results: results.map(({ spec, result }) => ({
+            spec,
+            success: result.success,
+            files: result.files?.length || 0,
+            errors: result.errors || [],
+          })),
+        }, null, 2));
       }
-      process.exit(ExitCode.ISL_ERROR);
+      
+      process.exit(allSuccess ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
     }
   });
 
@@ -659,6 +782,47 @@ program
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Policy Bundle Commands
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('policy bundle create')
+  .description('Create a policy bundle from current pack registry')
+  .option('-o, --output <file>', 'Output bundle file path (default: stdout)')
+  .option('-d, --description <text>', 'Bundle description')
+  .option('--min-severity <level>', 'Minimum severity to include (error, warning, info)', 'error')
+  .option('-c, --config <file>', 'Pack configuration file (JSON)')
+  .action(async (options) => {
+    const opts = program.opts();
+    const result = await createPolicyBundle({
+      output: options.output,
+      description: options.description,
+      minSeverity: options.minSeverity as 'error' | 'warning' | 'info',
+      config: options.config,
+      verbose: opts.verbose,
+    });
+    
+    printCreateBundleResult(result, { verbose: opts.verbose });
+    process.exit(getCreateBundleExitCode(result));
+  });
+
+program
+  .command('policy bundle verify <bundle>')
+  .description('Verify a policy bundle against current packs')
+  .option('--no-compatibility', 'Skip compatibility checks')
+  .action(async (bundle: string, options) => {
+    const opts = program.opts();
+    const result = await verifyPolicyBundle({
+      bundle,
+      checkCompatibility: options.compatibility !== false,
+      verbose: opts.verbose,
+    });
+    
+    printVerifyBundleResult(result, { verbose: opts.verbose });
+    process.exit(getVerifyBundleExitCode(result));
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Gate Command (SHIP/NO-SHIP)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -702,6 +866,92 @@ program
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Heal Command
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('heal <pattern>')
+  .description('Automatically fix violations in code to pass the gate')
+  .option('-s, --spec <file>', 'ISL spec file (auto-discovers if not provided)')
+  .option('--max-iterations <n>', 'Maximum healing iterations (default: 8)', '8')
+  .option('--stop-on-repeat <n>', 'Stop after N identical fingerprints (default: 2)', '2')
+  .action(async (pattern: string, options) => {
+    const opts = program.opts();
+    const result = await heal(pattern, {
+      spec: options.spec,
+      maxIterations: parseInt(options.maxIterations),
+      stopOnRepeat: parseInt(options.stopOnRepeat),
+      format: opts.format,
+      verbose: opts.verbose,
+    });
+    
+    printHealResult(result, { format: opts.format });
+    process.exit(getHealExitCode(result));
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Proof Verify Command
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('proof verify <bundle-path>')
+  .description('Verify a proof bundle is valid and check its integrity')
+  .option('--sign-secret <secret>', 'Secret for signature verification')
+  .option('--skip-file-check', 'Skip file completeness check')
+  .option('--skip-signature-check', 'Skip signature verification')
+  .action(async (bundlePath: string, options) => {
+    const opts = program.opts();
+    const result = await verifyProof(bundlePath, {
+      signSecret: options.signSecret,
+      skipFileCheck: options.skipFileCheck,
+      skipSignatureCheck: options.skipSignatureCheck,
+      format: opts.format,
+      verbose: opts.verbose,
+    });
+    
+    printProofVerifyResult(result, { format: opts.format });
+    process.exit(getProofVerifyExitCode(result));
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Watch Command
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('watch [files...]')
+  .description('Watch ISL files and rerun parse/check + optionally gate on changes')
+  .option('--gate', 'Run gate after check')
+  .option('--heal', 'Run heal after check')
+  .option('--changed-only', 'Only process changed files (not all files)')
+  .option('-i, --impl <file>', 'Implementation path for gate (required if --gate)')
+  .option('-t, --threshold <score>', 'Gate threshold (default: 95)', '95')
+  .action(async (files: string[], options) => {
+    const opts = program.opts();
+    
+    if (options.gate && !options.impl) {
+      console.error(chalk.red('Error: --impl is required when using --gate'));
+      process.exit(ExitCode.USAGE_ERROR);
+      return;
+    }
+
+    const result = await watch(files, {
+      gate: options.gate,
+      heal: options.heal,
+      changedOnly: options.changedOnly,
+      impl: options.impl,
+      threshold: parseInt(options.threshold),
+      verbose: opts.verbose,
+      quiet: opts.quiet || opts.format === 'quiet',
+      debounceMs: 300,
+    });
+
+    if (!result.started) {
+      console.error(chalk.red(`Failed to start watch: ${result.error ?? 'Unknown error'}`));
+      process.exit(ExitCode.ISL_ERROR);
+    }
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Unknown Command Handler
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -724,14 +974,23 @@ program.on('command:*', ([cmd]) => {
 
 program.addHelpText('after', `
 ${chalk.bold('Examples:')}
+  ${chalk.gray('# Initialize a new ISL project')}
+  $ isl init
+
+  ${chalk.gray('# Build ISL spec (parse → check → codegen → verify)')}
+  $ isl build specs/**/*.isl
+
+  ${chalk.gray('# Heal code to fix violations automatically')}
+  $ isl heal src/**/*.ts
+
+  ${chalk.gray('# Verify implementation against spec')}
+  $ isl verify src/auth.isl --impl src/auth.ts
+
+  ${chalk.gray('# Verify proof bundle')}
+  $ isl proof verify ./proof-bundles/auth-bundle
+
   ${chalk.gray('# SHIP/NO-SHIP gate (the main workflow)')}
   $ isl gate src/auth.isl --impl src/auth.ts
-
-  ${chalk.gray('# Gate with custom threshold')}
-  $ isl gate src/auth.isl --impl src/ --threshold 90
-
-  ${chalk.gray('# Gate in CI mode (minimal output)')}
-  $ isl gate src/auth.isl --impl src/ --ci
 
   ${chalk.gray('# Parse and show AST')}
   $ isl parse src/auth.isl
@@ -742,21 +1001,30 @@ ${chalk.bold('Examples:')}
   ${chalk.gray('# Generate TypeScript code')}
   $ isl gen ts src/auth.isl
 
-  ${chalk.gray('# Verify implementation')}
-  $ isl verify src/auth.isl --impl dist/auth.js
-
   ${chalk.gray('# Format ISL file')}
   $ isl fmt src/auth.isl
 
   ${chalk.gray('# Start REPL')}
   $ isl repl
 
-  ${chalk.gray('# Initialize new project')}
-  $ isl init my-api --template api
+  ${chalk.gray('# Watch ISL files for changes')}
+  $ isl watch
+
+  ${chalk.gray('# Watch with gate on changes')}
+  $ isl watch --gate --impl src/
+
+  ${chalk.gray('# Watch only changed files')}
+  $ isl watch --changed-only
+
+${chalk.bold('JSON Output:')}
+  All commands support --json or --format json for machine-readable output:
+  $ isl build specs/**/*.isl --json
+  $ isl heal src/**/*.ts --json
+  $ isl verify src/auth.isl --impl src/auth.ts --json
 
 ${chalk.bold('Exit Codes:')}
-  ${chalk.gray('0')}  SHIP (or success)
-  ${chalk.gray('1')}  NO-SHIP (or ISL errors)
+  ${chalk.gray('0')}  Success (SHIP)
+  ${chalk.gray('1')}  ISL errors (NO-SHIP, parse/type/verification failures)
   ${chalk.gray('2')}  Usage errors (bad flags, missing file)
   ${chalk.gray('3')}  Internal errors
 

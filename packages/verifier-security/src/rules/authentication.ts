@@ -2,12 +2,12 @@
 // Authentication Security Rules
 // ============================================================================
 
-import type { SecurityRule, SecurityFinding, RuleContext, Behavior } from '../types.js';
+import type { DomainSecurityRule, SecurityFinding, RuleContext, Behavior } from '../types.js';
 
 /**
  * Check for missing authentication
  */
-export const missingAuthenticationRule: SecurityRule = {
+export const missingAuthenticationRule: DomainSecurityRule = {
   id: 'SEC001',
   name: 'Missing Authentication',
   category: 'authentication',
@@ -62,7 +62,7 @@ function checkBehaviorAuth(domainName: string, behavior: Behavior): SecurityFind
 /**
  * Check for weak authentication methods
  */
-export const weakAuthMethodRule: SecurityRule = {
+export const weakAuthMethodRule: DomainSecurityRule = {
   id: 'SEC002',
   name: 'Weak Authentication Method',
   category: 'authentication',
@@ -99,7 +99,7 @@ export const weakAuthMethodRule: SecurityRule = {
 /**
  * Check for missing token validation
  */
-export const missingTokenValidationRule: SecurityRule = {
+export const missingTokenValidationRule: DomainSecurityRule = {
   id: 'SEC003',
   name: 'Missing Token Validation',
   category: 'authentication',
@@ -131,7 +131,7 @@ export const missingTokenValidationRule: SecurityRule = {
 /**
  * Check for password handling in preconditions
  */
-export const passwordExposureRule: SecurityRule = {
+export const passwordExposureRule: DomainSecurityRule = {
   id: 'SEC004',
   name: 'Password Exposure in Conditions',
   category: 'authentication',
@@ -176,7 +176,7 @@ export const passwordExposureRule: SecurityRule = {
   },
 };
 
-export const authenticationRules: SecurityRule[] = [
+export const authenticationRules: DomainSecurityRule[] = [
   missingAuthenticationRule,
   weakAuthMethodRule,
   missingTokenValidationRule,

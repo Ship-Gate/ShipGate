@@ -1,0 +1,51 @@
+{
+  "name": "@isl-lang/codegen-core",
+  "version": "0.1.0",
+  "description": "Core utilities for deterministic ISL code generation",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./formatter": {
+      "types": "./dist/formatter.d.ts",
+      "import": "./dist/formatter.js"
+    },
+    "./sorter": {
+      "types": "./dist/sorter.d.ts",
+      "import": "./dist/sorter.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/formatter.ts src/sorter.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:snapshot": "vitest run --update",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "prettier": "^3.2.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "rimraf": "^5.0.5"
+  },
+  "keywords": [
+    "isl",
+    "codegen",
+    "deterministic",
+    "formatter"
+  ],
+  "author": "ISL Team",
+  "license": "MIT"
+}

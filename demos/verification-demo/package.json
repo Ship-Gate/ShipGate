@@ -1,0 +1,24 @@
+{
+  "name": "@demos/verification-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Demo showing ISL verification: evaluator, stdlib imports, semantic analysis, and PROVEN output",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npx isl check spec/*.isl",
+    "verify": "npx isl verify spec/valid-auth.isl --impl src/auth.ts",
+    "gate": "npx isl gate spec/valid-auth.isl --impl src/",
+    "demo": "node --experimental-strip-types scripts/run-demo.ts"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1"
+  }
+}

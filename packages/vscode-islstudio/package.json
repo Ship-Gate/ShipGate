@@ -66,9 +66,29 @@
         "icon": "$(git-compare)"
       },
       {
+        "command": "islstudio.healUntilShip",
+        "title": "ISL Studio: Heal Until Ship",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "islstudio.setIntentBlocks",
+        "title": "ISL Studio: Set Intent Blocks",
+        "icon": "$(symbol-structure)"
+      },
+      {
         "command": "islstudio.explainRule",
         "title": "ISL Studio: Explain Rule",
         "icon": "$(book)"
+      },
+      {
+        "command": "islstudio.viewProofBundle",
+        "title": "ISL Studio: View Proof Bundle",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "islstudio.refreshSidebar",
+        "title": "ISL Studio: Refresh Sidebar",
+        "icon": "$(refresh)"
       },
       {
         "command": "islstudio.createBaseline",
@@ -91,11 +111,33 @@
         "icon": "$(output)"
       }
     ],
+    "views": {
+      "islstudio": [
+        {
+          "id": "islstudioSidebar",
+          "name": "ISL Studio",
+          "when": "islstudio.enable"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "islstudio",
+          "title": "ISL Studio",
+          "icon": "resources/icon.png"
+        }
+      ]
+    },
     "menus": {
       "commandPalette": [
         { "command": "islstudio.runGate" },
         { "command": "islstudio.runGateChangedOnly" },
+        { "command": "islstudio.healUntilShip" },
+        { "command": "islstudio.setIntentBlocks" },
         { "command": "islstudio.explainRule" },
+        { "command": "islstudio.viewProofBundle" },
+        { "command": "islstudio.refreshSidebar" },
         { "command": "islstudio.createBaseline" },
         { "command": "islstudio.useBaseline" },
         { "command": "islstudio.init" }

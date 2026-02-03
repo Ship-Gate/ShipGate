@@ -56,6 +56,158 @@ export interface CodeExample {
 // ============================================================================
 
 const EXPLANATIONS: Record<string, RuleExplanation> = {
+  // INTENT RULES
+  'intent/audit-required': {
+    ruleId: 'intent/audit-required',
+    why: 'Audit trails are legally required for compliance (SOC2, HIPAA, PCI-DSS) and essential for incident response. Missing audit on ANY exit path creates blind spots that attackers exploit and auditors flag.',
+    triggers: [
+      'HTTP exit path (return NextResponse.json/res.json) without preceding audit call',
+      'Rate limit (429) response without audit({ success: false, reason: "rate_limited" })',
+      'Validation error (400) without audit({ success: false, reason: "validation_failed" })',
+      'Auth error (401/403) without audit({ success: false, reason: "unauthorized" })',
+      'Audit payload missing required fields: action, success, timestamp',
+      'Audit payload missing requestId/correlationId for tracing',
+      'Audit with success:true on error paths (must be success:false)',
+      'Failure audit missing "reason" field',
+      'PII (email, password, token, etc.) in audit payload',
+    ],
+    fixes: [
+      {
+        name: 'Add audit before every return',
+        description: 'Each exit path must have an audit call capturing the outcome',
+        code: `// Success path
+await auditAttempt({
+  action: "user_login",
+  success: true,
+  timestamp: Date.now(),
+  requestId: req.headers.get("x-request-id"),
+});
+return NextResponse.json({ user });
+
+// Failure path (always include reason)
+await auditAttempt({
+  action: "user_login",
+  success: false,
+  reason: "invalid_credentials",
+  timestamp: Date.now(),
+  requestId,
+});
+return NextResponse.json({ error: "Invalid" }, { status: 401 });`,
+      },
+      {
+        name: 'Use auditAttempt helper for consistency',
+        description: 'Create a shared helper that ensures correct fields',
+        code: `async function auditAttempt(payload: {
+  action: string;
+  success: boolean;
+  reason?: string; // Required when success: false
+  timestamp: number;
+  requestId?: string;
+  // NO PII allowed: email, password, token, ssn, etc.
+}) {
+  await audit(payload);
+}`,
+      },
+      {
+        name: 'Audit all exit path types',
+        description: 'Each type of failure needs specific handling',
+        code: `// Rate limit (429)
+await auditAttempt({ action, success: false, reason: "rate_limited", timestamp, requestId });
+return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+
+// Validation (400)
+await auditAttempt({ action, success: false, reason: "validation_failed", timestamp, requestId });
+return NextResponse.json({ error: result.error.message }, { status: 400 });
+
+// Auth (401/403)
+await auditAttempt({ action, success: false, reason: "unauthorized", timestamp, requestId });
+return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+// Success (2xx)
+await auditAttempt({ action, success: true, timestamp, requestId });
+return NextResponse.json({ data });`,
+      },
+    ],
+    examples: [
+      {
+        title: 'Audit all exit paths in login handler',
+        bad: `export async function POST(req: Request) {
+  const { email, password } = await req.json();
+  
+  // Rate limit check - NO AUDIT!
+  if (isRateLimited(email)) {
+    return NextResponse.json({ error: "Too many attempts" }, { status: 429 });
+  }
+  
+  // Validation - NO AUDIT!
+  if (!email || !password) {
+    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+  }
+  
+  const user = await authenticate(email, password);
+  if (!user) {
+    // Auth failure - NO AUDIT!
+    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+  }
+  
+  // Only success is audited
+  await audit({ action: "login", success: true });
+  return NextResponse.json({ user });
+}`,
+        good: `export async function POST(req: Request) {
+  const requestId = req.headers.get("x-request-id") ?? crypto.randomUUID();
+  const action = "user_login";
+  const { email, password } = await req.json();
+  
+  // Rate limit - AUDITED
+  if (isRateLimited(email)) {
+    await auditAttempt({ action, success: false, reason: "rate_limited", timestamp: Date.now(), requestId });
+    return NextResponse.json({ error: "Too many attempts" }, { status: 429 });
+  }
+  
+  // Validation - AUDITED
+  if (!email || !password) {
+    await auditAttempt({ action, success: false, reason: "validation_failed", timestamp: Date.now(), requestId });
+    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+  }
+  
+  const user = await authenticate(email, password);
+  if (!user) {
+    // Auth failure - AUDITED
+    await auditAttempt({ action, success: false, reason: "invalid_credentials", timestamp: Date.now(), requestId });
+    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+  }
+  
+  // Success - AUDITED
+  await auditAttempt({ action, success: true, timestamp: Date.now(), requestId });
+  return NextResponse.json({ user });
+}`,
+      },
+      {
+        title: 'No PII in audit payload',
+        bad: `await audit({
+  action: "login",
+  success: true,
+  email: user.email,      // PII!
+  password: password,     // PII!
+  token: session.token,   // PII!
+});`,
+        good: `await audit({
+  action: "login",
+  success: true,
+  userId: user.id,        // Safe - ID only
+  timestamp: Date.now(),
+  requestId,
+});`,
+      },
+    ],
+    docs: [
+      'https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html',
+      'https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/10-Testing_for_Insufficient_Logging_and_Monitoring',
+    ],
+    related: ['intent/rate-limit-required', 'intent/no-pii-logging', 'pii/logged-sensitive-data'],
+  },
+
   // AUTH RULES
   'auth/bypass-detected': {
     ruleId: 'auth/bypass-detected',
@@ -360,6 +512,211 @@ router.post("/login", loginLimiter, async (req, res) => {
       'https://stripe.com/docs/webhooks/signatures',
     ],
     related: ['payments/bypass-detected'],
+  },
+
+  // QUALITY RULES
+  'quality/no-stubbed-handlers': {
+    ruleId: 'quality/no-stubbed-handlers',
+    why: 'Stubbed handlers and placeholder code indicate incomplete implementation. Shipping code that throws "Not implemented" or has TODO postconditions means the feature is broken in production. This is a ship blocker.',
+    triggers: [
+      'throw new Error("Not implemented")',
+      'throw new Error("TODO")',
+      'throw new Error("STUB") or "PLACEHOLDER"',
+      'TODO markers under "ISL postconditions to satisfy"',
+      'Function bodies with only "// TODO: implement"',
+      'Handler functions (like userLogin) that throw instead of implementing',
+      'Placeholder comments like "// Implementation goes here"',
+    ],
+    fixes: [
+      {
+        name: 'Implement the handler logic',
+        description: 'Replace stub with actual business logic',
+        code: `// Before: stub
+export async function userLogin(email: string, password: string) {
+  throw new Error('Not implemented');
+}
+
+// After: implemented
+export async function userLogin(email: string, password: string) {
+  const user = await db.users.findByEmail(email);
+  if (!user || !await verifyPassword(password, user.passwordHash)) {
+    throw new UnauthorizedError('Invalid credentials');
+  }
+  return createSession(user);
+}`,
+      },
+      {
+        name: 'Satisfy all postconditions',
+        description: 'Implement each TODO marked in postconditions section',
+        code: `// ISL postconditions to satisfy:
+// ✓ User credentials validated against database
+// ✓ Session token created on success
+// ✓ Failed attempts audited
+
+// All postconditions now implemented in code above`,
+      },
+      {
+        name: 'Move to allowlist if intentional stub',
+        description: 'If stub is for testing, move to __mocks__ or fixtures directory',
+        code: `// Move stub to: src/__mocks__/auth.ts
+// Or: test-fixtures/stubs.ts
+// These paths are in the default allowlist`,
+      },
+    ],
+    examples: [
+      {
+        title: 'Replace Not implemented error',
+        bad: `export async function processPayment(amount: number, card: CardDetails) {
+  throw new Error('Not implemented');
+}`,
+        good: `export async function processPayment(amount: number, card: CardDetails) {
+  const validated = PaymentSchema.parse({ amount, card });
+  const result = await stripe.charges.create({
+    amount: validated.amount,
+    currency: 'usd',
+    source: validated.card.token,
+  });
+  await auditAttempt({ action: 'payment', success: true, amount });
+  return result;
+}`,
+      },
+      {
+        title: 'Complete postconditions',
+        bad: `// ISL postconditions to satisfy:
+// - TODO: Validate input schema
+// - TODO: Check user permissions
+// - TODO: Audit the action
+
+export function updateUser(id: string, data: unknown) {
+  return db.users.update(id, data);
+}`,
+        good: `// ISL postconditions to satisfy:
+// ✓ Validate input schema
+// ✓ Check user permissions
+// ✓ Audit the action
+
+export async function updateUser(id: string, data: unknown, ctx: Context) {
+  const validated = UserUpdateSchema.parse(data);
+  await requirePermission(ctx.user, 'users:update', id);
+  const result = await db.users.update(id, validated);
+  await auditAttempt({ action: 'user_update', userId: id, success: true });
+  return result;
+}`,
+      },
+      {
+        title: 'Move test stubs to proper location',
+        bad: `// src/auth/login.ts (production code)
+export function mockLogin() {
+  throw new Error('Not implemented - test stub');
+}`,
+        good: `// src/__mocks__/auth.ts (allowlisted)
+export function mockLogin() {
+  return { userId: 'test-123', token: 'mock-token' };
+}`,
+      },
+    ],
+    docs: [
+      'https://wiki.c2.com/?StubObject',
+    ],
+    related: ['quality/no-todo-comments', 'quality/no-debug-code'],
+  },
+
+  'quality/no-todo-comments': {
+    ruleId: 'quality/no-todo-comments',
+    why: 'TODOs indicate incomplete work. Critical TODOs (TODO: CRITICAL, FIXME: BLOCKER) must be resolved before shipping. High TODO counts suggest rushed development.',
+    triggers: [
+      'TODO: CRITICAL in code',
+      'FIXME: BLOCKER comments',
+      'XXX: markers (urgent issues)',
+      'More than 5 TODO/FIXME comments in a file',
+    ],
+    fixes: [
+      {
+        name: 'Resolve critical TODOs',
+        description: 'Critical TODOs must be fixed before ship',
+        code: `// Before
+// TODO: CRITICAL - fix SQL injection vulnerability
+const query = \`SELECT * FROM users WHERE id = \${id}\`;
+
+// After
+const [user] = await db.query('SELECT * FROM users WHERE id = ?', [id]);`,
+      },
+      {
+        name: 'Convert to tracked issues',
+        description: 'Move non-critical TODOs to issue tracker',
+        code: `// Before
+// TODO: refactor this to use async/await
+
+// After (create GitHub issue, remove comment)
+// Or add issue reference: // See: #1234`,
+      },
+    ],
+    examples: [
+      {
+        title: 'Fix critical TODO',
+        bad: `// TODO: CRITICAL - user can bypass payment
+if (user.isAdmin) {
+  return { success: true };
+}`,
+        good: `// Fixed - admin still needs to pay
+const charge = await processPayment(user, amount);
+return { success: charge.paid };`,
+      },
+    ],
+    docs: [],
+    related: ['quality/no-stubbed-handlers'],
+  },
+
+  'quality/no-debug-code': {
+    ruleId: 'quality/no-debug-code',
+    why: 'debugger statements and debug flags left in production code can expose internals, slow execution, and create security vulnerabilities.',
+    triggers: [
+      'debugger; statement',
+      'DEBUG = true flags',
+      'ENABLE_DEBUG flags',
+      'IS_DEBUG = true',
+    ],
+    fixes: [
+      {
+        name: 'Remove debugger statements',
+        description: 'Delete all debugger; lines',
+        code: `// Before
+function process() {
+  debugger;
+  return data;
+}
+
+// After
+function process() {
+  return data;
+}`,
+      },
+      {
+        name: 'Use environment variables for debug flags',
+        description: 'Read debug state from environment, default to false',
+        code: `// Before
+const DEBUG = true;
+
+// After
+const DEBUG = process.env.DEBUG === 'true';`,
+      },
+    ],
+    examples: [
+      {
+        title: 'Remove debugger statement',
+        bad: `export function calculateTotal(items) {
+  debugger;
+  return items.reduce((sum, i) => sum + i.price, 0);
+}`,
+        good: `export function calculateTotal(items) {
+  return items.reduce((sum, i) => sum + i.price, 0);
+}`,
+      },
+    ],
+    docs: [
+      'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/debugger',
+    ],
+    related: ['quality/no-stubbed-handlers', 'pii/console-in-production'],
   },
 };
 

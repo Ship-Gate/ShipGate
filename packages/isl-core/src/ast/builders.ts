@@ -154,13 +154,36 @@ export function domainDeclaration(
     kind: 'DomainDeclaration',
     name,
     span: s,
+    uses: options?.uses ?? [],
     imports: options?.imports ?? [],
     entities: options?.entities ?? [],
     types: options?.types ?? [],
     enums: options?.enums ?? [],
     behaviors: options?.behaviors ?? [],
     invariants: options?.invariants ?? [],
+    uiBlueprints: options?.uiBlueprints ?? [],
     version: options?.version,
+  };
+}
+
+/**
+ * Create a UseStatement AST node
+ *
+ * @param module - Module specifier (identifier for bare names, string literal for paths)
+ * @param s - Source span
+ * @param options - Optional alias and version
+ */
+export function useStatement(
+  module: AST.Identifier | AST.StringLiteral,
+  s: SourceSpan,
+  options?: { alias?: AST.Identifier; version?: AST.StringLiteral }
+): AST.UseStatement {
+  return {
+    kind: 'UseStatement',
+    module,
+    alias: options?.alias,
+    version: options?.version,
+    span: s,
   };
 }
 
@@ -324,4 +347,163 @@ export function temporalRequirement(
     duration: options?.duration,
     percentile: options?.percentile,
   };
+}
+
+// ============================================
+// Chaos Engineering Builders
+// ============================================
+
+export function chaosBlock(
+  scenarios: AST.ChaosScenario[],
+  s: SourceSpan
+): AST.ChaosBlock {
+  return { kind: 'ChaosBlock', scenarios, span: s };
+}
+
+export function chaosScenario(
+  name: AST.StringLiteral,
+  injections: AST.ChaosInjection[],
+  expectations: AST.ChaosExpectation[],
+  s: SourceSpan,
+  options?: {
+    retries?: AST.NumberLiteral;
+    withClauses?: AST.ChaosWithClause[];
+  }
+): AST.ChaosScenario {
+  return {
+    kind: 'ChaosScenario',
+    name,
+    injections,
+    expectations,
+    span: s,
+    retries: options?.retries,
+    withClauses: options?.withClauses,
+  };
+}
+
+export function chaosInjection(
+  type: AST.Identifier,
+  args: AST.ChaosArgument[],
+  s: SourceSpan
+): AST.ChaosInjection {
+  return { kind: 'ChaosInjection', type, arguments: args, span: s };
+}
+
+export function chaosExpectation(
+  expression: AST.Expression,
+  s: SourceSpan
+): AST.ChaosExpectation {
+  return { kind: 'ChaosExpectation', expression, span: s };
+}
+
+export function chaosArgument(
+  name: AST.Identifier,
+  value: AST.Expression,
+  s: SourceSpan
+): AST.ChaosArgument {
+  return { kind: 'ChaosArgument', name, value, span: s };
+}
+
+export function chaosWithClause(
+  name: AST.Identifier,
+  args: AST.Expression[],
+  s: SourceSpan
+): AST.ChaosWithClause {
+  return { kind: 'ChaosWithClause', name, arguments: args, span: s };
+}
+
+// ============================================
+// UI Blueprint Builders
+// ============================================
+
+export function uiBlueprintDeclaration(
+  name: AST.Identifier,
+  sections: AST.UISection[],
+  s: SourceSpan,
+  options?: { tokens?: AST.UITokenBlock; constraints?: AST.UIConstraintBlock }
+): AST.UIBlueprintDeclaration {
+  return {
+    kind: 'UIBlueprintDeclaration',
+    name,
+    sections,
+    tokens: options?.tokens,
+    constraints: options?.constraints,
+    span: s,
+  };
+}
+
+export function uiTokenBlock(tokens: AST.UIToken[], s: SourceSpan): AST.UITokenBlock {
+  return { kind: 'UITokenBlock', tokens, span: s };
+}
+
+export function uiToken(
+  name: AST.Identifier,
+  category: 'color' | 'spacing' | 'typography' | 'border' | 'shadow',
+  value: AST.Expression,
+  s: SourceSpan
+): AST.UIToken {
+  return { kind: 'UIToken', name, category, value, span: s };
+}
+
+export function uiSection(
+  name: AST.Identifier,
+  type: 'hero' | 'features' | 'testimonials' | 'cta' | 'footer' | 'header' | 'content',
+  blocks: AST.UIContentBlock[],
+  s: SourceSpan,
+  layout?: AST.UILayout
+): AST.UISection {
+  return { kind: 'UISection', name, type, blocks, layout, span: s };
+}
+
+export function uiLayout(
+  type: 'grid' | 'flex' | 'stack',
+  s: SourceSpan,
+  options?: { columns?: AST.NumberLiteral; gap?: AST.Expression; responsive?: AST.UIResponsive[] }
+): AST.UILayout {
+  return {
+    kind: 'UILayout',
+    type,
+    columns: options?.columns,
+    gap: options?.gap,
+    responsive: options?.responsive,
+    span: s,
+  };
+}
+
+export function uiResponsive(
+  breakpoint: 'mobile' | 'tablet' | 'desktop',
+  layout: AST.UILayout,
+  s: SourceSpan
+): AST.UIResponsive {
+  return { kind: 'UIResponsive', breakpoint, layout, span: s };
+}
+
+export function uiContentBlock(
+  type: 'text' | 'heading' | 'image' | 'button' | 'form' | 'link' | 'container',
+  props: AST.UIBlockProperty[],
+  s: SourceSpan,
+  children?: AST.UIContentBlock[]
+): AST.UIContentBlock {
+  return { kind: 'UIContentBlock', type, props, children, span: s };
+}
+
+export function uiBlockProperty(
+  name: AST.Identifier,
+  value: AST.Expression,
+  s: SourceSpan
+): AST.UIBlockProperty {
+  return { kind: 'UIBlockProperty', name, value, span: s };
+}
+
+export function uiConstraintBlock(constraints: AST.UIConstraint[], s: SourceSpan): AST.UIConstraintBlock {
+  return { kind: 'UIConstraintBlock', constraints, span: s };
+}
+
+export function uiConstraint(
+  type: 'a11y' | 'seo' | 'perf' | 'security',
+  rule: AST.Identifier,
+  s: SourceSpan,
+  value?: AST.Expression
+): AST.UIConstraint {
+  return { kind: 'UIConstraint', type, rule, value, span: s };
 }

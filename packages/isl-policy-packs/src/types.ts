@@ -35,6 +35,14 @@ export interface PolicyRule {
   evaluate: (context: RuleContext) => RuleViolation | null;
   /** Optional configuration */
   config?: Record<string, unknown>;
+  /** Deprecation metadata (if rule is deprecated) */
+  deprecated?: boolean;
+  /** Version when rule was deprecated */
+  deprecatedSince?: string;
+  /** Replacement rule ID (if rule was renamed/replaced) */
+  replacementRuleId?: string;
+  /** Deprecation message */
+  deprecationMessage?: string;
 }
 
 /**
@@ -133,6 +141,26 @@ export interface TruthpackData {
   auth?: AuthDefinition;
   /** Contract definitions */
   contracts?: ContractDefinition[];
+  /** Runtime traces for trace-based rules */
+  traces?: TraceEntry[];
+}
+
+/**
+ * Trace entry for runtime verification
+ */
+export interface TraceEntry {
+  /** Trace event type */
+  type: 'log' | 'call' | 'return' | 'error' | 'state';
+  /** Timestamp */
+  timestamp?: string;
+  /** Event data */
+  data: unknown;
+  /** Source location */
+  source?: {
+    file?: string;
+    line?: number;
+    function?: string;
+  };
 }
 
 export interface RouteDefinition {

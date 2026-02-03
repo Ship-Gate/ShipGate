@@ -1,0 +1,11 @@
+# Output directory (generated during demo runs)
+output/
+!output/.gitkeep
+
+# Build artifacts
+dist/
+node_modules/
+
+# Terminal recordings
+*.txt
+!README.md

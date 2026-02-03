@@ -7,6 +7,7 @@
  *   npx islstudio gate --all        # Run on all files
  *   npx islstudio gate --ci         # CI mode (machine readable)
  *   npx islstudio gate --output json
+ *   npx islstudio proof verify <bundle>  # Verify a proof bundle
  */
 
 import * as fs from 'fs/promises';
@@ -17,6 +18,7 @@ import { formatTerminalOutput, formatJsonOutput, formatWithExplanations, formatS
 import { generateHtmlReport } from './report.js';
 import { runRulesCommand } from './rules-cli.js';
 import { saveBaseline, loadBaseline } from './baseline.js';
+import { runProofCommand } from './proof-cli.js';
 
 // ============================================================================
 // CLI Entry Point
@@ -40,6 +42,8 @@ async function main() {
     await runRulesCommand(args.slice(1));
   } else if (command === 'baseline') {
     await runBaselineCommand(args.slice(1));
+  } else if (command === 'proof') {
+    await runProofCommand(args.slice(1));
   } else if (command === 'version' || command === '--version' || command === '-v') {
     console.log('islstudio v0.1.1');
   } else {
@@ -242,6 +246,7 @@ USAGE
 
 COMMANDS
   gate          Run the gate on your code
+  proof         Manage and verify proof bundles
   init          Set up ISL Studio in your project
   rules         Manage and explore rules
   baseline      Manage baseline for legacy code
@@ -252,9 +257,15 @@ GATE OPTIONS
   --all, -a        Check all files (not just changed)
   --changed-only   Only check files changed in git
   --ci             CI mode (exit 1 on NO_SHIP)
+  --json           Output JSON (shorthand for --output json, healer-compatible)
   --output, -o     Output format: text, json, sarif
   --explain, -e    Show detailed fix guidance for each violation
   --config, -c     Path to config file
+
+PROOF COMMANDS
+  islstudio proof verify <bundle>   Verify a proof bundle
+  islstudio proof create            Create proof bundle from current state
+  islstudio proof show <bundle>     Display proof bundle summary
 
 RULES COMMANDS
   islstudio rules list              List all rules
@@ -277,6 +288,7 @@ EXAMPLES
   islstudio gate --explain          # Show fix guidance
   islstudio gate --ci --output json # CI mode with JSON output
   islstudio gate --output sarif     # SARIF for GitHub Security tab
+  islstudio proof verify ./proof-bundle-2026-02-02
   islstudio rules explain auth/bypass-detected
 
 CONFIG

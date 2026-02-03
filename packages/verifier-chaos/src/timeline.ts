@@ -13,7 +13,12 @@ export type EventType =
   | 'assertion_result'
   | 'error'
   | 'recovery'
-  | 'cleanup';
+  | 'cleanup'
+  | 'rate_limit_check'
+  | 'rate_limit_queued'
+  | 'rate_limit_dropped'
+  | 'rate_limit_rejected'
+  | 'rate_limit_burst';
 
 export interface TimelineEvent {
   id: string;

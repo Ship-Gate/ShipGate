@@ -61,16 +61,20 @@ export class Parser {
     const name = this.parseIdentifier();
     this.expect(TokenType.LBRACE, "Expected '{' after domain name");
     
+    const uses: AST.UseStatement[] = [];
     const imports: AST.ImportDeclaration[] = [];
     const entities: AST.EntityDeclaration[] = [];
     const types: AST.TypeDeclaration[] = [];
     const enums: AST.EnumDeclaration[] = [];
     const behaviors: AST.BehaviorDeclaration[] = [];
     const invariants: AST.InvariantsBlock[] = [];
+    const uiBlueprints: AST.UIBlueprintDeclaration[] = [];
     let version: AST.StringLiteral | undefined;
 
     while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
-      if (this.check(TokenType.ENTITY)) {
+      if (this.check(TokenType.USE)) {
+        uses.push(this.parseUseStatement());
+      } else if (this.check(TokenType.ENTITY)) {
         entities.push(this.parseEntity());
       } else if (this.check(TokenType.BEHAVIOR)) {
         behaviors.push(this.parseBehavior());
@@ -80,6 +84,8 @@ export class Parser {
         enums.push(this.parseEnum());
       } else if (this.check(TokenType.INVARIANTS)) {
         invariants.push(this.parseInvariantsBlock());
+      } else if (this.check(TokenType.UI_BLUEPRINT)) {
+        uiBlueprints.push(this.parseUIBlueprint());
       } else if (this.checkIdentifier('imports')) {
         this.advance();
         this.expect(TokenType.LBRACE, "Expected '{' after imports");
@@ -102,13 +108,90 @@ export class Parser {
     const end = this.previous().span.end;
     return B.domainDeclaration(name, B.span(start, end), {
       version,
+      uses,
       imports,
       entities,
       types,
       enums,
       behaviors,
       invariants,
+      uiBlueprints,
     });
+  }
+
+  /**
+   * Parse a use statement for importing modules.
+   *
+   * Syntax variations:
+   * - `use stdlib-auth`
+   * - `use stdlib-auth as auth`
+   * - `use stdlib-auth@1.0.0`
+   * - `use stdlib-auth@1.0.0 as auth`
+   * - `use "./local/module"`
+   */
+  private parseUseStatement(): AST.UseStatement {
+    const start = this.current().span.start;
+    this.expect(TokenType.USE, "Expected 'use' keyword");
+
+    // Parse module specifier - can be identifier or string literal for paths
+    let module: AST.Identifier | AST.StringLiteral;
+    let version: AST.StringLiteral | undefined;
+    let alias: AST.Identifier | undefined;
+
+    if (this.check(TokenType.STRING)) {
+      // String literal for relative paths: use "./local/module"
+      module = this.parseStringLiteral();
+    } else {
+      // Identifier for module names: use stdlib-auth
+      // Module names can contain hyphens, so we need to parse them specially
+      module = this.parseModuleName();
+    }
+
+    // Check for version: use module@version
+    if (this.match(TokenType.AT)) {
+      version = this.parseStringLiteral();
+    }
+
+    // Check for alias: use module as alias
+    if (this.check(TokenType.AS)) {
+      this.advance();
+      alias = this.parseIdentifier();
+    }
+
+    const end = this.previous().span.end;
+    return B.useStatement(module, B.span(start, end), { alias, version });
+  }
+
+  /**
+   * Parse a module name that may contain hyphens.
+   * Module names like "stdlib-auth" are parsed as a single identifier.
+   */
+  private parseModuleName(): AST.Identifier {
+    const start = this.current().span.start;
+    let name = '';
+
+    // Parse the first part
+    const firstToken = this.expect(TokenType.IDENTIFIER, "Expected module name");
+    name = firstToken.value;
+
+    // Continue parsing if followed by dash and identifier
+    while (this.check(TokenType.DASH)) {
+      this.advance(); // consume the dash
+      name += '-';
+      
+      // The next part could be an identifier or a number (for versions in name)
+      if (this.check(TokenType.IDENTIFIER)) {
+        name += this.advance().value;
+      } else if (this.check(TokenType.NUMBER)) {
+        // Handle cases like stdlib-v2
+        name += this.advance().value;
+      } else {
+        break;
+      }
+    }
+
+    const end = this.previous().span.end;
+    return B.identifier(name, B.span(start, end));
   }
 
   private parseImport(): AST.ImportDeclaration {
@@ -294,6 +377,8 @@ export class Parser {
     let security: AST.SecurityBlock | undefined;
     let compliance: AST.ComplianceBlock | undefined;
 
+    let chaos: AST.ChaosBlock | undefined;
+
     while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
       if (this.checkIdentifier('description')) {
         this.advance();
@@ -323,6 +408,8 @@ export class Parser {
         security = this.parseSecurity();
       } else if (this.check(TokenType.COMPLIANCE)) {
         compliance = this.parseCompliance();
+      } else if (this.check(TokenType.CHAOS)) {
+        chaos = this.parseChaos();
       } else {
         this.error(`Unexpected token in behavior: ${tokenTypeName(this.current().type)}`);
         this.advance();
@@ -343,6 +430,7 @@ export class Parser {
       temporal,
       security,
       compliance,
+      chaos,
     });
   }
 
@@ -808,6 +896,131 @@ export class Parser {
   }
 
   // ============================================
+  // Chaos Engineering Parsing
+  // ============================================
+
+  private parseChaos(): AST.ChaosBlock {
+    const start = this.current().span.start;
+    this.expect(TokenType.CHAOS, "Expected 'chaos'");
+    this.expect(TokenType.LBRACE, "Expected '{' after chaos");
+
+    const scenarios: AST.ChaosScenario[] = [];
+
+    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      if (this.check(TokenType.SCENARIO)) {
+        scenarios.push(this.parseChaosScenario());
+      } else {
+        this.error(`Expected 'scenario' in chaos block, got ${tokenTypeName(this.current().type)}`);
+        this.advance();
+      }
+    }
+
+    this.expect(TokenType.RBRACE, "Expected '}' after chaos");
+    const end = this.previous().span.end;
+
+    return B.chaosBlock(scenarios, B.span(start, end));
+  }
+
+  private parseChaosScenario(): AST.ChaosScenario {
+    const start = this.current().span.start;
+    this.expect(TokenType.SCENARIO, "Expected 'scenario'");
+    
+    const name = this.parseStringLiteral();
+    this.expect(TokenType.LBRACE, "Expected '{' after scenario name");
+
+    const injections: AST.ChaosInjection[] = [];
+    const expectations: AST.ChaosExpectation[] = [];
+    let retries: AST.NumberLiteral | undefined;
+    const withClauses: AST.ChaosWithClause[] = [];
+
+    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      if (this.check(TokenType.INJECT)) {
+        injections.push(this.parseChaosInjection());
+      } else if (this.check(TokenType.EXPECT)) {
+        expectations.push(this.parseChaosExpectation());
+      } else if (this.check(TokenType.RETRIES)) {
+        this.advance();
+        this.expect(TokenType.COLON, "Expected ':' after retries");
+        const numToken = this.expect(TokenType.NUMBER, "Expected number for retries");
+        retries = B.numberLiteral(parseInt(numToken.value, 10), numToken.span);
+      } else if (this.check(TokenType.WITH)) {
+        withClauses.push(this.parseChaosWithClause());
+      } else {
+        this.error(`Unexpected token in chaos scenario: ${tokenTypeName(this.current().type)}`);
+        this.advance();
+      }
+    }
+
+    this.expect(TokenType.RBRACE, "Expected '}' after scenario");
+    const end = this.previous().span.end;
+
+    return B.chaosScenario(name, injections, expectations, B.span(start, end), {
+      retries,
+      withClauses: withClauses.length > 0 ? withClauses : undefined,
+    });
+  }
+
+  private parseChaosInjection(): AST.ChaosInjection {
+    const start = this.current().span.start;
+    this.expect(TokenType.INJECT, "Expected 'inject'");
+    this.expect(TokenType.COLON, "Expected ':' after inject");
+
+    const type = this.parseIdentifier();
+    const args: AST.ChaosArgument[] = [];
+
+    // Parse injection arguments: inject: rate_limit_storm(requests: 100, window: 1s)
+    if (this.match(TokenType.LPAREN)) {
+      if (!this.check(TokenType.RPAREN)) {
+        do {
+          const argStart = this.current().span.start;
+          const argName = this.parseIdentifier();
+          this.expect(TokenType.COLON, "Expected ':' after argument name");
+          const argValue = this.parseExpression();
+          const argEnd = this.previous().span.end;
+          args.push(B.chaosArgument(argName, argValue, B.span(argStart, argEnd)));
+        } while (this.match(TokenType.COMMA));
+      }
+      this.expect(TokenType.RPAREN, "Expected ')' after injection arguments");
+    }
+
+    const end = this.previous().span.end;
+    return B.chaosInjection(type, args, B.span(start, end));
+  }
+
+  private parseChaosExpectation(): AST.ChaosExpectation {
+    const start = this.current().span.start;
+    this.expect(TokenType.EXPECT, "Expected 'expect'");
+    this.expect(TokenType.COLON, "Expected ':' after expect");
+
+    const expression = this.parseExpression();
+    const end = this.previous().span.end;
+
+    return B.chaosExpectation(expression, B.span(start, end));
+  }
+
+  private parseChaosWithClause(): AST.ChaosWithClause {
+    const start = this.current().span.start;
+    this.expect(TokenType.WITH, "Expected 'with'");
+    this.expect(TokenType.COLON, "Expected ':' after with");
+
+    const name = this.parseIdentifier();
+    const args: AST.Expression[] = [];
+
+    // Parse with clause arguments: with: idempotency_key("checkout-123")
+    if (this.match(TokenType.LPAREN)) {
+      if (!this.check(TokenType.RPAREN)) {
+        do {
+          args.push(this.parseExpression());
+        } while (this.match(TokenType.COMMA));
+      }
+      this.expect(TokenType.RPAREN, "Expected ')' after with arguments");
+    }
+
+    const end = this.previous().span.end;
+    return B.chaosWithClause(name, args, B.span(start, end));
+  }
+
+  // ============================================
   // Type Parsing
   // ============================================
 
@@ -1090,6 +1303,253 @@ export class Parser {
     this.error(`Unexpected token: ${tokenTypeName(token.type)}`);
     this.advance(); // Skip the problematic token to prevent infinite loops
     return B.identifier('error', token.span);
+  }
+
+  // ============================================
+  // UI Blueprint Parsing
+  // ============================================
+
+  private parseUIBlueprint(): AST.UIBlueprintDeclaration {
+    const start = this.current().span.start;
+    
+    this.expect(TokenType.UI_BLUEPRINT, "Expected 'ui_blueprint' keyword");
+    const name = this.parseIdentifier();
+    this.expect(TokenType.LBRACE, "Expected '{' after blueprint name");
+
+    const sections: AST.UISection[] = [];
+    let tokens: AST.UITokenBlock | undefined;
+    let constraints: AST.UIConstraintBlock | undefined;
+
+    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      if (this.checkIdentifier('tokens')) {
+        tokens = this.parseUITokenBlock();
+      } else if (this.checkIdentifier('constraints')) {
+        constraints = this.parseUIConstraintBlock();
+      } else if (this.checkIdentifier('section')) {
+        sections.push(this.parseUISection());
+      } else {
+        this.error(`Unexpected token in ui_blueprint: ${this.current().value}`);
+        this.advance();
+      }
+    }
+
+    this.expect(TokenType.RBRACE, "Expected '}' to close ui_blueprint");
+    
+    const end = this.previous().span.end;
+    return B.uiBlueprintDeclaration(name, sections, B.span(start, end), { tokens, constraints });
+  }
+
+  private parseUITokenBlock(): AST.UITokenBlock {
+    const start = this.current().span.start;
+    this.advance(); // consume 'tokens'
+    this.expect(TokenType.LBRACE, "Expected '{' after tokens");
+
+    const uiTokens: AST.UIToken[] = [];
+
+    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      const tokenStart = this.current().span.start;
+      const tokenName = this.parseIdentifier();
+      this.expect(TokenType.COLON, "Expected ':' after token name");
+      
+      // Parse category (color, spacing, typography, etc.)
+      const categoryToken = this.current();
+      let category: 'color' | 'spacing' | 'typography' | 'border' | 'shadow' = 'color';
+      if (this.checkIdentifier('color')) {
+        category = 'color';
+        this.advance();
+      } else if (this.checkIdentifier('spacing')) {
+        category = 'spacing';
+        this.advance();
+      } else if (this.checkIdentifier('typography')) {
+        category = 'typography';
+        this.advance();
+      } else if (this.checkIdentifier('border')) {
+        category = 'border';
+        this.advance();
+      } else if (this.checkIdentifier('shadow')) {
+        category = 'shadow';
+        this.advance();
+      }
+
+      // Parse value (string or expression)
+      const value = this.parseExpression();
+      const tokenEnd = this.previous().span.end;
+      
+      uiTokens.push(B.uiToken(tokenName, category, value, B.span(tokenStart, tokenEnd)));
+    }
+
+    this.expect(TokenType.RBRACE, "Expected '}' to close tokens block");
+    const end = this.previous().span.end;
+    return B.uiTokenBlock(uiTokens, B.span(start, end));
+  }
+
+  private parseUIConstraintBlock(): AST.UIConstraintBlock {
+    const start = this.current().span.start;
+    this.advance(); // consume 'constraints'
+    this.expect(TokenType.LBRACE, "Expected '{' after constraints");
+
+    const uiConstraints: AST.UIConstraint[] = [];
+
+    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      const constraintStart = this.current().span.start;
+      
+      // Parse constraint type (a11y, seo, perf, security)
+      let constraintType: 'a11y' | 'seo' | 'perf' | 'security' = 'a11y';
+      if (this.checkIdentifier('a11y')) {
+        constraintType = 'a11y';
+        this.advance();
+      } else if (this.checkIdentifier('seo')) {
+        constraintType = 'seo';
+        this.advance();
+      } else if (this.checkIdentifier('perf')) {
+        constraintType = 'perf';
+        this.advance();
+      } else if (this.checkIdentifier('security')) {
+        constraintType = 'security';
+        this.advance();
+      }
+
+      this.expect(TokenType.COLON, "Expected ':' after constraint type");
+      const rule = this.parseIdentifier();
+      
+      let value: AST.Expression | undefined;
+      if (this.match(TokenType.ASSIGN)) {
+        value = this.parseExpression();
+      }
+
+      const constraintEnd = this.previous().span.end;
+      uiConstraints.push(B.uiConstraint(constraintType, rule, B.span(constraintStart, constraintEnd), value));
+    }
+
+    this.expect(TokenType.RBRACE, "Expected '}' to close constraints block");
+    const end = this.previous().span.end;
+    return B.uiConstraintBlock(uiConstraints, B.span(start, end));
+  }
+
+  private parseUISection(): AST.UISection {
+    const start = this.current().span.start;
+    this.advance(); // consume 'section'
+    
+    const name = this.parseIdentifier();
+    this.expect(TokenType.COLON, "Expected ':' after section name");
+    
+    // Parse section type
+    const typeToken = this.current();
+    let sectionType: 'hero' | 'features' | 'testimonials' | 'cta' | 'footer' | 'header' | 'content' = 'content';
+    const typeMap: Record<string, typeof sectionType> = {
+      hero: 'hero', features: 'features', testimonials: 'testimonials',
+      cta: 'cta', footer: 'footer', header: 'header', content: 'content'
+    };
+    if (typeToken.type === TokenType.IDENTIFIER && typeMap[typeToken.value.toLowerCase()]) {
+      sectionType = typeMap[typeToken.value.toLowerCase()]!;
+      this.advance();
+    }
+
+    this.expect(TokenType.LBRACE, "Expected '{' after section type");
+
+    const blocks: AST.UIContentBlock[] = [];
+    let layout: AST.UILayout | undefined;
+
+    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      if (this.checkIdentifier('layout')) {
+        layout = this.parseUILayout();
+      } else {
+        blocks.push(this.parseUIContentBlock());
+      }
+    }
+
+    this.expect(TokenType.RBRACE, "Expected '}' to close section");
+    const end = this.previous().span.end;
+    return B.uiSection(name, sectionType, blocks, B.span(start, end), layout);
+  }
+
+  private parseUILayout(): AST.UILayout {
+    const start = this.current().span.start;
+    this.advance(); // consume 'layout'
+    this.expect(TokenType.COLON, "Expected ':' after layout");
+
+    // Parse layout type
+    let layoutType: 'grid' | 'flex' | 'stack' = 'flex';
+    if (this.checkIdentifier('grid')) {
+      layoutType = 'grid';
+      this.advance();
+    } else if (this.checkIdentifier('flex')) {
+      layoutType = 'flex';
+      this.advance();
+    } else if (this.checkIdentifier('stack')) {
+      layoutType = 'stack';
+      this.advance();
+    }
+
+    let columns: AST.NumberLiteral | undefined;
+    let gap: AST.Expression | undefined;
+
+    // Optional properties in braces
+    if (this.match(TokenType.LBRACE)) {
+      while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+        if (this.checkIdentifier('columns')) {
+          this.advance();
+          this.expect(TokenType.COLON, "Expected ':' after columns");
+          const numToken = this.expect(TokenType.NUMBER, "Expected number for columns");
+          columns = B.numberLiteral(parseInt(numToken.value, 10), numToken.span);
+        } else if (this.checkIdentifier('gap')) {
+          this.advance();
+          this.expect(TokenType.COLON, "Expected ':' after gap");
+          gap = this.parseExpression();
+        } else {
+          this.advance();
+        }
+      }
+      this.expect(TokenType.RBRACE, "Expected '}' to close layout options");
+    }
+
+    const end = this.previous().span.end;
+    return B.uiLayout(layoutType, B.span(start, end), { columns, gap });
+  }
+
+  private parseUIContentBlock(): AST.UIContentBlock {
+    const start = this.current().span.start;
+    
+    // Parse block type
+    const typeToken = this.current();
+    let blockType: 'text' | 'heading' | 'image' | 'button' | 'form' | 'link' | 'container' = 'text';
+    const blockTypeMap: Record<string, typeof blockType> = {
+      text: 'text', heading: 'heading', image: 'image', button: 'button',
+      form: 'form', link: 'link', container: 'container'
+    };
+    
+    if (typeToken.type === TokenType.IDENTIFIER && blockTypeMap[typeToken.value.toLowerCase()]) {
+      blockType = blockTypeMap[typeToken.value.toLowerCase()]!;
+      this.advance();
+    } else {
+      this.error(`Expected content block type, got ${typeToken.value}`);
+      this.advance();
+    }
+
+    const props: AST.UIBlockProperty[] = [];
+    const children: AST.UIContentBlock[] = [];
+
+    if (this.match(TokenType.LBRACE)) {
+      while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+        // Check if this is a nested block or a property
+        const current = this.current();
+        if (current.type === TokenType.IDENTIFIER && blockTypeMap[current.value.toLowerCase()]) {
+          children.push(this.parseUIContentBlock());
+        } else {
+          // Parse as property
+          const propStart = this.current().span.start;
+          const propName = this.parseIdentifier();
+          this.expect(TokenType.COLON, "Expected ':' after property name");
+          const propValue = this.parseExpression();
+          const propEnd = this.previous().span.end;
+          props.push(B.uiBlockProperty(propName, propValue, B.span(propStart, propEnd)));
+        }
+      }
+      this.expect(TokenType.RBRACE, "Expected '}' to close content block");
+    }
+
+    const end = this.previous().span.end;
+    return B.uiContentBlock(blockType, props, B.span(start, end), children.length > 0 ? children : undefined);
   }
 
   // ============================================

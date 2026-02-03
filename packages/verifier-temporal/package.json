@@ -23,7 +23,8 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@isl-lang/isl-core": "workspace:*"
+    "@isl-lang/isl-core": "workspace:*",
+    "@isl-lang/trace-format": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.1.0",

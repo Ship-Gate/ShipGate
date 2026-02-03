@@ -43,6 +43,12 @@ export interface BuildOptions {
   
   /** Include helper files in generation (default: true) */
   includeHelpers?: boolean;
+  
+  /** Enable temporal verification (default: true) */
+  verifyTemporal?: boolean;
+  
+  /** Minimum samples required for temporal verification (default: 10) */
+  temporalMinSamples?: number;
 }
 
 /**
@@ -170,6 +176,14 @@ export interface EvidenceSummary {
   failedChecks: number;
   overallScore: number;
   verdict: 'verified' | 'risky' | 'unsafe';
+  /** Temporal clause summary */
+  temporal?: {
+    total: number;
+    proven: number;
+    notProven: number;
+    incomplete: number;
+    unknown: number;
+  };
 }
 
 /**
@@ -183,8 +197,34 @@ export interface BehaviorEvidence {
   preconditions: CheckEvidence[];
   postconditions: CheckEvidence[];
   invariants: CheckEvidence[];
+  temporal: TemporalEvidence[];
   inputUsed: string;
   executionDurationMs: number;
+}
+
+/**
+ * Evidence for a temporal clause verification
+ */
+export interface TemporalEvidence {
+  /** Clause identifier */
+  clauseId: string;
+  /** Clause type (within, eventually_within, always, never) */
+  type: 'within' | 'eventually_within' | 'always' | 'never';
+  /** Original clause text */
+  clauseText: string;
+  /** Verification verdict */
+  verdict: 'PROVEN' | 'NOT_PROVEN' | 'INCOMPLETE_PROOF' | 'UNKNOWN';
+  /** Whether clause was satisfied */
+  passed: boolean;
+  /** Timing information */
+  timing?: {
+    thresholdMs: number;
+    percentile?: number;
+    actualMs?: number;
+    sampleCount?: number;
+  };
+  /** Error message if any */
+  error?: string;
 }
 
 /**

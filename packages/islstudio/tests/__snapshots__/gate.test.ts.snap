@@ -1,0 +1,125 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ISL Studio JSON Output Stability > JSON output should match snapshot structure for clean code > clean-code-gate-result 1`] = `
+{
+  "fingerprint": "ebecf4d03d619118",
+  "policyBundleVersion": "1.0.0",
+  "rulepackVersions": [
+    {
+      "id": "auth",
+      "rulesCount": 5,
+      "version": "0.1.0",
+    },
+    {
+      "id": "payments",
+      "rulesCount": 5,
+      "version": "0.1.0",
+    },
+    {
+      "id": "pii",
+      "rulesCount": 5,
+      "version": "0.1.0",
+    },
+    {
+      "id": "rate-limit",
+      "rulesCount": 5,
+      "version": "0.1.0",
+    },
+    {
+      "id": "intent",
+      "rulesCount": 5,
+      "version": "0.1.0",
+    },
+  ],
+  "score": 95,
+  "summary": {
+    "blockers": 0,
+    "filesChecked": 1,
+    "warnings": 1,
+  },
+  "timestamp": "[TIMESTAMP]",
+  "verdict": "SHIP",
+  "violations": [
+    {
+      "filePath": "src/utils.ts",
+      "location": {
+        "file": "src/utils.ts",
+      },
+      "message": "EXPENSIVE UNPROTECTED: "export" operation may need rate limiting or queueing",
+      "ruleId": "rate-limit/expensive-unprotected",
+      "ruleName": "Expensive Operation Unprotected",
+      "severity": "warning",
+      "suggestion": "Add rate limiting or move to background job queue",
+      "tier": "soft_block",
+    },
+  ],
+}
+`;
+
+exports[`ISL Studio JSON Output Stability > JSON output should match snapshot structure for violations > violation-gate-result 1`] = `
+{
+  "fingerprint": "134c30f91b3eb015",
+  "policyBundleVersion": "1.0.0",
+  "rulepackVersions": [
+    {
+      "id": "auth",
+      "rulesCount": 5,
+      "version": "0.1.0",
+    },
+    {
+      "id": "payments",
+      "rulesCount": 5,
+      "version": "0.1.0",
+    },
+    {
+      "id": "pii",
+      "rulesCount": 5,
+      "version": "0.1.0",
+    },
+    {
+      "id": "rate-limit",
+      "rulesCount": 5,
+      "version": "0.1.0",
+    },
+    {
+      "id": "intent",
+      "rulesCount": 5,
+      "version": "0.1.0",
+    },
+  ],
+  "score": 50,
+  "summary": {
+    "blockers": 2,
+    "filesChecked": 1,
+    "warnings": 0,
+  },
+  "timestamp": "[TIMESTAMP]",
+  "verdict": "NO_SHIP",
+  "violations": [
+    {
+      "filePath": "src/auth.ts",
+      "location": {
+        "file": "src/auth.ts",
+      },
+      "message": "AUTH BYPASS: Suspicious pattern "skipAuth" may disable authentication",
+      "ruleId": "auth/bypass-detected",
+      "ruleName": "Auth Bypass Detected",
+      "severity": "error",
+      "suggestion": "Remove auth bypass patterns. If this is intentional, add to allowlist.",
+      "tier": "hard_block",
+    },
+    {
+      "filePath": "src/auth.ts",
+      "location": {
+        "file": "src/auth.ts",
+      },
+      "message": "AUTH WITHOUT RATE LIMIT: Authentication endpoint lacks rate limiting",
+      "ruleId": "rate-limit/auth-endpoint",
+      "ruleName": "Auth Endpoint Rate Limit",
+      "severity": "error",
+      "suggestion": "Add strict rate limiting (e.g., 5 attempts per minute) to prevent brute force attacks",
+      "tier": "hard_block",
+    },
+  ],
+}
+`;

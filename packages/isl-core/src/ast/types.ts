@@ -20,12 +20,34 @@ export interface DomainDeclaration extends BaseNode {
   kind: 'DomainDeclaration';
   name: Identifier;
   version?: StringLiteral;
+  uses: UseStatement[];
   imports: ImportDeclaration[];
   entities: EntityDeclaration[];
   types: TypeDeclaration[];
   enums: EnumDeclaration[];
   behaviors: BehaviorDeclaration[];
   invariants: InvariantsBlock[];
+  uiBlueprints?: UIBlueprintDeclaration[];
+}
+
+/**
+ * Use statement for importing entire modules.
+ *
+ * Syntax variations:
+ * - `use stdlib-auth`
+ * - `use stdlib-auth as auth`
+ * - `use stdlib-auth@1.0.0`
+ * - `use stdlib-auth@1.0.0 as auth`
+ * - `use "./local/module"`
+ */
+export interface UseStatement extends BaseNode {
+  kind: 'UseStatement';
+  /** Module specifier (e.g., "stdlib-auth", "./local") */
+  module: Identifier | StringLiteral;
+  /** Optional alias for the module */
+  alias?: Identifier;
+  /** Optional version constraint */
+  version?: StringLiteral;
 }
 
 export interface ImportDeclaration extends BaseNode {
@@ -87,6 +109,7 @@ export interface BehaviorDeclaration extends BaseNode {
   temporal?: TemporalBlock;
   security?: SecurityBlock;
   compliance?: ComplianceBlock;
+  chaos?: ChaosBlock;
 }
 
 export interface ActorsBlock extends BaseNode {
@@ -217,6 +240,47 @@ export interface ComplianceStandard extends BaseNode {
 export interface ComplianceRequirement extends BaseNode {
   kind: 'ComplianceRequirement';
   expression: Expression;
+}
+
+// ============================================
+// Chaos Engineering
+// ============================================
+
+export interface ChaosBlock extends BaseNode {
+  kind: 'ChaosBlock';
+  scenarios: ChaosScenario[];
+}
+
+export interface ChaosScenario extends BaseNode {
+  kind: 'ChaosScenario';
+  name: StringLiteral;
+  injections: ChaosInjection[];
+  expectations: ChaosExpectation[];
+  retries?: NumberLiteral;
+  withClauses?: ChaosWithClause[];
+}
+
+export interface ChaosInjection extends BaseNode {
+  kind: 'ChaosInjection';
+  type: Identifier;
+  arguments: ChaosArgument[];
+}
+
+export interface ChaosExpectation extends BaseNode {
+  kind: 'ChaosExpectation';
+  expression: Expression;
+}
+
+export interface ChaosArgument extends BaseNode {
+  kind: 'ChaosArgument';
+  name: Identifier;
+  value: Expression;
+}
+
+export interface ChaosWithClause extends BaseNode {
+  kind: 'ChaosWithClause';
+  name: Identifier;
+  arguments: Expression[];
 }
 
 // ============================================
@@ -396,11 +460,83 @@ export interface OldExpression extends BaseNode {
 }
 
 // ============================================
+// UI Blueprint Declarations
+// ============================================
+
+export interface UIBlueprintDeclaration extends BaseNode {
+  kind: 'UIBlueprintDeclaration';
+  name: Identifier;
+  sections: UISection[];
+  tokens?: UITokenBlock;
+  constraints?: UIConstraintBlock;
+}
+
+export interface UITokenBlock extends BaseNode {
+  kind: 'UITokenBlock';
+  tokens: UIToken[];
+}
+
+export interface UIToken extends BaseNode {
+  kind: 'UIToken';
+  name: Identifier;
+  category: 'color' | 'spacing' | 'typography' | 'border' | 'shadow';
+  value: Expression;
+}
+
+export interface UISection extends BaseNode {
+  kind: 'UISection';
+  name: Identifier;
+  type: 'hero' | 'features' | 'testimonials' | 'cta' | 'footer' | 'header' | 'content';
+  blocks: UIContentBlock[];
+  layout?: UILayout;
+}
+
+export interface UILayout extends BaseNode {
+  kind: 'UILayout';
+  type: 'grid' | 'flex' | 'stack';
+  columns?: NumberLiteral;
+  gap?: Expression;
+  responsive?: UIResponsive[];
+}
+
+export interface UIResponsive extends BaseNode {
+  kind: 'UIResponsive';
+  breakpoint: 'mobile' | 'tablet' | 'desktop';
+  layout: UILayout;
+}
+
+export interface UIContentBlock extends BaseNode {
+  kind: 'UIContentBlock';
+  type: 'text' | 'heading' | 'image' | 'button' | 'form' | 'link' | 'container';
+  props: UIBlockProperty[];
+  children?: UIContentBlock[];
+}
+
+export interface UIBlockProperty extends BaseNode {
+  kind: 'UIBlockProperty';
+  name: Identifier;
+  value: Expression;
+}
+
+export interface UIConstraintBlock extends BaseNode {
+  kind: 'UIConstraintBlock';
+  constraints: UIConstraint[];
+}
+
+export interface UIConstraint extends BaseNode {
+  kind: 'UIConstraint';
+  type: 'a11y' | 'seo' | 'perf' | 'security';
+  rule: Identifier;
+  value?: Expression;
+}
+
+// ============================================
 // AST Node Union
 // ============================================
 
 export type ASTNode =
   | DomainDeclaration
+  | UseStatement
   | ImportDeclaration
   | EntityDeclaration
   | TypeDeclaration
@@ -424,8 +560,24 @@ export type ASTNode =
   | ComplianceBlock
   | ComplianceStandard
   | ComplianceRequirement
+  | ChaosBlock
+  | ChaosScenario
+  | ChaosInjection
+  | ChaosExpectation
+  | ChaosArgument
+  | ChaosWithClause
   | LifecycleBlock
   | LifecycleTransition
+  | UIBlueprintDeclaration
+  | UITokenBlock
+  | UIToken
+  | UISection
+  | UILayout
+  | UIResponsive
+  | UIContentBlock
+  | UIBlockProperty
+  | UIConstraintBlock
+  | UIConstraint
   | TypeExpression
   | TypeConstraint
   | Annotation

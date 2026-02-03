@@ -108,3 +108,32 @@ export type {
   ConcurrentResult,
   RaceConditionResult,
 } from './injectors/concurrent.js';
+
+export { 
+  RateLimitInjector,
+  RateLimitError,
+  createRateLimitStorm,
+  createThrottler,
+  createStrictRateLimiter,
+  createBurstTolerantRateLimiter,
+} from './injectors/rate-limit.js';
+export type { 
+  RateLimitInjectorConfig,
+  RateLimitInjectorState,
+  RateLimitAction,
+  RateLimitResult,
+} from './injectors/rate-limit.js';
+
+export { 
+  IdempotencyTracker,
+  IdempotencyError,
+  createIdempotencyTracker,
+  createConcurrentIdempotencyTracker,
+  createStrictIdempotencyTracker,
+} from './injectors/idempotency.js';
+export type { 
+  IdempotencyConfig,
+  IdempotencyState,
+  IdempotentRequest,
+  IdempotencyCheckResult,
+} from './injectors/idempotency.js';

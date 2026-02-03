@@ -14,7 +14,9 @@ export type InjectionType =
   | 'cpu_pressure'
   | 'memory_pressure'
   | 'clock_skew'
-  | 'concurrent_requests';
+  | 'concurrent_requests'
+  | 'rate_limit_storm'
+  | 'rate_limit';
 
 export interface ChaosInjection {
   type: InjectionType;
@@ -303,6 +305,8 @@ function isValidInjectionType(type: string): type is InjectionType {
     'memory_pressure',
     'clock_skew',
     'concurrent_requests',
+    'rate_limit_storm',
+    'rate_limit',
   ];
   return validTypes.includes(type as InjectionType);
 }
@@ -320,5 +324,7 @@ export function getSupportedInjectionTypes(): InjectionType[] {
     'memory_pressure',
     'clock_skew',
     'concurrent_requests',
+    'rate_limit_storm',
+    'rate_limit',
   ];
 }

@@ -48,8 +48,11 @@ npx islstudio gate --explain
 # Only changed files (for PRs)
 npx islstudio gate --changed-only
 
-# JSON/SARIF output for CI
+# JSON output (healer-compatible)
+npx islstudio gate --json
 npx islstudio gate --output json
+
+# SARIF output (GitHub Security tab)
 npx islstudio gate --output sarif
 
 # Explore rules
@@ -59,6 +62,94 @@ npx islstudio rules explain auth/bypass-detected
 # Baseline for legacy code
 npx islstudio baseline create
 ```
+
+## Machine-Readable Output (Healer Integration)
+
+For automated healing systems, use `--json` to get stable machine-readable output:
+
+```bash
+npx islstudio gate --json > gate-result.json
+```
+
+### GateResult JSON Schema
+
+```typescript
+interface GateResult {
+  verdict: 'SHIP' | 'NO_SHIP';      // Final decision
+  score: number;                     // 0-100 score
+  violations: RuleViolation[];       // Array of detected violations
+  fingerprint: string;               // Stable 16-char hash (violations-based)
+  policyBundleVersion: string;       // e.g., "1.0.0"
+  rulepackVersions: RulepackVersion[]; // Version info per rulepack
+  summary: {
+    filesChecked: number;
+    blockers: number;
+    warnings: number;
+  };
+  timestamp: string;                 // ISO 8601 timestamp
+}
+
+interface RuleViolation {
+  ruleId: string;                    // e.g., "auth/bypass-detected"
+  ruleName: string;
+  severity: 'error' | 'warning' | 'info';
+  message: string;
+  tier: 'hard_block' | 'soft_block' | 'warn';
+  filePath?: string;
+  line?: number;
+  suggestion?: string;
+}
+
+interface RulepackVersion {
+  id: string;                        // e.g., "auth"
+  version: string;                   // e.g., "0.1.0"
+  rulesCount: number;
+}
+```
+
+### Example JSON Output
+
+```json
+{
+  "verdict": "NO_SHIP",
+  "score": 75,
+  "violations": [
+    {
+      "ruleId": "auth/bypass-detected",
+      "ruleName": "Auth Bypass Detected",
+      "severity": "error",
+      "message": "Potential auth bypass via debug parameter",
+      "tier": "hard_block",
+      "filePath": "src/auth.ts",
+      "line": 15,
+      "suggestion": "Remove debug bypass or gate behind feature flag"
+    }
+  ],
+  "fingerprint": "a1b2c3d4e5f6a7b8",
+  "policyBundleVersion": "1.0.0",
+  "rulepackVersions": [
+    { "id": "auth", "version": "0.1.0", "rulesCount": 5 },
+    { "id": "pii", "version": "0.1.0", "rulesCount": 4 }
+  ],
+  "summary": {
+    "filesChecked": 42,
+    "blockers": 1,
+    "warnings": 2
+  },
+  "timestamp": "2026-02-02T12:00:00.000Z"
+}
+```
+
+### Fingerprint Stability
+
+The `fingerprint` field is a stable SHA-256 hash based on:
+- Violations (ruleId, filePath, line, tier)
+- Policy bundle version
+
+**Same violations = same fingerprint**, regardless of file content changes. This allows healers to:
+- Track violation state across runs
+- Detect when violations are actually fixed vs. just moved
+- Identify recurring issues
 
 ## GitHub Action
 

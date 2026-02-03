@@ -12,6 +12,13 @@ export enum TokenType {
   BEHAVIOR = 'BEHAVIOR',
   TYPE = 'TYPE',
   ENUM = 'ENUM',
+  UI_BLUEPRINT = 'UI_BLUEPRINT',
+  
+  // Keywords - Module System
+  USE = 'USE',
+  AS = 'AS',
+  MODULE = 'MODULE',
+  VERSION = 'VERSION',
   
   // Keywords - Behavior Sections
   INPUT = 'INPUT',
@@ -24,6 +31,14 @@ export enum TokenType {
   COMPLIANCE = 'COMPLIANCE',
   ACTORS = 'ACTORS',
   ERRORS = 'ERRORS',
+  
+  // Keywords - Chaos Engineering
+  CHAOS = 'CHAOS',
+  SCENARIO = 'SCENARIO',
+  INJECT = 'INJECT',
+  EXPECT = 'EXPECT',
+  RETRIES = 'RETRIES',
+  WITH = 'WITH',
   
   // Keywords - Modifiers & Conditions
   IMPLIES = 'IMPLIES',
@@ -117,6 +132,14 @@ export const KEYWORDS: Record<string, TokenType> = {
   behavior: TokenType.BEHAVIOR,
   type: TokenType.TYPE,
   enum: TokenType.ENUM,
+  ui_blueprint: TokenType.UI_BLUEPRINT,
+  blueprint: TokenType.UI_BLUEPRINT,
+  
+  // Module system
+  use: TokenType.USE,
+  as: TokenType.AS,
+  module: TokenType.MODULE,
+  version: TokenType.VERSION,
   
   // Behavior sections
   input: TokenType.INPUT,
@@ -129,6 +152,14 @@ export const KEYWORDS: Record<string, TokenType> = {
   compliance: TokenType.COMPLIANCE,
   actors: TokenType.ACTORS,
   errors: TokenType.ERRORS,
+  
+  // Chaos engineering
+  chaos: TokenType.CHAOS,
+  scenario: TokenType.SCENARIO,
+  inject: TokenType.INJECT,
+  expect: TokenType.EXPECT,
+  retries: TokenType.RETRIES,
+  with: TokenType.WITH,
   
   // Conditions
   implies: TokenType.IMPLIES,

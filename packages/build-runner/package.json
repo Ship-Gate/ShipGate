@@ -55,7 +55,8 @@
     "@isl-lang/typechecker": "workspace:*",
     "@isl-lang/isl-compiler": "workspace:*",
     "@isl-lang/codegen-tests": "workspace:*",
-    "@isl-lang/verifier-runtime": "workspace:*"
+    "@isl-lang/verifier-runtime": "workspace:*",
+    "@isl-lang/verifier-temporal": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

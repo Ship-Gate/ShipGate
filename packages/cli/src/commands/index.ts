@@ -15,3 +15,7 @@ export { fmt, printFmtResult, getFmtExitCode, type FmtOptions, type FmtResult } 
 export { lint, printLintResult, getLintExitCode, type LintOptions, type LintResult, type LintIssue } from './lint.js';
 export { spec, printSpecResult, getSpecExitCode, listTemplates, getTemplate, TEMPLATES, type SpecOptions, type SpecResult, type TemplateInfo } from './spec.js';
 export { gate, printGateResult, getGateExitCode, type GateOptions, type GateResult } from './gate.js';
+export { heal, printHealResult, getHealExitCode, type HealOptions, type HealResult } from './heal.js';
+export { verifyProof, printProofVerifyResult, getProofVerifyExitCode, type ProofVerifyCommandOptions, type ProofVerifyResult } from './proof.js';
+export { createPolicyBundle, printCreateBundleResult, getCreateBundleExitCode, verifyPolicyBundle, printVerifyBundleResult, getVerifyBundleExitCode, type CreateBundleOptions, type CreateBundleResult, type VerifyBundleOptions, type VerifyBundleResult } from './policy-bundle.js';
+export { watch, type WatchOptions, type WatchResult } from './watch.js';

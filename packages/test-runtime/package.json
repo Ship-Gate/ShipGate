@@ -1,5 +1,5 @@
 {
-  "name": "@isl-lang/test-runtime",
+  "name": "@isl-lang/test-runtime-legacy",
   "version": "0.1.0",
   "description": "Runtime bindings for ISL generated tests - provides entity proxies and state management",
   "type": "module",

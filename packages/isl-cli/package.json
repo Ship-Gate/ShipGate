@@ -20,11 +20,14 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
+    "@isl-lang/cli-ux": "workspace:*",
     "@isl-lang/errors": "workspace:*",
     "@isl-lang/isl-ai": "workspace:*",
     "@isl-lang/isl-compiler": "workspace:*",
     "@isl-lang/isl-core": "workspace:*",
     "@isl-lang/isl-verify": "workspace:*",
+    "@isl-lang/proof": "workspace:*",
+    "@isl-lang/trace-viewer": "workspace:*",
     "chalk": "^5.3.0",
     "commander": "^12.0.0",
     "ora": "^8.0.1"

@@ -154,8 +154,12 @@ export interface FrameworkAdapter {
   getErrorResponse(status: number, message: string): string;
 }
 
-const NextJSAdapter: FrameworkAdapter = {
-  name: 'nextjs',
+// Import the full-featured Next.js App Router adapter
+import { NextJSAppRouterAdapter } from './adapters/nextjs-app-router.js';
+
+// Legacy NextJS adapter for backward compatibility (Pages Router / simpler cases)
+const NextJSLegacyAdapter: FrameworkAdapter = {
+  name: 'nextjs-legacy',
   async detect(root) {
     return true; // Simplified for now
   },
@@ -231,10 +235,17 @@ const ExpressAdapter: FrameworkAdapter = {
 
 export function getFrameworkAdapter(ctx: RepoContext): FrameworkAdapter {
   switch (ctx.framework) {
-    case 'nextjs': return NextJSAdapter;
+    case 'nextjs':
+    case 'nextjs-app-router':
+      return NextJSAppRouterAdapter;
+    case 'nextjs-pages':
+    case 'nextjs-legacy':
+      return NextJSLegacyAdapter;
     case 'express':
-    case 'fastify': return ExpressAdapter;
-    default: return NextJSAdapter;
+    case 'fastify':
+      return ExpressAdapter;
+    default:
+      return NextJSAppRouterAdapter; // Default to App Router
   }
 }
 
@@ -575,7 +586,11 @@ export class ISLHealer {
    * Heal until the code passes the gate
    */
   async heal(): Promise<HealResult> {
-    const fingerprints = new Map<string, number>();
+    // Use FingerprintTracker for robust stuck detection
+    const tracker = new FingerprintTracker({
+      repeatThreshold: this.options.stopOnRepeat,
+      maxIterations: this.options.maxIterations,
+    });
 
     for (let i = 1; i <= this.options.maxIterations; i++) {
       const startTime = Date.now();
@@ -623,20 +638,19 @@ export class ISLHealer {
         };
       }
 
-      // Check for stuck (repeated fingerprint)
-      const fpCount = (fingerprints.get(gate.fingerprint) ?? 0) + 1;
-      fingerprints.set(gate.fingerprint, fpCount);
+      // Check for stuck using FingerprintTracker
+      const abortCondition: AbortCondition = tracker.record(gate.fingerprint);
 
-      if (fpCount >= this.options.stopOnRepeat) {
+      if (abortCondition.shouldAbort) {
         if (this.options.verbose) {
           console.log(`│`);
-          console.log(`│ ✗ STUCK - Same violations repeated ${fpCount} times`);
+          console.log(`│ ✗ ${abortCondition.reason?.toUpperCase()} - ${abortCondition.details}`);
           console.log(`└${'─'.repeat(50)}┘`);
         }
 
         return {
           ok: false,
-          reason: 'stuck',
+          reason: abortCondition.reason === 'max_iterations' ? 'max_iterations' : 'stuck',
           gate,
           iterations: i,
           history: this.history,
@@ -906,13 +920,15 @@ export class ISLHealer {
   }
 
   /**
-   * Compute stable fingerprint for violations
+   * Compute stable fingerprint for violations using the fingerprint module.
+   * This ensures order-independent, normalized fingerprinting.
    */
   private computeFingerprint(violations: Violation[]): string {
-    const sorted = [...violations]
-      .sort((a, b) => `${a.ruleId}:${a.file}`.localeCompare(`${b.ruleId}:${b.file}`));
-    const str = JSON.stringify(sorted.map(v => ({ r: v.ruleId, f: v.file })));
-    return crypto.createHash('sha256').update(str).digest('hex').slice(0, 16);
+    return stableFingerprint(violations, {
+      includeMessage: true,
+      includeSpan: true,
+      normalizeWhitespace: true,
+    });
   }
 
   /**

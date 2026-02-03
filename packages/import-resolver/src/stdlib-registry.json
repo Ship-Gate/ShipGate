@@ -1,0 +1,74 @@
+{
+  "$schema": "./stdlib-registry.schema.json",
+  "version": "1.0.0",
+  "description": "ISL Standard Library Module Registry",
+  "modules": {
+    "@isl/auth": {
+      "version": "1.0.0",
+      "path": "stdlib/auth",
+      "files": {
+        "oauth-login": "oauth-login.isl",
+        "password-reset": "password-reset.isl",
+        "rate-limit-login": "rate-limit-login.isl",
+        "session-create": "session-create.isl"
+      },
+      "exports": ["User", "Session", "Role", "Permission", "Token", "Credential", "AuthResult", "LoginAttempt"],
+      "description": "Authentication and authorization specifications"
+    },
+    "@isl/rate-limit": {
+      "version": "1.0.0",
+      "path": "packages/stdlib-rate-limit/src",
+      "files": {
+        "index": "index.isl",
+        "sliding-window": "sliding-window.isl",
+        "token-bucket": "token-bucket.isl",
+        "fixed-window": "fixed-window.isl"
+      },
+      "exports": ["RateLimitConfig", "RateLimitResult", "RateLimitKey", "QuotaConfig", "QuotaUsage", "SlidingWindowConfig", "TokenBucketConfig", "FixedWindowConfig"],
+      "description": "Rate limiting and quota management specifications"
+    },
+    "@isl/audit": {
+      "version": "1.0.0",
+      "path": "packages/stdlib-audit/src",
+      "files": {
+        "index": "index.isl",
+        "log-entry": "log-entry.isl",
+        "retention": "retention.isl",
+        "query": "query.isl"
+      },
+      "exports": ["AuditEntry", "AuditLog", "AuditQuery", "AuditRetention", "AuditEvent", "AuditActor", "AuditContext"],
+      "description": "Audit logging and compliance specifications"
+    },
+    "@isl/payments": {
+      "version": "1.0.0",
+      "path": "stdlib/payments",
+      "files": {
+        "process-payment": "process-payment.isl",
+        "process-refund": "process-refund.isl",
+        "subscription-create": "subscription-create.isl",
+        "webhook-handle": "webhook-handle.isl"
+      },
+      "exports": ["Payment", "Invoice", "Subscription", "Price", "Currency", "Transaction", "Refund", "Webhook"],
+      "description": "Payment processing specifications"
+    },
+    "@isl/uploads": {
+      "version": "1.0.0",
+      "path": "stdlib/uploads",
+      "files": {
+        "store-blob": "store-blob.isl",
+        "upload-image": "upload-image.isl",
+        "validate-mime": "validate-mime.isl"
+      },
+      "exports": ["File", "FileMetadata", "StorageProvider", "UploadResult", "MimeType", "Blob"],
+      "description": "File upload and storage specifications"
+    }
+  },
+  "aliases": {
+    "stdlib-auth": "@isl/auth",
+    "stdlib-rate-limit": "@isl/rate-limit",
+    "stdlib-audit": "@isl/audit",
+    "stdlib-payments": "@isl/payments",
+    "stdlib-uploads": "@isl/uploads",
+    "stdlib-billing": "@isl/payments"
+  }
+}

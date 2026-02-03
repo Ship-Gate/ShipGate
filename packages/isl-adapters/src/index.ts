@@ -1,5 +1,5 @@
 /**
- * ISL Adapters - GitHub Actions, MCP, and CLI Integrations
+ * ISL Adapters - GitHub Actions, MCP, CLI, and Domain Integrations
  * 
  * @module @isl-lang/adapters
  * 
@@ -13,6 +13,9 @@
  * 
  * // CLI
  * import { runGateCommand } from '@isl-lang/adapters/cli';
+ * 
+ * // Auth Domain (offline-only verification)
+ * import { createFixtureAdapter, createTraceAdapter } from '@isl-lang/adapters/auth';
  * ```
  */
 
@@ -20,3 +23,4 @@
 export * from './github/index.js';
 export * from './mcp/index.js';
 export * from './cli/index.js';
+export * from './auth/index.js';

@@ -1,277 +1,345 @@
-// ============================================================================
-// Security Verifier
-// ============================================================================
-
-import type {
-  Domain,
-  SecurityVerifierOptions,
-  SecurityVerificationResult,
-  SecurityFinding,
-  SecurityRule,
-  SecurityCategory,
-  Severity,
-} from './types.js';
-import { DEFAULT_OPTIONS, SEVERITY_PRIORITY } from './types.js';
-import { authenticationRules } from './rules/authentication.js';
-import { injectionRules } from './rules/injection.js';
-import { dataExposureRules } from './rules/data-exposure.js';
-
 /**
  * Security Verifier
  * 
- * Verifies ISL specifications against security best practices and vulnerabilities.
+ * Main verification logic for security invariants including
+ * session token entropy requirements.
  * 
- * @example
- * ```typescript
- * const verifier = new SecurityVerifier({
- *   categories: ['authentication', 'injection'],
- *   failOnSeverity: 'high',
- * });
- * 
- * const result = verifier.verify(domain);
- * if (!result.passed) {
- *   console.log('Security issues found:', result.findings);
- * }
- * ```
+ * Combines static analysis and runtime verification.
+ */
+
+import type {
+  SecurityRuleConfig,
+  SecurityViolation,
+  SecurityTraceEvent,
+  RuntimeTokenCheckResult,
+  SecurityVerifyResult,
+  SecurityVerdict,
+  SecurityCoverageInfo,
+  SecurityTimingInfo,
+  SecurityClause,
+  ClauseEvaluationResult,
+} from './types.js';
+import { runSecurityRules, SECURITY_RULES } from './static-rules.js';
+import {
+  verifyAllTraceEvents,
+  evaluateSecurityClause,
+  createStandardSecurityClauses,
+  createSafeLogEntry,
+  assertNoTokenValue,
+} from './runtime-checks.js';
+
+// ============================================================================
+// VERIFICATION OPTIONS
+// ============================================================================
+
+export interface VerifyOptions {
+  /** Configuration for security rules */
+  config?: SecurityRuleConfig;
+  /** Whether to continue on first failure */
+  continueOnFailure?: boolean;
+  /** Verbose logging (safe - no tokens) */
+  verbose?: boolean;
+  /** Custom security clauses to evaluate */
+  clauses?: SecurityClause[];
+}
+
+// ============================================================================
+// MAIN VERIFIER CLASS
+// ============================================================================
+
+/**
+ * Security Verifier for token entropy and cryptographic requirements
  */
 export class SecurityVerifier {
-  private options: Required<SecurityVerifierOptions>;
-  private rules: SecurityRule[];
+  private config: SecurityRuleConfig;
+  private clauses: SecurityClause[];
 
-  constructor(options: Partial<SecurityVerifierOptions> = {}) {
-    this.options = { ...DEFAULT_OPTIONS, ...options };
-    this.rules = this.buildRuleSet();
+  constructor(options: VerifyOptions = {}) {
+    this.config = options.config || {};
+    this.clauses = options.clauses || createStandardSecurityClauses();
   }
 
   /**
-   * Verify a domain specification
+   * Run static analysis on source code
    */
-  verify(domain: Domain): SecurityVerificationResult {
+  analyzeStatic(codeMap: Map<string, string>): SecurityViolation[] {
+    return runSecurityRules(codeMap, this.config);
+  }
+
+  /**
+   * Verify runtime trace events
+   */
+  verifyRuntime(events: SecurityTraceEvent[]): RuntimeTokenCheckResult[] {
+    return verifyAllTraceEvents(events, {
+      minLength: this.config.minTokenLength,
+      minEntropyBits: this.config.minEntropyBits,
+    });
+  }
+
+  /**
+   * Evaluate security clauses against evidence
+   */
+  evaluateClauses(evidence: { 
+    tokenLength?: number; 
+    encoding?: 'hex' | 'base64' | 'base64url' | 'unknown' 
+  }): ClauseEvaluationResult[] {
+    return this.clauses.map(clause => evaluateSecurityClause(clause, evidence));
+  }
+
+  /**
+   * Run full verification combining static and runtime checks
+   */
+  verify(
+    codeMap: Map<string, string>,
+    traceEvents: SecurityTraceEvent[] = []
+  ): SecurityVerifyResult {
     const startTime = performance.now();
-    const findings: SecurityFinding[] = [];
 
-    // Run all applicable rules
-    for (const rule of this.rules) {
-      if (this.shouldRunRule(rule)) {
-        const ruleFindings = rule.check({ domain });
-        findings.push(...ruleFindings);
-      }
-    }
+    // Phase 1: Static Analysis
+    const staticStart = performance.now();
+    const staticViolations = this.analyzeStatic(codeMap);
+    const staticTime = performance.now() - staticStart;
 
-    // Run custom rules
-    for (const customRule of this.options.customRules) {
-      if (this.shouldRunRule(customRule)) {
-        const customFindings = customRule.check({ domain });
-        findings.push(...customFindings);
-      }
-    }
+    // Phase 2: Runtime Verification
+    const runtimeStart = performance.now();
+    const runtimeChecks = this.verifyRuntime(traceEvents);
+    const runtimeTime = performance.now() - runtimeStart;
 
-    // Filter by severity
-    const filteredFindings = findings.filter(f => 
-      SEVERITY_PRIORITY[f.severity] >= SEVERITY_PRIORITY[this.options.minSeverity]
-    );
-
-    // Sort by severity
-    filteredFindings.sort((a, b) => 
-      SEVERITY_PRIORITY[b.severity] - SEVERITY_PRIORITY[a.severity]
-    );
-
-    // Calculate summary
-    const summary = {
-      critical: filteredFindings.filter(f => f.severity === 'critical').length,
-      high: filteredFindings.filter(f => f.severity === 'high').length,
-      medium: filteredFindings.filter(f => f.severity === 'medium').length,
-      low: filteredFindings.filter(f => f.severity === 'low').length,
-      info: filteredFindings.filter(f => f.severity === 'info').length,
-    };
-
-    // Determine pass/fail
-    const failSeverityPriority = SEVERITY_PRIORITY[this.options.failOnSeverity];
-    const passed = !filteredFindings.some(f => 
-      SEVERITY_PRIORITY[f.severity] >= failSeverityPriority
-    );
-
-    // Calculate score (0-100)
-    const score = this.calculateScore(filteredFindings);
+    // Calculate results
+    const totalTime = performance.now() - startTime;
+    const timing = this.calculateTiming(staticTime, runtimeTime, totalTime);
+    const coverage = this.calculateCoverage(staticViolations, runtimeChecks, codeMap.size, traceEvents.length);
+    const { success, verdict, score } = this.calculateVerdict(staticViolations, runtimeChecks);
 
     return {
-      passed,
+      success,
+      verdict,
       score,
-      findings: filteredFindings,
-      summary,
-      checkedCategories: this.options.categories,
-      duration: performance.now() - startTime,
+      staticViolations,
+      runtimeChecks,
+      coverage,
+      timing,
     };
   }
 
-  /**
-   * Verify multiple domains
-   */
-  verifyAll(domains: Domain[]): SecurityVerificationResult {
-    const startTime = performance.now();
-    const allFindings: SecurityFinding[] = [];
+  private calculateVerdict(
+    staticViolations: SecurityViolation[],
+    runtimeChecks: RuntimeTokenCheckResult[]
+  ): { success: boolean; verdict: SecurityVerdict; score: number } {
+    const criticalStatic = staticViolations.filter(v => v.severity === 'critical').length;
+    const highStatic = staticViolations.filter(v => v.severity === 'high').length;
+    const mediumStatic = staticViolations.filter(v => v.severity === 'medium').length;
+    
+    const failedRuntime = runtimeChecks.filter(r => !r.passed).length;
+    const criticalRuntime = runtimeChecks.filter(r => !r.passed && r.severity === 'critical').length;
 
-    for (const domain of domains) {
-      const result = this.verify(domain);
-      allFindings.push(...result.findings);
+    // Calculate score
+    let score = 100;
+    score -= criticalStatic * 30;
+    score -= highStatic * 15;
+    score -= mediumStatic * 5;
+    score -= criticalRuntime * 25;
+    score -= failedRuntime * 10;
+    score = Math.max(0, Math.min(100, score));
+
+    // Determine verdict
+    let verdict: SecurityVerdict;
+    if (criticalStatic > 0 || criticalRuntime > 0) {
+      verdict = 'insecure';
+    } else if (highStatic > 0 || failedRuntime > 0) {
+      verdict = 'risky';
+    } else {
+      verdict = 'secure';
     }
 
-    // Re-sort and calculate summary
-    allFindings.sort((a, b) => 
-      SEVERITY_PRIORITY[b.severity] - SEVERITY_PRIORITY[a.severity]
-    );
+    const success = verdict === 'secure';
 
-    const summary = {
-      critical: allFindings.filter(f => f.severity === 'critical').length,
-      high: allFindings.filter(f => f.severity === 'high').length,
-      medium: allFindings.filter(f => f.severity === 'medium').length,
-      low: allFindings.filter(f => f.severity === 'low').length,
-      info: allFindings.filter(f => f.severity === 'info').length,
+    return { success, verdict, score };
+  }
+
+  private calculateTiming(
+    staticTime: number,
+    runtimeTime: number,
+    totalTime: number
+  ): SecurityTimingInfo {
+    return {
+      total: Math.round(totalTime * 100) / 100,
+      staticAnalysis: Math.round(staticTime * 100) / 100,
+      runtimeVerification: Math.round(runtimeTime * 100) / 100,
     };
+  }
 
-    const failSeverityPriority = SEVERITY_PRIORITY[this.options.failOnSeverity];
-    const passed = !allFindings.some(f => 
-      SEVERITY_PRIORITY[f.severity] >= failSeverityPriority
-    );
+  private calculateCoverage(
+    staticViolations: SecurityViolation[],
+    runtimeChecks: RuntimeTokenCheckResult[],
+    filesAnalyzed: number,
+    traceEventsProcessed: number
+  ): SecurityCoverageInfo {
+    const staticPassed = SECURITY_RULES.length - new Set(staticViolations.map(v => v.ruleId)).size;
+    const runtimePassed = runtimeChecks.filter(r => r.passed).length;
+    const runtimeFailed = runtimeChecks.filter(r => !r.passed).length;
 
     return {
-      passed,
-      score: this.calculateScore(allFindings),
-      findings: allFindings,
-      summary,
-      checkedCategories: this.options.categories,
-      duration: performance.now() - startTime,
+      staticRules: {
+        total: SECURITY_RULES.length,
+        passed: Math.max(0, staticPassed),
+        failed: new Set(staticViolations.map(v => v.ruleId)).size,
+      },
+      runtimeChecks: {
+        total: runtimeChecks.length,
+        passed: runtimePassed,
+        failed: runtimeFailed,
+      },
+      filesAnalyzed,
+      traceEventsProcessed,
     };
-  }
-
-  /**
-   * Add custom rules
-   */
-  addRule(rule: SecurityRule): void {
-    this.options.customRules.push(rule);
-  }
-
-  /**
-   * Get all available rules
-   */
-  getRules(): SecurityRule[] {
-    return [...this.rules, ...this.options.customRules];
-  }
-
-  /**
-   * Generate report
-   */
-  generateReport(result: SecurityVerificationResult): string {
-    const lines: string[] = [
-      '# Security Verification Report',
-      '',
-      `**Status:** ${result.passed ? '✅ PASSED' : '❌ FAILED'}`,
-      `**Score:** ${result.score}/100`,
-      `**Duration:** ${result.duration.toFixed(2)}ms`,
-      '',
-      '## Summary',
-      '',
-      `- Critical: ${result.summary.critical}`,
-      `- High: ${result.summary.high}`,
-      `- Medium: ${result.summary.medium}`,
-      `- Low: ${result.summary.low}`,
-      `- Info: ${result.summary.info}`,
-      '',
-      '## Findings',
-      '',
-    ];
-
-    if (result.findings.length === 0) {
-      lines.push('No security issues found.');
-    } else {
-      for (const finding of result.findings) {
-        lines.push(`### ${finding.severity.toUpperCase()}: ${finding.title}`);
-        lines.push('');
-        lines.push(`**ID:** ${finding.id}`);
-        lines.push(`**Category:** ${finding.category}`);
-        lines.push(`**Location:** ${finding.location.domain}${finding.location.behavior ? `.${finding.location.behavior}` : ''}`);
-        lines.push('');
-        lines.push(finding.description);
-        lines.push('');
-        lines.push(`**Recommendation:** ${finding.recommendation}`);
-        if (finding.cweId) lines.push(`**CWE:** ${finding.cweId}`);
-        if (finding.owaspId) lines.push(`**OWASP:** ${finding.owaspId}`);
-        if (finding.evidence) lines.push(`**Evidence:** \`${finding.evidence}\``);
-        lines.push('');
-        lines.push('---');
-        lines.push('');
-      }
-    }
-
-    return lines.join('\n');
-  }
-
-  // Private methods
-  private buildRuleSet(): SecurityRule[] {
-    const rules: SecurityRule[] = [];
-
-    if (this.options.categories.includes('authentication')) {
-      rules.push(...authenticationRules);
-    }
-
-    if (this.options.categories.includes('injection') || 
-        this.options.categories.includes('input-validation')) {
-      rules.push(...injectionRules);
-    }
-
-    if (this.options.categories.includes('data-exposure')) {
-      rules.push(...dataExposureRules);
-    }
-
-    return rules;
-  }
-
-  private shouldRunRule(rule: SecurityRule): boolean {
-    if (!this.options.categories.includes(rule.category)) {
-      return false;
-    }
-
-    if (SEVERITY_PRIORITY[rule.severity] < SEVERITY_PRIORITY[this.options.minSeverity]) {
-      return false;
-    }
-
-    return true;
-  }
-
-  private calculateScore(findings: SecurityFinding[]): number {
-    if (findings.length === 0) return 100;
-
-    // Weight by severity
-    const weights = {
-      critical: 25,
-      high: 15,
-      medium: 8,
-      low: 3,
-      info: 1,
-    };
-
-    let penalty = 0;
-    for (const finding of findings) {
-      penalty += weights[finding.severity];
-    }
-
-    return Math.max(0, Math.min(100, 100 - penalty));
   }
 }
 
+// ============================================================================
+// CONVENIENCE FUNCTIONS
+// ============================================================================
+
 /**
- * Create a security verifier
+ * Create a new security verifier
  */
-export function createSecurityVerifier(options?: Partial<SecurityVerifierOptions>): SecurityVerifier {
+export function createVerifier(options?: VerifyOptions): SecurityVerifier {
   return new SecurityVerifier(options);
 }
 
 /**
- * Quick verify function
+ * Quick verification of code and trace
  */
-export function verifySecurityAsync(
-  domain: Domain,
-  options?: Partial<SecurityVerifierOptions>
-): Promise<SecurityVerificationResult> {
-  return Promise.resolve(new SecurityVerifier(options).verify(domain));
+export function verify(
+  codeMap: Map<string, string>,
+  traceEvents: SecurityTraceEvent[] = [],
+  options?: VerifyOptions
+): SecurityVerifyResult {
+  const verifier = createVerifier(options);
+  return verifier.verify(codeMap, traceEvents);
+}
+
+/**
+ * Static-only verification (no runtime trace)
+ */
+export function verifyStatic(
+  codeMap: Map<string, string>,
+  options?: VerifyOptions
+): SecurityViolation[] {
+  const verifier = createVerifier(options);
+  return verifier.analyzeStatic(codeMap);
+}
+
+/**
+ * Runtime-only verification from trace events
+ */
+export function verifyRuntime(
+  traceEvents: SecurityTraceEvent[],
+  options?: VerifyOptions
+): RuntimeTokenCheckResult[] {
+  const verifier = createVerifier(options);
+  return verifier.verifyRuntime(traceEvents);
+}
+
+/**
+ * Verify a single file's token generation
+ */
+export function verifyFile(
+  code: string,
+  file: string,
+  options?: VerifyOptions
+): SecurityVerifyResult {
+  const codeMap = new Map([[file, code]]);
+  return verify(codeMap, [], options);
+}
+
+// ============================================================================
+// CLAUSE VERIFICATION FOR ISL INTEGRATION
+// ============================================================================
+
+/**
+ * Verify security clauses against evidence
+ * 
+ * This function is designed to integrate with the ISL verification engine.
+ * It evaluates security-specific clauses like token entropy requirements.
+ */
+export function verifySecurityClauses(
+  clauses: SecurityClause[],
+  evidence: {
+    tokenLength?: number;
+    encoding?: 'hex' | 'base64' | 'base64url' | 'unknown';
+    entropySource?: string;
+  }
+): ClauseEvaluationResult[] {
+  return clauses.map(clause => evaluateSecurityClause(clause, evidence));
+}
+
+/**
+ * Create the standard 256-bit entropy clause
+ */
+export function create256BitEntropyClause(): SecurityClause {
+  return {
+    id: 'security/token-entropy-256',
+    type: 'token_entropy',
+    expression: 'session_token.entropy >= 256 bits',
+    requiredValue: 256,
+    unit: 'bits',
+  };
+}
+
+/**
+ * Create the standard 64-char minimum length clause
+ */
+export function create64CharLengthClause(): SecurityClause {
+  return {
+    id: 'security/token-length-64',
+    type: 'token_length',
+    expression: 'session_token.length >= 64 characters',
+    requiredValue: 64,
+    unit: 'characters',
+  };
+}
+
+// ============================================================================
+// SAFE REPORTING
+// ============================================================================
+
+/**
+ * Generate a safe verification report that can be logged
+ * NEVER includes actual token values
+ */
+export function generateSafeReport(result: SecurityVerifyResult): Record<string, unknown> {
+  const report = {
+    success: result.success,
+    verdict: result.verdict,
+    score: result.score,
+    staticAnalysis: {
+      violationCount: result.staticViolations.length,
+      criticalCount: result.staticViolations.filter(v => v.severity === 'critical').length,
+      highCount: result.staticViolations.filter(v => v.severity === 'high').length,
+      violations: result.staticViolations.map(v => ({
+        ruleId: v.ruleId,
+        file: v.file,
+        line: v.line,
+        severity: v.severity,
+        message: v.message,
+        // Evidence may contain code but NOT token values
+        evidenceLength: v.evidence.length,
+      })),
+    },
+    runtimeChecks: {
+      total: result.runtimeChecks.length,
+      passed: result.runtimeChecks.filter(r => r.passed).length,
+      failed: result.runtimeChecks.filter(r => !r.passed).length,
+      checks: result.runtimeChecks.map(r => createSafeLogEntry(r)),
+    },
+    coverage: result.coverage,
+    timing: result.timing,
+    tokenValuesLogged: false, // Explicit attestation
+  };
+
+  // Validate no token values leaked
+  assertNoTokenValue(report);
+
+  return report;
 }

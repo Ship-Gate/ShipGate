@@ -13,6 +13,7 @@ import {
   compile, printCompileResult,
   generate, printGenerateResult,
   verify, printVerifyResult,
+  test, printTestResult,
   explain,
 } from './commands/index.js';
 
@@ -64,17 +65,37 @@ program
 // Verify command
 program
   .command('verify <spec>')
-  .description('Verify an implementation against an ISL spec')
-  .requiredOption('-i, --impl <file>', 'Implementation file to verify')
+  .description('Verify ISL spec against runtime traces (proof bundle)')
+  .option('-b, --bundle <path>', 'Path to proof bundle or traces.json')
+  .option('--behavior <name>', 'Filter to specific behavior')
+  .option('--json', 'Output JSON format (stable schema)')
   .option('-v, --verbose', 'Show detailed output')
-  .option('-t, --timeout <ms>', 'Test timeout in milliseconds', '30000')
+  .option('--no-color', 'Disable colored output')
   .action(async (spec, options) => {
     const result = await verify(spec, {
-      implementation: options.impl,
+      bundle: options.bundle,
+      behavior: options.behavior,
+      json: options.json,
       verbose: options.verbose,
-      timeout: parseInt(options.timeout),
+      noColor: !options.color,
     });
-    printVerifyResult(result);
+    printVerifyResult(result, options);
+    // Exit codes: 0=PROVEN, 1=FAILED, 2=INCOMPLETE_PROOF
+    process.exit(result.exitCode);
+  });
+
+// Test command
+program
+  .command('test [pattern]')
+  .description('Run executable tests and generate proof bundles with traces')
+  .option('-o, --output <dir>', 'Output directory for proof bundle', '.proof-bundle')
+  .option('-f, --framework <framework>', 'Test framework (vitest or jest)')
+  .option('-v, --verbose', 'Show detailed output')
+  .option('--junit', 'Generate JUnit XML report', true)
+  .option('--json', 'Generate JSON summary', true)
+  .action(async (pattern, options) => {
+    const result = await test(pattern || '**/*.test.ts', options);
+    printTestResult(result);
     process.exit(result.success ? 0 : 1);
   });
 

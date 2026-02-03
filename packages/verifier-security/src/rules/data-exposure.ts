@@ -2,12 +2,12 @@
 // Data Exposure Security Rules
 // ============================================================================
 
-import type { SecurityRule, SecurityFinding, RuleContext } from '../types.js';
+import type { DomainSecurityRule, SecurityFinding, RuleContext, FieldDefinition } from '../types.js';
 
 /**
  * Check for sensitive data in output
  */
-export const sensitiveDataExposureRule: SecurityRule = {
+export const sensitiveDataExposureRule: DomainSecurityRule = {
   id: 'SEC020',
   name: 'Sensitive Data Exposure',
   category: 'data-exposure',
@@ -24,10 +24,12 @@ export const sensitiveDataExposureRule: SecurityRule = {
     ];
 
     for (const behavior of domain.behaviors) {
-      if (!behavior.output) continue;
+      const output = behavior.output || behavior.outputs;
+      if (!output) continue;
 
-      for (const [outputName, outputDef] of Object.entries(behavior.output)) {
+      for (const [outputName, outputDef] of Object.entries(output)) {
         const nameLower = outputName.toLowerCase();
+        const def = outputDef as FieldDefinition;
         
         if (sensitiveFields.some(sf => nameLower.includes(sf))) {
           findings.push({
@@ -44,7 +46,7 @@ export const sensitiveDataExposureRule: SecurityRule = {
         }
 
         // Check for explicitly marked sensitive fields
-        if (outputDef.sensitive && !outputDef.encrypted) {
+        if (def.sensitive && !def.encrypted) {
           findings.push({
             id: 'SEC020',
             category: 'data-exposure',
@@ -67,7 +69,7 @@ export const sensitiveDataExposureRule: SecurityRule = {
 /**
  * Check for PII exposure
  */
-export const piiExposureRule: SecurityRule = {
+export const piiExposureRule: DomainSecurityRule = {
   id: 'SEC021',
   name: 'PII Data Exposure',
   category: 'data-exposure',
@@ -84,15 +86,17 @@ export const piiExposureRule: SecurityRule = {
     ];
 
     for (const behavior of domain.behaviors) {
-      if (!behavior.output) continue;
+      const output = behavior.output || behavior.outputs;
+      if (!output) continue;
 
       // Check if behavior returns lists (bulk data)
       const isList = behavior.name.toLowerCase().startsWith('list') ||
                      behavior.name.toLowerCase().includes('getall') ||
                      behavior.name.toLowerCase().includes('search');
 
-      for (const [outputName, outputDef] of Object.entries(behavior.output)) {
+      for (const [outputName, outputDef] of Object.entries(output)) {
         const nameLower = outputName.toLowerCase();
+        const def = outputDef as FieldDefinition;
         
         if (piiFields.some(pf => nameLower.includes(pf))) {
           // Higher severity for bulk returns
@@ -111,7 +115,7 @@ export const piiExposureRule: SecurityRule = {
           });
         }
 
-        if (outputDef.pii && isList) {
+        if (def.pii && isList) {
           findings.push({
             id: 'SEC021',
             category: 'data-exposure',
@@ -134,7 +138,7 @@ export const piiExposureRule: SecurityRule = {
 /**
  * Check for verbose error information
  */
-export const verboseErrorsRule: SecurityRule = {
+export const verboseErrorsRule: DomainSecurityRule = {
   id: 'SEC022',
   name: 'Verbose Error Information',
   category: 'data-exposure',
@@ -174,7 +178,7 @@ export const verboseErrorsRule: SecurityRule = {
 /**
  * Check for missing data classification
  */
-export const missingDataClassificationRule: SecurityRule = {
+export const missingDataClassificationRule: DomainSecurityRule = {
   id: 'SEC023',
   name: 'Missing Data Classification',
   category: 'data-exposure',
@@ -208,7 +212,7 @@ export const missingDataClassificationRule: SecurityRule = {
   },
 };
 
-export const dataExposureRules: SecurityRule[] = [
+export const dataExposureRules: DomainSecurityRule[] = [
   sensitiveDataExposureRule,
   piiExposureRule,
   verboseErrorsRule,

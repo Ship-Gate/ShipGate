@@ -94,3 +94,30 @@ export {
   type HistogramBucket,
   type HistogramOptions,
 } from './histogram.js';
+
+// Trace-based timing verification
+export {
+  // Extraction
+  extractHandlerDurations,
+  extractTimingSamples,
+  extractEventTimestamps,
+  
+  // Verification
+  verifyWithinFromTraces,
+  verifyMultipleTimings,
+  verifyEventuallyWithin,
+  verifyTemporalClauses,
+  
+  // Formatting
+  formatTemporalClauseTable,
+  
+  // Types
+  type TraceTimingResult,
+  type TraceTimingOptions,
+  type TimingCheck,
+  type EventuallyWithinResult,
+  type TemporalClauseResult,
+  
+  // Constants
+  DEFAULT_TRACE_TIMING_OPTIONS,
+} from './trace-timing.js';

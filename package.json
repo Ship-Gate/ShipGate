@@ -23,7 +23,17 @@
     "demo:ui": "pnpm --filter playwright-showcase dev",
     "demo:test": "pnpm --filter playwright-showcase test",
     "demo:test:ui": "pnpm --filter playwright-showcase test:ui",
-    "demo:record": "pnpm --filter playwright-showcase test:record"
+    "demo:record": "pnpm --filter playwright-showcase test:record",
+    "demo:login": "pnpm --filter @isl-demos/e2e-login demo",
+    "demo:login:failure": "pnpm --filter @isl-demos/e2e-login demo:failure",
+    "demo:login:record": "pnpm --filter @isl-demos/e2e-login demo:record",
+    "verify-promise": "npx tsx scripts/verify-promise.ts",
+    "test:critical": "turbo test --filter=@isl-lang/evaluator --filter=@isl-lang/verifier-runtime --filter=@isl-lang/import-resolver --filter=@isl-lang/isl-pipeline --filter=@isl-lang/isl-proof",
+    "test:evaluator": "pnpm --filter @isl-lang/evaluator test && pnpm --filter @isl-lang/verifier-runtime test",
+    "test:import-resolver": "pnpm --filter @isl-lang/import-resolver test",
+    "test:semantic": "pnpm --filter @isl-lang/isl-pipeline test",
+    "test:proof": "pnpm --filter @isl-lang/isl-proof test",
+    "test:performance": "pnpm --filter @isl-lang/isl-pipeline test -- --testNamePattern=\"Performance\""
   },
   "keywords": [
     "isl",

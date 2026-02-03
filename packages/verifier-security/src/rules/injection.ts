@@ -2,12 +2,12 @@
 // Injection Security Rules
 // ============================================================================
 
-import type { SecurityRule, SecurityFinding, RuleContext } from '../types.js';
+import type { DomainSecurityRule, SecurityFinding, RuleContext, FieldDefinition } from '../types.js';
 
 /**
  * Check for SQL injection vulnerabilities
  */
-export const sqlInjectionRule: SecurityRule = {
+export const sqlInjectionRule: DomainSecurityRule = {
   id: 'SEC010',
   name: 'Potential SQL Injection',
   category: 'injection',
@@ -17,17 +17,6 @@ export const sqlInjectionRule: SecurityRule = {
     const findings: SecurityFinding[] = [];
     const { domain } = context;
 
-    const sqlPatterns = [
-      /select.*from/i, /insert.*into/i, /update.*set/i,
-      /delete.*from/i, /drop\s+table/i, /execute/i,
-    ];
-
-    const dangerousInputPatterns = [
-      /input\.\w+\s*\+/,
-      /\$\{input\./,
-      /`.*\$\{.*input/,
-    ];
-
     for (const behavior of domain.behaviors) {
       // Check if behavior deals with database
       if (behavior.name.toLowerCase().includes('query') ||
@@ -35,9 +24,11 @@ export const sqlInjectionRule: SecurityRule = {
           behavior.name.toLowerCase().includes('database')) {
         
         // Check input for string concatenation patterns
-        if (behavior.input) {
-          for (const [inputName, inputDef] of Object.entries(behavior.input)) {
-            if (inputDef.type === 'string' && !inputDef.validation?.length) {
+        const input = behavior.input || behavior.inputs;
+        if (input) {
+          for (const [inputName, inputDef] of Object.entries(input)) {
+            const def = inputDef as FieldDefinition;
+            if (def.type === 'string' && (!def.validation || def.validation.length === 0)) {
               findings.push({
                 id: 'SEC010',
                 category: 'injection',
@@ -62,7 +53,7 @@ export const sqlInjectionRule: SecurityRule = {
 /**
  * Check for command injection
  */
-export const commandInjectionRule: SecurityRule = {
+export const commandInjectionRule: DomainSecurityRule = {
   id: 'SEC011',
   name: 'Potential Command Injection',
   category: 'injection',
@@ -80,9 +71,11 @@ export const commandInjectionRule: SecurityRule = {
       const behaviorNameLower = behavior.name.toLowerCase();
       
       if (commandPatterns.some(p => behaviorNameLower.includes(p))) {
-        if (behavior.input) {
-          for (const [inputName, inputDef] of Object.entries(behavior.input)) {
-            if (inputDef.type === 'string' && !inputDef.validation?.length) {
+        const input = behavior.input || behavior.inputs;
+        if (input) {
+          for (const [inputName, inputDef] of Object.entries(input)) {
+            const def = inputDef as FieldDefinition;
+            if (def.type === 'string' && (!def.validation || def.validation.length === 0)) {
               findings.push({
                 id: 'SEC011',
                 category: 'injection',
@@ -107,7 +100,7 @@ export const commandInjectionRule: SecurityRule = {
 /**
  * Check for XSS vulnerabilities
  */
-export const xssRule: SecurityRule = {
+export const xssRule: DomainSecurityRule = {
   id: 'SEC012',
   name: 'Potential XSS Vulnerability',
   category: 'injection',
@@ -119,12 +112,16 @@ export const xssRule: SecurityRule = {
 
     for (const behavior of domain.behaviors) {
       // Check if output contains HTML/content type
-      if (behavior.output) {
-        for (const [outputName, outputDef] of Object.entries(behavior.output)) {
-          if (outputDef.type === 'string' || outputDef.type.includes('html')) {
+      const output = behavior.output || behavior.outputs;
+      const input = behavior.input || behavior.inputs;
+      
+      if (output) {
+        for (const [outputName, outputDef] of Object.entries(output)) {
+          const def = outputDef as FieldDefinition;
+          if (def.type === 'string' || def.type?.includes('html')) {
             // Check if corresponding input exists without sanitization
-            if (behavior.input) {
-              for (const [inputName] of Object.entries(behavior.input)) {
+            if (input) {
+              for (const [inputName] of Object.entries(input)) {
                 // Heuristic: input name similar to output name
                 if (inputName.toLowerCase().includes(outputName.toLowerCase()) ||
                     outputName.toLowerCase().includes(inputName.toLowerCase())) {
@@ -154,7 +151,7 @@ export const xssRule: SecurityRule = {
 /**
  * Check for missing input validation
  */
-export const missingValidationRule: SecurityRule = {
+export const missingValidationRule: DomainSecurityRule = {
   id: 'SEC013',
   name: 'Missing Input Validation',
   category: 'input-validation',
@@ -165,11 +162,13 @@ export const missingValidationRule: SecurityRule = {
     const { domain } = context;
 
     for (const behavior of domain.behaviors) {
-      if (!behavior.input) continue;
+      const input = behavior.input || behavior.inputs;
+      if (!input) continue;
 
-      for (const [inputName, inputDef] of Object.entries(behavior.input)) {
-        if (inputDef.type === 'string' && 
-            (!inputDef.validation || inputDef.validation.length === 0)) {
+      for (const [inputName, inputDef] of Object.entries(input)) {
+        const def = inputDef as FieldDefinition;
+        if (def.type === 'string' && 
+            (!def.validation || def.validation.length === 0)) {
           findings.push({
             id: 'SEC013',
             category: 'input-validation',
@@ -192,7 +191,7 @@ export const missingValidationRule: SecurityRule = {
 /**
  * Check for path traversal
  */
-export const pathTraversalRule: SecurityRule = {
+export const pathTraversalRule: DomainSecurityRule = {
   id: 'SEC014',
   name: 'Potential Path Traversal',
   category: 'injection',
@@ -205,12 +204,14 @@ export const pathTraversalRule: SecurityRule = {
     const filePatterns = ['file', 'path', 'filename', 'directory', 'folder', 'upload', 'download'];
 
     for (const behavior of domain.behaviors) {
-      if (!behavior.input) continue;
+      const input = behavior.input || behavior.inputs;
+      if (!input) continue;
 
-      for (const [inputName, inputDef] of Object.entries(behavior.input)) {
+      for (const [inputName, inputDef] of Object.entries(input)) {
+        const def = inputDef as FieldDefinition;
         const nameLower = inputName.toLowerCase();
         if (filePatterns.some(p => nameLower.includes(p))) {
-          if (!inputDef.validation?.some(v => v.includes('pattern'))) {
+          if (!def.validation?.some((v: string) => v.includes('pattern'))) {
             findings.push({
               id: 'SEC014',
               category: 'injection',
@@ -231,7 +232,7 @@ export const pathTraversalRule: SecurityRule = {
   },
 };
 
-export const injectionRules: SecurityRule[] = [
+export const injectionRules: DomainSecurityRule[] = [
   sqlInjectionRule,
   commandInjectionRule,
   xssRule,

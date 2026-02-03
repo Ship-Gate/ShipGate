@@ -1,18 +1,31 @@
 /**
  * Check Command
  * 
- * Parse and type check ISL files.
+ * Parse and type check ISL files with semantic analysis.
  * Usage: isl check <files...>
  */
 
 import { readFile } from 'fs/promises';
 import { glob } from 'glob';
-import { resolve, relative } from 'path';
+import { resolve, relative, dirname } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import { parse as parseISL } from '@isl-lang/parser';
 import { output, type DiagnosticError } from '../output.js';
 import { loadConfig, type ISLConfig } from '../config.js';
+import {
+  PassRunner,
+  builtinPasses,
+  buildTypeEnvironment,
+  type AnalysisResult,
+} from '@isl-lang/semantic-analysis';
+import {
+  buildModuleGraph,
+  getStdlibRegistry,
+  formatErrors as formatResolverErrors,
+  type ModuleGraph,
+  type UseStatementSpec,
+} from '@isl-lang/import-resolver';
 
 // Built-in types that don't need to be defined
 const BUILTIN_TYPES = new Set([
@@ -23,13 +36,38 @@ const BUILTIN_TYPES = new Set([
   'Integer', 'Number', 'Double',
 ]);
 
-// Standard library type definitions
-const STDLIB_TYPES: Record<string, string[]> = {
-  'stdlib-auth': ['User', 'Session', 'Role', 'Permission', 'Token', 'Credential'],
-  'stdlib-billing': ['Payment', 'Invoice', 'Subscription', 'Price', 'Currency', 'Transaction'],
-  'stdlib-files': ['File', 'FileMetadata', 'StorageProvider', 'UploadResult'],
-  'stdlib-messaging': ['Message', 'Channel', 'Notification', 'Template'],
-  'stdlib-analytics': ['Event', 'Metric', 'Dimension', 'Report'],
+// Standard library type definitions - now loaded dynamically from registry
+const getStdlibTypes = (): Record<string, string[]> => {
+  const registry = getStdlibRegistry();
+  const types: Record<string, string[]> = {};
+  
+  // Get aliases and map to exports
+  const aliases = registry.getAliases();
+  for (const [alias, canonical] of Object.entries(aliases)) {
+    const exports = registry.getModuleExports(canonical);
+    if (exports.length > 0) {
+      types[alias] = exports;
+    }
+  }
+  
+  // Also add canonical names
+  for (const moduleName of registry.getAvailableModules()) {
+    const exports = registry.getModuleExports(moduleName);
+    if (exports.length > 0) {
+      types[moduleName] = exports;
+    }
+  }
+  
+  return types;
+};
+
+// Lazy-loaded stdlib types
+let _stdlibTypes: Record<string, string[]> | null = null;
+const STDLIB_TYPES = (): Record<string, string[]> => {
+  if (!_stdlibTypes) {
+    _stdlibTypes = getStdlibTypes();
+  }
+  return _stdlibTypes;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -45,6 +83,26 @@ export interface CheckOptions {
   config?: string;
   /** Quiet mode - only show errors */
   quiet?: boolean;
+  /** Debug mode - show resolved imports */
+  debug?: boolean;
+  /** Enable semantic analysis passes */
+  semantic?: boolean;
+  /** Specific semantic passes to run (comma-separated) */
+  semanticPasses?: string[];
+  /** Semantic passes to skip (comma-separated) */
+  skipPasses?: string[];
+  /** Include hint-level diagnostics */
+  includeHints?: boolean;
+  /** Enable import resolution (resolves use statements and imports) */
+  resolveImports?: boolean;
+}
+
+export interface ResolvedImportInfo {
+  from: string;
+  names: string[];
+  isStdlib: boolean;
+  resolvedPath?: string;
+  error?: string;
 }
 
 export interface FileCheckResult {
@@ -52,11 +110,14 @@ export interface FileCheckResult {
   valid: boolean;
   errors: DiagnosticError[];
   warnings: DiagnosticError[];
+  hints: DiagnosticError[];
   stats?: {
     entities: number;
     behaviors: number;
     invariants: number;
   };
+  imports?: ResolvedImportInfo[];
+  semanticResult?: AnalysisResult;
 }
 
 export interface CheckResult {
@@ -74,9 +135,21 @@ export interface CheckResult {
 /**
  * Check a single ISL file
  */
-async function checkFile(filePath: string, verbose: boolean): Promise<FileCheckResult> {
+async function checkFile(
+  filePath: string, 
+  verbose: boolean, 
+  debug: boolean = false,
+  semanticOptions?: {
+    enabled: boolean;
+    passes?: string[];
+    skip?: string[];
+    includeHints?: boolean;
+  }
+): Promise<FileCheckResult> {
   const errors: DiagnosticError[] = [];
   const warnings: DiagnosticError[] = [];
+  const hints: DiagnosticError[] = [];
+  const imports: ResolvedImportInfo[] = [];
 
   try {
     const source = await readFile(filePath, 'utf-8');
@@ -98,6 +171,8 @@ async function checkFile(filePath: string, verbose: boolean): Promise<FileCheckR
 
     // If parsing succeeded, run type checks and collect stats
     let stats: FileCheckResult['stats'];
+    let semanticResult: AnalysisResult | undefined;
+    
     if (ast) {
       stats = {
         entities: ast.entities.length,
@@ -111,35 +186,58 @@ async function checkFile(filePath: string, verbose: boolean): Promise<FileCheckR
       // Add types from imports
       for (const importDecl of ast.imports ?? []) {
         const moduleName = importDecl.from?.value;
-        if (moduleName && STDLIB_TYPES[moduleName]) {
+        const isStdlib = moduleName?.startsWith('stdlib-') || moduleName?.startsWith('@isl/') || false;
+        const importNames = importDecl.names?.map(n => n.name) ?? [];
+        
+        // Collect import info for debug output
+        const importInfo: ResolvedImportInfo = {
+          from: moduleName ?? '',
+          names: importNames,
+          isStdlib,
+        };
+        
+        const stdlibTypes = STDLIB_TYPES();
+        if (moduleName && stdlibTypes[moduleName]) {
+          importInfo.resolvedPath = `stdlib:${moduleName}`;
+          
           // If specific names imported, add those
           if (importDecl.names?.length) {
             for (const name of importDecl.names) {
-              if (STDLIB_TYPES[moduleName].includes(name.name)) {
+              if (stdlibTypes[moduleName].includes(name.name)) {
                 definedTypes.add(name.name);
               } else {
                 warnings.push({
                   file: filePath,
                   message: `Type '${name.name}' is not exported from '${moduleName}'`,
                   severity: 'warning',
-                  help: [`Available types: ${STDLIB_TYPES[moduleName].join(', ')}`],
+                  help: [`Available types: ${stdlibTypes[moduleName].join(', ')}`],
                 });
               }
             }
           } else {
             // Wildcard import - add all types from module
-            for (const typeName of STDLIB_TYPES[moduleName]) {
+            for (const typeName of stdlibTypes[moduleName]) {
               definedTypes.add(typeName);
             }
           }
+        } else if (moduleName && !isStdlib) {
+          // Local import - resolve relative path
+          const baseDir = filePath.replace(/[^/\\]+$/, '');
+          importInfo.resolvedPath = resolve(baseDir, moduleName);
+          if (!importInfo.resolvedPath.endsWith('.isl')) {
+            importInfo.resolvedPath += '.isl';
+          }
         } else if (moduleName) {
+          importInfo.error = `Unknown module '${moduleName}'`;
           warnings.push({
             file: filePath,
             message: `Unknown module '${moduleName}'`,
             severity: 'warning',
-            help: [`Available modules: ${Object.keys(STDLIB_TYPES).join(', ')}`],
+            help: [`Available modules: ${Object.keys(STDLIB_TYPES()).join(', ')}`],
           });
         }
+        
+        imports.push(importInfo);
       }
       
       // Add entities as types
@@ -267,6 +365,53 @@ async function checkFile(filePath: string, verbose: boolean): Promise<FileCheckR
           });
         }
       }
+
+      // Run semantic analysis passes if enabled
+      if (semanticOptions?.enabled) {
+        const runner = new PassRunner({
+          enablePasses: semanticOptions.passes || [],
+          disablePasses: semanticOptions.skip || [],
+          includeHints: semanticOptions.includeHints ?? false,
+        });
+        
+        runner.registerAll(builtinPasses);
+        
+        try {
+          const typeEnv = buildTypeEnvironment(ast);
+          semanticResult = runner.run(ast, source, filePath, typeEnv);
+          
+          // Convert semantic diagnostics to DiagnosticError format
+          for (const diag of semanticResult.diagnostics) {
+            const diagnosticError: DiagnosticError = {
+              file: filePath,
+              line: diag.location?.line,
+              column: diag.location?.column,
+              endLine: diag.location?.endLine,
+              endColumn: diag.location?.endColumn,
+              message: diag.message,
+              severity: diag.severity as 'error' | 'warning' | 'info',
+              code: diag.code,
+              notes: diag.notes,
+              help: diag.help,
+            };
+            
+            if (diag.severity === 'error') {
+              errors.push(diagnosticError);
+            } else if (diag.severity === 'warning') {
+              warnings.push(diagnosticError);
+            } else if (diag.severity === 'hint' && semanticOptions.includeHints) {
+              hints.push(diagnosticError);
+            }
+          }
+        } catch (err) {
+          // If semantic analysis fails, add as warning
+          warnings.push({
+            file: filePath,
+            message: `Semantic analysis failed: ${err instanceof Error ? err.message : String(err)}`,
+            severity: 'warning',
+          });
+        }
+      }
     }
 
     return {
@@ -274,7 +419,10 @@ async function checkFile(filePath: string, verbose: boolean): Promise<FileCheckR
       valid: errors.length === 0,
       errors,
       warnings,
+      hints,
       stats,
+      imports: debug ? imports : undefined,
+      semanticResult,
     };
   } catch (err) {
     errors.push({
@@ -288,6 +436,8 @@ async function checkFile(filePath: string, verbose: boolean): Promise<FileCheckR
       valid: false,
       errors,
       warnings,
+      hints,
+      imports: debug ? imports : undefined,
     };
   }
 }
@@ -358,10 +508,68 @@ export async function check(filePatterns: string[], options: CheckOptions = {}):
 
   if (spinner) spinner.text = `Checking ${files.length} file${files.length === 1 ? '' : 's'}...`;
 
+  // Resolve imports first if enabled
+  const resolveImports = options.resolveImports ?? true; // Enabled by default
+  const moduleGraphs: Map<string, ModuleGraph> = new Map();
+  
+  if (resolveImports) {
+    if (spinner) spinner.text = 'Resolving imports...';
+    
+    for (const file of files) {
+      try {
+        const graph = await buildModuleGraph(file, {
+          basePath: dirname(file),
+          enableImports: true,
+          debug: options.debug ?? false,
+          enableCaching: true,
+        });
+        moduleGraphs.set(file, graph);
+        
+        // Log import resolution errors if verbose
+        if (options.verbose && graph.errors.length > 0) {
+          for (const err of graph.errors) {
+            output.debug(`[Import Resolution] ${err.message}`);
+          }
+        }
+      } catch (err) {
+        // Import resolution failed - continue with single-file mode
+        if (options.verbose) {
+          output.debug(`[Import Resolution] Failed for ${file}: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+    }
+    
+    if (spinner && options.verbose) {
+      spinner.text = `Resolved imports for ${moduleGraphs.size}/${files.length} files...`;
+    }
+  }
+
   // Check all files
   const results: FileCheckResult[] = [];
+  const semanticOptions = {
+    enabled: options.semantic ?? true, // Semantic analysis enabled by default
+    passes: options.semanticPasses,
+    skip: options.skipPasses,
+    includeHints: options.includeHints ?? false,
+  };
+  
   for (const file of files) {
-    const result = await checkFile(file, options.verbose ?? false);
+    const moduleGraph = moduleGraphs.get(file);
+    const result = await checkFile(file, options.verbose ?? false, options.debug ?? false, semanticOptions);
+    
+    // Add import resolution errors to result
+    if (moduleGraph && moduleGraph.errors.length > 0) {
+      for (const err of moduleGraph.errors) {
+        result.errors.push({
+          file,
+          message: err.message,
+          severity: 'error',
+          code: err.code,
+        });
+      }
+      result.valid = result.errors.length === 0;
+    }
+    
     results.push(result);
   }
 
@@ -391,7 +599,7 @@ export async function check(filePatterns: string[], options: CheckOptions = {}):
 /**
  * Print check results to console
  */
-export function printCheckResult(result: CheckResult): void {
+export function printCheckResult(result: CheckResult, showHints = false): void {
   console.log('');
 
   // Print file-by-file results
@@ -408,6 +616,23 @@ export function printCheckResult(result: CheckResult): void {
       console.log(chalk.red('✗') + ` ${relPath}`);
     }
 
+    // Print resolved imports if debug mode
+    if (file.imports && file.imports.length > 0) {
+      console.log(chalk.cyan('  Resolved imports:'));
+      for (const imp of file.imports) {
+        const status = imp.error ? chalk.red('✗') : chalk.green('✓');
+        const type = imp.isStdlib ? chalk.blue('[stdlib]') : chalk.gray('[local]');
+        const names = imp.names.length > 0 ? ` { ${imp.names.join(', ')} }` : '';
+        console.log(`    ${status} ${type} ${imp.from}${names}`);
+        if (imp.resolvedPath) {
+          console.log(chalk.gray(`       → ${imp.resolvedPath}`));
+        }
+        if (imp.error) {
+          console.log(chalk.red(`       Error: ${imp.error}`));
+        }
+      }
+    }
+
     // Print errors
     for (const err of file.errors) {
       output.diagnostic(err);
@@ -417,20 +642,51 @@ export function printCheckResult(result: CheckResult): void {
     for (const warn of file.warnings) {
       output.diagnostic(warn);
     }
+
+    // Print hints if enabled
+    if (showHints && file.hints) {
+      for (const hint of file.hints) {
+        output.diagnostic({ ...hint, severity: 'info' });
+      }
+    }
+
+    // Print semantic analysis timing info if available
+    if (file.semanticResult && output.isJson()) {
+      output.debug(`  Semantic passes: ${file.semanticResult.stats.passesRun}/${file.semanticResult.stats.totalPasses}`);
+      output.debug(`  Semantic duration: ${file.semanticResult.stats.totalDurationMs}ms`);
+    }
   }
+
+  // Calculate totals including hints
+  const totalHints = result.files.reduce((sum, f) => sum + (f.hints?.length ?? 0), 0);
 
   // Print summary
   console.log('');
   if (result.success) {
+    let message = chalk.green(`✓ All ${result.files.length} file${result.files.length === 1 ? '' : 's'} passed`);
+    const extras: string[] = [];
+    
     if (result.totalWarnings > 0) {
-      console.log(chalk.green(`✓ All ${result.files.length} file${result.files.length === 1 ? '' : 's'} passed`) + 
-        chalk.yellow(` (${result.totalWarnings} warning${result.totalWarnings === 1 ? '' : 's'})`));
-    } else {
-      console.log(chalk.green(`✓ All ${result.files.length} file${result.files.length === 1 ? '' : 's'} passed`));
+      extras.push(chalk.yellow(`${result.totalWarnings} warning${result.totalWarnings === 1 ? '' : 's'}`));
     }
+    if (showHints && totalHints > 0) {
+      extras.push(chalk.cyan(`${totalHints} hint${totalHints === 1 ? '' : 's'}`));
+    }
+    
+    if (extras.length > 0) {
+      message += ` (${extras.join(', ')})`;
+    }
+    console.log(message);
   } else {
-    console.log(chalk.red(`✗ ${result.totalErrors} error${result.totalErrors === 1 ? '' : 's'}`) +
-      (result.totalWarnings > 0 ? chalk.yellow(` ${result.totalWarnings} warning${result.totalWarnings === 1 ? '' : 's'}`) : ''));
+    let message = chalk.red(`✗ ${result.totalErrors} error${result.totalErrors === 1 ? '' : 's'}`);
+    
+    if (result.totalWarnings > 0) {
+      message += chalk.yellow(` ${result.totalWarnings} warning${result.totalWarnings === 1 ? '' : 's'}`);
+    }
+    if (showHints && totalHints > 0) {
+      message += chalk.cyan(` ${totalHints} hint${totalHints === 1 ? '' : 's'}`);
+    }
+    console.log(message);
   }
 
   console.log(chalk.gray(`  Completed in ${result.duration}ms`));

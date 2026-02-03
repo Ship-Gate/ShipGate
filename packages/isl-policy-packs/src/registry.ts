@@ -46,6 +46,7 @@ class PolicyPackRegistryImpl implements PolicyPackRegistry {
    */
   getEnabledRules(config?: Record<string, PolicyPackConfig>): PolicyRule[] {
     const rules: PolicyRule[] = [];
+    const deprecationWarnings: Array<{ ruleId: string; message: string }> = [];
 
     for (const pack of this.packs.values()) {
       const packConfig = config?.[pack.id];
@@ -63,6 +64,17 @@ class PolicyPackRegistryImpl implements PolicyPackRegistry {
           continue;
         }
 
+        // Check for deprecation
+        if (rule.deprecated) {
+          const replacement = rule.replacementRuleId 
+            ? ` Use ${rule.replacementRuleId} instead.`
+            : '';
+          deprecationWarnings.push({
+            ruleId: rule.id,
+            message: `Rule ${rule.id} is deprecated since ${rule.deprecatedSince || pack.version}.${replacement} ${rule.deprecationMessage || ''}`,
+          });
+        }
+
         // Apply overrides
         const finalRule: PolicyRule = {
           ...rule,
@@ -71,6 +83,13 @@ class PolicyPackRegistryImpl implements PolicyPackRegistry {
         };
 
         rules.push(finalRule);
+      }
+    }
+
+    // Emit deprecation warnings (in non-production environments)
+    if (deprecationWarnings.length > 0 && typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      for (const warning of deprecationWarnings) {
+        console.warn(`[Deprecation] ${warning.message}`);
       }
     }
 
@@ -108,12 +127,16 @@ export async function loadBuiltinPacks(reg: PolicyPackRegistry): Promise<void> {
     { piiPolicyPack },
     { rateLimitPolicyPack },
     { intentPolicyPack },
+    { qualityPolicyPack },
+    { securityPolicyPack },
   ] = await Promise.all([
     import('./packs/auth.js'),
     import('./packs/payments.js'),
     import('./packs/pii.js'),
     import('./packs/rate-limit.js'),
     import('./packs/intent.js'),
+    import('./packs/quality.js'),
+    import('./packs/security.js'),
   ]);
 
   reg.registerPack(authPolicyPack);
@@ -121,4 +144,6 @@ export async function loadBuiltinPacks(reg: PolicyPackRegistry): Promise<void> {
   reg.registerPack(piiPolicyPack);
   reg.registerPack(rateLimitPolicyPack);
   reg.registerPack(intentPolicyPack);
+  reg.registerPack(qualityPolicyPack);
+  reg.registerPack(securityPolicyPack);
 }

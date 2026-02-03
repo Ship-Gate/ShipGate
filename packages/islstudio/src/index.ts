@@ -22,3 +22,13 @@ export { runGate, type GateConfig, type GateFile, type GateResult } from './gate
 export { loadConfig, PRESETS } from './config.js';
 export { formatTerminalOutput, formatJsonOutput } from './formatters.js';
 export { generateHtmlReport } from './report.js';
+export { runProofCommand } from './proof-cli.js';
+
+// Re-export proof bundle types from @isl-lang/proof
+export type {
+  ProofBundleManifest,
+  ProofVerdict,
+  BuildResult,
+  TestResult,
+  IterationRecord,
+} from '@isl-lang/proof';

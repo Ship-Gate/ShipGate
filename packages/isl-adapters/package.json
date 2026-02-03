@@ -1,7 +1,7 @@
 {
   "name": "@isl-lang/adapters",
   "version": "0.1.0",
-  "description": "ISL Adapters - GitHub Actions, MCP tools, and CLI integrations",
+  "description": "ISL Adapters - GitHub Actions, MCP tools, CLI, and domain integrations",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -21,6 +21,10 @@
     "./cli": {
       "import": "./dist/cli/index.js",
       "types": "./dist/cli/index.d.ts"
+    },
+    "./auth": {
+      "import": "./dist/auth/index.js",
+      "types": "./dist/auth/index.d.ts"
     }
   },
   "files": [
@@ -28,7 +32,7 @@
     "github-action"
   ],
   "scripts": {
-    "build": "tsup src/index.ts src/github/index.ts src/mcp/index.ts src/cli/index.ts --format esm --clean --external @isl-lang/verified-build --external @isl-lang/gate --external @isl-lang/evidence --external @isl-lang/firewall",
+    "build": "tsup src/index.ts src/github/index.ts src/mcp/index.ts src/cli/index.ts src/auth/index.ts --format esm --dts --clean --external @isl-lang/verified-build --external @isl-lang/gate --external @isl-lang/evidence --external @isl-lang/firewall",
     "dev": "tsup src/index.ts --format esm --dts --watch",
     "test": "vitest run",
     "test:watch": "vitest",

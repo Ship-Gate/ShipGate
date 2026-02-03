@@ -184,17 +184,34 @@ export function formatDiagnostic(
     lines.push(...snippet);
   }
 
-  // Notes
-  if (opts.showHelp && diagnostic.notes && diagnostic.notes.length > 0) {
-    for (const note of diagnostic.notes) {
+  // Get explanation from catalog if available
+  const explanation = getExplanation(diagnostic.code);
+  
+  // Notes - "why" explanation
+  if (opts.showHelp) {
+    // Use notes from diagnostic, or fall back to explanation from catalog
+    const notes = diagnostic.notes && diagnostic.notes.length > 0
+      ? diagnostic.notes
+      : explanation
+        ? [explanation.explanation.trim()]
+        : [];
+    
+    for (const note of notes) {
       lines.push(formatAnnotation('note', note, colors));
     }
   }
 
-  // Help suggestions
-  if (opts.showHelp && diagnostic.help && diagnostic.help.length > 0) {
-    for (const help of diagnostic.help) {
-      lines.push(formatAnnotation('help', help, colors));
+  // Help suggestions - "how to fix"
+  if (opts.showHelp) {
+    // Use help from diagnostic, or fall back to solutions from catalog
+    const help = diagnostic.help && diagnostic.help.length > 0
+      ? diagnostic.help
+      : explanation && explanation.solutions.length > 0
+        ? explanation.solutions
+        : [];
+    
+    for (const helpText of help) {
+      lines.push(formatAnnotation('help', helpText, colors));
     }
   }
 

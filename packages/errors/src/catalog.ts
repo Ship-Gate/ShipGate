@@ -463,6 +463,96 @@ local bindings, or in parent scopes.
     seeAlso: ['E0301', 'E0302'],
   },
 
+  E0301: {
+    code: 'E0301',
+    category: 'semantic',
+    title: 'Undefined entity',
+    explanation: `
+You're referencing an entity that hasn't been defined in this domain.
+Entities must be declared before they can be used in behaviors, types, or
+other entities.
+`.trim(),
+    causes: [
+      'Typo in entity name',
+      'Entity defined in a different domain (missing import)',
+      "Entity was renamed but references weren't updated",
+      'Case sensitivity issue (entity names are case-sensitive)',
+    ],
+    solutions: [
+      'Check spelling of the entity name',
+      'Import the entity from the correct domain if it exists elsewhere',
+      'Define the entity before using it',
+      'Use correct casing (entities start with uppercase)',
+    ],
+    badExample: {
+      code: `behavior Transfer {
+  preconditions {
+    Account.exists(senderId)  // ← Account not defined
+  }
+}`,
+      description: 'Referencing undefined entity',
+    },
+    goodExample: {
+      code: `entity Account {
+  id: UUID
+}
+
+behavior Transfer {
+  preconditions {
+    Account.exists(senderId)  // ← Account is now defined
+  }
+}`,
+      description: 'Entity defined before use',
+    },
+    seeAlso: ['E0300', 'E0302'],
+  },
+
+  E0302: {
+    code: 'E0302',
+    category: 'semantic',
+    title: 'Undefined behavior',
+    explanation: `
+You're referencing a behavior that hasn't been defined in this domain.
+Behaviors must be declared before they can be referenced in scenarios,
+policies, or other behaviors.
+`.trim(),
+    causes: [
+      'Typo in behavior name',
+      'Behavior defined in a different domain (missing import)',
+      "Behavior was renamed but references weren't updated",
+      'Case sensitivity issue',
+    ],
+    solutions: [
+      'Check spelling of the behavior name',
+      'Import the behavior from the correct domain if it exists elsewhere',
+      'Define the behavior before referencing it',
+      'Use correct casing (behaviors start with uppercase)',
+    ],
+    badExample: {
+      code: `scenario "test" {
+  given {
+    Transfer(amount: 100)  // ← Transfer not defined
+  }
+}`,
+      description: 'Referencing undefined behavior',
+    },
+    goodExample: {
+      code: `behavior Transfer {
+  input {
+    amount: Decimal
+  }
+}
+
+scenario "test" {
+  given {
+    Transfer(amount: 100)  // ← Transfer is now defined
+  }
+}`,
+      description: 'Behavior defined before use',
+    },
+    seeAlso: ['E0300', 'E0301'],
+  },
+
   E0304: {
     code: 'E0304',
     category: 'semantic',
@@ -542,6 +632,198 @@ postconditions.
     seeAlso: ['E0304'],
   },
 
+  E0310: {
+    code: 'E0310',
+    category: 'semantic',
+    title: 'Unsatisfiable precondition',
+    explanation: `
+The preconditions contain contradictory constraints that can never all
+be satisfied simultaneously. This means the behavior can never be
+invoked legally.
+`.trim(),
+    causes: [
+      'Contradictory numeric bounds (e.g., x > 5 and x < 2)',
+      'Mutually exclusive conditions combined with AND',
+      'Copy-paste errors creating conflicting constraints',
+      'Overly strict validation that rejects all inputs',
+    ],
+    solutions: [
+      'Review the preconditions and remove contradictory constraints',
+      'Change AND to OR if conditions should be alternatives',
+      'Use consistent bounds (lower bound < upper bound)',
+      'Remove redundant or conflicting checks',
+    ],
+    badExample: {
+      code: `behavior Transfer {
+  preconditions {
+    amount > 1000 and amount < 100  // ← impossible
+  }
+}`,
+      description: 'Contradictory bounds that can never be satisfied',
+    },
+    goodExample: {
+      code: `behavior Transfer {
+  preconditions {
+    amount > 0 and amount <= 10000  // ← valid range
+  }
+}`,
+      description: 'Consistent bounds that define a valid range',
+    },
+    seeAlso: ['E0311', 'E0500'],
+  },
+
+  E0311: {
+    code: 'E0311',
+    category: 'semantic',
+    title: 'Output referenced in precondition',
+    explanation: `
+A precondition references 'result' or 'output', but these values don't
+exist until after the behavior executes. Preconditions are checked
+BEFORE execution, so they can only reference inputs and existing state.
+`.trim(),
+    causes: [
+      'Confusing preconditions with postconditions',
+      'Copy-paste error from a postcondition',
+      'Misunderstanding of contract evaluation order',
+    ],
+    solutions: [
+      'Move the check to a postcondition if validating output',
+      'Reference input fields instead of output fields',
+      'Use old() in postconditions to compare pre/post state',
+    ],
+    badExample: {
+      code: `behavior Transfer {
+  preconditions {
+    result.success == true  // ← result doesn't exist yet
+  }
+}`,
+      description: 'Referencing result in a precondition',
+    },
+    goodExample: {
+      code: `behavior Transfer {
+  preconditions {
+    amount > 0  // ← validates input
+  }
+  postconditions {
+    success implies result.transferred == amount
+  }
+}`,
+      description: 'Preconditions check inputs, postconditions check results',
+    },
+    seeAlso: ['E0305', 'E0310'],
+  },
+
+  E0312: {
+    code: 'E0312',
+    category: 'semantic',
+    title: 'Undefined result field',
+    explanation: `
+A postcondition references a field on 'result' that is not declared
+in the output type. This will cause a runtime error when the
+postcondition is evaluated.
+`.trim(),
+    causes: [
+      'Typo in field name',
+      'Field was renamed in output but not in postcondition',
+      'Referencing a field from a different behavior',
+      'Forgetting to add a field to the output type',
+    ],
+    solutions: [
+      'Check the spelling of the field name',
+      'Add the missing field to the output type',
+      'Use a field that exists in the declared output',
+    ],
+    badExample: {
+      code: `behavior Transfer {
+  output {
+    success: transferred: Decimal
+  }
+  postconditions {
+    result.ammount > 0  // ← typo: 'ammount' not in output
+  }
+}`,
+      description: 'Referencing non-existent field in output',
+    },
+    goodExample: {
+      code: `behavior Transfer {
+  output {
+    success: transferred: Decimal
+  }
+  postconditions {
+    result.transferred > 0  // ← correct field name
+  }
+}`,
+      description: 'Referencing a declared output field',
+    },
+    seeAlso: ['E0202', 'E0313'],
+  },
+
+  E0313: {
+    code: 'E0313',
+    category: 'semantic',
+    title: 'Undefined invariant variable',
+    explanation: `
+An invariant references a variable that is not defined in the current
+scope. Invariants can only reference entities, types, fields, and
+bound variables from quantifiers.
+`.trim(),
+    causes: [
+      'Typo in variable or field name',
+      'Variable defined in a different scope',
+      'Missing quantifier binding',
+      'Entity or type not defined before the invariant',
+    ],
+    solutions: [
+      'Check the spelling of the variable name',
+      'Define the entity or type before the invariant',
+      'Use a quantifier (all, any) to bind iteration variables',
+      'Reference fields using entity.field syntax',
+    ],
+    badExample: {
+      code: `invariant "balance check" {
+  account.balence >= 0  // ← typo: 'balence'
+}`,
+      description: 'Typo in field name',
+    },
+    goodExample: {
+      code: `invariant "balance check" {
+  all a in Account: a.balance >= 0  // ← correct with quantifier
+}`,
+      description: 'Proper variable binding with quantifier',
+    },
+    seeAlso: ['E0300', 'E0312'],
+  },
+
+  E0314: {
+    code: 'E0314',
+    category: 'semantic',
+    title: 'Contradictory bounds',
+    explanation: `
+The specified bounds for a variable are contradictory - the lower bound
+is greater than the upper bound, making it impossible for any value to
+satisfy both constraints.
+`.trim(),
+    causes: [
+      'Swapped comparison operators (< vs >)',
+      'Numeric typo in bound values',
+      'Copy-paste error with wrong variable',
+    ],
+    solutions: [
+      'Ensure lower bound < upper bound',
+      'Check comparison operators are correct',
+      'Verify numeric values are as intended',
+    ],
+    badExample: {
+      code: `type Age = Int where min(100) and max(0)  // ← min > max`,
+      description: 'Minimum bound greater than maximum',
+    },
+    goodExample: {
+      code: `type Age = Int where min(0) and max(120)  // ← valid range`,
+      description: 'Valid minimum and maximum bounds',
+    },
+    seeAlso: ['E0310', 'E0200'],
+  },
+
   // ==========================================================================
   // EVALUATION ERRORS (E0400-E0499)
   // ==========================================================================
@@ -614,6 +896,124 @@ postconditions {
 }`,
       description: 'Safe property access with null checks',
     },
+  },
+
+  E0403: {
+    code: 'E0403',
+    category: 'eval',
+    title: 'Undefined property',
+    explanation: `
+An expression tried to access a property that doesn't exist on the value.
+This is a runtime error that occurs when accessing fields, methods, or
+other properties that aren't defined.
+`.trim(),
+    causes: [
+      'Typo in property name',
+      'Property exists on a different type',
+      "Property was renamed but usages weren't updated",
+      'Accessing property on wrong object',
+    ],
+    solutions: [
+      'Check spelling of the property name',
+      'Verify the property exists on the type being accessed',
+      'Use autocomplete or check type definitions',
+      'Check if property needs to be accessed differently',
+    ],
+    badExample: {
+      code: `entity Account {
+  balance: Decimal
+}
+
+postconditions {
+  account.balace > 0  // ← typo: "balace"
+}`,
+      description: 'Typo in property name',
+    },
+    goodExample: {
+      code: `entity Account {
+  balance: Decimal
+}
+
+postconditions {
+  account.balance > 0  // ← correct spelling
+}`,
+      description: 'Correct property name',
+    },
+    seeAlso: ['E0202', 'E0401'],
+  },
+
+  E0404: {
+    code: 'E0404',
+    category: 'eval',
+    title: 'Invalid operation',
+    explanation: `
+An operation was attempted that is not valid for the given values or
+context. This is a catch-all for various runtime errors that don't fit
+into more specific categories.
+`.trim(),
+    causes: [
+      'Operation not supported for the value type',
+      'Invalid state for the operation',
+      'Missing required context or parameters',
+      'Operation failed due to constraints',
+    ],
+    solutions: [
+      'Check the operation is valid for the value type',
+      'Verify the system is in a valid state',
+      'Ensure all required parameters are provided',
+      'Review constraints and preconditions',
+    ],
+    badExample: {
+      code: `postconditions {
+  "hello".length()  // ← strings don't have length() method
+}`,
+      description: 'Invalid operation on type',
+    },
+    goodExample: {
+      code: `postconditions {
+  "hello".length > 0  // ← use property, not method
+}`,
+      description: 'Correct operation',
+    },
+    seeAlso: ['E0204', 'E0400'],
+  },
+
+  E0408: {
+    code: 'E0408',
+    category: 'eval',
+    title: 'Type coercion failed',
+    explanation: `
+An attempt to convert a value from one type to another failed because
+the conversion is not possible or the value is invalid for the target type.
+`.trim(),
+    causes: [
+      'Converting incompatible types (e.g., String to Int)',
+      'Invalid format for conversion (e.g., "abc" to Int)',
+      'Value out of range for target type',
+      'Null/undefined value cannot be coerced',
+    ],
+    solutions: [
+      'Ensure the value can be converted to the target type',
+      'Use proper conversion functions (parseInt, toString, etc.)',
+      'Validate the value format before conversion',
+      'Handle null/undefined cases explicitly',
+    ],
+    badExample: {
+      code: `postconditions {
+  parseInt("not a number")  // ← invalid format
+}`,
+      description: 'Invalid conversion',
+    },
+    goodExample: {
+      code: `preconditions {
+  input.value.matches(/^\\d+$/)  // ← validate format first
+}
+postconditions {
+  parseInt(input.value) > 0  // ← safe conversion
+}`,
+      description: 'Validating before conversion',
+    },
+    seeAlso: ['E0200', 'E0403'],
   },
 
   // ==========================================================================
@@ -819,6 +1219,137 @@ could be a built-in module, a package, or a local file.
       code: `import { Auth } from "@isl-lang/stdlib/auth"  // ← correct`,
       description: 'Correct import path',
     },
+  },
+
+  // ==========================================================================
+  // MODULE RESOLUTION ERRORS (E0710-E0799)
+  // ==========================================================================
+
+  E0710: {
+    code: 'E0710',
+    category: 'io',
+    title: 'Module not found',
+    explanation: `
+The module specified in the use statement could not be found.
+ISL searches for modules in this order:
+1. Relative paths (./local.isl)
+2. Project root and intents/ folder
+3. Standard library (stdlib-*)
+4. External packages (@org/module)
+`.trim(),
+    causes: [
+      'Typo in module name',
+      'Module file does not exist',
+      'Missing stdlib package installation',
+      'Incorrect relative path',
+      'Wrong file extension',
+    ],
+    solutions: [
+      'Check spelling of module name',
+      'Verify the file exists at the expected path',
+      'Install @isl-lang/stdlib if using stdlib modules',
+      'Use correct relative path syntax (./)',
+      'Ensure file has .isl extension',
+    ],
+    badExample: {
+      code: `use stdlib-autth  // ← typo: "autth" instead of "auth"`,
+      description: 'Typo in stdlib module name',
+    },
+    goodExample: {
+      code: `use stdlib-auth  // ← correct spelling`,
+      description: 'Correct stdlib module name',
+    },
+    seeAlso: ['E0705', 'E0711'],
+  },
+
+  E0711: {
+    code: 'E0711',
+    category: 'semantic',
+    title: 'Circular import detected',
+    explanation: `
+A circular dependency was detected in the module graph.
+Module A imports B, which imports C, which imports A again.
+Circular imports are not allowed as they create ambiguous load order
+and can cause initialization issues.
+
+ISL detects these cycles during module graph construction using
+Tarjan's algorithm for finding strongly connected components.
+`.trim(),
+    causes: [
+      'Two modules importing each other directly',
+      'Indirect cycle through multiple modules (A → B → C → A)',
+      'Shared types placed in a module that imports them',
+      'Refactoring that accidentally introduced a cycle',
+    ],
+    solutions: [
+      'Extract shared types to a common module that both can import',
+      'Restructure modules to break the cycle',
+      'Use interface segregation - split large modules',
+      'Create a dedicated "types" module for shared definitions',
+    ],
+    badExample: {
+      code: `// auth.isl
+use "./session"  // imports session
+
+// session.isl  
+use "./auth"     // imports auth → CYCLE!`,
+      description: 'Two modules importing each other',
+    },
+    goodExample: {
+      code: `// types.isl (shared types)
+entity User { ... }
+
+// auth.isl
+use "./types"    // imports shared types
+
+// session.isl
+use "./types"    // imports shared types (no cycle)`,
+      description: 'Extracting shared types to break the cycle',
+    },
+    seeAlso: ['E0710', 'E0712'],
+  },
+
+  E0712: {
+    code: 'E0712',
+    category: 'semantic',
+    title: 'Module version conflict',
+    explanation: `
+The same module is imported with different version constraints that
+cannot be satisfied simultaneously.
+
+When you use versioned imports like 'use stdlib-auth@1.0.0', ISL tracks
+all version constraints and reports conflicts when the same module is
+requested with incompatible versions.
+`.trim(),
+    causes: [
+      'Different files require incompatible versions of the same module',
+      'Transitive dependencies with version mismatch',
+      'Copy-paste error with different version numbers',
+      'Upgrading one import but forgetting others',
+    ],
+    solutions: [
+      'Align version constraints across all files',
+      'Update all imports to use the same compatible version',
+      'Remove version constraints to use latest compatible version',
+      'Check transitive dependencies for version requirements',
+    ],
+    badExample: {
+      code: `// file-a.isl
+use stdlib-auth@1.0.0
+
+// file-b.isl
+use stdlib-auth@2.0.0  // ← conflicts with file-a.isl!`,
+      description: 'Same module with conflicting versions',
+    },
+    goodExample: {
+      code: `// file-a.isl
+use stdlib-auth@2.0.0
+
+// file-b.isl
+use stdlib-auth@2.0.0  // ← same version, no conflict`,
+      description: 'Aligned version constraints',
+    },
+    seeAlso: ['E0710', 'E0711'],
   },
 };
 

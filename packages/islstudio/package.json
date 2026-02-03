@@ -27,7 +27,8 @@
   "dependencies": {
     "@isl-lang/policy-packs": "workspace:*",
     "@isl-lang/firewall": "workspace:*",
-    "@isl-lang/evidence": "workspace:*"
+    "@isl-lang/evidence": "workspace:*",
+    "@isl-lang/proof": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

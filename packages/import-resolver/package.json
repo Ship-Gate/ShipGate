@@ -52,7 +52,8 @@
     "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
-    "@isl-lang/parser": "workspace:*"
+    "@isl-lang/parser": "workspace:*",
+    "@isl-lang/isl-stdlib": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

@@ -1,155 +1,372 @@
-# IntentOS Improvement Plan
+# IntentOS Improvement Execution Checklist
 
-## Priority 1: Critical (Blocks Core Functionality)
-
-### 1.1 Complete Expression Evaluator
-**Status:** 🔴 Incomplete  
-**Impact:** Verification doesn't actually verify
-
-```typescript
-// CURRENT: Postconditions become TODO comments
-postconditions {
-  success implies User.exists(result.id)
-}
-// Generated test: expect(/* User.exists(result.id) */).toBe(true)
-
-// NEEDED: Actually evaluate the expression
-// Generated test: expect(await userRepo.exists(result.id)).toBe(true)
-```
-
-**Fix:** Complete `packages/verifier-runtime/src/expressions.ts`
-
-### 1.2 Import Resolution
-**Status:** 🔴 Not implemented  
-**Impact:** Can't use stdlib libraries
-
-```isl
-// CURRENT: This parses but doesn't resolve
-use stdlib-auth  // ← What entities/behaviors does this add?
-
-// NEEDED: Load and merge the stdlib definitions
-```
-
-**Fix:** Add import resolver to parser/compiler
-
-### 1.3 Semantic Analysis (Type Checking)
-**Status:** 🔴 Missing  
-**Impact:** Invalid specs aren't caught
-
-```isl
-// CURRENT: This parses successfully (shouldn't!)
-entity User {
-  status: NonExistentType  // ← Should error
-}
-```
-
-**Fix:** Add type checker pass after parsing
+This document maps improvement items to specific packages, commands, and acceptance criteria.
 
 ---
 
-## Priority 2: High (Major UX Issues)
+## Priority 1: CRITICAL (Blocks Core Functionality)
+
+### 1.1 Expression Evaluator
+
+| Field | Value |
+|-------|-------|
+| **Status** | 🟡 Partial |
+| **Owner** | `packages/verifier-runtime/` |
+| **Blockers** | Complex expressions return `'unknown'` instead of actual values |
+
+**Package Map:**
+- `packages/verifier-runtime/src/evaluator.ts` - Core tri-state evaluator (1188 lines)
+- `packages/verifier-runtime/src/types.ts` - `EvaluationContext` interface
+- `packages/isl-expression-evaluator/` - Standalone evaluator module
+
+**Commands:**
+```bash
+pnpm --filter @isl-lang/verifier-runtime test
+pnpm --filter @isl-lang/verifier-runtime build
+```
+
+**Acceptance Criteria:**
+- [ ] `User.exists(result.id)` returns `true`/`false` (not `'unknown'`)
+- [ ] `email.is_valid` evaluates against actual email validation
+- [ ] `result.status == 'success'` compares actual values
+- [ ] `old(User.count()) < User.count()` works with state snapshots
+- [ ] All quantifiers (`all`, `any`) iterate and evaluate predicates
+- [ ] Expression adapter interface allows domain-specific implementations
+
+**Evidence:**
+```typescript
+// packages/verifier-runtime/tests/evaluator.test.ts must pass:
+it('evaluates User.exists() with database lookup', async () => {
+  const result = evaluateExpression(expr, context);
+  expect(result.value).toBe(true); // NOT 'unknown'
+});
+```
+
+---
+
+### 1.2 Import Resolution
+
+| Field | Value |
+|-------|-------|
+| **Status** | 🟢 Implemented |
+| **Owner** | `packages/import-resolver/` |
+| **Blockers** | Stdlib registry needs more modules |
+
+**Package Map:**
+- `packages/import-resolver/src/index.ts` - Main entry (317 lines)
+- `packages/import-resolver/src/resolver.ts` - Import resolution logic
+- `packages/import-resolver/src/bundler.ts` - Multi-file bundling
+- `packages/import-resolver/src/stdlib-registry.ts` - Stdlib module registry (320 lines)
+
+**Commands:**
+```bash
+pnpm --filter @isl-lang/import-resolver test
+pnpm --filter @isl-lang/import-resolver build
+```
+
+**Acceptance Criteria:**
+- [x] `use stdlib-auth` resolves to `@isl/auth` module
+- [x] Circular dependency detection with clear error messages
+- [x] Module not found errors include suggestions
+- [x] Virtual file system support for testing
+- [x] `parseSingleFile()` rejects imports with explicit error
+- [ ] All stdlib modules registered in `stdlib-registry.json`
+
+**API Reference:**
+```typescript
+// Resolve and bundle multiple files
+const result = await resolveAndBundle('./main.isl', {
+  enableImports: true,
+  basePath: './specs',
+});
+
+// Single-file mode (imports disabled)
+const result = parseSingleFile(source, 'spec.isl');
+```
+
+---
+
+### 1.3 Semantic Analysis (Type Checking)
+
+| Field | Value |
+|-------|-------|
+| **Status** | 🟡 Partial |
+| **Owner** | `packages/isl-semantic-analysis/` |
+| **Blockers** | Limited passes implemented |
+
+**Package Map:**
+- `packages/isl-semantic-analysis/src/framework.ts` - Plugin architecture (152 lines)
+- `packages/isl-semantic-analysis/src/passes/` - Analysis passes
+- `packages/typechecker/` - Full type checking (future)
+
+**Commands:**
+```bash
+pnpm --filter @isl-lang/semantic-analysis test
+pnpm --filter @isl-lang/semantic-analysis build
+```
+
+**Acceptance Criteria:**
+- [x] Symbol resolution pass (`symbolResolverPass`)
+- [x] Symbol table with scoping (`SymbolTable`)
+- [ ] Undefined type detection (`status: NonExistentType` → error)
+- [ ] Unused entity/behavior warnings
+- [ ] Unreachable clause detection
+- [ ] Refinement type sanity checks
+
+**Diagnostic Codes:**
+| Code | Description |
+|------|-------------|
+| `E0500` | Semantic pass failure |
+| `E0501` | Undefined symbol reference |
+| `E0502` | Duplicate symbol definition |
+| `W0501` | Unused import |
+| `W0502` | Shadowed definition |
+
+---
+
+## Priority 2: HIGH (Major UX Issues)
 
 ### 2.1 Executable Test Generation
-**Status:** 🟡 Partial  
-**Impact:** Tests need manual completion
 
+| Field | Value |
+|-------|-------|
+| **Status** | 🟡 Partial |
+| **Owner** | `packages/codegen-tests/` |
+| **Blockers** | Precondition test values not generated |
+
+**Package Map:**
+- `packages/codegen-tests/src/` - Test code generation
+- `packages/codegen-types/src/` - Type generation (works)
+- `packages/isl-test-runtime/` - Runtime test harness
+
+**Commands:**
+```bash
+pnpm --filter @isl-lang/codegen-tests test
+isl codegen --tests spec.isl -o tests/
+```
+
+**Acceptance Criteria:**
+- [x] Test stubs generated for each behavior
+- [x] Precondition comments include original expression
+- [ ] Invalid input values auto-generated for precondition tests
+- [ ] Success path test with valid mock data
+- [ ] Postcondition assertions use evaluator
+
+**Example Output:**
 ```typescript
-// CURRENT
+// CURRENT (partial)
 it('validates precondition: email.is_valid', async () => {
   // TODO: Implement test
 });
 
-// NEEDED
+// EXPECTED (complete)
 it('validates precondition: email.is_valid', async () => {
-  const invalidInput = { email: 'not-an-email', password: 'validpass123' };
+  const invalidInput = { email: 'not-an-email', password: 'valid123' };
   const result = await login(invalidInput);
   expect(result.success).toBe(false);
+  expect(result.error?.code).toBe('VALIDATION_FAILED');
 });
 ```
 
+---
+
 ### 2.2 Watch Mode
-**Status:** 🟡 Missing  
-**Impact:** Poor development experience
 
+| Field | Value |
+|-------|-------|
+| **Status** | 🟢 Implemented |
+| **Owner** | `packages/cli/` |
+| **Blockers** | None |
+
+**Package Map:**
+- `packages/cli/src/commands/watch.ts` - Watch command
+- `packages/cli/src/cli.ts` - CLI entry point
+
+**Commands:**
 ```bash
-# CURRENT: Must re-run manually
-isl build spec.isl
-
-# NEEDED: Auto-rebuild on change
 isl build spec.isl --watch
+isl gate ./src --watch
 ```
+
+**Acceptance Criteria:**
+- [x] File watcher triggers rebuild on `.isl` changes
+- [x] Debouncing prevents rapid rebuilds
+- [x] Clear console on rebuild (optional)
+- [x] Exit on ctrl+c
+- [x] Error recovery without crash
+
+---
 
 ### 2.3 Better Error Messages
-**Status:** 🟡 Basic  
-**Impact:** Hard to debug issues
+
+| Field | Value |
+|-------|-------|
+| **Status** | 🟡 Partial |
+| **Owner** | `packages/errors/` |
+| **Blockers** | Parser errors lack suggestions |
+
+**Package Map:**
+- `packages/errors/src/catalog.ts` - Error code catalog
+- `packages/errors/src/formatter.ts` - Error formatting
+- `packages/isl-core/src/parser/parser.ts` - Parser error generation
+
+**Commands:**
+```bash
+pnpm --filter @isl-lang/errors test
+```
+
+**Acceptance Criteria:**
+- [x] Line and column numbers in all errors
+- [x] Source code snippet with caret
+- [ ] "Did you mean?" suggestions for typos
+- [ ] Documentation links for common errors
+- [ ] Multi-line error context
+
+---
+
+## Priority 3: MEDIUM (Polish)
+
+### 3.1 Proof Bundle System
+
+| Field | Value |
+|-------|-------|
+| **Status** | 🟢 Implemented |
+| **Owner** | `packages/isl-proof/` |
+| **Blockers** | None |
+
+**Package Map:**
+- `packages/isl-proof/src/manifest.ts` - V2 manifest schema (514 lines)
+- `packages/isl-proof/src/verifier.ts` - Bundle verification (407 lines)
+- `packages/isl-proof/src/writer.ts` - Bundle writer
+- `packages/isl-proof/src/verification-engine.ts` - Clause verification
+
+**Commands:**
+```bash
+islstudio proof create --spec spec.isl --output proof/
+islstudio proof verify proof/
+```
+
+**Acceptance Criteria:**
+- [x] PROVEN/INCOMPLETE_PROOF/VIOLATED tri-state verdicts
+- [x] Bundle ID integrity verification
+- [x] Signature support (HMAC-SHA256)
+- [x] Iteration history tracking
+- [x] Spec hash verification
+
+---
+
+### 3.2 Policy Packs
+
+| Field | Value |
+|-------|-------|
+| **Status** | 🟢 Implemented |
+| **Owner** | `packages/isl-policy-packs/` |
+| **Blockers** | None |
+
+**Package Map:**
+- `packages/isl-policy-packs/src/registry.ts` - Pack registry
+- `packages/isl-policy-packs/src/packs/pii.ts` - PII rules
+- `packages/isl-policy-packs/src/packs/quality.ts` - Quality rules
+- `packages/isl-pipeline/src/semantic-rules.ts` - Core semantic rules (1467 lines)
+
+**Semantic Rules:**
+| Rule ID | Description | Severity |
+|---------|-------------|----------|
+| `intent/audit-required` | Audit on ALL exit paths | critical |
+| `intent/rate-limit-required` | Rate limit before body parse | high |
+| `intent/no-pii-logging` | No PII in logs | critical |
+| `intent/input-validation` | Schema validation before use | high |
+| `intent/encryption-required` | Encrypt sensitive data | critical |
+| `quality/no-stubbed-handlers` | No TODO/stub in handlers | critical |
+| `quality/validation-before-use` | Validate before business logic | high |
+
+---
+
+### 3.3 Healer (Auto-Fix)
+
+| Field | Value |
+|-------|-------|
+| **Status** | 🟢 Implemented |
+| **Owner** | `packages/isl-healer/` |
+| **Blockers** | Limited fix recipes |
+
+**Package Map:**
+- `packages/isl-healer/src/` - Healer implementation
+- `packages/cli/src/commands/heal.ts` - Heal CLI command (422 lines)
+- `packages/isl-pipeline/src/fix-recipes.ts` - Fix recipes
+
+**Commands:**
+```bash
+isl heal ./src --max-iterations 5
+isl heal ./src --dry-run
+```
+
+---
+
+## Verification Commands
+
+### Full Pipeline Test
+```bash
+# Build all packages
+pnpm build
+
+# Run all tests
+pnpm test
+
+# Run specific package tests
+pnpm --filter @isl-lang/verifier-runtime test
+pnpm --filter @isl-lang/import-resolver test
+pnpm --filter @isl-lang/semantic-analysis test
+
+# Integration test
+pnpm --filter @isl-lang/cli test
+```
+
+### Gate Check
+```bash
+islstudio gate ./src --policy intent-pack
+```
+
+### Proof Bundle
+```bash
+islstudio proof create --spec spec.isl
+islstudio proof verify ./proof-bundle
+```
+
+---
+
+## Package Dependency Graph
 
 ```
-# CURRENT
-Error: Unexpected token at line 15
-
-# NEEDED
-Error: Unexpected token 'implies' at line 15:28
-  
-  postconditions {
-    success implies {
-            ^^^^^^^
-  
-  Hint: Did you mean to use 'implies' inside a postcondition block?
-  See: https://intentos.dev/docs/postconditions
+┌─────────────────┐
+│   @isl-lang/cli │ ─── Commands: build, gate, heal, proof
+└────────┬────────┘
+         │
+    ┌────┴────┐
+    ▼         ▼
+┌────────┐ ┌──────────────┐
+│ parser │ │ isl-pipeline │ ─── Gate checks, semantic rules
+└────┬───┘ └──────┬───────┘
+     │            │
+     ▼            ▼
+┌────────────┐ ┌──────────────────┐
+│ isl-core   │ │ verifier-runtime │ ─── Expression evaluation
+└────────────┘ └──────────────────┘
+     │
+     ▼
+┌─────────────────┐
+│ import-resolver │ ─── Module bundling, stdlib
+└─────────────────┘
 ```
 
 ---
 
-## Priority 3: Medium (Nice to Have)
+## Success Metrics
 
-### 3.1 AI Implementation Generator
-Connect to LangChain agents for generating actual implementations
-
-### 3.2 Incremental Builds
-Only rebuild what changed
-
-### 3.3 Configuration File
-`isl.config.json` for project settings
-
-### 3.4 VS Code Extension Improvements
-Real-time error highlighting, autocomplete
-
----
-
-## Priority 4: Future (Roadmap)
-
-### 4.1 Formal Verification
-Integration with TLA+, Alloy, or Z3 for mathematical proofs
-
-### 4.2 Mutation Testing
-Test the quality of tests themselves
-
-### 4.3 Property-Based Testing
-Generate random inputs to find edge cases
-
-### 4.4 Multi-Language Support
-Generate Go, Rust, Python implementations
-
----
-
-## Quick Wins (Can Fix Today)
-
-1. **Add import stubs** - Make `use stdlib-*` work by bundling stdlib ISL files
-2. **Improve error messages** - Add line/column context to errors
-3. **Add watch mode** - Simple file watcher for CLI
-4. **Complete common expressions** - Handle `==`, `!=`, `.exists()`, `.length`
-
----
-
-## Effort Estimates
-
-| Improvement | Effort | Impact |
-|-------------|--------|--------|
-| Expression evaluator (basic) | 2-3 days | High |
-| Import resolution | 1-2 days | High |
-| Type checker (basic) | 3-5 days | High |
-| Executable tests | 2-3 days | High |
-| Watch mode | 1 day | Medium |
-| Better errors | 1-2 days | Medium |
-| AI generator integration | 1 week | High |
-| Formal verification | 2+ weeks | Medium |
+| Metric | Current | Target |
+|--------|---------|--------|
+| Expression eval coverage | ~60% | 95% |
+| Stdlib modules registered | 3 | 10 |
+| Semantic passes | 2 | 8 |
+| Test generation completeness | ~40% | 80% |
+| Error message quality | Basic | Rich with suggestions |

@@ -9,6 +9,16 @@
       "dependsOn": ["build"],
       "cache": false
     },
+    "test:critical": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "env": ["CI"]
+    },
+    "test:perf": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "env": ["CI", "PERF_BUDGET"]
+    },
     "lint": {
       "dependsOn": ["^build"]
     },

@@ -146,4 +146,151 @@ export default defineWorkspace([
       },
     },
   },
+  // ISL Pipeline package
+  {
+    test: {
+      name: 'isl-pipeline',
+      root: './packages/isl-pipeline',
+      globals: true,
+      environment: 'node',
+      include: ['tests/**/*.test.ts'],
+      testTimeout: 30000,
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        include: ['src/**/*.ts'],
+        exclude: ['src/**/*.d.ts'],
+        thresholds: {
+          lines: 80,
+          functions: 80,
+          branches: 70,
+          statements: 80,
+        },
+      },
+    },
+  },
+  // ISL Policy Packs package
+  {
+    test: {
+      name: 'isl-policy-packs',
+      root: './packages/isl-policy-packs',
+      globals: true,
+      environment: 'node',
+      include: ['tests/**/*.test.ts'],
+      testTimeout: 30000,
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        include: ['src/**/*.ts'],
+        exclude: ['src/**/*.d.ts'],
+      },
+    },
+  },
+  // ISL Proof package
+  {
+    test: {
+      name: 'isl-proof',
+      root: './packages/isl-proof',
+      globals: true,
+      environment: 'node',
+      include: ['tests/**/*.test.ts'],
+      testTimeout: 30000,
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        include: ['src/**/*.ts'],
+        exclude: ['src/**/*.d.ts'],
+        thresholds: {
+          lines: 80,
+          functions: 80,
+          branches: 70,
+          statements: 80,
+        },
+      },
+    },
+  },
+  // Import Resolver package
+  {
+    test: {
+      name: 'import-resolver',
+      root: './packages/import-resolver',
+      globals: true,
+      environment: 'node',
+      include: ['tests/**/*.test.ts'],
+      testTimeout: 30000,
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        include: ['src/**/*.ts'],
+        exclude: ['src/**/*.d.ts'],
+        thresholds: {
+          lines: 80,
+          functions: 80,
+          branches: 70,
+          statements: 80,
+        },
+      },
+    },
+  },
+  // Verifier Runtime package
+  {
+    test: {
+      name: 'verifier-runtime',
+      root: './packages/verifier-runtime',
+      globals: true,
+      environment: 'node',
+      include: ['tests/**/*.test.ts'],
+      testTimeout: 30000,
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        include: ['src/**/*.ts'],
+        exclude: ['src/**/*.d.ts'],
+        thresholds: {
+          lines: 85,
+          functions: 85,
+          branches: 75,
+          statements: 85,
+        },
+      },
+    },
+  },
+  // ISL Stdlib Registry package
+  {
+    test: {
+      name: 'isl-stdlib',
+      root: './packages/isl-stdlib',
+      globals: true,
+      environment: 'node',
+      include: ['tests/**/*.test.ts'],
+      testTimeout: 30000,
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        include: ['src/**/*.ts'],
+        exclude: ['src/**/*.d.ts'],
+        thresholds: {
+          lines: 80,
+          functions: 80,
+          branches: 70,
+          statements: 80,
+        },
+      },
+    },
+  },
+  // ISL Test Runtime package (login test harness)
+  {
+    test: {
+      name: 'isl-test-runtime',
+      root: './packages/isl-test-runtime',
+      globals: true,
+      environment: 'node',
+      include: ['tests/**/*.test.ts'],
+      testTimeout: 60000,
+      alias: {
+        '@isl-lang/trace-format': './packages/isl-trace-format/src/index.ts',
+        '@isl-lang/trace-viewer': './packages/trace-viewer/src/index.ts',
+      },
+    },
+  },
 ]);

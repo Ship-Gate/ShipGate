@@ -12,7 +12,7 @@ import type { FileDiff } from '@isl-lang/generator';
 import type { ProofBundle } from '@isl-lang/proof';
 import { createProofBundle } from '@isl-lang/proof';
 import { runSemanticRules, checkProofCompleteness, type SemanticViolation, type ProofCompletenessResult } from './semantic-rules.js';
-import * as crypto from 'crypto';
+import { stableFingerprint, FingerprintTracker, type AbortCondition } from './fingerprint.js';
 
 // ============================================================================
 // Types
@@ -336,6 +336,145 @@ function redactPII(obj: unknown): unknown {
       return newCode.includes('safeParse') || newCode.includes('.parse(');
     },
   },
+
+  // =========================================================================
+  // intent/input-validation - Schema validation before input use
+  // =========================================================================
+  'intent/input-validation': {
+    description: 'Add schema validation with proper error handling',
+    apply(code, violation, ctx) {
+      // Add Zod import if needed
+      if (!code.includes("from 'zod'")) {
+        code = code.replace(
+          /^(import .* from ['"]next\/server['"];?\n)/m,
+          `$1import { z } from 'zod';\n`
+        );
+      }
+
+      // Add schema if missing
+      if (!code.includes('Schema =') && !code.includes('schema =')) {
+        const schemaTemplate = `
+// Input validation schema
+const ${ctx.ast.behaviors[0]?.name || 'Input'}Schema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
+`;
+        const exportIdx = code.indexOf('export async function');
+        if (exportIdx > 0) {
+          code = code.slice(0, exportIdx) + schemaTemplate + '\n' + code.slice(exportIdx);
+        }
+      }
+
+      // Add safeParse validation after body parsing
+      if (!code.includes('safeParse')) {
+        code = code.replace(
+          /(const body = await request\.json\(\);)/,
+          `$1
+    
+    // @intent input-validation - validate before use
+    const validationResult = ${ctx.ast.behaviors[0]?.name || 'Input'}Schema.safeParse(body);
+    if (!validationResult.success) {
+      await auditAttempt({ success: false, reason: 'validation_failed', requestId, action: '${ctx.ast.behaviors[0]?.name || 'Unknown'}' });
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationResult.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const input = validationResult.data;`
+        );
+      }
+
+      // Add result check if safeParse exists but no .success check
+      if (code.includes('safeParse') && !code.includes('.success')) {
+        code = code.replace(
+          /(const \w+ = \w+\.safeParse\([^)]+\);)/,
+          `$1
+    if (!validationResult.success) {
+      await auditAttempt({ success: false, reason: 'validation_failed', requestId, action: '${ctx.ast.behaviors[0]?.name || 'Unknown'}' });
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationResult.error.flatten() },
+        { status: 400 }
+      );
+    }`
+        );
+      }
+
+      return code;
+    },
+    validate(newCode, violation) {
+      // Must have safeParse and check the result
+      return newCode.includes('safeParse') && 
+             (newCode.includes('.success') || newCode.includes('.error'));
+    },
+  },
+
+  // =========================================================================
+  // intent/encryption-required - Encrypt sensitive data
+  // =========================================================================
+  'intent/encryption-required': {
+    description: 'Add encryption for sensitive data storage',
+    apply(code, violation, ctx) {
+      const isPassword = violation.message.includes('password');
+      
+      // Add bcrypt import for passwords
+      if (isPassword && !code.includes('bcrypt')) {
+        code = code.replace(
+          /^(import .* from ['"]next\/server['"];?\n)/m,
+          `$1import bcrypt from 'bcrypt';\n`
+        );
+      }
+
+      // Add hashPassword helper for passwords
+      if (isPassword && !code.includes('hashPassword')) {
+        const helperCode = `
+/**
+ * Hash password securely
+ * @intent encryption-required
+ */
+async function hashPassword(password: string): Promise<string> {
+  const saltRounds = 12;
+  return bcrypt.hash(password, saltRounds);
+}
+`;
+        const exportIdx = code.indexOf('export async function');
+        if (exportIdx > 0) {
+          code = code.slice(0, exportIdx) + helperCode + '\n' + code.slice(exportIdx);
+        }
+      }
+
+      // Wrap password field with hashPassword
+      if (isPassword) {
+        code = code.replace(
+          /password:\s*input\.password/g,
+          'password: await hashPassword(input.password)'
+        );
+      }
+
+      // Fix hardcoded encryption keys
+      if (violation.message.includes('hardcoded')) {
+        code = code.replace(
+          /(?:const|let)\s+(?:encryptionKey|key)\s*=\s*['"][^'"]+['"]/g,
+          "const encryptionKey = process.env.ENCRYPTION_KEY || ''"
+        );
+      }
+
+      return code;
+    },
+    validate(newCode, violation) {
+      const isPassword = violation.message.includes('password');
+      if (isPassword) {
+        // Must use bcrypt or similar secure hashing
+        return newCode.includes('bcrypt.hash') || 
+               newCode.includes('argon2.hash') ||
+               newCode.includes('hashPassword');
+      }
+      // Must have encryption or env-based keys
+      return newCode.includes('encrypt') || 
+             newCode.includes('process.env.ENCRYPTION_KEY') ||
+             newCode.includes('crypto.');
+    },
+  },
 };
 
 // ============================================================================
@@ -391,7 +530,11 @@ export class SemanticHealer {
   }
 
   async heal(): Promise<SemanticHealResult> {
-    const fingerprints = new Map<string, number>();
+    // Use FingerprintTracker for robust stuck detection
+    const tracker = new FingerprintTracker({
+      repeatThreshold: this.options.stopOnRepeat,
+      maxIterations: this.options.maxIterations,
+    });
 
     for (let i = 1; i <= this.options.maxIterations; i++) {
       const startTime = Date.now();
@@ -421,7 +564,7 @@ export class SemanticHealer {
         }
       }
 
-      // Compute fingerprint
+      // Compute fingerprint using stable algorithm
       const fingerprint = this.computeFingerprint(violations);
       
       // Check if SHIP (no critical/high violations)
@@ -488,26 +631,30 @@ export class SemanticHealer {
         };
       }
 
-      // Check for stuck
-      const fpCount = (fingerprints.get(fingerprint) ?? 0) + 1;
-      fingerprints.set(fingerprint, fpCount);
+      // Check for stuck using FingerprintTracker
+      const abortCondition: AbortCondition = tracker.record(fingerprint);
 
-      if (fpCount >= this.options.stopOnRepeat) {
+      if (abortCondition.shouldAbort) {
         if (this.options.verbose) {
           console.log(`│`);
-          console.log(`│ ✗ STUCK - Same violations repeated ${fpCount} times`);
+          console.log(`│ ✗ ${abortCondition.reason?.toUpperCase()} - ${abortCondition.details}`);
           console.log(`└${'─'.repeat(50)}┘`);
         }
 
         return {
           ok: false,
-          reason: 'stuck',
+          reason: abortCondition.reason === 'max_iterations' ? 'max_iterations' : 'stuck',
           iterations: i,
           finalScore: score,
           finalVerdict: 'NO_SHIP',
           history: this.history,
           finalCode: this.codeMap,
-          proofStatus: { complete: false, status: 'UNPROVEN', missing: ['Stuck in healing loop'], warnings: [] },
+          proofStatus: { 
+            complete: false, 
+            status: 'UNPROVEN', 
+            missing: [`${abortCondition.reason}: ${abortCondition.details}`], 
+            warnings: [] 
+          },
         };
       }
 
@@ -636,10 +783,13 @@ export class SemanticHealer {
   }
 
   private computeFingerprint(violations: SemanticViolation[]): string {
-    const sorted = [...violations]
-      .sort((a, b) => `${a.ruleId}:${a.file}`.localeCompare(`${b.ruleId}:${b.file}`));
-    const str = JSON.stringify(sorted.map(v => ({ r: v.ruleId, f: v.file, m: v.message })));
-    return crypto.createHash('sha256').update(str).digest('hex').slice(0, 16);
+    // Use the stable fingerprint algorithm that is order-independent
+    // and normalizes messages for consistent hashing
+    return stableFingerprint(violations, {
+      includeMessage: true,
+      includeSpan: true,
+      normalizeWhitespace: true,
+    });
   }
 
   private buildProof(score: number, violations: SemanticViolation[]): ProofBundle {

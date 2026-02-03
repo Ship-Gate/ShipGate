@@ -19,7 +19,9 @@
   },
   "dependencies": {
     "@isl-lang/translator": "workspace:*",
-    "@isl-lang/generator": "workspace:*"
+    "@isl-lang/generator": "workspace:*",
+    "@isl-lang/isl-core": "workspace:*",
+    "@isl-lang/evaluator": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

@@ -198,31 +198,77 @@ const missingEncryptionRule: PolicyRule = {
 };
 
 /**
- * Console Log in Production Rule
+ * All Console Methods in Production
+ */
+const CONSOLE_METHODS = ['log', 'error', 'warn', 'info', 'debug', 'trace', 'dir', 'table'] as const;
+const CONSOLE_PATTERN = new RegExp(`console\\.(${CONSOLE_METHODS.join('|')})\\s*\\(`, 'g');
+
+/**
+ * Console in Production Rule
+ * 
+ * Detects ALL console.* statements (log, error, warn, info, debug, trace, dir, table)
+ * that may leak data in production. Use a safe logger with PII redaction instead.
  */
 const consoleLogRule: PolicyRule = {
   id: 'pii/console-in-production',
-  name: 'Console Log in Production',
-  description: 'Detects console.log statements that may leak data in production',
+  name: 'Console in Production',
+  description: 'Detects console.* statements (log/error/warn/info/debug/trace/dir/table) that may leak data in production',
   severity: 'warning',
   category: 'pii',
-  tags: ['logging', 'security', 'production'],
+  tags: ['logging', 'security', 'production', 'no-console'],
   evaluate: (ctx: RuleContext): RuleViolation | null => {
     // Skip test files
     if (/\.(test|spec)\.(ts|js|tsx|jsx)$/.test(ctx.filePath)) {
       return null;
     }
 
-    // Check for console.log
-    if (/console\.(log|debug)\s*\(/.test(ctx.content)) {
+    // Skip files in test directories
+    if (/(__tests__|__mocks__|fixtures|test-fixtures)/.test(ctx.filePath)) {
+      return null;
+    }
+
+    // Skip CLI files (command-line tools are meant to use console)
+    // Match: cli.ts, bin.ts, cli.js, bin.js (at end of path or standalone), or in cli/bin directories
+    const fileName = ctx.filePath.split(/[\/\\]/).pop() || '';
+    const pathParts = ctx.filePath.split(/[\/\\]/);
+    const hasCliOrBinDir = pathParts.some(part => part === 'cli' || part === 'bin');
+    if (
+      /^(cli|bin)\.(ts|js)$/.test(fileName) ||
+      /[\/\\](cli|bin)\.(ts|js)$/.test(ctx.filePath) ||
+      hasCliOrBinDir ||
+      ctx.content.startsWith('#!/usr/bin/env node')
+    ) {
+      return null;
+    }
+
+    // Find all console.* calls
+    const matches: Array<{ method: string; line: number }> = [];
+    const lines = ctx.content.split('\n');
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      for (const method of CONSOLE_METHODS) {
+        const pattern = new RegExp(`console\\.${method}\\s*\\(`);
+        if (pattern.test(line)) {
+          matches.push({ method, line: i + 1 });
+        }
+      }
+    }
+
+    if (matches.length > 0) {
+      const methods = [...new Set(matches.map(m => m.method))];
+      const methodList = methods.length <= 3 
+        ? methods.join(', ') 
+        : `${methods.slice(0, 3).join(', ')}... (${methods.length} types)`;
+      
       return {
         ruleId: 'pii/console-in-production',
-        ruleName: 'Console Log in Production',
+        ruleName: 'Console in Production',
         severity: 'warning',
         tier: 'warn',
-        message: 'CONSOLE LOG: console.log/debug statements found in production code',
-        location: { file: ctx.filePath },
-        suggestion: 'Use a proper logger with log levels. Remove or guard console statements.',
+        message: `NO_CONSOLE: console.${methodList} found in production code (${matches.length} occurrence${matches.length > 1 ? 's' : ''})`,
+        location: { file: ctx.filePath, line: matches[0].line },
+        suggestion: 'Use a safe logger with PII redaction: import { createSafeLogger, safeError, redact } from "@isl-lang/pipeline/safe-logging"',
       };
     }
 
@@ -294,5 +340,22 @@ export const piiPolicyPack: PolicyPack = {
     enabled: true,
   },
 };
+
+/**
+ * Export individual rules for granular use
+ */
+export const piiRules = {
+  piiInLogs: piiInLogsRule,
+  unmaskedPii: unmaskedPiiRule,
+  missingEncryption: missingEncryptionRule,
+  consoleInProduction: consoleLogRule,
+  dataRetention: dataRetentionRule,
+};
+
+/**
+ * Console methods that are forbidden in production
+ * Use createSafeLogger from @isl-lang/pipeline instead
+ */
+export { CONSOLE_METHODS };
 
 export default piiPolicyPack;

@@ -1,0 +1,63 @@
+{
+  "name": "@isl-lang/verify-pipeline",
+  "version": "0.1.0",
+  "description": "Verification orchestrator pipeline for ISL - runs tests, captures traces, evaluates postconditions/invariants, and produces proof bundles",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "isl",
+    "verification",
+    "pipeline",
+    "proof",
+    "testing",
+    "postconditions",
+    "invariants",
+    "smt"
+  ],
+  "author": "IntentOS Team",
+  "license": "MIT",
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*",
+    "@isl-lang/proof": "workspace:*",
+    "@isl-lang/trace-format": "workspace:*",
+    "@isl-lang/verifier-runtime": "workspace:*",
+    "@isl-lang/evaluator": "workspace:*",
+    "@isl-lang/import-resolver": "workspace:*",
+    "@isl-lang/parser": "workspace:*",
+    "@isl-lang/expression-evaluator": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "vitest": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vitest": {
+      "optional": true
+    }
+  }
+}

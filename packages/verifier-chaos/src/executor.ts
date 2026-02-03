@@ -11,6 +11,7 @@ import { NetworkInjector } from './injectors/network.js';
 import { DatabaseInjector, type DatabaseFailureType } from './injectors/database.js';
 import { LatencyInjector } from './injectors/latency.js';
 import { ConcurrentInjector } from './injectors/concurrent.js';
+import { RateLimitInjector, type RateLimitAction } from './injectors/rate-limit.js';
 
 export interface ExecutorConfig {
   /** Timeout for each scenario (ms) */
@@ -53,7 +54,7 @@ export interface ExecutionContext {
   results: Map<string, unknown>;
 }
 
-type Injector = NetworkInjector | DatabaseInjector | LatencyInjector | ConcurrentInjector;
+type Injector = NetworkInjector | DatabaseInjector | LatencyInjector | ConcurrentInjector | RateLimitInjector;
 
 /**
  * Chaos scenario executor
@@ -239,11 +240,41 @@ export class ChaosExecutor {
           timeoutMs: params.timeoutMs as number,
         });
 
+      case 'rate_limit_storm':
+      case 'rate_limit':
+        return new RateLimitInjector({
+          requestsPerWindow: (params.requests as number) ?? (params.limit as number) ?? 10,
+          windowMs: this.parseDuration(params.window as string) ?? 1000,
+          burstLimit: params.burstLimit as number,
+          action: (params.action as RateLimitAction) ?? 'reject',
+        });
+
       default:
         if (this.config.verbose) {
           process.stderr.write(`Unknown injection type: ${injection.type}\n`);
         }
         return null;
+    }
+  }
+
+  /**
+   * Parse duration string to milliseconds
+   */
+  private parseDuration(duration: string | undefined): number | undefined {
+    if (!duration) return undefined;
+    
+    const match = duration.match(/^(\d+(?:\.\d+)?)(ms|s|m|h)?$/);
+    if (!match) return undefined;
+    
+    const value = parseFloat(match[1]!);
+    const unit = match[2] || 'ms';
+    
+    switch (unit) {
+      case 'ms': return value;
+      case 's': return value * 1000;
+      case 'm': return value * 60 * 1000;
+      case 'h': return value * 60 * 60 * 1000;
+      default: return value;
     }
   }
 
@@ -255,6 +286,7 @@ export class ChaosExecutor {
     if (injector instanceof DatabaseInjector) return 'database';
     if (injector instanceof LatencyInjector) return 'latency';
     if (injector instanceof ConcurrentInjector) return 'concurrent';
+    if (injector instanceof RateLimitInjector) return 'rate_limit';
     return 'unknown';
   }
 

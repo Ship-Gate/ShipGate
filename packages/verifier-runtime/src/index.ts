@@ -44,12 +44,31 @@ export type {
   ImplementationLoader,
 } from './types.js';
 
-// Expression evaluation
+// Expression evaluation (legacy)
 export {
   evaluate,
   expressionToString,
   EvaluationError,
 } from './expressions.js';
+
+// Enhanced expression evaluator (v1)
+export {
+  evaluateExpression,
+  DefaultAdapter,
+  triStateAnd,
+  triStateOr,
+  triStateNot,
+  triStateImplies,
+  isUnknown,
+  toTriState,
+  success,
+  unknown,
+  failure,
+  type TriState,
+  type EvaluationResult,
+  type ExpressionAdapter,
+  type EvaluatorOptions,
+} from './evaluator.js';
 
 // Input generation
 export {

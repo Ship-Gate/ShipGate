@@ -2,6 +2,7 @@
  * Lint Command
  * 
  * Lint ISL files for best practices and common issues.
+ * Includes semantic analysis passes for deeper code inspection.
  * Usage: isl lint <file>
  */
 
@@ -13,6 +14,12 @@ import { parse as parseISL, type Domain as DomainDeclaration } from '@isl-lang/p
 import { output, type DiagnosticError } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
 import { findSimilarFiles, formatCount } from '../utils.js';
+import {
+  PassRunner,
+  builtinPasses,
+  buildTypeEnvironment,
+  type AnalysisResult,
+} from '@isl-lang/semantic-analysis';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -25,6 +32,14 @@ export interface LintOptions {
   format?: 'pretty' | 'json' | 'quiet';
   /** Treat warnings as errors */
   strict?: boolean;
+  /** Enable semantic analysis passes (default: true) */
+  semantic?: boolean;
+  /** Specific semantic passes to run */
+  semanticPasses?: string[];
+  /** Semantic passes to skip */
+  skipPasses?: string[];
+  /** Include hint-level diagnostics */
+  includeHints?: boolean;
 }
 
 export interface LintIssue {
@@ -45,8 +60,12 @@ export interface LintResult {
     errors: number;
     warnings: number;
     info: number;
+    semanticErrors: number;
+    semanticWarnings: number;
+    semanticHints: number;
   };
   duration: number;
+  semanticResult?: AnalysisResult;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -333,7 +352,7 @@ export async function lint(file: string, options: LintOptions = {}): Promise<Lin
         message: `File not found: ${file}`,
         file: filePath,
       }],
-      stats: { errors: 1, warnings: 0, info: 0 },
+      stats: { errors: 1, warnings: 0, info: 0, semanticErrors: 0, semanticWarnings: 0, semanticHints: 0 },
       duration: Date.now() - startTime,
     };
   }
@@ -357,7 +376,7 @@ export async function lint(file: string, options: LintOptions = {}): Promise<Lin
           line: 'line' in e ? e.line : undefined,
           column: 'column' in e ? e.column : undefined,
         })),
-        stats: { errors: parseErrors.length, warnings: 0, info: 0 },
+        stats: { errors: parseErrors.length, warnings: 0, info: 0, semanticErrors: 0, semanticWarnings: 0, semanticHints: 0 },
         duration: Date.now() - startTime,
       };
     }
@@ -371,11 +390,65 @@ export async function lint(file: string, options: LintOptions = {}): Promise<Lin
       allIssues.push(...issues);
     }
     
-    // Calculate stats
+    // Run semantic analysis passes if enabled (default: true)
+    let semanticResult: AnalysisResult | undefined;
+    const runSemantic = options.semantic !== false;
+    
+    if (runSemantic) {
+      spinner && (spinner.text = 'Running semantic analysis...');
+      
+      try {
+        const runner = new PassRunner({
+          enablePasses: options.semanticPasses || [],
+          disablePasses: options.skipPasses || [],
+          includeHints: options.includeHints ?? false,
+        });
+        
+        runner.registerAll(builtinPasses);
+        
+        const typeEnv = buildTypeEnvironment(ast);
+        semanticResult = runner.run(ast, source, filePath, typeEnv);
+        
+        // Convert semantic diagnostics to LintIssues
+        for (const diag of semanticResult.diagnostics) {
+          allIssues.push({
+            rule: `semantic:${diag.code}`,
+            severity: diag.severity === 'error' ? 'error' : 
+                      diag.severity === 'warning' ? 'warning' : 'info',
+            message: diag.message,
+            file: filePath,
+            line: diag.location?.line,
+            column: diag.location?.column,
+            suggestion: diag.help?.[0],
+          });
+        }
+      } catch (err) {
+        // If semantic analysis fails, add as warning
+        allIssues.push({
+          rule: 'semantic:internal-error',
+          severity: 'warning',
+          message: `Semantic analysis failed: ${err instanceof Error ? err.message : String(err)}`,
+          file: filePath,
+        });
+      }
+    }
+    
+    // Calculate stats (separate lint and semantic)
+    const lintErrors = allIssues.filter(i => i.severity === 'error' && !i.rule.startsWith('semantic:')).length;
+    const lintWarnings = allIssues.filter(i => i.severity === 'warning' && !i.rule.startsWith('semantic:')).length;
+    const lintInfo = allIssues.filter(i => i.severity === 'info' && !i.rule.startsWith('semantic:')).length;
+    
+    const semanticErrors = semanticResult?.stats.errorCount ?? 0;
+    const semanticWarnings = semanticResult?.stats.warningCount ?? 0;
+    const semanticHints = semanticResult?.stats.hintCount ?? 0;
+    
     const stats = {
-      errors: allIssues.filter(i => i.severity === 'error').length,
-      warnings: allIssues.filter(i => i.severity === 'warning').length,
-      info: allIssues.filter(i => i.severity === 'info').length,
+      errors: lintErrors + semanticErrors,
+      warnings: lintWarnings + semanticWarnings,
+      info: lintInfo + (options.includeHints ? semanticHints : 0),
+      semanticErrors,
+      semanticWarnings,
+      semanticHints,
     };
     
     const duration = Date.now() - startTime;
@@ -385,12 +458,14 @@ export async function lint(file: string, options: LintOptions = {}): Promise<Lin
     const hasWarnings = stats.warnings > 0;
     const success = !hasErrors && (!options.strict || !hasWarnings);
     
+    const totalIssues = stats.errors + stats.warnings;
     if (!success) {
       spinner?.fail(`Lint found ${formatCount(stats.errors, 'error')}, ${formatCount(stats.warnings, 'warning')}`);
     } else if (stats.warnings > 0 || stats.info > 0) {
       spinner?.warn(`Lint passed with ${formatCount(stats.warnings, 'warning')}, ${formatCount(stats.info, 'info issue')}`);
     } else {
-      spinner?.succeed(`Lint passed (${duration}ms)`);
+      const semanticMsg = runSemantic ? ` (${semanticResult?.stats.passesRun ?? 0} semantic passes)` : '';
+      spinner?.succeed(`Lint passed${semanticMsg} (${duration}ms)`);
     }
     
     return {
@@ -399,6 +474,7 @@ export async function lint(file: string, options: LintOptions = {}): Promise<Lin
       issues: allIssues,
       stats,
       duration,
+      semanticResult,
     };
   } catch (err) {
     spinner?.fail('Lint failed');
@@ -412,7 +488,7 @@ export async function lint(file: string, options: LintOptions = {}): Promise<Lin
         message: err instanceof Error ? err.message : String(err),
         file: filePath,
       }],
-      stats: { errors: 1, warnings: 0, info: 0 },
+      stats: { errors: 1, warnings: 0, info: 0, semanticErrors: 0, semanticWarnings: 0, semanticHints: 0 },
       duration: Date.now() - startTime,
     };
   }
@@ -493,6 +569,17 @@ export function printLintResult(result: LintResult, options?: LintOptions): void
   
   if (parts.length > 0) {
     console.log(parts.join(', '));
+  }
+  
+  // Show semantic analysis breakdown if verbose
+  if (options?.verbose && result.semanticResult) {
+    console.log('');
+    console.log(chalk.gray('Semantic Analysis:'));
+    console.log(chalk.gray(`  Passes run: ${result.semanticResult.stats.passesRun}/${result.semanticResult.stats.totalPasses}`));
+    console.log(chalk.gray(`  Duration: ${result.semanticResult.stats.totalDurationMs}ms`));
+    if (result.semanticResult.cacheInfo.enabled) {
+      console.log(chalk.gray(`  Cache: ${result.semanticResult.cacheInfo.hits} hits, ${result.semanticResult.cacheInfo.misses} misses`));
+    }
   }
   
   console.log(chalk.gray(`Completed in ${result.duration}ms`));
