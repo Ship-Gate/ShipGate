@@ -10,6 +10,7 @@ import { TypeScriptGenerator } from './typescript.js';
 import { PythonGenerator } from './python.js';
 import { ZodGenerator } from './validation.js';
 import { SerdesGenerator } from './serdes.js';
+import { PythonContractGenerator } from './python-contracts.js';
 
 // ============================================================================
 // Types
@@ -31,6 +32,8 @@ export interface GeneratorOptions {
   outputPrefix?: string;
   /** Domain name override */
   domainName?: string;
+  /** Generate contract checking code (Python only for v1) */
+  contracts?: boolean;
 }
 
 export interface GeneratedFile {
@@ -39,7 +42,7 @@ export interface GeneratedFile {
   /** Generated file contents */
   content: string;
   /** File type for categorization */
-  type: 'types' | 'validation' | 'serdes' | 'index';
+  type: 'types' | 'validation' | 'serdes' | 'index' | 'contracts';
 }
 
 export interface GeneratedOutput {
@@ -63,6 +66,7 @@ export class CodeGenerator {
   private pyGenerator: PythonGenerator;
   private zodGenerator: ZodGenerator;
   private serdesGenerator: SerdesGenerator;
+  private pyContractGenerator: PythonContractGenerator;
 
   constructor(options: GeneratorOptions) {
     this.options = {
@@ -72,12 +76,14 @@ export class CodeGenerator {
       comments: options.comments ?? true,
       outputPrefix: options.outputPrefix ?? './',
       domainName: options.domainName ?? '',
+      contracts: options.contracts ?? true,
     };
 
     this.tsGenerator = new TypeScriptGenerator(this.options);
     this.pyGenerator = new PythonGenerator(this.options);
     this.zodGenerator = new ZodGenerator(this.options);
     this.serdesGenerator = new SerdesGenerator(this.options);
+    this.pyContractGenerator = new PythonContractGenerator();
   }
 
   /**
@@ -166,6 +172,16 @@ export class CodeGenerator {
       });
     }
 
+    // Generate contracts (v1 Python support)
+    if (this.options.contracts) {
+      const contractsContent = this.pyContractGenerator.generate(domain);
+      files.push({
+        path: `${snakeName}/contracts.py`,
+        content: contractsContent,
+        type: 'contracts',
+      });
+    }
+
     // Generate serdes
     if (this.options.serdes) {
       const serdesContent = this.serdesGenerator.generatePython(domain);
@@ -220,6 +236,10 @@ export class CodeGenerator {
 
     if (this.options.validation) {
       lines.push('from .validation import *');
+    }
+
+    if (this.options.contracts) {
+      lines.push('from .contracts import *');
     }
 
     if (this.options.serdes) {

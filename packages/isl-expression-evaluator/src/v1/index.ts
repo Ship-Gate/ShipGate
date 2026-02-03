@@ -3,10 +3,30 @@
 // ============================================================================
 
 // Core evaluator
-export { evaluate, createEvalContext, createEvalAdapter } from './evaluator.js';
+export {
+  evaluate,
+  createEvalContext,
+  createEvalAdapter,
+  // Constant folding
+  foldConstants,
+  isConstant,
+  analyzeExpression,
+  getCoverageReport,
+} from './evaluator.js';
 
 // Types
-export type { EvalResult, EvalKind, EvalContext, EvalAdapter } from './types.js';
+export type {
+  EvalResult,
+  EvalKind,
+  EvalContext,
+  EvalAdapter,
+  // Structured unknown reasons
+  UnknownReasonCode,
+  UnknownReason,
+} from './types.js';
+
+// Evaluator types (re-exported from evaluator.ts)
+export type { FoldResult, ExpressionStats } from './evaluator.js';
 
 // Type utilities
 export {

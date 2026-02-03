@@ -7,11 +7,13 @@
  *   isl spec --templates                    # List available templates
  *   isl spec --template <name>              # Create spec from template
  *   isl spec --template <name> --out <path> # Create spec at path
+ *   isl spec --ai <file>                    # Generate spec from code with AI
+ *   isl spec --ai <file> --hints "..."      # With intent hints
  *   isl spec --json                         # JSON output for tooling
  */
 
-import { writeFile, mkdir, access } from 'fs/promises';
-import { resolve, dirname, basename, join } from 'path';
+import { readFile, writeFile, mkdir, access } from 'fs/promises';
+import { resolve, dirname, basename, join, extname } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import { output } from '../output.js';
@@ -45,6 +47,12 @@ export interface SpecOptions {
   name?: string;
   /** Verbose output */
   verbose?: boolean;
+  /** AI-assisted spec generation from code file */
+  ai?: string;
+  /** Hints about code intent for AI assist */
+  hints?: string[];
+  /** Function/method signature to focus on */
+  signature?: string;
 }
 
 export interface SpecResult {
@@ -57,6 +65,14 @@ export interface SpecResult {
   templates?: TemplateInfo[];
   /** Error messages */
   errors: string[];
+  /** AI generation result (if using --ai) */
+  aiResult?: {
+    isl?: string;
+    provider: string;
+    durationMs: number;
+    validationPassed: boolean;
+    diagnostics?: Array<{ severity: string; message: string; fix?: string }>;
+  };
 }
 
 export interface TemplateInfo {
@@ -1294,6 +1310,200 @@ async function fileExists(path: string): Promise<boolean> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// AI-Assisted Spec Generation
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Language detection from file extension
+ */
+function detectLanguage(filePath: string): 'typescript' | 'javascript' | 'python' | 'go' | 'rust' | 'java' {
+  const ext = extname(filePath).toLowerCase();
+  const langMap: Record<string, 'typescript' | 'javascript' | 'python' | 'go' | 'rust' | 'java'> = {
+    '.ts': 'typescript',
+    '.tsx': 'typescript',
+    '.js': 'javascript',
+    '.jsx': 'javascript',
+    '.py': 'python',
+    '.go': 'go',
+    '.rs': 'rust',
+    '.java': 'java',
+  };
+  return langMap[ext] ?? 'typescript';
+}
+
+/**
+ * Handle AI-assisted spec generation
+ */
+async function handleAIGeneration(options: SpecOptions): Promise<SpecResult> {
+  const filePath = options.ai!;
+  const resolvedPath = resolve(filePath);
+  
+  // Check if file exists
+  if (!(await fileExists(resolvedPath))) {
+    return {
+      success: false,
+      errors: [`File not found: ${filePath}`],
+    };
+  }
+  
+  // Try to import spec-assist package
+  let specAssist: typeof import('@isl-lang/spec-assist') | null = null;
+  try {
+    specAssist = await import('@isl-lang/spec-assist');
+  } catch {
+    return {
+      success: false,
+      errors: [
+        'AI assist package not available. Install @isl-lang/spec-assist.',
+        'Or use --template flag to create from templates instead.',
+      ],
+    };
+  }
+  
+  // Check if AI is enabled
+  if (!specAssist.isSpecAssistAvailable()) {
+    return {
+      success: false,
+      errors: [
+        'AI assist is not enabled. To enable:',
+        '  1. Set env var: ISL_AI_ENABLED=true',
+        '  2. Or add to .islrc.json: { "ai": { "enabled": true } }',
+        '',
+        'Note: AI-generated specs are ALWAYS validated by the ISL verifier.',
+      ],
+    };
+  }
+  
+  // Read source file
+  const spinner = ora(`Reading ${filePath}...`).start();
+  let code: string;
+  try {
+    code = await readFile(resolvedPath, 'utf-8');
+  } catch (err) {
+    spinner.fail('Failed to read file');
+    return {
+      success: false,
+      errors: [`Failed to read file: ${err instanceof Error ? err.message : String(err)}`],
+    };
+  }
+  
+  // Detect language
+  const language = detectLanguage(filePath);
+  spinner.text = `Generating ISL spec from ${language} code...`;
+  
+  // Generate spec
+  let result: Awaited<ReturnType<typeof specAssist.generateSpecFromCode>>;
+  try {
+    result = await specAssist.generateSpecFromCode(code, language, {
+      signature: options.signature,
+      hints: options.hints,
+    });
+  } catch (err) {
+    spinner.fail('AI generation failed');
+    return {
+      success: false,
+      errors: [`AI generation error: ${err instanceof Error ? err.message : String(err)}`],
+    };
+  }
+  
+  // Handle result
+  if (!result.success) {
+    spinner.fail('Generated spec failed validation');
+    
+    const diagnosticMessages = result.diagnostics.map(d => {
+      let msg = `  [${d.severity}] ${d.message}`;
+      if (d.fix) {
+        msg += `\n    Fix: ${d.fix}`;
+      }
+      return msg;
+    });
+    
+    return {
+      success: false,
+      errors: [
+        'AI-generated spec failed validation:',
+        ...diagnosticMessages,
+        '',
+        'The AI output was rejected because it did not pass the ISL verifier.',
+        'Try providing more hints about the code intent with --hints.',
+      ],
+      aiResult: {
+        isl: result.isl,
+        provider: result.metadata.provider,
+        durationMs: result.metadata.durationMs,
+        validationPassed: false,
+        diagnostics: result.diagnostics,
+      },
+    };
+  }
+  
+  spinner.succeed('Generated valid ISL spec');
+  
+  // Determine output path
+  const specName = options.name ?? basename(filePath, extname(filePath));
+  const outputPath = options.out ?? `./${toKebabCase(specName)}.isl`;
+  const outputResolved = resolve(outputPath);
+  
+  // Check if output file exists
+  if (!options.force && (await fileExists(outputResolved))) {
+    // Don't fail - just print to stdout
+    console.log('');
+    console.log(chalk.cyan('Generated ISL Spec:'));
+    console.log('');
+    console.log(result.isl);
+    console.log('');
+    console.log(chalk.yellow(`File ${outputPath} already exists. Use --force to overwrite, or --out to specify different path.`));
+    
+    return {
+      success: true,
+      aiResult: {
+        isl: result.isl,
+        provider: result.metadata.provider,
+        durationMs: result.metadata.durationMs,
+        validationPassed: true,
+      },
+      errors: [],
+    };
+  }
+  
+  // Write output file
+  const writeSpinner = ora(`Writing ${outputPath}...`).start();
+  try {
+    const dir = dirname(outputResolved);
+    if (dir !== '.' && !(await fileExists(dir))) {
+      await mkdir(dir, { recursive: true });
+    }
+    
+    await writeFile(outputResolved, result.isl!, 'utf-8');
+    writeSpinner.succeed(`Created ${outputPath}`);
+    
+    return {
+      success: true,
+      filePath: outputResolved,
+      aiResult: {
+        isl: result.isl,
+        provider: result.metadata.provider,
+        durationMs: result.metadata.durationMs,
+        validationPassed: true,
+      },
+      errors: [],
+    };
+  } catch (err) {
+    writeSpinner.fail('Failed to write file');
+    return {
+      success: false,
+      errors: [`Failed to write file: ${err instanceof Error ? err.message : String(err)}`],
+      aiResult: {
+        isl: result.isl,
+        provider: result.metadata.provider,
+        durationMs: result.metadata.durationMs,
+        validationPassed: true,
+      },
+    };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Main Spec Function
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1404,10 +1614,20 @@ export async function spec(options: SpecOptions = {}): Promise<SpecResult> {
     }
   }
 
+  // Handle --ai <file> flag
+  if (options.ai) {
+    return await handleAIGeneration(options);
+  }
+
   // No valid options provided
   return {
     success: false,
-    errors: ['No action specified. Use --templates to list templates or --template <name> to create a spec.'],
+    errors: [
+      'No action specified. Options:',
+      '  --templates              List available templates',
+      '  --template <name>        Create spec from template',
+      '  --ai <file>              Generate spec from code with AI',
+    ],
   };
 }
 
@@ -1428,6 +1648,7 @@ export function printSpecResult(result: SpecResult, options?: { json?: boolean }
           filePath: result.filePath ?? null,
           templateUsed: result.templateUsed ?? null,
           templates: result.templates ?? null,
+          aiResult: result.aiResult ?? null,
           errors: result.errors,
         },
         null,
@@ -1446,7 +1667,36 @@ export function printSpecResult(result: SpecResult, options?: { json?: boolean }
     return;
   }
 
-  // File creation result
+  // AI generation result
+  if (result.aiResult) {
+    if (result.success) {
+      if (result.filePath) {
+        console.log(chalk.green('✓') + ' Generated ISL spec with AI');
+        console.log('');
+        output.filePath(result.filePath, 'created');
+        console.log('');
+        console.log(chalk.gray(`  Provider: ${result.aiResult.provider}`));
+        console.log(chalk.gray(`  Duration: ${result.aiResult.durationMs}ms`));
+        console.log('');
+        output.box('Next Steps', ['isl check ' + basename(result.filePath), 'isl verify', 'isl generate'], 'info');
+      } else {
+        // ISL was generated but not written to file
+        console.log(chalk.green('✓') + ' Generated valid ISL spec');
+        console.log('');
+        console.log(chalk.gray(`  Provider: ${result.aiResult.provider}`));
+        console.log(chalk.gray(`  Duration: ${result.aiResult.durationMs}ms`));
+      }
+    } else {
+      console.log(chalk.red('✗') + ' AI spec generation failed validation');
+      console.log('');
+      for (const error of result.errors) {
+        console.log(chalk.red(`  ${error}`));
+      }
+    }
+    return;
+  }
+
+  // File creation result (template)
   if (result.success && result.filePath) {
     console.log(chalk.green('✓') + ` Created spec from template ${chalk.cyan(result.templateUsed)}`);
     console.log('');

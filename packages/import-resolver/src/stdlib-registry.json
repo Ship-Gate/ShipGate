@@ -61,6 +61,51 @@
       },
       "exports": ["File", "FileMetadata", "StorageProvider", "UploadResult", "MimeType", "Blob"],
       "description": "File upload and storage specifications"
+    },
+    "@isl/datetime": {
+      "version": "1.0.0",
+      "path": "stdlib/datetime",
+      "files": {
+        "index": "index.isl"
+      },
+      "exports": ["Timestamp", "Duration", "TimeZone", "DateFormat", "DatePart", "DayOfWeek", "DateTimeComponents", "DurationComponents", "Now", "AddDuration", "SubtractDuration", "DiffTimestamps", "FormatTimestamp", "ParseTimestamp", "GetDatePart", "ToComponents", "FromComponents", "DurationToMs", "MsToDuration", "IsLeapYear", "DaysInMonth", "CompareTimestamps", "IsBefore", "IsAfter", "IsBetween"],
+      "description": "Date and time operations (deterministic subset with explicit non-deterministic Now)"
+    },
+    "@isl/strings": {
+      "version": "1.0.0",
+      "path": "stdlib/strings",
+      "files": {
+        "index": "index.isl"
+      },
+      "exports": ["StringCase", "TrimMode", "EmailFormat", "UrlFormat", "PhoneFormat", "StringValidationResult", "SplitResult", "Length", "IsEmpty", "IsBlank", "ToLowerCase", "ToUpperCase", "ToTitleCase", "ChangeCase", "Trim", "TrimStart", "TrimEnd", "TrimChars", "Contains", "StartsWith", "EndsWith", "IndexOf", "LastIndexOf", "Substring", "Replace", "ReplaceAll", "Split", "Join", "Concat", "Repeat", "PadStart", "PadEnd", "Reverse", "IsValidEmail", "IsValidUrl", "IsValidPhone", "MatchesPattern", "IsAlpha", "IsAlphanumeric", "IsNumeric", "IsHexadecimal", "EncodeBase64", "DecodeBase64", "EncodeUrl", "DecodeUrl", "EscapeHtml", "UnescapeHtml"],
+      "description": "String manipulation and validation operations (all deterministic)"
+    },
+    "@isl/crypto": {
+      "version": "1.0.0",
+      "path": "stdlib/crypto",
+      "files": {
+        "index": "index.isl"
+      },
+      "exports": ["HashAlgorithm", "PasswordHashAlgorithm", "HmacAlgorithm", "HashOutput", "PasswordHash", "SecureToken", "HmacSignature", "SecretKey", "HashResult", "PasswordHashConfig", "Hash", "HashSHA256", "HashSHA512", "HashSHA3", "HashBlake3", "HashPassword", "VerifyPassword", "NeedsRehash", "Hmac", "VerifyHmac", "GenerateToken", "GenerateApiKey", "GenerateBytes", "DeriveKey", "ConstantTimeEquals", "HashFile"],
+      "description": "Cryptographic hashing and secure operations"
+    },
+    "@isl/uuid": {
+      "version": "1.0.0",
+      "path": "stdlib/uuid",
+      "files": {
+        "index": "index.isl"
+      },
+      "exports": ["UUID", "UUIDVersion", "UUIDNamespace", "UUIDFormat", "UUIDInfo", "UUIDComponents", "GenerateUUID", "GenerateUUIDv7", "GenerateUUIDv5", "GenerateUUIDv3", "GenerateNamespacedUUID", "IsValidUUID", "IsNilUUID", "IsMaxUUID", "ParseUUID", "FormatUUID", "NormalizeUUID", "GetUUIDVersion", "ToComponents", "FromComponents", "CompareUUIDs", "UUIDsEqual"],
+      "description": "UUID generation, validation, and parsing"
+    },
+    "@isl/json": {
+      "version": "1.0.0",
+      "path": "stdlib/json",
+      "files": {
+        "index": "index.isl"
+      },
+      "exports": ["JSONValue", "JSONObject", "JSONArray", "JSONPath", "JSONPointer", "JSONPatchOp", "JSONFormatOptions", "JSONParseResult", "JSONPatch", "JSONDiff", "JSONSchemaValidation", "Parse", "TryParse", "Stringify", "StringifyPretty", "StringifyCompact", "Get", "GetString", "GetNumber", "GetBoolean", "GetArray", "GetObject", "Has", "Set", "Remove", "Merge", "Clone", "Keys", "Values", "Entries", "Query", "Equals", "Diff", "ApplyPatches", "IsValid", "IsObject", "IsArray", "IsString", "IsNumber", "IsBoolean", "IsNull", "Flatten", "Unflatten", "Pick", "Omit"],
+      "description": "JSON parsing, serialization, and manipulation (all deterministic)"
     }
   },
   "aliases": {
@@ -69,6 +114,11 @@
     "stdlib-audit": "@isl/audit",
     "stdlib-payments": "@isl/payments",
     "stdlib-uploads": "@isl/uploads",
-    "stdlib-billing": "@isl/payments"
+    "stdlib-billing": "@isl/payments",
+    "stdlib-datetime": "@isl/datetime",
+    "stdlib-strings": "@isl/strings",
+    "stdlib-crypto": "@isl/crypto",
+    "stdlib-uuid": "@isl/uuid",
+    "stdlib-json": "@isl/json"
   }
 }

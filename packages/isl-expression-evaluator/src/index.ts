@@ -4,13 +4,23 @@
 // v1 - Complete Expression Evaluator for Postconditions/Invariants
 //
 // Key features:
-// - Tri-state logic: true/false/unknown with provenance
-// - Boolean ops: && || ! implies (and or not)
+// - Tri-state logic: true/false/unknown with STRUCTURED REASON CODES
+// - Boolean ops: && || ! implies iff (and or not)
 // - Comparisons: == != < <= > >=
-// - Literals: string number boolean null
+// - Arithmetic: + - * / %
+// - Membership: in
+// - Literals: string number boolean null duration regex
 // - Identifiers: input.* result.* error variants
-// - Property access: foo.bar.baz
-// - Function calls: now() length(x) is_valid_format(x) is_valid(x) regex(x,p) contains(arr,v)
+// - Property access: foo.bar.baz, foo[index]
+// - Quantifiers: all, any, none, count, sum, filter
+// - Conditionals: condition ? then : else
+// - Function calls: now() length() is_valid_format() is_valid() regex() contains()
+//                   abs() ceil() floor() round() min() max() pow() sqrt()
+//                   concat() upper() lower() trim() startsWith() endsWith()
+//                   len() keys() values() isEmpty()
+// - String methods: startsWith() endsWith() includes() trim() split() charAt()
+// - Array methods: indexOf() includes() join() slice() concat() reverse() at()
+// - Constant folding: pre-evaluate constant subtrees
 // ============================================================================
 
 // ============================================================================
@@ -61,6 +71,11 @@ export {
   evaluate as evaluateV1,
   createEvalContext,
   createEvalAdapter,
+  // Constant folding
+  foldConstants,
+  isConstant,
+  analyzeExpression,
+  getCoverageReport,
 } from './v1/evaluator.js';
 
 export type {
@@ -68,7 +83,13 @@ export type {
   EvalKind,
   EvalContext,
   EvalAdapter,
+  // Structured unknown reasons
+  UnknownReasonCode,
+  UnknownReason,
 } from './v1/types.js';
+
+// Constant folding types (from evaluator)
+export type { FoldResult, ExpressionStats } from './v1/evaluator.js';
 
 export {
   triAnd,

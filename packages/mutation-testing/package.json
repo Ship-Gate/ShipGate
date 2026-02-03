@@ -9,7 +9,7 @@
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "lint": "eslint src/",
-    "clean": "rm -rf dist/"
+    "clean": "rimraf dist"
   },
   "dependencies": {
     "@isl-lang/isl-core": "workspace:*"

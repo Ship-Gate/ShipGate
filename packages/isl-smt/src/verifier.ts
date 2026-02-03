@@ -436,3 +436,161 @@ export async function checkExpression(
     duration: Date.now() - start,
   };
 }
+
+// ============================================================================
+// Unknown Resolution Hook
+// ============================================================================
+
+/**
+ * Result of attempting to resolve an unknown
+ */
+export interface UnknownResolution {
+  /** The original unknown reason */
+  originalReason: string;
+  /** Whether resolution was attempted */
+  attempted: boolean;
+  /** The new result after SMT check */
+  resolved?: {
+    verdict: 'proved' | 'disproved' | 'still_unknown';
+    model?: Record<string, unknown>;
+    reason?: string;
+  };
+  /** Time taken for resolution attempt */
+  durationMs: number;
+}
+
+/**
+ * Attempt to resolve an unknown verification result using SMT
+ * 
+ * This function is designed to be called when runtime verification
+ * produces an "unknown" result, attempting to use SMT solving to
+ * determine the truth value.
+ * 
+ * @example
+ * ```typescript
+ * // In the verifier, when we get an unknown:
+ * if (result.triState === 'unknown') {
+ *   const resolution = await resolveUnknown(
+ *     clause.expression,
+ *     clause.inputValues,
+ *     { timeout: 5000 }
+ *   );
+ *   
+ *   if (resolution.resolved?.verdict === 'proved') {
+ *     result.triState = true;
+ *     result.reason = 'Proved by SMT solver';
+ *   }
+ * }
+ * ```
+ */
+export async function resolveUnknown(
+  expression: any,
+  inputValues?: Record<string, unknown>,
+  options?: SMTVerifyOptions
+): Promise<UnknownResolution> {
+  const start = Date.now();
+  const ctx = createContext();
+  
+  // Add input values as known variables
+  if (inputValues) {
+    for (const [name, value] of Object.entries(inputValues)) {
+      if (typeof value === 'number') {
+        ctx.variables.set(name, Sort.Int());
+      } else if (typeof value === 'boolean') {
+        ctx.variables.set(name, Sort.Bool());
+      } else if (typeof value === 'string') {
+        ctx.variables.set(name, Sort.String());
+      }
+    }
+  }
+  
+  // Try to encode the expression
+  const encoded = encodeExpression(expression, ctx);
+  
+  if (!encoded.success) {
+    return {
+      originalReason: 'Expression encoding failed',
+      attempted: false,
+      durationMs: Date.now() - start,
+    };
+  }
+  
+  try {
+    const solver = createSolver(options);
+    
+    // Build declarations
+    const declarations: SMTDecl[] = [];
+    for (const [varName, sort] of ctx.variables) {
+      declarations.push(Decl.const(varName, sort));
+    }
+    
+    // Check if the expression is satisfiable (can be true)
+    const satResult = await solver.checkSat(encoded.expr, declarations);
+    
+    if (satResult.status === 'unsat') {
+      // Expression can never be true - it's always false
+      return {
+        originalReason: 'Unknown from runtime',
+        attempted: true,
+        resolved: {
+          verdict: 'disproved',
+          reason: 'SMT proved expression is unsatisfiable (always false)',
+        },
+        durationMs: Date.now() - start,
+      };
+    }
+    
+    // Check if the negation is satisfiable (can be false)
+    const negated = Expr.not(encoded.expr);
+    const negResult = await solver.checkSat(negated, declarations);
+    
+    if (negResult.status === 'unsat') {
+      // Negation can never be true - original is always true
+      return {
+        originalReason: 'Unknown from runtime',
+        attempted: true,
+        resolved: {
+          verdict: 'proved',
+          reason: 'SMT proved expression is valid (always true)',
+        },
+        durationMs: Date.now() - start,
+      };
+    }
+    
+    if (satResult.status === 'sat' && negResult.status === 'sat') {
+      // Both expression and negation are satisfiable
+      // This means the expression depends on variable values
+      return {
+        originalReason: 'Unknown from runtime',
+        attempted: true,
+        resolved: {
+          verdict: 'still_unknown',
+          model: satResult.model,
+          reason: 'Expression can be both true and false depending on inputs',
+        },
+        durationMs: Date.now() - start,
+      };
+    }
+    
+    // Other cases (timeout, unknown, error)
+    return {
+      originalReason: 'Unknown from runtime',
+      attempted: true,
+      resolved: {
+        verdict: 'still_unknown',
+        reason: `SMT check returned: ${satResult.status}`,
+      },
+      durationMs: Date.now() - start,
+    };
+  } catch (error) {
+    return {
+      originalReason: 'Unknown from runtime',
+      attempted: true,
+      resolved: {
+        verdict: 'still_unknown',
+        reason: `SMT error: ${error instanceof Error ? error.message : String(error)}`,
+      },
+      durationMs: Date.now() - start,
+    };
+  }
+}

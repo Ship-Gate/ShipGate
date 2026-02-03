@@ -9,6 +9,36 @@ The ISL Standard Library provides production-ready modules for common functional
 npm install @intentos/isl-cli
 ```
 
+## Module Overview (10 Modules)
+
+| Module | Alias | Description |
+|--------|-------|-------------|
+| `@isl/auth` | `stdlib-auth` | Authentication and authorization |
+| `@isl/rate-limit` | `stdlib-rate-limit` | Rate limiting and quotas |
+| `@isl/audit` | `stdlib-audit` | Audit logging and compliance |
+| `@isl/payments` | `stdlib-payments` | Payment processing |
+| `@isl/uploads` | `stdlib-uploads` | File uploads and storage |
+| `@isl/datetime` | `stdlib-datetime` | Date/time operations |
+| `@isl/strings` | `stdlib-strings` | String manipulation |
+| `@isl/crypto` | `stdlib-crypto` | Cryptographic operations |
+| `@isl/uuid` | `stdlib-uuid` | UUID generation/validation |
+| `@isl/json` | `stdlib-json` | JSON parsing/manipulation |
+
+## Quick Import
+
+```isl
+use @isl/datetime
+use @isl/strings
+use @isl/crypto
+use @isl/uuid
+use @isl/json
+```
+
+## Documentation
+
+- [Full Reference](../docs/stdlib/REFERENCE.md)
+- [Determinism Guide](../docs/stdlib/DETERMINISM.md)
+
 ## Domains
 
 ### Auth (`@isl/stdlib/auth`)

@@ -11,6 +11,44 @@
 export type EvalKind = 'true' | 'false' | 'unknown';
 
 /**
+ * Structured reason codes for unknown results.
+ * Every unknown result MUST have one of these reason codes.
+ */
+export type UnknownReasonCode =
+  | 'MISSING_BINDING'       // Variable/identifier not found in context
+  | 'MISSING_INPUT'         // Required input field not provided
+  | 'MISSING_RESULT'        // Result not available (e.g., in precondition)
+  | 'MISSING_OLD_STATE'     // old() called without previous state snapshot
+  | 'MISSING_PROPERTY'      // Property not found on object
+  | 'UNSUPPORTED_OP'        // Operator not yet implemented
+  | 'UNSUPPORTED_EXPR'      // Expression type not yet implemented
+  | 'UNSUPPORTED_QUANTIFIER' // Quantifier type not implemented
+  | 'UNSUPPORTED_FUNCTION'  // Unknown function call
+  | 'NON_DETERMINISTIC'     // Result depends on runtime state (e.g., now())
+  | 'EXTERNAL_CALL'         // External service/entity lookup required
+  | 'TYPE_MISMATCH'         // Operand types incompatible with operation
+  | 'INVALID_OPERAND'       // Operand value invalid for operation
+  | 'COLLECTION_UNKNOWN'    // Collection value could not be resolved
+  | 'ELEMENT_UNKNOWN'       // One or more elements could not be resolved
+  | 'PROPAGATED'            // Unknown propagated from sub-expression
+  | 'TIMEOUT'               // Evaluation timed out (depth limit)
+  | 'INVALID_PATTERN'       // Invalid regex or format pattern
+  | 'DIVISION_BY_ZERO'      // Division or modulo by zero
+  | 'UNKNOWN_LITERAL_TYPE'; // Unknown literal type encountered
+
+/**
+ * Detailed unknown reason with structured code
+ */
+export interface UnknownReason {
+  /** Structured reason code */
+  code: UnknownReasonCode;
+  /** Human-readable message explaining the unknown */
+  message: string;
+  /** The expression path/location that caused the unknown (optional) */
+  path?: string;
+}
+
+/**
  * v1 Evaluation Result
  * Clean, minimal result type for expression evaluation
  */
@@ -19,6 +57,8 @@ export interface EvalResult {
   kind: EvalKind;
   /** Human-readable reason for the result (especially for false/unknown) */
   reason?: string;
+  /** Structured reason code (required when kind === 'unknown') */
+  reasonCode?: UnknownReasonCode;
   /** Additional evidence or context for the result */
   evidence?: unknown;
 }
@@ -331,10 +371,46 @@ export function fail(reason: string, evidence?: unknown): EvalResult {
 }
 
 /**
- * Create an "unknown" result with reason
+ * Create an "unknown" result with structured reason code
+ * @param code - The structured reason code (required)
+ * @param message - Human-readable explanation
+ * @param evidence - Additional context/data
  */
-export function unknown(reason: string, evidence?: unknown): EvalResult {
-  return { kind: 'unknown', reason, evidence };
+export function unknown(code: UnknownReasonCode, message: string, evidence?: unknown): EvalResult {
+  return { kind: 'unknown', reason: message, reasonCode: code, evidence };
+}
+
+/**
+ * Legacy unknown creator - prefer the typed version
+ * @deprecated Use unknown(code, message, evidence) instead
+ */
+export function unknownLegacy(reason: string, evidence?: unknown): EvalResult {
+  // Try to infer a reason code from the message
+  const code = inferReasonCode(reason);
+  return { kind: 'unknown', reason, reasonCode: code, evidence };
+}
+
+/**
+ * Infer a reason code from a legacy reason string
+ */
+function inferReasonCode(reason: string): UnknownReasonCode {
+  const r = reason.toLowerCase();
+  if (r.includes('identifier') || r.includes('variable') || r.includes('binding')) return 'MISSING_BINDING';
+  if (r.includes('input')) return 'MISSING_INPUT';
+  if (r.includes('result')) return 'MISSING_RESULT';
+  if (r.includes('old') || r.includes('previous state')) return 'MISSING_OLD_STATE';
+  if (r.includes('property')) return 'MISSING_PROPERTY';
+  if (r.includes('operator')) return 'UNSUPPORTED_OP';
+  if (r.includes('expression') || r.includes('unsupported')) return 'UNSUPPORTED_EXPR';
+  if (r.includes('quantifier')) return 'UNSUPPORTED_QUANTIFIER';
+  if (r.includes('function') || r.includes('method')) return 'UNSUPPORTED_FUNCTION';
+  if (r.includes('collection')) return 'COLLECTION_UNKNOWN';
+  if (r.includes('element')) return 'ELEMENT_UNKNOWN';
+  if (r.includes('type') || r.includes('non-number') || r.includes('cannot compare')) return 'TYPE_MISMATCH';
+  if (r.includes('entity') || r.includes('lookup') || r.includes('external')) return 'EXTERNAL_CALL';
+  if (r.includes('depth') || r.includes('timeout')) return 'TIMEOUT';
+  if (r.includes('regex') || r.includes('pattern')) return 'INVALID_PATTERN';
+  return 'PROPAGATED';
 }
 
 /**
@@ -350,5 +426,6 @@ export function fromBool(value: boolean, evidence?: unknown): EvalResult {
 export function fromKind(kind: EvalKind, reason?: string, evidence?: unknown): EvalResult {
   if (kind === 'true') return ok(evidence);
   if (kind === 'false') return fail(reason ?? 'Evaluated to false', evidence);
-  return unknown(reason ?? 'Cannot determine', evidence);
+  // For unknown from EvalKind, use PROPAGATED as default
+  return { kind: 'unknown', reason: reason ?? 'Cannot determine', reasonCode: 'PROPAGATED', evidence };
 }

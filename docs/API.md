@@ -377,12 +377,18 @@ const goFiles = generateGo(domain, {
 
 ### Supported Languages
 
-| Language | Types | Stubs | Validators |
-|----------|-------|-------|------------|
-| TypeScript | ✓ | ✓ | ✓ |
-| Rust | ✓ | ✓ | ✓ |
-| Go | ✓ | ✓ | Partial |
-| Python | ✓ | ✓ | Partial |
+| Language | Types | Stubs | Contracts | Validators | Status |
+|----------|-------|-------|-----------|------------|--------|
+| TypeScript | ✓ | ✓ | ✓ | ✓ | **v1** |
+| Python | ✓ | ✓ | ✓ | ✓ | **v1** |
+| Rust | ✓ | ✓ | ✗ | ✓ | Experimental |
+| Go | ✓ | ✓ | ✗ | Partial | Experimental |
+| JVM | Partial | ✗ | ✗ | ✗ | Experimental |
+| C# | Partial | ✗ | ✗ | ✗ | Experimental |
+
+> **Note**: Python codegen with full contract support (preconditions, postconditions, invariants)
+> is supported as of v1.0. Other languages have partial or experimental support and may have
+> incomplete contract checking.
 
 ---
 

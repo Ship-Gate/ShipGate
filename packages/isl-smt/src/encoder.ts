@@ -195,11 +195,14 @@ function encode(expr: Expression, ctx: EncodingContext): SMTExpr {
     case 'OldExpression':
       return encodeOldExpression(expr, ctx);
       
-    default:
+    default: {
+      // Cast to any for exhaustiveness checking - TypeScript thinks this is unreachable
+      const unknownExpr = expr as { kind: string };
       throw new UnsupportedFeatureError(
-        expr.kind,
-        `Expression kind '${expr.kind}' not supported in SMT encoding`
+        unknownExpr.kind,
+        `Expression kind '${unknownExpr.kind}' not supported in SMT encoding`
       );
+    }
   }
 }
 

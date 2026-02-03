@@ -272,22 +272,73 @@ ${declarations}
 }
 
 // ============================================================================
-// Mock SMT Solver
+// Real SMT Solver Integration
 // ============================================================================
 
 /**
- * Mock SMT solver for when Z3/CVC5 is not available
- * Returns 'unknown' for all queries
+ * Import the actual SMT solver from isl-smt package
  */
-async function mockSMTSolver(
+let smtSolver: typeof import('@isl-lang/isl-smt') | null = null;
+
+async function loadSMTSolver(): Promise<typeof import('@isl-lang/isl-smt') | null> {
+  if (smtSolver !== null) return smtSolver;
+  
+  try {
+    smtSolver = await import('@isl-lang/isl-smt');
+    return smtSolver;
+  } catch {
+    // SMT package not available
+    return null;
+  }
+}
+
+/**
+ * Execute actual SMT solving using the isl-smt package
+ */
+async function executeSMTSolver(
   query: string,
+  formula: unknown,
   timeout: number
 ): Promise<{ result: SMTResult; model?: Record<string, unknown> }> {
-  // In a real implementation, this would call Z3 or CVC5
-  // For now, return unknown since we can't actually verify
-  return {
-    result: 'unknown',
-  };
+  const smt = await loadSMTSolver();
+  
+  if (!smt) {
+    // Fall back to unknown if SMT package not available
+    return { result: 'unknown' };
+  }
+  
+  try {
+    // Create a solver with the configured timeout
+    const solver = smt.createSolver({
+      timeout,
+      solver: 'builtin', // Use builtin solver with Z3 fallback
+      verbose: false,
+    });
+    
+    // If we have a parsed formula, use it directly
+    if (formula && typeof formula === 'object') {
+      const result = await solver.checkSat(formula as import('@isl-lang/prover').SMTExpr, []);
+      
+      switch (result.status) {
+        case 'sat':
+          return { result: 'sat', model: result.model };
+        case 'unsat':
+          return { result: 'unsat' };
+        case 'timeout':
+          return { result: 'timeout' };
+        case 'unknown':
+          return { result: 'unknown' };
+        case 'error':
+          return { result: 'error' };
+      }
+    }
+    
+    // If we only have the query string, return unknown
+    // (would need to parse SMT-LIB to use it)
+    return { result: 'unknown' };
+  } catch (error) {
+    return { result: 'error' };
+  }
 }
 
 // ============================================================================
@@ -305,10 +356,10 @@ async function executeCheck(
 ): Promise<SMTCheckResult> {
   const startTime = Date.now();
   
-  // Convert expression to SMT formula
-  const formula = toSMTFormula(expressionAst);
+  // Convert expression to SMT formula string
+  const formulaStr = toSMTFormula(expressionAst);
   
-  if (!formula) {
+  if (!formulaStr) {
     return {
       clauseId,
       formula: '[not translatable]',
@@ -323,14 +374,51 @@ async function executeCheck(
   extractVariables(expressionAst, variables);
   
   // Generate SMT query
-  const query = generateSMTQuery(formula, variables);
+  const query = generateSMTQuery(formulaStr, variables);
   
   try {
-    const { result, model } = await mockSMTSolver(query, timeout);
+    // Try to load and use the real SMT solver
+    const smt = await loadSMTSolver();
+    
+    if (smt) {
+      // Try to encode the expression using the isl-smt encoder
+      const ctx = smt.createContext();
+      
+      // Add variables to context (assume Int for now)
+      for (const v of variables) {
+        ctx.variables.set(v, smt.Sort.Int());
+      }
+      
+      const encoded = smt.encodeExpression(expressionAst as import('@isl-lang/isl-core/ast').Expression, ctx);
+      
+      if (encoded.success) {
+        const smtSolver = smt.createSolver({
+          timeout,
+          solver: 'builtin',
+          verbose: false,
+        });
+        
+        const result = await smtSolver.checkSat(encoded.expr, []);
+        
+        return {
+          clauseId,
+          formula: formulaStr,
+          result: result.status === 'error' ? 'error' : result.status,
+          durationMs: Date.now() - startTime,
+          model: result.status === 'sat' ? result.model : undefined,
+          counterexample: result.status === 'sat' ? result.model : undefined,
+          reason: result.status === 'unknown' ? result.reason : 
+                  result.status === 'error' ? result.message : undefined,
+        };
+      }
+    }
+    
+    // Fall back to mock solver if encoding failed
+    const { result, model } = await executeSMTSolver(query, null, timeout);
     
     return {
       clauseId,
-      formula,
+      formula: formulaStr,
       result,
       durationMs: Date.now() - startTime,
       model,
@@ -339,7 +427,7 @@ async function executeCheck(
   } catch (error) {
     return {
       clauseId,
-      formula,
+      formula: formulaStr,
       result: 'error',
       durationMs: Date.now() - startTime,
       reason: error instanceof Error ? error.message : String(error),

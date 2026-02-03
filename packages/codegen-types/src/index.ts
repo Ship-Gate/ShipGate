@@ -25,6 +25,26 @@ export { generatePython, PythonGenerator } from './python.js';
 export { generateZodValidation, ZodGenerator } from './validation.js';
 export { generateSerdes, SerdesGenerator } from './serdes.js';
 
+// Python contract generation (v1 supported)
+export {
+  generatePythonContracts,
+  PythonContractGenerator,
+} from './python-contracts.js';
+export {
+  compilePythonExpression,
+  compilePythonAssertion,
+  compilePreconditionCheck,
+  compilePostconditionCheck,
+  compileInvariantCheck,
+  createPythonCompilerContext,
+} from './python-expression-compiler.js';
+export type {
+  PythonCompilerContext,
+} from './python-expression-compiler.js';
+export type {
+  ContractGenerationOptions,
+} from './python-contracts.js';
+
 // Deterministic generator (recommended)
 export {
   generateDeterministicTypeScript,

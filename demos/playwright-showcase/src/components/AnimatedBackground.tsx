@@ -6,11 +6,20 @@ interface Point {
   y: number;
 }
 
+interface ClickRippleData {
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  alpha: number;
+  color: { r: number; g: number; b: number };
+}
+
 export default function AnimatedBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef<Point>({ x: 0, y: 0 });
   const targetMouseRef = useRef<Point>({ x: 0, y: 0 });
-  const clickRipplesRef = useRef<ClickRipple[]>([]);
+  const clickRipplesRef = useRef<ClickRippleData[]>([]);
 
   const animate = useCallback(() => {
     const canvas = canvasRef.current;

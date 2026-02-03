@@ -2,23 +2,32 @@
  * SMT Solver Backend
  * 
  * Provides SMT solving capabilities with:
- * - Built-in solver for simple cases
+ * - Built-in solver for simple cases (with bounded integer arithmetic)
  * - Z3 integration via subprocess (when available)
+ * - Query caching for deterministic results
  * - Proper timeout handling with UNKNOWN fallback
+ * - Safe memory limits - no unbounded solver runs
  */
 
 import { spawn } from 'child_process';
-import { writeFile, unlink, mkdtemp } from 'fs/promises';
+import { writeFile, unlink, mkdtemp, rmdir } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { Prover, toSMTLib, declToSMTLib, Expr, Decl, Sort } from '@isl-lang/prover';
+import { toSMTLib, declToSMTLib, Expr, Decl } from '@isl-lang/prover';
 import type { SMTExpr, SMTDecl, SMTSort } from '@isl-lang/prover';
 import type { SMTCheckResult, SMTVerifyOptions } from './types.js';
+import { SMTCache, getGlobalCache, type CacheConfig } from './cache.js';
+import { BuiltinSolver } from './builtin-solver.js';
 
 /**
  * Default timeout in milliseconds
  */
 const DEFAULT_TIMEOUT = 5000;
+
+/**
+ * Maximum memory limit for Z3 subprocess (in MB)
+ */
+const MAX_MEMORY_MB = 512;
 
 /**
  * SMT Solver interface
@@ -72,34 +81,66 @@ export function createSolver(options: SMTVerifyOptions = {}): ISMTSolver {
 }
 
 /**
+ * Extended solver options for internal use
+ */
+interface ExtendedSolverOptions extends Required<SMTVerifyOptions> {
+  cacheConfig?: CacheConfig;
+}
+
+/**
  * SMT Solver implementation
  */
 class SMTSolverImpl implements ISMTSolver {
-  private config: Required<SMTVerifyOptions>;
+  private config: ExtendedSolverOptions;
   private z3Available: boolean | null = null;
+  private cache: SMTCache;
+  private builtinSolver: BuiltinSolver;
   
-  constructor(config: Required<SMTVerifyOptions>) {
+  constructor(config: ExtendedSolverOptions) {
     this.config = config;
+    this.cache = config.cacheConfig ? new SMTCache(config.cacheConfig) : getGlobalCache();
+    this.builtinSolver = new BuiltinSolver({
+      timeout: config.timeout,
+      verbose: config.verbose,
+    });
   }
   
   async checkSat(formula: SMTExpr, declarations: SMTDecl[] = []): Promise<SMTCheckResult> {
-    const start = Date.now();
-    
     try {
+      // Check cache first for deterministic results
+      const queryHash = this.cache.hashQuery(formula, declarations);
+      const cachedResult = this.cache.get(queryHash);
+      
+      if (cachedResult) {
+        if (this.config.verbose) {
+          console.log('[SMT] Cache hit for query:', queryHash.slice(0, 16));
+        }
+        return cachedResult;
+      }
+      
+      let result: SMTCheckResult;
+      
       // Try external solver first if configured
       if (this.config.solver === 'z3') {
         const available = await this.checkZ3Available();
         if (available) {
-          return await this.solveWithZ3(formula, declarations);
+          result = await this.solveWithZ3(formula, declarations);
+        } else {
+          // Fall back to builtin if Z3 not available
+          if (this.config.verbose) {
+            console.log('[SMT] Z3 not available, falling back to builtin solver');
+          }
+          result = await this.solveEnhancedBuiltin(formula, declarations);
         }
-        // Fall back to builtin if Z3 not available
-        if (this.config.verbose) {
-          console.log('[SMT] Z3 not available, falling back to builtin solver');
-        }
+      } else {
+        // Use enhanced builtin solver
+        result = await this.solveEnhancedBuiltin(formula, declarations);
       }
       
-      // Use builtin solver
-      return await this.solveBuiltin(formula, declarations);
+      // Cache the result
+      this.cache.set(queryHash, result);
+      
+      return result;
     } catch (error) {
       return {
         status: 'error',
@@ -230,19 +271,24 @@ class SMTSolverImpl implements ISMTSolver {
       // Run Z3 with timeout
       const result = await this.runZ3(tmpFile);
       return result;
+    } catch (error) {
+      return {
+        status: 'error',
+        message: `Z3 execution failed: ${error instanceof Error ? error.message : String(error)}`,
+      };
     } finally {
-      // Cleanup
-      if (tmpFile) {
-        try { await unlink(tmpFile); } catch { /* ignore */ }
-      }
-      if (tmpDir) {
-        try { await unlink(tmpDir); } catch { /* ignore */ }
+      // Cleanup temp files
+      try {
+        if (tmpFile) await unlink(tmpFile);
+        if (tmpDir) await rmdir(tmpDir);
+      } catch {
+        // Ignore cleanup errors
       }
     }
   }
   
   /**
-   * Run Z3 on a file with timeout
+   * Run Z3 on a file with timeout and memory limits
    */
   private runZ3(filePath: string): Promise<SMTCheckResult> {
     return new Promise((resolve) => {
@@ -252,18 +298,27 @@ class SMTSolverImpl implements ISMTSolver {
       const proc = spawn('z3', [
         '-smt2',
         `-T:${timeoutSec}`,
+        `-memory:${MAX_MEMORY_MB}`,
         filePath,
       ], {
         stdio: ['pipe', 'pipe', 'pipe'],
         shell: true,
+        // Limit process resources
+        timeout: timeout + 2000,
       });
       
       let stdout = '';
       let stderr = '';
+      let stdoutSize = 0;
       let resolved = false;
       
-      proc.stdout?.on('data', (data) => {
-        stdout += data.toString();
+      const MAX_OUTPUT_SIZE = 1024 * 1024; // 1MB limit on output
+      
+      proc.stdout?.on('data', (data: Buffer) => {
+        if (stdoutSize < MAX_OUTPUT_SIZE) {
+          stdout += data.toString();
+          stdoutSize += data.length;
+        }
       });
       
       proc.stderr?.on('data', (data) => {
@@ -273,7 +328,11 @@ class SMTSolverImpl implements ISMTSolver {
       const timeoutHandle = setTimeout(() => {
         if (!resolved) {
           resolved = true;
-          proc.kill('SIGKILL');
+          try {
+            proc.kill('SIGKILL');
+          } catch {
+            // Process may already be dead
+          }
           resolve({ status: 'timeout' });
         }
       }, timeout + 1000); // Add buffer for Z3's own timeout
@@ -369,63 +428,23 @@ class SMTSolverImpl implements ISMTSolver {
   }
   
   /**
-   * Solve using builtin solver (from prover package)
+   * Solve using enhanced builtin solver
+   * 
+   * The enhanced solver supports:
+   * - Boolean SAT solving
+   * - Bounded integer arithmetic
+   * - Linear constraint analysis
+   * - Proper timeout handling
    */
-  private async solveBuiltin(formula: SMTExpr, declarations: SMTDecl[]): Promise<SMTCheckResult> {
-    const prover = new Prover({
-      solver: 'builtin',
-      timeout: this.config.timeout,
-      produceModels: this.config.produceModels,
-    });
-    
-    // Add declarations
-    for (const decl of declarations) {
-      prover.declare(decl);
-    }
-    
-    // Assert the formula
-    prover.assert(formula);
-    
-    // Check sat with timeout
-    const start = Date.now();
-    const deadline = start + this.config.timeout;
-    
+  private async solveEnhancedBuiltin(formula: SMTExpr, declarations: SMTDecl[]): Promise<SMTCheckResult> {
     try {
-      const status = await Promise.race([
-        prover.checkSat(),
-        this.createTimeout(this.config.timeout),
-      ]);
-      
-      if (status === 'timeout') {
-        return { status: 'timeout' };
-      }
-      
-      switch (status) {
-        case 'sat':
-          return { status: 'sat', model: {} };
-        case 'unsat':
-          return { status: 'unsat' };
-        default:
-          return { status: 'unknown', reason: 'Builtin solver returned unknown' };
-      }
+      return await this.builtinSolver.checkSat(formula, declarations);
     } catch (error) {
-      if (Date.now() > deadline) {
-        return { status: 'timeout' };
-      }
       return {
         status: 'error',
         message: error instanceof Error ? error.message : String(error),
       };
     }
-  }
-  
-  /**
-   * Create a timeout promise
-   */
-  private createTimeout(ms: number): Promise<'timeout'> {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve('timeout'), ms);
-    });
   }
   
   /**
@@ -465,4 +484,170 @@ class SMTSolverImpl implements ISMTSolver {
 export async function isZ3Available(): Promise<boolean> {
   const solver = createSolver({ solver: 'z3' }) as SMTSolverImpl;
   return (solver as any).checkZ3Available();
+}
+
+/**
+ * Translate an SMT expression to SMT-LIB format
+ * 
+ * This produces a deterministic string representation that can be:
+ * - Sent to external solvers
+ * - Used for debugging
+ * - Cached for deduplication
+ */
+export function translate(
+  formula: SMTExpr,
+  declarations: SMTDecl[] = []
+): string {
+  const lines: string[] = [
+    '; ISL SMT Query',
+    '(set-logic ALL)',
+    '(set-option :produce-models true)',
+    '',
+    '; Declarations',
+  ];
+  
+  for (const decl of declarations) {
+    lines.push(declToSMTLib(decl));
+  }
+  
+  lines.push('');
+  lines.push('; Formula');
+  lines.push(`(assert ${toSMTLib(formula)})`);
+  lines.push('');
+  lines.push('(check-sat)');
+  lines.push('(get-model)');
+  
+  return lines.join('\n');
+}
+
+/**
+ * High-level solve function with tri-state output
+ * 
+ * This is the recommended API for SMT solving:
+ * - Returns { verdict: 'proved' } if property is definitively true
+ * - Returns { verdict: 'disproved', model?, reason? } if false with counterexample
+ * - Returns { verdict: 'unknown', reason } if cannot determine
+ * 
+ * @example
+ * ```typescript
+ * // Check if x > 0 and x < 10 is satisfiable
+ * const result = await solve(
+ *   Expr.and(
+ *     Expr.gt(Expr.var('x', Sort.Int()), Expr.int(0)),
+ *     Expr.lt(Expr.var('x', Sort.Int()), Expr.int(10))
+ *   ),
+ *   { timeout: 1000 }
+ * );
+ * 
+ * if (result.verdict === 'disproved') {
+ *   console.log('Satisfiable with model:', result.model);
+ * }
+ * ```
+ */
+export async function solve(
+  formula: SMTExpr,
+  options: SMTVerifyOptions = {}
+): Promise<import('./types.js').SolveResult> {
+  const solver = createSolver(options);
+  
+  // Generate declarations from free variables in formula
+  const declarations: SMTDecl[] = collectDeclarations(formula);
+  
+  const result = await solver.checkSat(formula, declarations);
+  
+  switch (result.status) {
+    case 'unsat':
+      return { verdict: 'proved' };
+      
+    case 'sat':
+      return { 
+        verdict: 'disproved', 
+        model: result.model,
+        reason: 'Found satisfying assignment',
+      };
+      
+    case 'unknown':
+      return { verdict: 'unknown', reason: result.reason };
+      
+    case 'timeout':
+      return { verdict: 'unknown', reason: 'Timeout' };
+      
+    case 'error':
+      return { verdict: 'unknown', reason: `Error: ${result.message}` };
+  }
+}
+
+/**
+ * Collect free variables from expression and create declarations
+ */
+function collectDeclarations(expr: SMTExpr): SMTDecl[] {
+  const vars = new Map<string, SMTSort>();
+  
+  const collect = (e: SMTExpr): void => {
+    switch (e.kind) {
+      case 'Var':
+        vars.set(e.name, e.sort);
+        break;
+      case 'Not':
+      case 'Neg':
+      case 'Abs':
+        collect(e.arg);
+        break;
+      case 'And':
+      case 'Or':
+      case 'Add':
+      case 'Mul':
+      case 'Distinct':
+        for (const arg of e.args) collect(arg);
+        break;
+      case 'Implies':
+      case 'Iff':
+      case 'Eq':
+      case 'Lt':
+      case 'Le':
+      case 'Gt':
+      case 'Ge':
+      case 'Sub':
+      case 'Div':
+      case 'Mod':
+        collect(e.left);
+        collect(e.right);
+        break;
+      case 'Ite':
+        collect(e.cond);
+        collect(e.then);
+        collect(e.else);
+        break;
+      case 'Forall':
+      case 'Exists':
+        collect(e.body);
+        // Remove bound variables
+        for (const v of e.vars) {
+          vars.delete(v.name);
+        }
+        break;
+      case 'Select':
+        collect(e.array);
+        collect(e.index);
+        break;
+      case 'Store':
+        collect(e.array);
+        collect(e.index);
+        collect(e.value);
+        break;
+      case 'Apply':
+        for (const arg of e.args) collect(arg);
+        break;
+      case 'Let':
+        for (const b of e.bindings) collect(b.value);
+        collect(e.body);
+        break;
+    }
+  };
+  
+  collect(expr);
+  
+  return Array.from(vars.entries()).map(([name, sort]) => 
+    Decl.const(name, sort)
+  );
 }

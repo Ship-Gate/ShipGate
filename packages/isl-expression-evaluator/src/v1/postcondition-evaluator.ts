@@ -102,7 +102,7 @@ export function evaluatePostcondition(
   }
   
   return {
-    ...unknown(`Unknown postcondition predicate kind: ${predicate.predicateKind}`),
+    ...unknown('UNSUPPORTED_EXPR', `Unknown postcondition predicate kind: ${predicate.predicateKind}`),
     postconditionDetails: {
       predicateKind: predicate.predicateKind,
     },
@@ -179,7 +179,7 @@ function evaluateIncreasedBy(
   // Check for unknown values
   if (beforeValue === 'unknown') {
     return {
-      ...unknown('Cannot determine before value for field'),
+      ...unknown('MISSING_OLD_STATE', 'Cannot determine before value for field'),
       postconditionDetails: {
         predicateKind: 'increased_by',
         beforeValue: 'unknown',
@@ -190,7 +190,7 @@ function evaluateIncreasedBy(
   
   if (afterValue === 'unknown') {
     return {
-      ...unknown('Cannot determine after value for field'),
+      ...unknown('PROPAGATED', 'Cannot determine after value for field'),
       postconditionDetails: {
         predicateKind: 'increased_by',
         beforeValue,
@@ -215,7 +215,7 @@ function evaluateIncreasedBy(
   const expectedDelta = resolveDelta(delta, ctx);
   if (expectedDelta === 'unknown') {
     return {
-      ...unknown('Cannot resolve delta value'),
+      ...unknown('PROPAGATED', 'Cannot resolve delta value'),
       postconditionDetails: {
         predicateKind: 'increased_by',
         beforeValue,
@@ -328,7 +328,7 @@ function evaluateNoneCreated(
   
   if (wasCreated === 'unknown') {
     return {
-      ...unknown(`Cannot determine if ${entityType} was created`),
+      ...unknown('EXTERNAL_CALL', `Cannot determine if ${entityType} was created`),
       postconditionDetails: {
         predicateKind: 'none_created',
       },
@@ -380,7 +380,7 @@ function evaluateIncremented(
   // Check for unknown values
   if (beforeValue === 'unknown') {
     return {
-      ...unknown('Cannot determine before value for field'),
+      ...unknown('MISSING_OLD_STATE', 'Cannot determine before value for field'),
       postconditionDetails: {
         predicateKind: 'incremented',
         beforeValue: 'unknown',
@@ -391,7 +391,7 @@ function evaluateIncremented(
   
   if (afterValue === 'unknown') {
     return {
-      ...unknown('Cannot determine after value for field'),
+      ...unknown('PROPAGATED', 'Cannot determine after value for field'),
       postconditionDetails: {
         predicateKind: 'incremented',
         beforeValue,
@@ -462,7 +462,7 @@ function evaluateEntityCreated(
   
   if (wasCreated === 'unknown') {
     return {
-      ...unknown(`Cannot determine if ${entityType} was created`),
+      ...unknown('EXTERNAL_CALL', `Cannot determine if ${entityType} was created`),
       postconditionDetails: {
         predicateKind: 'entity_created',
       },
@@ -481,7 +481,7 @@ function evaluateEntityCreated(
   if (count !== undefined) {
     if (createdCount === 'unknown') {
       return {
-        ...unknown(`Cannot determine creation count for ${entityType}`),
+        ...unknown('EXTERNAL_CALL', `Cannot determine creation count for ${entityType}`),
         postconditionDetails: details,
       };
     }

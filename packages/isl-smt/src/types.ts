@@ -38,6 +38,9 @@ export interface SMTVerifyOptions {
   solver?: 'builtin' | 'z3' | 'cvc5';
 }
 
+// Import types from ISL core
+import type { ConditionStatement, TypeConstraint } from '@isl-lang/isl-core/ast';
+
 /**
  * Precondition check request
  */
@@ -120,3 +123,19 @@ export interface SMTBatchResult {
   /** Total duration */
   duration: number;
 }
+
+/**
+ * Tri-state solve result
+ * 
+ * The three states are:
+ * - proved: The property is definitively true (formula is unsatisfiable when negated)
+ * - disproved: The property is definitively false (found a counterexample)
+ * - unknown: Cannot determine either way (with reason)
+ */
+export type SolveResult = 
+  | { verdict: 'proved' }
+  | { verdict: 'disproved'; model?: Record<string, unknown>; reason?: string }
+  | { verdict: 'unknown'; reason: string };
+
+// Note: ConditionStatement and TypeConstraint are used in other files
+// that import from this types file, but are re-exported from isl-core/ast

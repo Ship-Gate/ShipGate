@@ -4099,6 +4099,28 @@ importers:
         specifier: ^1.2.0
         version: 1.6.1(@types/node@25.1.0)
 
+  packages/spec-assist:
+    dependencies:
+      '@isl-lang/parser':
+        specifier: workspace:*
+        version: link:../parser
+      '@isl-lang/semantic-analysis':
+        specifier: workspace:*
+        version: link:../isl-semantic-analysis
+      '@isl-lang/verifier':
+        specifier: workspace:*
+        version: link:../verifier
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.30
+      typescript:
+        specifier: ^5.3.0
+        version: 5.9.3
+      vitest:
+        specifier: ^1.0.0
+        version: 1.6.1(@types/node@20.19.30)
+
   packages/spec-federation:
     dependencies:
       '@isl-lang/parser':

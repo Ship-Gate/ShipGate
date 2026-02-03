@@ -77,7 +77,8 @@
   "optionalDependencies": {
     "@isl-lang/isl-smt": "workspace:*",
     "@isl-lang/pbt": "workspace:*",
-    "@isl-lang/verifier-temporal": "workspace:*"
+    "@isl-lang/verifier-temporal": "workspace:*",
+    "@isl-lang/spec-assist": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.1.0",
