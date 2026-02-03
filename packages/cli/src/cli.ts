@@ -785,8 +785,16 @@ program
 // Policy Bundle Commands
 // ─────────────────────────────────────────────────────────────────────────────
 
-program
-  .command('policy bundle create')
+const policyCommand = program
+  .command('policy')
+  .description('Policy pack and bundle management');
+
+const bundleCommand = policyCommand
+  .command('bundle')
+  .description('Policy bundle operations');
+
+bundleCommand
+  .command('create')
   .description('Create a policy bundle from current pack registry')
   .option('-o, --output <file>', 'Output bundle file path (default: stdout)')
   .option('-d, --description <text>', 'Bundle description')
@@ -806,8 +814,8 @@ program
     process.exit(getCreateBundleExitCode(result));
   });
 
-program
-  .command('policy bundle verify <bundle>')
+bundleCommand
+  .command('verify <bundle>')
   .description('Verify a policy bundle against current packs')
   .option('--no-compatibility', 'Skip compatibility checks')
   .action(async (bundle: string, options) => {
@@ -956,15 +964,16 @@ program
 // ─────────────────────────────────────────────────────────────────────────────
 
 program.on('command:*', ([cmd]) => {
+  const suggestion = findClosestMatch(cmd, COMMANDS);
+  
   console.error(chalk.red(`Unknown command: ${cmd}`));
   
-  const suggestion = findClosestMatch(cmd, COMMANDS);
   if (suggestion) {
-    console.log(chalk.gray(`Did you mean: isl ${suggestion}?`));
+    console.error(chalk.gray(`Did you mean: isl ${suggestion}?`));
   }
   
-  console.log('');
-  console.log(chalk.gray('Run `isl --help` to see available commands.'));
+  console.error('');
+  console.error(chalk.gray('Run `isl --help` to see available commands.'));
   process.exit(ExitCode.USAGE_ERROR);
 });
 
@@ -1036,19 +1045,37 @@ ${chalk.bold('Documentation:')}
 // Error Handling
 // ─────────────────────────────────────────────────────────────────────────────
 
-program.exitOverride((err) => {
-  if (err.code === 'commander.missingArgument') {
-    console.error(chalk.red(`Missing required argument`));
+program.exitOverride((err: any) => {
+  // Help and version display should exit with code 0
+  if (err.code === 'commander.helpDisplayed' || err.code === 'commander.version') {
+    process.exit(ExitCode.SUCCESS);
+  }
+  
+  // Handle missing required arguments
+  const errMessage = err.message || err.toString() || '';
+  if (err.code === 'commander.missingArgument' || 
+      errMessage.includes('missing required argument')) {
+    // Error message already printed by Commander, just set exit code
     process.exit(ExitCode.USAGE_ERROR);
   }
+  
   if (err.code === 'commander.unknownOption') {
     console.error(chalk.red(`Unknown option`));
     process.exit(ExitCode.USAGE_ERROR);
   }
+  
   if (err.code === 'commander.invalidArgument') {
     console.error(chalk.red(`Invalid argument`));
     process.exit(ExitCode.USAGE_ERROR);
   }
+  
+  // For any other Commander errors, check message for usage errors
+  if (errMessage.includes('missing required') ||
+      errMessage.includes('unknown command') ||
+      errMessage.includes('unknown option')) {
+    process.exit(ExitCode.USAGE_ERROR);
+  }
+  
   throw err;
 });
 

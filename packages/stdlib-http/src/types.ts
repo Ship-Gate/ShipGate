@@ -22,7 +22,7 @@ export interface RequestOptions {
   method?: Method;
   headers?: Headers;
   query?: QueryParams;
-  body?: BodyInit;
+  body?: string | Blob | ArrayBuffer | FormData | URLSearchParams | ReadableStream<Uint8Array> | null;
   timeout?: number;
   retry?: RetryConfig;
   signal?: AbortSignal;

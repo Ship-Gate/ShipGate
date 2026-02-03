@@ -173,7 +173,7 @@ export function parseJson(input: string): JsonParseResult {
 
     return {
       success: true,
-      data: validation.data,
+      data: validation.data as JsonOutput,
     };
   } catch (e) {
     return {

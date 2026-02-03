@@ -497,7 +497,7 @@ export class TraceDrivenAdapter extends BaseDomainAdapter {
         return this.resolved(Object.keys(entities).length > 0, 'From initial state');
       }
 
-      if (criteria.id && criteria.id in entities) {
+      if (criteria.id && typeof criteria.id === 'string' && criteria.id in entities) {
         return this.resolved(true, 'Found in initial state');
       }
 
@@ -519,8 +519,8 @@ export class TraceDrivenAdapter extends BaseDomainAdapter {
         return this.unhandled('No criteria for lookup');
       }
 
-      if (criteria.id && criteria.id in entities) {
-        return this.resolved(entities[criteria.id as string], 'From initial state');
+      if (criteria.id && typeof criteria.id === 'string' && criteria.id in entities) {
+        return this.resolved(entities[criteria.id], 'From initial state');
       }
 
       // Search entities

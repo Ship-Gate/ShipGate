@@ -183,6 +183,13 @@ export class ProofBundleV2Builder {
   }
 
   /**
+   * Get initial code state
+   */
+  getInitialCode(): Map<string, string> | undefined {
+    return this.initialCode;
+  }
+
+  /**
    * Set code state at a specific iteration
    */
   setCodeAtIteration(iteration: number, code: Map<string, string>): this {
@@ -410,7 +417,7 @@ export function generateClauseEvidence(
 
     // Generate evidence for preconditions
     for (let i = 0; i < behavior.preconditions.length; i++) {
-      const precondition = behavior.preconditions[i];
+      const precondition = behavior.preconditions[i]!;
       const clauseId = `${behavior.name}:pre:${i}`;
       
       evidence.push({
@@ -426,7 +433,7 @@ export function generateClauseEvidence(
 
     // Generate evidence for postconditions
     for (let i = 0; i < behavior.postconditions.length; i++) {
-      const postcondition = behavior.postconditions[i];
+      const postcondition = behavior.postconditions[i]!;
       const clauseId = `${behavior.name}:post:${i}`;
       
       evidence.push({
@@ -456,17 +463,18 @@ function findIntentEvidence(
   for (const [file, content] of codeMap) {
     const lines = content.split('\n');
     for (let i = 0; i < lines.length; i++) {
-      if (searchPattern.test(lines[i])) {
+      const line = lines[i]!;
+      if (searchPattern.test(line)) {
         return {
           file,
           span: {
             startLine: i + 1,
             startColumn: 1,
             endLine: i + 1,
-            endColumn: lines[i].length,
+            endColumn: line.length,
           },
-          snippet: lines[i].trim(),
-          hash: crypto.createHash('sha256').update(lines[i]).digest('hex').slice(0, 8),
+          snippet: line.trim(),
+          hash: crypto.createHash('sha256').update(line).digest('hex').slice(0, 8),
         };
       }
       searchPattern.lastIndex = 0;

@@ -124,8 +124,6 @@ export class DeterministicTypeScriptGenerator {
 
   constructor(options: DeterministicGeneratorOptions) {
     this.options = {
-      language: 'typescript',
-      validation: false,
       comments: true,
       includeHash: true,
       generatorVersion: '1.0.0',

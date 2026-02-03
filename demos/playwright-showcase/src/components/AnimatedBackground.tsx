@@ -13,6 +13,8 @@ interface ClickRippleData {
   maxRadius: number;
   alpha: number;
   color: { r: number; g: number; b: number };
+  update(): boolean;
+  draw(): void;
 }
 
 export default function AnimatedBackground() {

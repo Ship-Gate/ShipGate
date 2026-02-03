@@ -10,8 +10,8 @@ import type {
   RetryConfig,
   HTTPResponse,
   HTTPResult,
-  HTTPError,
 } from './types';
+import { HTTPError } from './types';
 
 const DEFAULT_TIMEOUT = 30000;
 const DEFAULT_RETRY: RetryConfig = {
@@ -83,7 +83,7 @@ export class HTTPClient {
 
         return result;
       } catch (error) {
-        lastError = new (HTTPError as any)(
+        lastError = new HTTPError(
           0,
           'NETWORK_ERROR',
           error instanceof Error ? error.message : 'Network error'
@@ -99,7 +99,7 @@ export class HTTPClient {
 
     return {
       ok: false,
-      error: lastError || new (HTTPError as any)(0, 'UNKNOWN', 'Unknown error'),
+      error: lastError || new HTTPError(0, 'UNKNOWN', 'Unknown error'),
     };
   }
 
@@ -194,15 +194,15 @@ export class HTTPClient {
     try {
       const response = await fetch(url, {
         method: options.method || 'GET',
-        headers: options.headers as HeadersInit,
-        body: options.body,
+        headers: options.headers as Record<string, string>,
+        body: options.body as BodyInit_ | undefined,
         signal: options.signal || controller.signal,
       });
 
       clearTimeout(timeoutId);
 
       const headers: Headers = {};
-      response.headers.forEach((value, key) => {
+      response.headers.forEach((value: string, key: string) => {
         headers[key] = value;
       });
 
@@ -231,7 +231,7 @@ export class HTTPClient {
       if (!response.ok) {
         return {
           ok: false,
-          error: new (HTTPError as any)(
+          error: new HTTPError(
             response.status,
             `HTTP_${response.status}`,
             response.statusText,
@@ -250,7 +250,7 @@ export class HTTPClient {
       if (error instanceof Error && error.name === 'AbortError') {
         return {
           ok: false,
-          error: new (HTTPError as any)(0, 'TIMEOUT', 'Request timed out'),
+          error: new HTTPError(0, 'TIMEOUT', 'Request timed out'),
         };
       }
 

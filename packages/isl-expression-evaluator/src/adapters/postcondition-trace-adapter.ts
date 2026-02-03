@@ -11,6 +11,7 @@
 
 import type { TraceEvent, Trace, StateChangeEvent, HandlerReturnEvent } from '@isl-lang/trace-format';
 import type { EvalKind } from '../v1/types.js';
+import type { EvalAdapter } from '../v1/types.js';
 import type {
   PostconditionAdapter,
 } from '../v1/postcondition-evaluator.js';
@@ -167,11 +168,8 @@ export class PostconditionTraceAdapter implements PostconditionAdapter {
       // Merge initial state as before state
       if (trace.initialState) {
         this.beforeState = { ...this.beforeState, ...trace.initialState };
-      }
-      
-      // Merge final state as after state
-      if (trace.finalState) {
-        this.afterState = { ...this.afterState, ...trace.finalState };
+        // Also use as initial after state (will be updated by events)
+        this.afterState = { ...this.afterState, ...trace.initialState };
       }
       
       this.loadEvents(trace.events);
@@ -211,16 +209,42 @@ export class PostconditionTraceAdapter implements PostconditionAdapter {
 
   private indexEvent(event: TraceEvent): void {
     switch (event.kind) {
-      case 'entity_created':
-        this.indexEntityCreation(event);
+      case 'handler_return':
+        // Check if this is an entity creation handler
+        if (this.isEntityCreationHandler(event.handler)) {
+          this.indexEntityCreation(event);
+        }
+        this.indexHandlerReturn(event as HandlerReturnEvent);
         break;
       case 'state_change':
         this.indexStateChange(event as StateChangeEvent);
+        // Update after state with the new value
+        const path = (event as StateChangeEvent).inputs?.path as string[] | undefined;
+        if (path && path.length > 0) {
+          const newValue = (event as StateChangeEvent).outputs?.newValue;
+          this.updateAfterState(path, newValue);
+        }
         break;
-      case 'handler_return':
-        this.indexHandlerReturn(event as HandlerReturnEvent);
+      default:
+        // Other event kinds are not indexed for postcondition evaluation
         break;
     }
+  }
+
+  private isEntityCreationHandler(handler: string): boolean {
+    return /^create[A-Z]/.test(handler) || handler.includes('.create');
+  }
+
+  private updateAfterState(path: string[], value: unknown): void {
+    let current: Record<string, unknown> = this.afterState;
+    for (let i = 0; i < path.length - 1; i++) {
+      const key = path[i];
+      if (!(key in current) || typeof current[key] !== 'object' || current[key] === null) {
+        current[key] = {};
+      }
+      current = current[key] as Record<string, unknown>;
+    }
+    current[path[path.length - 1]] = value;
   }
 
   private indexEntityCreation(event: TraceEvent): void {
@@ -479,6 +503,18 @@ export class PostconditionTraceAdapter implements PostconditionAdapter {
   getCreationEvents(entityType: string): TraceEventData[] {
     const events = this.creationEvents.get(entityType) ?? [];
     return events.map(e => ({
+      kind: 'entity_created' as const,
+      entityType: e.entityType,
+      entityId: e.entityId,
+      timestamp: e.timestamp,
+      data: e.data ?? {},
+    }));
+  }
+
+  // Legacy method - kept for compatibility but should use getCreationEvents
+  private getCreationEventsLegacy(entityType: string): TraceEventData[] {
+    const events = this.creationEvents.get(entityType) ?? [];
+    return events.map(e => ({
       kind: 'entity_created',
       timestamp: e.timestamp,
       entityType: e.entityType,
@@ -565,6 +601,44 @@ export class PostconditionTraceAdapter implements PostconditionAdapter {
     
     const value = (object as Record<string, unknown>)[property];
     return value !== undefined ? value : 'unknown';
+  }
+
+  now(): number | string {
+    return Date.now();
+  }
+
+  isValidFormat(value: unknown, format: string): EvalKind {
+    if (typeof value !== 'string') return 'false';
+    const patterns: Record<string, RegExp> = {
+      email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      uuid: /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+      url: /^https?:\/\/[^\s]+$/,
+    };
+    const pattern = patterns[format];
+    if (pattern) {
+      return pattern.test(value) ? 'true' : 'false';
+    }
+    return 'unknown';
+  }
+
+  regex(value: unknown, pattern: string): EvalKind {
+    if (typeof value !== 'string') return 'false';
+    try {
+      const re = new RegExp(pattern);
+      return re.test(value) ? 'true' : 'false';
+    } catch {
+      return 'unknown';
+    }
+  }
+
+  contains(collection: unknown, value: unknown): EvalKind {
+    if (Array.isArray(collection)) {
+      return collection.includes(value) ? 'true' : 'false';
+    }
+    if (typeof collection === 'string' && typeof value === 'string') {
+      return collection.includes(value) ? 'true' : 'false';
+    }
+    return 'unknown';
   }
 
   // ============================================================================

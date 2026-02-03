@@ -367,7 +367,7 @@ function applyCrossFieldConstraints(
     if (typeof leftVal !== 'number' || typeof rightVal !== 'number') continue;
 
     const leftConstraints = constraintMap.get(constraint.leftField) || {};
-    const rightConstraints = constraintMap.get(constraint.rightField) || {};
+    const _rightConstraints = constraintMap.get(constraint.rightField) || {}; // Reserved for future use
 
     // Ensure the constraint is satisfied
     switch (constraint.operator) {
@@ -1788,5 +1788,4 @@ export {
   extractCrossFieldConstraints,
   applyCrossFieldConstraints,
   FORMAT_GENERATORS,
-  type CrossFieldConstraint,
 };

@@ -117,6 +117,8 @@ export interface PolicyPack {
 export interface PolicyPackConfig {
   /** Enable/disable the entire pack */
   enabled: boolean;
+  /** Minimum severity level to include */
+  minSeverity?: PolicySeverity;
   /** Rule-specific overrides */
   ruleOverrides?: Record<string, {
     enabled?: boolean;

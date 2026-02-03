@@ -11,7 +11,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync, readFileSync } from 'fs';
 const execAsync = promisify(exec);
 
 // Paths
-const CLI_PATH = resolve(__dirname, '../src/cli.ts');
+const CLI_PATH = resolve(__dirname, '../src/index.ts');
 const FIXTURES_ROOT = resolve(__dirname, '../../../test-fixtures');
 const TEMP_DIR = resolve(__dirname, '../../../.test-temp');
 
@@ -66,10 +66,20 @@ function runCLISync(args: string[], options: { cwd?: string } = {}) {
 describe('CLI E2E Tests', () => {
   const fixturesExist = existsSync(FIXTURES_ROOT);
 
-  beforeAll(() => {
-    // Clean up temp directory if it exists
+  beforeAll(async () => {
+    // Clean up temp directory if it exists (with retry for Windows)
     if (existsSync(TEMP_DIR)) {
-      rmSync(TEMP_DIR, { recursive: true, force: true });
+      try {
+        rmSync(TEMP_DIR, { recursive: true, force: true });
+      } catch {
+        // On Windows, sometimes files are still locked - wait and retry
+        await new Promise(r => setTimeout(r, 100));
+        try {
+          rmSync(TEMP_DIR, { recursive: true, force: true });
+        } catch {
+          // If still failing, just proceed - mkdirSync will fail if truly problematic
+        }
+      }
     }
     mkdirSync(TEMP_DIR, { recursive: true });
   });

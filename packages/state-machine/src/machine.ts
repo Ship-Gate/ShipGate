@@ -303,7 +303,7 @@ export class StateMachine<TContext = Record<string, unknown>> {
       if (action) {
         const result = action(this.instance.context, event);
         if (result !== undefined) {
-          this.instance.context = result;
+          this.instance.context = result as TContext;
         }
       }
     }

@@ -580,12 +580,5 @@ function computeSize(value: unknown): number {
 // ============================================================================
 // EXPORTS
 // ============================================================================
-
-export {
-  shrinkWithPreconditions,
-  deltaDebugWithPreconditions,
-  shrinkLoginInput,
-  shrinkValidEmail,
-  shrinkValidPassword,
-  shrinkValidIP,
-};
+// All functions are exported inline with their definitions.
+// See index.ts for the public API exports.

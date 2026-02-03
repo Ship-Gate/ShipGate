@@ -304,13 +304,22 @@ export const DEFAULT_ANALYZER_CONFIG: Required<AnalyzerConfig> = {
 /**
  * Helper to convert SourceSpan to SourceLocation
  */
-export function spanToLocation(span: SourceSpan, file: string): SourceLocation {
+export function spanToLocation(span: SourceSpan | undefined | null, file: string): SourceLocation {
+  if (!span) {
+    return {
+      file,
+      line: 1,
+      column: 1,
+      endLine: 1,
+      endColumn: 1,
+    };
+  }
   return {
     file: span.file || file,
-    line: span.start.line,
-    column: span.start.column,
-    endLine: span.end.line,
-    endColumn: span.end.column,
+    line: span.start?.line || 1,
+    column: span.start?.column || 1,
+    endLine: span.end?.line || span.start?.line || 1,
+    endColumn: span.end?.column || span.start?.column || 1,
   };
 }
 

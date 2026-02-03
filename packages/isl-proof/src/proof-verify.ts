@@ -17,7 +17,7 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { parseISL } from '@isl-lang/isl-core/parser';
+import { parse } from '@isl-lang/isl-core/parser';
 import { verifyDomain, type TraceEvent } from './verification-engine.js';
 import type { VerificationResult } from './verification-engine.js';
 import type { 
@@ -251,7 +251,7 @@ export async function verifyProof(
   if (!options.skipTraceVerification) {
     try {
       const specContent = await fs.readFile(specPath, 'utf-8');
-      const { domain: ast, errors: parseErrors } = parseISL(specContent, specPath);
+      const { domain: ast, errors: parseErrors } = parse(specContent, specPath);
 
       if (parseErrors.length > 0 || !ast) {
         checks.push({

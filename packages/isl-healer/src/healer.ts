@@ -34,9 +34,9 @@ import type {
   PatchRecord,
   FrameworkAdapter,
   SupportedFramework,
+  FixRecipeRegistry,
 } from './types.js';
-import { GateIngester } from './gate-ingester.js';
-import { FixRecipeRegistryImpl, createDefaultRegistry } from './recipe-registry.js';
+import { createDefaultRegistry } from './recipe-registry.js';
 import { WeakeningGuard, WeakeningError } from './weakening-guard.js';
 import { ProofBundleV2Builder, generateClauseEvidence } from './proof-builder.js';
 // Note: getFrameworkAdapter is async; we use sync adapter lookup in constructor
@@ -239,13 +239,12 @@ export class ISLHealerV2 {
   private ast: Readonly<ISLAST>;
   private codeMap: Map<string, string>;
   private options: Required<HealOptions>;
-  private registry: FixRecipeRegistryImpl;
+  private registry: FixRecipeRegistry;
   private guard: WeakeningGuard;
   private framework: FrameworkAdapter;
   private proofBuilder: ProofBundleV2Builder;
   private tracker: FingerprintTracker;
   private history: IterationSnapshot[] = [];
-  private _gateIngester: GateIngester; // Prefixed to indicate internal use
   private projectRoot: string;
 
   constructor(
@@ -271,9 +270,6 @@ export class ISLHealerV2 {
 
     // Initialize weakening guard
     this.guard = new WeakeningGuard();
-
-    // Initialize gate ingester
-    this._gateIngester = new GateIngester();
 
     // Initialize fingerprint tracker
     this.tracker = new FingerprintTracker(

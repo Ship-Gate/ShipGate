@@ -199,7 +199,8 @@ export class MemoryRateLimitStorage implements RateLimitStorage {
     
     // Filter by time
     if (options?.since) {
-      violations = violations.filter(v => v.timestamp >= options.since);
+      const since = options.since;
+      violations = violations.filter(v => v.timestamp >= since);
     }
     
     const total = violations.length;

@@ -54,7 +54,8 @@
     "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
-    "@isl-lang/parser": "workspace:*"
+    "@isl-lang/parser": "workspace:*",
+    "@isl-lang/trace-format": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

@@ -190,7 +190,7 @@ const benchmarks = [
     name: 'Complex: (x > 0) && (y < 100) implies z == true',
     setup: () => ({
       ctx: createEvalContext({ 
-        variables: new Map([['x', 5], ['y', 50], ['z', true]]) 
+        variables: new Map<string, unknown>([['x', 5], ['y', 50], ['z', true]]) 
       }),
       expr: bin('implies',
         bin('&&', 

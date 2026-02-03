@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "description": "Algebraic effect system for ISL - track and manage side effects",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsup src/index.ts --format cjs,esm --no-dts",
     "test": "vitest"
   },
   "dependencies": {
@@ -13,6 +12,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
+    "tsup": "^8.0.0",
     "typescript": "^5.3.3",
     "vitest": "^1.2.0"
   },

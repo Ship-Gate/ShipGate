@@ -117,10 +117,11 @@ function groupBehaviorsByEntity(
       matchedEntity = entities[0]?.name.name ?? 'Default';
     }
     
-    if (!grouped.has(matchedEntity)) {
-      grouped.set(matchedEntity, []);
+    const entityKey: string = matchedEntity;
+    if (!grouped.has(entityKey)) {
+      grouped.set(entityKey, []);
     }
-    grouped.get(matchedEntity)!.push(behavior);
+    grouped.get(entityKey)!.push(behavior);
   }
   
   return grouped;

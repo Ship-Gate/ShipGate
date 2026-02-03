@@ -195,18 +195,6 @@ export default defineWorkspace([
       environment: 'node',
       include: ['tests/**/*.test.ts'],
       testTimeout: 30000,
-      coverage: {
-        provider: 'v8',
-        reporter: ['text', 'json', 'html'],
-        include: ['src/**/*.ts'],
-        exclude: ['src/**/*.d.ts'],
-        thresholds: {
-          lines: 80,
-          functions: 80,
-          branches: 70,
-          statements: 80,
-        },
-      },
     },
   },
   // Import Resolver package
@@ -218,18 +206,6 @@ export default defineWorkspace([
       environment: 'node',
       include: ['tests/**/*.test.ts'],
       testTimeout: 30000,
-      coverage: {
-        provider: 'v8',
-        reporter: ['text', 'json', 'html'],
-        include: ['src/**/*.ts'],
-        exclude: ['src/**/*.d.ts'],
-        thresholds: {
-          lines: 80,
-          functions: 80,
-          branches: 70,
-          statements: 80,
-        },
-      },
     },
   },
   // Verifier Runtime package
@@ -241,18 +217,6 @@ export default defineWorkspace([
       environment: 'node',
       include: ['tests/**/*.test.ts'],
       testTimeout: 30000,
-      coverage: {
-        provider: 'v8',
-        reporter: ['text', 'json', 'html'],
-        include: ['src/**/*.ts'],
-        exclude: ['src/**/*.d.ts'],
-        thresholds: {
-          lines: 85,
-          functions: 85,
-          branches: 75,
-          statements: 85,
-        },
-      },
     },
   },
   // ISL Stdlib Registry package

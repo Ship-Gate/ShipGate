@@ -250,7 +250,6 @@ export class WeakeningGuard {
   private patterns: WeakeningPattern[];
   private excludePatterns: RegExp[];
   private allowPatterns: RegExp[];
-  private strictMode: boolean;
 
   constructor(options: WeakeningGuardOptions = {}) {
     this.patterns = [
@@ -259,7 +258,7 @@ export class WeakeningGuard {
     ];
     this.excludePatterns = options.excludePatterns || [];
     this.allowPatterns = options.allowPatterns || [];
-    this.strictMode = options.strictMode ?? false;
+    // strictMode option is reserved for future use
   }
 
   /**

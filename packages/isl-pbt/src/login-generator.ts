@@ -491,7 +491,10 @@ export function invalidLoginInput(constraints: {
   maxPasswordLength: number;
 } = { minPasswordLength: 8, maxPasswordLength: 128 }): Generator<LoginInput> {
   const badEmailGen = invalidEmail();
-  const badPasswordGen = invalidPassword(constraints);
+  const badPasswordGen = invalidPassword({
+    minLength: constraints.minPasswordLength,
+    maxLength: constraints.maxPasswordLength,
+  });
   const goodEmailGen = validEmail();
   const goodPasswordGen = validPassword({
     minLength: constraints.minPasswordLength,
@@ -539,22 +542,5 @@ export function invalidLoginInput(constraints: {
 // ============================================================================
 // EXPORTS SUMMARY
 // ============================================================================
-
-export {
-  // Main generators
-  validEmail,
-  validPassword,
-  createLoginInputGenerator,
-  
-  // Invalid input generators (for negative testing)
-  invalidEmail,
-  invalidPassword,
-  invalidLoginInput,
-  
-  // Validation
-  validateLoginPreconditions,
-  isValidEmailFormat,
-  
-  // Constants
-  DEFAULT_LOGIN_PRECONDITIONS,
-};
+// All functions are exported inline with their definitions.
+// See index.ts for the public API exports.

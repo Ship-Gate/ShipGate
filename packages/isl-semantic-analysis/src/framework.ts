@@ -120,13 +120,13 @@ export class SemanticAnalyzer {
           severity: 'error',
           code: 'E0500',
           message: `Semantic pass '${pass.id}' failed: ${error instanceof Error ? error.message : String(error)}`,
-          location: {
+          location: domain.location ? {
             file: domain.location.file,
             line: domain.location.line,
             column: domain.location.column,
             endLine: domain.location.endLine,
             endColumn: domain.location.endColumn,
-          },
+          } : { file: 'unknown', line: 1, column: 1 },
           source: 'typechecker',
         } as Diagnostic);
       }

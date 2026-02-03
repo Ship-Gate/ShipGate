@@ -419,7 +419,6 @@ export function createHealerPatchValidator(
 // ============================================================================
 
 export {
-  DEFAULT_HONESTY_CONFIG,
   inspectPatchSet,
   parseDiff,
   quickScan,

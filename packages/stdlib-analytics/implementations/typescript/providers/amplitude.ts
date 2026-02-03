@@ -85,7 +85,7 @@ export class AmplitudeProvider implements AnalyticsProvider {
       body: new URLSearchParams({
         api_key: this.config.writeKey,
         identification: JSON.stringify(identify),
-      }),
+      }).toString(),
     });
 
     if (!response.ok) {

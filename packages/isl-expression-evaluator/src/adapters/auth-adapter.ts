@@ -330,7 +330,7 @@ export class AuthDomainAdapter extends BaseDomainAdapter {
 
   private findUser(criteria: Record<string, unknown>): UserFixture | undefined {
     for (const user of this.users.values()) {
-      if (this.matchesCriteria(user, criteria)) {
+      if (this.matchesCriteria(user as unknown as Record<string, unknown>, criteria)) {
         return user;
       }
     }
@@ -389,7 +389,7 @@ export class AuthDomainAdapter extends BaseDomainAdapter {
 
   private findSession(criteria: Record<string, unknown>): SessionFixture | undefined {
     for (const session of this.sessions.values()) {
-      if (this.matchesCriteria(session, criteria)) {
+      if (this.matchesCriteria(session as unknown as Record<string, unknown>, criteria)) {
         return session;
       }
     }
@@ -448,7 +448,7 @@ export class AuthDomainAdapter extends BaseDomainAdapter {
 
   private findApiKey(criteria: Record<string, unknown>): ApiKeyFixture | undefined {
     for (const apiKey of this.apiKeys.values()) {
-      if (this.matchesCriteria(apiKey, criteria)) {
+      if (this.matchesCriteria(apiKey as unknown as Record<string, unknown>, criteria)) {
         return apiKey;
       }
     }
@@ -487,7 +487,7 @@ export class AuthDomainAdapter extends BaseDomainAdapter {
       // User.current.email, User.current.name, etc.
       if (this.currentUser) {
         return this.resolvedProperty(
-          this.getNestedProperty(this.currentUser, path.slice(1))
+          this.getNestedProperty(this.currentUser as unknown as Record<string, unknown>, path.slice(1))
         );
       }
       return this.resolvedProperty(null);
@@ -510,7 +510,7 @@ export class AuthDomainAdapter extends BaseDomainAdapter {
       // Session.current.token, etc.
       if (this.currentSession) {
         return this.resolvedProperty(
-          this.getNestedProperty(this.currentSession, path.slice(1))
+          this.getNestedProperty(this.currentSession as unknown as Record<string, unknown>, path.slice(1))
         );
       }
       return this.resolvedProperty(null);

@@ -32,12 +32,12 @@ export type ExternalSolver = 'z3' | 'cvc5';
 /**
  * Solver execution result with statistics
  */
-export interface SolverExecResult extends SMTCheckResult {
+export type SolverExecResult = SMTCheckResult & {
   /** Execution statistics */
   stats?: SolverStats;
   /** Raw solver output (for debugging) */
   rawOutput?: string;
-}
+};
 
 /**
  * Solver execution statistics

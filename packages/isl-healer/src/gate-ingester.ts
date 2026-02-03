@@ -108,7 +108,7 @@ export class GateIngester {
   /**
    * Convert SARIF result to Violation
    */
-  private sarifResultToViolation(result: SarifResult, run: any): Violation {
+  private sarifResultToViolation(result: SarifResult, _run: unknown): Violation {
     const location = result.locations?.[0]?.physicalLocation;
     const region = location?.region;
 

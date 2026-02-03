@@ -4,24 +4,24 @@
   "description": "Formal verification and theorem proving for ISL specifications",
   "type": "module",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/index.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean",
-    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "build": "tsup src/index.ts --format esm --no-dts --clean",
+    "dev": "tsup src/index.ts --format esm --no-dts --watch",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@isl-lang/isl-core": "workspace:*"
+    "@isl-lang/isl-core": "workspace:*",
+    "@isl-lang/isl-smt": "workspace:*",
+    "@isl-lang/prover": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.1",

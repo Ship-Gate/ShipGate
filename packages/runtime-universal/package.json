@@ -29,8 +29,10 @@
   },
   "dependencies": {
     "@isl-lang/isl-core": "workspace:*",
-    "isolated-vm": "^4.7.0",
     "quickjs-emscripten": "^0.29.0"
+  },
+  "optionalDependencies": {
+    "isolated-vm": "^4.7.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -54,7 +56,5 @@
   "homepage": "https://intentlang.dev",
   "bugs": {
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
-  },
-  "private": true,
-  "experimental": true
+  }
 }

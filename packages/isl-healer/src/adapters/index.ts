@@ -438,8 +438,9 @@ export async function detectFramework(projectRoot: string): Promise<FrameworkDet
   // Sort by confidence and return highest
   results.sort((a, b) => b.detection.confidence - a.detection.confidence);
 
-  if (results[0].detection.confidence > 0.5) {
-    return results[0].detection;
+  const topResult = results[0];
+  if (topResult && topResult.detection.confidence > 0.5) {
+    return topResult.detection;
   }
 
   // Default to Next.js App Router

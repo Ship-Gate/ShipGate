@@ -18,7 +18,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@isl-lang/parser": "workspace:*",
+    "@isl-lang/parser": "workspace:*"
+  },
+  "optionalDependencies": {
     "isolated-vm": "^4.7.0"
   },
   "devDependencies": {

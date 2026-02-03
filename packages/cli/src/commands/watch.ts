@@ -149,20 +149,24 @@ async function processFile(
     const { domain: ast, errors: parseErrors } = parseISL(content, filePath);
     
     // Build diagnostics (simplified check)
-    const errors = parseErrors.map(err => ({
-      file: filePath,
-      line: 'span' in err ? err.span.start.line : err.line ?? 1,
-      column: 'span' in err ? err.span.start.column : err.column ?? 1,
-      message: err.message,
-      severity: 'error' as const,
-      code: err.code ?? 'E0000',
-    }));
+    const errors = parseErrors.map(err => {
+      const typedErr = err as { span?: { start: { line: number; column: number } }; line?: number; column?: number; message: string; code?: string };
+      return {
+        file: filePath,
+        line: typedErr.span?.start?.line ?? typedErr.line ?? 1,
+        column: typedErr.span?.start?.column ?? typedErr.column ?? 1,
+        message: typedErr.message,
+        severity: 'error' as const,
+        code: typedErr.code ?? 'E0000',
+      };
+    });
 
     const result: FileCheckResult = {
       file: filePath,
       valid: errors.length === 0,
       errors,
       warnings: [],
+      hints: [],
       stats: ast ? {
         entities: ast.entities.length,
         behaviors: ast.behaviors.length,
@@ -171,7 +175,7 @@ async function processFile(
     };
 
     // Update cache
-    updateCache(cache, filePath, content, ast, result);
+    updateCache(cache, filePath, content, ast ?? null, result);
     
     return result;
   } catch (error) {
@@ -181,9 +185,10 @@ async function processFile(
       errors: [{
         file: filePath,
         message: error instanceof Error ? error.message : String(error),
-        severity: 'error',
+        severity: 'error' as const,
       }],
       warnings: [],
+      hints: [],
     };
   }
 }
@@ -270,17 +275,41 @@ export async function watch(
   const filesToWatch = new Set<string>();
   
   for (const pattern of filePatterns.length > 0 ? filePatterns : config?.include ?? ['**/*.isl']) {
-    if (pattern.endsWith('.isl')) {
+    if (pattern.endsWith('.isl') && !pattern.includes('*')) {
+      // Direct file path
       filesToWatch.add(resolve(pattern));
     } else {
-      const matches = await glob(pattern, {
-        cwd: process.cwd(),
-        ignore: config?.exclude ?? ['node_modules/**', 'dist/**'],
-      });
-      for (const match of matches) {
-        if (match.endsWith('.isl')) {
-          filesToWatch.add(resolve(match));
+      // Glob pattern - handle absolute paths correctly
+      const isAbsolute = resolve(pattern) !== pattern && !pattern.startsWith('.') && (pattern.includes('\\') || pattern.includes('/'));
+      let globCwd = process.cwd();
+      let globPattern = pattern;
+      
+      if (isAbsolute || pattern.includes('\\') || pattern.includes('/')) {
+        // Extract directory from path like "C:\path\to\empty\*.isl" or "/path/to/empty/*.isl"
+        const normalized = pattern.replace(/\\/g, '/');
+        const lastSlash = normalized.lastIndexOf('/');
+        if (lastSlash >= 0) {
+          const dirPart = pattern.substring(0, lastSlash);
+          const patternPart = pattern.substring(lastSlash + 1);
+          globCwd = resolve(dirPart);
+          globPattern = patternPart;
         }
+      }
+      
+      try {
+        const matches = await glob(globPattern, {
+          cwd: globCwd,
+          ignore: config?.exclude ?? ['node_modules/**', 'dist/**'],
+          absolute: false,
+        });
+        for (const match of matches) {
+          if (match.endsWith('.isl')) {
+            filesToWatch.add(resolve(globCwd, match));
+          }
+        }
+      } catch (error) {
+        // If glob fails (e.g., invalid pattern), treat as no matches
+        // This allows the "no files found" error to be returned below
       }
     }
   }
@@ -415,9 +444,10 @@ export async function watch(
       }
     });
 
-    watcher.on('error', (error) => {
+    watcher.on('error', (err: unknown) => {
       if (!quiet) {
-        console.log(chalk.red(`Watcher error: ${error.message}`));
+        const message = err instanceof Error ? err.message : String(err);
+        console.log(chalk.red(`Watcher error: ${message}`));
       }
     });
 

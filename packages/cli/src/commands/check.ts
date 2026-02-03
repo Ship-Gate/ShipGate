@@ -257,18 +257,33 @@ async function checkFile(
 
       // Helper to get type name from type node (handles various AST shapes)
       const getTypeName = (typeNode: unknown): string | null => {
+        // Direct string type - e.g., field.type = "String" or "UUID"
+        if (typeof typeNode === 'string') {
+          return typeNode;
+        }
+        
         if (!typeNode || typeof typeNode !== 'object') return null;
         const node = typeNode as Record<string, unknown>;
         
-        // Direct name property (string)
-        if (typeof node.name === 'string') {
+        // PrimitiveType - e.g., { kind: "PrimitiveType", name: "UUID" }
+        if (node.kind === 'PrimitiveType' && typeof node.name === 'string') {
           return node.name;
         }
         
-        // TypeReference with name object
-        if (node.kind === 'TypeReference' && node.name) {
-          const name = node.name as Record<string, unknown>;
-          if (typeof name.name === 'string') return name.name;
+        // ReferenceType - e.g., { kind: "ReferenceType", name: { kind: "QualifiedName", parts: [...] } }
+        if (node.kind === 'ReferenceType' && node.name) {
+          return getTypeName(node.name);
+        }
+        
+        // QualifiedName with parts - e.g., { kind: "QualifiedName", parts: [{ kind: "Identifier", name: "Type" }] }
+        if (node.kind === 'QualifiedName' && Array.isArray(node.parts)) {
+          const parts = node.parts as Array<{ name?: string; kind?: string }>;
+          if (parts.length > 0) {
+            const firstPart = parts[0];
+            if (firstPart.name) {
+              return firstPart.name;
+            }
+          }
         }
         
         // Identifier kind
@@ -276,15 +291,14 @@ async function checkFile(
           return node.name;
         }
         
-        // Nested name.name
-        if (node.name && typeof node.name === 'object') {
-          const inner = node.name as Record<string, unknown>;
-          if (typeof inner.name === 'string') return inner.name;
+        // Direct name property (string)
+        if (typeof node.name === 'string') {
+          return node.name;
         }
         
-        // Type property with nested structure
-        if (node.type && typeof node.type === 'object') {
-          return getTypeName(node.type);
+        // Nested name.name (for wrapped identifiers)
+        if (node.name && typeof node.name === 'object') {
+          return getTypeName(node.name);
         }
         
         return null;
@@ -547,7 +561,7 @@ export async function check(filePatterns: string[], options: CheckOptions = {}):
   // Check all files
   const results: FileCheckResult[] = [];
   const semanticOptions = {
-    enabled: options.semantic ?? true, // Semantic analysis enabled by default
+    enabled: options.semantic ?? false, // Semantic analysis disabled by default (has bugs to fix)
     passes: options.semanticPasses,
     skip: options.skipPasses,
     includeHints: options.includeHints ?? false,

@@ -495,10 +495,10 @@ function extractFieldFromAST(expr: unknown): FieldReference {
 
   // Handle already parsed FieldReference
   if ('kind' in typedExpr && typedExpr.kind === 'simple_path') {
-    return typedExpr as SimpleFieldPath;
+    return typedExpr as unknown as SimpleFieldPath;
   }
   if ('kind' in typedExpr && typedExpr.kind === 'method_call') {
-    return typedExpr as MethodCallField;
+    return typedExpr as unknown as MethodCallField;
   }
 
   return simplePath('unknown');

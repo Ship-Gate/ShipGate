@@ -24,12 +24,10 @@ export type ImportGroup = 'external' | 'isl' | 'sibling' | 'parent' | 'unknown';
 /**
  * Default import group patterns
  */
-const DEFAULT_PATTERNS: Required<ImportGroupConfig['patterns']> = {
-  external: /^[a-z@][^./]/,
-  isl: /^@isl-lang\//,
-  sibling: /^\.\//,
-  parent: /^\.\.\//,
-};
+const DEFAULT_EXTERNAL = /^[a-z@][^./]/;
+const DEFAULT_ISL = /^@isl-lang\//;
+const DEFAULT_SIBLING = /^\.\//;
+const DEFAULT_PARENT = /^\.\.\//;
 
 /**
  * Classify an import into a group
@@ -38,12 +36,16 @@ export function classifyImport(
   moduleSpecifier: string,
   config?: ImportGroupConfig
 ): ImportGroup {
-  const patterns = config?.patterns ?? DEFAULT_PATTERNS;
+  const p = config?.patterns;
+  const isl = p?.isl ?? DEFAULT_ISL;
+  const sibling = p?.sibling ?? DEFAULT_SIBLING;
+  const parent = p?.parent ?? DEFAULT_PARENT;
+  const external = p?.external ?? DEFAULT_EXTERNAL;
 
-  if (patterns.isl?.test(moduleSpecifier)) return 'isl';
-  if (patterns.sibling?.test(moduleSpecifier)) return 'sibling';
-  if (patterns.parent?.test(moduleSpecifier)) return 'parent';
-  if (patterns.external?.test(moduleSpecifier)) return 'external';
+  if (isl.test(moduleSpecifier)) return 'isl';
+  if (sibling.test(moduleSpecifier)) return 'sibling';
+  if (parent.test(moduleSpecifier)) return 'parent';
+  if (external.test(moduleSpecifier)) return 'external';
 
   return 'unknown';
 }

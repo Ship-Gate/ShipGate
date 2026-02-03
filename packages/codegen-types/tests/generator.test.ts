@@ -196,7 +196,8 @@ describe('CodeGenerator', () => {
     it('should generate Python files', () => {
       const result = generate(domain, { language: 'python', validation: true });
 
-      expect(result.files).toHaveLength(4);
+      // Python generates 5 files: types.py, validation.py, contracts.py, serdes.py, __init__.py
+      expect(result.files).toHaveLength(5);
       expect(result.language).toBe('python');
 
       const types = result.files.find(f => f.type === 'types');
@@ -562,8 +563,8 @@ describe('Integration', () => {
     expect(tsValidation.content).toContain('export const StatusSchema');
     expect(tsValidation.content).toContain('export const LoginInputSchema');
 
-    // Python output
-    expect(pyResult.files.length).toBe(4);
+    // Python output - generates 5 files: types.py, validation.py, contracts.py, serdes.py, __init__.py
+    expect(pyResult.files.length).toBe(5);
     
     const pyTypes = pyResult.files.find(f => f.type === 'types')!;
     expect(pyTypes.content).toContain('class User:');

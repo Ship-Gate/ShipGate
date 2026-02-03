@@ -186,7 +186,7 @@ export class ClaimsLinter {
     const { text, value, unit } = claim;
     
     // Patterns for different types of claims
-    const patterns: Array<{ match: RegExp; replace: string }> = [
+    const patterns: Array<{ match: RegExp; replace: string | ((...args: string[]) => string) }> = [
       // "94%" -> "typically around 94%"
       { match: /^(\d+)%$/, replace: 'typically around $1%' },
       

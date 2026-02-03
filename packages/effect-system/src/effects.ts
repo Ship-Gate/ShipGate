@@ -368,7 +368,7 @@ export function map<E extends Effect, A, B>(
       result = gen.next(value);
     }
     return f(result.value);
-  });
+  }) as unknown as Eff<E, B>;
 }
 
 /**
@@ -389,5 +389,5 @@ export function all<E extends Effect, A>(
       results.push(result.value);
     }
     return results;
-  });
+  }) as unknown as Eff<E, A[]>;
 }

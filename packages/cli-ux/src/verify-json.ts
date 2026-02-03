@@ -163,7 +163,7 @@ export function parseVerifyJson(input: string): VerifyJsonParseResult {
 
     return {
       success: true,
-      data: validation.data,
+      data: validation.data as VerifyJsonOutput,
     };
   } catch (e) {
     return {

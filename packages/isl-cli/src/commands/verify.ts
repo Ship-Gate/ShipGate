@@ -104,7 +104,7 @@ export async function verify(specPath: string, options: VerifyOptions = {}): Pro
       };
     }
 
-    spinner?.text = 'Loading traces...';
+    if (spinner) spinner.text = 'Loading traces...';
 
     // Load proof bundle or traces
     const bundle = await loadProofBundle(specPath, options.bundle);
@@ -120,7 +120,7 @@ export async function verify(specPath: string, options: VerifyOptions = {}): Pro
       };
     }
 
-    spinner?.text = 'Verifying clauses...';
+    if (spinner) spinner.text = 'Verifying clauses...';
 
     // Run verification
     const result = await runVerification(ast, specPath, bundle, options);

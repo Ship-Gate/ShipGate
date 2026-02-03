@@ -11,7 +11,7 @@ import { promisify } from 'util';
 const execAsync = promisify(exec);
 
 // Paths
-const CLI_PATH = resolve(__dirname, '../src/cli.ts');
+const CLI_PATH = resolve(__dirname, '../src/index.ts');
 const TEMP_DIR = resolve(__dirname, '../../../.test-temp/verify-tests');
 const FIXTURES_ROOT = resolve(__dirname, '../../../test-fixtures');
 

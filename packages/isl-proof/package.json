@@ -4,17 +4,15 @@
   "description": "ISL Proof Bundle - verifiable proof that spec is satisfied",
   "type": "module",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/index.js"
     }
   },
   "files": ["dist"],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean",
-    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "build": "tsup src/index.ts --format esm --no-dts --clean",
+    "dev": "tsup src/index.ts --format esm --no-dts --watch",
     "test": "vitest run"
   },
   "dependencies": {

@@ -256,7 +256,7 @@ export function charCodeAt(value: string, index: number): number {
 }
 
 export function fromCharCode(codes: number[]): string {
-  return String.fromCharCode(...codes);
+  return codes.map(code => globalThis.String.fromCharCode(code)).join('');
 }
 
 // ============================================

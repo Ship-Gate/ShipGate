@@ -366,6 +366,7 @@ function buildEvidence(
       preconditions: r.preconditions.map(mapCheckEvidence),
       postconditions: r.postconditions.map(mapCheckEvidence),
       invariants: r.invariants.map(mapCheckEvidence),
+      temporal: [],
       inputUsed: r.inputUsed.name,
       executionDurationMs: r.execution.duration,
     }));

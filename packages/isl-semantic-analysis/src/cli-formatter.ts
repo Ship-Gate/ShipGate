@@ -218,7 +218,7 @@ export class CLIFormatter {
     if (d.relatedInformation?.length) {
       for (const related of d.relatedInformation) {
         lines.push('');
-        lines.push(`  ${c.blue('-->')} ${c.cyan(related.location.file)}:${related.location.line}:${related.location.column}`);
+        lines.push(`  ${c.blue('-->')} ${c.cyan(related.location?.file || 'unknown')}:${related.location?.line || 1}:${related.location?.column || 1}`);
         lines.push(`  ${c.dim('|')} ${c.gray(related.message)}`);
       }
     }
@@ -375,13 +375,13 @@ export class CLIFormatter {
       category: d.category,
       severity: d.severity,
       message: d.message,
-      location: {
+      location: d.location ? {
         file: d.location.file,
         line: d.location.line,
         column: d.location.column,
         endLine: d.location.endLine,
         endColumn: d.location.endColumn,
-      },
+      } : { file: 'unknown', line: 1, column: 1 },
       source: d.source,
       notes: d.notes,
       help: d.help,

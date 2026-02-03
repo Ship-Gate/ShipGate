@@ -4,21 +4,19 @@
   "description": "ISL Pipeline: NL → ISL → Code → Gate → Proof",
   "type": "module",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "bin": {
     "isl-pipeline": "./dist/cli.js",
     "isl-performance": "./dist/performance/cli.js"
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/index.js"
     }
   },
   "files": ["dist"],
   "scripts": {
-    "build": "tsup src/index.ts src/cli.ts src/performance/cli.ts --format esm --dts --clean",
-    "dev": "tsup src/index.ts src/cli.ts src/performance/cli.ts --format esm --dts --watch",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "demo": "tsx demo.ts",
     "demo:login": "tsx demo-login/run.ts",
     "demo:login:failure": "tsx demo-login/failure-mode.ts",
@@ -28,6 +26,7 @@
     "perf:regression": "tsx src/performance/cli.ts regression"
   },
   "dependencies": {
+    "@isl-lang/isl-core": "workspace:*",
     "@isl-lang/translator": "workspace:*",
     "@isl-lang/generator": "workspace:*",
     "@isl-lang/proof": "workspace:*",

@@ -16,7 +16,6 @@ import type {
   ClauseVerdict,
   OverallVerdict,
   EvidenceRef,
-  UnknownReason,
 } from './verify-types.js';
 import { DEFAULT_VERIFY_RENDER_OPTIONS } from './verify-types.js';
 
@@ -194,7 +193,7 @@ export function renderVerifyTable(result: VerifyResult, options: VerifyRenderOpt
 function renderClauseRow(
   clause: VerifyClauseResult,
   c: VerifyColorScheme,
-  opts: Required<VerifyRenderOptions>
+  _opts: Required<VerifyRenderOptions>
 ): string {
   // Format each column
   const idCol = formatColumn(clause.clauseId, 20, c.clauseId);

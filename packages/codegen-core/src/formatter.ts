@@ -115,7 +115,7 @@ function normalizeIndentation(code: string, config: FormatConfig): string {
       const match = line.match(/^(\s*)/);
       if (!match) return line;
 
-      const whitespace = match[1];
+      const whitespace = match[1] ?? '';
       if (whitespace.length === 0) return line;
 
       // Count indentation level (normalize mixed tabs/spaces)

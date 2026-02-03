@@ -33,6 +33,16 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./evaluator": {
+      "types": "./dist/evaluator.d.ts",
+      "import": "./dist/evaluator.js",
+      "require": "./dist/evaluator.cjs"
+    },
+    "./environment": {
+      "types": "./dist/environment.d.ts",
+      "import": "./dist/environment.js",
+      "require": "./dist/environment.cjs"
     }
   },
   "files": [

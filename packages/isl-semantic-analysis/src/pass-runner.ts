@@ -364,7 +364,10 @@ export class PassRunner {
     const unique: Diagnostic[] = [];
 
     for (const d of diagnostics) {
-      const key = `${d.code}:${d.location.file}:${d.location.line}:${d.location.column}:${d.message}`;
+      const file = d.location?.file || 'unknown';
+      const line = d.location?.line || 1;
+      const column = d.location?.column || 1;
+      const key = `${d.code}:${file}:${line}:${column}:${d.message}`;
       if (!seen.has(key)) {
         seen.add(key);
         unique.push(d);

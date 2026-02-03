@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "description": "SMT solver integration for ISL - satisfiability checking for preconditions, postconditions, and refinement types",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
     "build": "tsup",

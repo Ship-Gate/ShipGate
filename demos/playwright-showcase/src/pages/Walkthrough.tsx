@@ -281,7 +281,6 @@ export default function Walkthrough() {
   const codeRef = useRef<HTMLDivElement>(null);
   const scoreRef = useRef<HTMLDivElement>(null);
 
-  const _currentStep = DEMO_STEPS[currentStepIndex]; // Currently unused, reserved for future use
   const progress = ((currentStepIndex) / DEMO_STEPS.length) * 100;
 
   const clearTimeouts = useCallback(() => {

@@ -1352,7 +1352,7 @@ export class Parser {
       this.expect(TokenType.COLON, "Expected ':' after token name");
       
       // Parse category (color, spacing, typography, etc.)
-      const categoryToken = this.current();
+      const _categoryToken = this.current(); // Reserved for future error messages
       let category: 'color' | 'spacing' | 'typography' | 'border' | 'shadow' = 'color';
       if (this.checkIdentifier('color')) {
         category = 'color';
@@ -1435,8 +1435,9 @@ export class Parser {
     
     // Parse section type
     const typeToken = this.current();
-    let sectionType: 'hero' | 'features' | 'testimonials' | 'cta' | 'footer' | 'header' | 'content' = 'content';
-    const typeMap: Record<string, typeof sectionType> = {
+    type SectionType = 'hero' | 'features' | 'testimonials' | 'cta' | 'footer' | 'header' | 'content';
+    let sectionType: SectionType = 'content';
+    const typeMap: Record<string, SectionType> = {
       hero: 'hero', features: 'features', testimonials: 'testimonials',
       cta: 'cta', footer: 'footer', header: 'header', content: 'content'
     };
@@ -1511,9 +1512,10 @@ export class Parser {
     const start = this.current().span.start;
     
     // Parse block type
+    type BlockType = 'text' | 'heading' | 'image' | 'button' | 'form' | 'link' | 'container';
     const typeToken = this.current();
-    let blockType: 'text' | 'heading' | 'image' | 'button' | 'form' | 'link' | 'container' = 'text';
-    const blockTypeMap: Record<string, typeof blockType> = {
+    let blockType: BlockType = 'text';
+    const blockTypeMap: Record<string, BlockType> = {
       text: 'text', heading: 'heading', image: 'image', button: 'button',
       form: 'form', link: 'link', container: 'container'
     };
