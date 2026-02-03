@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/cli",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Command-line interface for ISL (Intent Specification Language)",
   "author": "ISL Team",
   "license": "MIT",

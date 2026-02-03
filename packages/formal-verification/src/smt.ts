@@ -2,15 +2,34 @@
  * SMT Solver Interface
  * 
  * Interface to SMT solvers (Z3, CVC5, etc.)
+ * 
+ * Modes:
+ * - REAL: Uses actual SMT solver via @isl-lang/isl-smt (recommended)
+ * - DEMO: Uses simulateSolve() for basic demos (explicitly labeled, no formal guarantees)
+ * 
+ * The DEMO mode is ONLY for:
+ * - Quick demos without solver installation
+ * - Development/testing of the verification pipeline
+ * - Fallback when no solver is available
+ * 
+ * For production verification, ALWAYS use REAL mode with Z3 or CVC5.
  */
 
-import type { Formula, Sort, VerifierConfig } from './types';
+import type { Formula, Sort, VerifierConfig, Variable } from './types';
+
+// ============================================================================
+// Types
+// ============================================================================
 
 export interface SMTResult {
   sat: boolean | null;
   model?: Record<string, unknown>;
   reason?: string;
   stats?: SMTStats;
+  /** Whether this result came from a real solver or simulation */
+  source: 'real_solver' | 'demo_simulation';
+  /** Solver used (if real) */
+  solver?: 'z3' | 'cvc5' | 'builtin';
 }
 
 export interface SMTStats {
@@ -22,13 +41,323 @@ export interface SMTStats {
 }
 
 /**
+ * SMT solver mode
+ */
+export type SolverMode = 'real' | 'demo';
+
+/**
+ * Extended config with solver mode
+ */
+export interface SMTSolverConfig extends Omit<VerifierConfig, 'solver'> {
+  solver: 'z3' | 'cvc5' | 'builtin' | 'auto';
+  /** 
+   * Solver mode: 
+   * - 'real': Use actual SMT solver (recommended for production)
+   * - 'demo': Use simulateSolve (for demos only, no formal guarantees)
+   */
+  mode?: SolverMode;
+}
+
+// ============================================================================
+// Real Solver Integration
+// ============================================================================
+
+/**
+ * Lazy-loaded isl-smt module
+ */
+let islSmt: typeof import('@isl-lang/isl-smt') | null = null;
+
+/**
+ * Load the isl-smt module
+ */
+async function loadIslSmt(): Promise<typeof import('@isl-lang/isl-smt') | null> {
+  if (islSmt !== null) return islSmt;
+  
+  try {
+    islSmt = await import('@isl-lang/isl-smt');
+    return islSmt;
+  } catch {
+    // Module not available
+    return null;
+  }
+}
+
+/**
+ * Convert local Formula type to SMT expression
+ */
+function formulaToSMTExpr(
+  formula: Formula,
+  smt: typeof import('@isl-lang/isl-smt')
+): import('@isl-lang/prover').SMTExpr {
+  const { Expr, Sort } = smt;
+  
+  const sortToSmtSort = (s: Sort): import('@isl-lang/prover').SMTSort => {
+    switch (s.kind) {
+      case 'bool': return Sort.Bool();
+      case 'int': return Sort.Int();
+      case 'real': return Sort.Real();
+      case 'string': return Sort.String();
+      case 'bitvec': return Sort.BitVec(s.width);
+      case 'array': return Sort.Array(sortToSmtSort(s.index), sortToSmtSort(s.element));
+      default: return Sort.Int(); // Default to Int
+    }
+  };
+  
+  const convert = (f: Formula): import('@isl-lang/prover').SMTExpr => {
+    switch (f.kind) {
+      case 'const':
+        if (typeof f.value === 'boolean') return Expr.bool(f.value);
+        if (typeof f.value === 'number') {
+          return Number.isInteger(f.value) ? Expr.int(BigInt(f.value)) : Expr.real(f.value);
+        }
+        return Expr.string(String(f.value));
+      
+      case 'var':
+        return Expr.var(f.name, sortToSmtSort(f.sort));
+      
+      case 'not':
+        return Expr.not(convert(f.arg));
+      
+      case 'and':
+        if (f.args.length === 0) return Expr.bool(true);
+        if (f.args.length === 1 && f.args[0]) return convert(f.args[0]);
+        return Expr.and(...f.args.map(convert));
+      
+      case 'or':
+        if (f.args.length === 0) return Expr.bool(false);
+        if (f.args.length === 1 && f.args[0]) return convert(f.args[0]);
+        return Expr.or(...f.args.map(convert));
+      
+      case 'implies':
+        return Expr.implies(convert(f.left), convert(f.right));
+      
+      case 'iff':
+        return Expr.iff(convert(f.left), convert(f.right));
+      
+      case 'forall':
+        return Expr.forall(
+          f.vars.map(v => ({ name: v.name, sort: sortToSmtSort(v.sort) })),
+          convert(f.body)
+        );
+      
+      case 'exists':
+        return Expr.exists(
+          f.vars.map(v => ({ name: v.name, sort: sortToSmtSort(v.sort) })),
+          convert(f.body)
+        );
+      
+      case 'eq':
+        return Expr.eq(convert(f.left), convert(f.right));
+      
+      case 'lt':
+        return Expr.lt(convert(f.left), convert(f.right));
+      
+      case 'le':
+        return Expr.le(convert(f.left), convert(f.right));
+      
+      case 'gt':
+        return Expr.gt(convert(f.left), convert(f.right));
+      
+      case 'ge':
+        return Expr.ge(convert(f.left), convert(f.right));
+      
+      case 'add':
+        if (f.args.length === 0) return Expr.int(0n);
+        if (f.args.length === 1 && f.args[0]) return convert(f.args[0]);
+        return Expr.add(...f.args.map(convert));
+      
+      case 'sub':
+        return Expr.sub(convert(f.left), convert(f.right));
+      
+      case 'mul':
+        if (f.args.length === 0) return Expr.int(1n);
+        if (f.args.length === 1 && f.args[0]) return convert(f.args[0]);
+        return Expr.mul(...f.args.map(convert));
+      
+      case 'div':
+        return Expr.div(convert(f.left), convert(f.right));
+      
+      case 'mod':
+        return Expr.mod(convert(f.left), convert(f.right));
+      
+      case 'ite':
+        return Expr.ite(convert(f.cond), convert(f.then), convert(f.else));
+      
+      case 'select':
+        return Expr.select(convert(f.array), convert(f.index));
+      
+      case 'store':
+        return Expr.store(convert(f.array), convert(f.index), convert(f.value));
+      
+      case 'app':
+        return Expr.apply(f.func, f.args.map(convert));
+      
+      default:
+        return Expr.bool(true);
+    }
+  };
+  
+  return convert(formula);
+}
+
+/**
+ * Check satisfiability using real SMT solver
+ */
+async function checkSatReal(
+  formula: Formula,
+  config: SMTSolverConfig
+): Promise<SMTResult> {
+  const smt = await loadIslSmt();
+  
+  if (!smt) {
+    // Fall back to demo mode if isl-smt not available
+    return {
+      sat: null,
+      reason: 'isl-smt module not available, falling back to demo mode',
+      source: 'demo_simulation',
+    };
+  }
+  
+  const startTime = Date.now();
+  
+  try {
+    // Determine which solver to use
+    let solver: 'builtin' | 'z3' | 'cvc5' = 'builtin';
+    
+    if (config.solver === 'auto') {
+      const availability = await smt.getSolverAvailability();
+      solver = availability.bestAvailable === 'builtin' ? 'builtin' : availability.bestAvailable;
+    } else if (config.solver !== 'builtin') {
+      // Check if requested solver is available
+      const isAvailable = config.solver === 'z3' 
+        ? await smt.isZ3Available()
+        : await smt.isCVC5Available();
+      
+      if (isAvailable) {
+        solver = config.solver;
+      } else if (config.verbose) {
+        console.log(`[SMT] ${config.solver.toUpperCase()} not available, using builtin solver`);
+      }
+    }
+    
+    // Convert formula to SMT expression
+    const smtExpr = formulaToSMTExpr(formula, smt);
+    
+    // Create solver and check
+    const smtSolver = smt.createSolver({
+      timeout: config.timeout,
+      solver,
+      verbose: config.verbose,
+      produceModels: true,
+    });
+    
+    const result = await smtSolver.checkSat(smtExpr, []);
+    
+    const elapsed = Date.now() - startTime;
+    
+    // Convert result
+    switch (result.status) {
+      case 'sat':
+        return {
+          sat: true,
+          model: result.model,
+          source: 'real_solver',
+          solver,
+          stats: {
+            decisions: 0,
+            conflicts: 0,
+            propagations: 0,
+            memoryUsed: 0,
+            timeElapsed: elapsed,
+          },
+        };
+      
+      case 'unsat':
+        return {
+          sat: false,
+          source: 'real_solver',
+          solver,
+          stats: {
+            decisions: 0,
+            conflicts: 0,
+            propagations: 0,
+            memoryUsed: 0,
+            timeElapsed: elapsed,
+          },
+        };
+      
+      case 'timeout':
+        return {
+          sat: null,
+          reason: 'Solver timeout',
+          source: 'real_solver',
+          solver,
+          stats: {
+            decisions: 0,
+            conflicts: 0,
+            propagations: 0,
+            memoryUsed: 0,
+            timeElapsed: elapsed,
+          },
+        };
+      
+      case 'unknown':
+        return {
+          sat: null,
+          reason: result.reason || 'Solver returned unknown',
+          source: 'real_solver',
+          solver,
+          stats: {
+            decisions: 0,
+            conflicts: 0,
+            propagations: 0,
+            memoryUsed: 0,
+            timeElapsed: elapsed,
+          },
+        };
+      
+      case 'error':
+        return {
+          sat: null,
+          reason: `Solver error: ${result.message}`,
+          source: 'real_solver',
+          solver,
+        };
+    }
+  } catch (error) {
+    return {
+      sat: null,
+      reason: `Solver error: ${error instanceof Error ? error.message : String(error)}`,
+      source: 'real_solver',
+    };
+  }
+}
+
+// ============================================================================
+// SMT Solver Wrapper
+// ============================================================================
+
+/**
  * SMT Solver wrapper
+ * 
+ * Provides a unified interface to SMT solving with:
+ * - Real solver mode (uses Z3/CVC5 via isl-smt)
+ * - Demo mode (uses simulateSolve for basic demos)
  */
 export class SMTSolver {
-  private config: VerifierConfig;
+  private config: SMTSolverConfig;
+  private mode: SolverMode;
 
-  constructor(config: VerifierConfig) {
-    this.config = config;
+  constructor(config: VerifierConfig | SMTSolverConfig) {
+    // Convert VerifierConfig to SMTSolverConfig
+    this.config = {
+      ...config,
+      solver: 'solver' in config ? 
+        (config.solver === 'yices' ? 'z3' : config.solver) as 'z3' | 'cvc5' | 'builtin' | 'auto' :
+        'auto',
+      mode: 'mode' in config ? (config as SMTSolverConfig).mode : 'real',
+    };
+    this.mode = this.config.mode ?? 'real';
   }
 
   /**
@@ -39,10 +368,26 @@ export class SMTSolver {
 
     if (this.config.verbose) {
       console.log('[SMT] Query:', smtlib);
+      console.log('[SMT] Mode:', this.mode);
     }
 
-    // In a real implementation, this would call the actual solver
-    // For now, we simulate basic solving
+    // Use real solver in real mode
+    if (this.mode === 'real') {
+      const result = await checkSatReal(formula, this.config);
+      
+      // If real solver failed to load, fall back to demo with warning
+      if (result.reason?.includes('not available') && this.config.verbose) {
+        console.warn('[SMT] WARNING: Using demo simulation - results have no formal guarantees');
+        return this.simulateSolve(formula);
+      }
+      
+      return result;
+    }
+
+    // Demo mode - explicitly requested simulation
+    if (this.config.verbose) {
+      console.warn('[SMT] WARNING: Demo mode - results have no formal guarantees');
+    }
     return this.simulateSolve(formula);
   }
 
@@ -55,9 +400,8 @@ export class SMTSolver {
     const result = await this.checkSat(negated);
 
     return {
-      sat: result.sat === false,
-      model: result.model,
-      reason: result.reason,
+      ...result,
+      sat: result.sat === false ? true : result.sat === true ? false : null,
     };
   }
 
@@ -270,9 +614,16 @@ export class SMTSolver {
   }
 
   /**
-   * Simulate solving (for demo purposes)
+   * Simulate solving (DEMO MODE ONLY)
+   * 
+   * ⚠️ WARNING: This is for DEMO purposes only!
+   * - Results have NO formal guarantees
+   * - Only handles trivial cases
+   * - NOT suitable for production verification
+   * 
+   * For real verification, use mode: 'real' with Z3 or CVC5 installed.
    */
-  private async simulateSolve(formula: Formula): Promise<SMTResult> {
+  private simulateSolve(formula: Formula): SMTResult {
     // Simple simulation - in reality would call actual solver
     
     // Check for trivially true/false
@@ -280,6 +631,7 @@ export class SMTSolver {
       return {
         sat: formula.value as boolean,
         model: {},
+        source: 'demo_simulation',
       };
     }
 
@@ -287,7 +639,7 @@ export class SMTSolver {
     if (formula.kind === 'and') {
       for (const arg of formula.args) {
         if (arg.kind === 'const' && arg.value === false) {
-          return { sat: false };
+          return { sat: false, source: 'demo_simulation' };
         }
       }
     }
@@ -309,10 +661,55 @@ export class SMTSolver {
         }
       }
 
-      return { sat, model };
+      return { sat, model, source: 'demo_simulation' };
     }
 
-    // Default: assume satisfiable
-    return { sat: true, model: {} };
+    // Default: assume satisfiable (NOT SAFE - demo only!)
+    return { 
+      sat: true, 
+      model: {}, 
+      source: 'demo_simulation',
+      reason: 'Demo mode default - no actual solving performed',
+    };
   }
+}
+
+// ============================================================================
+// Convenience Functions
+// ============================================================================
+
+/**
+ * Create an SMT solver with real solver enabled
+ */
+export function createRealSolver(config?: Partial<SMTSolverConfig>): SMTSolver {
+  return new SMTSolver({
+    solver: config?.solver ?? 'auto',
+    timeout: config?.timeout ?? 30000,
+    memoryLimit: config?.memoryLimit ?? 4096,
+    parallel: config?.parallel ?? true,
+    maxWorkers: config?.maxWorkers ?? 4,
+    cacheResults: config?.cacheResults ?? true,
+    generateProofs: config?.generateProofs ?? true,
+    verbose: config?.verbose ?? false,
+    mode: 'real',
+  });
+}
+
+/**
+ * Create an SMT solver in demo mode (FOR DEMOS ONLY)
+ * 
+ * ⚠️ WARNING: Demo mode provides NO formal guarantees!
+ */
+export function createDemoSolver(config?: Partial<SMTSolverConfig>): SMTSolver {
+  return new SMTSolver({
+    solver: config?.solver ?? 'builtin',
+    timeout: config?.timeout ?? 30000,
+    memoryLimit: config?.memoryLimit ?? 4096,
+    parallel: config?.parallel ?? false,
+    maxWorkers: config?.maxWorkers ?? 1,
+    cacheResults: config?.cacheResults ?? false,
+    generateProofs: config?.generateProofs ?? false,
+    verbose: config?.verbose ?? false,
+    mode: 'demo',
+  });
 }

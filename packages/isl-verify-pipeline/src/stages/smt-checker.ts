@@ -512,7 +512,16 @@ export async function checkWithSMT(
  * Check if SMT solver is available
  */
 export async function isSMTAvailable(solver: 'z3' | 'cvc5' = 'z3'): Promise<boolean> {
-  // In a real implementation, this would check if the solver binary exists
-  // For now, always return false since we're using a mock
-  return false;
+  const smt = await loadSMTSolver();
+  if (!smt) return false;
+  
+  try {
+    if (solver === 'z3') {
+      return await smt.isZ3Available();
+    } else {
+      return await smt.isCVC5Available();
+    }
+  } catch {
+    return false;
+  }
 }

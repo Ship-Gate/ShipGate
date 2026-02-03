@@ -104,29 +104,72 @@ export {
 // Gate Ingestion
 // ============================================================================
 
-export {
-  GateIngester,
-  parseStudioJSON,
-  parseSarifReport,
-  computeFingerprint,
-} from './gate-ingester.js';
+export { GateIngester } from './gate-ingester.js';
 
-export type { IngesterOptions } from './gate-ingester.js';
+// Helper functions (implemented on class, exported as convenience)
+export function parseStudioJSON(input: string | object) {
+  return new (require('./gate-ingester.js').GateIngester)().parse(input);
+}
+
+export function parseSarifReport(input: string | object) {
+  return new (require('./gate-ingester.js').GateIngester)().parse(input);
+}
+
+export function computeFingerprint(violation: { file: string; ruleId: string; message: string }) {
+  const crypto = require('crypto');
+  return crypto.createHash('sha256')
+    .update(`${violation.file}:${violation.ruleId}:${violation.message}`)
+    .digest('hex')
+    .slice(0, 16);
+}
+
+export interface IngesterOptions {
+  strict?: boolean;
+  includeContext?: boolean;
+}
 
 // ============================================================================
 // Recipe Registry
 // ============================================================================
 
-export {
-  FixRecipeRegistryImpl,
-  createRecipeRegistry,
-  createDefaultRegistry,
-  defineRecipe,
-  createInsertPatch,
-  createReplacePatch,
-  createDeletePatch,
-  createWrapPatch,
-} from './recipe-registry.js';
+export { FixRecipeRegistryImpl } from './recipe-registry.js';
+
+import type { FixRecipe, FixRecipeRegistry, PatchOperation } from './types.js';
+
+// Factory functions
+export function createRecipeRegistry(): FixRecipeRegistry {
+  const { FixRecipeRegistryImpl } = require('./recipe-registry.js');
+  return new FixRecipeRegistryImpl();
+}
+
+export function createDefaultRegistry(): FixRecipeRegistry {
+  const { FixRecipeRegistryImpl, BUILTIN_RECIPES } = require('./recipe-registry.js');
+  const registry = new FixRecipeRegistryImpl();
+  for (const recipe of BUILTIN_RECIPES) {
+    registry.register(recipe);
+  }
+  return registry;
+}
+
+export function defineRecipe(recipe: FixRecipe): FixRecipe {
+  return recipe;
+}
+
+export function createInsertPatch(file: string, content: string, description?: string): PatchOperation {
+  return { type: 'insert', file, content, description: description || 'Insert content' };
+}
+
+export function createReplacePatch(file: string, content: string, description?: string): PatchOperation {
+  return { type: 'replace', file, content, description: description || 'Replace content' };
+}
+
+export function createDeletePatch(file: string, content: string, description?: string): PatchOperation {
+  return { type: 'delete', file, content, description: description || 'Delete content' };
+}
+
+export function createWrapPatch(file: string, content: string, wrapPrefix: string, wrapSuffix: string, description?: string): PatchOperation {
+  return { type: 'wrap', file, content, wrapPrefix, wrapSuffix, description: description || 'Wrap content' };
+}
 
 // ============================================================================
 // Weakening Guard

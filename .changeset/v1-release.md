@@ -1,52 +1,68 @@
 ---
-"@isl-lang/parser": minor
-"@isl-lang/typechecker": minor
-"@isl-lang/evaluator": minor
-"@isl-lang/isl-core": minor
-"@isl-lang/isl-compiler": minor
-"@isl-lang/cli": minor
-"@isl-lang/lsp-server": minor
-"@isl-lang/lsp-core": minor
-"@isl-lang/vscode": minor
-"@isl-lang/verifier-runtime": minor
-"@isl-lang/build-runner": minor
-"@isl-lang/evidence": minor
-"@isl-lang/evidence-html": minor
-"@isl-lang/codegen-tests": minor
-"@isl-lang/codegen-openapi": minor
-"@isl-lang/codegen-graphql": minor
-"@isl-lang/codegen-python": minor
-"@isl-lang/codegen-go": minor
+"@isl-lang/parser": major
+"@isl-lang/typechecker": major
+"@isl-lang/evaluator": major
+"@isl-lang/isl-core": major
+"@isl-lang/isl-compiler": major
+"@isl-lang/cli": major
+"@isl-lang/lsp-server": major
+"@isl-lang/lsp-core": major
+"@isl-lang/vscode": major
+"@isl-lang/verifier-runtime": major
+"@isl-lang/build-runner": major
+"@isl-lang/evidence": major
+"@isl-lang/evidence-html": major
+"@isl-lang/codegen-tests": major
+"@isl-lang/codegen-openapi": major
+"@isl-lang/codegen-graphql": major
+"@isl-lang/codegen-python": major
+"@isl-lang/codegen-go": major
+"@isl-lang/proof": major
+"@isl-lang/isl-verify": major
 ---
 
-# ISL v1.0 Release
+# ISL v1.0.0 Release
 
 First stable release of the Intent Specification Language toolchain.
 
 ## Core Features
 - Full ISL parser supporting domains, entities, behaviors, types, and contracts
 - Type checker with refinement types and constraints
-- Expression evaluator for preconditions and postconditions
+- Expression evaluator (95%) for preconditions and postconditions with tri-state logic
 - Test scaffold generation for Vitest/Jest
 - TypeScript type generation from ISL specs
 - Trust score calculation and evidence reports
+- Proof bundles with evaluator traces and SMT transcripts
 
 ## CLI Commands
+- `isl init` - Initialize a new ISL project
 - `isl parse` - Parse ISL files and display AST
 - `isl check` - Type check ISL specifications
 - `isl gen` - Generate code (TypeScript, OpenAPI, GraphQL)
 - `isl verify` - Verify implementations against specs
+- `isl gate` - SHIP/NO-SHIP gate with evidence bundle
+- `isl heal` - Automatically fix violations
 - `isl build` - Full pipeline: parse → check → gen → verify → evidence
 - `isl fmt` - Format ISL files
 - `isl lint` - Lint ISL files for best practices
 - `isl repl` - Interactive REPL
+- `isl proof verify` - Verify proof bundle integrity
 
 ## Editor Support
-- VS Code extension with syntax highlighting
+- VS Code extension (vscode-islstudio) with syntax highlighting
 - LSP server for any editor
 - Real-time diagnostics and completion
+- Heal Until Ship UI
+
+## Proof Bundle Enhancements (v2.1)
+- Evaluator decision traces with unknown reason codes
+- SMT solver transcripts (when --smt enabled)
+- Run metadata for reproducibility
+- Import graph and stdlib version tracking
+
+## Verified Output
+- "Verified by VibeCheck ✓" badge for passing verification
 
 ## Known Limitations
-- Expression evaluator ~70% complete (some postconditions require manual testing)
-- Python/Go codegen generates scaffolds only
-- No SMT solver integration yet (planned for v1.2)
+- Python/Go codegen generates scaffolds only (full implementation planned for v1.2)
+- SMT solver requires Z3 for external solver; builtin handles basic cases

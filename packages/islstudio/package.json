@@ -50,5 +50,7 @@
     "type": "git",
     "url": "https://github.com/isl-lang/isl-studio"
   },
-  "homepage": "https://islstudio.dev"
+  "homepage": "https://islstudio.dev",
+  "private": true,
+  "experimental": true
 }

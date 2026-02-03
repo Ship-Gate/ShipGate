@@ -195,6 +195,19 @@ importers:
         specifier: ^5.0.12
         version: 5.4.21(@types/node@25.1.0)
 
+  demos/spec-assist-demo:
+    dependencies:
+      '@isl-lang/spec-assist':
+        specifier: workspace:*
+        version: link:../../packages/spec-assist
+    devDependencies:
+      tsx:
+        specifier: ^4.0.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5.3.0
+        version: 5.9.3
+
   demos/verification-demo:
     dependencies:
       bcrypt:
@@ -589,6 +602,9 @@ importers:
       '@isl-lang/pbt':
         specifier: workspace:*
         version: link:../isl-pbt
+      '@isl-lang/spec-assist':
+        specifier: workspace:*
+        version: link:../spec-assist
       '@isl-lang/verifier-temporal':
         specifier: workspace:*
         version: link:../verifier-temporal

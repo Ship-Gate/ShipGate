@@ -2,12 +2,13 @@
 // ISL Expression Evaluator v1 - Comprehensive Test Suite
 // ============================================================================
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import type { Expression } from '@isl-lang/parser';
 import {
   evaluateV1 as evaluate,
   createEvalContext,
   createEvalAdapter,
+  clearEvalCache,
   triAnd,
   triOr,
   triNot,
@@ -15,6 +16,11 @@ import {
   type EvalContext,
   type EvalKind,
 } from '../src/index.js';
+
+// Clear cache before each test to avoid cross-test pollution
+beforeEach(() => {
+  clearEvalCache();
+});
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -1159,11 +1165,11 @@ describe('Edge Cases', () => {
   it('should handle maximum depth exceeded', () => {
     const ctx = createEvalContext({ maxDepth: 3 });
     // Create deeply nested AND expression
-    // With maxDepth 3, the 4th level should fail
+    // With maxDepth 3, the 4th level should return unknown with TIMEOUT
     const expr = bin('and',
       bin('and',
         bin('and',
-          bin('and', bool(true), bool(true)), // depth 4 - should fail
+          bin('and', bool(true), bool(true)), // depth 4 - should timeout
           bool(true)
         ),
         bool(true)
@@ -1171,9 +1177,9 @@ describe('Edge Cases', () => {
       bool(true)
     );
     const result = evaluate(expr, ctx);
-    // When depth is exceeded, it returns a fail result
-    expect(result.kind).toBe('false');
-    expect(result.reason).toBeDefined();
+    // When depth is exceeded, it returns unknown with TIMEOUT reason
+    expect(result.kind).toBe('unknown');
+    expect(result.reasonCode).toBe('TIMEOUT');
   });
 
   it('should handle list expressions', () => {

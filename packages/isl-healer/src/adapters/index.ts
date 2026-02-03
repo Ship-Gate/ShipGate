@@ -477,3 +477,8 @@ export async function getFrameworkAdapter(
       return NextJSAppAdapter;
   }
 }
+
+/**
+ * Convenience alias for getFrameworkAdapter
+ */
+export const getAdapterForProject = getFrameworkAdapter;

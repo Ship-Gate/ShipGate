@@ -34,7 +34,8 @@ export type UnknownReasonCode =
   | 'TIMEOUT'               // Evaluation timed out (depth limit)
   | 'INVALID_PATTERN'       // Invalid regex or format pattern
   | 'DIVISION_BY_ZERO'      // Division or modulo by zero
-  | 'UNKNOWN_LITERAL_TYPE'; // Unknown literal type encountered
+  | 'UNKNOWN_LITERAL_TYPE'  // Unknown literal type encountered
+  | 'UNBOUNDED_DOMAIN';     // Quantifier over infinite/unknown domain
 
 /**
  * Detailed unknown reason with structured code
@@ -45,6 +46,24 @@ export interface UnknownReason {
   /** Human-readable message explaining the unknown */
   message: string;
   /** The expression path/location that caused the unknown (optional) */
+  path?: string;
+}
+
+/**
+ * Blame span for unknown results - identifies the smallest subexpression causing unknown
+ */
+export interface BlameSpan {
+  /** The expression kind that caused the unknown */
+  exprKind: string;
+  /** Source location if available */
+  location?: {
+    file?: string;
+    line?: number;
+    column?: number;
+    endLine?: number;
+    endColumn?: number;
+  };
+  /** Path to the blame expression (e.g., "left.right.operand") */
   path?: string;
 }
 
@@ -61,6 +80,8 @@ export interface EvalResult {
   reasonCode?: UnknownReasonCode;
   /** Additional evidence or context for the result */
   evidence?: unknown;
+  /** Blame span: the smallest subexpression causing unknown (for diagnostics) */
+  blameSpan?: BlameSpan;
 }
 
 // ============================================================================
@@ -160,6 +181,8 @@ export interface EvalContext {
   adapter: EvalAdapter;
   /** Maximum recursion depth */
   maxDepth?: number;
+  /** Enable evaluation caching for repeated expressions (default: true) */
+  enableCache?: boolean;
 }
 
 /**
@@ -375,9 +398,15 @@ export function fail(reason: string, evidence?: unknown): EvalResult {
  * @param code - The structured reason code (required)
  * @param message - Human-readable explanation
  * @param evidence - Additional context/data
+ * @param blameSpan - Optional blame span identifying the causing subexpression
  */
-export function unknown(code: UnknownReasonCode, message: string, evidence?: unknown): EvalResult {
-  return { kind: 'unknown', reason: message, reasonCode: code, evidence };
+export function unknown(
+  code: UnknownReasonCode,
+  message: string,
+  evidence?: unknown,
+  blameSpan?: BlameSpan
+): EvalResult {
+  return { kind: 'unknown', reason: message, reasonCode: code, evidence, blameSpan };
 }
 
 /**

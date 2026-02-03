@@ -76,5 +76,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "homepage": "https://intentlang.dev"
+  "homepage": "https://intentlang.dev",
+  "private": true,
+  "experimental": true
 }

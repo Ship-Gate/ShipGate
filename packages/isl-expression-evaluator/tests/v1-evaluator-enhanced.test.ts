@@ -3,11 +3,12 @@
 // Tests for: arithmetic, new expression types, structured unknowns, constant folding
 // ============================================================================
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import type { Expression } from '@isl-lang/parser';
 import {
   evaluateV1 as evaluate,
   createEvalContext,
+  clearEvalCache,
   foldConstants,
   isConstant,
   analyzeExpression,
@@ -16,6 +17,11 @@ import {
   type EvalResult,
   type UnknownReasonCode,
 } from '../src/index.js';
+
+// Clear cache before each test to avoid cross-test pollution
+beforeEach(() => {
+  clearEvalCache();
+});
 
 // ============================================================================
 // HELPER FUNCTIONS

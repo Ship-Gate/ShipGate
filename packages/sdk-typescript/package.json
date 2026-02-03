@@ -74,5 +74,7 @@
   },
   "bugs": {
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
-  }
+  },
+  "private": true,
+  "experimental": true
 }

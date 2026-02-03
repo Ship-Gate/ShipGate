@@ -1,68 +1,278 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "description": "ISL experimental packages configuration. These packages are excluded from default public exports and may have incomplete implementations.",
+  "description": "ISL package categorization for 1.0 pipeline. Production packages are included in default build/typecheck. Experimental packages are marked private and excluded until implemented.",
+  
+  "production": {
+    "description": "Core verified packages - tested, documented, ready for 1.0 release",
+    "core": [
+      "@isl-lang/parser",
+      "@isl-lang/typechecker",
+      "@isl-lang/evaluator",
+      "@isl-lang/isl-core",
+      "@isl-lang/errors",
+      "@isl-lang/semantics"
+    ],
+    "cli": [
+      "@isl-lang/cli",
+      "@isl-lang/cli-ux",
+      "@isl-lang/repl"
+    ],
+    "pipeline": [
+      "@isl-lang/pipeline",
+      "@isl-lang/isl-compiler",
+      "@isl-lang/import-resolver",
+      "@isl-lang/isl-expression-evaluator",
+      "@isl-lang/isl-semantic-analysis"
+    ],
+    "verification": [
+      "@isl-lang/verifier-runtime",
+      "@isl-lang/isl-verify",
+      "@isl-lang/isl-verify-pipeline",
+      "@isl-lang/evidence-schema",
+      "@isl-lang/evidence-html",
+      "@isl-lang/isl-gate",
+      "@isl-lang/isl-healer",
+      "@isl-lang/isl-proof"
+    ],
+    "codegen": [
+      "@isl-lang/codegen",
+      "@isl-lang/codegen-core",
+      "@isl-lang/codegen-tests",
+      "@isl-lang/codegen-openapi",
+      "@isl-lang/codegen-python",
+      "@isl-lang/codegen-graphql",
+      "@isl-lang/codegen-types",
+      "@isl-lang/codegen-runtime"
+    ],
+    "lsp": [
+      "@isl-lang/lsp-core",
+      "@isl-lang/lsp-server",
+      "@isl-lang/language-server"
+    ],
+    "build": [
+      "@isl-lang/build-runner",
+      "@isl-lang/verified-build"
+    ],
+    "stdlib_production": [
+      "@isl-lang/isl-stdlib",
+      "@isl-lang/stdlib-core",
+      "@isl-lang/stdlib-auth",
+      "@isl-lang/stdlib-payments",
+      "@isl-lang/stdlib-rate-limit",
+      "@isl-lang/stdlib-idempotency",
+      "@isl-lang/stdlib-cache",
+      "@isl-lang/stdlib-files",
+      "@isl-lang/stdlib-workflow",
+      "@isl-lang/stdlib-scheduling",
+      "@isl-lang/stdlib-messaging",
+      "@isl-lang/stdlib-notifications",
+      "@isl-lang/stdlib-billing",
+      "@isl-lang/stdlib-analytics"
+    ]
+  },
+  
+  "partial": {
+    "description": "Needed for 1.0 but incomplete - real implementation, missing tests or features",
+    "codegen_languages": [
+      "@isl-lang/codegen-go",
+      "@isl-lang/codegen-rust",
+      "@isl-lang/codegen-csharp",
+      "@isl-lang/codegen-jvm"
+    ],
+    "stdlib_untested": [
+      "@isl-lang/stdlib-api",
+      "@isl-lang/stdlib-events",
+      "@isl-lang/stdlib-queue",
+      "@isl-lang/stdlib-search",
+      "@isl-lang/stdlib-email",
+      "@isl-lang/stdlib-database",
+      "@isl-lang/stdlib-http",
+      "@isl-lang/stdlib-observability",
+      "@isl-lang/stdlib-realtime",
+      "@isl-lang/stdlib-distributed",
+      "@isl-lang/stdlib-audit",
+      "@isl-lang/stdlib-saas",
+      "@isl-lang/stdlib-actors",
+      "@isl-lang/stdlib-ai"
+    ],
+    "verification_advanced": [
+      "@isl-lang/isl-smt",
+      "@isl-lang/isl-pbt",
+      "@isl-lang/prover",
+      "@isl-lang/verifier-formal",
+      "@isl-lang/verifier-chaos",
+      "@isl-lang/verifier-security",
+      "@isl-lang/verifier-temporal"
+    ],
+    "tooling": [
+      "@isl-lang/test-generator",
+      "@isl-lang/test-runtime",
+      "@isl-lang/isl-test-runtime",
+      "@isl-lang/autofix",
+      "@isl-lang/patch-engine",
+      "@isl-lang/snapshot-testing",
+      "@isl-lang/contract-testing"
+    ]
+  },
   
   "experimental": {
-    "packages": [
+    "description": "Shell/stub packages - marked private, excluded from default build until implemented",
+    "advanced_features": [
       "@isl-lang/effect-handlers",
+      "@isl-lang/effect-system",
+      "@isl-lang/effects",
       "@isl-lang/formal-verification",
       "@isl-lang/mutation-testing",
       "@isl-lang/fuzzer"
     ],
-    "reason": "Advanced features with incomplete implementations or known issues"
+    "codegen_shells": [
+      "@isl-lang/codegen-terraform",
+      "@isl-lang/codegen-wasm",
+      "@isl-lang/codegen-kubernetes",
+      "@isl-lang/codegen-edge",
+      "@isl-lang/codegen-pipelines",
+      "@isl-lang/codegen-migrations",
+      "@isl-lang/codegen-mocks",
+      "@isl-lang/codegen-loadtest",
+      "@isl-lang/codegen-docs",
+      "@isl-lang/codegen-db",
+      "@isl-lang/codegen-sdk",
+      "@isl-lang/codegen-client",
+      "@isl-lang/codegen-validators",
+      "@isl-lang/codegen-property-tests",
+      "@isl-lang/codegen-grpc",
+      "@isl-lang/codegen-ui",
+      "@isl-lang/codegen-python-advanced",
+      "@isl-lang/graphql-codegen",
+      "@isl-lang/db-generator",
+      "@isl-lang/api-generator"
+    ],
+    "sdk_shells": [
+      "@isl-lang/sdk-typescript",
+      "@isl-lang/sdk-web",
+      "@isl-lang/sdk-react-native",
+      "@isl-lang/generator-sdk",
+      "@isl-lang/runtime-sdk"
+    ],
+    "stdlib_shells": [
+      "@isl-lang/stdlib-ml",
+      "@isl-lang/stdlib-time"
+    ],
+    "platform_shells": [
+      "@isl-lang/marketplace-api",
+      "@isl-lang/dashboard-api",
+      "@isl-lang/agent-os",
+      "@isl-lang/ai-copilot",
+      "@isl-lang/ai-generator",
+      "@isl-lang/isl-ai",
+      "@isl-lang/spec-assist",
+      "@isl-lang/spec-federation",
+      "@isl-lang/spec-reviewer",
+      "@isl-lang/intent-translator",
+      "@isl-lang/isl-translator",
+      "@isl-lang/isl-federation",
+      "@isl-lang/inference"
+    ],
+    "infrastructure_shells": [
+      "@isl-lang/distributed",
+      "@isl-lang/distributed-tracing",
+      "@isl-lang/event-sourcing",
+      "@isl-lang/streaming",
+      "@isl-lang/circuit-breaker",
+      "@isl-lang/health-check",
+      "@isl-lang/multi-tenant",
+      "@isl-lang/api-gateway",
+      "@isl-lang/api-versioning",
+      "@isl-lang/schema-evolution",
+      "@isl-lang/policy-engine",
+      "@isl-lang/security-policies",
+      "@isl-lang/security-scanner",
+      "@isl-lang/feature-flags",
+      "@isl-lang/mock-server",
+      "@isl-lang/runtime-interpreter",
+      "@isl-lang/runtime-universal",
+      "@isl-lang/runtime-verify",
+      "@isl-lang/edge-runtime",
+      "@isl-lang/interpreter",
+      "@isl-lang/expression-compiler"
+    ],
+    "observability_shells": [
+      "@isl-lang/datadog",
+      "@isl-lang/grafana",
+      "@isl-lang/prometheus",
+      "@isl-lang/opentelemetry",
+      "@isl-lang/sentry"
+    ],
+    "integrations_shells": [
+      "@isl-lang/github-app",
+      "@isl-lang/github-action",
+      "@isl-lang/github-action-gate",
+      "@isl-lang/slack-bot",
+      "@isl-lang/registry-client",
+      "@isl-lang/mcp-server"
+    ],
+    "analysis_shells": [
+      "@isl-lang/dependency-analyzer",
+      "@isl-lang/migration-tools",
+      "@isl-lang/migrations",
+      "@isl-lang/versioner",
+      "@isl-lang/comparator",
+      "@isl-lang/compliance",
+      "@isl-lang/claims-verifier",
+      "@isl-lang/postconditions",
+      "@isl-lang/state-machine",
+      "@isl-lang/isl-firewall",
+      "@isl-lang/isl-adapters",
+      "@isl-lang/isl-policy-packs",
+      "@isl-lang/isl-trace-format",
+      "@isl-lang/error-catalog"
+    ]
   },
   
   "internal": {
+    "description": "Internal UI/web apps - already marked private, not published",
     "packages": [
       "@isl-lang/visual-editor",
       "@isl-lang/trace-viewer",
       "@isl-lang/playground",
       "@isl-lang/marketplace-web",
-      "@isl-lang/docs",
-      "@isl-lang/diff-viewer",
       "@isl-lang/dashboard-web",
-      "@isl-lang/audit-viewer"
-    ],
-    "reason": "Internal/private packages not intended for public use (marked private: true)"
-  },
-  
-  "stable": {
-    "core": [
-      "@isl-lang/parser",
-      "@isl-lang/typechecker",
-      "@isl-lang/isl-core",
-      "@isl-lang/errors"
-    ],
-    "cli": [
-      "@isl-lang/cli",
-      "@isl-lang/repl"
-    ],
-    "codegen": [
+      "@isl-lang/docs",
+      "@isl-lang/docs-advanced",
+      "@isl-lang/diff-viewer",
+      "@isl-lang/audit-viewer",
+      "@isl-lang/vscode",
+      "@isl-lang/vscode-islstudio",
+      "@isl-lang/islstudio",
+      "@isl-lang/lsp",
+      "@isl-lang/isl-cli",
       "@isl-lang/isl-compiler",
-      "@isl-lang/codegen-tests",
-      "@isl-lang/codegen-openapi",
-      "@isl-lang/codegen-python",
-      "@isl-lang/codegen-graphql"
-    ],
-    "verification": [
-      "@isl-lang/verifier-runtime",
-      "@isl-lang/isl-verify",
-      "@isl-lang/evidence",
-      "@isl-lang/evidence-html"
-    ],
-    "lsp": [
-      "@isl-lang/lsp-core",
-      "@isl-lang/lsp-server"
-    ],
-    "build": [
-      "@isl-lang/build-runner"
+      "@isl-lang/isl-runtime",
+      "@isl-lang/isl-generator",
+      "@isl-lang/isl-evidence",
+      "@isl-lang/contracts",
+      "@isl-lang/core",
+      "@isl-lang/runtime",
+      "@isl-lang/verifier"
     ]
   },
   
   "notes": {
     "effect-handlers": "Has known issues - build/test scripts skip with warning message",
-    "formal-verification": "Theorem proving integration - requires external dependencies",
-    "mutation-testing": "Experimental mutation testing framework",
-    "fuzzer": "Property-based testing / fuzzing - incomplete"
+    "formal-verification": "Theorem proving integration - requires external Z3/CVC5 dependencies",
+    "mutation-testing": "Experimental mutation testing framework - incomplete",
+    "fuzzer": "Property-based testing / fuzzing - incomplete",
+    "codegen-terraform": "Cloud provider templates - partial implementation",
+    "codegen-wasm": "WebAssembly compilation - has binaryen/wabt deps",
+    "sdk-*": "Client SDK generators - not production tested",
+    "stdlib-ml": "Types only, minimal implementation",
+    "stdlib-time": "Types only, no runtime implementation",
+    "marketplace-*": "Platform services - not needed for 1.0",
+    "agent-os": "Advanced agent orchestration - future roadmap",
+    "ai-*": "AI integration features - experimental"
+  },
+  
+  "turbo_filter": {
+    "description": "Reference only - actual filter is generated by scripts/run-production.ts from the experimental/internal sections above"
   }
 }

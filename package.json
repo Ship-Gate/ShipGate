@@ -6,18 +6,22 @@
   "type": "module",
   "scripts": {
     "build": "turbo build",
+    "build:production": "npx tsx scripts/run-production.ts build",
     "test": "turbo test",
+    "test:production": "npx tsx scripts/run-production.ts test",
     "test:coverage": "turbo test:coverage",
     "test:ci": "turbo test -- --reporter=verbose",
     "lint": "turbo lint",
+    "lint:production": "npx tsx scripts/run-production.ts lint",
     "clean": "turbo clean",
     "typecheck": "turbo typecheck",
+    "typecheck:production": "npx tsx scripts/run-production.ts typecheck",
     "dev": "turbo dev",
     "coverage:report": "vitest run --coverage --workspace",
     "benchmark": "node scripts/benchmark.js",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo build && turbo test && changeset publish",
+    "release": "pnpm build:production && pnpm test:production && changeset publish",
     "prepublish-check": "npx tsx scripts/publish.ts --check",
     "publish-packages": "npx tsx scripts/publish.ts",
     "demo:ui": "pnpm --filter playwright-showcase dev",
@@ -33,7 +37,8 @@
     "test:import-resolver": "pnpm --filter @isl-lang/import-resolver test",
     "test:semantic": "pnpm --filter @isl-lang/isl-pipeline test",
     "test:proof": "pnpm --filter @isl-lang/isl-proof test",
-    "test:performance": "pnpm --filter @isl-lang/isl-pipeline test -- --testNamePattern=\"Performance\""
+    "test:performance": "pnpm --filter @isl-lang/isl-pipeline test -- --testNamePattern=\"Performance\"",
+    "list:experimental": "npx tsx scripts/mark-experimental-private.ts --dry-run"
   },
   "keywords": [
     "isl",

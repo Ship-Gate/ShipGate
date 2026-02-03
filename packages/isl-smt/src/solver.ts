@@ -3,21 +3,30 @@
  * 
  * Provides SMT solving capabilities with:
  * - Built-in solver for simple cases (with bounded integer arithmetic)
- * - Z3 integration via subprocess (when available)
+ * - Z3 and CVC5 integration via subprocess (when available)
  * - Query caching for deterministic results
- * - Proper timeout handling with UNKNOWN fallback
+ * - Strict timeout handling with process kill - NO HANGING PROCESSES
  * - Safe memory limits - no unbounded solver runs
+ * - Cross-platform support (Windows, Linux, macOS)
+ * 
+ * Non-negotiables:
+ * - Every solve has a hard timeout with guaranteed process termination
+ * - Same query → same result (deterministic via caching)
+ * - Cross-platform binary detection
  */
 
-import { spawn } from 'child_process';
-import { writeFile, unlink, mkdtemp, rmdir } from 'fs/promises';
-import { tmpdir } from 'os';
-import { join } from 'path';
 import { toSMTLib, declToSMTLib, Expr, Decl } from '@isl-lang/prover';
 import type { SMTExpr, SMTDecl, SMTSort } from '@isl-lang/prover';
 import type { SMTCheckResult, SMTVerifyOptions } from './types.js';
 import { SMTCache, getGlobalCache, type CacheConfig } from './cache.js';
 import { BuiltinSolver } from './builtin-solver.js';
+import {
+  checkSatExternal,
+  checkSolverAvailability,
+  getBestAvailableSolver,
+  type ExternalSolver,
+  type SolverAvailability,
+} from './external-solver.js';
 
 /**
  * Default timeout in milliseconds
@@ -25,9 +34,14 @@ import { BuiltinSolver } from './builtin-solver.js';
 const DEFAULT_TIMEOUT = 5000;
 
 /**
- * Maximum memory limit for Z3 subprocess (in MB)
+ * Maximum memory limit for solver subprocess (in MB)
  */
 const MAX_MEMORY_MB = 512;
+
+/**
+ * Maximum output size from solver (bytes)
+ */
+const MAX_OUTPUT_BYTES = 1024 * 1024; // 1MB
 
 /**
  * SMT Solver interface
@@ -92,7 +106,7 @@ interface ExtendedSolverOptions extends Required<SMTVerifyOptions> {
  */
 class SMTSolverImpl implements ISMTSolver {
   private config: ExtendedSolverOptions;
-  private z3Available: boolean | null = null;
+  private solverAvailability: Map<ExternalSolver, SolverAvailability | null> = new Map();
   private cache: SMTCache;
   private builtinSolver: BuiltinSolver;
   
@@ -120,15 +134,15 @@ class SMTSolverImpl implements ISMTSolver {
       
       let result: SMTCheckResult;
       
-      // Try external solver first if configured
-      if (this.config.solver === 'z3') {
-        const available = await this.checkZ3Available();
+      // Try external solver if configured
+      if (this.config.solver === 'z3' || this.config.solver === 'cvc5') {
+        const available = await this.checkExternalSolverAvailable(this.config.solver);
         if (available) {
-          result = await this.solveWithZ3(formula, declarations);
+          result = await this.solveWithExternalSolver(formula, declarations, this.config.solver);
         } else {
-          // Fall back to builtin if Z3 not available
+          // Fall back to builtin if external solver not available
           if (this.config.verbose) {
-            console.log('[SMT] Z3 not available, falling back to builtin solver');
+            console.log(`[SMT] ${this.config.solver.toUpperCase()} not available, falling back to builtin solver`);
           }
           result = await this.solveEnhancedBuiltin(formula, declarations);
         }
@@ -206,225 +220,61 @@ class SMTSolverImpl implements ISMTSolver {
   }
   
   /**
-   * Check if Z3 is available on the system
+   * Check if an external solver is available on the system
    */
-  private async checkZ3Available(): Promise<boolean> {
-    if (this.z3Available !== null) {
-      return this.z3Available;
+  private async checkExternalSolverAvailable(solver: ExternalSolver): Promise<boolean> {
+    // Check cache
+    const cached = this.solverAvailability.get(solver);
+    if (cached !== undefined && cached !== null) {
+      return cached.available;
     }
     
-    return new Promise((resolve) => {
-      const proc = spawn('z3', ['--version'], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        shell: true,
-      });
-      
-      let resolved = false;
-      
-      proc.on('error', () => {
-        if (!resolved) {
-          resolved = true;
-          this.z3Available = false;
-          resolve(false);
-        }
-      });
-      
-      proc.on('close', (code) => {
-        if (!resolved) {
-          resolved = true;
-          this.z3Available = code === 0;
-          resolve(code === 0);
-        }
-      });
-      
-      // Timeout check
-      setTimeout(() => {
-        if (!resolved) {
-          resolved = true;
-          proc.kill();
-          this.z3Available = false;
-          resolve(false);
-        }
-      }, 1000);
-    });
+    const availability = await checkSolverAvailability(solver);
+    this.solverAvailability.set(solver, availability);
+    
+    if (this.config.verbose && availability.available) {
+      console.log(`[SMT] ${solver.toUpperCase()} available: ${availability.path} (v${availability.version})`);
+    }
+    
+    return availability.available;
   }
   
   /**
-   * Solve using Z3 subprocess
+   * Solve using external SMT solver (Z3 or CVC5)
+   * 
+   * Uses the external-solver adapter which provides:
+   * - Cross-platform binary detection
+   * - Strict timeout enforcement with process kill
+   * - Output size limits
+   * - Proper model parsing
    */
-  private async solveWithZ3(formula: SMTExpr, declarations: SMTDecl[]): Promise<SMTCheckResult> {
+  private async solveWithExternalSolver(
+    formula: SMTExpr,
+    declarations: SMTDecl[],
+    solver: ExternalSolver
+  ): Promise<SMTCheckResult> {
     const smtLib = this.generateSMTLib(formula, declarations);
     
     if (this.config.verbose) {
-      console.log('[SMT] Z3 query:\n', smtLib);
+      console.log(`[SMT] ${solver.toUpperCase()} query:\n`, smtLib);
     }
     
-    // Write to temp file
-    let tmpDir: string | null = null;
-    let tmpFile: string | null = null;
-    
-    try {
-      tmpDir = await mkdtemp(join(tmpdir(), 'isl-smt-'));
-      tmpFile = join(tmpDir, 'query.smt2');
-      await writeFile(tmpFile, smtLib, 'utf-8');
-      
-      // Run Z3 with timeout
-      const result = await this.runZ3(tmpFile);
-      return result;
-    } catch (error) {
-      return {
-        status: 'error',
-        message: `Z3 execution failed: ${error instanceof Error ? error.message : String(error)}`,
-      };
-    } finally {
-      // Cleanup temp files
-      try {
-        if (tmpFile) await unlink(tmpFile);
-        if (tmpDir) await rmdir(tmpDir);
-      } catch {
-        // Ignore cleanup errors
-      }
-    }
-  }
-  
-  /**
-   * Run Z3 on a file with timeout and memory limits
-   */
-  private runZ3(filePath: string): Promise<SMTCheckResult> {
-    return new Promise((resolve) => {
-      const timeout = this.config.timeout;
-      const timeoutSec = Math.ceil(timeout / 1000);
-      
-      const proc = spawn('z3', [
-        '-smt2',
-        `-T:${timeoutSec}`,
-        `-memory:${MAX_MEMORY_MB}`,
-        filePath,
-      ], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        shell: true,
-        // Limit process resources
-        timeout: timeout + 2000,
-      });
-      
-      let stdout = '';
-      let stderr = '';
-      let stdoutSize = 0;
-      let resolved = false;
-      
-      const MAX_OUTPUT_SIZE = 1024 * 1024; // 1MB limit on output
-      
-      proc.stdout?.on('data', (data: Buffer) => {
-        if (stdoutSize < MAX_OUTPUT_SIZE) {
-          stdout += data.toString();
-          stdoutSize += data.length;
-        }
-      });
-      
-      proc.stderr?.on('data', (data) => {
-        stderr += data.toString();
-      });
-      
-      const timeoutHandle = setTimeout(() => {
-        if (!resolved) {
-          resolved = true;
-          try {
-            proc.kill('SIGKILL');
-          } catch {
-            // Process may already be dead
-          }
-          resolve({ status: 'timeout' });
-        }
-      }, timeout + 1000); // Add buffer for Z3's own timeout
-      
-      proc.on('error', (err) => {
-        if (!resolved) {
-          resolved = true;
-          clearTimeout(timeoutHandle);
-          resolve({
-            status: 'error',
-            message: `Z3 error: ${err.message}`,
-          });
-        }
-      });
-      
-      proc.on('close', (code) => {
-        if (!resolved) {
-          resolved = true;
-          clearTimeout(timeoutHandle);
-          resolve(this.parseZ3Output(stdout, stderr, code));
-        }
-      });
+    const result = await checkSatExternal(smtLib, {
+      solver,
+      timeoutMs: this.config.timeout,
+      maxOutputBytes: MAX_OUTPUT_BYTES,
+      maxMemoryMB: MAX_MEMORY_MB,
+      produceModels: this.config.produceModels,
+      verbose: this.config.verbose,
     });
-  }
-  
-  /**
-   * Parse Z3 output
-   */
-  private parseZ3Output(stdout: string, stderr: string, exitCode: number | null): SMTCheckResult {
-    const output = stdout.trim().toLowerCase();
     
-    if (output.includes('timeout') || exitCode === -1) {
-      return { status: 'timeout' };
-    }
-    
-    if (output.startsWith('sat')) {
-      // Parse model if available
-      const model = this.parseZ3Model(stdout);
-      return { status: 'sat', model };
-    }
-    
-    if (output.startsWith('unsat')) {
-      return { status: 'unsat' };
-    }
-    
-    if (output.startsWith('unknown')) {
-      return { status: 'unknown', reason: 'Z3 returned unknown' };
-    }
-    
-    // Check for errors
-    if (stderr || output.includes('error')) {
-      return {
-        status: 'error',
-        message: stderr || stdout || 'Unknown Z3 error',
-      };
-    }
-    
-    return { status: 'unknown', reason: `Unexpected Z3 output: ${output}` };
-  }
-  
-  /**
-   * Parse Z3 model output
-   */
-  private parseZ3Model(output: string): Record<string, unknown> | undefined {
-    // Simple model parsing - looks for (define-fun varname () Type value)
-    const model: Record<string, unknown> = {};
-    
-    const modelMatch = output.match(/\(model[\s\S]*?\)/);
-    if (!modelMatch) return undefined;
-    
-    const defineRegex = /\(define-fun\s+(\w+)\s+\(\)\s+\w+\s+([\w\d\-\.]+)\)/g;
-    let match;
-    
-    while ((match = defineRegex.exec(modelMatch[0])) !== null) {
-      const name = match[1]!;
-      const value = match[2]!;
-      
-      // Parse value
-      if (value === 'true') {
-        model[name] = true;
-      } else if (value === 'false') {
-        model[name] = false;
-      } else if (/^-?\d+$/.test(value)) {
-        model[name] = parseInt(value);
-      } else if (/^-?\d+\.\d+$/.test(value)) {
-        model[name] = parseFloat(value);
-      } else {
-        model[name] = value;
-      }
-    }
-    
-    return Object.keys(model).length > 0 ? model : undefined;
+    // Convert external result to SMTCheckResult
+    return {
+      status: result.status,
+      model: result.status === 'sat' ? result.model : undefined,
+      reason: result.status === 'unknown' ? result.reason : undefined,
+      message: result.status === 'error' ? result.message : undefined,
+    } as SMTCheckResult;
   }
   
   /**
@@ -482,8 +332,38 @@ class SMTSolverImpl implements ISMTSolver {
  * Check if Z3 is available on the system
  */
 export async function isZ3Available(): Promise<boolean> {
-  const solver = createSolver({ solver: 'z3' }) as SMTSolverImpl;
-  return (solver as any).checkZ3Available();
+  const availability = await checkSolverAvailability('z3');
+  return availability.available;
+}
+
+/**
+ * Check if CVC5 is available on the system
+ */
+export async function isCVC5Available(): Promise<boolean> {
+  const availability = await checkSolverAvailability('cvc5');
+  return availability.available;
+}
+
+/**
+ * Get availability info for all supported solvers
+ */
+export async function getSolverAvailability(): Promise<{
+  z3: SolverAvailability;
+  cvc5: SolverAvailability;
+  bestAvailable: ExternalSolver | 'builtin';
+}> {
+  const [z3, cvc5] = await Promise.all([
+    checkSolverAvailability('z3'),
+    checkSolverAvailability('cvc5'),
+  ]);
+  
+  const best = await getBestAvailableSolver();
+  
+  return {
+    z3,
+    cvc5,
+    bestAvailable: best || 'builtin',
+  };
 }
 
 /**

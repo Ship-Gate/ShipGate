@@ -4,6 +4,12 @@
 //
 // Computes expected outcomes from ISL postconditions and invariants.
 // Generates meaningful assertions rather than placeholder TODOs.
+// 
+// Key features:
+// - Compiles postconditions to executable assertions
+// - Handles old() expressions with state capture
+// - Infers assertions from result types
+// - Supports both success and error path assertions
 // ============================================================================
 
 import type * as AST from '@isl-lang/parser';
@@ -19,9 +25,11 @@ export interface ComputedAssertion {
   /** Human-readable description */
   description: string;
   /** Source of this assertion */
-  source: 'postcondition' | 'invariant' | 'error' | 'inferred';
+  source: 'postcondition' | 'invariant' | 'error' | 'inferred' | 'computed';
   /** Confidence level */
   confidence: 'high' | 'medium' | 'low';
+  /** Expected value if computable */
+  expectedValue?: unknown;
 }
 
 export interface ExpectedOutcomeResult {
@@ -35,6 +43,17 @@ export interface ExpectedOutcomeResult {
   capturesBefore: string[];
   /** Contract verification code */
   contractCode: string;
+  /** Computed expected values (from input + spec) */
+  computedExpectations: ComputedExpectation[];
+}
+
+export interface ComputedExpectation {
+  /** Result path (e.g., 'result.data.amount') */
+  path: string;
+  /** Expected value */
+  value: unknown;
+  /** How it was computed */
+  source: string;
 }
 
 // ============================================================================
@@ -51,6 +70,7 @@ export function synthesizeExpectedOutcome(
 ): ExpectedOutcomeResult {
   const assertions: ComputedAssertion[] = [];
   const capturesBefore: string[] = [];
+  const computedExpectations: ComputedExpectation[] = [];
 
   // Determine if this input should succeed or fail
   const shouldSucceed = input.category === 'valid' || input.category === 'boundary';
@@ -63,11 +83,27 @@ export function synthesizeExpectedOutcome(
     );
 
     for (const block of successBlocks) {
-      const { blockAssertions, captures } = processPostconditionBlock(
+      const { blockAssertions, captures, expectations } = processPostconditionBlock(
         block, behavior, domain, input.values
       );
       assertions.push(...blockAssertions);
       capturesBefore.push(...captures);
+      computedExpectations.push(...expectations);
+    }
+
+    // Compute expected values from postconditions that define equality
+    const computed = computeExpectedFromPostconditions(behavior, input.values, domain);
+    for (const expectation of computed) {
+      // Add computed assertion
+      const formattedValue = formatExpectedValue(expectation.value);
+      assertions.push({
+        code: `expect(${expectation.path}).toEqual(${formattedValue});`,
+        description: `${expectation.path} should equal computed value`,
+        source: 'computed',
+        confidence: 'high',
+        expectedValue: expectation.value,
+      });
+      computedExpectations.push(expectation);
     }
 
     // Process invariants
@@ -89,11 +125,12 @@ export function synthesizeExpectedOutcome(
     );
 
     for (const block of failureBlocks) {
-      const { blockAssertions, captures } = processPostconditionBlock(
+      const { blockAssertions, captures, expectations } = processPostconditionBlock(
         block, behavior, domain, input.values
       );
       assertions.push(...blockAssertions);
       capturesBefore.push(...captures);
+      computedExpectations.push(...expectations);
     }
 
     // Add basic error assertion
@@ -123,7 +160,129 @@ export function synthesizeExpectedOutcome(
     assertions,
     capturesBefore: [...new Set(capturesBefore)],
     contractCode,
+    computedExpectations,
   };
+}
+
+/**
+ * Compute expected values from postconditions that define result properties
+ */
+function computeExpectedFromPostconditions(
+  behavior: AST.Behavior,
+  inputValues: Record<string, unknown>,
+  domain: AST.Domain
+): ComputedExpectation[] {
+  const expectations: ComputedExpectation[] = [];
+  const entityNames = domain.entities.map(e => e.name.name);
+
+  const successBlocks = behavior.postconditions.filter(p => p.condition === 'success');
+
+  for (const block of successBlocks) {
+    for (const predicate of block.predicates) {
+      const expectation = extractExpectationFromPredicate(predicate, inputValues, entityNames);
+      if (expectation) {
+        expectations.push(expectation);
+      }
+    }
+  }
+
+  return expectations;
+}
+
+/**
+ * Extract expected values from postcondition predicates like:
+ * - result.amount == input.amount
+ * - Payment.lookup(result.id).currency == input.currency
+ */
+function extractExpectationFromPredicate(
+  predicate: AST.Expression,
+  inputValues: Record<string, unknown>,
+  _entityNames: string[]
+): ComputedExpectation | null {
+  if (predicate.kind !== 'BinaryExpr') return null;
+  if (predicate.operator !== '==') return null;
+
+  const { left, right } = predicate;
+
+  // Check if left side references result and right side references input
+  const resultPath = extractResultPath(left);
+  const inputRef = extractInputReference(right);
+
+  if (resultPath && inputRef && inputRef in inputValues) {
+    return {
+      path: resultPath,
+      value: inputValues[inputRef],
+      source: `postcondition: ${resultPath} == input.${inputRef}`,
+    };
+  }
+
+  // Check reverse (input on left, result on right)
+  const inputRefLeft = extractInputReference(left);
+  const resultPathRight = extractResultPath(right);
+
+  if (resultPathRight && inputRefLeft && inputRefLeft in inputValues) {
+    return {
+      path: resultPathRight,
+      value: inputValues[inputRefLeft],
+      source: `postcondition: ${resultPathRight} == input.${inputRefLeft}`,
+    };
+  }
+
+  // Check for literal value assignments
+  const literalValue = extractLiteralValue(right);
+  if (resultPath && literalValue !== undefined) {
+    return {
+      path: resultPath,
+      value: literalValue,
+      source: `postcondition: ${resultPath} == ${JSON.stringify(literalValue)}`,
+    };
+  }
+
+  return null;
+}
+
+function extractResultPath(expr: AST.Expression): string | null {
+  if (expr.kind === 'ResultExpr') {
+    return expr.property ? `result.data.${expr.property.name}` : 'result.data';
+  }
+  if (expr.kind === 'MemberExpr') {
+    const objPath = extractResultPath(expr.object);
+    if (objPath) {
+      return `${objPath}.${expr.property.name}`;
+    }
+  }
+  return null;
+}
+
+function extractInputReference(expr: AST.Expression): string | null {
+  if (expr.kind === 'InputExpr') {
+    return expr.property.name;
+  }
+  if (expr.kind === 'MemberExpr' && expr.object.kind === 'InputExpr') {
+    return `${expr.object.property.name}.${expr.property.name}`;
+  }
+  return null;
+}
+
+function extractLiteralValue(expr: AST.Expression): unknown {
+  switch (expr.kind) {
+    case 'NumberLiteral': return expr.value;
+    case 'StringLiteral': return expr.value;
+    case 'BooleanLiteral': return expr.value;
+    case 'NullLiteral': return null;
+    default: return undefined;
+  }
+}
+
+function formatExpectedValue(value: unknown): string {
+  if (value === null) return 'null';
+  if (value === undefined) return 'undefined';
+  if (typeof value === 'string') return JSON.stringify(value);
+  if (typeof value === 'number') return String(value);
+  if (typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) return JSON.stringify(value);
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
 }
 
 // ============================================================================
@@ -133,6 +292,7 @@ export function synthesizeExpectedOutcome(
 interface ProcessedBlock {
   blockAssertions: ComputedAssertion[];
   captures: string[];
+  expectations: ComputedExpectation[];
 }
 
 function processPostconditionBlock(
@@ -143,6 +303,8 @@ function processPostconditionBlock(
 ): ProcessedBlock {
   const assertions: ComputedAssertion[] = [];
   const captures: string[] = [];
+  const expectations: ComputedExpectation[] = [];
+  const entityNames = domain.entities.map(e => e.name.name);
 
   for (const predicate of block.predicates) {
     const result = processPostconditionPredicate(predicate, behavior, domain, inputValues);
@@ -150,9 +312,15 @@ function processPostconditionBlock(
       assertions.push(result.assertion);
       captures.push(...result.captures);
     }
+
+    // Extract computed expectations
+    const expectation = extractExpectationFromPredicate(predicate, inputValues, entityNames);
+    if (expectation) {
+      expectations.push(expectation);
+    }
   }
 
-  return { blockAssertions: assertions, captures };
+  return { blockAssertions: assertions, captures, expectations };
 }
 
 interface PredicateResult {
@@ -655,4 +823,7 @@ export {
   compilePostconditionExpression,
   expressionToDescription,
   inferResultTypeAssertions,
+  computeExpectedFromPostconditions,
+  extractExpectationFromPredicate,
+  formatExpectedValue,
 };

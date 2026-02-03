@@ -285,6 +285,202 @@ export interface TestsSummary {
 }
 
 /**
+ * Evaluator decision trace entry
+ * 
+ * Records how the evaluator made decisions about clause satisfaction.
+ * This provides transparency into the verification process.
+ */
+export interface EvaluatorDecisionEntry {
+  /** Unique decision ID */
+  decisionId: string;
+  /** Clause ID being evaluated */
+  clauseId: string;
+  /** Expression being evaluated */
+  expression: string;
+  /** Tri-state result: TRUE, FALSE, or UNKNOWN */
+  triState: 'TRUE' | 'FALSE' | 'UNKNOWN';
+  /** Reason code for UNKNOWN results */
+  unknownReasonCode?: UnknownReasonCode;
+  /** Human-readable explanation */
+  explanation: string;
+  /** Sub-expressions evaluated */
+  subExpressions?: Array<{
+    expression: string;
+    result: 'TRUE' | 'FALSE' | 'UNKNOWN';
+    bindings?: Record<string, unknown>;
+  }>;
+  /** Variable bindings used during evaluation */
+  bindings?: Record<string, unknown>;
+  /** Trace IDs that informed this decision */
+  informingTraceIds?: string[];
+  /** Timestamp */
+  timestamp: string;
+  /** Duration in milliseconds */
+  durationMs: number;
+}
+
+/**
+ * Reason codes for UNKNOWN results
+ * 
+ * These codes explain why the evaluator could not determine TRUE/FALSE.
+ */
+export type UnknownReasonCode =
+  | 'MISSING_TRACE_DATA'      // No trace data for this clause
+  | 'INCOMPLETE_BINDING'      // Variable binding incomplete
+  | 'EXTERNAL_DEPENDENCY'     // Depends on external system state
+  | 'ARITHMETIC_OVERFLOW'     // Numeric computation overflow
+  | 'NULL_REFERENCE'          // Null/undefined in expression
+  | 'TYPE_MISMATCH'           // Type mismatch during evaluation
+  | 'QUANTIFIER_UNBOUNDED'    // Unbounded quantifier
+  | 'TIMEOUT'                 // Evaluation timed out
+  | 'UNSUPPORTED_OPERATOR'    // Operator not supported
+  | 'RECURSION_LIMIT'         // Recursion depth exceeded
+  | 'EXCEPTION_THROWN'        // Exception during evaluation
+  | 'SMT_UNKNOWN'             // SMT solver returned unknown
+  | 'OTHER';                  // Other reason (see explanation)
+
+/**
+ * Evaluator decision trace
+ * 
+ * Complete record of evaluator decisions for a verification run.
+ */
+export interface EvaluatorDecisionTrace {
+  /** Trace version */
+  version: '1.0.0';
+  /** Run ID */
+  runId: string;
+  /** Domain being verified */
+  domain: string;
+  /** Total decisions made */
+  totalDecisions: number;
+  /** Decisions by result */
+  summary: {
+    true: number;
+    false: number;
+    unknown: number;
+  };
+  /** Unknown reason code breakdown */
+  unknownReasons: Record<UnknownReasonCode, number>;
+  /** Individual decision entries */
+  decisions: EvaluatorDecisionEntry[];
+  /** Generation timestamp */
+  generatedAt: string;
+  /** Total duration in milliseconds */
+  totalDurationMs: number;
+}
+
+/**
+ * SMT solver transcript entry
+ * 
+ * Records a single SMT solver interaction.
+ */
+export interface SMTTranscriptEntry {
+  /** Unique entry ID */
+  entryId: string;
+  /** Check kind */
+  kind: 'precondition_satisfiability' | 'postcondition_implication' | 'refinement_constraint' | 'invariant_check';
+  /** Clause or check name */
+  name: string;
+  /** Behavior name (if applicable) */
+  behavior?: string;
+  /** SMT-LIB query sent to solver */
+  smtLibQuery: string;
+  /** Solver response */
+  response: {
+    status: 'sat' | 'unsat' | 'unknown' | 'timeout' | 'error';
+    /** Model (if sat) */
+    model?: string;
+    /** Unsat core (if unsat) */
+    unsatCore?: string[];
+    /** Reason (if unknown) */
+    reason?: string;
+    /** Error message (if error) */
+    error?: string;
+  };
+  /** Solver used */
+  solver: 'builtin' | 'z3' | 'cvc5' | 'other';
+  /** Solver version */
+  solverVersion?: string;
+  /** Query duration in milliseconds */
+  durationMs: number;
+  /** Timestamp */
+  timestamp: string;
+}
+
+/**
+ * SMT solver transcript
+ * 
+ * Complete record of SMT solver interactions during formal verification.
+ * Only included when formal mode (--smt) is enabled.
+ */
+export interface SMTSolverTranscript {
+  /** Transcript version */
+  version: '1.0.0';
+  /** Whether formal mode was enabled */
+  formalModeEnabled: boolean;
+  /** Primary solver used */
+  primarySolver: 'builtin' | 'z3' | 'cvc5';
+  /** Primary solver version */
+  primarySolverVersion?: string;
+  /** Total checks performed */
+  totalChecks: number;
+  /** Summary by status */
+  summary: {
+    sat: number;
+    unsat: number;
+    unknown: number;
+    timeout: number;
+    error: number;
+  };
+  /** Individual transcript entries */
+  entries: SMTTranscriptEntry[];
+  /** Solver configuration */
+  config: {
+    timeoutMs: number;
+    memoryLimitMb?: number;
+    randomSeed?: number;
+    options?: Record<string, string>;
+  };
+  /** Generation timestamp */
+  generatedAt: string;
+  /** Total duration in milliseconds */
+  totalDurationMs: number;
+}
+
+/**
+ * Run metadata for proof bundle
+ * 
+ * Captures metadata about the verification run environment.
+ */
+export interface RunMetadata {
+  /** ISL CLI version */
+  islVersion: string;
+  /** Node.js version */
+  nodeVersion: string;
+  /** Platform */
+  platform: 'win32' | 'darwin' | 'linux' | 'other';
+  /** Architecture */
+  arch: string;
+  /** CI environment (if detected) */
+  ci?: {
+    provider: string;
+    buildId?: string;
+    buildUrl?: string;
+    jobId?: string;
+  };
+  /** Working directory */
+  workingDirectory: string;
+  /** Environment variables (filtered for sensitive data) */
+  envSnapshot?: Record<string, string>;
+  /** Timestamp when run started */
+  startedAt: string;
+  /** Timestamp when run completed */
+  completedAt: string;
+  /** Total run duration in milliseconds */
+  totalDurationMs: number;
+}
+
+/**
  * Iteration record for healing/fix cycles
  */
 export interface IterationRecord {
@@ -577,6 +773,19 @@ export interface ProofBundleManifest {
   
   /** Enhanced tests summary */
   testsSummary?: TestsSummary;
+  
+  // ============================================================================
+  // Evidence & Diagnostics (v2.1 - for 1.0 release)
+  // ============================================================================
+  
+  /** Evaluator decision trace - records how evaluator decisions were made */
+  evaluatorTrace?: EvaluatorDecisionTrace;
+  
+  /** SMT solver transcript - records SMT solver interactions when formal mode enabled */
+  smtTranscript?: SMTSolverTranscript;
+  
+  /** Run metadata - environment and execution context */
+  runMetadata?: RunMetadata;
   
   // ============================================================================
   // Original Fields

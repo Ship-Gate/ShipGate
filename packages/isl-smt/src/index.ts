@@ -42,6 +42,9 @@ export type {
   SMTVerificationResult,
   SMTBatchResult,
   SolveResult,
+  SolverEvidence,
+  VerificationWithEvidence,
+  ProofBundleEntry,
 } from './types.js';
 
 // Re-export SMT types from prover for convenience
@@ -76,10 +79,27 @@ export {
 export {
   createSolver,
   isZ3Available,
+  isCVC5Available,
+  getSolverAvailability,
   solve,
   translate,
   type ISMTSolver,
 } from './solver.js';
+
+// External Solver Adapter
+export {
+  runSolver,
+  checkSatExternal,
+  checkSolverAvailability,
+  checkAllSolvers,
+  getBestAvailableSolver,
+  clearSolverCache,
+  type ExternalSolver,
+  type ExternalSolverConfig,
+  type SolverAvailability,
+  type SolverExecResult,
+  type SolverStats,
+} from './external-solver.js';
 
 // Verifier
 export {
@@ -87,7 +107,9 @@ export {
   verifySMT,
   checkExpression,
   resolveUnknown,
+  verifyFormal,
   type UnknownResolution,
+  type FormalModeOptions,
 } from './verifier.js';
 
 // Re-export useful utilities from prover

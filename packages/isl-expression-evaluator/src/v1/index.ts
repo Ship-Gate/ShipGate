@@ -12,6 +12,9 @@ export {
   isConstant,
   analyzeExpression,
   getCoverageReport,
+  // Evaluation caching
+  clearEvalCache,
+  getEvalCacheSize,
 } from './evaluator.js';
 
 // Types
@@ -23,6 +26,8 @@ export type {
   // Structured unknown reasons
   UnknownReasonCode,
   UnknownReason,
+  // Blame span for diagnostics
+  BlameSpan,
 } from './types.js';
 
 // Evaluator types (re-exported from evaluator.ts)

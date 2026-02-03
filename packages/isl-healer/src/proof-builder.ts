@@ -38,7 +38,7 @@ export class ProofBundleV2Builder {
   private healing: ProofBundleV2['healing'];
   private evidence: ClauseEvidence[] = [];
   private gate: ProofBundleV2['gate'];
-  private build?: BuildProof;
+  private buildProof?: BuildProof;
   private tests?: TestProof;
   private chain: ProofChainEntry[] = [];
   private startTime: number;
@@ -151,7 +151,7 @@ export class ProofBundleV2Builder {
    * Set build proof
    */
   setBuildProof(proof: BuildProof): this {
-    this.build = proof;
+    this.buildProof = proof;
     this.addChainEntry('build', '', proof.exitCode === 0 ? 'pass' : 'fail');
     return this;
   }
@@ -284,7 +284,7 @@ export class ProofBundleV2Builder {
       healing: this.healing,
       evidence: this.evidence,
       gate: this.gate,
-      build: this.build,
+      build: this.buildProof,
       tests: this.tests,
       verdict,
       chain: this.chain,
@@ -476,8 +476,4 @@ function findIntentEvidence(
   return undefined;
 }
 
-// ============================================================================
-// Exports
-// ============================================================================
-
-export { generateClauseEvidence };
+// Note: generateClauseEvidence is exported inline above

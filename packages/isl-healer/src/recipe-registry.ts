@@ -527,3 +527,14 @@ export class FixRecipeRegistryImpl implements FixRecipeRegistry {
     this.recipes.clear();
   }
 }
+
+// ============================================================================
+// Factory Functions
+// ============================================================================
+
+/**
+ * Create a new recipe registry with built-in recipes
+ */
+export function createDefaultRegistry(): FixRecipeRegistry {
+  return new FixRecipeRegistryImpl();
+}

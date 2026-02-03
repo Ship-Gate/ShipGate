@@ -275,5 +275,7 @@
     "esbuild": "^0.19.8",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.0"
-  }
+  },
+  "private": true,
+  "experimental": true
 }

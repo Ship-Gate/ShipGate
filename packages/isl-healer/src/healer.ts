@@ -39,8 +39,8 @@ import { GateIngester } from './gate-ingester.js';
 import { FixRecipeRegistryImpl, createDefaultRegistry } from './recipe-registry.js';
 import { WeakeningGuard, WeakeningError } from './weakening-guard.js';
 import { ProofBundleV2Builder, generateClauseEvidence } from './proof-builder.js';
-import { getFrameworkAdapter, detectFramework } from './adapters/index.js';
-import { BUILTIN_RECIPES } from './recipes/index.js';
+// Note: getFrameworkAdapter is async; we use sync adapter lookup in constructor
+// Note: BUILTIN_RECIPES are auto-registered via createDefaultRegistry
 
 // ============================================================================
 // Constants
@@ -90,7 +90,7 @@ class ClauseTracker {
     // Check if the last N iterations all had this violation
     const recentIterations = history.slice(-threshold);
     const isConsecutive = recentIterations.every((iter, i, arr) => 
-      i === 0 || iter === arr[i - 1] + 1
+      i === 0 || iter === (arr[i - 1] ?? 0) + 1
     );
 
     if (isConsecutive) {
@@ -195,12 +195,12 @@ class FingerprintTracker {
       if (
         recent[0] === recent[2] &&
         recent[1] === recent[3] &&
-        recent[0] !== recent[1]
+        recent[0] && recent[1] && recent[0] !== recent[1]
       ) {
         return {
           shouldAbort: true,
           reason: 'oscillating',
-          details: `Oscillating between fingerprints ${recent[0].slice(0, 8)}... and ${recent[1].slice(0, 8)}...`,
+          details: `Oscillating between fingerprints ${recent[0]?.slice(0, 8) ?? 'unknown'}... and ${recent[1]?.slice(0, 8) ?? 'unknown'}...`,
           stuckClauses: this.clauseTracker.getStuckClauses(),
         };
       }
@@ -245,7 +245,7 @@ export class ISLHealerV2 {
   private proofBuilder: ProofBundleV2Builder;
   private tracker: FingerprintTracker;
   private history: IterationSnapshot[] = [];
-  private gateIngester: GateIngester;
+  private _gateIngester: GateIngester; // Prefixed to indicate internal use
   private projectRoot: string;
 
   constructor(
@@ -263,16 +263,17 @@ export class ISLHealerV2 {
     this.options = { ...DEFAULT_OPTIONS, ...options };
 
     // Initialize registry with built-in recipes + custom
-    this.registry = createDefaultRegistry([
-      ...BUILTIN_RECIPES,
-      ...(this.options.customRecipes || []),
-    ]);
+    this.registry = createDefaultRegistry();
+    // Add custom recipes if provided
+    for (const recipe of this.options.customRecipes || []) {
+      this.registry.register(recipe);
+    }
 
     // Initialize weakening guard
     this.guard = new WeakeningGuard();
 
     // Initialize gate ingester
-    this.gateIngester = new GateIngester();
+    this._gateIngester = new GateIngester();
 
     // Initialize fingerprint tracker
     this.tracker = new FingerprintTracker(
@@ -286,10 +287,18 @@ export class ISLHealerV2 {
     this.proofBuilder.addSourceFiles(Array.from(initialCode.keys()));
     this.proofBuilder.setInitialCode(initialCode);
 
-    // Get framework adapter
-    this.framework = this.options.framework
-      ? getFrameworkAdapter(this.options.framework)
-      : getFrameworkAdapter('nextjs-app'); // Default
+    // Get framework adapter synchronously using the adapter map
+    // Note: getFrameworkAdapter is async for auto-detection, but we use direct lookup here
+    const frameworkName = this.options.framework || 'nextjs-app';
+    // Import the adapters directly for sync access
+    const adapters = require('./adapters/index.js');
+    this.framework = adapters[
+      frameworkName === 'nextjs-app' ? 'NextJSAppAdapter' :
+      frameworkName === 'nextjs-pages' ? 'NextJSPagesAdapter' :
+      frameworkName === 'express' ? 'ExpressAdapter' :
+      frameworkName === 'fastify' ? 'FastifyAdapter' :
+      'NextJSAppAdapter'
+    ] as FrameworkAdapter;
   }
 
   /**

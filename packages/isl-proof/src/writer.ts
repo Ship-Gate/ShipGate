@@ -47,6 +47,10 @@ import type {
   VerifyResults,
   TraceRef,
   TestsSummary,
+  // V2.1 types for 1.0 release
+  EvaluatorDecisionTrace,
+  SMTSolverTranscript,
+  RunMetadata,
 } from './manifest.js';
 import {
   calculateVerdictV2,
@@ -177,6 +181,11 @@ export class ProofBundleWriter {
   private verifyResults: VerifyResults | null = null;
   private traceRefs: TraceRef[] = [];
   private testsSummary: TestsSummary | null = null;
+  
+  // V2.1 fields for 1.0 release
+  private evaluatorTrace: EvaluatorDecisionTrace | null = null;
+  private smtTranscript: SMTSolverTranscript | null = null;
+  private runMetadata: RunMetadata | null = null;
 
   constructor(options: WriterOptions) {
     this.options = options;
@@ -327,6 +336,42 @@ export class ProofBundleWriter {
     return this;
   }
 
+  // ============================================================================
+  // V2.1 Setters - Evaluator Trace, SMT Transcript, Run Metadata
+  // ============================================================================
+
+  /**
+   * Set evaluator decision trace
+   * 
+   * Records how the evaluator made decisions about clause satisfaction.
+   * This provides transparency into why clauses are TRUE, FALSE, or UNKNOWN.
+   */
+  setEvaluatorTrace(trace: EvaluatorDecisionTrace): this {
+    this.evaluatorTrace = trace;
+    return this;
+  }
+
+  /**
+   * Set SMT solver transcript
+   * 
+   * Records all SMT solver interactions during formal verification.
+   * Only meaningful when formal mode (--smt) is enabled.
+   */
+  setSMTTranscript(transcript: SMTSolverTranscript): this {
+    this.smtTranscript = transcript;
+    return this;
+  }
+
+  /**
+   * Set run metadata
+   * 
+   * Captures environment and execution context for reproducibility.
+   */
+  setRunMetadata(metadata: RunMetadata): this {
+    this.runMetadata = metadata;
+    return this;
+  }
+
   /**
    * Add an iteration record
    */
@@ -451,7 +496,7 @@ export class ProofBundleWriter {
       },
       policyVersion: {
         bundleVersion: this.gateResult.policyBundleVersion,
-        islStudioVersion: this.options.islStudioVersion || '0.1.0',
+        islStudioVersion: this.options.islStudioVersion || '1.0.0',
         packs: this.gateResult.rulepackVersions,
       },
       // V2 fields
@@ -461,6 +506,10 @@ export class ProofBundleWriter {
       verifyResults: this.verifyResults || undefined,
       traceRefs: this.traceRefs.length > 0 ? this.traceRefs : undefined,
       testsSummary: this.testsSummary || undefined,
+      // V2.1 fields for 1.0 release - evaluator trace, SMT transcript, run metadata
+      evaluatorTrace: this.evaluatorTrace || undefined,
+      smtTranscript: this.smtTranscript || undefined,
+      runMetadata: this.runMetadata || undefined,
       // Original fields
       gateResult: this.gateResult,
       buildResult: this.buildResult,
@@ -615,6 +664,49 @@ export class ProofBundleWriter {
         JSON.stringify(this.testsSummary, null, 2)
       );
       files.push('results/tests-summary.json');
+    }
+
+    // ========================================================================
+    // V2.1 Files - Evaluator Trace, SMT Transcript, Run Metadata
+    // ========================================================================
+
+    // Write evaluator decision trace if available
+    if (this.evaluatorTrace) {
+      await fs.writeFile(
+        path.join(bundleDir, 'results', 'evaluator-trace.json'),
+        JSON.stringify(this.evaluatorTrace, null, 2)
+      );
+      files.push('results/evaluator-trace.json');
+    }
+
+    // Write SMT solver transcript if available (only when formal mode enabled)
+    if (this.smtTranscript && this.smtTranscript.formalModeEnabled) {
+      await fs.writeFile(
+        path.join(bundleDir, 'results', 'smt-transcript.json'),
+        JSON.stringify(this.smtTranscript, null, 2)
+      );
+      files.push('results/smt-transcript.json');
+      
+      // Also write individual SMT-LIB queries for reproducibility
+      if (this.smtTranscript.entries.length > 0) {
+        await fs.mkdir(path.join(bundleDir, 'results', 'smt-queries'), { recursive: true });
+        for (const entry of this.smtTranscript.entries) {
+          await fs.writeFile(
+            path.join(bundleDir, 'results', 'smt-queries', `${entry.entryId}.smt2`),
+            entry.smtLibQuery
+          );
+          files.push(`results/smt-queries/${entry.entryId}.smt2`);
+        }
+      }
+    }
+
+    // Write run metadata if available
+    if (this.runMetadata) {
+      await fs.writeFile(
+        path.join(bundleDir, 'results', 'run-metadata.json'),
+        JSON.stringify(this.runMetadata, null, 2)
+      );
+      files.push('results/run-metadata.json');
     }
 
     // Write iterations

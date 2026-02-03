@@ -1,0 +1,17 @@
+{
+  "name": "evaluator-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Demo showing ISL Expression Evaluator capabilities",
+  "type": "module",
+  "scripts": {
+    "demo": "tsx demo.ts"
+  },
+  "dependencies": {
+    "@isl-lang/expression-evaluator": "workspace:*",
+    "@isl-lang/parser": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}

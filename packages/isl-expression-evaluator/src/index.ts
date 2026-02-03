@@ -76,6 +76,9 @@ export {
   isConstant,
   analyzeExpression,
   getCoverageReport,
+  // Evaluation caching
+  clearEvalCache,
+  getEvalCacheSize,
 } from './v1/evaluator.js';
 
 export type {
@@ -86,6 +89,8 @@ export type {
   // Structured unknown reasons
   UnknownReasonCode,
   UnknownReason,
+  // Blame span for diagnostics
+  BlameSpan,
 } from './v1/types.js';
 
 // Constant folding types (from evaluator)

@@ -53,5 +53,7 @@
     "rimraf": "^5.0.5"
   },
   "author": "mevla",
-  "license": "MIT"
+  "license": "MIT",
+  "private": true,
+  "experimental": true
 }

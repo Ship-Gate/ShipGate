@@ -35,5 +35,7 @@
     "type": "git",
     "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
   },
-  "homepage": "https://intentlang.dev"
+  "homepage": "https://intentlang.dev",
+  "private": true,
+  "experimental": true
 }

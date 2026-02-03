@@ -346,6 +346,9 @@ export function printGateResult(result: GateResult, options: { format?: string; 
   if (ci) {
     // Minimal output for CI
     console.log(result.decision);
+    if (result.decision === 'SHIP') {
+      console.log('Verified by VibeCheck ✓');
+    }
     return;
   }
 
@@ -405,6 +408,14 @@ export function printGateResult(result: GateResult, options: { format?: string; 
   // Fingerprint
   if (result.manifest?.fingerprint) {
     console.log(chalk.gray(`  Fingerprint: ${result.manifest.fingerprint}`));
+  }
+
+  // Verified badge - only shown when SHIP
+  if (result.decision === 'SHIP') {
+    console.log('');
+    console.log(chalk.bold.green('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'));
+    console.log(chalk.bold.green('  Verified by VibeCheck ✓'));
+    console.log(chalk.bold.green('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'));
   }
 
   console.log('');

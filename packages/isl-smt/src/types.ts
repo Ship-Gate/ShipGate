@@ -137,5 +137,79 @@ export type SolveResult =
   | { verdict: 'disproved'; model?: Record<string, unknown>; reason?: string }
   | { verdict: 'unknown'; reason: string };
 
+// ============================================================================
+// Solver Evidence Types (for proof bundles)
+// ============================================================================
+
+/**
+ * Evidence from SMT solver execution
+ * 
+ * This is attached to proof bundles to provide:
+ * - Reproducibility: contains query hash for deterministic replay
+ * - Auditability: records solver used, version, and timing
+ * - Debugging: includes raw query and model for inspection
+ */
+export interface SolverEvidence {
+  /** Hash of the SMT query (for caching and reproducibility) */
+  queryHash: string;
+  /** Solver used */
+  solver: 'builtin' | 'z3' | 'cvc5';
+  /** Solver version (if external) */
+  solverVersion?: string;
+  /** Result status */
+  status: 'sat' | 'unsat' | 'unknown' | 'timeout' | 'error';
+  /** Model (if sat) */
+  model?: Record<string, unknown>;
+  /** Reason (if unknown or error) */
+  reason?: string;
+  /** Time spent solving (ms) */
+  durationMs: number;
+  /** Raw SMT-LIB query (for debugging) */
+  smtLibQuery?: string;
+  /** Timestamp of execution */
+  timestamp: string;
+}
+
+/**
+ * Verification result with solver evidence
+ */
+export interface VerificationWithEvidence {
+  /** The verification result */
+  result: SolveResult;
+  /** Solver evidence (if solver was invoked) */
+  evidence?: SolverEvidence;
+  /** Whether solver was invoked (vs. runtime evaluation) */
+  solverInvoked: boolean;
+  /** Reason solver was invoked (if applicable) */
+  solverInvocationReason?: 'runtime_unknown' | 'formal_mode' | 'explicit_request';
+}
+
+/**
+ * Proof bundle entry with optional solver evidence
+ */
+export interface ProofBundleEntry {
+  /** Unique identifier for this proof entry */
+  id: string;
+  /** Type of verification performed */
+  kind: SMTCheckKind | 'runtime' | 'mixed';
+  /** Name of the verified item */
+  name: string;
+  /** Expression that was verified (as string) */
+  expression: string;
+  /** Final verdict */
+  verdict: 'proved' | 'disproved' | 'unknown';
+  /** Runtime evidence (if runtime verification was performed) */
+  runtimeEvidence?: {
+    sampleCount: number;
+    passCount: number;
+    failCount: number;
+    unknownCount: number;
+  };
+  /** Solver evidence (if solver was invoked) */
+  solverEvidence?: SolverEvidence;
+  /** How the final verdict was determined */
+  verdictSource: 'runtime_only' | 'solver_only' | 'runtime_then_solver';
+}
+
 // Note: ConditionStatement and TypeConstraint are used in other files
 // that import from this types file, but are re-exported from isl-core/ast

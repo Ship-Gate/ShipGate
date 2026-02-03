@@ -1,8 +1,8 @@
 {
   "name": "vscode-islstudio",
   "displayName": "VibeCheck + ISL Studio",
-  "description": "Unified code gate. Truthpack validation (routes, env, imports) + 25 security rules (auth, pii, payments, rate-limit, intent). SHIP or NO_SHIP with evidence.",
-  "version": "0.2.0",
+  "description": "Unified code gate. Truthpack validation (routes, env, imports) + 25 security rules (auth, pii, payments, rate-limit, intent). SHIP or NO_SHIP with evidence. Verified by VibeCheck.",
+  "version": "1.0.0",
   "publisher": "ISL",
   "license": "MIT",
   "repository": {
@@ -35,6 +35,7 @@
     "ai-safety",
     "truthpack"
   ],
+  "icon": "icon.png",
   "galleryBanner": {
     "color": "#1e1e1e",
     "theme": "dark"
@@ -125,22 +126,42 @@
         {
           "id": "islstudio",
           "title": "ISL Studio",
-          "icon": "resources/icon.png"
+          "icon": "icon.png"
         }
       ]
     },
     "menus": {
       "commandPalette": [
-        { "command": "islstudio.runGate" },
-        { "command": "islstudio.runGateChangedOnly" },
-        { "command": "islstudio.healUntilShip" },
-        { "command": "islstudio.setIntentBlocks" },
-        { "command": "islstudio.explainRule" },
-        { "command": "islstudio.viewProofBundle" },
-        { "command": "islstudio.refreshSidebar" },
-        { "command": "islstudio.createBaseline" },
-        { "command": "islstudio.useBaseline" },
-        { "command": "islstudio.init" }
+        {
+          "command": "islstudio.runGate"
+        },
+        {
+          "command": "islstudio.runGateChangedOnly"
+        },
+        {
+          "command": "islstudio.healUntilShip"
+        },
+        {
+          "command": "islstudio.setIntentBlocks"
+        },
+        {
+          "command": "islstudio.explainRule"
+        },
+        {
+          "command": "islstudio.viewProofBundle"
+        },
+        {
+          "command": "islstudio.refreshSidebar"
+        },
+        {
+          "command": "islstudio.createBaseline"
+        },
+        {
+          "command": "islstudio.useBaseline"
+        },
+        {
+          "command": "islstudio.init"
+        }
       ]
     },
     "configuration": {
@@ -179,5 +200,7 @@
     "tsup": "^8.0.0",
     "typescript": "^5.3.0"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "private": true,
+  "experimental": true
 }

@@ -50,8 +50,12 @@ export {
 // SMT Solver
 export {
   SMTSolver,
+  createRealSolver,
+  createDemoSolver,
   type SMTResult,
   type SMTStats,
+  type SolverMode,
+  type SMTSolverConfig,
 } from './smt.js';
 
 // Invariant checking

@@ -64,6 +64,20 @@ export interface TypeConstraints {
   precision?: number;
   format?: string;
   pattern?: RegExp | string;
+  // Collection constraints
+  minItems?: number;
+  maxItems?: number;
+  uniqueItems?: boolean;
+  itemType?: string;
+}
+
+/** Cross-field constraint for relationships like a < b */
+export interface CrossFieldConstraint {
+  leftField: string;
+  operator: '<' | '<=' | '>' | '>=' | '==' | '!=';
+  rightField: string;
+  /** Parsed from precondition expressions */
+  source: string;
 }
 
 export interface SynthesisOptions {
@@ -162,12 +176,15 @@ export function synthesizeInputs(
   // Build constraint map for all fields
   const constraintMap = buildConstraintMap(inputSpec, domain);
 
-  // 1. Generate valid inputs
-  inputs.push(...generateValidInputs(inputSpec, domain, constraintMap, rng, seed, maxInputsPerCategory));
+  // Extract cross-field constraints from preconditions
+  const crossFieldConstraints = extractCrossFieldConstraints(behavior);
+
+  // 1. Generate valid inputs (applying cross-field constraints)
+  inputs.push(...generateValidInputs(inputSpec, domain, constraintMap, rng, seed, maxInputsPerCategory, crossFieldConstraints));
 
   // 2. Generate boundary inputs
   if (includeBoundary) {
-    inputs.push(...generateBoundaryInputs(inputSpec, domain, constraintMap, rng, seed, maxInputsPerCategory));
+    inputs.push(...generateBoundaryInputs(inputSpec, domain, constraintMap, rng, seed, maxInputsPerCategory, crossFieldConstraints));
   }
 
   // 3. Generate invalid inputs (negative tests)
@@ -180,6 +197,91 @@ export function synthesizeInputs(
     inputs.push(...generatePreconditionViolations(
       behavior, domain, constraintMap, rng, seed, maxInputsPerCategory
     ));
+  }
+
+  // 5. Generate cross-field violation tests
+  if (includePreconditionViolations && crossFieldConstraints.length > 0) {
+    inputs.push(...generateCrossFieldViolations(
+      inputSpec, domain, constraintMap, crossFieldConstraints, rng, seed
+    ));
+  }
+
+  return inputs;
+}
+
+/**
+ * Generate inputs that violate cross-field constraints
+ */
+function generateCrossFieldViolations(
+  inputSpec: AST.InputSpec,
+  domain: AST.Domain,
+  constraintMap: Map<string, TypeConstraints>,
+  crossFieldConstraints: CrossFieldConstraint[],
+  rng: SeededRandom,
+  seed: number
+): SynthesizedInput[] {
+  const inputs: SynthesizedInput[] = [];
+  const constraintSummaries = buildConstraintSummaries(inputSpec, constraintMap);
+
+  for (const constraint of crossFieldConstraints) {
+    // First generate valid values
+    const values: Record<string, unknown> = {};
+    for (const field of inputSpec.fields) {
+      if (!field.optional) {
+        values[field.name.name] = generateTypicalValue(
+          field.type, constraintMap.get(field.name.name) || {}, domain, rng
+        );
+      }
+    }
+
+    // Then violate the cross-field constraint
+    const leftVal = values[constraint.leftField];
+    const rightVal = values[constraint.rightField];
+
+    if (typeof leftVal === 'number' && typeof rightVal === 'number') {
+      const violatedValues = { ...values };
+      
+      switch (constraint.operator) {
+        case '<':
+          violatedValues[constraint.leftField] = rightVal; // equal, not less
+          break;
+        case '<=':
+          violatedValues[constraint.leftField] = rightVal + 1; // greater
+          break;
+        case '>':
+          violatedValues[constraint.leftField] = rightVal; // equal, not greater
+          break;
+        case '>=':
+          violatedValues[constraint.leftField] = rightVal - 1; // less
+          break;
+        case '==':
+          violatedValues[constraint.leftField] = rightVal + 1; // not equal
+          break;
+        case '!=':
+          violatedValues[constraint.leftField] = rightVal; // equal
+          break;
+      }
+
+      inputs.push({
+        category: 'precondition_violation',
+        name: `cross_field_violation_${constraint.leftField}_${constraint.operator}_${constraint.rightField}`,
+        description: `Violates cross-field constraint: ${constraint.source}`,
+        values: violatedValues,
+        dataTrace: {
+          seed,
+          constraints: constraintSummaries,
+          generatedAt: new Date().toISOString(),
+          strategy: `cross_field_violation`,
+        },
+        expectedOutcome: {
+          type: 'error',
+          assertions: [
+            'result.success === false',
+            `// Cross-field constraint violated: ${constraint.source}`,
+          ],
+        },
+      });
+    }
   }
 
   return inputs;
@@ -201,6 +303,127 @@ function buildConstraintMap(
   }
 
   return map;
+}
+
+/**
+ * Extract cross-field constraints from preconditions
+ * E.g., "input.min_amount < input.max_amount"
+ */
+function extractCrossFieldConstraints(
+  behavior: AST.Behavior
+): CrossFieldConstraint[] {
+  const constraints: CrossFieldConstraint[] = [];
+
+  for (const precondition of behavior.preconditions) {
+    const crossConstraint = parseCrossFieldConstraint(precondition);
+    if (crossConstraint) {
+      constraints.push(crossConstraint);
+    }
+  }
+
+  return constraints;
+}
+
+function parseCrossFieldConstraint(
+  expr: AST.Expression
+): CrossFieldConstraint | null {
+  if (expr.kind !== 'BinaryExpr') return null;
+
+  const { left, operator, right } = expr;
+  
+  // Check if both sides reference input fields
+  const leftField = extractFieldName(left);
+  const rightField = extractFieldName(right);
+
+  if (!leftField || !rightField) return null;
+
+  // Only handle relational operators
+  const validOps: CrossFieldConstraint['operator'][] = ['<', '<=', '>', '>=', '==', '!='];
+  if (!validOps.includes(operator as CrossFieldConstraint['operator'])) return null;
+
+  return {
+    leftField,
+    operator: operator as CrossFieldConstraint['operator'],
+    rightField,
+    source: `${leftField} ${operator} ${rightField}`,
+  };
+}
+
+/**
+ * Apply cross-field constraints to generated values
+ */
+function applyCrossFieldConstraints(
+  values: Record<string, unknown>,
+  constraints: CrossFieldConstraint[],
+  constraintMap: Map<string, TypeConstraints>,
+  rng: SeededRandom
+): Record<string, unknown> {
+  const result = { ...values };
+
+  for (const constraint of constraints) {
+    const leftVal = result[constraint.leftField];
+    const rightVal = result[constraint.rightField];
+
+    if (typeof leftVal !== 'number' || typeof rightVal !== 'number') continue;
+
+    const leftConstraints = constraintMap.get(constraint.leftField) || {};
+    const rightConstraints = constraintMap.get(constraint.rightField) || {};
+
+    // Ensure the constraint is satisfied
+    switch (constraint.operator) {
+      case '<': {
+        if (leftVal >= rightVal) {
+          // Make left smaller than right
+          const maxLeft = Math.min(rightVal - 1, leftConstraints.max ?? rightVal - 1);
+          const minLeft = leftConstraints.min ?? 0;
+          result[constraint.leftField] = rng.int(minLeft, maxLeft);
+        }
+        break;
+      }
+      case '<=': {
+        if (leftVal > rightVal) {
+          const maxLeft = Math.min(rightVal, leftConstraints.max ?? rightVal);
+          const minLeft = leftConstraints.min ?? 0;
+          result[constraint.leftField] = rng.int(minLeft, maxLeft);
+        }
+        break;
+      }
+      case '>': {
+        if (leftVal <= rightVal) {
+          const minLeft = Math.max(rightVal + 1, leftConstraints.min ?? rightVal + 1);
+          const maxLeft = leftConstraints.max ?? rightVal + 100;
+          result[constraint.leftField] = rng.int(minLeft, maxLeft);
+        }
+        break;
+      }
+      case '>=': {
+        if (leftVal < rightVal) {
+          const minLeft = Math.max(rightVal, leftConstraints.min ?? rightVal);
+          const maxLeft = leftConstraints.max ?? rightVal + 100;
+          result[constraint.leftField] = rng.int(minLeft, maxLeft);
+        }
+        break;
+      }
+      case '==': {
+        result[constraint.leftField] = rightVal;
+        break;
+      }
+      case '!=': {
+        if (leftVal === rightVal) {
+          // Make them different
+          const newVal = leftVal + (rng.next() > 0.5 ? 1 : -1);
+          const clamped = Math.max(
+            leftConstraints.min ?? Number.MIN_SAFE_INTEGER,
+            Math.min(leftConstraints.max ?? Number.MAX_SAFE_INTEGER, newVal)
+          );
+          result[constraint.leftField] = clamped;
+        }
+        break;
+      }
+    }
+  }
+
+  return result;
 }
 
 function extractConstraints(
@@ -279,18 +502,21 @@ function generateValidInputs(
   constraintMap: Map<string, TypeConstraints>,
   rng: SeededRandom,
   seed: number,
-  _maxInputs: number
+  _maxInputs: number,
+  crossFieldConstraints: CrossFieldConstraint[] = []
 ): SynthesizedInput[] {
   const inputs: SynthesizedInput[] = [];
   const constraintSummaries = buildConstraintSummaries(inputSpec, constraintMap);
 
   // 1. Typical valid input
-  const typicalValues: Record<string, unknown> = {};
+  let typicalValues: Record<string, unknown> = {};
   for (const field of inputSpec.fields) {
     typicalValues[field.name.name] = generateTypicalValue(
       field.type, constraintMap.get(field.name.name) || {}, domain, rng
     );
   }
+  // Apply cross-field constraints
+  typicalValues = applyCrossFieldConstraints(typicalValues, crossFieldConstraints, constraintMap, rng);
 
   inputs.push({
     category: 'valid',
@@ -312,7 +538,7 @@ function generateValidInputs(
   // 2. Minimal valid input (only required fields)
   const hasOptional = inputSpec.fields.some(f => f.optional);
   if (hasOptional) {
-    const minimalValues: Record<string, unknown> = {};
+    let minimalValues: Record<string, unknown> = {};
     for (const field of inputSpec.fields) {
       if (!field.optional) {
         minimalValues[field.name.name] = generateTypicalValue(
@@ -320,6 +546,8 @@ function generateValidInputs(
         );
       }
     }
+    // Apply cross-field constraints
+    minimalValues = applyCrossFieldConstraints(minimalValues, crossFieldConstraints, constraintMap, rng);
 
     inputs.push({
       category: 'valid',
@@ -340,12 +568,14 @@ function generateValidInputs(
   }
 
   // 3. Randomized valid inputs (seeded)
-  const randomValues: Record<string, unknown> = {};
+  let randomValues: Record<string, unknown> = {};
   for (const field of inputSpec.fields) {
     randomValues[field.name.name] = generateRandomValidValue(
       field.type, constraintMap.get(field.name.name) || {}, domain, rng
     );
   }
+  // Apply cross-field constraints
+  randomValues = applyCrossFieldConstraints(randomValues, crossFieldConstraints, constraintMap, rng);
 
   inputs.push({
     category: 'valid',
@@ -377,17 +607,26 @@ function generateBoundaryInputs(
   constraintMap: Map<string, TypeConstraints>,
   rng: SeededRandom,
   seed: number,
-  _maxInputs: number
+  _maxInputs: number,
+  crossFieldConstraints: CrossFieldConstraint[] = []
 ): SynthesizedInput[] {
   const inputs: SynthesizedInput[] = [];
   const constraintSummaries = buildConstraintSummaries(inputSpec, constraintMap);
 
   for (const field of inputSpec.fields) {
     const constraints = constraintMap.get(field.name.name) || {};
-    const boundaryValues = generateBoundaryValuesForField(field.type, constraints, domain);
+    let boundaryValues = generateBoundaryValuesForField(field.type, constraints, domain);
+
+    // Add array boundary values for list types
+    if (field.type.kind === 'ListType') {
+      boundaryValues = [
+        ...boundaryValues,
+        ...generateArrayBoundaryValues(field.type.element, constraints, domain, rng),
+      ];
+    }
 
     for (const boundary of boundaryValues) {
-      const values: Record<string, unknown> = {};
+      let values: Record<string, unknown> = {};
 
       for (const f of inputSpec.fields) {
         if (f.name.name === field.name.name) {
@@ -398,6 +637,9 @@ function generateBoundaryInputs(
           );
         }
       }
+
+      // Apply cross-field constraints
+      values = applyCrossFieldConstraints(values, crossFieldConstraints, constraintMap, rng);
 
       inputs.push({
         category: 'boundary',
@@ -1060,6 +1302,14 @@ function generateTypicalValue(
 
   switch (baseType) {
     case 'String':
+      // Check for pattern constraint first
+      if (constraints.pattern) {
+        return generateStringFromPattern(constraints.pattern, rng, constraints);
+      }
+      // Check for format-based generation
+      if (constraints.format && FORMAT_GENERATORS[constraints.format]) {
+        return FORMAT_GENERATORS[constraints.format]!(rng, constraints.maxLength);
+      }
       return generateTypicalString(constraints, rng);
 
     case 'Int': {
@@ -1096,8 +1346,7 @@ function generateTypicalValue(
         return generateStructValue(type, domain, rng);
       }
       if (type.kind === 'ListType') {
-        const element = generateTypicalValue(type.element, {}, domain, rng);
-        return [element];
+        return generateArrayValue(type.element, constraints, domain, rng, 'typical');
       }
       if (type.kind === 'MapType') {
         return {};
@@ -1192,6 +1441,230 @@ function generateStringOfLength(length: number, format?: string): string {
   }
 
   return 'a'.repeat(length);
+}
+
+// ============================================================================
+// COLLECTION/ARRAY GENERATION
+// ============================================================================
+
+/**
+ * Generate array values respecting constraints
+ */
+function generateArrayValue(
+  elementType: AST.TypeDefinition,
+  constraints: TypeConstraints,
+  domain: AST.Domain,
+  rng: SeededRandom,
+  category: 'typical' | 'boundary' | 'invalid' = 'typical'
+): unknown[] {
+  const minItems = constraints.minItems ?? 0;
+  const maxItems = constraints.maxItems ?? 10;
+
+  let count: number;
+  switch (category) {
+    case 'boundary':
+      // Boundary: try min or max
+      count = rng.next() > 0.5 ? minItems : Math.min(maxItems, minItems + 3);
+      break;
+    case 'invalid':
+      // Invalid: below min or above max
+      count = rng.next() > 0.5 ? Math.max(0, minItems - 1) : maxItems + 1;
+      break;
+    default:
+      // Typical: between min and max
+      count = rng.int(minItems, Math.min(maxItems, minItems + 5));
+  }
+
+  const result: unknown[] = [];
+  const usedValues = new Set<string>();
+
+  for (let i = 0; i < count; i++) {
+    let value = generateTypicalValue(elementType, {}, domain, rng);
+    
+    // Handle uniqueItems constraint
+    if (constraints.uniqueItems && typeof value === 'string') {
+      let attempts = 0;
+      while (usedValues.has(String(value)) && attempts < 10) {
+        value = generateRandomValidValue(elementType, {}, domain, rng);
+        attempts++;
+      }
+      usedValues.add(String(value));
+    }
+    
+    result.push(value);
+  }
+
+  return result;
+}
+
+/**
+ * Generate boundary values for arrays
+ */
+function generateArrayBoundaryValues(
+  elementType: AST.TypeDefinition,
+  constraints: TypeConstraints,
+  domain: AST.Domain,
+  rng: SeededRandom
+): BoundaryValue[] {
+  const values: BoundaryValue[] = [];
+  const minItems = constraints.minItems ?? 0;
+  const maxItems = constraints.maxItems ?? 10;
+
+  // Empty array (if allowed)
+  if (minItems === 0) {
+    values.push({
+      name: 'empty_array',
+      value: [],
+      description: 'empty array',
+    });
+  }
+
+  // Minimum items
+  if (minItems > 0) {
+    values.push({
+      name: 'at_min_items',
+      value: generateArrayValue(elementType, { ...constraints }, domain, rng, 'boundary').slice(0, minItems),
+      description: `minimum items (${minItems})`,
+    });
+  }
+
+  // Maximum items
+  values.push({
+    name: 'at_max_items',
+    value: generateArrayValue(elementType, { maxItems }, domain, rng, 'boundary'),
+    description: `maximum items (${maxItems})`,
+  });
+
+  // Single item
+  if (minItems <= 1) {
+    values.push({
+      name: 'single_item',
+      value: [generateTypicalValue(elementType, {}, domain, rng)],
+      description: 'single item array',
+    });
+  }
+
+  return values;
+}
+
+// ============================================================================
+// PATTERN-BASED STRING GENERATION
+// ============================================================================
+
+/** Common patterns for format-based generation */
+const FORMAT_GENERATORS: Record<string, (rng: SeededRandom, length?: number) => string> = {
+  email: (rng, _length) => {
+    const user = rng.string(rng.int(5, 12), 'abcdefghijklmnopqrstuvwxyz0123456789');
+    const domains = ['example.com', 'test.org', 'mail.net', 'demo.io'];
+    return `${user}@${rng.pick(domains)}`;
+  },
+  uuid: (rng) => generateDeterministicUUID(rng),
+  url: (rng, _length) => {
+    const protocol = rng.pick(['http', 'https']);
+    const domain = rng.string(rng.int(5, 10), 'abcdefghijklmnopqrstuvwxyz');
+    const tld = rng.pick(['com', 'org', 'net', 'io']);
+    return `${protocol}://${domain}.${tld}`;
+  },
+  phone: (rng) => {
+    const areaCode = rng.int(200, 999);
+    const exchange = rng.int(200, 999);
+    const subscriber = rng.int(1000, 9999);
+    return `+1${areaCode}${exchange}${subscriber}`;
+  },
+  date: () => {
+    const now = new Date();
+    return now.toISOString().split('T')[0]!;
+  },
+  'date-time': () => new Date().toISOString(),
+  time: () => {
+    const now = new Date();
+    return now.toISOString().split('T')[1]!.split('.')[0]!;
+  },
+  ipv4: (rng) => {
+    return `${rng.int(1, 255)}.${rng.int(0, 255)}.${rng.int(0, 255)}.${rng.int(1, 254)}`;
+  },
+  ipv6: (rng) => {
+    const segments = [];
+    for (let i = 0; i < 8; i++) {
+      segments.push(rng.int(0, 65535).toString(16).padStart(4, '0'));
+    }
+    return segments.join(':');
+  },
+  hostname: (rng) => {
+    const name = rng.string(rng.int(5, 10), 'abcdefghijklmnopqrstuvwxyz');
+    const tld = rng.pick(['com', 'org', 'net', 'io']);
+    return `${name}.${tld}`;
+  },
+  slug: (rng, length) => {
+    const len = length ?? rng.int(5, 20);
+    return rng.string(len, 'abcdefghijklmnopqrstuvwxyz0123456789-');
+  },
+  credit_card: (rng) => {
+    // Luhn-valid test card number (starts with 4 for Visa)
+    const prefix = '4111';
+    const middle = rng.string(11, '0123456789');
+    const partial = prefix + middle;
+    // Calculate Luhn check digit
+    let sum = 0;
+    for (let i = 0; i < 15; i++) {
+      let digit = parseInt(partial[i]!, 10);
+      if (i % 2 === 0) {
+        digit *= 2;
+        if (digit > 9) digit -= 9;
+      }
+      sum += digit;
+    }
+    const checkDigit = (10 - (sum % 10)) % 10;
+    return partial + checkDigit;
+  },
+  cvv: (rng) => rng.string(3, '0123456789'),
+};
+
+/**
+ * Generate string from pattern (regex)
+ * Simple implementation for common patterns
+ */
+function generateStringFromPattern(
+  pattern: RegExp | string,
+  rng: SeededRandom,
+  constraints: TypeConstraints
+): string {
+  const patternStr = typeof pattern === 'string' ? pattern : pattern.source;
+  
+  // Handle simple patterns
+  if (patternStr === '^[a-z]+$' || patternStr === '[a-z]+') {
+    const length = constraints.maxLength ?? 10;
+    return rng.string(Math.min(length, rng.int(3, 15)), 'abcdefghijklmnopqrstuvwxyz');
+  }
+  
+  if (patternStr === '^[A-Z]+$' || patternStr === '[A-Z]+') {
+    const length = constraints.maxLength ?? 10;
+    return rng.string(Math.min(length, rng.int(3, 15)), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+  }
+  
+  if (patternStr === '^[a-zA-Z]+$' || patternStr === '[a-zA-Z]+') {
+    const length = constraints.maxLength ?? 10;
+    return rng.string(Math.min(length, rng.int(3, 15)), 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
+  }
+  
+  if (patternStr === '^[0-9]+$' || patternStr === '[0-9]+' || patternStr === '^\\d+$') {
+    const length = constraints.maxLength ?? 10;
+    return rng.string(Math.min(length, rng.int(1, 10)), '0123456789');
+  }
+  
+  if (patternStr.includes('[a-zA-Z0-9]')) {
+    const length = constraints.maxLength ?? 10;
+    return rng.string(Math.min(length, rng.int(5, 15)), 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
+  }
+
+  // UUID pattern
+  if (patternStr.includes('[0-9a-f]{8}') || patternStr.includes('uuid')) {
+    return generateDeterministicUUID(rng);
+  }
+
+  // Fallback: generate alphanumeric
+  const length = constraints.maxLength ?? 10;
+  return rng.string(Math.min(length, 10), 'abcdefghijklmnopqrstuvwxyz0123456789');
 }
 
 function generateStructValue(
@@ -1306,6 +1779,14 @@ export {
   SeededRandom,
   extractConstraints,
   generateTypicalValue,
+  generateRandomValidValue,
   generateBoundaryValuesForField,
   generateInvalidValuesForField,
+  generateArrayValue,
+  generateArrayBoundaryValues,
+  generateStringFromPattern,
+  extractCrossFieldConstraints,
+  applyCrossFieldConstraints,
+  FORMAT_GENERATORS,
+  type CrossFieldConstraint,
 };

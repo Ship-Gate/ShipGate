@@ -3,7 +3,7 @@
 // ============================================================================
 
 import type { Expression } from '@isl-lang/parser';
-import type { EvalResult, EvalContext, EvalAdapter } from './types.js';
+import type { EvalResult, EvalContext, EvalAdapter, BlameSpan } from './types.js';
 import {
   triAnd,
   triOr,
@@ -14,6 +14,142 @@ import {
   fromKind,
   DefaultEvalAdapter,
 } from './types.js';
+
+// ============================================================================
+// BLAME SPAN HELPERS
+// ============================================================================
+
+/**
+ * Create a blame span from an expression for diagnostics
+ */
+function createBlameSpan(expr: Expression, path?: string): BlameSpan {
+  return {
+    exprKind: expr.kind,
+    location: expr.location ? {
+      file: expr.location.file,
+      line: expr.location.line,
+      column: expr.location.column,
+      endLine: expr.location.endLine,
+      endColumn: expr.location.endColumn,
+    } : undefined,
+    path,
+  };
+}
+
+// ============================================================================
+// EVALUATION CACHING
+// ============================================================================
+
+/**
+ * Simple hash function for strings
+ */
+function simpleHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash;
+}
+
+/**
+ * Create a unique expression signature for caching
+ * Includes enough of the expression structure to avoid collisions
+ */
+function getExprSignature(expr: Expression): string {
+  switch (expr.kind) {
+    case 'BooleanLiteral':
+      return `Bool:${(expr as { value: boolean }).value}`;
+    case 'StringLiteral':
+      return `Str:${(expr as { value: string }).value.slice(0, 50)}`;
+    case 'NumberLiteral':
+      return `Num:${(expr as { value: number }).value}`;
+    case 'NullLiteral':
+      return 'Null';
+    case 'Identifier':
+      return `Id:${(expr as { name: string }).name}`;
+    case 'BinaryExpr': {
+      const bin = expr as { operator: string; left: Expression; right: Expression };
+      return `Bin:${bin.operator}:${getExprSignature(bin.left)}:${getExprSignature(bin.right)}`;
+    }
+    case 'UnaryExpr': {
+      const un = expr as { operator: string; operand: Expression };
+      return `Un:${un.operator}:${getExprSignature(un.operand)}`;
+    }
+    default:
+      // For complex expressions, use a hash of the JSON representation
+      try {
+        return `${expr.kind}:${simpleHash(JSON.stringify(expr))}`;
+      } catch {
+        return `${expr.kind}:unknown`;
+      }
+  }
+}
+
+/**
+ * Create a cache key from expression and context
+ */
+function createCacheKey(expr: Expression, ctx: EvalContext): string {
+  // Use expression signature for unique identification
+  const exprSig = getExprSignature(expr);
+  
+  // Hash the relevant context state
+  const inputHash = ctx.input ? simpleHash(JSON.stringify(ctx.input)) : 0;
+  const resultHash = ctx.result !== undefined ? simpleHash(JSON.stringify(ctx.result)) : 0;
+  const varsHash = ctx.variables.size > 0 
+    ? simpleHash(JSON.stringify(Array.from(ctx.variables.entries())))
+    : 0;
+  const oldStateHash = ctx.oldState 
+    ? simpleHash(JSON.stringify(Array.from(ctx.oldState.entries())))
+    : 0;
+  
+  return `${exprSig}|${inputHash}|${resultHash}|${varsHash}|${oldStateHash}`;
+}
+
+/**
+ * Evaluation cache with LRU-like behavior
+ */
+class EvalCache {
+  private cache: Map<string, EvalResult> = new Map();
+  private maxSize: number;
+  
+  constructor(maxSize: number = 1000) {
+    this.maxSize = maxSize;
+  }
+  
+  get(key: string): EvalResult | undefined {
+    const value = this.cache.get(key);
+    if (value) {
+      // Move to end (most recently used)
+      this.cache.delete(key);
+      this.cache.set(key, value);
+    }
+    return value;
+  }
+  
+  set(key: string, value: EvalResult): void {
+    // Remove oldest entries if cache is full
+    if (this.cache.size >= this.maxSize) {
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey) {
+        this.cache.delete(firstKey);
+      }
+    }
+    this.cache.set(key, value);
+  }
+  
+  clear(): void {
+    this.cache.clear();
+  }
+  
+  get size(): number {
+    return this.cache.size;
+  }
+}
+
+// Global evaluation cache (can be disabled via context)
+const globalEvalCache = new EvalCache(1000);
 
 // ============================================================================
 // MAIN EVALUATOR
@@ -41,6 +177,7 @@ export function createEvalContext(options: {
   oldState?: Map<string, unknown>;
   adapter?: EvalAdapter;
   maxDepth?: number;
+  enableCache?: boolean;
 } = {}): EvalContext {
   return {
     variables: options.variables ?? new Map(),
@@ -49,7 +186,22 @@ export function createEvalContext(options: {
     oldState: options.oldState,
     adapter: options.adapter ?? new DefaultEvalAdapter(),
     maxDepth: options.maxDepth ?? 1000,
+    enableCache: options.enableCache ?? true,
   };
+}
+
+/**
+ * Clear the global evaluation cache
+ */
+export function clearEvalCache(): void {
+  globalEvalCache.clear();
+}
+
+/**
+ * Get the current cache size (for diagnostics)
+ */
+export function getEvalCacheSize(): number {
+  return globalEvalCache.size;
 }
 
 /**
@@ -78,7 +230,31 @@ function evalExpr(expr: Expression, ctx: EvalContext, depth: number, maxDepth: n
   if (depth > maxDepth) {
     return unknown('TIMEOUT', `Maximum evaluation depth (${maxDepth}) exceeded`);
   }
+  
+  // Skip caching for simple literals (fast path)
+  const isSimpleLiteral = ['BooleanLiteral', 'StringLiteral', 'NumberLiteral', 'NullLiteral'].includes(expr.kind);
+  
+  // Check cache for complex expressions
+  if (!isSimpleLiteral && ctx.enableCache !== false) {
+    const cacheKey = createCacheKey(expr, ctx);
+    const cached = globalEvalCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+  }
 
+  const result = evalExprUncached(expr, ctx, depth, maxDepth);
+  
+  // Cache complex expression results
+  if (!isSimpleLiteral && ctx.enableCache !== false && result.kind !== 'unknown') {
+    const cacheKey = createCacheKey(expr, ctx);
+    globalEvalCache.set(cacheKey, result);
+  }
+  
+  return result;
+}
+
+function evalExprUncached(expr: Expression, ctx: EvalContext, depth: number, maxDepth: number): EvalResult {
   switch (expr.kind) {
     // Literals
     case 'BooleanLiteral':
@@ -184,7 +360,7 @@ function evalNullLiteral(): EvalResult {
 // IDENTIFIER HANDLER
 // ============================================================================
 
-function evalIdentifier(expr: { name: string }, ctx: EvalContext): EvalResult {
+function evalIdentifier(expr: { name: string; location?: unknown }, ctx: EvalContext): EvalResult {
   const name = expr.name;
 
   // Special identifiers
@@ -201,7 +377,7 @@ function evalIdentifier(expr: { name: string }, ctx: EvalContext): EvalResult {
   // Handle 'input' identifier - return input object
   if (name === 'input') {
     if (!ctx.input || Object.keys(ctx.input).length === 0) {
-      return unknown('MISSING_INPUT', 'Input not available');
+      return unknown('MISSING_INPUT', 'Input not available', undefined, createBlameSpan(expr as Expression));
     }
     return ok(ctx.input);
   }
@@ -215,7 +391,7 @@ function evalIdentifier(expr: { name: string }, ctx: EvalContext): EvalResult {
   // Handle 'result' identifier
   if (name === 'result') {
     if (ctx.result === undefined) {
-      return unknown('MISSING_RESULT', 'Result not available');
+      return unknown('MISSING_RESULT', 'Result not available', undefined, createBlameSpan(expr as Expression));
     }
     return valueToResult(ctx.result, 'Result');
   }
@@ -226,11 +402,11 @@ function evalIdentifier(expr: { name: string }, ctx: EvalContext): EvalResult {
     if (ctx.variables.has('error')) {
       return valueToResult(ctx.variables.get('error'), 'Error');
     }
-    return unknown('MISSING_BINDING', 'Error not available');
+    return unknown('MISSING_BINDING', 'Error not available', undefined, createBlameSpan(expr as Expression));
   }
 
   // Unknown identifier
-  return unknown('MISSING_BINDING', `Unknown identifier: '${name}'`);
+  return unknown('MISSING_BINDING', `Unknown identifier: '${name}'`, undefined, createBlameSpan(expr as Expression));
 }
 
 /**
@@ -1387,7 +1563,7 @@ function evalFunctionCall(
 // ============================================================================
 
 function evalQuantifierExpr(
-  expr: { quantifier: string; variable: { name: string }; collection: Expression; predicate: Expression },
+  expr: { quantifier: string; variable: { name: string }; collection: Expression; predicate: Expression; location?: unknown },
   ctx: EvalContext,
   depth: number,
   maxDepth: number
@@ -1395,7 +1571,27 @@ function evalQuantifierExpr(
   const collection = extractValue(expr.collection, ctx, depth, maxDepth);
   
   if (collection === 'unknown') {
-    return unknown('COLLECTION_UNKNOWN', 'Cannot evaluate quantifier: collection is unknown');
+    // Determine if this is a bounded or unbounded domain
+    // If the collection expression is a type reference (e.g., Integer, String), it's unbounded
+    const isUnboundedDomain = 
+      expr.collection.kind === 'Identifier' && 
+      ['Integer', 'Number', 'String', 'Int', 'Float'].includes((expr.collection as { name: string }).name);
+    
+    if (isUnboundedDomain) {
+      return unknown(
+        'UNBOUNDED_DOMAIN',
+        `Cannot evaluate quantifier over unbounded domain: ${(expr.collection as { name: string }).name}`,
+        undefined,
+        createBlameSpan(expr as Expression, `quantifier.collection`)
+      );
+    }
+    
+    return unknown(
+      'COLLECTION_UNKNOWN',
+      'Cannot evaluate quantifier: collection is unknown',
+      undefined,
+      createBlameSpan(expr.collection as Expression, 'quantifier.collection')
+    );
   }
   
   if (!Array.isArray(collection)) {
@@ -1595,13 +1791,18 @@ function evalConditionalExpr(
 // ============================================================================
 
 function evalOldExpr(
-  expr: { expression: Expression },
+  expr: { expression: Expression; location?: unknown },
   ctx: EvalContext,
   depth: number,
   maxDepth: number
 ): EvalResult {
   if (!ctx.oldState) {
-    return unknown('MISSING_OLD_STATE', 'old() called without previous state snapshot');
+    return unknown(
+      'MISSING_OLD_STATE',
+      'old() called without previous state snapshot',
+      undefined,
+      createBlameSpan(expr as Expression, 'old()')
+    );
   }
   
   // Create context with old state as variables
@@ -1618,17 +1819,27 @@ function evalOldExpr(
 // ============================================================================
 
 function evalInputExpr(
-  expr: { property: { name: string } },
+  expr: { property: { name: string }; location?: unknown },
   ctx: EvalContext
 ): EvalResult {
   const property = expr.property.name;
   
   if (!ctx.input) {
-    return unknown('MISSING_INPUT', 'Input not available');
+    return unknown(
+      'MISSING_INPUT',
+      'Input not available',
+      undefined,
+      createBlameSpan(expr as Expression, `input.${property}`)
+    );
   }
   
   if (!(property in ctx.input)) {
-    return unknown('MISSING_INPUT', `Input property '${property}' not found`);
+    return unknown(
+      'MISSING_INPUT',
+      `Input property '${property}' not found`,
+      undefined,
+      createBlameSpan(expr as Expression, `input.${property}`)
+    );
   }
   
   return valueToResult(ctx.input[property], `Input '${property}'`);
@@ -1639,13 +1850,18 @@ function evalInputExpr(
 // ============================================================================
 
 function evalResultExpr(
-  expr: { property?: { name: string } },
+  expr: { property?: { name: string }; location?: unknown },
   ctx: EvalContext,
   _depth: number,
   _maxDepth: number
 ): EvalResult {
   if (ctx.result === undefined) {
-    return unknown('MISSING_RESULT', 'Result not available');
+    return unknown(
+      'MISSING_RESULT',
+      'Result not available',
+      undefined,
+      createBlameSpan(expr as Expression, 'result')
+    );
   }
   
   // If no property specified, return the whole result
@@ -1657,12 +1873,22 @@ function evalResultExpr(
   
   // Access property on result
   if (typeof ctx.result !== 'object' || ctx.result === null) {
-    return unknown('TYPE_MISMATCH', `Cannot access property '${property}' on non-object result`);
+    return unknown(
+      'TYPE_MISMATCH',
+      `Cannot access property '${property}' on non-object result`,
+      undefined,
+      createBlameSpan(expr as Expression, `result.${property}`)
+    );
   }
   
   const value = ctx.adapter.getProperty(ctx.result, property);
   if (value === 'unknown') {
-    return unknown('MISSING_PROPERTY', `Result property '${property}' not found`);
+    return unknown(
+      'MISSING_PROPERTY',
+      `Result property '${property}' not found`,
+      undefined,
+      createBlameSpan(expr as Expression, `result.${property}`)
+    );
   }
   
   return valueToResult(value, `Result.${property}`);

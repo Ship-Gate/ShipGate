@@ -49,5 +49,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/isl-lang/isl.git"
-  }
+  },
+  "private": true,
+  "experimental": true
 }

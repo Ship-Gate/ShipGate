@@ -1,9 +1,15 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["CI", "NODE_ENV"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "build:production": {
+      "dependsOn": ["^build:production"],
+      "outputs": ["dist/**"],
+      "env": ["NODE_ENV"]
     },
     "test": {
       "dependsOn": ["build"],
@@ -24,6 +30,9 @@
     },
     "typecheck": {
       "dependsOn": ["^build"]
+    },
+    "typecheck:production": {
+      "dependsOn": ["^typecheck:production"]
     },
     "clean": {
       "cache": false
