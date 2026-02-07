@@ -1,15 +1,17 @@
 // ============================================================================
-// ISL Property-Based Testing
+// ISL Property-Based Testing - v1.0.0
 // ============================================================================
-// 
-// Generate random inputs satisfying ISL preconditions and verify postconditions.
+//
+// Production-grade property-based testing for ISL specifications.
 //
 // Features:
-// - Type-aware random input generation
+// - Full type generators: Money, enums, nested structs, collections (List, Map, Set)
 // - Precondition filtering (only valid inputs)
-// - Postcondition and invariant verification
-// - Smart shrinking for minimal failing cases
-// - PII leak detection (never_logged invariants)
+// - Postcondition and invariant verification with real expression evaluation
+// - Constraint-aware shrinking for minimal failing cases
+// - PII leak detection (never_logged / never_exposed invariants)
+// - CLI with --seed, --num-tests, --format json
+// - Deterministic runs via seed
 // - Vitest integration
 // ============================================================================
 
@@ -30,6 +32,8 @@ export type {
   ShrinkStep,
   PropertyViolation,
   PIIConfig,
+  PBTJsonReport,
+  CLIOptions,
 } from './types.js';
 
 export {
@@ -51,12 +55,19 @@ export {
   timestamp,
   ipAddress,
   array,
+  set,
+  map,
   oneOf,
   constant,
   fromEnum,
   optional,
   record,
   fromConstraints,
+  // Domain-specific generators
+  money,
+  moneyAmount,
+  duration,
+  durationMs,
 } from './random.js';
 
 // Property extraction
@@ -81,6 +92,16 @@ export {
   shrinkEmail,
   shrinkPassword,
   shrinkIP,
+  // Constraint-aware shrinkers
+  shrinkConstrained,
+  shrinkConstrainedString,
+  shrinkMoney,
+  shrinkMap,
+  shrinkDuration,
+} from './shrinker.js';
+
+export type {
+  ShrinkConstraints,
 } from './shrinker.js';
 
 // Test runner
@@ -94,6 +115,18 @@ export type {
   BehaviorImplementation,
   ExecutionResult,
 } from './runner.js';
+
+// Postcondition & Invariant evaluator
+export {
+  evaluatePostcondition,
+  evaluateInvariant,
+  evaluateAllProperties,
+} from './postcondition-evaluator.js';
+
+export type {
+  EvalContext,
+  EvalResult,
+} from './postcondition-evaluator.js';
 
 // PII checking
 export {
@@ -148,9 +181,11 @@ export {
   runPBTVerification,
   createPBTVerifier,
   formatPBTResult,
+  createTracedImplementation,
 } from './cli-integration.js';
 
 export type {
   PBTVerifyOptions,
   PBTVerifyResult,
+  PBTTrace,
 } from './cli-integration.js';

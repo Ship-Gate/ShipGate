@@ -68,6 +68,12 @@ export interface PipelineOptions {
 
   /** Dry run - don't write any files */
   dryRun?: boolean;
+
+  /** Enforce assumption guards (P1–P4, D1) before pipeline runs */
+  enforceAssumptions?: boolean;
+
+  /** Strict mode: fail if any step is skipped or stubbed (D2) */
+  strictSteps?: boolean;
 }
 
 /**
@@ -244,6 +250,8 @@ export const DEFAULT_PIPELINE_OPTIONS: Omit<Required<PipelineOptions>, 'workspac
   notes: undefined as unknown as string,
   verbose: false,
   dryRun: false,
+  enforceAssumptions: false,
+  strictSteps: false,
 };
 
 /**

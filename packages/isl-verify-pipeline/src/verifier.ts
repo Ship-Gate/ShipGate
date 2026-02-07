@@ -27,6 +27,11 @@ import type {
   SourceLocation,
 } from './types.js';
 import { collectTraces, findTraceSlice, extractStateSnapshots } from './stages/trace-collector.js';
+import {
+  resolveUnknownsWithSMT,
+  applyResolutions,
+  type UnknownClauseInput,
+} from './stages/smt-resolution.js';
 
 // ============================================================================
 // Configuration
@@ -53,6 +58,18 @@ export interface VerifyConfig {
   
   /** Timeout per clause evaluation (ms) */
   timeoutPerClause?: number;
+  
+  /** SMT resolution configuration for unknown clauses */
+  smt?: {
+    /** Enable SMT resolution of unknowns (default: true) */
+    enabled?: boolean;
+    /** Timeout per SMT check in ms (default: 5000) */
+    timeout?: number;
+    /** Hard cap on total SMT stage duration in ms (default: 60000) */
+    globalTimeout?: number;
+    /** Solver preference (default: 'builtin') */
+    solver?: 'builtin' | 'z3' | 'cvc5';
+  };
 }
 
 // ============================================================================
@@ -832,6 +849,79 @@ export async function runVerification(config: VerifyConfig): Promise<Verificatio
     
     result.timing.evaluatorMs = Date.now() - evalStart;
     
+    // Step 4.5: SMT resolution of unknowns
+    const smtEnabled = config.smt?.enabled !== false; // enabled by default
+    if (smtEnabled && result.summary.unknown > 0) {
+      const smtStart = Date.now();
+      
+      // Build unknown clause inputs from clauses that are not_proven
+      const unknownClauses: UnknownClauseInput[] = [];
+      for (let i = 0; i < clauses.length; i++) {
+        const cr = result.clauseResults[i];
+        if (cr && cr.status === 'not_proven' && cr.triStateResult === 'unknown') {
+          const clause = clauses[i];
+          unknownClauses.push({
+            clauseId: cr.clauseId,
+            expressionAst: clause.expressionAst,
+            expression: cr.expression,
+            inputValues: extractInputValuesForClause(clause, traces),
+          });
+        }
+      }
+      
+      if (unknownClauses.length > 0) {
+        const smtOutput = await resolveUnknownsWithSMT({
+          unknownClauses,
+          timeoutPerClause: config.smt?.timeout ?? 5000,
+          globalTimeout: config.smt?.globalTimeout ?? 60000,
+          solver: config.smt?.solver ?? 'builtin',
+        });
+        
+        // Apply resolutions back onto clauseResults
+        applyResolutions(result.clauseResults, smtOutput.resolutions);
+        
+        // Add evidence refs for SMT-resolved clauses
+        for (const res of smtOutput.resolutions) {
+          if (res.verdict === 'proved' || res.verdict === 'disproved') {
+            result.evidenceRefs.push({
+              clauseId: res.clauseId,
+              type: 'smt_proof',
+              ref: res.evidence?.queryHash ?? `smt-${res.clauseId}`,
+              summary: `SMT solver ${res.verdict} clause: ${res.reason ?? ''}`,
+              location: undefined,
+            });
+          }
+        }
+        
+        // Update unknown reasons: remove resolved, add new reasons for still_unknown
+        result.unknownReasons = result.unknownReasons.filter((ur) => {
+          const res = smtOutput.resolutions.find((r) => r.clauseId === ur.clauseId);
+          return !res || res.verdict === 'still_unknown';
+        });
+        
+        for (const res of smtOutput.resolutions) {
+          if (res.verdict === 'still_unknown' && res.reason) {
+            const existing = result.unknownReasons.find((ur) => ur.clauseId === res.clauseId);
+            if (existing) {
+              existing.category = 'smt_unknown';
+              existing.message = res.reason;
+            }
+          }
+        }
+        
+        // Recalculate summary from the now-updated clauseResults
+        result.summary = {
+          totalClauses: result.clauseResults.length,
+          proven: result.clauseResults.filter((cr) => cr.status === 'proven').length,
+          violated: result.clauseResults.filter((cr) => cr.status === 'violated').length,
+          unknown: result.clauseResults.filter((cr) => cr.status === 'not_proven').length,
+          skipped: result.clauseResults.filter((cr) => cr.status === 'skipped').length,
+        };
+      }
+      
+      result.timing.smtResolutionMs = Date.now() - smtStart;
+    }
+    
     // Step 5: Calculate final verdict
     const { verdict, reason, score, exitCode } = calculateVerdict(result.summary);
     result.verdict = verdict;
@@ -1055,6 +1145,31 @@ function generateRunId(): string {
   const timestamp = Date.now().toString(36);
   const random = crypto.randomBytes(4).toString('hex');
   return `verify-${timestamp}-${random}`;
+}
+
+// ============================================================================
+// SMT Input Extraction
+// ============================================================================
+
+/**
+ * Extract input values from traces for a given clause.
+ * These values help the SMT solver constrain its search space.
+ */
+function extractInputValuesForClause(
+  clause: ExtractedClause,
+  traces: ExecutionTrace[],
+): Record<string, unknown> | undefined {
+  const relevantTraces = clause.behavior
+    ? traces.filter((t) => t.behavior === clause.behavior)
+    : traces;
+
+  if (relevantTraces.length === 0) return undefined;
+
+  // Take the first trace's handler_call inputs
+  const trace = relevantTraces[0];
+  const callEvent = trace.events.find((e) => e.kind === 'handler_call');
+
+  return callEvent?.inputs;
 }
 
 // ============================================================================

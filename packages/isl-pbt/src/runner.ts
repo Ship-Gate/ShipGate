@@ -4,23 +4,24 @@
 
 import type * as AST from '@isl-lang/parser';
 import type {
-  PRNG,
-  Generator,
   BehaviorProperties,
-  Property,
   PBTConfig,
   PBTReport,
   PBTStats,
   TestRun,
   LogCapture,
   PropertyViolation,
-  PIIConfig,
 } from './types.js';
-import { DEFAULT_PBT_CONFIG, DEFAULT_PII_CONFIG } from './types.js';
+import { DEFAULT_PBT_CONFIG } from './types.js';
 import { createPRNG } from './random.js';
 import { createInputGenerator } from './generator.js';
-import { shrinkInput, deltaDebug } from './shrinker.js';
-import { extractProperties, getNeverLoggedFields } from './property.js';
+import { deltaDebug } from './shrinker.js';
+import { extractProperties } from './property.js';
+import {
+  evaluatePostcondition as evalPost,
+  evaluateInvariant as evalInv,
+  type EvalContext,
+} from './postcondition-evaluator.js';
 
 // ============================================================================
 // MAIN RUNNER
@@ -182,17 +183,17 @@ async function runSingleTest(
       timeout(config.timeout),
     ]);
     
-    // Check postconditions
+    // Build evaluation context
+    const evalCtx: EvalContext = {
+      input,
+      result,
+      logs,
+    };
+
+    // Check postconditions using the real evaluator
     for (const post of properties.postconditions) {
-      // Check guard
-      if (post.guard) {
-        const shouldCheck = checkGuard(post.guard, result);
-        if (!shouldCheck) continue;
-      }
-      
-      // Evaluate postcondition
-      const passed = await evaluatePostcondition(post, input, result, properties);
-      if (!passed) {
+      const evalResult = evalPost(post, evalCtx);
+      if (!evalResult.passed) {
         return {
           iteration,
           size,
@@ -200,17 +201,17 @@ async function runSingleTest(
           input,
           passed: false,
           failedProperty: post,
-          error: `Postcondition failed: ${post.name}`,
+          error: evalResult.reason,
           duration: Date.now() - startTime,
           logs,
         };
       }
     }
     
-    // Check invariants
+    // Check invariants using the real evaluator
     for (const inv of properties.invariants) {
-      const passed = await evaluateInvariant(inv, input, result, logs, properties);
-      if (!passed) {
+      const evalResult = evalInv(inv, evalCtx);
+      if (!evalResult.passed) {
         return {
           iteration,
           size,
@@ -218,7 +219,7 @@ async function runSingleTest(
           input,
           passed: false,
           failedProperty: inv,
-          error: `Invariant violated: ${inv.name}`,
+          error: evalResult.reason,
           duration: Date.now() - startTime,
           logs,
         };
@@ -250,105 +251,7 @@ async function runSingleTest(
   }
 }
 
-// ============================================================================
-// CONDITION EVALUATION
-// ============================================================================
-
-/**
- * Check if a guard matches the result
- */
-function checkGuard(guard: string, result: ExecutionResult): boolean {
-  if (guard === 'success') {
-    return result.success;
-  }
-  if (guard === 'failure') {
-    return !result.success;
-  }
-  // Check for specific error code
-  if (result.error) {
-    return result.error.code === guard;
-  }
-  return false;
-}
-
-/**
- * Evaluate a postcondition
- */
-async function evaluatePostcondition(
-  property: Property,
-  input: Record<string, unknown>,
-  result: ExecutionResult,
-  properties: BehaviorProperties
-): Promise<boolean> {
-  // Simple evaluation - in a full implementation, would use the expression evaluator
-  // For now, assume postconditions pass if no exception
-  return true;
-}
-
-/**
- * Evaluate an invariant
- */
-async function evaluateInvariant(
-  property: Property,
-  input: Record<string, unknown>,
-  result: ExecutionResult,
-  logs: LogCapture[],
-  properties: BehaviorProperties
-): Promise<boolean> {
-  const invStr = property.name;
-  
-  // Handle "X never_logged" invariants
-  const neverLoggedMatch = invStr.match(/^(\w+)\s+never_logged$/);
-  if (neverLoggedMatch) {
-    const field = neverLoggedMatch[1]!;
-    const fieldValue = input[field];
-    
-    // Check if the value appears in any log
-    if (fieldValue !== undefined && fieldValue !== null) {
-      for (const log of logs) {
-        if (containsSensitiveValue(log.message, fieldValue)) {
-          return false;
-        }
-        for (const arg of log.args) {
-          if (containsSensitiveValue(arg, fieldValue)) {
-            return false;
-          }
-        }
-      }
-    }
-    return true;
-  }
-  
-  // Handle "X never_stored_plaintext" invariants
-  const neverStoredMatch = invStr.match(/^(\w+)\s+never_stored_plaintext$/);
-  if (neverStoredMatch) {
-    // Would check storage - for now assume it passes
-    return true;
-  }
-  
-  // Default: assume invariant passes
-  return true;
-}
-
-/**
- * Check if a value contains sensitive data
- */
-function containsSensitiveValue(container: unknown, value: unknown): boolean {
-  if (value === null || value === undefined) return false;
-  
-  const valueStr = String(value);
-  
-  if (typeof container === 'string') {
-    return container.includes(valueStr);
-  }
-  
-  if (typeof container === 'object' && container !== null) {
-    const json = JSON.stringify(container);
-    return json.includes(valueStr);
-  }
-  
-  return String(container).includes(valueStr);
-}
+// (Postcondition/invariant evaluation is handled by postcondition-evaluator.ts)
 
 // ============================================================================
 // CONSOLE CAPTURE

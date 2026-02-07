@@ -19,10 +19,5 @@
       "indentSize": 2,
       "useTabs": false
     }
-  },
-  "ai": {
-    "enabled": false,
-    "provider": "stub",
-    "_comment": "Set enabled: true and provider: 'anthropic' to use AI assist. Requires ANTHROPIC_API_KEY env var."
   }
 }

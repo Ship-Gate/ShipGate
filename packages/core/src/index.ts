@@ -175,3 +175,9 @@ export * from './context/index.js';
 // ============================================================================
 
 export * from './isl-diff/index.js';
+
+// ============================================================================
+// Assumption Enforcement (runtime guards for implicit assumptions)
+// ============================================================================
+
+export * from './assumption-enforcement/index.js';

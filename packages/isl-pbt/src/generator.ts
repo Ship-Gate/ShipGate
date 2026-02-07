@@ -23,10 +23,14 @@ import {
   timestamp,
   ipAddress,
   array,
+  map,
+  set,
   fromEnum,
   optional,
   record,
   fromConstraints,
+  moneyAmount,
+  duration,
 } from './random.js';
 
 // ============================================================================
@@ -100,38 +104,54 @@ function createTypeGenerator(
     case 'EnumType':
       return fromEnum(type.variants.map((v) => v.name.name));
     
-    case 'ListType':
+    case 'ListType': {
       const elementGen = createTypeGenerator(type.element, domain);
       return array(elementGen, { minLength: 0, maxLength: 10 });
+    }
     
-    case 'StructType':
+    case 'MapType': {
+      const keyGen = createTypeGenerator(type.key, domain);
+      const valueGen = createTypeGenerator(type.value, domain);
+      return map(keyGen as Generator<string>, valueGen, { minSize: 0, maxSize: 5 });
+    }
+
+    case 'StructType': {
       const fields: Record<string, Generator<unknown>> = {};
       for (const field of type.fields) {
-        if (!field.optional) {
-          fields[field.name.name] = createTypeGenerator(field.type, domain);
-        }
+        const fieldGen = createTypeGenerator(field.type, domain);
+        fields[field.name.name] = field.optional ? optional(fieldGen) : fieldGen;
       }
       return record(fields);
+    }
     
     case 'OptionalType':
       return optional(createTypeGenerator(type.inner, domain));
     
-    case 'UnionType':
-      // Generate first variant
-      const firstVariant = type.variants[0];
-      if (firstVariant) {
+    case 'UnionType': {
+      // Generate from ALL variants, not just the first
+      const variantGenerators = type.variants.map((variant) => {
         const variantFields: Record<string, Generator<unknown>> = {
-          __variant__: new BaseGenerator(() => firstVariant.name.name, () => []),
+          __variant__: new BaseGenerator(() => variant.name.name, () => []),
         };
-        for (const field of firstVariant.fields) {
-          if (!field.optional) {
-            variantFields[field.name.name] = createTypeGenerator(field.type, domain);
-          }
+        for (const field of variant.fields) {
+          const fieldGen = createTypeGenerator(field.type, domain);
+          variantFields[field.name.name] = field.optional ? optional(fieldGen) : fieldGen;
         }
-        return record(variantFields);
+        return record(variantFields) as Generator<unknown>;
+      });
+      if (variantGenerators.length === 0) {
+        return new BaseGenerator(() => null, () => []);
       }
-      return new BaseGenerator(() => null, () => []);
-    
+      // Pick a random variant each time
+      return new BaseGenerator(
+        (prng, size) => {
+          const gen = prng.pick(variantGenerators);
+          return gen.generate(prng.fork(), size);
+        },
+        () => []
+      );
+    }
+
     default:
       // Default to string
       return string();
@@ -221,6 +241,8 @@ function createConstrainedGenerator(
     case 'decimal':
     case 'float':
       return float(min ?? -1000, max ?? 1000);
+    case 'money':
+      return moneyAmount({ min: min ?? 0, max: max ?? 100000 });
     default:
       return createTypeGenerator(type.base, domain);
   }
@@ -251,16 +273,21 @@ function createReferenceGenerator(
       return uuid();
     case 'timestamp':
       return timestamp();
+    case 'money':
+      return moneyAmount({ min: 0, max: 100000, precision: 2 });
+    case 'duration':
+      return duration();
     case 'ip':
     case 'ip_address':
       return ipAddress();
-    default:
+    default: {
       // Entity reference - generate UUID
       const entity = domain.entities.find((e) => e.name.name === refName);
       if (entity) {
         return uuid();
       }
       return string();
+    }
   }
 }
 

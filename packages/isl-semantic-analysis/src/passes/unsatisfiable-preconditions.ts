@@ -7,14 +7,12 @@
  * - Type mismatches in comparisons
  */
 
-import type { Diagnostic } from '@isl-lang/errors';
+import type { Diagnostic, SourceLocation } from '@isl-lang/errors';
 import type { 
-  BehaviorDeclaration, 
-  ConditionBlock,
+  Behavior, 
   Expression,
-} from '@isl-lang/isl-core';
+} from '@isl-lang/parser';
 import type { SemanticPass, PassContext } from '../types.js';
-import { spanToLocation } from '../types.js';
 
 export const UnsatisfiablePreconditionsPass: SemanticPass = {
   id: 'unsatisfiable-preconditions',
@@ -29,7 +27,7 @@ export const UnsatisfiablePreconditionsPass: SemanticPass = {
     const { ast, filePath, typeEnv } = ctx;
 
     for (const behavior of ast.behaviors || []) {
-      if (behavior.preconditions) {
+      if (behavior.preconditions && behavior.preconditions.length > 0) {
         diagnostics.push(...analyzePreconditions(
           behavior,
           behavior.preconditions,
@@ -49,12 +47,29 @@ export const UnsatisfiablePreconditionsPass: SemanticPass = {
 export const unsatisfiablePreconditionsPass = UnsatisfiablePreconditionsPass;
 
 // ============================================================================
+// Helper to convert AST location
+// ============================================================================
+
+function nodeLocation(node: { location: SourceLocation }, filePath: string): SourceLocation {
+  if (node.location) {
+    return {
+      file: node.location.file || filePath,
+      line: node.location.line,
+      column: node.location.column,
+      endLine: node.location.endLine,
+      endColumn: node.location.endColumn,
+    };
+  }
+  return { file: filePath, line: 1, column: 1, endLine: 1, endColumn: 1 };
+}
+
+// ============================================================================
 // Analysis Logic
 // ============================================================================
 
 function analyzePreconditions(
-  behavior: BehaviorDeclaration,
-  block: ConditionBlock,
+  behavior: Behavior,
+  expressions: Expression[],
   filePath: string,
   typeEnv: PassContext['typeEnv']
 ): Diagnostic[] {
@@ -62,30 +77,28 @@ function analyzePreconditions(
   const constraints: ConstraintInfo[] = [];
 
   // Collect all constraints from preconditions
-  for (const condition of block.conditions || []) {
-    if (condition.expression) {
-      const constraint = extractConstraint(condition.expression);
-      if (constraint) {
-        constraints.push({
-          ...constraint,
-          span: condition.span,
-        });
-      }
+  for (const expression of expressions) {
+    const constraint = extractConstraint(expression);
+    if (constraint) {
+      constraints.push({
+        ...constraint,
+        location: nodeLocation(expression, filePath),
+      });
+    }
 
-      // Check for tautologically false conditions
-      const falseCheck = checkAlwaysFalse(condition.expression);
-      if (falseCheck) {
-        diagnostics.push({
-          code: 'E0330',
-          category: 'semantic',
-          severity: 'error',
-          message: `Unsatisfiable precondition: ${falseCheck.reason}`,
-          location: spanToLocation(condition.span, filePath),
-          source: 'verifier',
-          notes: [`In behavior '${behavior.name.name}'`],
-          help: ['This precondition can never be satisfied and the behavior can never execute'],
-        });
-      }
+    // Check for tautologically false conditions
+    const falseCheck = checkAlwaysFalse(expression);
+    if (falseCheck) {
+      diagnostics.push({
+        code: 'E0330',
+        category: 'semantic',
+        severity: 'error',
+        message: `Unsatisfiable precondition: ${falseCheck.reason}`,
+        location: nodeLocation(expression, filePath),
+        source: 'verifier',
+        notes: [`In behavior '${behavior.name.name}'`],
+        help: ['This precondition can never be satisfied and the behavior can never execute'],
+      });
     }
   }
 
@@ -99,7 +112,7 @@ function analyzePreconditions(
           category: 'semantic',
           severity: 'error',
           message: `Contradictory preconditions: ${contradiction}`,
-          location: spanToLocation(constraints[i].span, filePath),
+          location: constraints[i].location,
           source: 'verifier',
           notes: [
             `In behavior '${behavior.name.name}'`,
@@ -111,7 +124,7 @@ function analyzePreconditions(
           ],
           relatedInformation: [{
             message: 'Conflicting condition here',
-            location: spanToLocation(constraints[j].span, filePath),
+            location: constraints[j].location,
           }],
         });
       }
@@ -130,11 +143,11 @@ interface ConstraintInfo {
   operator: 'eq' | 'ne' | 'lt' | 'le' | 'gt' | 'ge' | 'in' | 'nin';
   value: unknown;
   text: string;
-  span: { start: { line: number; column: number; offset: number }; end: { line: number; column: number; offset: number } };
+  location: SourceLocation;
 }
 
-function extractConstraint(expr: Expression): Omit<ConstraintInfo, 'span'> | null {
-  if (expr.kind === 'ComparisonExpression' || expr.kind === 'BinaryExpression') {
+function extractConstraint(expr: Expression): Omit<ConstraintInfo, 'location'> | null {
+  if (expr.kind === 'BinaryExpr') {
     const binary = expr as { 
       left?: Expression; 
       operator?: string; 
@@ -162,11 +175,10 @@ function extractVariableName(expr: Expression): string | null {
   if (expr.kind === 'Identifier') {
     return (expr as { name: string }).name;
   }
-  if (expr.kind === 'MemberExpression') {
-    const member = expr as { object: Expression; property: Expression };
+  if (expr.kind === 'MemberExpr') {
+    const member = expr as { object: Expression; property: { name: string } };
     const obj = extractVariableName(member.object);
-    const prop = extractVariableName(member.property);
-    if (obj && prop) return `${obj}.${prop}`;
+    if (obj && member.property) return `${obj}.${member.property.name}`;
   }
   return null;
 }
@@ -301,7 +313,7 @@ interface AlwaysFalseResult {
 
 function checkAlwaysFalse(expr: Expression): AlwaysFalseResult | null {
   // x != x is always false
-  if (expr.kind === 'ComparisonExpression' || expr.kind === 'BinaryExpression') {
+  if (expr.kind === 'BinaryExpr') {
     const binary = expr as { left?: Expression; operator?: string; right?: Expression };
     
     if (binary.operator === '!=' || binary.operator === '!==') {

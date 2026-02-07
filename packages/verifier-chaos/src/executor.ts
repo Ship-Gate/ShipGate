@@ -12,6 +12,9 @@ import { DatabaseInjector, type DatabaseFailureType } from './injectors/database
 import { LatencyInjector } from './injectors/latency.js';
 import { ConcurrentInjector } from './injectors/concurrent.js';
 import { RateLimitInjector, type RateLimitAction } from './injectors/rate-limit.js';
+import { CpuPressureInjector } from './injectors/cpu-pressure.js';
+import { MemoryPressureInjector } from './injectors/memory-pressure.js';
+import { ClockSkewInjector } from './injectors/clock-skew.js';
 
 export interface ExecutorConfig {
   /** Timeout for each scenario (ms) */
@@ -54,7 +57,15 @@ export interface ExecutionContext {
   results: Map<string, unknown>;
 }
 
-type Injector = NetworkInjector | DatabaseInjector | LatencyInjector | ConcurrentInjector | RateLimitInjector;
+type Injector =
+  | NetworkInjector
+  | DatabaseInjector
+  | LatencyInjector
+  | ConcurrentInjector
+  | RateLimitInjector
+  | CpuPressureInjector
+  | MemoryPressureInjector
+  | ClockSkewInjector;
 
 /**
  * Chaos scenario executor
@@ -249,6 +260,29 @@ export class ChaosExecutor {
           action: (params.action as RateLimitAction) ?? 'reject',
         });
 
+      case 'cpu_pressure':
+        return new CpuPressureInjector({
+          percentage: (params.percentage as number) ?? 80,
+          durationMs: (params.durationMs as number) ?? (params.duration as number),
+          burstMs: params.burstMs as number,
+          yieldMs: params.yieldMs as number,
+        });
+
+      case 'memory_pressure':
+        return new MemoryPressureInjector({
+          allocationMb: (params.allocationMb as number) ?? (params.percentage as number) ?? 128,
+          steps: (params.steps as number) ?? 1,
+          stepDelayMs: params.stepDelayMs as number,
+        });
+
+      case 'clock_skew':
+        return new ClockSkewInjector({
+          offsetMs: (params.offsetMs as number) ?? (params.offset as number) ?? 5000,
+          mode: (params.mode as 'fixed' | 'drift' | 'jump' | 'oscillate') ?? 'fixed',
+          driftRateMs: params.driftRateMs as number,
+          oscillatePeriodMs: params.oscillatePeriodMs as number,
+        });
+
       default:
         if (this.config.verbose) {
           process.stderr.write(`Unknown injection type: ${injection.type}\n`);
@@ -287,6 +321,9 @@ export class ChaosExecutor {
     if (injector instanceof LatencyInjector) return 'latency';
     if (injector instanceof ConcurrentInjector) return 'concurrent';
     if (injector instanceof RateLimitInjector) return 'rate_limit';
+    if (injector instanceof CpuPressureInjector) return 'cpu_pressure';
+    if (injector instanceof MemoryPressureInjector) return 'memory_pressure';
+    if (injector instanceof ClockSkewInjector) return 'clock_skew';
     return 'unknown';
   }
 

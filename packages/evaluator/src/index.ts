@@ -40,6 +40,16 @@ export type {
   LambdaValue,
 } from './types.js';
 
+// Diagnostics
+export {
+  EvalDiagnosticCode,
+  DiagnosticError,
+} from './types.js';
+
+export type {
+  DiagnosticPayload,
+} from './types.js';
+
 // Errors
 export {
   EvaluationError,

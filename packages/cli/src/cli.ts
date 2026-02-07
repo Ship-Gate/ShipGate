@@ -32,6 +32,7 @@ import {
   fmt, printFmtResult, getFmtExitCode,
   lint, printLintResult, getLintExitCode,
   gate, printGateResult, getGateExitCode,
+  trustScore, printTrustScoreResult, printTrustScoreHistory, getTrustScoreExitCode,
   heal, printHealResult, getHealExitCode,
   verifyProof, printProofVerifyResult, getProofVerifyExitCode,
   createPolicyBundle, printCreateBundleResult, getCreateBundleExitCode,
@@ -53,6 +54,7 @@ const COMMANDS = [
   'parse', 'check', 'gen', 'verify', 'repl', 'init', 'fmt', 'lint',
   'generate', 'build', // aliases
   'gate', // SHIP/NO-SHIP gate
+  'gate:trust-score', 'trust-score', // Trust score engine
   'heal', // Auto-fix violations
   'proof', // Proof verification
   'watch', // Watch mode
@@ -297,6 +299,11 @@ program
   .option('--pbt-tests <num>', 'Number of PBT test iterations', '100')
   .option('--pbt-seed <seed>', 'PBT random seed for reproducibility')
   .option('--pbt-max-shrinks <num>', 'Maximum PBT shrinking iterations', '100')
+  .option('--temporal', 'Enable temporal verification (latency SLAs, eventually within)')
+  .option('--temporal-min-samples <num>', 'Minimum samples for temporal verification', '10')
+  .option('--chaos', 'Enable chaos verification (fault injection)')
+  .option('--all', 'Enable all verification modes (SMT + PBT + Temporal + Chaos)')
+  .option('-r, --report <path>', 'Write evidence report to file')
   .action(async (spec: string, options) => {
     const opts = program.opts();
     
@@ -331,19 +338,25 @@ program
       return;
     }
     
+    // --all enables everything
+    const enableAll = options.all;
+
     const result = await verify(spec, {
       impl: options.impl,
       timeout: parseInt(options.timeout),
       minScore: parseInt(options.minScore),
       detailed: options.detailed,
+      report: options.report,
       format: opts.format === 'json' ? 'json' : 'text',
       verbose: opts.verbose,
-      smt: options.smt,
+      smt: enableAll || options.smt,
       smtTimeout: options.smtTimeout ? parseInt(options.smtTimeout) : undefined,
-      pbt: options.pbt,
+      pbt: enableAll || options.pbt,
       pbtTests: options.pbtTests ? parseInt(options.pbtTests) : undefined,
       pbtSeed: options.pbtSeed ? parseInt(options.pbtSeed) : undefined,
       pbtMaxShrinks: options.pbtMaxShrinks ? parseInt(options.pbtMaxShrinks) : undefined,
+      temporal: enableAll || options.temporal,
+      temporalMinSamples: options.temporalMinSamples ? parseInt(options.temporalMinSamples) : undefined,
     });
     
     printVerifyResult(result, {
@@ -871,6 +884,71 @@ program
     });
 
     process.exit(getGateExitCode(result));
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Gate Trust-Score Subcommand
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('gate:trust-score <spec>')
+  .alias('trust-score')
+  .description('Compute a defensible 0-100 trust score from ISL verification results with per-category breakdown, history tracking, and gate enforcement.')
+  .requiredOption('-i, --impl <file>', 'Implementation file or directory to verify')
+  .option('-t, --threshold <score>', 'Minimum trust score to SHIP (default: 80)', '80')
+  .option('-w, --weights <weights>', 'Custom weights (e.g. "preconditions=30,postconditions=25,invariants=20,temporal=10,chaos=5,coverage=10")')
+  .option('--unknown-penalty <penalty>', 'Penalty for unknown/uncovered categories 0.0-1.0 (default: 0.5)', '0.5')
+  .option('--history', 'Show trust score history instead of running evaluation')
+  .option('--history-path <path>', 'Custom history file path (default: .isl-gate/trust-history.json)')
+  .option('--commit-hash <hash>', 'Git commit hash to tag this evaluation')
+  .option('--no-persist', 'Do not persist results to history')
+  .option('--json', 'Output as JSON')
+  .option('--ci', 'CI mode: minimal output')
+  .action(async (spec: string, options) => {
+    const opts = program.opts();
+    const isJson = options.json || opts.format === 'json';
+    const isCi = options.ci || isCI();
+
+    // History mode
+    if (options.history) {
+      await printTrustScoreHistory(options.historyPath);
+      process.exit(0);
+    }
+
+    if (!isCi && !isJson) {
+      console.log('');
+      console.log(chalk.bold.cyan('  Trust Score Engine'));
+      console.log(chalk.gray(`  Spec:      ${spec}`));
+      console.log(chalk.gray(`  Impl:      ${options.impl}`));
+      console.log(chalk.gray(`  Threshold: ${options.threshold}`));
+      if (options.weights) {
+        console.log(chalk.gray(`  Weights:   ${options.weights}`));
+      }
+      console.log(chalk.gray(`  Unknown:   ${options.unknownPenalty} penalty`));
+      console.log('');
+    }
+
+    const result = await trustScore(spec, {
+      impl: options.impl,
+      threshold: parseInt(options.threshold),
+      weights: options.weights,
+      unknownPenalty: parseFloat(options.unknownPenalty),
+      history: options.history,
+      json: isJson,
+      ci: isCi,
+      verbose: opts.verbose,
+      historyPath: options.historyPath,
+      commitHash: options.commitHash,
+      noPersist: options.persist === false,
+    });
+
+    printTrustScoreResult(result, {
+      json: isJson,
+      verbose: opts.verbose,
+      ci: isCi,
+    });
+
+    process.exit(getTrustScoreExitCode(result));
   });
 
 // ─────────────────────────────────────────────────────────────────────────────

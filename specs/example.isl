@@ -48,15 +48,17 @@ domain Example {
       }
     }
 
-    pre {
+    preconditions {
       - input.email.contains("@")
       - input.name.length > 0
     }
 
-    post success {
-      - User.exists(result.id)
-      - User.email == input.email
-      - User.name == input.name
+    postconditions {
+      success implies {
+        - User.exists(result.id)
+        - User.email == input.email
+        - User.name == input.name
+      }
     }
 
     temporal {

@@ -11,3 +11,4 @@ export * from './trace-collector.js';
 export * from './postcondition-evaluator.js';
 export * from './invariant-checker.js';
 export * from './smt-checker.js';
+export * from './smt-resolution.js';

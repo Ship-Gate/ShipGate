@@ -61,6 +61,7 @@
     "@isl-lang/evaluator": "workspace:*",
     "@isl-lang/repl": "workspace:*",
     "@isl-lang/isl-verify": "workspace:*",
+    "@isl-lang/gate": "workspace:*",
     "@isl-lang/isl-core": "workspace:*",
     "@isl-lang/build-runner": "workspace:*",
     "@isl-lang/pipeline": "workspace:*",

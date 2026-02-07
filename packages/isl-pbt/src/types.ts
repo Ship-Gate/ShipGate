@@ -315,6 +315,80 @@ export interface PBTStats {
 }
 
 // ============================================================================
+// JSON REPORT SCHEMA
+// ============================================================================
+
+/**
+ * Serializable JSON report for CI/CD integration.
+ * Used when --format json is passed to the CLI.
+ */
+export interface PBTJsonReport {
+  /** Schema version for forward-compatibility */
+  version: '1.0';
+
+  /** ISO 8601 timestamp of when the report was generated */
+  timestamp: string;
+
+  /** Overall pass/fail */
+  success: boolean;
+
+  /** Seed used (for reproduction) */
+  seed: number;
+
+  /** Summary statistics */
+  summary: {
+    totalBehaviors: number;
+    passedBehaviors: number;
+    failedBehaviors: number;
+    totalTests: number;
+    passedTests: number;
+    failedTests: number;
+    duration: number;
+  };
+
+  /** Per-behavior results */
+  behaviors: Array<{
+    name: string;
+    success: boolean;
+    testsRun: number;
+    testsPassed: number;
+    duration: number;
+    violations: Array<{
+      property: string;
+      type: 'precondition' | 'postcondition' | 'invariant';
+      error: string;
+      input?: Record<string, unknown>;
+      minimalInput?: Record<string, unknown>;
+    }>;
+    error?: string;
+  }>;
+
+  /** Configuration used */
+  config: {
+    numTests: number;
+    seed?: number;
+    maxShrinks: number;
+    timeout: number;
+  };
+}
+
+/**
+ * CLI option types for programmatic usage
+ */
+export interface CLIOptions {
+  specFile: string;
+  seed?: number;
+  numTests?: number;
+  maxShrinks?: number;
+  timeout?: number;
+  behavior?: string;
+  format?: 'text' | 'json';
+  verbose?: boolean;
+  output?: string;
+  dryRun?: boolean;
+}
+
+// ============================================================================
 // LOG INVARIANT TYPES
 // ============================================================================
 

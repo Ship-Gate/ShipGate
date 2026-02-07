@@ -31,6 +31,10 @@ import {
   runVerifyStep,
   runScoreStep,
 } from './steps/index.js';
+import {
+  assertPipelineAssumptions,
+  assertNoSkippedSteps,
+} from '../assumption-enforcement/index.js';
 
 /**
  * Default options for the pipeline
@@ -47,6 +51,8 @@ const DEFAULTS: Omit<Required<PipelineOptions>, 'workspacePath'> = {
   notes: '',
   verbose: false,
   dryRun: false,
+  enforceAssumptions: false,
+  strictSteps: false,
 };
 
 /**
@@ -244,6 +250,15 @@ export async function runPipeline(
 ): Promise<PipelineResult> {
   const state = createInitialState(input, options);
 
+  // Enforce assumption guards when enabled (P1–P4, D1)
+  if (state.options.enforceAssumptions) {
+    await assertPipelineAssumptions(input, {
+      workspacePath: state.options.workspacePath,
+      outDir: state.options.outDir,
+      writeReport: state.options.writeReport,
+    });
+  }
+
   try {
     // Step 1: Extract context
     if (state.options.verbose) {
@@ -339,6 +354,14 @@ export async function runPipeline(
         report,
         state.options.workspacePath,
         state.options.outDir
+      );
+    }
+
+    // Enforce D2: no skipped/stubbed steps in strict mode
+    if (state.options.strictSteps) {
+      assertNoSkippedSteps(
+        state.stepResults as Record<string, import('./pipelineTypes.js').StepResult<unknown> | undefined>,
+        { strict: true }
       );
     }
 

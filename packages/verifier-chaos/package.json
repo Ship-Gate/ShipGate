@@ -1,22 +1,32 @@
 {
   "name": "@isl-lang/verifier-chaos",
-  "version": "0.1.0",
-  "description": "Chaos engineering verifier - inject failures and verify implementations handle them correctly",
+  "version": "0.2.0",
+  "description": "Chaos engineering verifier - inject failures, execute scenarios, and produce proof bundles",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "isl-chaos": "./dist/cli.js"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./cli": {
+      "import": "./dist/cli.js"
+    },
+    "./pipeline": {
+      "import": "./dist/pipeline.js",
+      "types": "./dist/pipeline.d.ts"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean",
-    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "build": "tsup src/index.ts src/cli.ts src/pipeline.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts src/cli.ts src/pipeline.ts --format esm --dts --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",

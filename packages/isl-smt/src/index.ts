@@ -71,6 +71,8 @@ export {
   encodeTypeConstraint,
   createContext,
   islTypeToSort,
+  registerEnum,
+  createPrePostContext,
   type EncodingContext,
   type EncodeResult,
 } from './encoder.js';
@@ -93,10 +95,13 @@ export {
   checkSolverAvailability,
   checkAllSolvers,
   getBestAvailableSolver,
+  getSolverAvailabilityMatrix,
   clearSolverCache,
+  _testInternals,
   type ExternalSolver,
   type ExternalSolverConfig,
   type SolverAvailability,
+  type SolverAvailabilityMatrix,
   type SolverExecResult,
   type SolverStats,
 } from './external-solver.js';

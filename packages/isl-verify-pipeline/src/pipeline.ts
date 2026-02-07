@@ -50,6 +50,13 @@ import {
   SMTCheckerOutput,
 } from './stages/smt-checker.js';
 import {
+  resolveUnknownsWithSMT,
+  applyResolutions,
+  type SMTResolutionConfig,
+  type UnknownClauseInput,
+} from './stages/smt-resolution.js';
+import type { SMTResolutionOutput } from './types.js';
+import {
   generateCIOutput,
   formatCIOutput,
 } from './output/ci-output.js';
@@ -203,18 +210,91 @@ export class VerificationPipeline {
       // ─── Stage 6: SMT Checker (Optional) ───
       if (this.config.smt?.enabled) {
         result.stages.smtChecker = await this.runStage('smt_checker', async () => {
-          const notProvenClauses = [
-            ...result.evidence.postconditions.filter(e => e.status === 'not_proven'),
-            ...result.evidence.invariants.filter(e => e.status === 'not_proven'),
-          ];
+          // Collect not-proven clauses from both postconditions and invariants
+          const notProvenPostconditions = result.evidence.postconditions.filter(e => e.status === 'not_proven');
+          const notProvenInvariants = result.evidence.invariants.filter(e => e.status === 'not_proven');
+          const notProvenClauses = [...notProvenPostconditions, ...notProvenInvariants];
           
-          const smtConfig: SMTCheckerConfig = {
-            domain: this.domain!,
-            clauses: notProvenClauses,
-            solver: this.config.smt?.solver,
-            timeout: this.config.smt?.timeout || this.config.timeouts?.smtChecker,
+          // Build unknown clause inputs for the SMT resolution stage
+          const unknownInputs: UnknownClauseInput[] = notProvenClauses.map(c => ({
+            clauseId: c.clauseId,
+            expressionAst: (c as { expressionAst?: unknown }).expressionAst,
+            expression: c.expression,
+            inputValues: c.evaluationDetails?.inputValues,
+          }));
+          
+          // Run SMT resolution
+          const resolutionOutput = await resolveUnknownsWithSMT({
+            unknownClauses: unknownInputs,
+            timeoutPerClause: this.config.smt?.timeout || this.config.timeouts?.smtChecker || 5000,
+            globalTimeout: this.config.timeouts?.smtChecker || 60000,
+            solver: (this.config.smt?.solver as 'builtin' | 'z3' | 'cvc5') || 'builtin',
+          });
+          
+          // Apply resolutions back onto evidence arrays
+          for (const res of resolutionOutput.resolutions) {
+            if (res.verdict === 'still_unknown') continue;
+            
+            // Update postcondition evidence
+            const postEvidence = result.evidence.postconditions.find(e => e.clauseId === res.clauseId);
+            if (postEvidence) {
+              postEvidence.status = res.newStatus;
+              postEvidence.triStateResult = res.newTriState;
+              postEvidence.reason = res.reason;
+            }
+            
+            // Update invariant evidence
+            const invEvidence = result.evidence.invariants.find(e => e.clauseId === res.clauseId);
+            if (invEvidence) {
+              invEvidence.status = res.newStatus;
+              invEvidence.triStateResult = res.newTriState;
+              invEvidence.reason = res.reason;
+            }
+          }
+          
+          // Recalculate postcondition summary
+          result.summary.postconditions = {
+            total: result.evidence.postconditions.length,
+            proven: result.evidence.postconditions.filter(e => e.status === 'proven').length,
+            violated: result.evidence.postconditions.filter(e => e.status === 'violated').length,
+            notProven: result.evidence.postconditions.filter(e => e.status === 'not_proven').length,
           };
-          return checkWithSMT(smtConfig);
+          
+          // Recalculate invariant summary
+          result.summary.invariants = {
+            total: result.evidence.invariants.length,
+            proven: result.evidence.invariants.filter(e => e.status === 'proven').length,
+            violated: result.evidence.invariants.filter(e => e.status === 'violated').length,
+            notProven: result.evidence.invariants.filter(e => e.status === 'not_proven').length,
+          };
+          
+          // Build the combined output: legacy SMTCheckerOutput + resolution summary
+          const smtCheckerOutput: SMTCheckerOutput = {
+            enabled: true,
+            solver: this.config.smt?.solver || 'builtin',
+            results: resolutionOutput.resolutions.map(r => ({
+              clauseId: r.clauseId,
+              formula: r.evidence?.smtLibQuery || '[no query]',
+              result: r.verdict === 'proved' ? 'unsat' as const :
+                      r.verdict === 'disproved' ? 'sat' as const :
+                      'unknown' as const,
+              durationMs: r.durationMs,
+              model: r.evidence?.model,
+              counterexample: r.verdict === 'disproved' ? r.evidence?.model : undefined,
+              reason: r.reason,
+            })),
+            summary: {
+              totalChecks: resolutionOutput.summary.totalUnknowns,
+              proven: resolutionOutput.summary.proved,
+              refuted: resolutionOutput.summary.disproved,
+              unknown: resolutionOutput.summary.stillUnknown,
+              timeout: resolutionOutput.summary.timedOut,
+              error: resolutionOutput.summary.errors,
+              totalDurationMs: resolutionOutput.summary.totalDurationMs,
+            },
+          };
+          
+          return smtCheckerOutput;
         });
         
         // Update summary with SMT results

@@ -9,7 +9,7 @@
  */
 
 import { createHash } from 'crypto';
-import type { DomainDeclaration } from '@isl-lang/isl-core';
+import type { Domain } from '@isl-lang/parser';
 import type { Diagnostic } from '@isl-lang/errors';
 import type {
   SemanticPass,
@@ -146,7 +146,7 @@ export class PassRunner {
    * Run all enabled passes on the given AST
    */
   run(
-    ast: DomainDeclaration,
+    ast: Domain,
     sourceContent: string,
     filePath: string,
     typeEnv?: TypeEnvironment

@@ -4,7 +4,15 @@
  * Provides type information lookup for semantic analysis passes.
  */
 
-import type { DomainDeclaration, EntityDeclaration, TypeDeclaration, EnumDeclaration, BehaviorDeclaration, FieldDeclaration, TypeExpression } from '@isl-lang/isl-core';
+import type { 
+  Domain, 
+  Entity, 
+  TypeDeclaration, 
+  Behavior, 
+  Field,
+  TypeDefinition,
+  SourceLocation,
+} from '@isl-lang/parser';
 import type { TypeEnvironment, TypeInfo, SymbolEntry, SymbolKind, TypeConstraint } from './types.js';
 
 // ============================================================================
@@ -12,9 +20,9 @@ import type { TypeEnvironment, TypeInfo, SymbolEntry, SymbolKind, TypeConstraint
 // ============================================================================
 
 /**
- * Build a TypeEnvironment from a parsed DomainDeclaration
+ * Build a TypeEnvironment from a parsed Domain
  */
-export function buildTypeEnvironment(domain: DomainDeclaration): TypeEnvironment {
+export function buildTypeEnvironment(domain: Domain): TypeEnvironment {
   return new TypeEnvironmentImpl(domain);
 }
 
@@ -30,24 +38,19 @@ class TypeEnvironmentImpl implements TypeEnvironment {
   private enums: Map<string, SymbolEntry> = new Map();
   private behaviors: Map<string, SymbolEntry> = new Map();
 
-  constructor(private domain: DomainDeclaration) {
+  constructor(private domain: Domain) {
     this.indexDomain(domain);
   }
 
-  private indexDomain(domain: DomainDeclaration): void {
+  private indexDomain(domain: Domain): void {
     // Index entities
     for (const entity of domain.entities || []) {
       this.indexEntity(entity);
     }
 
-    // Index custom types
+    // Index custom types (includes enums in the parser AST)
     for (const type of domain.types || []) {
       this.indexType(type);
-    }
-
-    // Index enums
-    for (const enumDecl of domain.enums || []) {
-      this.indexEnum(enumDecl);
     }
 
     // Index behaviors
@@ -56,7 +59,7 @@ class TypeEnvironmentImpl implements TypeEnvironment {
     }
   }
 
-  private indexEntity(entity: EntityDeclaration): void {
+  private indexEntity(entity: Entity): void {
     const name = entity.name.name;
     const entry: SymbolEntry = {
       name,
@@ -65,7 +68,7 @@ class TypeEnvironmentImpl implements TypeEnvironment {
         typeName: name,
         nullable: false,
         isArray: false,
-        declaredAt: entity.span,
+        declaredAt: entity.location,
       },
       exported: true,
       doc: this.extractDoc(entity),
@@ -84,11 +87,11 @@ class TypeEnvironmentImpl implements TypeEnvironment {
     this.scopedSymbols.set(name, fieldScope);
   }
 
-  private indexField(field: FieldDeclaration, scope: string): SymbolEntry {
+  private indexField(field: Field, scope: string): SymbolEntry {
     const entry: SymbolEntry = {
       name: field.name.name,
       kind: 'field',
-      type: this.resolveTypeExpression(field.type),
+      type: this.resolveTypeDefinition(field.type),
       scope,
       doc: this.extractDoc(field),
     };
@@ -97,12 +100,39 @@ class TypeEnvironmentImpl implements TypeEnvironment {
 
   private indexType(type: TypeDeclaration): void {
     const name = type.name.name;
+    
+    // Check if this is an enum type
+    if (type.definition && type.definition.kind === 'EnumType') {
+      const enumDef = type.definition as { variants: Array<{ name: { name: string } }> };
+      const entry: SymbolEntry = {
+        name,
+        kind: 'enum',
+        type: {
+          typeName: name,
+          nullable: false,
+          isArray: false,
+          declaredAt: type.location,
+          constraints: [{
+            kind: 'enum',
+            value: enumDef.variants?.map(v => v.name.name) || [],
+          }],
+        },
+        exported: true,
+        doc: this.extractDoc(type),
+      };
+
+      this.symbols.set(name, entry);
+      this.enums.set(name, entry);
+      this.types.set(name, entry);
+      return;
+    }
+    
     const entry: SymbolEntry = {
       name,
       kind: 'type',
-      type: type.type 
-        ? this.resolveTypeExpression(type.type)
-        : { typeName: name, nullable: false, isArray: false, declaredAt: type.span },
+      type: type.definition 
+        ? this.resolveTypeDefinition(type.definition)
+        : { typeName: name, nullable: false, isArray: false, declaredAt: type.location },
       exported: true,
       doc: this.extractDoc(type),
     };
@@ -111,31 +141,7 @@ class TypeEnvironmentImpl implements TypeEnvironment {
     this.types.set(name, entry);
   }
 
-  private indexEnum(enumDecl: EnumDeclaration): void {
-    const name = enumDecl.name.name;
-    const entry: SymbolEntry = {
-      name,
-      kind: 'enum',
-      type: {
-        typeName: name,
-        nullable: false,
-        isArray: false,
-        declaredAt: enumDecl.span,
-        constraints: [{
-          kind: 'enum',
-          value: enumDecl.values?.map(v => v.name) || [],
-        }],
-      },
-      exported: true,
-      doc: this.extractDoc(enumDecl),
-    };
-
-    this.symbols.set(name, entry);
-    this.enums.set(name, entry);
-    this.types.set(name, entry);
-  }
-
-  private indexBehavior(behavior: BehaviorDeclaration): void {
+  private indexBehavior(behavior: Behavior): void {
     const name = behavior.name.name;
     const entry: SymbolEntry = {
       name,
@@ -144,7 +150,7 @@ class TypeEnvironmentImpl implements TypeEnvironment {
         typeName: 'Behavior',
         nullable: false,
         isArray: false,
-        declaredAt: behavior.span,
+        declaredAt: behavior.location,
       },
       exported: true,
       doc: this.extractDoc(behavior),
@@ -156,74 +162,116 @@ class TypeEnvironmentImpl implements TypeEnvironment {
     // Index behavior parameters (input/output)
     const paramScope = new Map<string, SymbolEntry>();
     
-    for (const input of behavior.input || []) {
-      const paramEntry: SymbolEntry = {
-        name: input.name.name,
-        kind: 'parameter',
-        type: this.resolveTypeExpression(input.type),
-        scope: name,
-      };
-      paramScope.set(input.name.name, paramEntry);
+    // Input is InputSpec with fields: Field[]
+    if (behavior.input && behavior.input.fields) {
+      for (const field of behavior.input.fields) {
+        const paramEntry: SymbolEntry = {
+          name: field.name.name,
+          kind: 'parameter',
+          type: this.resolveTypeDefinition(field.type),
+          scope: name,
+        };
+        paramScope.set(field.name.name, paramEntry);
+      }
     }
 
-    for (const output of behavior.output || []) {
-      const paramEntry: SymbolEntry = {
-        name: output.name.name,
+    // Output is OutputSpec with success: TypeDefinition and errors: ErrorSpec[]
+    // We index the output type as 'result' for postcondition checks
+    if (behavior.output && behavior.output.success) {
+      const outputType = this.resolveTypeDefinition(behavior.output.success);
+      paramScope.set('result', {
+        name: 'result',
         kind: 'parameter',
-        type: this.resolveTypeExpression(output.type),
+        type: outputType,
         scope: name,
-      };
-      paramScope.set(output.name.name, paramEntry);
+      });
     }
 
     this.scopedSymbols.set(name, paramScope);
   }
 
-  private resolveTypeExpression(typeExpr: TypeExpression): TypeInfo {
-    switch (typeExpr.kind) {
-      case 'SimpleType':
+  private resolveTypeDefinition(typeDef: TypeDefinition): TypeInfo {
+    switch (typeDef.kind) {
+      case 'PrimitiveType':
         return {
-          typeName: typeExpr.name.name,
-          nullable: typeExpr.nullable || false,
+          typeName: typeDef.name,
+          nullable: false,
           isArray: false,
-          declaredAt: typeExpr.span,
+          declaredAt: typeDef.location,
         };
 
-      case 'GenericType':
+      case 'ReferenceType':
+        // ReferenceType has name: QualifiedName with parts: Identifier[]
+        const parts = typeDef.name.parts || [];
+        const refName = parts.map(p => p.name).join('.');
         return {
-          typeName: typeExpr.name.name,
-          nullable: typeExpr.nullable || false,
-          isArray: typeExpr.name.name === 'Array' || typeExpr.name.name === 'List',
-          typeParams: typeExpr.params?.map(p => this.resolveTypeExpression(p)),
-          declaredAt: typeExpr.span,
+          typeName: refName || 'unknown',
+          nullable: false,
+          isArray: false,
+          declaredAt: typeDef.location,
         };
 
-      case 'ArrayType':
+      case 'ConstrainedType':
+        return this.resolveTypeDefinition(typeDef.base);
+
+      case 'ListType':
         return {
           typeName: 'Array',
-          nullable: typeExpr.nullable || false,
+          nullable: false,
           isArray: true,
-          typeParams: [this.resolveTypeExpression(typeExpr.elementType)],
-          declaredAt: typeExpr.span,
+          typeParams: [this.resolveTypeDefinition(typeDef.element)],
+          declaredAt: typeDef.location,
+        };
+
+      case 'MapType':
+        return {
+          typeName: 'Map',
+          nullable: false,
+          isArray: false,
+          typeParams: [
+            this.resolveTypeDefinition(typeDef.key),
+            this.resolveTypeDefinition(typeDef.value),
+          ],
+          declaredAt: typeDef.location,
+        };
+
+      case 'OptionalType':
+        const inner = this.resolveTypeDefinition(typeDef.inner);
+        return {
+          ...inner,
+          nullable: true,
         };
 
       case 'UnionType':
+        // Parser UnionType has variants: UnionVariant[] with name and fields
+        const unionDef = typeDef as { variants?: Array<{ name: { name: string }; fields: unknown[] }> };
         return {
           typeName: 'Union',
-          nullable: typeExpr.types?.some(t => 
-            t.kind === 'SimpleType' && t.name.name === 'null'
-          ) || false,
+          nullable: false,
           isArray: false,
-          typeParams: typeExpr.types?.map(t => this.resolveTypeExpression(t)),
-          declaredAt: typeExpr.span,
+          // Extract variant names as simple type info
+          typeParams: unionDef.variants?.map(v => ({
+            typeName: v.name?.name || 'unknown',
+            nullable: false,
+            isArray: false,
+          })),
+          declaredAt: typeDef.location,
         };
 
-      case 'ObjectType':
+      case 'StructType':
         return {
           typeName: 'Object',
           nullable: false,
           isArray: false,
-          declaredAt: typeExpr.span,
+          declaredAt: typeDef.location,
+        };
+
+      case 'EnumType':
+        return {
+          typeName: 'Enum',
+          nullable: false,
+          isArray: false,
+          declaredAt: typeDef.location,
         };
 
       default:
@@ -235,9 +283,17 @@ class TypeEnvironmentImpl implements TypeEnvironment {
     }
   }
 
-  private extractDoc(node: { doc?: string; description?: { value: string } }): string | undefined {
-    if ('doc' in node && node.doc) return node.doc;
-    if ('description' in node && node.description) return node.description.value;
+  private extractDoc(node: unknown): string | undefined {
+    // Parser AST nodes may have different doc/description patterns
+    if (node && typeof node === 'object') {
+      const obj = node as Record<string, unknown>;
+      if ('description' in obj && obj.description && typeof obj.description === 'object') {
+        const desc = obj.description as Record<string, unknown>;
+        if ('value' in desc && typeof desc.value === 'string') {
+          return desc.value;
+        }
+      }
+    }
     return undefined;
   }
 

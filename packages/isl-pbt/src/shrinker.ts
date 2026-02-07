@@ -384,6 +384,174 @@ export function* shrinkIP(ip: string): Generator<string> {
 }
 
 // ============================================================================
+// CONSTRAINT-AWARE SHRINKERS
+// ============================================================================
+
+/**
+ * Constraints to respect during shrinking
+ */
+export interface ShrinkConstraints {
+  min?: number;
+  max?: number;
+  minLength?: number;
+  maxLength?: number;
+  precision?: number;
+  enum?: string[];
+  format?: string;
+}
+
+/**
+ * Shrink a number respecting min/max/precision constraints
+ */
+export function* shrinkConstrained(
+  value: number,
+  constraints: ShrinkConstraints
+): Generator<number> {
+  const { min, max, precision } = constraints;
+  const effectiveMin = min ?? -Infinity;
+  const effectiveMax = max ?? Infinity;
+  const round = (n: number) =>
+    precision !== undefined
+      ? Math.round(n * Math.pow(10, precision)) / Math.pow(10, precision)
+      : n;
+
+  // Try the minimum
+  if (value !== effectiveMin && effectiveMin !== -Infinity) {
+    const clamped = round(Math.max(effectiveMin, effectiveMin));
+    if (clamped >= effectiveMin && clamped <= effectiveMax && clamped !== value) {
+      yield clamped;
+    }
+  }
+
+  // Try zero if in range
+  if (value !== 0 && 0 >= effectiveMin && 0 <= effectiveMax) {
+    yield 0;
+  }
+
+  // Try 1 if in range
+  if (value !== 1 && 1 >= effectiveMin && 1 <= effectiveMax) {
+    yield round(1);
+  }
+
+  // Binary search towards min
+  let current = value;
+  const target = effectiveMin !== -Infinity ? effectiveMin : 0;
+  while (Math.abs(current - target) > (precision !== undefined ? Math.pow(10, -precision) : 0.001)) {
+    current = round((current + target) / 2);
+    if (current >= effectiveMin && current <= effectiveMax && current !== value) {
+      yield current;
+    }
+    if (current === target) break;
+  }
+
+  // Adjacent values
+  if (value > effectiveMin) {
+    const step = precision !== undefined ? Math.pow(10, -precision) : 1;
+    const adj = round(value - step);
+    if (adj >= effectiveMin && adj !== value) {
+      yield adj;
+    }
+  }
+}
+
+/**
+ * Shrink a string respecting minLength/maxLength constraints
+ */
+export function* shrinkConstrainedString(
+  value: string,
+  constraints: ShrinkConstraints
+): Generator<string> {
+  const minLen = constraints.minLength ?? 0;
+  const maxLen = constraints.maxLength ?? Infinity;
+
+  if (value.length <= minLen) return;
+
+  // Try minimum length
+  if (value.length > minLen) {
+    yield value.slice(0, minLen);
+  }
+
+  // Half length (if still above min)
+  const halfLen = Math.max(minLen, Math.ceil(value.length / 2));
+  if (halfLen < value.length && halfLen !== minLen) {
+    yield value.slice(0, halfLen);
+  }
+
+  // Progressive removal from end
+  for (let i = value.length - 1; i > minLen; i--) {
+    yield value.slice(0, i);
+  }
+
+  // Try simpler characters (keep same length)
+  if (value.length >= minLen && value.length <= maxLen) {
+    const simplified = value.toLowerCase().replace(/[^a-z]/g, 'a');
+    if (simplified !== value) {
+      yield simplified;
+    }
+  }
+}
+
+/**
+ * Shrink a Money amount respecting min: 0, precision: 2
+ */
+export function* shrinkMoney(
+  value: number,
+  minAmount = 0,
+  precision = 2
+): Generator<number> {
+  yield* shrinkConstrained(value, { min: minAmount, precision });
+}
+
+/**
+ * Shrink a map (record) by removing keys and shrinking values
+ */
+export function* shrinkMap(
+  value: Record<string, unknown>,
+  minSize = 0
+): Generator<Record<string, unknown>> {
+  const keys = Object.keys(value);
+  if (keys.length <= minSize) return;
+
+  // Try minimum size
+  if (keys.length > minSize && minSize === 0) {
+    yield {};
+  }
+  if (keys.length > minSize && minSize > 0) {
+    const minKeys = keys.slice(0, minSize);
+    const minObj: Record<string, unknown> = {};
+    for (const k of minKeys) minObj[k] = value[k];
+    yield minObj;
+  }
+
+  // Remove each key one at a time
+  for (const key of keys) {
+    if (keys.length - 1 >= minSize) {
+      const copy = { ...value };
+      delete copy[key];
+      yield copy;
+    }
+  }
+
+  // Shrink individual values
+  for (const key of keys) {
+    for (const shrunk of shrinkValue(value[key])) {
+      yield { ...value, [key]: shrunk };
+    }
+  }
+}
+
+/**
+ * Shrink a duration string towards "PT0S"
+ */
+export function* shrinkDuration(value: string): Generator<string> {
+  if (value === 'PT0S') return;
+  yield 'PT0S';
+  yield 'PT1S';
+  yield 'PT1M';
+  yield 'PT1H';
+}
+
+// ============================================================================
 // DELTA DEBUGGING
 // ============================================================================
 

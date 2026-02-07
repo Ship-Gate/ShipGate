@@ -1,23 +1,29 @@
 {
   "name": "@isl-lang/pbt",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Property-Based Testing for ISL - Generate random inputs satisfying preconditions and verify postconditions",
   "type": "module",
   "main": "./dist/index.js",
   "exports": {
     ".": {
       "import": "./dist/index.js"
+    },
+    "./cli": {
+      "import": "./dist/cli.js"
     }
+  },
+  "bin": {
+    "isl-pbt": "./dist/cli.js"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --clean",
-    "dev": "tsup src/index.ts --format esm --watch",
+    "build": "tsup --config false src/index.ts src/cli.ts --format esm --clean --sourcemap --no-dts --external @isl-lang/parser --external @isl-lang/verifier-runtime",
+    "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "echo 'TODO: Fix AST type mismatches with @isl-lang/isl-core' && exit 0",
+    "typecheck": "tsc --noEmit",
     "clean": "rimraf dist"
   },
   "dependencies": {

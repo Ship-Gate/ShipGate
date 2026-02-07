@@ -38,6 +38,7 @@ import { ISLSymbolProvider } from './features/symbols';
 import { ISLSemanticTokensProvider, TOKEN_TYPES, TOKEN_MODIFIERS } from './features/semantic-tokens';
 import { ISLCodeActionProvider } from './features/actions';
 import { ISLFormattingProvider } from './features/formatting';
+import { ScannerDiagnosticsProvider, SOURCE_HOST, SOURCE_REALITY_GAP } from './features/scanner-diagnostics';
 import { DiagnosticSeverity } from '@isl-lang/lsp-core';
 
 export class ISLServer {
@@ -52,7 +53,9 @@ export class ISLServer {
   private semanticTokensProvider: ISLSemanticTokensProvider;
   private codeActionProvider: ISLCodeActionProvider;
   private formattingProvider: ISLFormattingProvider;
+  private scannerDiagnosticsProvider: ScannerDiagnosticsProvider;
   private diagnosticTimers = new Map<string, NodeJS.Timeout>();
+  private lastScannerDiagnostics = new Map<string, import('vscode-languageserver/node').Diagnostic[]>();
 
   constructor() {
     this.connection = createConnection(ProposedFeatures.all);
@@ -66,6 +69,7 @@ export class ISLServer {
     this.semanticTokensProvider = new ISLSemanticTokensProvider(this.documentManager);
     this.codeActionProvider = new ISLCodeActionProvider(this.documentManager);
     this.formattingProvider = new ISLFormattingProvider();
+    this.scannerDiagnosticsProvider = new ScannerDiagnosticsProvider();
 
     this.setupHandlers();
   }
@@ -160,6 +164,10 @@ export class ISLServer {
       const document = this.documents.get(params.textDocument.uri);
       if (!document) return null;
 
+      // Check for scanner diagnostic hover first
+      const scannerHover = this.getScannerHover(params.textDocument.uri, params.position);
+      if (scannerHover) return scannerHover;
+
       const hover = this.hoverProvider.provideHover(document, params.position);
       if (!hover) return null;
 
@@ -194,7 +202,55 @@ export class ISLServer {
       const document = this.documents.get(params.textDocument.uri);
       if (!document) return [];
 
-      return this.codeActionProvider.provideCodeActions(document, params.range, params.context);
+      const actions = this.codeActionProvider.provideCodeActions(document, params.range, params.context);
+
+      // Append scanner-specific code actions
+      for (const diag of params.context.diagnostics) {
+        if (diag.source !== SOURCE_HOST && diag.source !== SOURCE_REALITY_GAP) continue;
+
+        const data = diag.data as { suggestion?: string; tier?: string; quickFixes?: Array<{ title: string; edit: string }> } | undefined;
+
+        // Suppress-line action: insert a comment above the offending line
+        const suppressComment = diag.source === SOURCE_HOST
+          ? `// vibecheck-ignore`
+          : `// islstudio-ignore ${diag.code}`;
+
+        actions.push({
+          title: `Suppress ${diag.code} for this line`,
+          kind: CodeActionKind.QuickFix,
+          diagnostics: [diag],
+          edit: {
+            changes: {
+              [document.uri]: [
+                TextEdit.insert(
+                  { line: diag.range.start.line, character: 0 },
+                  suppressComment + '\n'
+                ),
+              ],
+            },
+          },
+        });
+
+        // Surface quickFixes from scanner data if present
+        if (data?.quickFixes) {
+          for (const fix of data.quickFixes) {
+            actions.push({
+              title: fix.title,
+              kind: CodeActionKind.QuickFix,
+              diagnostics: [diag],
+              edit: {
+                changes: {
+                  [document.uri]: [
+                    TextEdit.replace(diag.range, fix.edit),
+                  ],
+                },
+              },
+            });
+          }
+        }
+      }
+
+      return actions;
     });
 
     // Document formatting
@@ -272,30 +328,133 @@ export class ISLServer {
     // Ensure document is parsed
     this.documentManager.updateDocument(document, true);
 
-    // Get diagnostics from document manager
-    const diagnostics = this.documentManager.getDiagnostics(document.uri);
+    // Get diagnostics from document manager (parser + semantic)
+    const islDiagnostics = this.documentManager.getDiagnostics(document.uri);
 
+    const parserDiagnostics = islDiagnostics.map((d) => ({
+      range: ISLDocumentManager.toRange(d.location),
+      message: d.message,
+      severity: d.severity as 1 | 2 | 3 | 4,
+      code: d.code,
+      source: d.source,
+      relatedInformation: d.relatedInfo?.map(r => ({
+        location: {
+          uri: document.uri,
+          range: ISLDocumentManager.toRange(r.location),
+        },
+        message: r.message,
+      })),
+    }));
+
+    // Send parser diagnostics immediately for fast feedback
     this.connection.sendDiagnostics({
       uri: document.uri,
-      diagnostics: diagnostics.map((d) => ({
-        range: ISLDocumentManager.toRange(d.location),
-        message: d.message,
-        severity: d.severity as 1 | 2 | 3 | 4,
-        code: d.code,
-        source: d.source,
-        relatedInformation: d.relatedInfo?.map(r => ({
-          location: {
-            uri: document.uri,
-            range: ISLDocumentManager.toRange(r.location),
-          },
-          message: r.message,
-        })),
-      })),
+      diagnostics: parserDiagnostics,
     });
+
+    // Run scanner diagnostics asynchronously, then merge and re-send
+    this.runScannerDiagnostics(document, parserDiagnostics);
+  }
+
+  /**
+   * Run Host + Reality-Gap scanners async and merge with parser diagnostics.
+   * Suppressions and safelists are applied inside the firewall.
+   */
+  private async runScannerDiagnostics(
+    document: TextDocument,
+    parserDiagnostics: import('vscode-languageserver/node').Diagnostic[]
+  ): Promise<void> {
+    try {
+      if (!this.scannerDiagnosticsProvider.isSupported(document)) {
+        // Clear any stale scanner diagnostics for non-supported files
+        this.lastScannerDiagnostics.delete(document.uri);
+        return;
+      }
+
+      const scannerDiags = await this.scannerDiagnosticsProvider.provideDiagnostics(document);
+      this.lastScannerDiagnostics.set(document.uri, scannerDiags);
+
+      // Merge parser + scanner, deduplicate by code:line:char
+      const merged = this.deduplicateDiagnostics([...parserDiagnostics, ...scannerDiags]);
+
+      // Re-send with merged results
+      this.connection.sendDiagnostics({
+        uri: document.uri,
+        diagnostics: merged,
+      });
+    } catch (err) {
+      // Scanner failure should not break the LSP — log and continue
+      console.error('[scanner-diagnostics] Error:', err);
+    }
+  }
+
+  /**
+   * Deduplicate diagnostics by code + start position.
+   * Prefers entries with richer data (e.g. scanner entries with suggestions).
+   */
+  private deduplicateDiagnostics(
+    diagnostics: import('vscode-languageserver/node').Diagnostic[]
+  ): import('vscode-languageserver/node').Diagnostic[] {
+    const byKey = new Map<string, import('vscode-languageserver/node').Diagnostic>();
+    for (const d of diagnostics) {
+      const key = `${d.code}:${d.range.start.line}:${d.range.start.character}`;
+      const existing = byKey.get(key);
+      if (!existing) {
+        byKey.set(key, d);
+      } else if (d.data && !existing.data) {
+        byKey.set(key, d);
+      }
+    }
+    return Array.from(byKey.values());
   }
 
   private clearDiagnostics(uri: string): void {
+    this.lastScannerDiagnostics.delete(uri);
     this.connection.sendDiagnostics({ uri, diagnostics: [] });
+  }
+
+  /**
+   * Return hover info for scanner diagnostics at the given position.
+   * Shows tier, source, and suggestion if available.
+   */
+  private getScannerHover(uri: string, position: { line: number; character: number }): Hover | null {
+    const scannerDiags = this.lastScannerDiagnostics.get(uri);
+    if (!scannerDiags || scannerDiags.length === 0) return null;
+
+    // Find scanner diagnostics whose range contains the position
+    const matching = scannerDiags.filter(d => {
+      const r = d.range;
+      if (position.line < r.start.line || position.line > r.end.line) return false;
+      if (position.line === r.start.line && position.character < r.start.character) return false;
+      if (position.line === r.end.line && position.character > r.end.character) return false;
+      return true;
+    });
+
+    if (matching.length === 0) return null;
+
+    const parts: string[] = [];
+    for (const d of matching) {
+      const data = d.data as { suggestion?: string; tier?: string; quickFixes?: unknown[] } | undefined;
+      const tierLabel = data?.tier === 'hard_block' ? '🔴 Hard Block'
+        : data?.tier === 'soft_block' ? '🟡 Soft Block'
+        : '🔵 Warning';
+      const sourceLabel = d.source === SOURCE_HOST ? 'Host Scanner' : 'Reality-Gap Scanner';
+
+      let md = `**${sourceLabel}** — ${tierLabel}\n\n`;
+      md += `**\`${d.code}\`**: ${d.message}\n`;
+      if (data?.suggestion) {
+        md += `\n💡 **Suggestion:** ${data.suggestion}\n`;
+      }
+      parts.push(md);
+    }
+
+    return {
+      contents: {
+        kind: 'markdown',
+        value: parts.join('\n---\n'),
+      },
+      range: matching[0]!.range,
+    };
   }
 
   private mapCompletionKind(kind: string): CompletionItemKind {

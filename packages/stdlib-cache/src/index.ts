@@ -46,9 +46,18 @@ export type {
   RedisCacheConfig,
   CacheableOptions,
   CacheEvictOptions,
+  SecurityContext,
+  CacheVersion,
+  CacheLimits,
 } from './types.js';
 
 export { JsonSerializer, MsgPackSerializer } from './types.js';
+
+export { BloomFilter, estimatedFalsePositiveRate } from './bloom.js';
+export type { BloomFilterOptions } from './bloom.js';
+
+export { HardenedCache, createHardenedCache } from './hardened-cache.js';
+export type { HardenedCacheOptions } from './hardened-cache.js';
 
 // Export backends
 export {

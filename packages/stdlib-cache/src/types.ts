@@ -294,6 +294,42 @@ export type EvictionReason = 'expired' | 'lru' | 'size' | 'manual';
 export type CacheEventHandler = (event: CacheEvent) => void;
 
 // ============================================
+// Cache Versioning & Security Context
+// ============================================
+
+/**
+ * Security context for cache isolation. Prevents cross-tenant/scan poisoning.
+ * All keys are namespaced by this context so one context cannot read/write another's data.
+ */
+export interface SecurityContext {
+  /** Tenant/organization identifier */
+  tenantId?: string;
+  /** Scan/session identifier (e.g. per-scan Bloom and cache isolation) */
+  scanId?: string;
+  /** User identifier */
+  userId?: string;
+  /** Optional additional namespace */
+  namespace?: string;
+}
+
+/**
+ * Cache version. When format or schema changes, bump version so old entries are ignored.
+ */
+export type CacheVersion = string;
+
+/**
+ * Configurable limits for safe cache (prevents abuse and cross-scan poisoning).
+ */
+export interface CacheLimits {
+  /** Maximum key length in characters (default: 2048) */
+  maxKeyLength?: number;
+  /** Maximum value size in bytes (approximate; 0 = no limit) (default: 0) */
+  maxValueSizeBytes?: number;
+  /** Maximum number of keys per context (default: 0 = use backend maxSize) */
+  maxKeysPerContext?: number;
+}
+
+// ============================================
 // Configuration Types
 // ============================================
 

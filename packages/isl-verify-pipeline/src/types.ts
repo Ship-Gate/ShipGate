@@ -421,6 +421,85 @@ export interface SMTCheckerOutput {
 }
 
 // ============================================================================
+// SMT RESOLUTION TYPES (unknown → proved/disproved)
+// ============================================================================
+
+/**
+ * Evidence from SMT solver execution (pipeline-local, mirrors isl-smt SolverEvidence)
+ */
+export interface SMTSolverEvidence {
+  /** Hash of the SMT query (for caching and reproducibility) */
+  queryHash: string;
+  /** Solver used */
+  solver: string;
+  /** Solver version (if external) */
+  solverVersion?: string;
+  /** Result status */
+  status: 'sat' | 'unsat' | 'unknown' | 'timeout' | 'error';
+  /** Model (if sat / counterexample found) */
+  model?: Record<string, unknown>;
+  /** Reason (if unknown or error) */
+  reason?: string;
+  /** Time spent solving (ms) */
+  durationMs: number;
+  /** Raw SMT-LIB query (for debugging / proof bundles) */
+  smtLibQuery?: string;
+  /** Timestamp of execution */
+  timestamp: string;
+}
+
+/**
+ * Result of attempting to resolve a single unknown clause via SMT
+ */
+export interface SMTResolutionResult {
+  /** Clause that was resolved */
+  clauseId: string;
+  /** Original status was always 'not_proven' */
+  originalStatus: 'not_proven';
+  /** New status after SMT resolution */
+  newStatus: ClauseStatus;
+  /** New tri-state after SMT resolution */
+  newTriState: TriState;
+  /** SMT verdict */
+  verdict: 'proved' | 'disproved' | 'still_unknown';
+  /** Solver evidence for proof bundles */
+  evidence?: SMTSolverEvidence;
+  /** Duration of this resolution attempt (ms) */
+  durationMs: number;
+  /** Reason for the verdict */
+  reason?: string;
+}
+
+/**
+ * Output from the SMT resolution stage
+ */
+export interface SMTResolutionOutput {
+  /** Individual resolution results */
+  resolutions: SMTResolutionResult[];
+  /** Summary statistics */
+  summary: {
+    /** Total unknowns that were candidates for SMT */
+    totalUnknowns: number;
+    /** Unknowns that became proved or disproved */
+    resolved: number;
+    /** Unknowns proved true by SMT */
+    proved: number;
+    /** Unknowns disproved (counterexample found) by SMT */
+    disproved: number;
+    /** Unknowns that SMT could not determine */
+    stillUnknown: number;
+    /** Unknowns that timed out */
+    timedOut: number;
+    /** Unknowns that errored during SMT */
+    errors: number;
+    /** Resolution rate: resolved / totalUnknowns (0-1) */
+    resolutionRate: number;
+    /** Total time spent on SMT resolution (ms) */
+    totalDurationMs: number;
+  };
+}
+
+// ============================================================================
 // PIPELINE CONFIGURATION
 // ============================================================================
 
@@ -733,6 +812,12 @@ export interface ClauseResult {
   
   /** Source location in the ISL spec */
   sourceLocation?: SourceLocation;
+  
+  /** How the verdict was determined */
+  resolvedBy?: 'runtime' | 'smt' | 'runtime_then_smt';
+  
+  /** SMT solver evidence (attached when SMT resolved this clause) */
+  smtEvidence?: SMTSolverEvidence;
 }
 
 /**
@@ -842,6 +927,7 @@ export interface VerificationResult {
     testRunnerMs?: number;
     traceCollectorMs?: number;
     evaluatorMs?: number;
+    smtResolutionMs?: number;
   };
   
   /** Exit code recommendation (0=success, 1=failure, 2=incomplete) */

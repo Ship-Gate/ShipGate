@@ -782,3 +782,1243 @@ describe('Adapter interface', () => {
     expect(longResult.value).toBe(true);
   });
 });
+
+// ============================================================================
+// ARITHMETIC OPERATOR TESTS
+// ============================================================================
+
+describe('Arithmetic operators', () => {
+  describe('Addition (+)', () => {
+    it('should add two numbers', () => {
+      const expr = createBinaryExpr('+', createNumberLiteral(3), createNumberLiteral(4));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should add negative numbers', () => {
+      const expr = createBinaryExpr('+', createNumberLiteral(-5), createNumberLiteral(3));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should add zero', () => {
+      const expr = createBinaryExpr('+', createNumberLiteral(0), createNumberLiteral(0));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should add floating point numbers', () => {
+      const expr = createBinaryExpr('+', createNumberLiteral(1.5), createNumberLiteral(2.3));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should concatenate strings with +', () => {
+      const expr = createBinaryExpr('+', createStringLiteral('hello'), createStringLiteral(' world'));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should concatenate string + number', () => {
+      const expr = createBinaryExpr('+', createStringLiteral('count: '), createNumberLiteral(42));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should fail adding non-numeric/non-string types', () => {
+      const expr = createBinaryExpr('+', createBooleanLiteral(true), createBooleanLiteral(false));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(false);
+    });
+
+    it('should return unknown when operand is unknown', () => {
+      const expr = createBinaryExpr('+', createIdentifier('missing'), createNumberLiteral(1));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe('unknown');
+    });
+  });
+
+  describe('Subtraction (-)', () => {
+    it('should subtract two numbers', () => {
+      const expr = createBinaryExpr('-', createNumberLiteral(10), createNumberLiteral(3));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should subtract to negative', () => {
+      const expr = createBinaryExpr('-', createNumberLiteral(3), createNumberLiteral(10));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should subtract zero', () => {
+      const expr = createBinaryExpr('-', createNumberLiteral(5), createNumberLiteral(0));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should subtract floating points', () => {
+      const expr = createBinaryExpr('-', createNumberLiteral(5.5), createNumberLiteral(2.2));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should fail subtracting non-numbers', () => {
+      const expr = createBinaryExpr('-', createStringLiteral('a'), createNumberLiteral(1));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(false);
+      expect(result.reason).toContain('Cannot subtract non-numbers');
+    });
+  });
+
+  describe('Multiplication (*)', () => {
+    it('should multiply two numbers', () => {
+      const expr = createBinaryExpr('*', createNumberLiteral(6), createNumberLiteral(7));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should multiply by zero', () => {
+      const expr = createBinaryExpr('*', createNumberLiteral(100), createNumberLiteral(0));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should multiply negative numbers', () => {
+      const expr = createBinaryExpr('*', createNumberLiteral(-3), createNumberLiteral(-4));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should multiply floating points', () => {
+      const expr = createBinaryExpr('*', createNumberLiteral(2.5), createNumberLiteral(4.0));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should fail multiplying non-numbers', () => {
+      const expr = createBinaryExpr('*', createStringLiteral('a'), createNumberLiteral(2));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(false);
+      expect(result.reason).toContain('Cannot multiply non-numbers');
+    });
+  });
+
+  describe('Division (/)', () => {
+    it('should divide two numbers', () => {
+      const expr = createBinaryExpr('/', createNumberLiteral(10), createNumberLiteral(2));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should divide with remainder', () => {
+      const expr = createBinaryExpr('/', createNumberLiteral(7), createNumberLiteral(2));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should fail on division by zero', () => {
+      const expr = createBinaryExpr('/', createNumberLiteral(10), createNumberLiteral(0));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(false);
+      expect(result.reason).toBe('Division by zero');
+    });
+
+    it('should fail dividing non-numbers', () => {
+      const expr = createBinaryExpr('/', createStringLiteral('a'), createNumberLiteral(1));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(false);
+      expect(result.reason).toContain('Cannot divide non-numbers');
+    });
+
+    it('should divide floating points', () => {
+      const expr = createBinaryExpr('/', createNumberLiteral(7.5), createNumberLiteral(2.5));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+  });
+
+  describe('Modulo (%)', () => {
+    it('should compute modulo', () => {
+      const expr = createBinaryExpr('%', createNumberLiteral(10), createNumberLiteral(3));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should compute modulo with zero remainder', () => {
+      const expr = createBinaryExpr('%', createNumberLiteral(10), createNumberLiteral(5));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should fail on modulo by zero', () => {
+      const expr = createBinaryExpr('%', createNumberLiteral(10), createNumberLiteral(0));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(false);
+      expect(result.reason).toBe('Modulo by zero');
+    });
+
+    it('should fail modulo with non-numbers', () => {
+      const expr = createBinaryExpr('%', createStringLiteral('a'), createNumberLiteral(2));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(false);
+      expect(result.reason).toContain('Cannot modulo non-numbers');
+    });
+
+    it('should compute modulo with negative numbers', () => {
+      const expr = createBinaryExpr('%', createNumberLiteral(-7), createNumberLiteral(3));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+  });
+
+  describe('Unary negation (-)', () => {
+    it('should negate a number', () => {
+      const expr = createUnaryExpr('-', createNumberLiteral(5));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should negate zero', () => {
+      const expr = createUnaryExpr('-', createNumberLiteral(0));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should fail negating non-number', () => {
+      const expr = createUnaryExpr('-', createStringLiteral('abc'));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(false);
+    });
+  });
+
+  describe('Arithmetic with variables', () => {
+    it('should add variables from context', () => {
+      const ctx = createContext();
+      ctx.variables.set('x', 10);
+      ctx.variables.set('y', 20);
+
+      const expr = createBinaryExpr('+', createIdentifier('x'), createIdentifier('y'));
+      const result = evaluateExpression(expr, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should use input fields in arithmetic', () => {
+      const ctx = createContext({ input: { price: 100, tax: 8 } });
+      const priceExpr = createIdentifier('price');
+      const taxExpr = createIdentifier('tax');
+      const expr = createBinaryExpr('*', priceExpr, taxExpr);
+      const result = evaluateExpression(expr, ctx);
+      expect(result.value).toBe(true);
+    });
+  });
+
+  describe('Arithmetic in comparisons', () => {
+    it('should compare arithmetic result: (3 + 4) == 7', () => {
+      const sum = createBinaryExpr('+', createNumberLiteral(3), createNumberLiteral(4));
+      const expr = createBinaryExpr('==', sum, createNumberLiteral(7));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should compare arithmetic result: (10 - 3) > 5', () => {
+      const diff = createBinaryExpr('-', createNumberLiteral(10), createNumberLiteral(3));
+      const expr = createBinaryExpr('>', diff, createNumberLiteral(5));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should compare arithmetic result: (4 * 5) == 20', () => {
+      const product = createBinaryExpr('*', createNumberLiteral(4), createNumberLiteral(5));
+      const expr = createBinaryExpr('==', product, createNumberLiteral(20));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should compare arithmetic result: (10 / 2) == 5', () => {
+      const quotient = createBinaryExpr('/', createNumberLiteral(10), createNumberLiteral(2));
+      const expr = createBinaryExpr('==', quotient, createNumberLiteral(5));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should compare arithmetic result: (10 % 3) == 1', () => {
+      const mod = createBinaryExpr('%', createNumberLiteral(10), createNumberLiteral(3));
+      const expr = createBinaryExpr('==', mod, createNumberLiteral(1));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+  });
+});
+
+// ============================================================================
+// STRING OPERATION TESTS
+// ============================================================================
+
+describe('String operations', () => {
+  describe('contains', () => {
+    it('should return true when substring is found', () => {
+      const str = createStringLiteral('hello world');
+      const member = createMemberExpr(str, 'contains');
+      const call = createCallExpr(member, [createStringLiteral('world')]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should return false when substring is not found', () => {
+      const str = createStringLiteral('hello world');
+      const member = createMemberExpr(str, 'contains');
+      const call = createCallExpr(member, [createStringLiteral('xyz')]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(false);
+    });
+
+    it('should find empty string in any string', () => {
+      const str = createStringLiteral('hello');
+      const member = createMemberExpr(str, 'contains');
+      const call = createCallExpr(member, [createStringLiteral('')]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should find string in itself', () => {
+      const str = createStringLiteral('exact');
+      const member = createMemberExpr(str, 'contains');
+      const call = createCallExpr(member, [createStringLiteral('exact')]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should handle case sensitivity', () => {
+      const str = createStringLiteral('Hello World');
+      const member = createMemberExpr(str, 'contains');
+      const call = createCallExpr(member, [createStringLiteral('hello')]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(false);
+    });
+
+    it('should fail with non-string argument', () => {
+      const str = createStringLiteral('hello');
+      const member = createMemberExpr(str, 'contains');
+      const call = createCallExpr(member, [createNumberLiteral(42)]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(false);
+      expect(result.reason).toContain('contains requires a string argument');
+    });
+  });
+
+  describe('startsWith', () => {
+    it('should return true when string starts with prefix', () => {
+      const str = createStringLiteral('hello world');
+      const member = createMemberExpr(str, 'startsWith');
+      const call = createCallExpr(member, [createStringLiteral('hello')]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should return false when string does not start with prefix', () => {
+      const str = createStringLiteral('hello world');
+      const member = createMemberExpr(str, 'startsWith');
+      const call = createCallExpr(member, [createStringLiteral('world')]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(false);
+    });
+
+    it('should handle empty prefix', () => {
+      const str = createStringLiteral('hello');
+      const member = createMemberExpr(str, 'startsWith');
+      const call = createCallExpr(member, [createStringLiteral('')]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should fail with non-string argument', () => {
+      const str = createStringLiteral('hello');
+      const member = createMemberExpr(str, 'startsWith');
+      const call = createCallExpr(member, [createNumberLiteral(1)]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(false);
+      expect(result.reason).toContain('startsWith requires a string argument');
+    });
+  });
+
+  describe('endsWith', () => {
+    it('should return true when string ends with suffix', () => {
+      const str = createStringLiteral('hello world');
+      const member = createMemberExpr(str, 'endsWith');
+      const call = createCallExpr(member, [createStringLiteral('world')]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should return false when string does not end with suffix', () => {
+      const str = createStringLiteral('hello world');
+      const member = createMemberExpr(str, 'endsWith');
+      const call = createCallExpr(member, [createStringLiteral('hello')]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(false);
+    });
+
+    it('should handle empty suffix', () => {
+      const str = createStringLiteral('hello');
+      const member = createMemberExpr(str, 'endsWith');
+      const call = createCallExpr(member, [createStringLiteral('')]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should fail with non-string argument', () => {
+      const str = createStringLiteral('hello');
+      const member = createMemberExpr(str, 'endsWith');
+      const call = createCallExpr(member, [createNumberLiteral(1)]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(false);
+      expect(result.reason).toContain('endsWith requires a string argument');
+    });
+  });
+
+  describe('concat', () => {
+    it('should concatenate two strings', () => {
+      const str = createStringLiteral('hello');
+      const member = createMemberExpr(str, 'concat');
+      const call = createCallExpr(member, [createStringLiteral(' world')]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should concatenate with empty string', () => {
+      const str = createStringLiteral('hello');
+      const member = createMemberExpr(str, 'concat');
+      const call = createCallExpr(member, [createStringLiteral('')]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should fail with non-string argument', () => {
+      const str = createStringLiteral('hello');
+      const member = createMemberExpr(str, 'concat');
+      const call = createCallExpr(member, [createNumberLiteral(42)]);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(false);
+      expect(result.reason).toContain('concat requires a string argument');
+    });
+  });
+
+  describe('String length (method call)', () => {
+    it('should return true for non-empty string length', () => {
+      const str = createStringLiteral('hello');
+      const member = createMemberExpr(str, 'length');
+      const call = createCallExpr(member, []);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should return true for empty string length', () => {
+      const str = createStringLiteral('');
+      const member = createMemberExpr(str, 'length');
+      const call = createCallExpr(member, []);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(true);
+    });
+  });
+
+  describe('String length (property access)', () => {
+    it('should evaluate string length property', () => {
+      const ctx = createContext({ input: { name: 'Alice' } });
+      const nameExpr = createIdentifier('name');
+      const lengthExpr = createMemberExpr(nameExpr, 'length');
+      const result = evaluateExpression(lengthExpr, ctx);
+      expect(result.value).toBe(true);
+    });
+  });
+
+  describe('String is_valid', () => {
+    it('should return true for non-empty string is_valid call', () => {
+      const str = createStringLiteral('hello');
+      const member = createMemberExpr(str, 'is_valid');
+      const call = createCallExpr(member, []);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should return false for empty string is_valid call', () => {
+      const str = createStringLiteral('');
+      const member = createMemberExpr(str, 'is_valid');
+      const call = createCallExpr(member, []);
+      const result = evaluateExpression(call, createContext());
+      expect(result.value).toBe(false);
+    });
+  });
+
+  describe('String with input values', () => {
+    it('should evaluate contains on input field', () => {
+      const ctx = createContext({ input: { email: 'user@example.com' } });
+      const emailExpr = createIdentifier('email');
+      const member = createMemberExpr(emailExpr, 'contains');
+      const call = createCallExpr(member, [createStringLiteral('@')]);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should evaluate startsWith on input field', () => {
+      const ctx = createContext({ input: { url: 'https://example.com' } });
+      const urlExpr = createIdentifier('url');
+      const member = createMemberExpr(urlExpr, 'startsWith');
+      const call = createCallExpr(member, [createStringLiteral('https://')]);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(true);
+    });
+  });
+});
+
+// ============================================================================
+// COLLECTION OPERATION TESTS
+// ============================================================================
+
+describe('Collection operations', () => {
+  function createInputList(name: string, values: number[]): { ctx: ReturnType<typeof createContext>; listExpr: AST.Expression } {
+    const ctx = createContext({ input: { [name]: values } });
+    const listExpr = createIdentifier(name);
+    return { ctx, listExpr };
+  }
+
+  describe('Collection length (method call)', () => {
+    it('should return true for array length', () => {
+      const { ctx, listExpr } = createInputList('items', [1, 2, 3]);
+      const member = createMemberExpr(listExpr, 'length');
+      const call = createCallExpr(member, []);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should return true for empty array length', () => {
+      const { ctx, listExpr } = createInputList('items', []);
+      const member = createMemberExpr(listExpr, 'length');
+      const call = createCallExpr(member, []);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(true);
+    });
+  });
+
+  describe('Collection length (property access)', () => {
+    it('should evaluate array length property', () => {
+      const ctx = createContext({ input: { items: [10, 20, 30] } });
+      const itemsExpr = createIdentifier('items');
+      const lengthExpr = createMemberExpr(itemsExpr, 'length');
+      const result = evaluateExpression(lengthExpr, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should compare array length: items.length == 3', () => {
+      const ctx = createContext({ input: { items: [10, 20, 30] } });
+      const itemsExpr = createIdentifier('items');
+      const lengthExpr = createMemberExpr(itemsExpr, 'length');
+      const expr = createBinaryExpr('==', lengthExpr, createNumberLiteral(3));
+      const result = evaluateExpression(expr, ctx);
+      expect(result.value).toBe(true);
+    });
+  });
+
+  describe('Collection sum', () => {
+    it('should compute sum of numeric array', () => {
+      const { ctx, listExpr } = createInputList('nums', [1, 2, 3, 4, 5]);
+      const member = createMemberExpr(listExpr, 'sum');
+      const call = createCallExpr(member, []);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should compute sum of empty array', () => {
+      const { ctx, listExpr } = createInputList('nums', []);
+      const member = createMemberExpr(listExpr, 'sum');
+      const call = createCallExpr(member, []);
+      // Empty array: every() returns true for empty, so sum succeeds
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should fail sum of non-numeric array', () => {
+      const ctx = createContext({ input: { items: ['a', 'b', 'c'] } });
+      const listExpr = createIdentifier('items');
+      const member = createMemberExpr(listExpr, 'sum');
+      const call = createCallExpr(member, []);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(false);
+      expect(result.reason).toContain('sum requires all numeric elements');
+    });
+  });
+
+  describe('Collection count', () => {
+    it('should return true for count', () => {
+      const { ctx, listExpr } = createInputList('items', [10, 20, 30]);
+      const member = createMemberExpr(listExpr, 'count');
+      const call = createCallExpr(member, []);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should return true for empty array count', () => {
+      const { ctx, listExpr } = createInputList('items', []);
+      const member = createMemberExpr(listExpr, 'count');
+      const call = createCallExpr(member, []);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(true);
+    });
+  });
+
+  describe('Collection contains', () => {
+    it('should return true when element is in array', () => {
+      const { ctx, listExpr } = createInputList('nums', [1, 2, 3]);
+      const member = createMemberExpr(listExpr, 'contains');
+      const call = createCallExpr(member, [createNumberLiteral(2)]);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should return false when element is not in array', () => {
+      const { ctx, listExpr } = createInputList('nums', [1, 2, 3]);
+      const member = createMemberExpr(listExpr, 'contains');
+      const call = createCallExpr(member, [createNumberLiteral(99)]);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(false);
+    });
+
+    it('should handle string elements', () => {
+      const ctx = createContext({ input: { tags: ['red', 'green', 'blue'] } });
+      const listExpr = createIdentifier('tags');
+      const member = createMemberExpr(listExpr, 'contains');
+      const call = createCallExpr(member, [createStringLiteral('green')]);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should return false for empty array', () => {
+      const { ctx, listExpr } = createInputList('items', []);
+      const member = createMemberExpr(listExpr, 'contains');
+      const call = createCallExpr(member, [createNumberLiteral(1)]);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(false);
+    });
+  });
+
+  describe('Collection isEmpty', () => {
+    it('should return true for empty array', () => {
+      const { ctx, listExpr } = createInputList('items', []);
+      const member = createMemberExpr(listExpr, 'isEmpty');
+      const call = createCallExpr(member, []);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should return false for non-empty array', () => {
+      const { ctx, listExpr } = createInputList('items', [1, 2, 3]);
+      const member = createMemberExpr(listExpr, 'isEmpty');
+      const call = createCallExpr(member, []);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(false);
+    });
+  });
+
+  describe('Collection index', () => {
+    it('should return true for valid index', () => {
+      const { ctx, listExpr } = createInputList('items', [10, 20, 30]);
+      const member = createMemberExpr(listExpr, 'index');
+      const call = createCallExpr(member, [createNumberLiteral(1)]);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should return true for first element', () => {
+      const { ctx, listExpr } = createInputList('items', [10, 20, 30]);
+      const member = createMemberExpr(listExpr, 'index');
+      const call = createCallExpr(member, [createNumberLiteral(0)]);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should return true for last element', () => {
+      const { ctx, listExpr } = createInputList('items', [10, 20, 30]);
+      const member = createMemberExpr(listExpr, 'index');
+      const call = createCallExpr(member, [createNumberLiteral(2)]);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should fail for out-of-bounds index', () => {
+      const { ctx, listExpr } = createInputList('items', [10, 20, 30]);
+      const member = createMemberExpr(listExpr, 'index');
+      const call = createCallExpr(member, [createNumberLiteral(5)]);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(false);
+      expect(result.reason).toContain('out of bounds');
+    });
+
+    it('should fail for negative index', () => {
+      const { ctx, listExpr } = createInputList('items', [10, 20, 30]);
+      const member = createMemberExpr(listExpr, 'index');
+      const call = createCallExpr(member, [createNumberLiteral(-1)]);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(false);
+      expect(result.reason).toContain('out of bounds');
+    });
+
+    it('should fail for non-number index', () => {
+      const { ctx, listExpr } = createInputList('items', [10, 20, 30]);
+      const member = createMemberExpr(listExpr, 'index');
+      const call = createCallExpr(member, [createStringLiteral('first')]);
+      const result = evaluateExpression(call, ctx);
+      expect(result.value).toBe(false);
+      expect(result.reason).toContain('index requires a number argument');
+    });
+  });
+
+  describe('IndexExpr on collections', () => {
+    it('should access array element by index', () => {
+      const ctx = createContext({ input: { items: [10, 20, 30] } });
+      const itemsExpr = createIdentifier('items');
+      const indexExpr = createIndexExpr(itemsExpr, createNumberLiteral(1));
+      const result = evaluateExpression(indexExpr, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should access object property by string index', () => {
+      const ctx = createContext({ input: { data: { key: 'value' } } });
+      const dataExpr = createIdentifier('data');
+      const indexExpr = createIndexExpr(dataExpr, createStringLiteral('key'));
+      const result = evaluateExpression(indexExpr, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should fail for array with non-number index', () => {
+      const ctx = createContext({ input: { items: [10, 20] } });
+      const itemsExpr = createIdentifier('items');
+      const indexExpr = createIndexExpr(itemsExpr, createStringLiteral('foo'));
+      const result = evaluateExpression(indexExpr, ctx);
+      expect(result.value).toBe(false);
+    });
+
+    it('should fail for null object', () => {
+      const ctx = createContext({ input: { obj: null } });
+      const objExpr = createIdentifier('obj');
+      const indexExpr = createIndexExpr(objExpr, createNumberLiteral(0));
+      const result = evaluateExpression(indexExpr, ctx);
+      expect(result.value).toBe(false);
+    });
+  });
+});
+
+// ============================================================================
+// IN / IFF OPERATOR TESTS
+// ============================================================================
+
+describe('Membership and biconditional operators', () => {
+  describe('in operator', () => {
+    it('should find number in array', () => {
+      const ctx = createContext({ input: { items: [1, 2, 3] } });
+      const expr = createBinaryExpr('in', createNumberLiteral(2), createIdentifier('items'));
+      const result = evaluateExpression(expr, ctx);
+      expect(result.value).toBe(true);
+    });
+
+    it('should not find missing number in array', () => {
+      const ctx = createContext({ input: { items: [1, 2, 3] } });
+      const expr = createBinaryExpr('in', createNumberLiteral(99), createIdentifier('items'));
+      const result = evaluateExpression(expr, ctx);
+      expect(result.value).toBe(false);
+      expect(result.reason).toContain('not found');
+    });
+
+    it('should find substring in string', () => {
+      const expr = createBinaryExpr('in', createStringLiteral('world'), createStringLiteral('hello world'));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should not find missing substring', () => {
+      const expr = createBinaryExpr('in', createStringLiteral('xyz'), createStringLiteral('hello'));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(false);
+    });
+
+    it('should fail for invalid right operand', () => {
+      const expr = createBinaryExpr('in', createNumberLiteral(1), createNumberLiteral(42));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(false);
+      expect(result.reason).toContain('requires array or string');
+    });
+
+    it('should find string in array', () => {
+      const ctx = createContext({ input: { roles: ['admin', 'user', 'moderator'] } });
+      const expr = createBinaryExpr('in', createStringLiteral('admin'), createIdentifier('roles'));
+      const result = evaluateExpression(expr, ctx);
+      expect(result.value).toBe(true);
+    });
+  });
+
+  describe('iff operator', () => {
+    it('should return true when both sides true', () => {
+      const expr = createBinaryExpr('iff', createBooleanLiteral(true), createBooleanLiteral(true));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should return true when both sides false', () => {
+      const expr = createBinaryExpr('iff', createBooleanLiteral(false), createBooleanLiteral(false));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(true);
+    });
+
+    it('should return false when sides differ (true/false)', () => {
+      const expr = createBinaryExpr('iff', createBooleanLiteral(true), createBooleanLiteral(false));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(false);
+    });
+
+    it('should return false when sides differ (false/true)', () => {
+      const expr = createBinaryExpr('iff', createBooleanLiteral(false), createBooleanLiteral(true));
+      const result = evaluateExpression(expr, createContext());
+      expect(result.value).toBe(false);
+    });
+  });
+});
+
+// ============================================================================
+// extractValue CONCRETE VALUE TESTS
+// ============================================================================
+
+describe('Concrete value extraction via comparisons', () => {
+  it('should verify string concat result: "hello" + " world" == "hello world"', () => {
+    const concat = createBinaryExpr('+', createStringLiteral('hello'), createStringLiteral(' world'));
+    const expr = createBinaryExpr('==', concat, createStringLiteral('hello world'));
+    const result = evaluateExpression(expr, createContext());
+    expect(result.value).toBe(true);
+  });
+
+  it('should verify nested arithmetic: (2 + 3) * 4 == 20', () => {
+    const sum = createBinaryExpr('+', createNumberLiteral(2), createNumberLiteral(3));
+    const product = createBinaryExpr('*', sum, createNumberLiteral(4));
+    const expr = createBinaryExpr('==', product, createNumberLiteral(20));
+    const result = evaluateExpression(expr, createContext());
+    expect(result.value).toBe(true);
+  });
+
+  it('should verify division: 15 / 3 == 5', () => {
+    const div = createBinaryExpr('/', createNumberLiteral(15), createNumberLiteral(3));
+    const expr = createBinaryExpr('==', div, createNumberLiteral(5));
+    const result = evaluateExpression(expr, createContext());
+    expect(result.value).toBe(true);
+  });
+
+  it('should verify modulo: 17 % 5 == 2', () => {
+    const mod = createBinaryExpr('%', createNumberLiteral(17), createNumberLiteral(5));
+    const expr = createBinaryExpr('==', mod, createNumberLiteral(2));
+    const result = evaluateExpression(expr, createContext());
+    expect(result.value).toBe(true);
+  });
+
+  it('should verify subtraction: 100 - 37 == 63', () => {
+    const diff = createBinaryExpr('-', createNumberLiteral(100), createNumberLiteral(37));
+    const expr = createBinaryExpr('==', diff, createNumberLiteral(63));
+    const result = evaluateExpression(expr, createContext());
+    expect(result.value).toBe(true);
+  });
+
+  it('should verify complex: ((a + b) * c) - d where a=2,b=3,c=4,d=5 == 15', () => {
+    const ctx = createContext();
+    ctx.variables.set('a', 2);
+    ctx.variables.set('b', 3);
+    ctx.variables.set('c', 4);
+    ctx.variables.set('d', 5);
+
+    const sum = createBinaryExpr('+', createIdentifier('a'), createIdentifier('b'));
+    const product = createBinaryExpr('*', sum, createIdentifier('c'));
+    const diff = createBinaryExpr('-', product, createIdentifier('d'));
+    const expr = createBinaryExpr('==', diff, createNumberLiteral(15));
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(true);
+  });
+});
+
+// ============================================================================
+// SPECIAL EXPRESSION COVERAGE
+// ============================================================================
+
+describe('Special expressions', () => {
+  it('should evaluate result expression', () => {
+    const ctx = createContext({ result: { status: 'ok', value: 42 } });
+    const expr: AST.ResultExpr = {
+      kind: 'ResultExpr',
+      property: createIdentifier('status'),
+      location: createLocation(),
+    };
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(true);
+  });
+
+  it('should fail result expression with missing property', () => {
+    const ctx = createContext({ result: { status: 'ok' } });
+    const expr: AST.ResultExpr = {
+      kind: 'ResultExpr',
+      property: createIdentifier('missing'),
+      location: createLocation(),
+    };
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(false);
+  });
+
+  it('should fail result expression when result is null', () => {
+    const ctx = createContext({ result: null });
+    const expr: AST.ResultExpr = {
+      kind: 'ResultExpr',
+      property: createIdentifier('status'),
+      location: createLocation(),
+    };
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(false);
+  });
+
+  it('should evaluate result without property', () => {
+    const ctx = createContext({ result: 42 });
+    const expr: AST.ResultExpr = {
+      kind: 'ResultExpr',
+      property: undefined as unknown as AST.Identifier,
+      location: createLocation(),
+    };
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(true);
+  });
+
+  it('should evaluate input expression', () => {
+    const ctx = createContext({ input: { name: 'Alice' } });
+    const expr: AST.InputExpr = {
+      kind: 'InputExpr',
+      property: createIdentifier('name'),
+      location: createLocation(),
+    };
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(true);
+  });
+
+  it('should fail input expression with missing property', () => {
+    const ctx = createContext({ input: {} });
+    const expr: AST.InputExpr = {
+      kind: 'InputExpr',
+      property: createIdentifier('missing'),
+      location: createLocation(),
+    };
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(false);
+  });
+
+  it('should handle identifier for result', () => {
+    const ctx = createContext({ result: { value: 100 } });
+    const expr = createIdentifier('result');
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(true);
+  });
+
+  it('should handle identifier for input', () => {
+    const ctx = createContext({ input: { name: 'test' } });
+    const expr = createIdentifier('input');
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(true);
+  });
+
+  it('should handle identifier for now', () => {
+    const ctx = createContext();
+    const expr = createIdentifier('now');
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(true);
+  });
+
+  it('should evaluate old() expression', () => {
+    const snapshot = {
+      entities: new Map(),
+      timestamp: Date.now(),
+    };
+    const ctx = createContext({ oldState: snapshot });
+    const innerExpr = createBooleanLiteral(true);
+    const expr: AST.OldExpr = {
+      kind: 'OldExpr',
+      expression: innerExpr,
+      location: createLocation(),
+    };
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(true);
+  });
+
+  it('should fail old() without snapshot', () => {
+    const ctx = createContext({ oldState: undefined });
+    const innerExpr = createBooleanLiteral(true);
+    const expr: AST.OldExpr = {
+      kind: 'OldExpr',
+      expression: innerExpr,
+      location: createLocation(),
+    };
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(false);
+  });
+});
+
+// ============================================================================
+// QUALIFIED NAME & DEPTH LIMIT TESTS
+// ============================================================================
+
+describe('QualifiedName expressions', () => {
+  it('should evaluate qualified name', () => {
+    const ctx = createContext({ input: { user: { name: 'Alice' } } });
+    const expr: AST.QualifiedName = {
+      kind: 'QualifiedName',
+      parts: [createIdentifier('input'), createIdentifier('user')],
+      location: createLocation(),
+    };
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(true);
+  });
+});
+
+describe('Depth limit', () => {
+  it('should fail when depth exceeds maxDepth', () => {
+    const expr = createBooleanLiteral(true);
+    const result = evaluateExpression(expr, createContext(), { maxDepth: 0 });
+    expect(result.value).toBe(true); // single expr at depth 0 passes
+    const nested = createBinaryExpr('and', expr, expr);
+    const result2 = evaluateExpression(nested, createContext(), { maxDepth: 0 });
+    expect(result2.value).toBe(false);
+    // Depth limit may appear in reason or in a child's reason (e.g. left operand)
+    const reason = result2.reason ?? '';
+    const childReason = result2.children?.[0]?.reason ?? result2.children?.[1]?.reason ?? '';
+    expect(reason + childReason).toMatch(/Maximum evaluation depth/);
+  });
+});
+
+// ============================================================================
+// UNSUPPORTED EXPRESSION TESTS
+// ============================================================================
+
+describe('Unsupported expressions', () => {
+  it('should fail for unsupported expression kinds', () => {
+    const expr = {
+      kind: 'SomeFutureExpr',
+      location: createLocation(),
+    } as unknown as AST.Expression;
+    const result = evaluateExpression(expr, createContext());
+    expect(result.value).toBe(false);
+    expect(result.reason).toContain('Unsupported expression kind');
+  });
+
+  it('should fail for unsupported binary operator', () => {
+    const expr = createBinaryExpr('xor' as AST.BinaryOperator, createNumberLiteral(1), createNumberLiteral(2));
+    const result = evaluateExpression(expr, createContext());
+    expect(result.value).toBe(false);
+    expect(result.reason).toContain('Unsupported binary operator');
+  });
+
+  it('should fail for unsupported unary operator', () => {
+    const expr = createUnaryExpr('~' as AST.UnaryOperator, createNumberLiteral(1));
+    const result = evaluateExpression(expr, createContext());
+    expect(result.value).toBe(false);
+    expect(result.reason).toContain('Unsupported unary operator');
+  });
+
+  it('should fail for unknown method on string', () => {
+    const str = createStringLiteral('hello');
+    const member = createMemberExpr(str, 'unknownMethod');
+    const call = createCallExpr(member, []);
+    const result = evaluateExpression(call, createContext());
+    expect(result.value).toBe(false);
+    expect(result.reason).toContain('Unknown method');
+  });
+
+  it('should fail for unknown builtin function', () => {
+    const call = createCallExpr(createIdentifier('nonExistentFn'), []);
+    const result = evaluateExpression(call, createContext());
+    expect(result.value).toBe(false);
+    expect(result.reason).toContain('Unknown function');
+  });
+
+  it('should fail for unknown identifier', () => {
+    const expr = createIdentifier('undeclaredVariable');
+    const result = evaluateExpression(expr, createContext());
+    expect(result.value).toBe(false);
+    expect(result.reason).toContain('Unknown identifier');
+  });
+});
+
+// ============================================================================
+// DEFAULT ADAPTER TESTS
+// ============================================================================
+
+describe('DefaultAdapter', () => {
+  const adapter = new DefaultAdapter();
+
+  it('is_valid returns false for null', () => {
+    expect(adapter.is_valid(null)).toBe(false);
+  });
+
+  it('is_valid returns false for undefined', () => {
+    expect(adapter.is_valid(undefined)).toBe(false);
+  });
+
+  it('is_valid returns true for non-empty string', () => {
+    expect(adapter.is_valid('hello')).toBe(true);
+  });
+
+  it('is_valid returns false for empty string', () => {
+    expect(adapter.is_valid('')).toBe(false);
+  });
+
+  it('is_valid returns true for valid number', () => {
+    expect(adapter.is_valid(42)).toBe(true);
+  });
+
+  it('is_valid returns false for NaN', () => {
+    expect(adapter.is_valid(NaN)).toBe(false);
+  });
+
+  it('is_valid returns false for Infinity', () => {
+    expect(adapter.is_valid(Infinity)).toBe(false);
+  });
+
+  it('is_valid returns true for boolean', () => {
+    expect(adapter.is_valid(true)).toBe(true);
+    expect(adapter.is_valid(false)).toBe(true);
+  });
+
+  it('is_valid returns true for non-empty array', () => {
+    expect(adapter.is_valid([1, 2])).toBe(true);
+  });
+
+  it('is_valid returns false for empty array', () => {
+    expect(adapter.is_valid([])).toBe(false);
+  });
+
+  it('is_valid returns true for object', () => {
+    expect(adapter.is_valid({ key: 'val' })).toBe(true);
+  });
+
+  it('length returns unknown for null', () => {
+    expect(adapter.length(null)).toBe('unknown');
+  });
+
+  it('length returns unknown for undefined', () => {
+    expect(adapter.length(undefined)).toBe('unknown');
+  });
+
+  it('length returns string length', () => {
+    expect(adapter.length('hello')).toBe(5);
+  });
+
+  it('length returns array length', () => {
+    expect(adapter.length([1, 2, 3])).toBe(3);
+  });
+
+  it('length returns unknown for number', () => {
+    expect(adapter.length(42)).toBe('unknown');
+  });
+});
+
+// ============================================================================
+// COMPLEX END-TO-END SCENARIOS
+// ============================================================================
+
+describe('End-to-end scenarios', () => {
+  it('should verify order total: items.length > 0 and total > 0', () => {
+    const ctx = createContext({ input: { items: ['a', 'b'], total: 100 } });
+
+    const itemsLen = createMemberExpr(createIdentifier('items'), 'length');
+    const lenGtZero = createBinaryExpr('>', itemsLen, createNumberLiteral(0));
+    const totalGtZero = createBinaryExpr('>', createIdentifier('total'), createNumberLiteral(0));
+    const expr = createBinaryExpr('and', lenGtZero, totalGtZero);
+
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(true);
+  });
+
+  it('should verify email format: email.contains("@") and email.length > 5', () => {
+    const ctx = createContext({ input: { email: 'user@example.com' } });
+
+    const emailExpr = createIdentifier('email');
+    const containsAt = createCallExpr(
+      createMemberExpr(emailExpr, 'contains'),
+      [createStringLiteral('@')]
+    );
+    const emailLen = createMemberExpr(emailExpr, 'length');
+    const lenGt5 = createBinaryExpr('>', emailLen, createNumberLiteral(5));
+    const expr = createBinaryExpr('and', containsAt, lenGt5);
+
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(true);
+  });
+
+  it('should verify discount: price * discount / 100 == expected', () => {
+    const ctx = createContext();
+    ctx.variables.set('price', 200);
+    ctx.variables.set('discount', 15);
+
+    const product = createBinaryExpr('*', createIdentifier('price'), createIdentifier('discount'));
+    const divided = createBinaryExpr('/', product, createNumberLiteral(100));
+    const expr = createBinaryExpr('==', divided, createNumberLiteral(30));
+
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(true);
+  });
+
+  it('should verify pagination: page >= 1 and page <= totalPages', () => {
+    const ctx = createContext({ input: { page: 3, totalPages: 10 } });
+
+    const pageGe1 = createBinaryExpr('>=', createIdentifier('page'), createNumberLiteral(1));
+    const pageLeTp = createBinaryExpr('<=', createIdentifier('page'), createIdentifier('totalPages'));
+    const expr = createBinaryExpr('and', pageGe1, pageLeTp);
+
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(true);
+  });
+
+  it('should handle all quantifier with arithmetic predicate', () => {
+    const collection = createListExpr([
+      createNumberLiteral(2),
+      createNumberLiteral(4),
+      createNumberLiteral(6),
+    ]);
+    // all(x in [2,4,6], x % 2 == 0)
+    const predicate = createBinaryExpr(
+      '==',
+      createBinaryExpr('%', createIdentifier('x'), createNumberLiteral(2)),
+      createNumberLiteral(0)
+    );
+    const expr = createQuantifierExpr('all', 'x', collection, predicate);
+    const result = evaluateExpression(expr, createContext());
+    expect(result.value).toBe(true);
+  });
+
+  it('should handle any quantifier finding match', () => {
+    const collection = createListExpr([
+      createNumberLiteral(1),
+      createNumberLiteral(3),
+      createNumberLiteral(4),
+    ]);
+    // any(x in [1,3,4], x % 2 == 0)
+    const predicate = createBinaryExpr(
+      '==',
+      createBinaryExpr('%', createIdentifier('x'), createNumberLiteral(2)),
+      createNumberLiteral(0)
+    );
+    const expr = createQuantifierExpr('any', 'x', collection, predicate);
+    const result = evaluateExpression(expr, createContext());
+    expect(result.value).toBe(true);
+  });
+
+  it('should handle conditional with arithmetic', () => {
+    const ctx = createContext();
+    ctx.variables.set('discount', true);
+
+    const condition = createIdentifier('discount');
+    const thenBranch = createBinaryExpr('*', createNumberLiteral(100), createNumberLiteral(0.9));
+    const elseBranch = createNumberLiteral(100);
+    const expr = createConditionalExpr(condition, thenBranch, elseBranch);
+
+    const result = evaluateExpression(expr, ctx);
+    expect(result.value).toBe(true);
+  });
+});

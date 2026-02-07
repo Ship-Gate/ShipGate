@@ -425,6 +425,14 @@ export class IntegratedFirewall {
   }
 
   /**
+   * Run Reality-Gap scanner only (ISL Studio policies).
+   * Does not run VibeCheck/truthpack validation.
+   */
+  async evaluateRealityGapOnly(request: FirewallRequest): Promise<ISLGateResult> {
+    return this.runISLPolicies(request);
+  }
+
+  /**
    * Quick gate check - returns combined SHIP/NO_SHIP
    */
   async gate(request: FirewallRequest): Promise<{

@@ -385,6 +385,92 @@ export class RuntimeError extends EvaluationError {
 }
 
 // ============================================================================
+// DIAGNOSTIC CODES
+// ============================================================================
+
+/**
+ * Semantic diagnostic codes for evaluator failures.
+ * Every unknown/error path must produce one of these codes.
+ */
+export enum EvalDiagnosticCode {
+  /** Member access on null or undefined value */
+  EVAL_NULL_DEREF = 'EVAL_NULL_DEREF',
+  /** Property does not exist on target object */
+  EVAL_UNDEFINED_MEMBER = 'EVAL_UNDEFINED_MEMBER',
+  /** Undefined variable or identifier */
+  EVAL_UNDEFINED_VAR = 'EVAL_UNDEFINED_VAR',
+  /** old() called without a previous state snapshot */
+  EVAL_MISSING_OLD_STATE = 'EVAL_MISSING_OLD_STATE',
+  /** Nested path resolution failed inside old() */
+  EVAL_OLD_NESTED_FAIL = 'EVAL_OLD_NESTED_FAIL',
+  /** Type mismatch in operation */
+  EVAL_TYPE_MISMATCH = 'EVAL_TYPE_MISMATCH',
+  /** Array/string index out of bounds */
+  EVAL_OOB_INDEX = 'EVAL_OOB_INDEX',
+  /** Unknown function or method call */
+  EVAL_UNKNOWN_FUNCTION = 'EVAL_UNKNOWN_FUNCTION',
+  /** Unsupported expression kind */
+  EVAL_UNSUPPORTED_EXPR = 'EVAL_UNSUPPORTED_EXPR',
+  /** Optional chaining applied to non-object value */
+  EVAL_OPTIONAL_CHAIN_NON_OBJECT = 'EVAL_OPTIONAL_CHAIN_NON_OBJECT',
+}
+
+/**
+ * Structured diagnostic payload attached to every evaluator failure.
+ */
+export interface DiagnosticPayload {
+  /** Diagnostic code identifying the failure class */
+  code: EvalDiagnosticCode;
+  /** Human-readable message */
+  message: string;
+  /** Source span where the error originated */
+  span: SourceLocation;
+  /** String representation of the failing sub-expression */
+  subExpression: string;
+  /** Optional upstream cause (e.g. the inner error for old() wrapping) */
+  cause?: DiagnosticPayload;
+}
+
+/**
+ * Structured diagnostic error thrown by the evaluator.
+ * Carries a full DiagnosticPayload so callers can inspect
+ * the code, span, and sub-expression without parsing strings.
+ */
+export class DiagnosticError extends EvaluationError {
+  public readonly diagnostic: DiagnosticPayload;
+
+  constructor(payload: DiagnosticPayload, expression?: unknown) {
+    super(payload.message, payload.span, expression, payload.code);
+    this.name = 'DiagnosticError';
+    this.diagnostic = payload;
+    Object.setPrototypeOf(this, DiagnosticError.prototype);
+  }
+
+  /**
+   * Wrap an existing DiagnosticError as the cause of a higher-level diagnostic.
+   */
+  static wrap(
+    outerCode: EvalDiagnosticCode,
+    outerMessage: string,
+    outerSpan: SourceLocation,
+    outerSubExpr: string,
+    innerError: DiagnosticError,
+    expression?: unknown,
+  ): DiagnosticError {
+    return new DiagnosticError(
+      {
+        code: outerCode,
+        message: outerMessage,
+        span: outerSpan,
+        subExpression: outerSubExpr,
+        cause: innerError.diagnostic,
+      },
+      expression,
+    );
+  }
+}
+
+// ============================================================================
 // VERIFICATION
 // ============================================================================
 

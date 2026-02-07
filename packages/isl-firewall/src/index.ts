@@ -48,6 +48,17 @@ export {
   type IntegratedGateResult,
 } from './isl-studio-integration.js';
 
+// Scanners (Host + Reality-Gap)
+export {
+  runHostScan,
+  runRealityGapScan,
+  type HostScanResult,
+  type RealityGapScanResult,
+  type ScanResult,
+  type ScannerOptions,
+  type ScannerViolation,
+} from './scanners.js';
+
 // Types
 export type {
   FirewallMode,

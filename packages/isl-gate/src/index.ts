@@ -75,3 +75,30 @@ export {
   formatScore,
   formatVerdict,
 } from './scoring/unified-scorer.js';
+
+// Trust Score Engine
+export {
+  calculateTrustScore,
+  evaluateTrust,
+  enforceTrustGate,
+  resolveConfig as resolveTrustConfig,
+  generateReport as generateTrustReport,
+} from './trust-score/index.js';
+
+export type {
+  TrustCategory,
+  TrustScoreInput,
+  TrustScoreConfig,
+  TrustScoreResult,
+  TrustClauseResult,
+  ClauseStatus,
+  CategoryScore,
+  TrustVerdict,
+  TrustWeights,
+  TrustDelta,
+  TrustHistoryEntry,
+  TrustHistory,
+  TrustReport,
+  TrustReportJSON,
+  ResolvedTrustConfig,
+} from './trust-score/index.js';

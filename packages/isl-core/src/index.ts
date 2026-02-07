@@ -64,6 +64,12 @@ export * as verification from './isl-agent/verification/index.js';
 export * as testgen from './testgen/index.js';
 
 // ============================================================================
+// Adapters (AST Type Conversion)
+// ============================================================================
+
+export * as adapters from './adapters/index.js';
+
+// ============================================================================
 // High-Level Convenience APIs
 // ============================================================================
 

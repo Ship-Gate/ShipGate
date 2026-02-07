@@ -118,7 +118,7 @@ export default defineWorkspace([
       },
     },
   },
-  // E2E Integration Tests
+  // E2E and Phase 3 Integration Tests
   {
     test: {
       name: 'e2e',
@@ -126,7 +126,7 @@ export default defineWorkspace([
       globals: true,
       environment: 'node',
       include: ['tests/e2e/**/*.test.ts'],
-      testTimeout: 60000,
+      testTimeout: 180000,
     },
   },
   // Intent Translator package
@@ -208,6 +208,17 @@ export default defineWorkspace([
       testTimeout: 30000,
     },
   },
+  // ISL Gate package (trust score engine)
+  {
+    test: {
+      name: 'isl-gate',
+      root: './packages/isl-gate',
+      globals: false,
+      environment: 'node',
+      include: ['tests/**/*.test.ts'],
+      testTimeout: 10000,
+    },
+  },
   // Verifier Runtime package
   {
     test: {
@@ -240,6 +251,17 @@ export default defineWorkspace([
           statements: 80,
         },
       },
+    },
+  },
+  // ISL SMT package (external Z3/CVC5 solver adapter)
+  {
+    test: {
+      name: 'isl-smt',
+      root: './packages/isl-smt',
+      globals: true,
+      environment: 'node',
+      include: ['tests/**/*.test.ts'],
+      testTimeout: 30000,
     },
   },
   // ISL Test Runtime package (login test harness)

@@ -45,5 +45,5 @@ export {
 export * from './passes/index.js';
 
 // Re-export common types for convenience
-export type { Domain } from '@isl-lang/parser';
-export type { Diagnostic } from '@isl-lang/errors';
+export type { Domain, Behavior, Entity, PostconditionBlock, Expression } from '@isl-lang/parser';
+export type { Diagnostic, SourceLocation } from '@isl-lang/errors';

@@ -486,9 +486,9 @@ function evaluateBinaryExpr(
   const leftResult = evaluateRecursive(expr.left, context, adapter, diagnostics, maxDepth, depth + 1);
   const rightResult = evaluateRecursive(expr.right, context, adapter, diagnostics, maxDepth, depth + 1);
   
-  // Extract actual values (for comparison)
-  const leftValue = extractValue(expr.left, context);
-  const rightValue = extractValue(expr.right, context);
+  // Extract actual values (for comparison and computation)
+  const leftValue = extractValue(expr.left, context, adapter);
+  const rightValue = extractValue(expr.right, context, adapter);
   
   // Handle unknown values
   if (leftValue === 'unknown' || rightValue === 'unknown') {
@@ -557,6 +557,111 @@ function evaluateBinaryExpr(
       }
       break;
     
+    // ----------------------------------------------------------------
+    // ARITHMETIC OPERATORS — return concrete values, never unknown
+    // ----------------------------------------------------------------
+    
+    case '+':
+      if (typeof leftValue === 'string' || typeof rightValue === 'string') {
+        // String concatenation always succeeds
+        return success(true, location, [leftResult, rightResult]);
+      }
+      if (typeof leftValue === 'number' && typeof rightValue === 'number') {
+        return success(true, location, [leftResult, rightResult]);
+      }
+      return failure(
+        `Cannot add values of types ${typeof leftValue} and ${typeof rightValue}`,
+        location,
+        [leftResult, rightResult]
+      );
+    
+    case '-':
+      if (typeof leftValue !== 'number' || typeof rightValue !== 'number') {
+        return failure(
+          `Cannot subtract non-numbers: ${typeof leftValue} - ${typeof rightValue}`,
+          location,
+          [leftResult, rightResult]
+        );
+      }
+      return success(true, location, [leftResult, rightResult]);
+    
+    case '*':
+      if (typeof leftValue !== 'number' || typeof rightValue !== 'number') {
+        return failure(
+          `Cannot multiply non-numbers: ${typeof leftValue} * ${typeof rightValue}`,
+          location,
+          [leftResult, rightResult]
+        );
+      }
+      return success(true, location, [leftResult, rightResult]);
+    
+    case '/':
+      if (typeof leftValue !== 'number' || typeof rightValue !== 'number') {
+        return failure(
+          `Cannot divide non-numbers: ${typeof leftValue} / ${typeof rightValue}`,
+          location,
+          [leftResult, rightResult]
+        );
+      }
+      if (rightValue === 0) {
+        return failure('Division by zero', location, [leftResult, rightResult]);
+      }
+      return success(true, location, [leftResult, rightResult]);
+    
+    case '%':
+      if (typeof leftValue !== 'number' || typeof rightValue !== 'number') {
+        return failure(
+          `Cannot modulo non-numbers: ${typeof leftValue} % ${typeof rightValue}`,
+          location,
+          [leftResult, rightResult]
+        );
+      }
+      if (rightValue === 0) {
+        return failure('Modulo by zero', location, [leftResult, rightResult]);
+      }
+      return success(true, location, [leftResult, rightResult]);
+    
+    // ----------------------------------------------------------------
+    // MEMBERSHIP & BICONDITIONAL
+    // ----------------------------------------------------------------
+    
+    case 'in': {
+      if (Array.isArray(rightValue)) {
+        const found = rightValue.some((item) => deepEqual(item, leftValue));
+        if (found) {
+          return success(true, location, [leftResult, rightResult]);
+        }
+        return failure(
+          `Value ${JSON.stringify(leftValue)} not found in collection`,
+          location,
+          [leftResult, rightResult]
+        );
+      }
+      if (typeof rightValue === 'string' && typeof leftValue === 'string') {
+        const found = rightValue.includes(leftValue);
+        if (found) {
+          return success(true, location, [leftResult, rightResult]);
+        }
+        return failure(
+          `Substring "${leftValue}" not found in "${rightValue}"`,
+          location,
+          [leftResult, rightResult]
+        );
+      }
+      return failure(
+        `'in' operator requires array or string on right side`,
+        location,
+        [leftResult, rightResult]
+      );
+    }
+    
+    case 'iff':
+      result = Boolean(leftValue) === Boolean(rightValue);
+      if (!result) {
+        reason = `Biconditional failed: ${JSON.stringify(leftValue)} iff ${JSON.stringify(rightValue)}`;
+      }
+      break;
+    
     default:
       return failure(`Unsupported binary operator: ${expr.operator}`, location, [leftResult, rightResult]);
   }
@@ -591,7 +696,7 @@ function evaluateUnaryExpr(
       return success(result, location, [operandResult]);
     
     case '-':
-      const value = extractValue(expr.operand, context);
+      const value = extractValue(expr.operand, context, adapter);
       if (value === 'unknown' || typeof value !== 'number') {
         return failure('Cannot negate non-number or unknown value', location, [operandResult]);
       }
@@ -648,7 +753,7 @@ function evaluateMemberCall(
   const argResults = expr.arguments.map((arg) =>
     evaluateRecursive(arg, context, adapter, diagnostics, maxDepth, depth + 1)
   );
-  const argValues = expr.arguments.map((arg) => extractValue(arg, context));
+  const argValues = expr.arguments.map((arg) => extractValue(arg, context, adapter));
   
   // Handle entity method calls (User.exists, User.lookup)
   if (memberExpr.object.kind === 'Identifier') {
@@ -676,9 +781,97 @@ function evaluateMemberCall(
     }
   }
   
-  // Handle property method calls (e.g., email.is_valid, array.length)
-  const objectValue = extractValue(memberExpr.object, context);
+  // Handle property method calls (e.g., email.is_valid, str.contains, arr.sum)
+  const objectValue = extractValue(memberExpr.object, context, adapter);
   
+  // ------------------------------------------------------------------
+  // STRING METHODS — concrete evaluation, never unknown
+  // ------------------------------------------------------------------
+  if (typeof objectValue === 'string') {
+    switch (method) {
+      case 'contains': {
+        if (argValues.length >= 1 && typeof argValues[0] === 'string') {
+          const found = objectValue.includes(argValues[0]);
+          return success(found, location, [objectResult, ...argResults]);
+        }
+        return failure('contains requires a string argument', location, [objectResult, ...argResults]);
+      }
+      case 'startsWith': {
+        if (argValues.length >= 1 && typeof argValues[0] === 'string') {
+          const found = objectValue.startsWith(argValues[0]);
+          return success(found, location, [objectResult, ...argResults]);
+        }
+        return failure('startsWith requires a string argument', location, [objectResult, ...argResults]);
+      }
+      case 'endsWith': {
+        if (argValues.length >= 1 && typeof argValues[0] === 'string') {
+          const found = objectValue.endsWith(argValues[0]);
+          return success(found, location, [objectResult, ...argResults]);
+        }
+        return failure('endsWith requires a string argument', location, [objectResult, ...argResults]);
+      }
+      case 'concat': {
+        if (argValues.length >= 1 && typeof argValues[0] === 'string') {
+          return success(true, location, [objectResult, ...argResults]);
+        }
+        return failure('concat requires a string argument', location, [objectResult, ...argResults]);
+      }
+      case 'length':
+        return success(true, location, [objectResult, ...argResults]);
+      case 'is_valid': {
+        const result = adapter.is_valid?.(objectValue, context) ?? (objectValue.length > 0);
+        if (result === 'unknown') {
+          return unknown('Cannot determine validity', location, [objectResult, ...argResults]);
+        }
+        return success(result, location, [objectResult, ...argResults]);
+      }
+    }
+  }
+  
+  // ------------------------------------------------------------------
+  // COLLECTION METHODS — concrete evaluation, never unknown
+  // ------------------------------------------------------------------
+  if (Array.isArray(objectValue)) {
+    switch (method) {
+      case 'length':
+        return success(true, location, [objectResult, ...argResults]);
+      case 'sum': {
+        if (objectValue.every((v) => typeof v === 'number')) {
+          return success(true, location, [objectResult, ...argResults]);
+        }
+        return failure('sum requires all numeric elements', location, [objectResult, ...argResults]);
+      }
+      case 'count':
+        return success(true, location, [objectResult, ...argResults]);
+      case 'contains': {
+        if (argValues.length >= 1 && argValues[0] !== 'unknown') {
+          const found = objectValue.some((item) => deepEqual(item, argValues[0]));
+          return success(found, location, [objectResult, ...argResults]);
+        }
+        return unknown('Cannot check contains: argument is unknown', location, [objectResult, ...argResults]);
+      }
+      case 'isEmpty':
+        return success(objectValue.length === 0, location, [objectResult, ...argResults]);
+      case 'index': {
+        if (argValues.length >= 1 && typeof argValues[0] === 'number') {
+          const idx = argValues[0];
+          if (idx >= 0 && idx < objectValue.length) {
+            return success(true, location, [objectResult, ...argResults]);
+          }
+          return failure(
+            `Index ${idx} out of bounds [0, ${objectValue.length})`,
+            location,
+            [objectResult, ...argResults]
+          );
+        }
+        return failure('index requires a number argument', location, [objectResult, ...argResults]);
+      }
+    }
+  }
+  
+  // ------------------------------------------------------------------
+  // ADAPTER-BASED FALLBACKS
+  // ------------------------------------------------------------------
   if (method === 'is_valid') {
     const result = adapter.is_valid?.(objectValue, context);
     if (result === 'unknown' || result === undefined) {
@@ -753,7 +946,7 @@ function evaluateMemberExpr(
   const objectResult = evaluateRecursive(expr.object, context, adapter, diagnostics, maxDepth, depth + 1);
   const property = expr.property.name;
   
-  const objectValue = extractValue(expr.object, context);
+  const objectValue = extractValue(expr.object, context, adapter);
   
   if (objectValue === 'unknown' || objectValue === null || objectValue === undefined) {
     return unknown(`Cannot access property ${property}: object is null/undefined/unknown`, location, [objectResult]);
@@ -800,8 +993,8 @@ function evaluateIndexExpr(
   const objectResult = evaluateRecursive(expr.object, context, adapter, diagnostics, maxDepth, depth + 1);
   const indexResult = evaluateRecursive(expr.index, context, adapter, diagnostics, maxDepth, depth + 1);
   
-  const objectValue = extractValue(expr.object, context);
-  const indexValue = extractValue(expr.index, context);
+  const objectValue = extractValue(expr.object, context, adapter);
+  const indexValue = extractValue(expr.index, context, adapter);
   
   if (objectValue === 'unknown' || indexValue === 'unknown') {
     return unknown('Cannot index: object or index is unknown', location, [objectResult, indexResult]);
@@ -840,7 +1033,7 @@ function evaluateQuantifierExpr(
   const location = expr.location;
   const collectionResult = evaluateRecursive(expr.collection, context, adapter, diagnostics, maxDepth, depth + 1);
   
-  const collectionValue = extractValue(expr.collection, context);
+  const collectionValue = extractValue(expr.collection, context, adapter);
   
   if (collectionValue === 'unknown') {
     return unknown('Cannot evaluate quantifier: collection is unknown', location, [collectionResult]);
@@ -1035,7 +1228,7 @@ function evaluateListExpr(
 /**
  * Extract actual value from expression (for comparisons)
  */
-function extractValue(expr: AST.Expression, context: EvaluationContext): unknown {
+function extractValue(expr: AST.Expression, context: EvaluationContext, adapter?: ExpressionAdapter): unknown {
   switch (expr.kind) {
     case 'StringLiteral':
       return expr.value;
@@ -1057,23 +1250,35 @@ function extractValue(expr: AST.Expression, context: EvaluationContext): unknown
       return 'unknown';
     }
     case 'MemberExpr': {
-      const objectValue = extractValue(expr.object, context);
+      const objectValue = extractValue(expr.object, context, adapter);
       if (objectValue === 'unknown' || objectValue === null || objectValue === undefined) {
         return 'unknown';
       }
-      if (typeof objectValue === 'object' && expr.property.name in objectValue) {
-        return (objectValue as Record<string, unknown>)[expr.property.name];
+      const prop = expr.property.name;
+      // Built-in property: length
+      if (prop === 'length') {
+        if (typeof objectValue === 'string') return objectValue.length;
+        if (Array.isArray(objectValue)) return objectValue.length;
+        const adapterLen = adapter?.length?.(objectValue, context);
+        if (adapterLen !== 'unknown' && adapterLen !== undefined) return adapterLen;
+        return 'unknown';
+      }
+      if (typeof objectValue === 'object' && prop in objectValue) {
+        return (objectValue as Record<string, unknown>)[prop];
       }
       return 'unknown';
     }
     case 'IndexExpr': {
-      const objectValue = extractValue(expr.object, context);
-      const indexValue = extractValue(expr.index, context);
+      const objectValue = extractValue(expr.object, context, adapter);
+      const indexValue = extractValue(expr.index, context, adapter);
       if (objectValue === 'unknown' || indexValue === 'unknown') {
         return 'unknown';
       }
       if (Array.isArray(objectValue) && typeof indexValue === 'number') {
-        return objectValue[indexValue];
+        if (indexValue >= 0 && indexValue < objectValue.length) {
+          return objectValue[indexValue];
+        }
+        return 'unknown';
       }
       if (typeof objectValue === 'object' && indexValue !== null && indexValue !== undefined) {
         return (objectValue as Record<string, unknown>)[String(indexValue)];
@@ -1081,11 +1286,208 @@ function extractValue(expr: AST.Expression, context: EvaluationContext): unknown
       return 'unknown';
     }
     case 'ListExpr': {
-      return expr.elements.map((el) => extractValue(el, context));
+      return expr.elements.map((el) => extractValue(el, context, adapter));
+    }
+    case 'BinaryExpr': {
+      const leftVal = extractValue(expr.left, context, adapter);
+      const rightVal = extractValue(expr.right, context, adapter);
+      if (leftVal === 'unknown' || rightVal === 'unknown') return 'unknown';
+      switch (expr.operator) {
+        case '+':
+          if (typeof leftVal === 'string' || typeof rightVal === 'string') {
+            return String(leftVal) + String(rightVal);
+          }
+          if (typeof leftVal === 'number' && typeof rightVal === 'number') return leftVal + rightVal;
+          return 'unknown';
+        case '-':
+          if (typeof leftVal === 'number' && typeof rightVal === 'number') return leftVal - rightVal;
+          return 'unknown';
+        case '*':
+          if (typeof leftVal === 'number' && typeof rightVal === 'number') return leftVal * rightVal;
+          return 'unknown';
+        case '/':
+          if (typeof leftVal === 'number' && typeof rightVal === 'number') {
+            if (rightVal === 0) return 'unknown';
+            return leftVal / rightVal;
+          }
+          return 'unknown';
+        case '%':
+          if (typeof leftVal === 'number' && typeof rightVal === 'number') {
+            if (rightVal === 0) return 'unknown';
+            return leftVal % rightVal;
+          }
+          return 'unknown';
+        case '==':
+          return deepEqual(leftVal, rightVal);
+        case '!=':
+          return !deepEqual(leftVal, rightVal);
+        case '<':
+          if (typeof leftVal === 'number' && typeof rightVal === 'number') return leftVal < rightVal;
+          return 'unknown';
+        case '<=':
+          if (typeof leftVal === 'number' && typeof rightVal === 'number') return leftVal <= rightVal;
+          return 'unknown';
+        case '>':
+          if (typeof leftVal === 'number' && typeof rightVal === 'number') return leftVal > rightVal;
+          return 'unknown';
+        case '>=':
+          if (typeof leftVal === 'number' && typeof rightVal === 'number') return leftVal >= rightVal;
+          return 'unknown';
+        case 'and':
+          return Boolean(leftVal) && Boolean(rightVal);
+        case 'or':
+          return Boolean(leftVal) || Boolean(rightVal);
+        case 'implies':
+          return !Boolean(leftVal) || Boolean(rightVal);
+        case 'iff':
+          return Boolean(leftVal) === Boolean(rightVal);
+        case 'in': {
+          if (Array.isArray(rightVal)) {
+            return rightVal.some((item) => deepEqual(item, leftVal));
+          }
+          if (typeof rightVal === 'string' && typeof leftVal === 'string') {
+            return rightVal.includes(leftVal);
+          }
+          return 'unknown';
+        }
+        default:
+          return 'unknown';
+      }
+    }
+    case 'UnaryExpr': {
+      const operandVal = extractValue(expr.operand, context, adapter);
+      if (operandVal === 'unknown') return 'unknown';
+      switch (expr.operator) {
+        case 'not':
+          return !Boolean(operandVal);
+        case '-':
+          if (typeof operandVal === 'number') return -operandVal;
+          return 'unknown';
+        default:
+          return 'unknown';
+      }
+    }
+    case 'CallExpr': {
+      return extractCallValue(expr, context, adapter);
+    }
+    case 'ConditionalExpr': {
+      const condVal = extractValue(expr.condition, context, adapter);
+      if (condVal === 'unknown') return 'unknown';
+      return extractValue(
+        Boolean(condVal) ? expr.thenBranch : expr.elseBranch,
+        context,
+        adapter
+      );
+    }
+    case 'InputExpr': {
+      const prop = expr.property.name;
+      if (prop in context.input) return context.input[prop];
+      return 'unknown';
+    }
+    case 'ResultExpr': {
+      if (context.result === null || context.result === undefined) return 'unknown';
+      if (expr.property) {
+        const resultObj = context.result as Record<string, unknown>;
+        if (expr.property.name in resultObj) return resultObj[expr.property.name];
+        return 'unknown';
+      }
+      return context.result;
     }
     default:
       return 'unknown';
   }
+}
+
+/**
+ * Extract concrete value from a call expression (string/collection methods)
+ */
+function extractCallValue(expr: AST.CallExpr, context: EvaluationContext, adapter?: ExpressionAdapter): unknown {
+  // Handle member calls (e.g., str.contains(...), arr.sum())
+  if (expr.callee.kind === 'MemberExpr') {
+    const memberExpr = expr.callee as AST.MemberExpr;
+    const objectValue = extractValue(memberExpr.object, context, adapter);
+    const method = memberExpr.property.name;
+    const argValues = expr.arguments.map((arg) => extractValue(arg, context, adapter));
+
+    // String methods
+    if (typeof objectValue === 'string') {
+      switch (method) {
+        case 'contains': {
+          if (argValues.length >= 1 && typeof argValues[0] === 'string') {
+            return objectValue.includes(argValues[0]);
+          }
+          return 'unknown';
+        }
+        case 'startsWith': {
+          if (argValues.length >= 1 && typeof argValues[0] === 'string') {
+            return objectValue.startsWith(argValues[0]);
+          }
+          return 'unknown';
+        }
+        case 'endsWith': {
+          if (argValues.length >= 1 && typeof argValues[0] === 'string') {
+            return objectValue.endsWith(argValues[0]);
+          }
+          return 'unknown';
+        }
+        case 'concat': {
+          if (argValues.length >= 1 && typeof argValues[0] === 'string') {
+            return objectValue + argValues[0];
+          }
+          return 'unknown';
+        }
+        case 'length':
+          return objectValue.length;
+      }
+    }
+
+    // Collection methods
+    if (Array.isArray(objectValue)) {
+      switch (method) {
+        case 'length':
+          return objectValue.length;
+        case 'sum': {
+          if (objectValue.every((v) => typeof v === 'number')) {
+            return (objectValue as number[]).reduce((a, b) => a + b, 0);
+          }
+          return 'unknown';
+        }
+        case 'count':
+          return objectValue.length;
+        case 'contains': {
+          if (argValues.length >= 1 && argValues[0] !== 'unknown') {
+            return objectValue.some((item) => deepEqual(item, argValues[0]));
+          }
+          return 'unknown';
+        }
+        case 'isEmpty':
+          return objectValue.length === 0;
+        case 'index': {
+          if (argValues.length >= 1 && typeof argValues[0] === 'number') {
+            const idx = argValues[0];
+            if (idx >= 0 && idx < objectValue.length) return objectValue[idx];
+            return 'unknown';
+          }
+          return 'unknown';
+        }
+      }
+    }
+
+    // Adapter-based length
+    if (method === 'length' && adapter?.length) {
+      const len = adapter.length(objectValue, context);
+      if (len !== 'unknown' && len !== undefined) return len;
+    }
+
+    if (method === 'is_valid' && adapter?.is_valid) {
+      const result = adapter.is_valid(objectValue, context);
+      if (result !== 'unknown' && result !== undefined) return result;
+    }
+
+    return 'unknown';
+  }
+
+  return 'unknown';
 }
 
 function deepEqual(a: unknown, b: unknown): boolean {

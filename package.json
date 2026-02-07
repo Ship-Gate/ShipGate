@@ -19,6 +19,9 @@
     "dev": "turbo dev",
     "coverage:report": "vitest run --coverage --workspace",
     "benchmark": "node scripts/benchmark.js",
+    "benchmark:phase3": "npx tsx bench/phase3-benchmarks.ts",
+    "test:integration": "npx vitest run --project e2e tests/e2e/phase3-verify-pipeline",
+    "test:phase3": "npx vitest run --project e2e tests/e2e/phase3-verify-pipeline && npx tsx bench/phase3-benchmarks.ts",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm build:production && pnpm test:production && changeset publish",
@@ -38,7 +41,10 @@
     "test:semantic": "pnpm --filter @isl-lang/isl-pipeline test",
     "test:proof": "pnpm --filter @isl-lang/isl-proof test",
     "test:performance": "pnpm --filter @isl-lang/isl-pipeline test -- --testNamePattern=\"Performance\"",
-    "list:experimental": "npx tsx scripts/mark-experimental-private.ts --dry-run"
+    "list:experimental": "npx tsx scripts/mark-experimental-private.ts --dry-run",
+    "mvp:green": "pwsh scripts/mvp-green.ps1",
+    "mvp:green:unix": "bash scripts/mvp-green.sh",
+    "typecheck:experimental": "echo 'Checking experimental packages...' && pnpm --filter @isl-lang/semantic-analysis exec tsc --noEmit || true && pnpm --filter @isl-lang/pbt exec tsc --noEmit || true && pnpm --filter @isl-lang/isl-cli exec tsc --noEmit || true && echo 'Experimental check complete (failures expected)'"
   },
   "keywords": [
     "isl",

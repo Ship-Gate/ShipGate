@@ -1,0 +1,19 @@
+{
+  "version": "1.0.0",
+  "conventions": [
+    {
+      "category": "naming",
+      "rules": [
+        "Use kebab-case for file names",
+        "Use .test.ts suffix for test files"
+      ]
+    },
+    {
+      "category": "error-handling",
+      "rules": [
+        "Always handle async errors with try/catch",
+        "Use custom error classes for domain errors"
+      ]
+    }
+  ]
+}

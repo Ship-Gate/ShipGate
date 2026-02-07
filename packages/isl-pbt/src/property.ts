@@ -45,15 +45,13 @@ function extractPreconditions(behavior: AST.Behavior): Property[] {
     return properties;
   }
   
-  for (const condition of behavior.preconditions.conditions) {
-    for (const stmt of condition.statements) {
-      properties.push({
-        name: expressionToString(stmt.expression),
-        type: 'precondition',
-        expression: stmt.expression,
-        location: stmt.location,
-      });
-    }
+  for (const expr of behavior.preconditions) {
+    properties.push({
+      name: expressionToString(expr),
+      type: 'precondition',
+      expression: expr,
+      location: expr.location,
+    });
   }
   
   return properties;
@@ -73,28 +71,21 @@ function extractPostconditions(behavior: AST.Behavior): Property[] {
     return properties;
   }
   
-  for (const condition of behavior.postconditions.conditions) {
-    // Determine guard
-    let guard: string | undefined;
-    if (condition.guard) {
-      if (typeof condition.guard === 'string') {
-        guard = condition.guard; // 'success' or 'failure'
-      } else {
-        guard = condition.guard.name; // Error identifier
-      }
-    }
-    
-    for (const stmt of condition.statements) {
+  for (const block of behavior.postconditions) {
+    const guard =
+      typeof block.condition === 'string'
+        ? block.condition
+        : block.condition.name;
+    for (const expr of block.predicates) {
       properties.push({
-        name: expressionToString(stmt.expression),
+        name: expressionToString(expr),
         type: 'postcondition',
-        expression: stmt.expression,
+        expression: expr,
         guard,
-        location: stmt.location,
+        location: expr.location,
       });
     }
   }
-  
   return properties;
 }
 
@@ -112,18 +103,14 @@ function extractInvariants(behavior: AST.Behavior): Property[] {
     return properties;
   }
   
-  for (const condition of behavior.invariants.conditions) {
-    for (const stmt of condition.statements) {
-      // Handle special invariant expressions like "password never_logged"
-      const invariantStr = expressionToString(stmt.expression);
-      
-      properties.push({
-        name: invariantStr,
-        type: 'invariant',
-        expression: stmt.expression,
-        location: stmt.location,
-      });
-    }
+  for (const expr of behavior.invariants) {
+    const invariantStr = expressionToString(expr);
+    properties.push({
+      name: invariantStr,
+      type: 'invariant',
+      expression: expr,
+      location: expr.location,
+    });
   }
   
   return properties;
@@ -149,7 +136,7 @@ function extractInputSpec(
   for (const field of behavior.input.fields) {
     const constraints = extractConstraints(field.type, domain);
     const sensitive = field.annotations?.some(
-      (a) => a.name === 'sensitive' || a.name === 'secret' || a.name === 'pii'
+      (a) => a.name.name === 'sensitive' || a.name.name === 'secret' || a.name.name === 'pii'
     ) ?? false;
     
     specs.push({
@@ -208,7 +195,7 @@ function extractConstraints(
     case 'ReferenceType': {
       // Look up the type definition
       const refName = type.name.parts.map((p) => p.name).join('.');
-      const typeDef = domain.types.find((t) => t.name.name === refName);
+      const typeDef = domain.types.find((t) => (t as AST.TypeDeclaration).name.name === refName);
       if (typeDef) {
         return extractConstraints(typeDef.definition, domain);
       }
@@ -219,18 +206,17 @@ function extractConstraints(
       constraints.enum = type.variants.map((v) => v.name.name);
       return constraints;
     
-    case 'PrimitiveType':
-      // Set default constraints based on primitive type
-      switch (type.name) {
-        case 'Email':
-          constraints.format = 'email';
-          constraints.maxLength = 254;
-          break;
-        case 'UUID':
-          constraints.format = 'uuid';
-          break;
+    case 'PrimitiveType': {
+      // Set default constraints based on primitive type (name may include extended types at runtime)
+      const typeName: string = (type as AST.PrimitiveType & { name: string }).name;
+      if (typeName === 'Email') {
+        constraints.format = 'email';
+        constraints.maxLength = 254;
+      } else if (typeName === 'UUID') {
+        constraints.format = 'uuid';
       }
       return constraints;
+    }
     
     default:
       return constraints;
@@ -371,7 +357,7 @@ export function getSensitiveFields(domain: AST.Domain): Map<string, string[]> {
     const sensitiveFields: string[] = [];
     for (const field of entity.fields) {
       const isSensitive = field.annotations?.some(
-        (a) => a.name === 'secret' || a.name === 'sensitive' || a.name === 'pii'
+        (a) => a.name.name === 'secret' || a.name.name === 'sensitive' || a.name.name === 'pii'
       );
       if (isSensitive) {
         sensitiveFields.push(field.name.name);

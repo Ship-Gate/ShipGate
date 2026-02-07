@@ -4,7 +4,7 @@
  * Core type definitions for the semantic pass framework.
  */
 
-import type { DomainDeclaration, SourceSpan } from '@isl-lang/isl-core';
+import type { Domain, SourceLocation as ParserSourceLocation } from '@isl-lang/parser';
 import type { Diagnostic, CodeFix, SourceLocation } from '@isl-lang/errors';
 
 // ============================================================================
@@ -23,8 +23,8 @@ export interface TypeInfo {
   isArray: boolean;
   /** Generic type parameters (e.g., for Map<K, V>) */
   typeParams?: TypeInfo[];
-  /** The original declaration span */
-  declaredAt?: SourceSpan;
+  /** The original declaration location */
+  declaredAt?: SourceLocation;
   /** Type constraints (e.g., min, max, pattern) */
   constraints?: TypeConstraint[];
 }
@@ -133,7 +133,7 @@ export interface TypeEnvironment {
  */
 export interface PassContext {
   /** The parsed AST */
-  ast: DomainDeclaration;
+  ast: Domain;
   /** Type environment from type checking */
   typeEnv: TypeEnvironment;
   /** Source file path */
@@ -302,10 +302,14 @@ export const DEFAULT_ANALYZER_CONFIG: Required<AnalyzerConfig> = {
 // ============================================================================
 
 /**
- * Helper to convert SourceSpan to SourceLocation
+ * Helper to extract location from an AST node
+ * @deprecated Use node.location directly - parser AST nodes have SourceLocation
  */
-export function spanToLocation(span: SourceSpan | undefined | null, file: string): SourceLocation {
-  if (!span) {
+export function spanToLocation(
+  loc: ParserSourceLocation | SourceLocation | undefined | null, 
+  file: string
+): SourceLocation {
+  if (!loc) {
     return {
       file,
       line: 1,
@@ -315,12 +319,28 @@ export function spanToLocation(span: SourceSpan | undefined | null, file: string
     };
   }
   return {
-    file: span.file || file,
-    line: span.start?.line || 1,
-    column: span.start?.column || 1,
-    endLine: span.end?.line || span.start?.line || 1,
-    endColumn: span.end?.column || span.start?.column || 1,
+    file: loc.file || file,
+    line: loc.line || 1,
+    column: loc.column || 1,
+    endLine: loc.endLine || loc.line || 1,
+    endColumn: loc.endColumn || loc.column || 1,
   };
+}
+
+/**
+ * Get location from an AST node
+ */
+export function nodeLocation(node: { location: SourceLocation }, file: string): SourceLocation {
+  if (node.location) {
+    return {
+      file: node.location.file || file,
+      line: node.location.line,
+      column: node.location.column,
+      endLine: node.location.endLine,
+      endColumn: node.location.endColumn,
+    };
+  }
+  return { file, line: 1, column: 1, endLine: 1, endColumn: 1 };
 }
 
 /**

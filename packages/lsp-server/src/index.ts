@@ -24,6 +24,14 @@ export {
   type ImportResolutionResult,
 } from './features/import-resolver';
 
+// Scanner diagnostics (Host + Reality-Gap)
+export {
+  ScannerDiagnosticsProvider,
+  SOURCE_HOST,
+  SOURCE_REALITY_GAP,
+  type ScannerDiagnosticsOptions,
+} from './features/scanner-diagnostics';
+
 // Semantic linting
 export {
   ISLSemanticLinter,

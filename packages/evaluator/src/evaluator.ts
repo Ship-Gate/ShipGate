@@ -9,12 +9,15 @@ import type {
   EntityStore,
   BuiltinRegistry,
   LambdaValue,
+  DiagnosticPayload,
 } from './types.js';
 import {
   EvaluationError,
   TypeError,
   ReferenceError,
   RuntimeError,
+  DiagnosticError,
+  EvalDiagnosticCode,
   isLambdaValue,
   getValueType,
 } from './types.js';
@@ -108,6 +111,12 @@ interface MemberExpr extends ASTNode {
   property: Identifier;
 }
 
+interface OptionalMemberExpr extends ASTNode {
+  kind: 'OptionalMemberExpr';
+  object: Expression;
+  property: Identifier;
+}
+
 interface IndexExpr extends ASTNode {
   kind: 'IndexExpr';
   object: Expression;
@@ -179,6 +188,7 @@ type Expression =
   | UnaryExpr
   | CallExpr
   | MemberExpr
+  | OptionalMemberExpr
   | IndexExpr
   | QuantifierExpr
   | ConditionalExpr
@@ -196,7 +206,11 @@ type Expression =
 export interface EvaluatorOptions {
   /** Custom builtin registry */
   builtins?: BuiltinRegistry;
-  /** Enable strict type checking */
+  /**
+   * Enable strict diagnostics mode.
+   * When true (default), null-dereferences, OOB indices, and undefined members
+   * throw DiagnosticError instead of silently returning undefined.
+   */
   strict?: boolean;
   /** Maximum recursion depth */
   maxDepth?: number;
@@ -213,6 +227,7 @@ export interface EvaluatorOptions {
  */
 export class Evaluator {
   private readonly builtins: BuiltinRegistry;
+  private readonly strict: boolean;
   private readonly maxDepth: number;
   private currentDepth: number = 0;
   private startTime: number = 0;
@@ -220,7 +235,7 @@ export class Evaluator {
 
   constructor(options: EvaluatorOptions = {}) {
     this.builtins = options.builtins ?? getDefaultBuiltins();
-    // options.strict reserved for future strict mode
+    this.strict = options.strict ?? true;
     this.maxDepth = options.maxDepth ?? 1000;
     this.timeout = options.timeout ?? 5000;
   }
@@ -293,6 +308,9 @@ export class Evaluator {
         case 'MemberExpr':
           return this.evalMemberExpr(expr, ctx);
 
+        case 'OptionalMemberExpr':
+          return this.evalOptionalMemberExpr(expr, ctx);
+
         case 'IndexExpr':
           return this.evalIndexExpr(expr, ctx);
 
@@ -322,6 +340,17 @@ export class Evaluator {
 
         default: {
           const unknownExpr = expr as unknown as ASTNode;
+          if (this.strict) {
+            throw new DiagnosticError(
+              {
+                code: EvalDiagnosticCode.EVAL_UNSUPPORTED_EXPR,
+                message: `Unsupported expression kind: ${unknownExpr.kind}`,
+                span: unknownExpr.location,
+                subExpression: `<${unknownExpr.kind}>`,
+              },
+              expr,
+            );
+          }
           throw new EvaluationError(
             `Unsupported expression kind: ${unknownExpr.kind}`,
             unknownExpr.location,
@@ -371,6 +400,17 @@ export class Evaluator {
         this.builtins.get(name)!(args, ctx, expr.location)) as unknown as Value;
     }
 
+    if (this.strict) {
+      throw new DiagnosticError(
+        {
+          code: EvalDiagnosticCode.EVAL_UNDEFINED_VAR,
+          message: `Unknown identifier: '${name}'`,
+          span: expr.location,
+          subExpression: name,
+        },
+        expr,
+      );
+    }
     throw new ReferenceError(
       `Unknown identifier: ${name}`,
       expr.location,
@@ -389,6 +429,18 @@ export class Evaluator {
     for (let i = 1; i < parts.length; i++) {
       const part = parts[i]!.name;
       if (value === null || value === undefined) {
+        if (this.strict) {
+          const resolvedPath = parts.slice(0, i).map(p => p.name).join('.');
+          throw new DiagnosticError(
+            {
+              code: EvalDiagnosticCode.EVAL_NULL_DEREF,
+              message: `Cannot access property '${part}' on ${value === null ? 'null' : 'undefined'} (in path '${resolvedPath}.${part}')`,
+              span: expr.location,
+              subExpression: parts.map(p => p.name).join('.'),
+            },
+            expr,
+          );
+        }
         return undefined;
       }
       value = (value as Record<string, Value>)[part];
@@ -924,6 +976,17 @@ export class Evaluator {
     const property = expr.property.name;
 
     if (object === null || object === undefined) {
+      if (this.strict) {
+        throw new DiagnosticError(
+          {
+            code: EvalDiagnosticCode.EVAL_NULL_DEREF,
+            message: `Cannot access property '${property}' on ${object === null ? 'null' : 'undefined'}`,
+            span: expr.location,
+            subExpression: expressionToString(expr),
+          },
+          expr,
+        );
+      }
       return undefined;
     }
 
@@ -966,6 +1029,71 @@ export class Evaluator {
   }
 
   // ============================================================================
+  // OPTIONAL MEMBER EXPRESSIONS
+  // ============================================================================
+
+  private evalOptionalMemberExpr(expr: OptionalMemberExpr, ctx: EvaluationContext): Value {
+    const object = this.eval(expr.object, ctx);
+    const property = expr.property.name;
+
+    // Optional chaining: null/undefined short-circuits to undefined
+    if (object === null || object === undefined) {
+      return undefined;
+    }
+
+    // Primitives that aren't objects or strings cannot have properties
+    if (typeof object !== 'object' && typeof object !== 'string') {
+      if (this.strict) {
+        throw new DiagnosticError(
+          {
+            code: EvalDiagnosticCode.EVAL_OPTIONAL_CHAIN_NON_OBJECT,
+            message: `Optional chaining (?.) requires object or null/undefined, got '${getValueType(object)}'`,
+            span: expr.location,
+            subExpression: expressionToString(expr),
+          },
+          expr,
+        );
+      }
+      return undefined;
+    }
+
+    // Entity proxy - return bound method
+    if (isEntityProxy(object)) {
+      switch (property) {
+        case 'exists':
+          return ((criteria?: Record<string, unknown>) =>
+            object.exists(criteria)) as unknown as Value;
+        case 'lookup':
+          return ((criteria: Record<string, unknown>) =>
+            object.lookup(criteria)) as unknown as Value;
+        case 'count':
+          return ((criteria?: Record<string, unknown>) =>
+            object.count(criteria)) as unknown as Value;
+        case 'getAll':
+        case 'all':
+          return (() => object.getAll()) as unknown as Value;
+        default:
+          throw new EvaluationError(
+            `Unknown entity property: ${object.__entityName__}.${property}`,
+            expr.location,
+            expr
+          );
+      }
+    }
+
+    // Array / string length
+    if (Array.isArray(object) && property === 'length') {
+      return object.length;
+    }
+    if (typeof object === 'string' && property === 'length') {
+      return object.length;
+    }
+
+    // General property access
+    return (object as Record<string, Value>)[property];
+  }
+
+  // ============================================================================
   // INDEX EXPRESSIONS
   // ============================================================================
 
@@ -974,12 +1102,34 @@ export class Evaluator {
     const index = this.eval(expr.index, ctx);
 
     if (object === null || object === undefined) {
+      if (this.strict) {
+        throw new DiagnosticError(
+          {
+            code: EvalDiagnosticCode.EVAL_NULL_DEREF,
+            message: `Cannot index into ${object === null ? 'null' : 'undefined'}`,
+            span: expr.location,
+            subExpression: expressionToString(expr),
+          },
+          expr,
+        );
+      }
       return undefined;
     }
 
     if (Array.isArray(object)) {
       const idx = index as number;
       if (idx < 0 || idx >= object.length) {
+        if (this.strict) {
+          throw new DiagnosticError(
+            {
+              code: EvalDiagnosticCode.EVAL_OOB_INDEX,
+              message: `Index ${idx} is out of bounds for array of length ${object.length}`,
+              span: expr.location,
+              subExpression: expressionToString(expr),
+            },
+            expr,
+          );
+        }
         return undefined;
       }
       return object[idx] as Value;
@@ -988,6 +1138,17 @@ export class Evaluator {
     if (typeof object === 'string') {
       const idx = index as number;
       if (idx < 0 || idx >= object.length) {
+        if (this.strict) {
+          throw new DiagnosticError(
+            {
+              code: EvalDiagnosticCode.EVAL_OOB_INDEX,
+              message: `Index ${idx} is out of bounds for string of length ${object.length}`,
+              span: expr.location,
+              subExpression: expressionToString(expr),
+            },
+            expr,
+          );
+        }
         return undefined;
       }
       return object[idx];
@@ -1101,6 +1262,17 @@ export class Evaluator {
 
   private evalOldExpr(expr: OldExpr, ctx: EvaluationContext): Value {
     if (!ctx.oldState) {
+      if (this.strict) {
+        throw new DiagnosticError(
+          {
+            code: EvalDiagnosticCode.EVAL_MISSING_OLD_STATE,
+            message: 'old() called without previous state snapshot',
+            span: expr.location,
+            subExpression: expressionToString(expr),
+          },
+          expr,
+        );
+      }
       throw new RuntimeError(
         'old() called without previous state snapshot',
         expr.location
@@ -1114,7 +1286,21 @@ export class Evaluator {
       store: oldStore,
     };
 
-    return this.eval(expr.expression, oldCtx);
+    try {
+      return this.eval(expr.expression, oldCtx);
+    } catch (error) {
+      if (this.strict && error instanceof DiagnosticError) {
+        throw DiagnosticError.wrap(
+          EvalDiagnosticCode.EVAL_OLD_NESTED_FAIL,
+          `Nested path resolution failed inside old(): ${error.message}`,
+          expr.location,
+          expressionToString(expr),
+          error,
+          expr,
+        );
+      }
+      throw error;
+    }
   }
 
   private evalResultExpr(expr: ResultExpr, ctx: EvaluationContext): Value {
@@ -1293,6 +1479,8 @@ export function expressionToString(expr: unknown): string {
       return `${expressionToString(e.callee)}(${e.arguments.map(expressionToString).join(', ')})`;
     case 'MemberExpr':
       return `${expressionToString(e.object)}.${e.property.name}`;
+    case 'OptionalMemberExpr':
+      return `${expressionToString(e.object)}?.${e.property.name}`;
     case 'IndexExpr':
       return `${expressionToString(e.object)}[${expressionToString(e.index)}]`;
     case 'OldExpr':

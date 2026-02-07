@@ -219,6 +219,69 @@ function generateDefaultChaosScenarios(
     }],
   });
 
+  // CPU pressure scenario
+  scenarios.push({
+    name: `${behaviorName}_cpu_pressure`,
+    behaviorName,
+    injections: [{
+      type: 'cpu_pressure',
+      parameters: { percentage: 80, durationMs: 5000 },
+    }],
+    setup: [],
+    actions: [{
+      type: 'call',
+      target: behaviorName,
+      arguments: {},
+    }],
+    assertions: [{
+      type: 'timeout',
+      expected: false,
+      message: 'Should complete within timeout under CPU pressure',
+    }],
+  });
+
+  // Memory pressure scenario
+  scenarios.push({
+    name: `${behaviorName}_memory_pressure`,
+    behaviorName,
+    injections: [{
+      type: 'memory_pressure',
+      parameters: { allocationMb: 128 },
+    }],
+    setup: [],
+    actions: [{
+      type: 'call',
+      target: behaviorName,
+      arguments: {},
+    }],
+    assertions: [{
+      type: 'error_returned',
+      expected: false,
+      message: 'Should not crash under memory pressure',
+    }],
+  });
+
+  // Clock skew scenario
+  scenarios.push({
+    name: `${behaviorName}_clock_skew`,
+    behaviorName,
+    injections: [{
+      type: 'clock_skew',
+      parameters: { offsetMs: 30000, mode: 'fixed' },
+    }],
+    setup: [],
+    actions: [{
+      type: 'call',
+      target: behaviorName,
+      arguments: {},
+    }],
+    assertions: [{
+      type: 'state_check',
+      expected: 'correct_timestamps',
+      message: 'Should handle clock skew correctly',
+    }],
+  });
+
   return scenarios;
 }
 

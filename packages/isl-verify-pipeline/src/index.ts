@@ -90,6 +90,11 @@ export type {
   SMTCheckResult,
   SMTCheckerOutput,
   
+  // SMT Resolution types
+  SMTSolverEvidence,
+  SMTResolutionResult,
+  SMTResolutionOutput,
+  
   // Configuration
   PipelineConfig,
   
@@ -138,6 +143,11 @@ export {
   checkWithSMT,
   isSMTAvailable,
 } from './stages/smt-checker.js';
+
+export {
+  resolveUnknownsWithSMT,
+  applyResolutions,
+} from './stages/smt-resolution.js';
 
 // Output formatters
 export {

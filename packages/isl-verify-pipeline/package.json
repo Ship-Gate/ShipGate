@@ -51,10 +51,14 @@
     "vitest": "^1.0.0"
   },
   "peerDependencies": {
-    "vitest": ">=1.0.0"
+    "vitest": ">=1.0.0",
+    "@isl-lang/isl-smt": "workspace:*"
   },
   "peerDependenciesMeta": {
     "vitest": {
+      "optional": true
+    },
+    "@isl-lang/isl-smt": {
       "optional": true
     }
   }

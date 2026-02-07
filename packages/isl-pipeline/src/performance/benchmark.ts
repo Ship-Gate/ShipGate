@@ -169,9 +169,9 @@ export class PerformanceBenchmark {
         verbose: false,
       });
 
-      const healStart = Date.now();
+      const healStart = performance.now();
       const healResult = await healer.heal();
-      const healTotalTime = Date.now() - healStart;
+      const healTotalTime = performance.now() - healStart;
 
       // Extract iteration times from history
       for (const iter of healResult.history) {

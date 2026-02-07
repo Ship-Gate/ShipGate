@@ -10,14 +10,13 @@
  * @module @isl-lang/semantic-analysis
  */
 
-import type { Diagnostic } from '@isl-lang/errors';
+import type { Diagnostic, SourceLocation } from '@isl-lang/errors';
 import type {
-  BehaviorDeclaration,
-  ConditionBlock,
+  Behavior,
+  PostconditionBlock,
   Expression,
-} from '@isl-lang/isl-core';
+} from '@isl-lang/parser';
 import type { SemanticPass, PassContext } from '../types.js';
-import { spanToLocation } from '../types.js';
 
 // ============================================================================
 // Pass Definition
@@ -36,9 +35,9 @@ export const RedundantConditionsPass: SemanticPass = {
     const { ast, filePath } = ctx;
 
     for (const behavior of ast.behaviors || []) {
-      // Check preconditions
-      if (behavior.preconditions) {
-        diagnostics.push(...checkConditionBlock(
+      // Check preconditions (Expression[])
+      if (behavior.preconditions && behavior.preconditions.length > 0) {
+        diagnostics.push(...checkExpressionList(
           behavior.preconditions,
           behavior,
           'precondition',
@@ -46,27 +45,23 @@ export const RedundantConditionsPass: SemanticPass = {
         ));
       }
 
-      // Check postconditions
-      if (behavior.postconditions) {
-        diagnostics.push(...checkConditionBlock(
+      // Check postconditions (PostconditionBlock[])
+      if (behavior.postconditions && behavior.postconditions.length > 0) {
+        diagnostics.push(...checkPostconditionBlocks(
           behavior.postconditions,
           behavior,
-          'postcondition',
           filePath
         ));
       }
 
-      // Check invariants
-      if (behavior.invariants) {
-        const invBlock = behavior.invariants as ConditionBlock;
-        if (invBlock.conditions) {
-          diagnostics.push(...checkConditionBlock(
-            invBlock,
-            behavior,
-            'invariant',
-            filePath
-          ));
-        }
+      // Check invariants (Expression[])
+      if (behavior.invariants && behavior.invariants.length > 0) {
+        diagnostics.push(...checkExpressionList(
+          behavior.invariants,
+          behavior,
+          'invariant',
+          filePath
+        ));
       }
     }
 
@@ -80,33 +75,47 @@ export const RedundantConditionsPass: SemanticPass = {
 export const redundantConditionsPass = RedundantConditionsPass;
 
 // ============================================================================
-// Condition Block Analysis
+// Helper to convert AST location
 // ============================================================================
 
-function checkConditionBlock(
-  block: ConditionBlock,
-  behavior: BehaviorDeclaration,
+function nodeLocation(node: { location: SourceLocation }, filePath: string): SourceLocation {
+  if (node.location) {
+    return {
+      file: node.location.file || filePath,
+      line: node.location.line,
+      column: node.location.column,
+      endLine: node.location.endLine,
+      endColumn: node.location.endColumn,
+    };
+  }
+  return { file: filePath, line: 1, column: 1, endLine: 1, endColumn: 1 };
+}
+
+// ============================================================================
+// Expression List Analysis (for preconditions and invariants)
+// ============================================================================
+
+function checkExpressionList(
+  expressions: Expression[],
+  behavior: Behavior,
   blockType: 'precondition' | 'postcondition' | 'invariant',
   filePath: string
 ): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
-  const conditions = block.conditions || [];
-  const seenConditions = new Map<string, number>();
+  const seenConditions = new Map<string, { index: number; location: SourceLocation }>();
 
-  for (let i = 0; i < conditions.length; i++) {
-    const condition = conditions[i];
-    
-    if (!condition.expression) continue;
+  for (let i = 0; i < expressions.length; i++) {
+    const expression = expressions[i];
 
     // Check for tautological conditions
-    const tautology = checkTautology(condition.expression);
+    const tautology = checkTautology(expression);
     if (tautology) {
       diagnostics.push({
         code: 'E0350',
         category: 'semantic',
         severity: 'warning',
         message: `Tautological ${blockType}: ${tautology.reason}`,
-        location: spanToLocation(condition.span, filePath),
+        location: nodeLocation(expression, filePath),
         source: 'verifier',
         notes: [
           `In behavior '${behavior.name.name}'`,
@@ -118,16 +127,16 @@ function checkConditionBlock(
     }
 
     // Check for exact duplicates
-    const conditionText = normalizeExpression(condition.expression);
-    const prevIndex = seenConditions.get(conditionText);
+    const conditionText = normalizeExpression(expression);
+    const prev = seenConditions.get(conditionText);
     
-    if (prevIndex !== undefined) {
+    if (prev !== undefined) {
       diagnostics.push({
         code: 'E0351',
         category: 'semantic',
         severity: 'warning',
         message: `Duplicate ${blockType} condition`,
-        location: spanToLocation(condition.span, filePath),
+        location: nodeLocation(expression, filePath),
         source: 'verifier',
         notes: [
           `In behavior '${behavior.name.name}'`,
@@ -137,22 +146,18 @@ function checkConditionBlock(
         tags: ['unnecessary'],
         relatedInformation: [{
           message: 'Original condition here',
-          location: spanToLocation(conditions[prevIndex].span, filePath),
+          location: prev.location,
         }],
       });
     } else {
-      seenConditions.set(conditionText, i);
+      seenConditions.set(conditionText, { index: i, location: nodeLocation(expression, filePath) });
     }
 
     // Check for subsumed conditions
     for (let j = 0; j < i; j++) {
-      const prevCondition = conditions[j];
-      if (!prevCondition.expression) continue;
+      const prevExpression = expressions[j];
 
-      const subsumption = checkSubsumption(
-        prevCondition.expression,
-        condition.expression
-      );
+      const subsumption = checkSubsumption(prevExpression, expression);
 
       if (subsumption) {
         diagnostics.push({
@@ -160,7 +165,7 @@ function checkConditionBlock(
           category: 'semantic',
           severity: 'warning',
           message: `Subsumed ${blockType}: ${subsumption.reason}`,
-          location: spanToLocation(condition.span, filePath),
+          location: nodeLocation(expression, filePath),
           source: 'verifier',
           notes: [
             `In behavior '${behavior.name.name}'`,
@@ -173,21 +178,21 @@ function checkConditionBlock(
           tags: ['unnecessary'],
           relatedInformation: [{
             message: 'Subsuming condition here',
-            location: spanToLocation(prevCondition.span, filePath),
+            location: nodeLocation(prevExpression, filePath),
           }],
         });
       }
     }
 
     // Check for redundant boolean comparisons
-    const redundantBool = checkRedundantBooleanComparison(condition.expression);
+    const redundantBool = checkRedundantBooleanComparison(expression);
     if (redundantBool) {
       diagnostics.push({
         code: 'E0353',
         category: 'semantic',
         severity: 'hint',
         message: `Redundant boolean comparison: ${redundantBool.reason}`,
-        location: spanToLocation(condition.span, filePath),
+        location: nodeLocation(expression, filePath),
         source: 'verifier',
         notes: [
           `In behavior '${behavior.name.name}'`,
@@ -201,6 +206,25 @@ function checkConditionBlock(
         } : undefined,
       });
     }
+  }
+
+  return diagnostics;
+}
+
+// ============================================================================
+// Postcondition Blocks Analysis
+// ============================================================================
+
+function checkPostconditionBlocks(
+  blocks: PostconditionBlock[],
+  behavior: Behavior,
+  filePath: string
+): Diagnostic[] {
+  const diagnostics: Diagnostic[] = [];
+
+  for (const block of blocks) {
+    const predicates = block.predicates || [];
+    diagnostics.push(...checkExpressionList(predicates, behavior, 'postcondition', filePath));
   }
 
   return diagnostics;
@@ -224,7 +248,7 @@ function checkTautology(expr: Expression): TautologyResult | null {
   }
 
   // x == x
-  if (expr.kind === 'ComparisonExpression' || expr.kind === 'BinaryExpression') {
+  if (expr.kind === 'BinaryExpr') {
     const binary = expr as { left?: Expression; operator?: string; right?: Expression };
     
     if (binary.operator === '==' || binary.operator === '===') {
@@ -243,21 +267,17 @@ function checkTautology(expr: Expression): TautologyResult | null {
         return { reason: `'${leftText} ${binary.operator} ${rightText}' is always true` };
       }
     }
-  }
-
-  // x OR true
-  if (expr.kind === 'LogicalExpression') {
-    const logical = expr as { left?: Expression; operator?: string; right?: Expression };
     
-    if (logical.operator === '||' || logical.operator === 'or') {
-      if (logical.left?.kind === 'BooleanLiteral') {
-        const value = (logical.left as { value: boolean }).value;
+    // x OR true
+    if (binary.operator === '||' || binary.operator === 'or') {
+      if (binary.left?.kind === 'BooleanLiteral') {
+        const value = (binary.left as { value: boolean }).value;
         if (value === true) {
           return { reason: "'true || x' is always true" };
         }
       }
-      if (logical.right?.kind === 'BooleanLiteral') {
-        const value = (logical.right as { value: boolean }).value;
+      if (binary.right?.kind === 'BooleanLiteral') {
+        const value = (binary.right as { value: boolean }).value;
         if (value === true) {
           return { reason: "'x || true' is always true" };
         }
@@ -266,7 +286,7 @@ function checkTautology(expr: Expression): TautologyResult | null {
   }
 
   // NOT false
-  if (expr.kind === 'UnaryExpression') {
+  if (expr.kind === 'UnaryExpr') {
     const unary = expr as { operator?: string; operand?: Expression };
     
     if (unary.operator === '!' || unary.operator === 'not') {
@@ -403,7 +423,7 @@ interface RedundantBoolResult {
 }
 
 function checkRedundantBooleanComparison(expr: Expression): RedundantBoolResult | null {
-  if (expr.kind !== 'ComparisonExpression' && expr.kind !== 'BinaryExpression') {
+  if (expr.kind !== 'BinaryExpr') {
     return null;
   }
 
@@ -502,7 +522,7 @@ interface ConstraintInfo {
 }
 
 function extractConstraintInfo(expr: Expression): ConstraintInfo | null {
-  if (expr.kind !== 'ComparisonExpression' && expr.kind !== 'BinaryExpression') {
+  if (expr.kind !== 'BinaryExpr') {
     return null;
   }
 
@@ -523,11 +543,10 @@ function extractExpressionText(expr: Expression): string | null {
   switch (expr.kind) {
     case 'Identifier':
       return (expr as { name: string }).name;
-    case 'MemberExpression': {
-      const member = expr as { object: Expression; property: Expression };
+    case 'MemberExpr': {
+      const member = expr as { object: Expression; property: { name: string } };
       const obj = extractExpressionText(member.object);
-      const prop = extractExpressionText(member.property);
-      if (obj && prop) return `${obj}.${prop}`;
+      if (obj && member.property) return `${obj}.${member.property.name}`;
       return null;
     }
     default:
@@ -582,27 +601,26 @@ function normalizeExpression(expr: Expression): string {
       return `num:${(expr as { value: number }).value}`;
     case 'BooleanLiteral':
       return `bool:${(expr as { value: boolean }).value}`;
-    case 'MemberExpression': {
-      const member = expr as { object: Expression; property: Expression };
-      return `member:${normalizeExpression(member.object)}.${normalizeExpression(member.property)}`;
+    case 'MemberExpr': {
+      const member = expr as { object: Expression; property: { name: string } };
+      return `member:${normalizeExpression(member.object)}.${member.property.name}`;
     }
-    case 'BinaryExpression':
-    case 'ComparisonExpression': {
+    case 'BinaryExpr': {
       const binary = expr as { left: Expression; operator: string; right: Expression };
       return `bin:${normalizeExpression(binary.left)}${binary.operator}${normalizeExpression(binary.right)}`;
     }
-    case 'LogicalExpression': {
-      const logical = expr as { left: Expression; operator: string; right: Expression };
-      return `log:${normalizeExpression(logical.left)}${logical.operator}${normalizeExpression(logical.right)}`;
-    }
-    case 'UnaryExpression': {
+    case 'UnaryExpr': {
       const unary = expr as { operator: string; operand: Expression };
       return `un:${unary.operator}${normalizeExpression(unary.operand)}`;
     }
-    case 'CallExpression': {
+    case 'CallExpr': {
       const call = expr as { callee: Expression; arguments: Expression[] };
       const args = call.arguments.map(a => normalizeExpression(a)).join(',');
       return `call:${normalizeExpression(call.callee)}(${args})`;
+    }
+    case 'QuantifierExpr': {
+      const quant = expr as { quantifier: string; variable: { name: string }; collection: Expression; predicate: Expression };
+      return `quant:${quant.quantifier}(${quant.variable.name} in ${normalizeExpression(quant.collection)}):${normalizeExpression(quant.predicate)}`;
     }
     default:
       return `unknown:${expr.kind}`;

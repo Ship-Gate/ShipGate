@@ -9,3 +9,4 @@ export { analyze, type AnalysisResult, type SpecInsight } from './analysis.js';
 export * from './types.js';
 export * from './prompts/index.js';
 export * from './generator/index.js';
+export * from './llm-analysis/index.js';

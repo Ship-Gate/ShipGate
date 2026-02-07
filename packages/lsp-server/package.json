@@ -54,6 +54,7 @@
     "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
+    "@isl-lang/firewall": "workspace:*",
     "@isl-lang/lsp-core": "workspace:*",
     "@isl-lang/parser": "workspace:*",
     "@isl-lang/typechecker": "workspace:*",

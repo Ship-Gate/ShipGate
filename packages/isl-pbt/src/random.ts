@@ -559,6 +559,266 @@ export function record<T extends Record<string, unknown>>(
   );
 }
 
+/**
+ * Generate a set (unique array)
+ */
+export function set<T>(
+  elementGen: Generator<T>,
+  options: { minSize?: number; maxSize?: number } = {}
+): Generator<T[]> {
+  const { minSize = 0, maxSize = 10 } = options;
+
+  return new BaseGenerator(
+    (prng, size) => {
+      const targetSize = prng.int(minSize, Math.min(maxSize, size));
+      const seen = new Set<string>();
+      const result: T[] = [];
+      let attempts = 0;
+      const maxAttempts = targetSize * 10;
+
+      while (result.length < targetSize && attempts < maxAttempts) {
+        const value = elementGen.generate(prng.fork(), size);
+        const key = JSON.stringify(value);
+        if (!seen.has(key)) {
+          seen.add(key);
+          result.push(value);
+        }
+        attempts++;
+      }
+      return result;
+    },
+    function* (value) {
+      if (value.length <= minSize) return;
+      if (minSize === 0) yield [];
+      if (value.length > minSize) yield value.slice(0, minSize);
+      for (let i = 0; i < value.length; i++) {
+        yield [...value.slice(0, i), ...value.slice(i + 1)];
+      }
+    }
+  );
+}
+
+/**
+ * Generate map (key-value records)
+ */
+export function map<K extends string | number, V>(
+  keyGen: Generator<K>,
+  valueGen: Generator<V>,
+  options: { minSize?: number; maxSize?: number } = {}
+): Generator<Record<string, V>> {
+  const { minSize = 0, maxSize = 10 } = options;
+
+  return new BaseGenerator(
+    (prng, size) => {
+      const targetSize = prng.int(minSize, Math.min(maxSize, size));
+      const result: Record<string, V> = {};
+      let attempts = 0;
+      const maxAttempts = targetSize * 10;
+
+      while (Object.keys(result).length < targetSize && attempts < maxAttempts) {
+        const key = String(keyGen.generate(prng.fork(), size));
+        if (!(key in result)) {
+          result[key] = valueGen.generate(prng.fork(), size);
+        }
+        attempts++;
+      }
+      return result;
+    },
+    function* (value) {
+      const keys = Object.keys(value);
+      if (keys.length <= minSize) return;
+      if (minSize === 0) yield {} as Record<string, V>;
+
+      // Remove each key
+      for (const key of keys) {
+        const copy = { ...value };
+        delete copy[key];
+        yield copy;
+      }
+
+      // Shrink individual values
+      for (const key of keys) {
+        for (const shrunk of valueGen.shrink(value[key]!)) {
+          yield { ...value, [key]: shrunk };
+        }
+      }
+    }
+  );
+}
+
+// ============================================================================
+// DOMAIN-SPECIFIC GENERATORS
+// ============================================================================
+
+/**
+ * Generate Money values (Decimal with min: 0, precision: 2)
+ * Models ISL: type Money = Decimal { min: 0, precision: 2 }
+ */
+export function money(options: {
+  min?: number;
+  max?: number;
+  precision?: number;
+  currency?: string[];
+} = {}): Generator<{ amount: number; currency?: string }> {
+  const {
+    min = 0,
+    max = 100000,
+    precision = 2,
+    currency,
+  } = options;
+
+  const factor = Math.pow(10, precision);
+
+  return new BaseGenerator(
+    (prng, size) => {
+      const scaledMax = Math.min(max, size * 100);
+      const raw = min + prng.random() * (scaledMax - min);
+      const amount = Math.round(raw * factor) / factor;
+      const result: { amount: number; currency?: string } = { amount };
+      if (currency && currency.length > 0) {
+        result.currency = prng.pick(currency);
+      }
+      return result;
+    },
+    function* (value) {
+      // Shrink towards zero (minimum valid money)
+      if (value.amount !== min) {
+        yield { ...value, amount: min };
+      }
+      // Shrink towards small round numbers
+      if (value.amount > 1) {
+        yield { ...value, amount: 1 };
+      }
+      if (value.amount > 0.01 && min <= 0.01) {
+        yield { ...value, amount: 0.01 };
+      }
+      // Binary search towards min
+      let current = value.amount;
+      while (current > min + 0.01) {
+        current = Math.round(((current + min) / 2) * factor) / factor;
+        if (current !== value.amount) {
+          yield { ...value, amount: current };
+        }
+      }
+      // Shrink currency to first option
+      if (currency && value.currency && value.currency !== currency[0]) {
+        yield { ...value, currency: currency[0] };
+      }
+    }
+  );
+}
+
+/**
+ * Generate a plain money amount (number with precision constraints)
+ * For fields typed as Money = Decimal { min: 0, precision: 2 }
+ */
+export function moneyAmount(options: {
+  min?: number;
+  max?: number;
+  precision?: number;
+} = {}): Generator<number> {
+  const { min = 0, max = 100000, precision = 2 } = options;
+  const factor = Math.pow(10, precision);
+
+  return new BaseGenerator(
+    (prng, size) => {
+      const scaledMax = Math.min(max, Math.max(min + 1, size * 100));
+      const raw = min + prng.random() * (scaledMax - min);
+      return Math.round(raw * factor) / factor;
+    },
+    function* (value) {
+      if (value === min) return;
+      yield min;
+      if (value > 1 && min <= 1) yield 1;
+      if (value > 0.01 && min <= 0.01) yield 0.01;
+      let current = value;
+      while (current > min + 0.01) {
+        current = Math.round(((current + min) / 2) * factor) / factor;
+        if (current !== value) yield current;
+      }
+    }
+  );
+}
+
+/**
+ * Generate ISO 8601 duration strings (e.g., "PT1H30M", "P1DT12H")
+ * Models ISL: type Duration
+ */
+export function duration(options: {
+  maxDays?: number;
+  maxHours?: number;
+  maxMinutes?: number;
+  maxSeconds?: number;
+} = {}): Generator<string> {
+  const {
+    maxDays = 365,
+    maxHours = 23,
+    maxMinutes = 59,
+    maxSeconds = 59,
+  } = options;
+
+  return new BaseGenerator(
+    (prng, size) => {
+      const days = prng.int(0, Math.min(maxDays, size));
+      const hours = prng.int(0, Math.min(maxHours, size));
+      const minutes = prng.int(0, Math.min(maxMinutes, size));
+      const seconds = prng.int(0, Math.min(maxSeconds, size));
+
+      let result = 'P';
+      if (days > 0) result += `${days}D`;
+
+      const hasTime = hours > 0 || minutes > 0 || seconds > 0;
+      if (hasTime) {
+        result += 'T';
+        if (hours > 0) result += `${hours}H`;
+        if (minutes > 0) result += `${minutes}M`;
+        if (seconds > 0) result += `${seconds}S`;
+      }
+
+      // Ensure at least PT0S for zero duration
+      if (result === 'P') result = 'PT0S';
+
+      return result;
+    },
+    function* (value) {
+      if (value === 'PT0S') return;
+      yield 'PT0S';
+      yield 'PT1S';
+      yield 'PT1M';
+      yield 'PT1H';
+      yield 'P1D';
+    }
+  );
+}
+
+/**
+ * Generate a numeric duration in milliseconds
+ */
+export function durationMs(options: {
+  min?: number;
+  max?: number;
+} = {}): Generator<number> {
+  const { min = 0, max = 86400000 } = options; // Default max: 1 day in ms
+
+  return new BaseGenerator(
+    (prng, size) => {
+      const scaledMax = Math.min(max, size * 1000);
+      return prng.int(min, Math.max(min, scaledMax));
+    },
+    function* (value) {
+      if (value === min) return;
+      yield min;
+      if (min <= 1000 && value > 1000) yield 1000;
+      if (min <= 60000 && value > 60000) yield 60000;
+      let current = value;
+      while (current > min + 1) {
+        current = Math.trunc((current + min) / 2);
+        if (current !== value) yield current;
+      }
+    }
+  );
+}
+
 // ============================================================================
 // CONSTRAINT-BASED GENERATOR
 // ============================================================================
@@ -598,6 +858,12 @@ export function fromConstraints(constraints: FieldConstraints, typeName: string)
     case 'number':
       return float(constraints.min ?? -1000, constraints.max ?? 1000);
     
+    case 'money':
+      return moneyAmount({
+        min: constraints.min ?? 0,
+        max: constraints.max ?? 100000,
+      });
+    
     case 'boolean':
     case 'bool':
       return boolean();
@@ -608,6 +874,9 @@ export function fromConstraints(constraints: FieldConstraints, typeName: string)
     case 'timestamp':
       return timestamp();
     
+    case 'duration':
+      return duration();
+
     case 'ip':
     case 'ip_address':
     case 'ipaddress':
