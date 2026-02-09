@@ -813,11 +813,11 @@ export async function runVerification(config: VerifyConfig): Promise<Verificatio
       const clauseResult = evaluateClause(clause, traces);
       result.clauseResults.push(clauseResult);
       
-      // Track unknown reasons
+      // Track unknown reasons (will be enhanced with classification later)
       if (clauseResult.status === 'not_proven' && clauseResult.reason) {
         result.unknownReasons.push({
           clauseId: clause.id,
-          category: categorizeUnknownReason(clauseResult.reason),
+          category: 'runtime_data_unavailable', // Temporary, will be classified later
           message: clauseResult.reason,
         });
       }
@@ -905,6 +905,102 @@ export async function runVerification(config: VerifyConfig): Promise<Verificatio
             if (existing) {
               existing.category = 'smt_unknown';
               existing.message = res.reason;
+            } else {
+              // Add new unknown reason
+              result.unknownReasons.push({
+                clauseId: res.clauseId,
+                category: 'smt_unknown',
+                message: res.reason,
+              });
+            }
+          }
+        }
+        
+        // Step 4.6: Classify and enhance unknown reasons with remediation
+        const { classifyAllUnknowns } = await import('./unknown-classifier.js');
+        const unknownClassifications = classifyAllUnknowns(
+          result.clauseResults.filter(cr => cr.triStateResult === 'unknown'),
+          {
+            hasTraces: traces.length > 0,
+            traceCount: traces.length,
+            smtAttempted: true,
+          }
+        );
+        
+        // Enhance unknown reasons with classification data
+        for (const [clauseId, classification] of unknownClassifications.entries()) {
+          const unknownReason = result.unknownReasons.find(ur => ur.clauseId === clauseId);
+          if (unknownReason) {
+            // Update with enhanced information
+            unknownReason.category = classification.category as any;
+            unknownReason.message = classification.explanation;
+            unknownReason.remediation = classification.remediation;
+            unknownReason.mitigatable = classification.mitigatable;
+            unknownReason.suggestedMitigations = classification.suggestedMitigations;
+            unknownReason.details = {
+              ...unknownReason.details,
+              ...classification.context,
+              subcategory: classification.subcategory,
+            };
+          } else {
+            // Create new unknown reason from classification
+            result.unknownReasons.push({
+              clauseId,
+              category: classification.category as any,
+              message: classification.explanation,
+              remediation: classification.remediation,
+              mitigatable: classification.mitigatable,
+              suggestedMitigations: classification.suggestedMitigations,
+              details: {
+                ...classification.context,
+                subcategory: classification.subcategory,
+              },
+            });
+          }
+        }
+      }
+      
+      // Step 4.7: Classify unknowns that weren't sent to SMT (if any)
+      if (result.summary.unknown > 0) {
+        const { classifyAllUnknowns } = await import('./unknown-classifier.js');
+        const preSMTUnknowns = result.clauseResults.filter(
+          cr => cr.triStateResult === 'unknown' && !cr.smtEvidence
+        );
+        
+        if (preSMTUnknowns.length > 0) {
+          const preSMTClassifications = classifyAllUnknowns(preSMTUnknowns, {
+            hasTraces: traces.length > 0,
+            traceCount: traces.length,
+            smtAttempted: false,
+          });
+          
+          // Enhance or create unknown reasons
+          for (const [clauseId, classification] of preSMTClassifications.entries()) {
+            const unknownReason = result.unknownReasons.find(ur => ur.clauseId === clauseId);
+            if (unknownReason) {
+              unknownReason.category = classification.category as any;
+              unknownReason.message = classification.explanation;
+              unknownReason.remediation = classification.remediation;
+              unknownReason.mitigatable = classification.mitigatable;
+              unknownReason.suggestedMitigations = classification.suggestedMitigations;
+              unknownReason.details = {
+                ...unknownReason.details,
+                ...classification.context,
+                subcategory: classification.subcategory,
+              };
+            } else {
+              result.unknownReasons.push({
+                clauseId,
+                category: classification.category as any,
+                message: classification.explanation,
+                remediation: classification.remediation,
+                mitigatable: classification.mitigatable,
+                suggestedMitigations: classification.suggestedMitigations,
+                details: {
+                  ...classification.context,
+                  subcategory: classification.subcategory,
+                },
+              });
             }
           }
         }

@@ -161,3 +161,52 @@ describe('Error handling', () => {
     expect(output.toLowerCase()).toMatch(/did you mean|verify|unknown/i);
   });
 });
+
+describe('shipgate init', () => {
+  it('init --help shows init command help', () => {
+    const { stdout, exitCode } = exec('init --help');
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('init');
+    expect(stdout).toContain('template');
+  });
+
+  it('init creates minimal project structure', async () => {
+    const { mkdtempSync, rmSync, existsSync, readFileSync } = require('fs');
+    const { join } = require('path');
+    const tmpDir = mkdtempSync(join(require('os').tmpdir(), 'shipgate-test-'));
+    
+    try {
+      const { exitCode, stdout, stderr } = exec(`init test-project --directory "${tmpDir}"`);
+      expect(exitCode).toBe(0);
+      
+      // Check that key files were created
+      const projectDir = join(tmpDir, 'test-project');
+      expect(existsSync(join(projectDir, 'package.json'))).toBe(true);
+      expect(existsSync(join(projectDir, 'src', 'test-project.isl'))).toBe(true);
+      expect(existsSync(join(projectDir, 'isl.config.json'))).toBe(true);
+      
+      // Verify ISL file has content
+      const islContent = readFileSync(join(projectDir, 'src', 'test-project.isl'), 'utf-8');
+      expect(islContent).toContain('domain');
+      expect(islContent).toContain('entity');
+      expect(islContent).toContain('behavior');
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('shipgate parse', () => {
+  it('parse --help shows parse command help', () => {
+    const { stdout, exitCode } = exec('parse --help');
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('parse');
+  });
+
+  it('parse handles non-existent file gracefully', () => {
+    const { exitCode, stderr } = exec('parse ./nonexistent.isl');
+    expect(exitCode).not.toBe(0);
+    // Should show an error message
+    expect(stderr || '').toBeTruthy();
+  });
+});

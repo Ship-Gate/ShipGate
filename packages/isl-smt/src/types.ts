@@ -34,8 +34,8 @@ export interface SMTVerifyOptions {
   produceModels?: boolean;
   /** Verbose logging */
   verbose?: boolean;
-  /** Solver to use (default: builtin, can use z3 if available) */
-  solver?: 'builtin' | 'z3' | 'cvc5';
+  /** Solver to use (default: builtin, can use z3 if available, or z3-wasm as fallback) */
+  solver?: 'builtin' | 'z3' | 'cvc5' | 'z3-wasm';
 }
 
 // Import types from ISL core

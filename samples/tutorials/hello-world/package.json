@@ -1,0 +1,12 @@
+{
+  "name": "hello-world-tutorial",
+  "version": "1.0.0",
+  "description": "Hello World tutorial sample",
+  "type": "module",
+  "scripts": {
+    "test": "node --test src/greeter.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}

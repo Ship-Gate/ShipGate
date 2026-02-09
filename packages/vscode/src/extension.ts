@@ -14,6 +14,7 @@ import {
   registerGenerateSkeletonCommand,
   registerVerifyCommands,
   registerCoverageCommand,
+  registerValidateCommand,
   getLastCoverageReport,
 } from './commands/index';
 import { registerCodeLensProvider, setupDiagnosticsIntegration } from './providers/index';
@@ -41,6 +42,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   registerGenerateSkeletonCommand(context, outputChannel);
   const diagnosticCollection = registerVerifyCommands(context, outputChannel);
   registerCoverageCommand(context, outputChannel);
+  registerValidateCommand(context, () => client, outputChannel);
 
   // ── Legacy ISL commands (parse, typecheck, codegen, etc.) ──
   registerCommands(context, () => client, outputChannel);

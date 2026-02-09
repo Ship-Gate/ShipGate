@@ -10,7 +10,8 @@ import { readFile, access } from 'fs/promises';
 import { resolve, relative } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
-import { parse as parseISL, type Domain as DomainDeclaration } from '@isl-lang/parser';
+import { parse as parseISL } from '@isl-lang/parser';
+import type { Domain as DomainDeclaration, Behavior, Entity, Import as ImportDeclaration } from '@isl-lang/parser';
 import { output, type DiagnosticError } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
 import { findSimilarFiles, formatCount } from '../utils.js';
@@ -50,6 +51,20 @@ export interface LintIssue {
   line?: number;
   column?: number;
   suggestion?: string;
+  fix?: LintFix;
+}
+
+export interface LintFix {
+  description: string;
+  edits: LintEdit[];
+}
+
+export interface LintEdit {
+  range: {
+    start: { line: number; column: number };
+    end: { line: number; column: number };
+  };
+  newText: string;
 }
 
 export interface LintResult {
@@ -69,228 +84,464 @@ export interface LintResult {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Lint Rules
+// Lint Rules Framework
 // ─────────────────────────────────────────────────────────────────────────────
 
 type LintRule = {
   id: string;
   name: string;
   severity: 'error' | 'warning' | 'info';
-  check: (domain: DomainDeclaration, filePath: string) => LintIssue[];
+  description: string;
+  check: (domain: DomainDeclaration, filePath: string, source: string) => LintIssue[];
 };
 
 const LINT_RULES: LintRule[] = [
-  // Entity rules
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Rule 1: Unused Symbols
+  // ─────────────────────────────────────────────────────────────────────────────
   {
-    id: 'entity-no-fields',
-    name: 'Entity should have fields',
+    id: 'unused-symbols',
+    name: 'Unused Symbols',
+    description: 'Detects entities, types, enums, and behaviors that are declared but never referenced',
     severity: 'warning',
-    check: (domain, filePath) => {
+    check: (domain, filePath, source) => {
       const issues: LintIssue[] = [];
-      for (const entity of domain.entities) {
-        if (!entity.fields || entity.fields.length === 0) {
+      const referenced = collectReferencedSymbols(domain);
+      
+      // Check unused entities
+      for (const entity of domain.entities || []) {
+        if (!referenced.entities.has(entity.name.name)) {
           issues.push({
-            rule: 'entity-no-fields',
+            rule: 'unused-symbols',
             severity: 'warning',
-            message: `Entity '${entity.name.name}' has no fields`,
+            message: `Entity '${entity.name.name}' is declared but never referenced`,
             file: filePath,
-            suggestion: 'Add at least one field to the entity',
+            line: entity.name.location?.line,
+            column: entity.name.location?.column,
+            suggestion: 'Remove unused entity or add references to it',
           });
         }
       }
+      
+      // Check unused types
+      for (const type of domain.types || []) {
+        if (!referenced.types.has(type.name.name)) {
+          issues.push({
+            rule: 'unused-symbols',
+            severity: 'warning',
+            message: `Type '${type.name.name}' is declared but never used`,
+            file: filePath,
+            line: type.name.location?.line,
+            column: type.name.location?.column,
+            suggestion: 'Remove unused type or use it in entity fields or behavior inputs/outputs',
+          });
+        }
+      }
+      
+      // Check unused enums (enums are in types with EnumType definition)
+      for (const type of domain.types || []) {
+        if (type.definition.kind === 'EnumType' && !referenced.enums.has(type.name.name)) {
+          issues.push({
+            rule: 'unused-symbols',
+            severity: 'warning',
+            message: `Enum '${type.name.name}' is declared but never used`,
+            file: filePath,
+            line: type.name.location?.line,
+            column: type.name.location?.column,
+            suggestion: 'Remove unused enum or use it in entity fields',
+          });
+        }
+      }
+      
+      // Check unused behaviors
+      for (const behavior of domain.behaviors || []) {
+        if (!referenced.behaviors.has(behavior.name.name)) {
+          issues.push({
+            rule: 'unused-symbols',
+            severity: 'info',
+            message: `Behavior '${behavior.name.name}' is declared but never referenced`,
+            file: filePath,
+            line: behavior.name.location?.line,
+            column: behavior.name.location?.column,
+            suggestion: 'Consider removing if truly unused, or ensure it is called',
+          });
+        }
+      }
+      
       return issues;
     },
   },
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Rule 2: Duplicate Behaviors
+  // ─────────────────────────────────────────────────────────────────────────────
   {
-    id: 'entity-missing-id',
-    name: 'Entity should have an ID field',
+    id: 'duplicate-behaviors',
+    name: 'Duplicate Behaviors',
+    description: 'Detects behaviors with duplicate names in the same domain',
+    severity: 'error',
+    check: (domain, filePath) => {
+      const issues: LintIssue[] = [];
+      const behaviorNames = new Map<string, BehaviorDeclaration[]>();
+      
+      for (const behavior of domain.behaviors || []) {
+        const name = behavior.name.name;
+        if (!behaviorNames.has(name)) {
+          behaviorNames.set(name, []);
+        }
+        behaviorNames.get(name)!.push(behavior);
+      }
+      
+      for (const [name, behaviors] of behaviorNames.entries()) {
+        if (behaviors.length > 1) {
+          for (let i = 1; i < behaviors.length; i++) {
+            issues.push({
+              rule: 'duplicate-behaviors',
+              severity: 'error',
+              message: `Duplicate behavior '${name}' (first declared at line ${behaviors[0]!.span?.start?.line})`,
+              file: filePath,
+              line: behaviors[i]!.span?.start?.line,
+              column: behaviors[i]!.span?.start?.column,
+              suggestion: `Rename or remove duplicate behavior '${name}'`,
+            });
+          }
+        }
+      }
+      
+      return issues;
+    },
+  },
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Rule 3: Overly-Broad Invariants
+  // ─────────────────────────────────────────────────────────────────────────────
+  {
+    id: 'overly-broad-invariants',
+    name: 'Overly-Broad Invariants',
+    description: 'Detects invariants that are too generic (e.g., "true", "x == x")',
+    severity: 'warning',
+    check: (domain, filePath, source) => {
+      const issues: LintIssue[] = [];
+      
+      // Check domain-level invariants
+      for (const invBlock of domain.invariants || []) {
+        for (const pred of invBlock.predicates || []) {
+          const expr = extractExpressionText(pred, source);
+          if (isOverlyBroad(expr)) {
+            issues.push({
+              rule: 'overly-broad-invariants',
+              severity: 'warning',
+              message: `Invariant is overly broad: "${expr}"`,
+              file: filePath,
+              line: invBlock.location?.line,
+              column: invBlock.location?.column,
+              suggestion: 'Make invariants more specific and meaningful',
+            });
+          }
+        }
+      }
+      
+      // Check behavior-level invariants
+      for (const behavior of domain.behaviors || []) {
+        if (behavior.invariants && Array.isArray(behavior.invariants)) {
+          for (const inv of behavior.invariants) {
+            const expr = extractExpressionText(inv, source);
+            if (isOverlyBroad(expr)) {
+              issues.push({
+                rule: 'overly-broad-invariants',
+                severity: 'warning',
+                message: `Invariant on behavior '${behavior.name.name}' is overly broad: "${expr}"`,
+                file: filePath,
+                line: behavior.location?.line,
+                column: behavior.location?.column,
+                suggestion: 'Make invariants more specific and meaningful',
+              });
+            }
+          }
+        }
+      }
+      
+      return issues;
+    },
+  },
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Rule 4: Ambiguous Imports
+  // ─────────────────────────────────────────────────────────────────────────────
+  {
+    id: 'ambiguous-imports',
+    name: 'Ambiguous Imports',
+    description: 'Detects imports that could resolve to multiple symbols',
+    severity: 'warning',
+    check: (domain, filePath) => {
+      const issues: LintIssue[] = [];
+      const importedNames = new Map<string, string[]>(); // name -> [sources]
+      
+      // Collect all imported names
+      for (const importDecl of domain.imports || []) {
+        for (const name of importDecl.names || []) {
+          const symbolName = name.name;
+          if (!importedNames.has(symbolName)) {
+            importedNames.set(symbolName, []);
+          }
+          importedNames.get(symbolName)!.push(importDecl.from.value);
+        }
+      }
+      
+      // Check for ambiguous imports (same name from different sources)
+      for (const [name, sources] of importedNames.entries()) {
+        const uniqueSources = [...new Set(sources)];
+        if (uniqueSources.length > 1) {
+          issues.push({
+            rule: 'ambiguous-imports',
+            severity: 'warning',
+            message: `Symbol '${name}' is imported from multiple sources: ${uniqueSources.join(', ')}`,
+            file: filePath,
+            suggestion: `Use aliases to disambiguate: import { ${name} as ${name}From${uniqueSources[0]!.split('/').pop()} } from "${uniqueSources[0]}"`,
+          });
+        }
+      }
+      
+      return issues;
+    },
+  },
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Rule 5: Unreachable Constraints
+  // ─────────────────────────────────────────────────────────────────────────────
+  {
+    id: 'unreachable-constraints',
+    name: 'Unreachable Constraints',
+    description: 'Detects postconditions that can never be satisfied due to preconditions',
+    severity: 'warning',
+    check: (domain, filePath, source) => {
+      const issues: LintIssue[] = [];
+      
+      for (const behavior of domain.behaviors || []) {
+        if (!behavior.preconditions || !behavior.postconditions) continue;
+        
+        const preExprs = extractConditionExpressions(behavior.preconditions, source);
+        const postExprs = extractConditionExpressions(behavior.postconditions, source);
+        
+        // Simple check: if postcondition contradicts precondition
+        for (const postExpr of postExprs) {
+          for (const preExpr of preExprs) {
+            if (contradicts(preExpr, postExpr)) {
+              issues.push({
+                rule: 'unreachable-constraints',
+                severity: 'warning',
+                message: `Behavior '${behavior.name.name}' has unreachable postcondition "${postExpr}" due to precondition "${preExpr}"`,
+                file: filePath,
+                line: behavior.postconditions.span?.start?.line,
+                column: behavior.postconditions.span?.start?.column,
+                suggestion: 'Review preconditions and postconditions for logical consistency',
+              });
+            }
+          }
+        }
+      }
+      
+      return issues;
+    },
+  },
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Rule 6: Missing Preconditions
+  // ─────────────────────────────────────────────────────────────────────────────
+  {
+    id: 'missing-preconditions',
+    name: 'Missing Preconditions',
+    description: 'Behaviors should have preconditions to specify valid inputs',
+    severity: 'warning',
+    check: (domain, filePath) => {
+      const issues: LintIssue[] = [];
+      
+      for (const behavior of domain.behaviors || []) {
+        if (!behavior.preconditions || 
+            (Array.isArray(behavior.preconditions) && behavior.preconditions.length === 0)) {
+          issues.push({
+            rule: 'missing-preconditions',
+            severity: 'warning',
+            message: `Behavior '${behavior.name.name}' has no preconditions`,
+            file: filePath,
+            line: behavior.name.location?.line,
+            column: behavior.name.location?.column,
+            suggestion: 'Add preconditions to specify valid input constraints',
+          });
+        }
+      }
+      
+      return issues;
+    },
+  },
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Rule 7: Unused Imports
+  // ─────────────────────────────────────────────────────────────────────────────
+  {
+    id: 'unused-imports',
+    name: 'Unused Imports',
+    description: 'Detects imported symbols that are never used',
+    severity: 'warning',
+    check: (domain, filePath) => {
+      const issues: LintIssue[] = [];
+      const referenced = collectReferencedSymbols(domain);
+      
+      for (const importDecl of domain.imports || []) {
+        for (const name of importDecl.names || []) {
+          const symbolName = name.name;
+          // Check if imported symbol is used
+          if (!referenced.entities.has(symbolName) &&
+              !referenced.types.has(symbolName) &&
+              !referenced.enums.has(symbolName)) {
+            issues.push({
+              rule: 'unused-imports',
+              severity: 'warning',
+              message: `Imported symbol '${symbolName}' from "${importDecl.from.value}" is never used`,
+              file: filePath,
+              line: name.span?.start?.line,
+              column: name.span?.start?.column,
+              suggestion: `Remove unused import '${symbolName}'`,
+            });
+          }
+        }
+      }
+      
+      return issues;
+    },
+  },
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Rule 8: Missing Error Handling
+  // ─────────────────────────────────────────────────────────────────────────────
+  {
+    id: 'missing-error-handling',
+    name: 'Missing Error Handling',
+    description: 'Behaviors should define error outputs for failure cases',
     severity: 'info',
     check: (domain, filePath) => {
       const issues: LintIssue[] = [];
-      for (const entity of domain.entities) {
-        const hasId = entity.fields?.some(f => 
-          f.name.name.toLowerCase() === 'id' || 
-          f.type?.name === 'ID'
-        );
-        if (!hasId) {
+      
+      for (const behavior of domain.behaviors || []) {
+        if (behavior.output && (!behavior.output.errors || behavior.output.errors.length === 0)) {
           issues.push({
-            rule: 'entity-missing-id',
+            rule: 'missing-error-handling',
             severity: 'info',
-            message: `Entity '${entity.name.name}' has no ID field`,
+            message: `Behavior '${behavior.name.name}' has no error outputs defined`,
             file: filePath,
-            suggestion: 'Consider adding an `id: ID` field',
+            line: behavior.output.location?.line,
+            column: behavior.output.location?.column,
+            suggestion: 'Consider adding error outputs for failure cases',
           });
         }
       }
+      
       return issues;
     },
   },
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Rule 9: Circular Dependencies
+  // ─────────────────────────────────────────────────────────────────────────────
   {
-    id: 'entity-pascal-case',
-    name: 'Entity names should be PascalCase',
-    severity: 'warning',
+    id: 'circular-dependencies',
+    name: 'Circular Dependencies',
+    description: 'Detects circular import dependencies',
+    severity: 'error',
+    check: (domain, filePath) => {
+      const issues: LintIssue[] = [];
+      const importGraph = new Map<string, Set<string>>();
+      const visited = new Set<string>();
+      const recursionStack = new Set<string>();
+      
+      // Build import graph
+      for (const importDecl of domain.imports || []) {
+        const from = importDecl.from.value;
+        if (!importGraph.has(filePath)) {
+          importGraph.set(filePath, new Set());
+        }
+        importGraph.get(filePath)!.add(from);
+      }
+      
+      // Detect cycles (simplified - would need full resolution for real check)
+      // This is a basic check for same-file circular references
+      const hasSelfReference = importGraph.get(filePath)?.has(filePath);
+      if (hasSelfReference) {
+        issues.push({
+          rule: 'circular-dependencies',
+          severity: 'error',
+          message: 'Circular import detected (file imports itself)',
+          file: filePath,
+          suggestion: 'Remove self-referential imports',
+        });
+      }
+      
+      return issues;
+    },
+  },
+  
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Rule 10: Inconsistent Naming
+  // ─────────────────────────────────────────────────────────────────────────────
+  {
+    id: 'inconsistent-naming',
+    name: 'Inconsistent Naming',
+    description: 'Detects inconsistent naming conventions (PascalCase vs camelCase)',
+    severity: 'info',
     check: (domain, filePath) => {
       const issues: LintIssue[] = [];
       const pascalCase = /^[A-Z][a-zA-Z0-9]*$/;
-      for (const entity of domain.entities) {
+      const camelCase = /^[a-z][a-zA-Z0-9]*$/;
+      
+      // Check entity names
+      for (const entity of domain.entities || []) {
         if (!pascalCase.test(entity.name.name)) {
           issues.push({
-            rule: 'entity-pascal-case',
-            severity: 'warning',
+            rule: 'inconsistent-naming',
+            severity: 'info',
             message: `Entity '${entity.name.name}' should be PascalCase`,
             file: filePath,
+            line: entity.name.location?.line,
+            column: entity.name.location?.column,
             suggestion: `Rename to '${toPascalCase(entity.name.name)}'`,
           });
         }
       }
-      return issues;
-    },
-  },
-  
-  // Behavior rules
-  {
-    id: 'behavior-no-postconditions',
-    name: 'Behavior should have postconditions',
-    severity: 'warning',
-    check: (domain, filePath) => {
-      const issues: LintIssue[] = [];
-      for (const behavior of domain.behaviors) {
-        if (!behavior.body?.postconditions || behavior.body.postconditions.length === 0) {
-          issues.push({
-            rule: 'behavior-no-postconditions',
-            severity: 'warning',
-            message: `Behavior '${behavior.name.name}' has no postconditions`,
-            file: filePath,
-            suggestion: 'Add postconditions to specify expected outcomes',
-          });
-        }
-      }
-      return issues;
-    },
-  },
-  {
-    id: 'behavior-no-scenarios',
-    name: 'Behavior should have test scenarios',
-    severity: 'info',
-    check: (domain, filePath) => {
-      const issues: LintIssue[] = [];
-      for (const behavior of domain.behaviors) {
-        if (!behavior.body?.scenarios || behavior.body.scenarios.length === 0) {
-          issues.push({
-            rule: 'behavior-no-scenarios',
-            severity: 'info',
-            message: `Behavior '${behavior.name.name}' has no test scenarios`,
-            file: filePath,
-            suggestion: 'Add scenario blocks to define test cases',
-          });
-        }
-      }
-      return issues;
-    },
-  },
-  {
-    id: 'behavior-pascal-case',
-    name: 'Behavior names should be PascalCase',
-    severity: 'warning',
-    check: (domain, filePath) => {
-      const issues: LintIssue[] = [];
-      const pascalCase = /^[A-Z][a-zA-Z0-9]*$/;
-      for (const behavior of domain.behaviors) {
+      
+      // Check behavior names
+      for (const behavior of domain.behaviors || []) {
         if (!pascalCase.test(behavior.name.name)) {
           issues.push({
-            rule: 'behavior-pascal-case',
-            severity: 'warning',
+            rule: 'inconsistent-naming',
+            severity: 'info',
             message: `Behavior '${behavior.name.name}' should be PascalCase`,
             file: filePath,
+            line: behavior.name.location?.line,
+            column: behavior.name.location?.column,
             suggestion: `Rename to '${toPascalCase(behavior.name.name)}'`,
           });
         }
       }
-      return issues;
-    },
-  },
-  {
-    id: 'behavior-missing-output',
-    name: 'Behavior should specify output type',
-    severity: 'warning',
-    check: (domain, filePath) => {
-      const issues: LintIssue[] = [];
-      for (const behavior of domain.behaviors) {
-        if (!behavior.output) {
-          issues.push({
-            rule: 'behavior-missing-output',
-            severity: 'warning',
-            message: `Behavior '${behavior.name.name}' has no output type`,
-            file: filePath,
-            suggestion: 'Add an output type declaration',
-          });
-        }
-      }
-      return issues;
-    },
-  },
-  
-  // Domain rules
-  {
-    id: 'domain-no-invariants',
-    name: 'Domain should have invariants',
-    severity: 'info',
-    check: (domain, filePath) => {
-      const issues: LintIssue[] = [];
-      if (!domain.invariants || domain.invariants.length === 0) {
-        issues.push({
-          rule: 'domain-no-invariants',
-          severity: 'info',
-          message: `Domain '${domain.name.name}' has no invariants`,
-          file: filePath,
-          suggestion: 'Consider adding invariants to specify domain rules',
-        });
-      }
-      return issues;
-    },
-  },
-  {
-    id: 'domain-empty',
-    name: 'Domain should not be empty',
-    severity: 'error',
-    check: (domain, filePath) => {
-      const issues: LintIssue[] = [];
-      if (domain.entities.length === 0 && domain.behaviors.length === 0) {
-        issues.push({
-          rule: 'domain-empty',
-          severity: 'error',
-          message: `Domain '${domain.name.name}' is empty`,
-          file: filePath,
-          suggestion: 'Add entities and behaviors to define the domain',
-        });
-      }
-      return issues;
-    },
-  },
-  
-  // Field rules
-  {
-    id: 'field-camel-case',
-    name: 'Field names should be camelCase',
-    severity: 'info',
-    check: (domain, filePath) => {
-      const issues: LintIssue[] = [];
-      const camelCase = /^[a-z][a-zA-Z0-9]*$/;
-      for (const entity of domain.entities) {
+      
+      // Check field names
+      for (const entity of domain.entities || []) {
         if (entity.fields) {
           for (const field of entity.fields) {
             if (!camelCase.test(field.name.name) && field.name.name !== 'ID') {
               issues.push({
-                rule: 'field-camel-case',
+                rule: 'inconsistent-naming',
                 severity: 'info',
-                message: `Field '${field.name.name}' in '${entity.name.name}' should be camelCase`,
+                message: `Field '${field.name.name}' in entity '${entity.name.name}' should be camelCase`,
                 file: filePath,
+                line: field.name.location?.line,
+                column: field.name.location?.column,
                 suggestion: `Rename to '${toCamelCase(field.name.name)}'`,
               });
             }
           }
         }
       }
+      
       return issues;
     },
   },
@@ -307,6 +558,329 @@ function toPascalCase(str: string): string {
 function toCamelCase(str: string): string {
   const pascal = toPascalCase(str);
   return pascal.charAt(0).toLowerCase() + pascal.slice(1);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Symbol Collection Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface ReferencedSymbols {
+  entities: Set<string>;
+  types: Set<string>;
+  enums: Set<string>;
+  behaviors: Set<string>;
+  fields: Map<string, Set<string>>; // entity -> fields
+}
+
+function collectReferencedSymbols(domain: DomainDeclaration): ReferencedSymbols {
+  const result: ReferencedSymbols = {
+    entities: new Set(),
+    types: new Set(),
+    enums: new Set(),
+    behaviors: new Set(),
+    fields: new Map(),
+  };
+
+  // Walk through all behaviors to find references
+  for (const behavior of domain.behaviors || []) {
+    // Input/output types reference entities/types
+    if (behavior.input) {
+      for (const field of behavior.input.fields || []) {
+        collectTypeReferences(field.type, result);
+      }
+    }
+    if (behavior.output) {
+      collectTypeReferences(behavior.output.success, result);
+    }
+
+    // Expressions in conditions reference fields/entities
+    if (behavior.preconditions) {
+      collectExpressionReferences(behavior.preconditions, result);
+    }
+    if (behavior.postconditions) {
+      collectExpressionReferences(behavior.postconditions, result);
+    }
+    if (behavior.invariants && Array.isArray(behavior.invariants)) {
+      for (const inv of behavior.invariants) {
+        collectExpressionReferences(inv, result);
+      }
+    }
+  }
+
+  // Entity fields can reference other entities
+  for (const entity of domain.entities || []) {
+    if (entity.fields && Array.isArray(entity.fields)) {
+      for (const field of entity.fields) {
+        collectTypeReferences(field.type, result);
+      }
+    }
+  }
+
+  return result;
+}
+
+function collectTypeReferences(type: unknown, refs: ReferencedSymbols): void {
+  if (!type || typeof type !== 'object') return;
+  
+  const t = type as Record<string, unknown>;
+  
+  // ReferenceType: references entities/types
+  if (t.kind === 'ReferenceType') {
+    const name = t.name as { name?: string } | string | undefined;
+    if (name) {
+      const nameStr = typeof name === 'string' ? name : name.name;
+      if (nameStr) {
+        refs.types.add(nameStr);
+        refs.entities.add(nameStr); // Could be either, add to both
+      }
+    }
+  }
+  
+  // PrimitiveType: built-in types, skip
+  if (t.kind === 'PrimitiveType') {
+    return;
+  }
+  
+  // EnumType: has variants
+  if (t.kind === 'EnumType' && Array.isArray(t.variants)) {
+    for (const variant of t.variants) {
+      const v = variant as { name?: { name?: string } };
+      if (v.name?.name) {
+        refs.enums.add(v.name.name);
+      }
+    }
+  }
+  
+  // StructType: has fields
+  if (t.kind === 'StructType' && Array.isArray(t.fields)) {
+    for (const field of t.fields) {
+      const f = field as { type?: unknown };
+      if (f.type) {
+        collectTypeReferences(f.type, refs);
+      }
+    }
+  }
+  
+  // UnionType: has variants
+  if (t.kind === 'UnionType' && Array.isArray(t.variants)) {
+    for (const variant of t.variants) {
+      const v = variant as { fields?: Array<{ type?: unknown }> };
+      if (v.fields) {
+        for (const field of v.fields) {
+          if (field.type) {
+            collectTypeReferences(field.type, refs);
+          }
+        }
+      }
+    }
+  }
+  
+  // ListType: has element
+  if (t.kind === 'ListType' && t.element) {
+    collectTypeReferences(t.element, refs);
+  }
+  
+  // MapType: has key and value
+  if (t.kind === 'MapType') {
+    if (t.key) collectTypeReferences(t.key, refs);
+    if (t.value) collectTypeReferences(t.value, refs);
+  }
+  
+  // OptionalType: has inner
+  if (t.kind === 'OptionalType' && t.inner) {
+    collectTypeReferences(t.inner, refs);
+  }
+  
+  // ConstrainedType: has base
+  if (t.kind === 'ConstrainedType' && t.base) {
+    collectTypeReferences(t.base, refs);
+  }
+}
+
+function collectExpressionReferences(block: unknown, refs: ReferencedSymbols): void {
+  if (!block || typeof block !== 'object') return;
+  
+  walkObject(block, (node) => {
+    if (typeof node !== 'object' || !node) return;
+    
+    const n = node as Record<string, unknown>;
+    
+    // Member expressions like Entity.field
+    if (n.kind === 'MemberExpression') {
+      const obj = n.object as { name?: string };
+      const prop = n.property as { name?: string };
+      if (obj?.name && prop?.name) {
+        if (!refs.fields.has(obj.name)) {
+          refs.fields.set(obj.name, new Set());
+        }
+        refs.fields.get(obj.name)!.add(prop.name);
+        refs.entities.add(obj.name);
+      }
+    }
+    
+    // Call expressions like User.lookup(id)
+    if (n.kind === 'CallExpression') {
+      const callee = n.callee as { object?: { name?: string }; name?: string };
+      if (callee?.object?.name) {
+        refs.entities.add(callee.object.name);
+      }
+      if (callee?.name) {
+        refs.behaviors.add(callee.name);
+      }
+    }
+    
+    // Identifier references
+    if (n.kind === 'Identifier' && n.name) {
+      const name = n.name as string;
+      // Could be entity, type, enum, or behavior reference
+      refs.entities.add(name);
+      refs.types.add(name);
+      refs.enums.add(name);
+    }
+  });
+}
+
+function walkObject(obj: unknown, visitor: (node: unknown) => void): void {
+  if (!obj || typeof obj !== 'object') return;
+  
+  visitor(obj);
+  
+  for (const value of Object.values(obj)) {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        walkObject(item, visitor);
+      }
+    } else if (value && typeof value === 'object') {
+      walkObject(value, visitor);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Invariant Analysis Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+function extractExpressionText(expr: unknown, source: string): string {
+  if (!expr || typeof expr !== 'object') return '';
+  
+  const exprObj = expr as { location?: { line?: number; column?: number; endLine?: number; endColumn?: number } };
+  if (exprObj.location) {
+    const lines = source.split('\n');
+    const startLine = (exprObj.location.line ?? 1) - 1;
+    const endLine = (exprObj.location.endLine ?? exprObj.location.line ?? 1) - 1;
+    if (startLine >= 0 && endLine < lines.length) {
+      if (startLine === endLine) {
+        const startCol = exprObj.location.column ?? 0;
+        const endCol = exprObj.location.endColumn ?? lines[startLine]!.length;
+        return lines[startLine]!.substring(startCol, endCol).trim();
+      }
+      return lines.slice(startLine, endLine + 1).join(' ').trim();
+    }
+  }
+  return '';
+}
+
+function isOverlyBroad(expr: string): boolean {
+  const normalized = expr.trim().toLowerCase();
+  
+  // Check for tautologies
+  if (normalized === 'true' || normalized === '1' || normalized === '1 == 1') {
+    return true;
+  }
+  
+  // Check for self-referential equality (x == x)
+  const selfEqMatch = normalized.match(/^(\w+)\s*==\s*\1$/);
+  if (selfEqMatch) {
+    return true;
+  }
+  
+  // Check for overly generic patterns
+  if (normalized.length < 5) {
+    return true; // Very short expressions are likely too generic
+  }
+  
+  return false;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Constraint Analysis Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+function extractConditionExpressions(block: unknown, source: string): string[] {
+  const exprs: string[] = [];
+  
+  if (!block || typeof block !== 'object') return exprs;
+  
+  const b = block as { conditions?: Array<{ statements?: Array<{ expression?: unknown }> }> };
+  
+  if (Array.isArray(b.conditions)) {
+    for (const cond of b.conditions) {
+      if (Array.isArray(cond.statements)) {
+        for (const stmt of cond.statements) {
+          if (stmt.expression) {
+            const expr = extractExpressionText(stmt.expression, source);
+            if (expr) exprs.push(expr);
+          }
+        }
+      }
+    }
+  }
+  
+  return exprs;
+}
+
+function extractExpressionText(expr: unknown, source: string): string {
+  if (expr && typeof expr === 'object') {
+    const exprObj = expr as { span?: { start?: { line?: number; column?: number }; end?: { line?: number; column?: number } } };
+    if (exprObj.span && exprObj.span.start && exprObj.span.end) {
+      const lines = source.split('\n');
+      const startLine = (exprObj.span.start.line ?? 1) - 1;
+      const endLine = (exprObj.span.end.line ?? 1) - 1;
+      if (startLine >= 0 && endLine < lines.length) {
+        if (startLine === endLine) {
+          return lines[startLine]!.substring(exprObj.span.start.column ?? 0, exprObj.span.end.column ?? lines[startLine]!.length).trim();
+        }
+        return lines.slice(startLine, endLine + 1).join(' ').trim();
+      }
+    }
+  }
+  return '';
+}
+
+function contradicts(preExpr: string, postExpr: string): boolean {
+  // Simple contradiction detection
+  // Check if postExpr negates preExpr
+  
+  const pre = preExpr.toLowerCase().trim();
+  const post = postExpr.toLowerCase().trim();
+  
+  // Check for direct negation patterns
+  if (pre.includes('==') && post.includes('!=')) {
+    const preVar = pre.split('==')[0]?.trim();
+    const postVar = post.split('!=')[0]?.trim();
+    if (preVar === postVar) {
+      return true;
+    }
+  }
+  
+  if (pre.includes('!=') && post.includes('==')) {
+    const preVar = pre.split('!=')[0]?.trim();
+    const postVar = post.split('==')[0]?.trim();
+    if (preVar === postVar) {
+      return true;
+    }
+  }
+  
+  // Check for boolean negation
+  if (pre.startsWith('not ') && post === pre.substring(4)) {
+    return true;
+  }
+  
+  if (post.startsWith('not ') && pre === post.substring(4)) {
+    return true;
+  }
+  
+  return false;
 }
 
 async function fileExists(path: string): Promise<boolean> {
@@ -386,7 +960,7 @@ export async function lint(file: string, options: LintOptions = {}): Promise<Lin
     const allIssues: LintIssue[] = [];
     
     for (const rule of LINT_RULES) {
-      const issues = rule.check(ast, filePath);
+      const issues = rule.check(ast, filePath, source);
       allIssues.push(...issues);
     }
     

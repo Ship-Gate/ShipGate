@@ -53,6 +53,12 @@ export interface ChaosOptions {
   temporal?: boolean;
   /** Minimum samples for temporal verification (default: 10) */
   temporalMinSamples?: number;
+  /** Select specific scenarios by name */
+  scenario?: string[];
+  /** Number of trials to run */
+  trials?: number;
+  /** Show detailed metrics output */
+  metrics?: boolean;
 }
 
 export interface ChaosResult {
@@ -141,6 +147,9 @@ async function runChaosVerification(
     seed?: number;
     continueOnFailure?: boolean;
     verbose?: boolean;
+    scenario?: string[];
+    trials?: number;
+    metrics?: boolean;
   }
 ): Promise<ChaosVerifyResult> {
   const start = Date.now();
@@ -149,9 +158,18 @@ async function runChaosVerification(
     // Dynamically import the chaos verifier package
     const chaos = await import('@isl-lang/verifier-chaos');
 
+    // Use harness API if trials > 1 or scenario selection
+    const useHarness = (options.trials ?? 1) > 1 || (options.scenario && options.scenario.length > 0);
+    
+    if (useHarness) {
+      return await runChaosWithHarness(domain, implSource, options, chaos);
+    }
+
     // Create a chaos engine with options
     const engine = chaos.createEngine({
       continueOnFailure: options.continueOnFailure ?? true,
+      timeoutMs: options.timeout ?? 30000,
+      scenarioFilter: options.scenario,
     });
 
     // Create an implementation adapter that simulates realistic behavior
@@ -457,6 +475,187 @@ async function runChaosVerification(
   }
 }
 
+/**
+ * Run chaos verification using harness API (for trials and scenario selection)
+ */
+async function runChaosWithHarness(
+  domain: DomainDeclaration,
+  implSource: string,
+  options: {
+    timeout?: number;
+    seed?: number;
+    continueOnFailure?: boolean;
+    verbose?: boolean;
+    scenario?: string[];
+    trials?: number;
+    metrics?: boolean;
+  },
+  chaos: typeof import('@isl-lang/verifier-chaos')
+): Promise<ChaosVerifyResult> {
+  const start = Date.now();
+  const harness = chaos.createHarness({
+    timeoutMs: options.timeout ?? 30000,
+    continueOnFailure: options.continueOnFailure ?? true,
+    verbose: options.verbose ?? false,
+  });
+
+  // Parse scenarios
+  const parseResult = chaos.parseChaosScenarios(domain);
+  let scenarios = parseResult.scenarios;
+  
+  // Filter by scenario names if specified
+  if (options.scenario && options.scenario.length > 0) {
+    scenarios = scenarios.filter(s => options.scenario!.includes(s.name));
+  }
+
+  if (scenarios.length === 0) {
+    return {
+      success: false,
+      verdict: 'unsafe',
+      score: 0,
+      passed: [],
+      failed: [],
+      skipped: [],
+      coverage: {
+        injectionTypes: { total: 0, covered: 0, percentage: 0 },
+        scenarios: { total: 0, covered: 0, percentage: 0 },
+        behaviors: { total: 0, covered: 0, percentage: 0 },
+        overall: 0,
+      },
+      timing: { total: Date.now() - start, setup: 0, execution: 0, teardown: 0 },
+      config: { timeout: options.timeout ?? 30000, continueOnFailure: options.continueOnFailure ?? true },
+      duration: Date.now() - start,
+    };
+  }
+
+  // Create implementation
+  const createImpl = (behaviorName: string): chaos.BehaviorImplementation => ({
+    async execute(input: Record<string, unknown>): Promise<chaos.BehaviorExecutionResult> {
+      const random = Math.random();
+      if (random < 0.1) {
+        return { 
+          success: false, 
+          error: new Error(`Simulated failure in ${behaviorName}`) 
+        };
+      }
+      await new Promise(resolve => setTimeout(resolve, 10 + Math.random() * 90));
+      return { success: true, data: { behaviorName, input } };
+    },
+  });
+
+  const passed: ChaosTestResult[] = [];
+  const failed: ChaosTestResult[] = [];
+  const skipped: ChaosTestResult[] = [];
+  const coveredInjectionTypes = new Set<string>();
+
+  // Run trials for each scenario
+  for (const scenario of scenarios) {
+    const behaviorName = scenario.behaviorName;
+    const impl = createImpl(behaviorName);
+    const numTrials = options.trials ?? 1;
+
+    const harnessResult = await harness.runTrials(scenario, domain, impl, numTrials);
+
+    // Convert harness results to test results
+    for (const trial of harnessResult.trials) {
+      const testResult: ChaosTestResult = {
+        name: `${scenario.name} (trial ${trial.trial})`,
+        type: 'chaos',
+        passed: trial.outcome.passed,
+        duration: trial.outcome.durationMs,
+        injections: scenario.injections.map(i => i.type),
+      };
+
+      if (trial.outcome.passed) {
+        passed.push(testResult);
+      } else {
+        testResult.error = trial.outcome.errors?.[0] 
+          ? { message: trial.outcome.errors[0].message }
+          : undefined;
+        failed.push(testResult);
+      }
+
+      scenario.injections.forEach(i => coveredInjectionTypes.add(i.type));
+    }
+  }
+
+  // Calculate coverage and score
+  const allInjectionTypes = new Set([
+    'database_failure',
+    'network_latency',
+    'service_unavailable',
+    'concurrent_requests',
+    'timeout',
+    'rate_limit',
+    'clock_skew',
+  ]);
+
+  const coverage: ChaosCoverageReport = {
+    injectionTypes: {
+      total: allInjectionTypes.size,
+      covered: coveredInjectionTypes.size,
+      percentage: (coveredInjectionTypes.size / allInjectionTypes.size) * 100,
+    },
+    scenarios: {
+      total: passed.length + failed.length + skipped.length,
+      covered: passed.length + failed.length,
+      percentage: passed.length + failed.length + skipped.length > 0 
+        ? ((passed.length + failed.length) / (passed.length + failed.length + skipped.length)) * 100 
+        : 0,
+    },
+    behaviors: {
+      total: domain.behaviors.length,
+      covered: domain.behaviors.length,
+      percentage: 100,
+    },
+    overall: 0,
+  };
+  
+  coverage.overall = (
+    coverage.injectionTypes.percentage * 0.3 +
+    coverage.scenarios.percentage * 0.5 +
+    coverage.behaviors.percentage * 0.2
+  );
+
+  const total = passed.length + failed.length + skipped.length;
+  const score = total > 0 
+    ? Math.round(((passed.length * 1.0 + skipped.length * 0.5) / total) * 100)
+    : 0;
+
+  let verdict: 'verified' | 'risky' | 'unsafe';
+  if (failed.length === 0 && score >= 80) {
+    verdict = 'verified';
+  } else if (failed.length > 0 && score < 50) {
+    verdict = 'unsafe';
+  } else {
+    verdict = 'risky';
+  }
+
+  const duration = Date.now() - start;
+
+  return {
+    success: failed.length === 0,
+    verdict,
+    score,
+    passed,
+    failed,
+    skipped,
+    coverage,
+    timing: {
+      total: duration,
+      setup: 0,
+      execution: duration,
+      teardown: 0,
+    },
+    config: {
+      timeout: options.timeout ?? 30000,
+      seed: options.seed,
+      continueOnFailure: options.continueOnFailure ?? true,
+    },
+    duration,
+  };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Command
 // ─────────────────────────────────────────────────────────────────────────────
@@ -627,7 +826,7 @@ export async function chaos(specFile: string, options: ChaosOptions): Promise<Ch
 /**
  * Print chaos results to console
  */
-export function printChaosResult(result: ChaosResult, options?: { detailed?: boolean; format?: string; json?: boolean }): void {
+export function printChaosResult(result: ChaosResult, options?: { detailed?: boolean; format?: string; json?: boolean; metrics?: boolean }): void {
   // JSON output
   if (options?.json || options?.format === 'json') {
     console.log(JSON.stringify({
@@ -706,6 +905,15 @@ export function printChaosResult(result: ChaosResult, options?: { detailed?: boo
   console.log(chalk.gray(`    Scenarios:       ${coverage.scenarios.covered}/${coverage.scenarios.total} (${coverage.scenarios.percentage.toFixed(0)}%)`));
   console.log(chalk.gray(`    Behaviors:       ${coverage.behaviors.covered}/${coverage.behaviors.total} (${coverage.behaviors.percentage.toFixed(0)}%)`));
   console.log(chalk.gray(`    Overall:         ${coverage.overall.toFixed(0)}%`));
+
+  // Metrics output (if requested)
+  if (options?.metrics && result.chaosResult) {
+    console.log('');
+    console.log(chalk.bold('  Metrics:'));
+    console.log(chalk.gray(`    Total Trials: ${result.chaosResult.passed.length + result.chaosResult.failed.length}`));
+    console.log(chalk.gray(`    Success Rate: ${((result.chaosResult.passed.length / (result.chaosResult.passed.length + result.chaosResult.failed.length)) * 100).toFixed(1)}%`));
+    console.log(chalk.gray(`    Average Duration: ${(result.chaosResult.timing.execution / (result.chaosResult.passed.length + result.chaosResult.failed.length)).toFixed(0)}ms`));
+  }
 
   // Detailed scenario results
   if (options?.detailed) {

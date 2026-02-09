@@ -7,6 +7,7 @@ export type { SymbolTable, Scope } from './symbols';
 export { SymbolTableBuilder } from './symbols';
 export { TypeResolver } from './resolver';
 export { ExpressionChecker, type ExpressionContext } from './expressions';
+export { ImportGraphResolver, type ImportGraph, type ImportGraphNode } from './import-resolver';
 
 // Type exports
 export type {

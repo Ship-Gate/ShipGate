@@ -160,3 +160,15 @@ export {
   createComplexTrace,
   testTraces,
 } from './test-traces.js';
+
+// Trace-based temporal evaluation
+export {
+  loadTraceFile,
+  loadTraceFiles,
+  discoverTraceFiles,
+  evaluateTemporalRequirement,
+  evaluateTemporalProperties,
+  type TemporalPropertyEvaluation,
+  type TemporalEvaluationReport,
+  type TraceEvaluationOptions,
+} from './trace-evaluator.js';

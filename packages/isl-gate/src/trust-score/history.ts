@@ -17,9 +17,11 @@ import type {
   TrustDelta,
   TrustHistory,
   ResolvedTrustConfig,
+  EvidenceSource,
 } from './types.js';
 
 import { TRUST_CATEGORIES } from './types.js';
+import { computeProjectFingerprint } from './fingerprint.js';
 
 // ============================================================================
 // History I/O
@@ -60,11 +62,12 @@ export async function saveHistory(
 /**
  * Create a new empty history object.
  */
-export function createEmptyHistory(): TrustHistory {
+export function createEmptyHistory(projectFingerprint?: string): TrustHistory {
   return {
     version: 1,
     entries: [],
     lastUpdated: new Date().toISOString(),
+    projectFingerprint,
   };
 }
 
@@ -75,17 +78,27 @@ export function createEmptyHistory(): TrustHistory {
 /**
  * Record a new trust score result into history.
  * Trims entries beyond maxHistoryEntries.
+ * Filters to same project fingerprint.
  */
 export function recordEntry(
   history: TrustHistory,
   result: TrustScoreResult,
   config: ResolvedTrustConfig,
   commitHash?: string,
+  projectFingerprint?: string,
 ): TrustHistory {
   const categoryScores = {} as Record<TrustCategory, number>;
   for (const cs of result.categories) {
     categoryScores[cs.category] = cs.score;
   }
+
+  // Count evidence by source (if available in clauses)
+  // This is a simplified version - in practice, clauses would need to be passed
+  const evidenceBreakdown = {
+    smt: 0,
+    runtime: 0,
+    heuristic: 0,
+  };
 
   const entry: TrustHistoryEntry = {
     score: result.score,
@@ -94,16 +107,24 @@ export function recordEntry(
     timestamp: result.timestamp,
     specFile: result.config.historyPath,
     commitHash,
+    projectFingerprint,
     counts: { ...result.counts },
+    evidenceBreakdown,
   };
 
+  // Filter existing entries to same project fingerprint
+  const existingEntries = projectFingerprint
+    ? history.entries.filter(e => e.projectFingerprint === projectFingerprint)
+    : history.entries;
+
   // Newest first
-  const entries = [entry, ...history.entries].slice(0, config.maxHistoryEntries);
+  const entries = [entry, ...existingEntries].slice(0, config.maxHistoryEntries);
 
   return {
     version: 1,
     entries,
     lastUpdated: new Date().toISOString(),
+    projectFingerprint: projectFingerprint ?? history.projectFingerprint,
   };
 }
 

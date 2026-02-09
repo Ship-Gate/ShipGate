@@ -1,0 +1,8 @@
+{
+  "shipgate.languageServer.enabled": true,
+  "shipgate.validation.enabled": true,
+  "shipgate.trace.server": "off",
+  "files.associations": {
+    "*.isl": "isl"
+  }
+}

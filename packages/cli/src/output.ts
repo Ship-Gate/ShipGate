@@ -2,9 +2,11 @@
  * Output Utilities
  * 
  * Console formatting and colorful output for the ISL CLI.
+ * All output is automatically masked to prevent secrets leakage.
  */
 
 import chalk from 'chalk';
+import { safeJSONStringify, maskString } from '@isl-lang/secrets-hygiene';
 
 /** Log levels */
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'success';
@@ -64,10 +66,11 @@ export function json(data: unknown): void {
 
 /**
  * Output JSON or pretty based on mode
+ * Secrets are automatically masked before output.
  */
 export function outputResult<T>(data: T, prettyPrinter: (data: T) => void): void {
   if (config.format === 'json') {
-    console.log(JSON.stringify(data, null, 2));
+    console.log(safeJSONStringify(data, undefined, 2));
   } else {
     prettyPrinter(data);
   }
@@ -95,10 +98,12 @@ export function debug(message: string): void {
 
 /**
  * Log an info message
+ * Secrets are automatically masked.
  */
 export function info(message: string): void {
   if (!isQuietOutput() && !isJsonOutput()) {
-    console.log(message);
+    const masked = maskString(message);
+    console.log(masked);
   }
 }
 
@@ -111,17 +116,21 @@ export function warn(message: string): void {
 
 /**
  * Log an error message
+ * Secrets are automatically masked.
  */
 export function error(message: string): void {
-  console.error(chalk.red(`✗ ${message}`));
+  const masked = maskString(message);
+  console.error(chalk.red(`✗ ${masked}`));
 }
 
 /**
  * Log a success message
+ * Secrets are automatically masked.
  */
 export function success(message: string): void {
   if (!isQuietOutput() && !isJsonOutput()) {
-    console.log(chalk.green(`✓ ${message}`));
+    const masked = maskString(message);
+    console.log(chalk.green(`✓ ${masked}`));
   }
 }
 

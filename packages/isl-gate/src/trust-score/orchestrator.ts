@@ -17,6 +17,7 @@ import type {
 import { calculateTrustScore, resolveConfig } from './calculator.js';
 import { loadHistory, saveHistory, recordEntry, computeDelta } from './history.js';
 import { generateReport } from './report.js';
+import { computeProjectFingerprint } from './fingerprint.js';
 
 // ============================================================================
 // Orchestrator
@@ -48,11 +49,17 @@ export async function evaluateTrust(
   const config = resolveConfig(options);
   const persist = options?.persist ?? true;
 
+  // Compute project fingerprint
+  const projectFingerprint = computeProjectFingerprint(
+    input.metadata?.projectRoot,
+    input.metadata?.projectFingerprint,
+  );
+
   // 1. Calculate score
   const result = calculateTrustScore(input, options);
 
-  // 2. Load history and compute delta
-  const history = await loadHistory(config.historyPath);
+  // 2. Load history and compute delta (filtered by project fingerprint)
+  const history = await loadHistory(config.historyPath, projectFingerprint);
   const delta = computeDelta(result, history);
 
   // 3. Generate report
@@ -60,7 +67,13 @@ export async function evaluateTrust(
 
   // 4. Persist to history
   if (persist) {
-    const updatedHistory = recordEntry(history, result, config, options?.commitHash);
+    const updatedHistory = recordEntry(
+      history,
+      result,
+      config,
+      options?.commitHash,
+      projectFingerprint,
+    );
     await saveHistory(config.historyPath, updatedHistory);
   }
 

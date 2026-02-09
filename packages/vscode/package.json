@@ -97,6 +97,12 @@
         "icon": "$(graph)"
       },
       {
+        "command": "shipgate.validateISL",
+        "title": "ShipGate: Validate ISL",
+        "category": "ShipGate",
+        "icon": "$(check)"
+      },
+      {
         "command": "isl.parseFile",
         "title": "ISL: Parse Current File",
         "category": "ISL",
@@ -164,6 +170,11 @@
           "group": "shipgate@2"
         },
         {
+          "when": "resourceLangId == isl",
+          "command": "shipgate.validateISL",
+          "group": "shipgate@3"
+        },
+        {
           "when": "resourceLangId == typescript || resourceLangId == javascript",
           "command": "shipgate.generateSpec",
           "group": "shipgate@1"
@@ -213,6 +224,10 @@
         },
         {
           "command": "shipgate.coverage"
+        },
+        {
+          "command": "shipgate.validateISL",
+          "when": "resourceLangId == isl"
         },
         {
           "command": "isl.parseFile",

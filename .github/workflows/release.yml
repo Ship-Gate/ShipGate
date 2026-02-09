@@ -65,6 +65,24 @@ jobs:
           path: reports/release-manifest.json
           retention-days: 90
 
+      - name: Verify license compliance
+        run: pnpm compliance:verify-licenses
+
+      - name: Generate third-party notices
+        run: pnpm compliance:generate-notices
+
+      - name: Generate SBOM
+        run: pnpm compliance:generate-sbom
+
+      - name: Upload compliance artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-artifacts
+          path: |
+            THIRD_PARTY_NOTICES.txt
+            sbom.json
+          retention-days: 365
+
       - name: Create Release Pull Request or Publish
         id: changesets
         uses: changesets/action@v1

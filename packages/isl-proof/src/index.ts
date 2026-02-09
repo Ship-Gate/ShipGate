@@ -206,3 +206,32 @@ export {
 export type {
   ClaimCollection,
 } from './claim-integration.js';
+
+// ZIP bundle support
+export {
+  createZipBundle,
+  collectFiles,
+  scanDirectory,
+} from './zip-bundle.js';
+
+export type {
+  ZipBundleOptions,
+  ZipBundleResult,
+} from './zip-bundle.js';
+
+// ZIP verification
+export {
+  verifyZipBundle,
+  extractZip,
+  verifyEd25519Signature,
+} from './zip-verify.js';
+
+export type {
+  ZipVerifyOptions,
+  ZipVerifyResult,
+} from './zip-verify.js';
+
+// HTML viewer
+export {
+  generateHtmlViewer,
+} from './html-viewer.js';

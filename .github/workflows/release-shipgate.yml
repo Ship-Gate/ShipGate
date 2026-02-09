@@ -1,0 +1,141 @@
+name: Release Shipgate CLI
+
+on:
+  push:
+    tags:
+      - 'shipgate@*'
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to publish (e.g., shipgate@1.0.0)'
+        required: true
+        type: string
+
+concurrency:
+  group: release-shipgate-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release Shipgate CLI
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build CLI package
+        working-directory: packages/cli
+        run: pnpm run build
+
+      - name: Verify build output
+        working-directory: packages/cli
+        run: |
+          if [ ! -f dist/cli.js ]; then
+            echo "Error: dist/cli.js not found"
+            exit 1
+          fi
+          if [ ! -s dist/cli.js ]; then
+            echo "Error: dist/cli.js is empty"
+            exit 1
+          fi
+          # Verify shebang
+          if ! head -1 dist/cli.js | grep -q '#!/usr/bin/env node'; then
+            echo "Error: Missing shebang in dist/cli.js"
+            exit 1
+          fi
+          echo "✓ Build output verified"
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${{ github.ref_name }}"
+          fi
+          # Remove 'shipgate@' prefix if present
+          VERSION="${VERSION#shipgate@}"
+          # Remove 'v' prefix if present
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Update package version
+        working-directory: packages/cli
+        run: |
+          npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
+          cat package.json | grep '"version"'
+
+      - name: Run smoke tests
+        working-directory: packages/cli
+        run: |
+          # Test CLI help
+          node dist/cli.js --help > /dev/null || exit 1
+          # Test version
+          node dist/cli.js --version > /dev/null || exit 1
+          echo "✓ Smoke tests passed"
+
+      - name: Publish to npm
+        working-directory: packages/cli
+        run: |
+          npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Verify published package
+        run: |
+          sleep 5
+          npm view shipgate@${{ steps.version.outputs.version }} version || exit 1
+          echo "✓ Package published successfully"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: shipgate@${{ steps.version.outputs.version }}
+          name: Shipgate CLI v${{ steps.version.outputs.version }}
+          body: |
+            ## Shipgate CLI v${{ steps.version.outputs.version }}
+
+            ### Installation
+
+            ```bash
+            npm install -g shipgate
+            # or
+            npx shipgate init
+            ```
+
+            ### What's Changed
+
+            See [CHANGELOG.md](packages/cli/CHANGELOG.md) for details.
+
+            ### Quick Start
+
+            ```bash
+            npx shipgate init
+            npx shipgate check specs/
+            ```
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

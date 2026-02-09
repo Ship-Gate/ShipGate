@@ -15,6 +15,12 @@ export interface ConcurrentInjectorConfig {
   staggered?: boolean;
   /** Maximum wait time for all requests to complete (ms) */
   timeoutMs?: number;
+  /** Jitter range for stagger delay (ms) - adds randomness */
+  staggerJitterMs?: number;
+  /** Maximum concurrent requests limit (enforced) */
+  maxConcurrency?: number;
+  /** Whether to enforce maxConcurrency strictly */
+  enforceLimit?: boolean;
 }
 
 export interface ConcurrentResult<T> {
@@ -63,6 +69,9 @@ export class ConcurrentInjector {
       staggerDelayMs: config.staggerDelayMs ?? 0,
       staggered: config.staggered ?? false,
       timeoutMs: config.timeoutMs ?? 30000,
+      staggerJitterMs: config.staggerJitterMs ?? 0,
+      maxConcurrency: config.maxConcurrency ?? config.concurrency,
+      enforceLimit: config.enforceLimit ?? false,
     };
     this.state = {
       active: false,
@@ -181,17 +190,33 @@ export class ConcurrentInjector {
     // Create promises for all concurrent executions
     const promises: Promise<ConcurrentResult<T>>[] = [];
 
-    if (this.config.staggered && this.config.staggerDelayMs > 0) {
-      // Staggered execution
-      for (let i = 0; i < this.config.concurrency; i++) {
+    // Enforce max concurrency limit if configured
+    const effectiveConcurrency = this.config.enforceLimit 
+      ? Math.min(this.config.concurrency, this.config.maxConcurrency!)
+      : this.config.concurrency;
+
+    if (this.config.staggered && this.config.staggerDelayMs! > 0) {
+      // Staggered execution with jitter
+      for (let i = 0; i < effectiveConcurrency; i++) {
         if (i > 0) {
-          await new Promise(resolve => setTimeout(resolve, this.config.staggerDelayMs));
+          const baseDelay = this.config.staggerDelayMs!;
+          const jitter = this.config.staggerJitterMs! > 0
+            ? (Math.random() * 2 - 1) * this.config.staggerJitterMs!
+            : 0;
+          const delay = Math.max(0, baseDelay + jitter);
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
         promises.push(executeOne(i));
       }
     } else {
-      // Simultaneous execution
-      for (let i = 0; i < this.config.concurrency; i++) {
+      // Simultaneous execution (with concurrency limit enforcement)
+      const batchSize = this.config.enforceLimit ? this.config.maxConcurrency! : effectiveConcurrency;
+      for (let i = 0; i < effectiveConcurrency; i++) {
+        // If enforcing limit, execute in batches
+        if (this.config.enforceLimit && i > 0 && i % batchSize === 0) {
+          // Wait for current batch to complete before starting next
+          await Promise.all(promises.slice(-batchSize));
+        }
         promises.push(executeOne(i));
       }
     }

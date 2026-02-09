@@ -12,7 +12,7 @@ import {
   VerificationVerdict,
   VerificationType,
   CheckType,
-} from '../semantic-attributes';
+} from '../semantic-attributes.js';
 
 /**
  * Configuration for verification span

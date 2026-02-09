@@ -15,7 +15,7 @@ import {
   SEMRESATTRS_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
-import { ISLSemanticAttributes } from './semantic-attributes';
+import { ISLSemanticAttributes } from './semantic-attributes.js';
 
 /**
  * Configuration for ISL Tracer

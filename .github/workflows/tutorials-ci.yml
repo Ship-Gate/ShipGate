@@ -1,0 +1,62 @@
+name: Tutorials CI
+
+on:
+  push:
+    paths:
+      - 'docs/tutorials/**'
+      - 'samples/tutorials/**'
+      - 'scripts/test-tutorials.ts'
+  pull_request:
+    paths:
+      - 'docs/tutorials/**'
+      - 'samples/tutorials/**'
+      - 'scripts/test-tutorials.ts'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-tutorials:
+    name: Test Tutorials
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build CLI
+        run: pnpm build --filter @isl-lang/cli
+
+      - name: Install shipgate CLI globally
+        run: |
+          cd packages/cli
+          npm install -g .
+
+      - name: Test tutorials
+        run: pnpm test:tutorials
+
+      - name: Verify tutorial specs parse
+        run: |
+          for spec in samples/tutorials/*/specs/*.isl; do
+            if [ -f "$spec" ]; then
+              echo "Checking $spec..."
+              shipgate check "$spec" || exit 1
+            fi
+          done

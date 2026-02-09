@@ -44,6 +44,7 @@ export {
   computeTrend,
 } from './history.js';
 export { generateReport, formatTextReport, formatJSONReport } from './report.js';
+export { generateProjectFingerprint, computeProjectFingerprint } from './fingerprint.js';
 
 // Orchestrator
 export { evaluateTrust, enforceTrustGate } from './orchestrator.js';

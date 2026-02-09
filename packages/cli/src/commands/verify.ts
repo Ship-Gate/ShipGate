@@ -29,6 +29,7 @@ import { loadConfig } from '../config.js';
 import { withSpan, ISL_ATTR } from '@isl-lang/observability';
 import type { TemporalClauseResult } from '@isl-lang/verifier-temporal';
 import { formatGitLab, formatJUnit } from './output-formats.js';
+import { safeJSONStringify } from '@isl-lang/secrets-hygiene';
 
 // Re-export types for use
 export type { VerificationResult, TrustScore, TestResult };
@@ -60,6 +61,8 @@ export interface VerifyOptions {
   smt?: boolean;
   /** SMT solver timeout in milliseconds (default: 5000) */
   smtTimeout?: number;
+  /** SMT solver to use: 'builtin', 'z3', 'cvc5', or 'auto' (default: 'auto') */
+  smtSolver?: 'builtin' | 'z3' | 'cvc5' | 'auto';
   /** Enable property-based testing */
   pbt?: boolean;
   /** Number of PBT test iterations (default: 100) */
@@ -72,6 +75,10 @@ export interface VerifyOptions {
   temporal?: boolean;
   /** Minimum samples for temporal verification (default: 10) */
   temporalMinSamples?: number;
+  /** Trace files to use for temporal verification */
+  temporalTraceFiles?: string[];
+  /** Trace directory to search for trace files */
+  temporalTraceDir?: string;
   /** Enable import resolution (resolves use statements and imports) */
   resolveImports?: boolean;
 }
@@ -89,6 +96,8 @@ export interface VerifyResult {
   pbtResult?: PBTVerifyResultType;
   /** Temporal verification results (when --temporal flag is used) */
   temporalResult?: TemporalVerifyResult;
+  /** Reality probe results (when --reality flag is used) */
+  realityResult?: import('@isl-lang/reality-probe').RealityProbeResult;
   errors: string[];
   duration: number;
 }
@@ -287,6 +296,7 @@ function calculateEvidenceScore(
     smtResult?: SMTVerifyResult;
     pbtResult?: PBTVerifyResultType;
     temporalResult?: TemporalVerifyResult;
+    realityResult?: import('@isl-lang/reality-probe').RealityProbeResult;
   }
 ): EvidenceScore {
   const { breakdown } = trustScore;
@@ -341,6 +351,17 @@ function calculateEvidenceScore(
     const temporal = additionalResults.temporalResult;
     temporalPassed += temporal.summary.proven;
     temporalFailed += temporal.summary.notProven;
+  }
+
+  // Incorporate reality probe results
+  if (additionalResults?.realityResult) {
+    const reality = additionalResults.realityResult;
+    // Ghost routes and env vars are failures
+    const realityFailed = reality.summary.ghostRoutes + reality.summary.ghostEnvVars;
+    const realityPassed = (reality.summary.existingRoutes + reality.summary.existingEnvVars) - realityFailed;
+    // Add to scenarios category (reality checks are scenario-like)
+    scenariosPassed += realityPassed;
+    scenariosFailed += realityFailed;
   }
 
   // Calculate totals for each category
@@ -504,7 +525,7 @@ function generateEvidenceReport(result: VerifyResult): string {
     }
   }
 
-  return JSON.stringify({
+  return safeJSONStringify({
     metadata: {
       timestamp,
       specFile: result.specFile,
@@ -812,7 +833,7 @@ async function runPBTVerification(
  */
 async function runTemporalVerification(
   domain: Domain,
-  options: { minSamples?: number; verbose?: boolean }
+  options: { minSamples?: number; verbose?: boolean; traceFiles?: string[]; traceDir?: string }
 ): Promise<TemporalVerifyResult> {
   const start = Date.now();
   const clauses: TemporalClauseResult[] = [];
@@ -821,6 +842,95 @@ async function runTemporalVerification(
     // Dynamically import the temporal verifier
     const temporal = await import('@isl-lang/verifier-temporal');
 
+    // Try to load traces if trace files/directory provided
+    let traces: import('@isl-lang/trace-format').Trace[] = [];
+    let useTraceEvaluation = false;
+    
+    if (options.traceFiles && options.traceFiles.length > 0) {
+      try {
+        traces = await temporal.loadTraceFiles(options.traceFiles);
+        useTraceEvaluation = true;
+      } catch (error) {
+        if (options.verbose) {
+          console.warn(`Failed to load trace files: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+    } else if (options.traceDir) {
+      try {
+        const traceFiles = await temporal.discoverTraceFiles(options.traceDir);
+        if (traceFiles.length > 0) {
+          traces = await temporal.loadTraceFiles(traceFiles);
+          useTraceEvaluation = true;
+        }
+      } catch (error) {
+        if (options.verbose) {
+          console.warn(`Failed to discover traces: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+    }
+
+    // Use trace-based evaluation if traces are available
+    if (useTraceEvaluation && traces.length > 0) {
+      const report = await temporal.evaluateTemporalProperties(
+        domain as unknown as import('@isl-lang/isl-core').DomainDeclaration,
+        traces,
+        {
+          minSnapshots: options.minSamples ?? 1,
+        }
+      );
+
+      // Map evaluation results to clause format
+      for (const evaluation of report.evaluations) {
+        const behaviorName = evaluation.requirement.behaviorName || 'unknown';
+        const clauseId = `${behaviorName}:${evaluation.requirement.type}`;
+        
+        let type: 'within' | 'eventually_within' | 'always' | 'never' = 'within';
+        if (evaluation.requirement.type === 'eventually') {
+          type = 'eventually_within';
+        } else if (evaluation.requirement.type === 'always') {
+          type = 'always';
+        } else if (evaluation.requirement.type === 'never') {
+          type = 'never';
+        }
+
+        clauses.push({
+          clauseId,
+          type,
+          clauseText: evaluation.description,
+          verdict: evaluation.verdict === 'SATISFIED' ? 'PROVEN' :
+                   evaluation.verdict === 'VIOLATED' ? 'NOT_PROVEN' :
+                   evaluation.verdict === 'VACUOUSLY_TRUE' ? 'PROVEN' : 'UNKNOWN',
+          success: evaluation.satisfied,
+          timing: evaluation.requirement.duration ? {
+            thresholdMs: durationToMs(evaluation.requirement.duration),
+            percentile: evaluation.requirement.percentile ? parsePercentile(evaluation.requirement.percentile) : undefined,
+            actualMs: evaluation.result.witnessTimeMs,
+            sampleCount: evaluation.result.snapshotsEvaluated,
+          } : undefined,
+          error: evaluation.violation ? evaluation.violation.message : evaluation.result.explanation,
+        });
+      }
+
+      const proven = clauses.filter(c => c.verdict === 'PROVEN').length;
+      const notProven = clauses.filter(c => c.verdict === 'NOT_PROVEN').length;
+      const incomplete = clauses.filter(c => c.verdict === 'INCOMPLETE_PROOF').length;
+      const unknown = clauses.filter(c => c.verdict === 'UNKNOWN').length;
+
+      return {
+        success: report.success,
+        clauses,
+        summary: {
+          total: clauses.length,
+          proven,
+          notProven,
+          incomplete,
+          unknown,
+        },
+        duration: Date.now() - start,
+      };
+    }
+
+    // Fallback to original implementation-based verification
     // Extract temporal clauses from behaviors
     for (const behavior of domain.behaviors) {
       const behaviorName = behavior.name.name;
@@ -1034,19 +1144,29 @@ function extractEventKind(req: { expression?: unknown }): string | undefined {
  */
 async function runSMTVerification(
   domain: Domain,
-  options: { timeout?: number; verbose?: boolean }
+  options: { timeout?: number; verbose?: boolean; solver?: 'builtin' | 'z3' | 'cvc5' | 'auto' }
 ): Promise<SMTVerifyResult> {
   const start = Date.now();
   const checks: SMTCheckItem[] = [];
   
   try {
     // Dynamically import the SMT package to keep it optional
-    const { verifySMT } = await import('@isl-lang/isl-smt');
+    const { verifySMT, getBestAvailableSolver } = await import('@isl-lang/isl-smt');
+    
+    // Determine which solver to use
+    let solver: 'builtin' | 'z3' | 'cvc5' = 'builtin';
+    if (options.solver === 'auto' || !options.solver) {
+      // Auto-detect best available solver
+      const bestSolver = await getBestAvailableSolver();
+      solver = bestSolver || 'builtin';
+    } else {
+      solver = options.solver;
+    }
     
     const result = await verifySMT(domain, {
       timeout: options.timeout ?? 5000,
       verbose: options.verbose,
-      solver: 'builtin', // Use builtin solver by default, z3 if available
+      solver,
     });
     
     // Convert to our format
@@ -1217,6 +1337,7 @@ export async function verify(specFile: string, options: VerifyOptions): Promise<
       smtResult = await runSMTVerification(ast, {
         timeout: options.smtTimeout ?? 5000,
         verbose: options.verbose,
+        solver: options.smtSolver ?? 'auto',
       });
       
       if (options.verbose) {
@@ -1248,10 +1369,50 @@ export async function verify(specFile: string, options: VerifyOptions): Promise<
       temporalResult = await runTemporalVerification(ast, {
         minSamples: options.temporalMinSamples ?? 10,
         verbose: options.verbose,
+        traceFiles: options.temporalTraceFiles,
+        traceDir: options.temporalTraceDir,
       });
       
       if (options.verbose) {
         spinner.info(`Temporal: ${temporalResult.summary.proven}/${temporalResult.summary.total} clauses proven`);
+      }
+    }
+
+    // Run reality probe if enabled
+    let realityResult: import('@isl-lang/reality-probe').RealityProbeResult | undefined;
+    if (options.reality) {
+      spinner.text = 'Running reality probe...';
+      try {
+        const { runRealityProbe } = await import('@isl-lang/reality-probe');
+        
+        // Auto-detect truthpack paths if not provided
+        const routeMapPath = options.realityRouteMap || 
+          (existsSync('.shipgate/truthpack/routes.json') ? '.shipgate/truthpack/routes.json' : undefined);
+        const envVarsPath = options.realityEnvVars || 
+          (existsSync('.shipgate/truthpack/env.json') ? '.shipgate/truthpack/env.json' : undefined);
+
+        if (!options.realityBaseUrl && !routeMapPath && !envVarsPath) {
+          spinner.warn('Reality probe skipped: no baseUrl, routeMap, or envVars provided');
+        } else {
+          realityResult = await runRealityProbe({
+            baseUrl: options.realityBaseUrl,
+            routeMapPath,
+            envVarsPath,
+            timeoutMs: timeout,
+            verbose: options.verbose,
+          });
+
+          if (options.verbose) {
+            const { summary } = realityResult;
+            spinner.info(
+              `Reality: ${summary.existingRoutes}/${summary.totalRoutes} routes exist, ` +
+              `${summary.ghostRoutes} ghost routes, ${summary.ghostEnvVars} ghost env vars`
+            );
+          }
+        }
+      } catch (error) {
+        spinner.warn(`Reality probe failed: ${error instanceof Error ? error.message : String(error)}`);
+        // Don't fail verification if reality probe fails
       }
     }
 
@@ -1261,6 +1422,10 @@ export async function verify(specFile: string, options: VerifyOptions): Promise<
       runner: {
         timeout,
         verbose: options.verbose,
+        sandbox: options.sandbox,
+        sandboxTimeout: options.sandboxTimeout,
+        sandboxMemory: options.sandboxMemory,
+        sandboxEnv: options.sandboxEnv,
       },
     });
 
@@ -1272,11 +1437,17 @@ export async function verify(specFile: string, options: VerifyOptions): Promise<
       passed = false;
     }
 
+    // Also check reality probe result if enabled
+    if (options.reality && realityResult && !realityResult.success) {
+      passed = false;
+    }
+
     // Calculate evidence score with all verification results (BUG-001 FIX)
     const evidenceScore = calculateEvidenceScore(verification.trustScore, {
       smtResult,
       pbtResult,
       temporalResult,
+      realityResult,
     });
 
     if (passed) {
@@ -1476,11 +1647,12 @@ function printEvidenceScore(evidence: EvidenceScore): void {
 
 /**
  * Print verify results to console
+ * Secrets are automatically masked in output.
  */
 export function printVerifyResult(result: VerifyResult, options?: { detailed?: boolean; format?: string; json?: boolean }): void {
-  // JSON output
+  // JSON output (secrets are automatically masked)
   if (options?.json || options?.format === 'json') {
-    console.log(JSON.stringify({
+    console.log(safeJSONStringify({
       success: result.success,
       specFile: result.specFile,
       implFile: result.implFile,
@@ -1525,6 +1697,13 @@ export function printVerifyResult(result: VerifyResult, options?: { detailed?: b
           error: c.error,
         })),
         duration: result.temporalResult.duration,
+      } : null,
+      realityResult: result.realityResult ? {
+        success: result.realityResult.success,
+        summary: result.realityResult.summary,
+        routes: result.realityResult.routes,
+        envVars: result.realityResult.envVars,
+        duration: result.realityResult.durationMs,
       } : null,
       errors: result.errors,
     }, null, 2));
@@ -1630,6 +1809,27 @@ export function printVerifyResult(result: VerifyResult, options?: { detailed?: b
           : chalk.gray;
         console.log(`  ${chalk.red('✗')} ${failure.name}`);
         console.log(`    ${impactColor(`[${failure.impact}]`)} ${failure.message ?? ''}`);
+      }
+    }
+  }
+
+  // Unknown clauses with remediation (if verification result has unknown reasons)
+  if (result.verification && 'unknownReasons' in result.verification) {
+    const verificationResult = result.verification as any;
+    if (verificationResult.unknownReasons && verificationResult.unknownReasons.length > 0) {
+      try {
+        const { formatUnknownSummary } = await import('@isl-lang/verify-pipeline');
+        const unknownOutput = formatUnknownSummary(verificationResult, {
+          colors: true,
+          detailed: options?.detailed,
+        });
+        if (unknownOutput) {
+          console.log(unknownOutput);
+        }
+      } catch (err) {
+        // Fallback if formatter not available
+        console.log('');
+        console.log(chalk.yellow(`? ${verificationResult.unknownReasons.length} unknown clause(s)`));
       }
     }
   }
@@ -2613,7 +2813,8 @@ function printUnifiedJSON(result: UnifiedVerifyResult): void {
     duration: result.duration,
     exitCode: result.exitCode,
   };
-  console.log(JSON.stringify(payload, null, 2));
+  // Secrets are automatically masked
+  console.log(safeJSONStringify(payload, undefined, 2));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

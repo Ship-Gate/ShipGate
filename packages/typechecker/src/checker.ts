@@ -235,6 +235,7 @@ export class TypeChecker {
   private exprChecker: ExpressionChecker;
   private diagnostics: Diagnostic[] = [];
   private typeMap: Map<ASTNode, ResolvedType> = new Map();
+  private importGraph?: import('./import-resolver').ImportGraph;
 
   constructor() {
     this.symbolTable = new SymbolTableBuilder();

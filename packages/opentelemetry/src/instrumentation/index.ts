@@ -4,8 +4,8 @@ export {
   traceBehavior,
   traceVerification,
   createISLRequestHeaders,
-} from './express';
-export type { ExpressInstrumentationOptions } from './express';
+} from './express.js';
+export type { ExpressInstrumentationOptions } from './express.js';
 
 export {
   islFastifyPlugin,
@@ -16,8 +16,8 @@ export {
   completeVerificationOnSend,
   getISLContextFromRequest,
   runInRequestContext,
-} from './fastify';
-export type { FastifyInstrumentationOptions } from './fastify';
+} from './fastify.js';
+export type { FastifyInstrumentationOptions } from './fastify.js';
 
 export {
   extractISLContextFromMetadata,
@@ -27,5 +27,5 @@ export {
   traceServerStreamingCall,
   traceBidiStreamingCall,
   traceService,
-} from './grpc';
-export type { GrpcInstrumentationOptions, GrpcCall } from './grpc';
+} from './grpc.js';
+export type { GrpcInstrumentationOptions, GrpcCall } from './grpc.js';

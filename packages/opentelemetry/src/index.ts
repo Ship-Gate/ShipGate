@@ -8,7 +8,7 @@ export { trace, context, SpanStatusCode, SpanKind } from '@opentelemetry/api';
 export type { Span, Tracer, Context, Attributes } from '@opentelemetry/api';
 
 // Semantic attributes
-export { ISLSemanticAttributes } from './semantic-attributes';
+export { ISLSemanticAttributes } from './semantic-attributes.js';
 export type {
   ISLSemanticAttributeKey,
   ISLSemanticAttributeValue,
@@ -16,16 +16,16 @@ export type {
   CheckType,
   ChaosInjectionType,
   VerificationType,
-} from './semantic-attributes';
+} from './semantic-attributes.js';
 
 // Tracer
-export { ISLTracer, createISLTracer } from './tracer';
+export { ISLTracer, createISLTracer } from './tracer.js';
 export type {
   ISLTracerConfig,
   VerificationResult,
   CheckResult as TracerCheckResult,
   CoverageResult as TracerCoverageResult,
-} from './tracer';
+} from './tracer.js';
 
 // Spans
 export {
@@ -47,7 +47,7 @@ export {
   withChaosSpan,
   createChaosSpan,
   ChaosUtils,
-} from './spans';
+} from './spans/index.js';
 export type {
   BehaviorSpanConfig,
   BehaviorResult,
@@ -57,7 +57,7 @@ export type {
   VerificationResult as SpanVerificationResult,
   ChaosSpanConfig,
   ChaosResult,
-} from './spans';
+} from './spans/index.js';
 
 // Metrics
 export {
@@ -68,7 +68,7 @@ export {
   SLOMetrics,
   SLOTemplates,
   createSLOMetrics,
-} from './metrics';
+} from './metrics/index.js';
 export type {
   VerificationBatchResult,
   CoverageData,
@@ -77,7 +77,7 @@ export type {
   SLODefinition,
   SLOMeasurement,
   SLOStatus,
-} from './metrics';
+} from './metrics/index.js';
 
 // Propagation
 export {
@@ -91,8 +91,8 @@ export {
   createISLContextFromSpan,
   createISLHeaders,
   parseISLHeaders,
-} from './propagation/isl-context';
-export type { ISLContextData } from './propagation/isl-context';
+} from './propagation/isl-context.js';
+export type { ISLContextData } from './propagation/isl-context.js';
 
 // Exporters
 export {
@@ -119,13 +119,13 @@ export {
   defaultOTLPConfig,
   otlpConfigFromEnv,
   OTLPBackends,
-} from './exporters';
+} from './exporters/index.js';
 export type {
   ISLJaegerConfig,
   ISLZipkinConfig,
   ISLOTLPConfig,
   OTLPProtocol,
-} from './exporters';
+} from './exporters/index.js';
 
 // Instrumentation
 export {
@@ -152,43 +152,43 @@ export {
   traceServerStreamingCall,
   traceBidiStreamingCall,
   traceService,
-} from './instrumentation';
+} from './instrumentation/index.js';
 export type {
   ExpressInstrumentationOptions,
   FastifyInstrumentationOptions,
   GrpcInstrumentationOptions,
   GrpcCall,
-} from './instrumentation';
+} from './instrumentation/index.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Convenience Factory Functions
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { ISLTracer, createISLTracer as _createISLTracer } from './tracer';
-import type { ISLTracerConfig } from './tracer';
+import { ISLTracer, createISLTracer as _createISLTracer } from './tracer.js';
+import type { ISLTracerConfig } from './tracer.js';
 import {
   VerificationMetrics,
   createVerificationMetrics as _createVerificationMetrics,
-} from './metrics/verification';
+} from './metrics/verification.js';
 import {
   CoverageMetrics,
   createCoverageMetrics as _createCoverageMetrics,
-} from './metrics/coverage';
+} from './metrics/coverage.js';
 import {
   SLOMetrics,
   SLOTemplates as _SLOTemplates,
   createSLOMetrics as _createSLOMetrics,
-} from './metrics/slo';
+} from './metrics/slo.js';
 import {
   configureJaegerProvider,
   jaegerConfigFromEnv,
-} from './exporters/jaeger';
+} from './exporters/jaeger.js';
 import {
   configureZipkinProvider,
   zipkinConfigFromEnv,
-} from './exporters/zipkin';
-import { configureOTLPProvider, otlpConfigFromEnv } from './exporters/otlp';
-import { ISLSemanticAttributes as _ISLSemanticAttributes } from './semantic-attributes';
+} from './exporters/zipkin.js';
+import { configureOTLPProvider, otlpConfigFromEnv } from './exporters/otlp.js';
+import { ISLSemanticAttributes as _ISLSemanticAttributes } from './semantic-attributes.js';
 
 /**
  * Full ISL observability configuration

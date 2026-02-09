@@ -13,9 +13,11 @@ import { readFile } from 'fs/promises';
 import { resolve } from 'path';
 import chalk from 'chalk';
 import { parse as parseISL, type Domain } from '@isl-lang/parser';
-import { RuntimeSimulator, simulate, type SimulationResult } from '@isl-lang/interpreter';
-import { parseTestData, type TestData } from '@isl-lang/interpreter';
 import { output } from '../output.js';
+
+// @isl-lang/interpreter is optional - loaded dynamically
+type SimulationResult = any;
+type TestData = any;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -80,6 +82,22 @@ export async function simulateCommand(options: SimulateOptions): Promise<Simulat
 
     if (validBehaviors.length === 0) {
       throw new Error(`No behaviors found${options.behavior ? ` matching "${options.behavior}"` : ''}`);
+    }
+
+    // Dynamically load interpreter (optional dependency)
+    let RuntimeSimulator: any;
+    let simulate: any;
+    let parseTestData: any;
+    
+    try {
+      const interpreterModule = await import('@isl-lang/interpreter');
+      RuntimeSimulator = interpreterModule.RuntimeSimulator;
+      simulate = interpreterModule.simulate;
+      parseTestData = interpreterModule.parseTestData;
+    } catch (error) {
+      throw new Error(
+        '@isl-lang/interpreter is not available. Install it with: pnpm add -D @isl-lang/interpreter'
+      );
     }
 
     // Create simulator

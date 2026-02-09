@@ -6,8 +6,6 @@
 import * as YAML from 'yaml';
 import type {
   Domain,
-  Entity,
-  Behavior,
   Field,
   Annotation,
   GenerateOptions,
@@ -49,10 +47,6 @@ function findAnnotation(annotations: Annotation[] | undefined, name: string): An
 
 function domainSlug(domain: Domain): string {
   return toKebabCase(domain.name);
-}
-
-function base64Encode(value: string): string {
-  return Buffer.from(value, 'utf-8').toString('base64');
 }
 
 function serializeManifest(manifest: K8sManifest, format: 'yaml' | 'json'): string {

@@ -1,12 +1,12 @@
-export { VerificationMetrics, createVerificationMetrics } from './verification';
-export type { VerificationBatchResult } from './verification';
+export { VerificationMetrics, createVerificationMetrics } from './verification.js';
+export type { VerificationBatchResult } from './verification.js';
 
-export { CoverageMetrics, createCoverageMetrics } from './coverage';
+export { CoverageMetrics, createCoverageMetrics } from './coverage.js';
 export type {
   CoverageData,
   CoverageReport,
   DomainCoverageReport,
-} from './coverage';
+} from './coverage.js';
 
-export { SLOMetrics, SLOTemplates, createSLOMetrics } from './slo';
-export type { SLODefinition, SLOMeasurement, SLOStatus } from './slo';
+export { SLOMetrics, SLOTemplates, createSLOMetrics } from './slo.js';
+export type { SLODefinition, SLOMeasurement, SLOStatus } from './slo.js';

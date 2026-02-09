@@ -13,6 +13,7 @@ import { parse as parseISL, type Domain as DomainDeclaration } from '@isl-lang/p
 import { output, type DiagnosticError } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
 import { findSimilarFiles, formatCodeSnippet } from '../utils.js';
+import { withSpan, ISL_ATTR } from '@isl-lang/observability';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -149,91 +150,112 @@ async function fileExists(path: string): Promise<boolean> {
  * Parse an ISL file and return the AST
  */
 export async function parse(file: string, options: ParseOptions = {}): Promise<ParseResult> {
-  const startTime = Date.now();
-  const filePath = resolve(file);
-  const spinner = options.format !== 'json' ? ora('Parsing ISL file...').start() : null;
-  
-  // Check if file exists
-  if (!await fileExists(filePath)) {
-    spinner?.fail(`File not found: ${file}`);
+  return await withSpan('cli.parse', {
+    attributes: {
+      [ISL_ATTR.COMMAND]: 'parse',
+      [ISL_ATTR.SPEC_FILE]: file,
+    },
+  }, async (parseSpan) => {
+    const startTime = Date.now();
+    const filePath = resolve(file);
+    const spinner = options.format !== 'json' ? ora('Parsing ISL file...').start() : null;
     
-    // Suggest similar files
-    const similar = await findSimilarFiles(filePath);
-    if (similar.length > 0) {
-      console.log('');
-      console.log(chalk.gray('Did you mean:'));
-      for (const s of similar) {
-        console.log(chalk.gray(`  ${relative(process.cwd(), s)}`));
+    // Check if file exists
+    if (!await fileExists(filePath)) {
+      spinner?.fail(`File not found: ${file}`);
+      parseSpan.setError('File not found');
+      
+      // Suggest similar files
+      const similar = await findSimilarFiles(filePath);
+      if (similar.length > 0) {
+        console.log('');
+        console.log(chalk.gray('Did you mean:'));
+        for (const s of similar) {
+          console.log(chalk.gray(`  ${relative(process.cwd(), s)}`));
+        }
       }
+      
+      return {
+        success: false,
+        file: filePath,
+        ast: null,
+        errors: [{
+          file: filePath,
+          message: `File not found: ${file}`,
+          severity: 'error',
+        }],
+        duration: Date.now() - startTime,
+      };
     }
     
-    return {
-      success: false,
-      file: filePath,
-      ast: null,
-      errors: [{
-        file: filePath,
-        message: `File not found: ${file}`,
-        severity: 'error',
-      }],
-      duration: Date.now() - startTime,
-    };
-  }
-  
-  const errors: DiagnosticError[] = [];
-  
-  try {
-    const source = await readFile(filePath, 'utf-8');
-    spinner && (spinner.text = 'Parsing...');
+    const errors: DiagnosticError[] = [];
     
-    const { domain: ast, errors: parseErrors } = parseISL(source, filePath);
-    
-    // Convert parse errors to diagnostics
-    for (const error of parseErrors) {
-      const line = 'span' in error ? error.span.start.line : error.line;
-      const column = 'span' in error ? error.span.start.column : error.column;
+    try {
+      const source = await readFile(filePath, 'utf-8');
+      spinner && (spinner.text = 'Parsing...');
       
+      const { domain: ast, errors: parseErrors } = parseISL(source, filePath);
+      
+      // Convert parse errors to diagnostics
+      for (const error of parseErrors) {
+        const line = 'span' in error ? error.span.start.line : error.line;
+        const column = 'span' in error ? error.span.start.column : error.column;
+        
+        errors.push({
+          file: filePath,
+          line,
+          column,
+          message: error.message,
+          severity: 'error',
+        });
+      }
+      
+      const duration = Date.now() - startTime;
+      
+      // Set span attributes
+      parseSpan.setAttribute('isl.parse.error_count', errors.length);
+      parseSpan.setAttribute(ISL_ATTR.DURATION_MS, duration);
+      if (ast) {
+        parseSpan.setAttribute('isl.parse.entities', ast.entities.length);
+        parseSpan.setAttribute('isl.parse.behaviors', ast.behaviors.length);
+        parseSpan.setAttribute('isl.parse.invariants', ast.invariants?.length ?? 0);
+      }
+      if (errors.length > 0) {
+        parseSpan.setError(`${errors.length} parse errors`);
+      }
+      
+      if (errors.length > 0) {
+        spinner?.fail(`Parse failed with ${errors.length} error${errors.length === 1 ? '' : 's'}`);
+      } else {
+        spinner?.succeed(`Parsed ${relative(process.cwd(), filePath)} (${duration}ms)`);
+      }
+      
+      return {
+        success: errors.length === 0,
+        file: filePath,
+        ast: ast ?? null,
+        errors,
+        source,
+        duration,
+      };
+    } catch (err) {
+      spinner?.fail('Parse failed');
+      parseSpan.setError(err instanceof Error ? err.message : String(err));
       errors.push({
         file: filePath,
-        line,
-        column,
-        message: error.message,
+        message: err instanceof Error ? err.message : String(err),
         severity: 'error',
       });
+      
+      return {
+        success: false,
+        file: filePath,
+        ast: null,
+        errors,
+        duration: Date.now() - startTime,
+      };
     }
-    
-    const duration = Date.now() - startTime;
-    
-    if (errors.length > 0) {
-      spinner?.fail(`Parse failed with ${errors.length} error${errors.length === 1 ? '' : 's'}`);
-    } else {
-      spinner?.succeed(`Parsed ${relative(process.cwd(), filePath)} (${duration}ms)`);
-    }
-    
-    return {
-      success: errors.length === 0,
-      file: filePath,
-      ast: ast ?? null,
-      errors,
-      source,
-      duration,
-    };
-  } catch (err) {
-    spinner?.fail('Parse failed');
-    errors.push({
-      file: filePath,
-      message: err instanceof Error ? err.message : String(err),
-      severity: 'error',
-    });
-    
-    return {
-      success: false,
-      file: filePath,
-      ast: null,
-      errors,
-      duration: Date.now() - startTime,
-    };
-  }
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

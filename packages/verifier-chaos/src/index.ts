@@ -313,9 +313,26 @@ export {
   createDriftingClock,
   createClockJump,
   createOscillatingClock,
+  SystemTimeProvider,
 } from './injectors/clock-skew.js';
 export type {
   ClockSkewConfig,
   ClockSkewState,
   ClockSkewMode,
+  TimeProvider,
 } from './injectors/clock-skew.js';
+
+// ── Harness API
+export {
+  ChaosHarness,
+  ScenarioRunner,
+  createHarness,
+} from './harness.js';
+export type {
+  HarnessConfig,
+  ScenarioOutcome,
+  ScenarioMetrics,
+  TrialResult,
+  HarnessResult,
+  AggregatedMetrics,
+} from './harness.js';

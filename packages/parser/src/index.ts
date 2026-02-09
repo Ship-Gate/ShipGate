@@ -3,7 +3,7 @@
 // ============================================================================
 
 import * as fs from 'fs/promises';
-import { parse as parseSource, type ParseResult } from './parser.js';
+import { Parser, type ParseResult } from './parser.js';
 
 // Re-export types
 export * from './ast.js';
@@ -11,9 +11,15 @@ export * from './tokens.js';
 export * from './errors.js';
 export { Parser, ParseResult } from './parser.js';
 export { Lexer, tokenize } from './lexer.js';
+export * from './fuzz-harness.js';
+export * from './parser-limits.js';
+export * from './build-corpus.js';
 
 // Peggy-based parser (dual-mode transition)
 export { parsePeggy, type PeggyParseResult } from './grammar/index.js';
+
+// Versioning system
+export * from './versioning.js';
 
 // ============================================================================
 // PARSER API (matches contracts/api.ts)
@@ -35,7 +41,8 @@ export interface ParserAPI {
  * @returns ParseResult with success status, domain AST, errors, and tokens
  */
 export function parse(source: string, filename?: string): ParseResult {
-  return parseSource(source, filename);
+  const parser = new Parser(filename);
+  return parser.parse(source);
 }
 
 /**

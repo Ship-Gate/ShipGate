@@ -79,6 +79,8 @@ export interface PBTVerifyResult {
       property: string;
       type: string;
       error: string;
+      input?: Record<string, unknown>;
+      minimalInput?: Record<string, unknown>;
     }>;
     error?: string;
   }>;
@@ -174,6 +176,8 @@ async function runPBTVerification(
             property: v.property.name,
             type: v.property.type,
             error: v.error,
+            input: v.input,
+            minimalInput: v.minimalInput,
           })),
         });
       } catch (error) {
@@ -435,20 +439,43 @@ export async function pbt(specFile: string, options: PBTOptions): Promise<PBTRes
 export function printPBTResult(result: PBTResult, options?: { detailed?: boolean; format?: string; json?: boolean }): void {
   // JSON output
   if (options?.json || options?.format === 'json') {
-    console.log(JSON.stringify({
+    const jsonOutput: any = {
       success: result.success,
       specFile: result.specFile,
       implFile: result.implFile,
+      seed: result.pbtResult?.config.seed,
       pbtResult: result.pbtResult ? {
         success: result.pbtResult.success,
         summary: result.pbtResult.summary,
-        behaviors: result.pbtResult.behaviors,
+        behaviors: result.pbtResult.behaviors.map(b => ({
+          behaviorName: b.behaviorName,
+          success: b.success,
+          testsRun: b.testsRun,
+          testsPassed: b.testsPassed,
+          violations: b.violations.map(v => ({
+            property: v.property,
+            type: v.type,
+            error: v.error,
+            failingCase: v.input,
+            shrunkCase: v.minimalInput,
+          })),
+          error: b.error,
+        })),
         config: result.pbtResult.config,
         duration: result.pbtResult.duration,
       } : null,
       errors: result.errors,
       duration: result.duration,
-    }, null, 2));
+    };
+    
+    // Add reproducible command
+    if (!result.success && result.pbtResult?.config.seed !== undefined) {
+      const specRel = relative(process.cwd(), result.specFile);
+      const implRel = relative(process.cwd(), result.implFile);
+      jsonOutput.reproduceCommand = `isl pbt ${specRel} --impl ${implRel} --seed ${result.pbtResult.config.seed}`;
+    }
+    
+    console.log(JSON.stringify(jsonOutput, null, 2));
     return;
   }
 
@@ -512,10 +539,43 @@ export function printPBTResult(result: PBTResult, options?: { detailed?: boolean
     }
   }
 
-  // Reproduction hint
-  if (!result.pbtResult.success && config.seed !== undefined) {
+  // Failure details with JSON output
+  if (!result.pbtResult.success) {
     console.log('');
-    console.log(chalk.gray(`  To reproduce: isl pbt ${relative(process.cwd(), result.specFile)} --impl ${relative(process.cwd(), result.implFile)} --seed ${config.seed}`));
+    console.log(chalk.bold.red('  Failure Details:'));
+    
+    for (const behavior of result.pbtResult.behaviors) {
+      if (!behavior.success && behavior.violations.length > 0) {
+        for (const violation of behavior.violations) {
+          console.log('');
+          console.log(chalk.red(`    [${violation.type}] ${violation.property}:`));
+          console.log(chalk.gray(`      Error: ${violation.error}`));
+          
+          // Output failing case JSON
+          if (violation.input) {
+            console.log('');
+            console.log(chalk.bold('      Failing Case (JSON):'));
+            console.log(chalk.gray(JSON.stringify(violation.input, null, 6)));
+            
+            // Output shrunk case JSON if available
+            if (violation.minimalInput) {
+              console.log('');
+              console.log(chalk.bold('      Shrunk Case (JSON):'));
+              console.log(chalk.gray(JSON.stringify(violation.minimalInput, null, 6)));
+            }
+          }
+        }
+      }
+    }
+    
+    // Reproduction command
+    if (config.seed !== undefined) {
+      console.log('');
+      console.log(chalk.bold('  To Reproduce:'));
+      const specRel = relative(process.cwd(), result.specFile);
+      const implRel = relative(process.cwd(), result.implFile);
+      console.log(chalk.gray(`    isl pbt ${specRel} --impl ${implRel} --seed ${config.seed}`));
+    }
   }
 
   // Summary line

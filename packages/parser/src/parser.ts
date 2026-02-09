@@ -14,6 +14,7 @@ import {
   type Diagnostic,
 } from './errors.js';
 import { Lexer } from './lexer.js';
+import { checkParserLimits, DEFAULT_PARSER_LIMITS, type ParserLimits } from './parser-limits.js';
 
 // Parse result interface
 export interface ParseResult {
@@ -21,6 +22,7 @@ export interface ParseResult {
   domain?: AST.Domain;
   errors: Diagnostic[];
   tokens?: Token[];
+  islVersion?: string; // ISL language version (e.g., "0.1", "0.2")
 }
 
 export class Parser {
@@ -29,21 +31,63 @@ export class Parser {
   private filename: string;
   private errors: ErrorCollector;
   private _panicMode: boolean = false;
+  private limits: ParserLimits;
+  private parseDepth: number = 0;
 
   /** Check if parser is in panic mode (for error recovery) */
   get inPanicMode(): boolean {
     return this._panicMode;
   }
 
-  constructor(filename: string = '<input>') {
+  constructor(filename: string = '<input>', limits?: ParserLimits) {
     this.filename = filename;
     this.errors = new ErrorCollector();
+    this.limits = limits ?? DEFAULT_PARSER_LIMITS;
   }
 
   parse(source: string): ParseResult {
+    // Check limits upfront
+    try {
+      checkParserLimits(source, this.limits);
+    } catch (err) {
+      if (err instanceof Error) {
+        this.errors.addError(
+          err.message,
+          ErrorCode.UNEXPECTED_TOKEN,
+          { line: 1, column: 1, filename: this.filename }
+        );
+        return {
+          success: false,
+          errors: this.errors.getAll(),
+        };
+      }
+    }
+    
+    // Extract islVersion directive from source (before tokenization)
+    const islVersion = this.extractISLVersion(source);
+    
+    // Reset parse depth
+    this.parseDepth = 0;
+    
     // Lexical analysis
     const lexer = new Lexer(source, this.filename, this.errors);
     const { tokens } = lexer.tokenize();
+    
+    // Check token count limit
+    if (this.limits.enabled && tokens.length > this.limits.maxTokens) {
+      this.errors.addError(
+        `Token count ${tokens.length} exceeds maximum ${this.limits.maxTokens}`,
+        ErrorCode.UNEXPECTED_TOKEN,
+        { line: 1, column: 1, filename: this.filename }
+      );
+      return {
+        success: false,
+        errors: this.errors.getAll(),
+        tokens,
+        islVersion,
+      };
+    }
+    
     this.tokens = tokens.filter(t => t.type !== 'COMMENT'); // Remove comments for parsing
     this.current = 0;
 
@@ -54,6 +98,7 @@ export class Parser {
         domain,
         errors: this.errors.getAll(),
         tokens,
+        islVersion,
       };
     } catch (e) {
       if (e instanceof Error) {
@@ -67,8 +112,38 @@ export class Parser {
         success: false,
         errors: this.errors.getAll(),
         tokens,
+        islVersion,
       };
     }
+  }
+
+  /**
+   * Extract islVersion directive from source text.
+   * Supports formats:
+   *   #islVersion "0.1"
+   *   islVersion "0.1"
+   * Returns undefined if not found (defaults to current version).
+   */
+  private extractISLVersion(source: string): string | undefined {
+    const lines = source.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      // Check for #islVersion "version" format
+      const hashMatch = trimmed.match(/^#\s*islVersion\s+["']([^"']+)["']/i);
+      if (hashMatch) {
+        return hashMatch[1];
+      }
+      // Check for islVersion "version" format (at start of file)
+      const directMatch = trimmed.match(/^islVersion\s+["']([^"']+)["']/i);
+      if (directMatch) {
+        return directMatch[1];
+      }
+      // Stop searching if we hit the domain declaration
+      if (trimmed.startsWith('domain ')) {
+        break;
+      }
+    }
+    return undefined;
   }
 
   // ============================================================================
@@ -144,6 +219,9 @@ export class Parser {
     }
 
     return domain;
+    } finally {
+      this.decrementDepth();
+    }
   }
 
   private parseDomainMember(domain: AST.Domain): void {
@@ -2047,7 +2125,12 @@ export class Parser {
   // ============================================================================
 
   private parseExpression(): AST.Expression {
-    return this.parseOr();
+    this.checkDepth();
+    try {
+      return this.parseOr();
+    } finally {
+      this.decrementDepth();
+    }
   }
 
   private parseOr(): AST.Expression {

@@ -14,6 +14,7 @@
  */
 
 import * as crypto from 'crypto';
+import type { CoverageReport } from '@isl-lang/isl-coverage';
 
 // ============================================================================
 // Manifest Schema v2
@@ -752,6 +753,26 @@ export interface ProofBundleManifest {
     packs: RulepackVersion[];
   };
   
+  /** Tool versions used during verification */
+  toolVersions?: {
+    /** ISL CLI version */
+    islCli?: string;
+    /** Node.js version */
+    nodeVersion?: string;
+    /** Build tool version (e.g., tsc, esbuild) */
+    buildTool?: string;
+    buildToolVersion?: string;
+    /** Test framework version */
+    testFramework?: string;
+    testFrameworkVersion?: string;
+    /** SMT solver version (if used) */
+    smtSolver?: string;
+    smtSolverVersion?: string;
+    /** Platform information */
+    platform?: string;
+    arch?: string;
+  };
+  
   // ============================================================================
   // V2 Fields - Import Graph & Stdlib Versions
   // ============================================================================
@@ -773,6 +794,9 @@ export interface ProofBundleManifest {
   
   /** Enhanced tests summary */
   testsSummary?: TestsSummary;
+  
+  /** Coverage analytics (v2.2) */
+  coverage?: CoverageReport;
   
   // ============================================================================
   // Evidence & Diagnostics (v2.1 - for 1.0 release)

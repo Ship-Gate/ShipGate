@@ -13,15 +13,15 @@ import type {
   FastifyPluginCallback,
   HookHandlerDoneFunction,
 } from 'fastify';
-import { ISLSemanticAttributes } from '../semantic-attributes';
+import { ISLSemanticAttributes } from '../semantic-attributes.js';
 import {
   ISL_HEADERS,
   parseISLHeaders,
   ISLContextData,
   setISLContext,
-} from '../propagation/isl-context';
-import { BehaviorSpan } from '../spans/behavior';
-import { VerificationSpan } from '../spans/verification';
+} from '../propagation/isl-context.js';
+import { BehaviorSpan } from '../spans/behavior.js';
+import { VerificationSpan } from '../spans/verification.js';
 
 /**
  * Fastify instrumentation options

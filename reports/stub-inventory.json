@@ -1,0 +1,1800 @@
+{
+  "generated": "2026-02-09T15:55:28.003Z",
+  "summary": {
+    "totalPackages": 224,
+    "stubbedPackages": 61,
+    "tier1": 7,
+    "tier2": 5,
+    "tier3": 49
+  },
+  "packages": [
+    {
+      "name": "@isl-lang/policy-packs",
+      "path": "packages\\isl-policy-packs",
+      "tier": "Tier 2",
+      "scores": {
+        "stub": 100,
+        "integration": 50,
+        "userFacing": 0,
+        "priority": 65
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": false
+      },
+      "upstreamDependents": [
+        "shipgate",
+        "@isl-lang/github-app",
+        "@isl-lang/isl-policy-engine",
+        "@isl-lang/islstudio",
+        "@isl-lang/verified-build"
+      ],
+      "stubEvidence": [
+        {
+          "file": "packages\\isl-policy-packs\\src\\explain.ts",
+          "line": 522,
+          "pattern": "throw-not-implemented",
+          "severity": "critical",
+          "snippet": "'throw new Error(\"Not implemented\")',"
+        },
+        {
+          "file": "packages\\isl-policy-packs\\src\\explain.ts",
+          "line": 536,
+          "pattern": "throw-not-implemented",
+          "severity": "critical",
+          "snippet": "throw new Error('Not implemented');"
+        },
+        {
+          "file": "packages\\isl-policy-packs\\src\\explain.ts",
+          "line": 570,
+          "pattern": "throw-not-implemented",
+          "severity": "critical",
+          "snippet": "throw new Error('Not implemented');"
+        },
+        {
+          "file": "packages\\isl-policy-packs\\src\\explain.ts",
+          "line": 523,
+          "pattern": "throw-todo",
+          "severity": "critical",
+          "snippet": "'throw new Error(\"TODO\")',"
+        },
+        {
+          "file": "packages\\isl-policy-packs\\src\\explain.ts",
+          "line": 524,
+          "pattern": "throw-stub",
+          "severity": "critical",
+          "snippet": "'throw new Error(\"STUB\") or \"PLACEHOLDER\"',"
+        }
+      ],
+      "recommendedActions": [
+        "Replace all stub implementations with real logic",
+        "Fix 5 critical stub(s) (throw \"Not implemented\")",
+        "Ensure compatibility with 5 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/generator",
+      "path": "packages\\isl-generator",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 60,
+        "integration": 70,
+        "userFacing": 0,
+        "priority": 51
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": false
+      },
+      "upstreamDependents": [
+        "@isl-lang/autofix",
+        "@isl-lang/pipeline",
+        "@isl-lang/proof",
+        "@isl-lang/verify-pipeline",
+        "@isl-lang/sdk-react-native",
+        "@isl-lang/sdk-typescript",
+        "@isl-lang/sdk-web"
+      ],
+      "stubEvidence": [
+        {
+          "file": "packages\\isl-generator\\src\\generator.ts",
+          "line": 185,
+          "pattern": "throw-not-implemented",
+          "severity": "critical",
+          "snippet": "throw new Error('Not implemented');"
+        },
+        {
+          "file": "packages\\isl-generator\\src\\generator.ts",
+          "line": 243,
+          "pattern": "throw-not-implemented",
+          "severity": "critical",
+          "snippet": "throw new Error('Not implemented');"
+        }
+      ],
+      "recommendedActions": [
+        "Replace all stub implementations with real logic",
+        "Add test suite (unit + integration tests)",
+        "Fix 2 critical stub(s) (throw \"Not implemented\")",
+        "Ensure compatibility with 7 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/pipeline",
+      "path": "packages\\isl-pipeline",
+      "tier": "Tier 1",
+      "scores": {
+        "stub": 60,
+        "integration": 30,
+        "userFacing": 20,
+        "priority": 43
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "shipgate",
+        "@isl-lang/github-app",
+        "@isl-lang/trace-format"
+      ],
+      "stubEvidence": [
+        {
+          "file": "packages\\isl-pipeline\\src\\semantic-healer.ts",
+          "line": 283,
+          "pattern": "throw-not-implemented",
+          "severity": "critical",
+          "snippet": "// Replace \"throw new Error('Not implemented')\" with real skeleton"
+        },
+        {
+          "file": "packages\\isl-pipeline\\src\\semantic-rules.ts",
+          "line": 699,
+          "pattern": "throw-not-implemented",
+          "severity": "critical",
+          "snippet": "// Pattern 1: throw new Error('Not implemented') and variations"
+        }
+      ],
+      "recommendedActions": [
+        "Replace all stub implementations with real logic",
+        "Implement core exports and functionality",
+        "Fix 2 critical stub(s) (throw \"Not implemented\")",
+        "Ensure compatibility with 3 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/parser",
+      "path": "packages\\parser",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 100,
+        "userFacing": 20,
+        "priority": 34
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "@isl-lang/agent-os",
+        "@isl-lang/build-runner",
+        "shipgate",
+        "@isl-lang/codegen-csharp",
+        "@isl-lang/codegen-go",
+        "@isl-lang/codegen-graphql",
+        "@isl-lang/codegen-grpc",
+        "@isl-lang/codegen-harness",
+        "@isl-lang/codegen-openapi",
+        "@isl-lang/codegen-python",
+        "@isl-lang/codegen-python-advanced",
+        "@isl-lang/codegen-runtime",
+        "@isl-lang/codegen-terraform",
+        "@isl-lang/codegen-tests",
+        "@isl-lang/core",
+        "@isl-lang/docs-advanced",
+        "@isl-lang/error-catalog",
+        "@isl-lang/evaluator",
+        "@isl-lang/expression-compiler",
+        "@isl-lang/graphql-codegen",
+        "@isl-lang/import-resolver",
+        "@isl-lang/intent-translator",
+        "@isl-lang/interpreter",
+        "@isl-lang/isl-compiler",
+        "@isl-lang/isl-core",
+        "@isl-lang/isl-coverage",
+        "@isl-lang/isl-discovery",
+        "@isl-lang/static-analyzer",
+        "@isl-lang/gate",
+        "@isl-lang/pbt",
+        "@isl-lang/proof",
+        "@isl-lang/semantic-analysis",
+        "@isl-lang/isl-verify",
+        "@isl-lang/verify-pipeline",
+        "@isl-lang/java-resolver",
+        "@isl-lang/lsp-core",
+        "@isl-lang/lsp-server",
+        "@isl-lang/mcp-server",
+        "@isl-lang/reality-probe",
+        "@isl-lang/repl",
+        "@shipgate/sdk",
+        "@isl-lang/sdk-typescript",
+        "@isl-lang/simulator",
+        "@isl-lang/spec-assist",
+        "@isl-lang/spec-federation",
+        "@isl-lang/stdlib-payments",
+        "@isl-lang/stdlib-scheduling",
+        "@isl-lang/test-generator",
+        "@isl-lang/typechecker",
+        "@isl-lang/verifier",
+        "@isl-lang/verifier-runtime"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality",
+        "Ensure compatibility with 51 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/core",
+      "path": "packages\\core",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 100,
+        "userFacing": 0,
+        "priority": 30
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "@isl-lang/agent-os",
+        "@isl-lang/ai-generator",
+        "@isl-lang/api-gateway",
+        "@isl-lang/api-generator",
+        "@isl-lang/autofix",
+        "shipgate",
+        "@isl-lang/codegen-client",
+        "@isl-lang/codegen-db",
+        "@isl-lang/codegen-edge",
+        "@isl-lang/codegen-grpc",
+        "@isl-lang/codegen-jvm",
+        "@isl-lang/codegen-migrations",
+        "@isl-lang/codegen-mocks",
+        "@isl-lang/codegen-pipelines",
+        "@isl-lang/codegen-property-tests",
+        "@isl-lang/codegen-terraform",
+        "@isl-lang/codegen-types",
+        "@isl-lang/codegen-ui",
+        "@isl-lang/codegen-validators",
+        "@isl-lang/codegen-wasm",
+        "@isl-lang/comparator",
+        "@isl-lang/compliance",
+        "@isl-lang/contract-testing",
+        "@isl-lang/contracts",
+        "@isl-lang/coverage",
+        "@isl-lang/db-generator",
+        "@isl-lang/dependency-analyzer",
+        "@isl-lang/diff-viewer",
+        "@isl-lang/distributed",
+        "@isl-lang/effect-system",
+        "@isl-lang/env-reality-checker",
+        "@isl-lang/event-sourcing",
+        "@isl-lang/formal-verification",
+        "@isl-lang/generator-sdk",
+        "@isl-lang/github-action",
+        "@isl-lang/health-check",
+        "@isl-lang/inference",
+        "@isl-lang/intent-translator",
+        "@isl-lang/isl-ai",
+        "@isl-lang/isl-cli",
+        "@isl-lang/isl-federation",
+        "@isl-lang/gate-action",
+        "@isl-lang/isl-lsp",
+        "@isl-lang/pipeline",
+        "@isl-lang/proof",
+        "@isl-lang/isl-runtime",
+        "@isl-lang/semantic-analysis",
+        "@isl-lang/isl-smt",
+        "@isl-lang/verify-pipeline",
+        "@isl-lang/language-server",
+        "@isl-lang/lsp",
+        "@isl-lang/lsp-server",
+        "@isl-lang/migration-tools",
+        "@isl-lang/migrations",
+        "@isl-lang/mock-server",
+        "@isl-lang/multi-tenant",
+        "@isl-lang/mutation-testing",
+        "@isl-lang/runtime-sdk",
+        "@isl-lang/runtime-universal",
+        "@shipgate/sdk",
+        "@isl-lang/security-scanner",
+        "@isl-lang/security-verifier-enhancer",
+        "@isl-lang/simulator",
+        "@isl-lang/spec-reviewer",
+        "@isl-lang/state-machine",
+        "@isl-lang/stdlib-ai",
+        "@isl-lang/stdlib-cache",
+        "@isl-lang/stdlib-email",
+        "@isl-lang/stdlib-events",
+        "@isl-lang/stdlib-messaging",
+        "@isl-lang/stdlib-notifications",
+        "@isl-lang/stdlib-observability",
+        "@isl-lang/stdlib-queue",
+        "@isl-lang/stdlib-realtime",
+        "@isl-lang/stdlib-search",
+        "@isl-lang/stdlib-workflow",
+        "@isl-lang/streaming",
+        "@isl-lang/truthpack-v2",
+        "@isl-lang/ui-generator",
+        "@isl-lang/verifier-chaos",
+        "@isl-lang/verifier-formal",
+        "@isl-lang/verifier-security",
+        "@isl-lang/verifier-temporal",
+        "@isl-lang/versioner"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality",
+        "Ensure compatibility with 84 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/isl-core",
+      "path": "packages\\isl-core",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 100,
+        "userFacing": 0,
+        "priority": 30
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "@isl-lang/agent-os",
+        "@isl-lang/ai-generator",
+        "@isl-lang/api-gateway",
+        "@isl-lang/api-generator",
+        "@isl-lang/autofix",
+        "shipgate",
+        "@isl-lang/codegen-client",
+        "@isl-lang/codegen-db",
+        "@isl-lang/codegen-edge",
+        "@isl-lang/codegen-grpc",
+        "@isl-lang/codegen-jvm",
+        "@isl-lang/codegen-migrations",
+        "@isl-lang/codegen-mocks",
+        "@isl-lang/codegen-pipelines",
+        "@isl-lang/codegen-property-tests",
+        "@isl-lang/codegen-terraform",
+        "@isl-lang/codegen-types",
+        "@isl-lang/codegen-ui",
+        "@isl-lang/codegen-validators",
+        "@isl-lang/codegen-wasm",
+        "@isl-lang/comparator",
+        "@isl-lang/compliance",
+        "@isl-lang/contract-testing",
+        "@isl-lang/contracts",
+        "@isl-lang/coverage",
+        "@isl-lang/db-generator",
+        "@isl-lang/dependency-analyzer",
+        "@isl-lang/diff-viewer",
+        "@isl-lang/distributed",
+        "@isl-lang/effect-system",
+        "@isl-lang/event-sourcing",
+        "@isl-lang/formal-verification",
+        "@isl-lang/generator-sdk",
+        "@isl-lang/health-check",
+        "@isl-lang/inference",
+        "@isl-lang/intent-translator",
+        "@isl-lang/isl-ai",
+        "@isl-lang/isl-cli",
+        "@isl-lang/isl-federation",
+        "@isl-lang/isl-lsp",
+        "@isl-lang/pipeline",
+        "@isl-lang/proof",
+        "@isl-lang/isl-runtime",
+        "@isl-lang/semantic-analysis",
+        "@isl-lang/isl-smt",
+        "@isl-lang/verify-pipeline",
+        "@isl-lang/language-server",
+        "@isl-lang/lsp",
+        "@isl-lang/migration-tools",
+        "@isl-lang/migrations",
+        "@isl-lang/mock-server",
+        "@isl-lang/multi-tenant",
+        "@isl-lang/mutation-testing",
+        "@isl-lang/runtime-sdk",
+        "@isl-lang/runtime-universal",
+        "@isl-lang/security-scanner",
+        "@isl-lang/simulator",
+        "@isl-lang/spec-reviewer",
+        "@isl-lang/state-machine",
+        "@isl-lang/stdlib-cache",
+        "@isl-lang/stdlib-email",
+        "@isl-lang/stdlib-messaging",
+        "@isl-lang/stdlib-notifications",
+        "@isl-lang/streaming",
+        "@isl-lang/ui-generator",
+        "@isl-lang/verifier-chaos",
+        "@isl-lang/verifier-formal",
+        "@isl-lang/verifier-security",
+        "@isl-lang/verifier-temporal",
+        "@isl-lang/versioner"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality",
+        "Ensure compatibility with 70 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/healer",
+      "path": "packages\\isl-healer",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 60,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 30
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": false
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [
+        {
+          "file": "packages\\isl-healer\\src\\rules\\ast-semantic-rules.ts",
+          "line": 767,
+          "pattern": "throw-not-implemented",
+          "severity": "critical",
+          "snippet": "// Pattern 1: throw new Error('Not implemented') variants"
+        },
+        {
+          "file": "packages\\isl-healer\\src\\rules\\deterministic-recipes.ts",
+          "line": 926,
+          "pattern": "throw-not-implemented",
+          "severity": "critical",
+          "snippet": "// Pattern 1: Replace \"throw new Error('Not implemented')\" with proper TODO"
+        }
+      ],
+      "recommendedActions": [
+        "Replace all stub implementations with real logic",
+        "Fix 2 critical stub(s) (throw \"Not implemented\")"
+      ]
+    },
+    {
+      "name": "@isl-lang/isl-verify",
+      "path": "packages\\isl-verify",
+      "tier": "Tier 1",
+      "scores": {
+        "stub": 0,
+        "integration": 90,
+        "userFacing": 0,
+        "priority": 27
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "@isl-lang/agent-os",
+        "shipgate",
+        "@isl-lang/comparator",
+        "@isl-lang/compliance",
+        "@isl-lang/github-action",
+        "@isl-lang/isl-cli",
+        "@isl-lang/gate",
+        "@isl-lang/mcp-server",
+        "@isl-lang/slack-bot"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality",
+        "Ensure compatibility with 9 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/generator-sdk",
+      "path": "packages\\generator-sdk",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 30,
+        "integration": 30,
+        "userFacing": 0,
+        "priority": 24
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": false
+      },
+      "upstreamDependents": [
+        "@isl-lang/sdk-react-native",
+        "@isl-lang/sdk-typescript",
+        "@isl-lang/sdk-web"
+      ],
+      "stubEvidence": [
+        {
+          "file": "packages\\generator-sdk\\src\\cli\\scaffold.ts",
+          "line": 469,
+          "pattern": "throw-not-implemented",
+          "severity": "critical",
+          "snippet": "throw new Error('Not implemented');"
+        }
+      ],
+      "recommendedActions": [
+        "Fix 1 critical stub(s) (throw \"Not implemented\")",
+        "Ensure compatibility with 3 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/test-generator",
+      "path": "packages\\test-generator",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 30,
+        "integration": 10,
+        "userFacing": 0,
+        "priority": 18
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": false
+      },
+      "upstreamDependents": [
+        "@isl-lang/verify-pipeline"
+      ],
+      "stubEvidence": [
+        {
+          "file": "packages\\test-generator\\src\\generator.ts",
+          "line": 528,
+          "pattern": "throw-not-implemented",
+          "severity": "critical",
+          "snippet": "throw new Error('Not implemented');"
+        }
+      ],
+      "recommendedActions": [
+        "Fix 1 critical stub(s) (throw \"Not implemented\")",
+        "Ensure compatibility with 1 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/github-app",
+      "path": "packages\\github-app",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 30,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 15
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": false
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [
+        {
+          "file": "packages\\github-app\\src\\services\\policy.ts",
+          "line": 84,
+          "pattern": "throw-not-implemented",
+          "severity": "critical",
+          "snippet": "throw new Error('Not implemented');"
+        }
+      ],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Fix 1 critical stub(s) (throw \"Not implemented\")"
+      ]
+    },
+    {
+      "name": "@isl-lang/isl-compiler",
+      "path": "packages\\isl-compiler",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 40,
+        "userFacing": 0,
+        "priority": 12
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "@isl-lang/agent-os",
+        "@isl-lang/build-runner",
+        "@isl-lang/isl-cli",
+        "@isl-lang/security-verifier-enhancer"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality",
+        "Ensure compatibility with 4 dependent package(s)"
+      ]
+    },
+    {
+      "name": "shipgate-isl",
+      "path": "packages\\vscode",
+      "tier": "Tier 1",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 60,
+        "priority": 12
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": false,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/codegen-client",
+      "path": "packages\\codegen-client",
+      "tier": "Tier 1",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 50,
+        "priority": 10
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/semantic-analysis",
+      "path": "packages\\isl-semantic-analysis",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 30,
+        "userFacing": 0,
+        "priority": 9
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "shipgate",
+        "@isl-lang/security-verifier-enhancer",
+        "@isl-lang/spec-assist"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality",
+        "Ensure compatibility with 3 dependent package(s)"
+      ]
+    },
+    {
+      "name": "vscode-islstudio",
+      "path": "packages\\vscode-islstudio",
+      "tier": "Tier 1",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 40,
+        "priority": 8
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": false,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/import-resolver",
+      "path": "packages\\import-resolver",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 20,
+        "userFacing": 0,
+        "priority": 6
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "shipgate",
+        "@isl-lang/verify-pipeline"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality",
+        "Ensure compatibility with 2 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/trace-viewer",
+      "path": "packages\\trace-viewer",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 20,
+        "userFacing": 0,
+        "priority": 6
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": false,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "@isl-lang/isl-cli",
+        "@isl-lang/test-runtime"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality",
+        "Ensure compatibility with 2 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/verifier-sandbox",
+      "path": "packages\\verifier-sandbox",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 20,
+        "priority": 4
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/codegen-docs",
+      "path": "packages\\codegen-docs",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 10,
+        "userFacing": 0,
+        "priority": 3
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "@isl-lang/codegen"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality",
+        "Ensure compatibility with 1 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/codegen-mocks",
+      "path": "packages\\codegen-mocks",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 10,
+        "userFacing": 0,
+        "priority": 3
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "@isl-lang/codegen"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality",
+        "Ensure compatibility with 1 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/codegen-openapi",
+      "path": "packages\\codegen-openapi",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 10,
+        "userFacing": 0,
+        "priority": 3
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "@isl-lang/codegen"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality",
+        "Ensure compatibility with 1 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/codegen-validators",
+      "path": "packages\\codegen-validators",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 10,
+        "userFacing": 0,
+        "priority": 3
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "@isl-lang/codegen"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality",
+        "Ensure compatibility with 1 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/docs",
+      "path": "packages\\docs",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 10,
+        "userFacing": 0,
+        "priority": 3
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": false,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "@isl-lang/codegen"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality",
+        "Ensure compatibility with 1 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/isl-ai",
+      "path": "packages\\isl-ai",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 10,
+        "userFacing": 0,
+        "priority": 3
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "@isl-lang/isl-cli"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality",
+        "Ensure compatibility with 1 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/policy-engine",
+      "path": "packages\\policy-engine",
+      "tier": "Tier 2",
+      "scores": {
+        "stub": 0,
+        "integration": 10,
+        "userFacing": 0,
+        "priority": 3
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "shipgate"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality",
+        "Ensure compatibility with 1 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/reality-probe",
+      "path": "packages\\reality-probe",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 10,
+        "userFacing": 0,
+        "priority": 3
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "shipgate"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality",
+        "Ensure compatibility with 1 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/runtime-interpreter",
+      "path": "packages\\runtime-interpreter",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 10,
+        "userFacing": 0,
+        "priority": 3
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "@isl-lang/interpreter"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality",
+        "Ensure compatibility with 1 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/secrets-hygiene",
+      "path": "packages\\secrets-hygiene",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 10,
+        "userFacing": 0,
+        "priority": 3
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": false,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "shipgate"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Create README.md with usage examples",
+        "Implement core exports and functionality",
+        "Ensure compatibility with 1 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/stdlib-auth",
+      "path": "packages\\stdlib-auth",
+      "tier": "Tier 2",
+      "scores": {
+        "stub": 0,
+        "integration": 10,
+        "userFacing": 0,
+        "priority": 3
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "@isl-lang/stdlib-saas"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality",
+        "Ensure compatibility with 1 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/truthpack-v2",
+      "path": "packages\\truthpack-v2",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 10,
+        "userFacing": 0,
+        "priority": 3
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [
+        "shipgate"
+      ],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality",
+        "Ensure compatibility with 1 dependent package(s)"
+      ]
+    },
+    {
+      "name": "@isl-lang/ai-copilot",
+      "path": "packages\\ai-copilot",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/api-versioning",
+      "path": "packages\\api-versioning",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/circuit-breaker",
+      "path": "packages\\circuit-breaker",
+      "tier": "Tier 1",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/codegen-edge",
+      "path": "packages\\codegen-edge",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/codegen-k8s",
+      "path": "packages\\codegen-k8s",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/codegen-kubernetes",
+      "path": "packages\\codegen-kubernetes",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/codegen-migrations",
+      "path": "packages\\codegen-migrations",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/codegen-sdk",
+      "path": "packages\\codegen-sdk",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/codegen-wasm",
+      "path": "packages\\codegen-wasm",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/diff-viewer",
+      "path": "packages\\diff-viewer",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": false,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/distributed",
+      "path": "packages\\distributed",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/distributed-tracing",
+      "path": "packages\\distributed-tracing",
+      "tier": "Tier 1",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/effect-handlers",
+      "path": "packages\\effect-handlers",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/effect-system",
+      "path": "packages\\effect-system",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/env-reality-checker",
+      "path": "packages\\env-reality-checker",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/error-catalog",
+      "path": "packages\\error-catalog",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/feature-flags",
+      "path": "packages\\feature-flags",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/grafana",
+      "path": "packages\\grafana",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/adapters",
+      "path": "packages\\isl-adapters",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/isl-federation",
+      "path": "packages\\isl-federation",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/java-resolver",
+      "path": "packages\\java-resolver",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/language-server",
+      "path": "packages\\language-server",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/mutation-testing",
+      "path": "packages\\mutation-testing",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/private-registry",
+      "path": "packages\\private-registry",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/runtime-universal",
+      "path": "packages\\runtime-universal",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/schema-evolution",
+      "path": "packages\\schema-evolution",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/sdk-react-native",
+      "path": "packages\\sdk-react-native",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": true,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/stdlib-distributed",
+      "path": "packages\\stdlib-distributed",
+      "tier": "Tier 2",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": true,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/stdlib-time",
+      "path": "packages\\stdlib-time",
+      "tier": "Tier 2",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": false,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    },
+    {
+      "name": "@isl-lang/visual-editor",
+      "path": "packages\\visual-editor",
+      "tier": "Tier 3",
+      "scores": {
+        "stub": 0,
+        "integration": 0,
+        "userFacing": 0,
+        "priority": 0
+      },
+      "status": {
+        "hasTests": false,
+        "hasReadme": true,
+        "hasExports": false,
+        "isEmpty": true
+      },
+      "upstreamDependents": [],
+      "stubEvidence": [],
+      "recommendedActions": [
+        "Add test suite (unit + integration tests)",
+        "Implement core exports and functionality"
+      ]
+    }
+  ]
+}

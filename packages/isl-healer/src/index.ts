@@ -230,6 +230,48 @@ export {
 } from './recipes/index.js';
 
 // ============================================================================
+// Healable Findings
+// ============================================================================
+
+export {
+  TOP_10_HEALABLE_FINDINGS,
+  getHealableFinding,
+  isHealable,
+  getHealableRuleIds,
+} from './healable-findings.js';
+
+export type { HealableFinding } from './healable-findings.js';
+
+// ============================================================================
+// Patch Writer
+// ============================================================================
+
+export {
+  generatePatchDiff,
+  generatePatchSet,
+  formatPatchSet,
+  writePatchSet,
+} from './patch-writer.js';
+
+export type {
+  PatchDiff,
+  PatchSet,
+} from './patch-writer.js';
+
+// ============================================================================
+// Enhanced Heal
+// ============================================================================
+
+export {
+  enhancedHeal,
+} from './heal-enhanced.js';
+
+export type {
+  EnhancedHealOptions,
+  EnhancedHealResult,
+} from './heal-enhanced.js';
+
+// ============================================================================
 // AST Semantic Rules (Next.js Route Handlers)
 // ============================================================================
 

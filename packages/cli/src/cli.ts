@@ -16,6 +16,7 @@
 
 import { Command, InvalidArgumentError } from 'commander';
 import chalk from 'chalk';
+import path from 'path';
 import { output, type OutputFormat } from './output.js';
 import { ExitCode } from './exit-codes.js';
 import { findClosestMatch, isCI, isTTY } from './utils.js';
@@ -43,9 +44,13 @@ import {
   lint, printLintResult, getLintExitCode,
   gate, printGateResult, getGateExitCode,
   trustScore, printTrustScoreResult, printTrustScoreHistory, getTrustScoreExitCode,
+  trustScoreExplain, printTrustScoreExplain,
   heal, printHealResult, getHealExitCode,
   verifyProof, printProofVerifyResult, getProofVerifyExitCode,
   proofPack, printProofPackResult, getProofPackExitCode,
+  generateBadge, printBadgeResult, getBadgeExitCode,
+  generateAttestation, printAttestationResult, getAttestationExitCode,
+  generatePRComment, printCommentResult, getCommentExitCode,
   createPolicyBundle, printCreateBundleResult, getCreateBundleExitCode,
   verifyPolicyBundle, printVerifyBundleResult, getVerifyBundleExitCode,
   watch,
@@ -60,10 +65,17 @@ import {
   simulateCommand, printSimulateResult, getSimulateExitCode,
   verifyRuntime, printVerifyRuntimeResult, getVerifyRuntimeExitCode,
   policyEngineCheck, printPolicyEngineResult, getPolicyEngineExitCode,
+  detectDrift, printDriftResult, getDriftExitCode,
+  installPack, listPacks, verifyPackInstall, printInstallResult, printListResult, printVerifyResult, getInstallExitCode, getVerifyExitCode,
+  domainInit, printDomainInitResult,
+  domainValidate, printDomainValidateResult, getDomainValidateExitCode,
+  coverage, printCoverageResult, getCoverageExitCode,
+  demo, printDemoResult, getDemoExitCode,
+  migrate, printMigrateResult, getMigrateExitCode,
 } from './commands/index.js';
 import type { FailOnLevel } from './commands/verify.js';
 import { TeamConfigError } from '@isl-lang/core';
-import { withSpan, ISL_ATTR } from '@isl-lang/observability';
+import { initTracing, shutdownTracing, getCurrentTraceId, withSpan, ISL_ATTR } from '@isl-lang/observability';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Version
@@ -91,8 +103,10 @@ const COMMANDS = [
   'shipgate truthpack build', 'shipgate truthpack diff', // Truthpack v2
   'shipgate simulate', // Behavior simulation
   'shipgate verify runtime', // Runtime probe verification
+  'shipgate domain init', 'shipgate domain validate', // Domain pack management
   'policy', 'policy check', 'policy team-init', // Team policy enforcement
   'verify evolution', // API evolution verification
+  'drift', // Drift detection between code and specs
 ];
 
 
@@ -114,6 +128,23 @@ program
   .option('-c, --config <path>', 'Path to config file')
   .hook('preAction', async (thisCommand) => {
     const opts = thisCommand.opts();
+    
+    // Initialize tracing if enabled
+    initTracing({
+      enabled: process.env['ISL_TRACE'] === '1' || process.env['SHIPGATE_TRACE'] === '1',
+      serviceName: 'shipgate-cli',
+      exporter: process.env['OTEL_EXPORTER_OTLP_ENDPOINT'] ? {
+        type: 'otlp',
+        endpoint: process.env['OTEL_EXPORTER_OTLP_ENDPOINT'],
+        headers: process.env['OTEL_EXPORTER_OTLP_HEADERS'] ? 
+          Object.fromEntries(
+            process.env['OTEL_EXPORTER_OTLP_HEADERS'].split(',').map(h => {
+              const [k, v] = h.split('=');
+              return [k.trim(), v.trim()];
+            })
+          ) : undefined,
+      } : undefined,
+    });
     
     // Determine format
     let format: OutputFormat = 'pretty';
@@ -138,6 +169,21 @@ program
         process.exit(ExitCode.USAGE_ERROR);
       }
     }
+  });
+  
+  // Shutdown tracing on exit
+  process.on('SIGINT', async () => {
+    await shutdownTracing();
+    process.exit(0);
+  });
+  
+  process.on('SIGTERM', async () => {
+    await shutdownTracing();
+    process.exit(0);
+  });
+  
+  process.on('beforeExit', async () => {
+    await shutdownTracing();
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -205,7 +251,7 @@ program
 
 program
   .command('gen <target> <file>')
-  .description(`Generate code from ISL spec\n  Targets: ${VALID_TARGETS.join(', ')}`)
+  .description(`Generate code from ISL spec\n  Targets: ${VALID_TARGETS.join(', ')}\n  Examples:\n    isl gen python auth.isl    # Generate Python Pydantic models\n    isl gen graphql api.isl    # Generate GraphQL schema and resolvers`)
   .option('-o, --output <dir>', 'Output directory')
   .option('--force', 'Overwrite existing files')
   .action(async (target: string, file: string, options) => {
@@ -301,13 +347,22 @@ program
   .option('-d, --detailed', 'Show detailed breakdown')
   .option('--smt', 'Enable SMT verification for preconditions/postconditions')
   .option('--smt-timeout <ms>', 'SMT solver timeout in milliseconds', '5000')
+  .option('--smt-solver <solver>', 'SMT solver to use: builtin, z3, cvc5, or auto (default: auto)', 'auto')
   .option('--pbt', 'Enable property-based testing')
   .option('--pbt-tests <num>', 'Number of PBT test iterations', '100')
   .option('--pbt-seed <seed>', 'PBT random seed for reproducibility')
   .option('--pbt-max-shrinks <num>', 'Maximum PBT shrinking iterations', '100')
   .option('--temporal', 'Enable temporal verification (latency SLAs)')
   .option('--temporal-min-samples <num>', 'Minimum samples for temporal verification', '10')
-  .option('--all', 'Enable all verification modes (SMT + PBT + Temporal)')
+  .option('--reality', 'Enable reality probe (route and env var verification)')
+  .option('--reality-base-url <url>', 'Base URL for reality probe (e.g., http://localhost:3000)')
+  .option('--reality-route-map <path>', 'Path to route map or OpenAPI spec (default: .shipgate/truthpack/routes.json)')
+  .option('--reality-env-vars <path>', 'Path to env vars JSON (default: .shipgate/truthpack/env.json)')
+  .option('--all', 'Enable all verification modes (SMT + PBT + Temporal + Reality)')
+  .option('--sandbox <mode>', 'Sandbox execution mode: auto (default), worker, docker, or off (no sandbox)', 'auto')
+  .option('--sandbox-timeout <ms>', 'Sandbox execution timeout in milliseconds', '30000')
+  .option('--sandbox-memory <mb>', 'Maximum memory limit in MB for sandbox execution', '128')
+  .option('--sandbox-env <vars>', 'Comma-separated list of allowed environment variables (default: NODE_ENV,PATH)', 'NODE_ENV,PATH')
   .option('-r, --report <format>', 'Generate formatted report: md, pdf, json, html (or legacy: path to write evidence report)')
   .option('-o, --report-output <path>', 'Output path for formatted report file (default: stdout for text formats)')
   .option('--explain', 'Generate detailed explanation reports (verdict-explain.json and .md)')
@@ -398,6 +453,7 @@ program
         json: isJsonMode,
         smt: enableAll || options.smt,
         smtTimeout: options.smtTimeout ? parseInt(options.smtTimeout) : undefined,
+        smtSolver: options.smtSolver as 'builtin' | 'z3' | 'cvc5' | 'auto' | undefined,
         pbt: enableAll || options.pbt,
         pbtTests: options.pbtTests ? parseInt(options.pbtTests) : undefined,
         pbtSeed: options.pbtSeed ? parseInt(options.pbtSeed) : undefined,
@@ -406,6 +462,14 @@ program
         temporalMinSamples: options.temporalMinSamples
           ? parseInt(options.temporalMinSamples)
           : undefined,
+        temporalTraceFiles: options.temporalTraceFiles
+          ? options.temporalTraceFiles.split(',').map(f => f.trim())
+          : undefined,
+        temporalTraceDir: options.temporalTraceDir,
+        reality: enableAll || options.reality,
+        realityBaseUrl: options.realityBaseUrl,
+        realityRouteMap: options.realityRouteMap,
+        realityEnvVars: options.realityEnvVars,
       });
 
       if (isCiMode) {
@@ -601,6 +665,7 @@ program
   .option('-d, --detailed', 'Show detailed breakdown')
   .option('--smt', 'Enable SMT verification for preconditions/postconditions')
   .option('--smt-timeout <ms>', 'SMT solver timeout in milliseconds', '5000')
+  .option('--smt-solver <solver>', 'SMT solver to use: builtin, z3, cvc5, or auto (default: auto)', 'auto')
   .option('--temporal', 'Enable temporal verification')
   .option('--temporal-min-samples <num>', 'Minimum samples for temporal verification', '10')
   .action(async (spec: string, options) => {
@@ -638,6 +703,49 @@ program
 // Chaos Command (Chaos Testing)
 // ─────────────────────────────────────────────────────────────────────────────
 
+const chaosCommandGroup = program
+  .command('chaos')
+  .description('Chaos testing commands');
+
+chaosCommandGroup
+  .command('run <spec>')
+  .description('Run chaos tests with scenario selection, N trials, and metrics output')
+  .requiredOption('-i, --impl <file>', 'Implementation file to verify')
+  .option('-s, --scenario <name>', 'Select specific scenario by name (can be used multiple times)', (val, prev) => {
+    prev = prev || [];
+    prev.push(val);
+    return prev;
+  }, [])
+  .option('-n, --trials <num>', 'Number of trials to run', '1')
+  .option('-t, --timeout <ms>', 'Test timeout in milliseconds', '30000')
+  .option('--seed <seed>', 'Random seed for reproducibility')
+  .option('--continue-on-failure', 'Continue running scenarios after failure')
+  .option('-d, --detailed', 'Show detailed breakdown')
+  .option('--metrics', 'Show detailed metrics output')
+  .action(async (spec: string, options) => {
+    const opts = program.opts();
+    
+    const result = await chaos(spec, {
+      impl: options.impl,
+      scenario: options.scenario && options.scenario.length > 0 ? options.scenario : undefined,
+      trials: parseInt(options.trials),
+      timeout: parseInt(options.timeout),
+      seed: options.seed ? parseInt(options.seed) : undefined,
+      continueOnFailure: options.continueOnFailure,
+      verbose: opts.verbose,
+      format: opts.format === 'json' ? 'json' : 'text',
+      metrics: options.metrics,
+    });
+    
+    printChaosResult(result, {
+      detailed: options.detailed,
+      format: opts.format === 'json' ? 'json' : 'text',
+      metrics: options.metrics,
+    });
+    
+    process.exit(getChaosExitCode(result));
+  });
+
 program
   .command('chaos <spec>')
   .description('Run chaos testing pipeline against an ISL specification (fault injection)')
@@ -648,6 +756,7 @@ program
   .option('-d, --detailed', 'Show detailed breakdown')
   .option('--smt', 'Enable SMT verification for preconditions/postconditions')
   .option('--smt-timeout <ms>', 'SMT solver timeout in milliseconds', '5000')
+  .option('--smt-solver <solver>', 'SMT solver to use: builtin, z3, cvc5, or auto (default: auto)', 'auto')
   .option('--temporal', 'Enable temporal verification')
   .option('--temporal-min-samples <num>', 'Minimum samples for temporal verification', '10')
   .action(async (spec: string, options) => {
@@ -692,6 +801,7 @@ program
   .option('--force', 'Overwrite existing files')
   .option('--no-git', 'Skip git initialization')
   .option('-e, --examples', 'Include example files')
+  .option('--interactive', 'Run interactive setup (default when no name provided and TTY available)')
   .option('--from-code <path>', 'Generate ISL spec from existing source code (file or directory)')
   .option('--from-prompt <text>', 'Generate ISL spec from natural language prompt')
   .option('--ai', 'Use AI for spec generation (requires ANTHROPIC_API_KEY for best results)')
@@ -699,25 +809,55 @@ program
   .action(async (name: string | undefined, options) => {
     const opts = program.opts();
 
-    // When called without a name: run interactive onboarding in the current directory
+    // When called without a name: run interactive onboarding if TTY and --interactive, else create minimal project
     if (!name && !options.fromCode && !options.fromPrompt) {
-      const result = await interactiveInit({
-        root: options.directory,
+      // Use interactive mode only if explicitly requested or TTY is available
+      const shouldUseInteractive = options.interactive || (isTTY() && !isCI());
+      
+      if (shouldUseInteractive) {
+        const result = await interactiveInit({
+          root: options.directory,
+          force: options.force,
+          format: opts.format,
+        });
+
+        if (opts.format === 'json') {
+          console.log(JSON.stringify({
+            success: result.success,
+            profile: result.profile,
+            configPath: result.configPath,
+            workflowPath: result.workflowPath,
+            islFiles: result.islFiles,
+            errors: result.errors,
+          }, null, 2));
+        } else {
+          printInteractiveInitResult(result);
+        }
+
+        process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
+        return;
+      }
+      
+      // Non-interactive: create minimal project in current directory
+      const targetDir = options.directory || process.cwd();
+      const projectName = path.basename(targetDir) || 'my-project';
+      const result = await init(projectName, {
+        template: 'minimal',
+        directory: targetDir,
         force: options.force,
-        format: opts.format,
+        skipGit: !options.git,
+        examples: options.examples,
       });
 
       if (opts.format === 'json') {
         console.log(JSON.stringify({
           success: result.success,
-          profile: result.profile,
-          configPath: result.configPath,
-          workflowPath: result.workflowPath,
-          islFiles: result.islFiles,
+          projectPath: result.projectPath,
+          files: result.files,
           errors: result.errors,
         }, null, 2));
       } else {
-        printInteractiveInitResult(result);
+        printInitResult(result);
       }
 
       process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
@@ -1237,6 +1377,9 @@ program
       verbose: opts.verbose,
       format: opts.format,
       ci: isCi,
+      skipPolicy: options.skipPolicy,
+      policyFile: options.policyFile,
+      policyProfile: options.policyProfile as 'strict' | 'standard' | 'lenient' | undefined,
     });
 
     printGateResult(result, {
@@ -1314,6 +1457,55 @@ program
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Trust Score Explain Command
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('trust-score explain <spec>')
+  .description('Explain trust score with evidence breakdown and history analysis')
+  .requiredOption('-i, --impl <file>', 'Implementation file or directory to verify')
+  .option('-t, --threshold <score>', 'Minimum trust score to SHIP (default: 80)', '80')
+  .option('-w, --weights <weights>', 'Custom weights (e.g. "preconditions=30,postconditions=25,invariants=20,temporal=10,chaos=5,coverage=10")')
+  .option('--unknown-penalty <penalty>', 'Penalty for unknown/uncovered categories 0.0-1.0 (default: 0.5)', '0.5')
+  .option('--history <count>', 'Number of history entries to show (default: 10)', '10')
+  .option('--history-path <path>', 'Custom history file path (default: .isl-gate/trust-history.json)')
+  .option('--commit-hash <hash>', 'Git commit hash to tag this evaluation')
+  .option('--project-root <path>', 'Project root directory for fingerprinting')
+  .option('--json', 'Output as JSON')
+  .action(async (spec: string, options) => {
+    const opts = program.opts();
+    const isJson = options.json || opts.format === 'json';
+
+    if (!isJson) {
+      console.log('');
+      console.log(chalk.bold.cyan('  Trust Score Explanation'));
+      console.log(chalk.gray(`  Spec:      ${spec}`));
+      console.log(chalk.gray(`  Impl:      ${options.impl}`));
+      console.log('');
+    }
+
+    const result = await trustScoreExplain(spec, {
+      impl: options.impl,
+      threshold: parseInt(options.threshold),
+      weights: options.weights,
+      unknownPenalty: parseFloat(options.unknownPenalty),
+      historyCount: parseInt(options.history),
+      json: isJson,
+      verbose: opts.verbose,
+      historyPath: options.historyPath,
+      commitHash: options.commitHash,
+      projectRoot: options.projectRoot,
+    });
+
+    printTrustScoreExplain(result, {
+      json: isJson,
+      verbose: opts.verbose,
+    });
+
+    process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Heal Command
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1323,6 +1515,9 @@ program
   .option('-s, --spec <file>', 'ISL spec file (auto-discovers if not provided)')
   .option('--max-iterations <n>', 'Maximum healing iterations (default: 8)', '8')
   .option('--stop-on-repeat <n>', 'Stop after N identical fingerprints (default: 2)', '2')
+  .option('--dry-run', 'Preview patches without applying them')
+  .option('--interactive', 'Ask for confirmation before applying each patch')
+  .option('-o, --output <dir>', 'Output directory for dry-run patches (default: .isl-heal-patches)')
   .action(async (pattern: string, options) => {
     const opts = program.opts();
     const result = await heal(pattern, {
@@ -1331,6 +1526,9 @@ program
       stopOnRepeat: parseInt(options.stopOnRepeat),
       format: opts.format,
       verbose: opts.verbose,
+      dryRun: options.dryRun,
+      interactive: options.interactive,
+      outputDir: options.output,
     });
     
     printHealResult(result, { format: opts.format });
@@ -1338,11 +1536,15 @@ program
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Proof Verify Command
+// Proof Commands
 // ─────────────────────────────────────────────────────────────────────────────
 
-program
-  .command('proof verify <bundle-path>')
+const proofCommand = program
+  .command('proof')
+  .description('Proof bundle management');
+
+proofCommand
+  .command('verify <bundle-path>')
   .description('Verify a proof bundle is valid and check its integrity')
   .option('--sign-secret <secret>', 'Secret for signature verification')
   .option('--skip-file-check', 'Skip file completeness check')
@@ -1361,12 +1563,8 @@ program
     process.exit(getProofVerifyExitCode(result));
   });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Proof Pack Command
-// ─────────────────────────────────────────────────────────────────────────────
-
-program
-  .command('proof pack')
+proofCommand
+  .command('pack')
   .description('Pack artifacts into a deterministic, hashable, verifiable proof bundle')
   .requiredOption('--spec <file>', 'ISL spec file')
   .option('--evidence <dir>', 'Evidence directory (contains results.json, traces, etc.)')
@@ -1387,6 +1585,62 @@ program
     
     printProofPackResult(result, { format: opts.format });
     process.exit(getProofPackExitCode(result));
+  });
+
+proofCommand
+  .command('badge <bundle-path>')
+  .description('Generate a badge (SVG or URL) from a proof bundle')
+  .option('-f, --format <format>', 'Output format: svg or url (default: svg)', 'svg')
+  .option('-o, --output <file>', 'Output file path (for SVG format)')
+  .option('--badge-url-base <url>', 'Badge service URL base (for URL format)')
+  .option('--bundle-url <url>', 'Bundle URL (for linking from badge)')
+  .action(async (bundlePath: string, options) => {
+    const opts = program.opts();
+    const result = await generateBadge(bundlePath, {
+      format: options.format === 'url' ? 'url' : 'svg',
+      output: options.output,
+      badgeUrlBase: options.badgeUrlBase,
+      bundleUrl: options.bundleUrl,
+      outputFormat: opts.format,
+      verbose: opts.verbose,
+    });
+    
+    printBadgeResult(result, { format: opts.format });
+    process.exit(getBadgeExitCode(result));
+  });
+
+proofCommand
+  .command('attest <bundle-path>')
+  .description('Generate SLSA-style attestation JSON from a proof bundle')
+  .option('-o, --output <file>', 'Output file path (default: stdout)')
+  .option('--include-manifest', 'Include full manifest in attestation')
+  .action(async (bundlePath: string, options) => {
+    const opts = program.opts();
+    const result = await generateAttestation(bundlePath, {
+      output: options.output,
+      includeManifest: options.includeManifest,
+      outputFormat: opts.format,
+      verbose: opts.verbose,
+    });
+    
+    printAttestationResult(result, { format: opts.format });
+    process.exit(getAttestationExitCode(result));
+  });
+
+proofCommand
+  .command('comment <bundle-path>')
+  .description('Generate GitHub PR comment from a proof bundle')
+  .option('-o, --output <file>', 'Output file path (default: stdout)')
+  .action(async (bundlePath: string, options) => {
+    const opts = program.opts();
+    const result = await generatePRComment(bundlePath, {
+      output: options.output,
+      outputFormat: opts.format,
+      verbose: opts.verbose,
+    });
+    
+    printCommentResult(result, { format: opts.format });
+    process.exit(getCommentExitCode(result));
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1480,8 +1734,88 @@ program
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ISL Bind Command (Automatic implementation discovery)
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('bind <spec>')
+  .alias('link')
+  .description(
+    'Discover and bind ISL specifications to implementation code\n\n' +
+    '  Automatically maps ISL behaviors/entities to code functions/routes\n' +
+    '  using filesystem heuristics, AST scanning, and naming conventions.\n' +
+    '  Generates .shipgate.bindings.json with confidence scores.',
+  )
+  .option('-s, --spec <file>', 'ISL spec file(s) (comma-separated or multiple)', (val, prev) => {
+    if (prev) return [...prev, val];
+    return [val];
+  })
+  .option('-i, --impl <dir>', 'Implementation directory (default: current directory)', '.')
+  .option('-o, --output <file>', 'Output bindings file (default: .shipgate.bindings.json)')
+  .option('--min-confidence <threshold>', 'Minimum confidence threshold (0-1)', '0.3')
+  .option('--code-dirs <dirs>', 'Code directories to search (comma-separated)')
+  .option('--include <patterns>', 'Include file patterns (comma-separated globs)')
+  .option('--exclude <patterns>', 'Exclude file patterns (comma-separated globs)')
+  .action(async (spec: string, options) => {
+    const opts = program.opts();
+    const isJson = opts.format === 'json';
+
+    if (!isJson) {
+      console.log('');
+      console.log(chalk.bold.cyan('🔗 ISL Bind - Discovery Engine'));
+      console.log('');
+    }
+
+    const specFiles = options.spec && Array.isArray(options.spec) ? options.spec : [spec];
+
+    const result = await bind({
+      spec: specFiles,
+      impl: options.impl,
+      output: options.output,
+      minConfidence: parseFloat(options.minConfidence || '0.3'),
+      codeDirs: options.codeDirs?.split(',').map((d: string) => d.trim()),
+      include: options.include?.split(',').map((p: string) => p.trim()),
+      exclude: options.exclude?.split(',').map((p: string) => p.trim()),
+      verbose: opts.verbose,
+      format: opts.format,
+    });
+
+    if (!isJson) {
+      printBindResult(result, { verbose: opts.verbose });
+    }
+
+    process.exit(getBindExitCode(result));
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ShipGate Command Group
 // ─────────────────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Demo Command
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('demo')
+  .description('One-command demo that proves ShipGate value immediately\n\n' +
+    '  Scaffolds a sample app with a deliberate ghost feature,\n' +
+    '  runs verify + gate (shows NO_SHIP), outputs proof bundle.\n\n' +
+    '  Use --fix to apply the fix and re-run gate -> SHIP.')
+  .option('--fix', 'Apply the fix and re-run gate')
+  .option('-o, --output <dir>', 'Output directory for demo (default: ./shipgate-demo)', './shipgate-demo')
+  .option('--keep', 'Keep demo files after completion')
+  .action(async (options) => {
+    const opts = program.opts();
+    const result = await demo({
+      fix: options.fix,
+      output: options.output,
+      keep: options.keep,
+      verbose: opts.verbose,
+    });
+    
+    printDemoResult(result, { verbose: opts.verbose });
+    process.exit(getDemoExitCode(result));
+  });
 
 const shipgateCommand = program
   .command('shipgate')
@@ -1518,8 +1852,12 @@ shipgateCommand
     process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
   });
 
-shipgateCommand
-  .command('truthpack build')
+const truthpackCommand = shipgateCommand
+  .command('truthpack')
+  .description('Truthpack v2 - canonical project reality snapshot');
+
+truthpackCommand
+  .command('build')
   .description('Build truthpack v2 - canonical project reality snapshot')
   .option('-r, --repo-root <dir>', 'Repository root (default: cwd)')
   .option('-o, --output <dir>', 'Output directory (default: .shipgate/truthpack)')
@@ -1550,8 +1888,8 @@ shipgateCommand
     process.exit(getTruthpackBuildExitCode(result));
   });
 
-shipgateCommand
-  .command('truthpack diff')
+truthpackCommand
+  .command('diff')
   .description('Compare truthpack v2 and detect drift')
   .option('-r, --repo-root <dir>', 'Repository root (default: cwd)')
   .option('--old <dir>', 'Old truthpack directory (default: .shipgate/truthpack/.previous)')
@@ -1570,6 +1908,43 @@ shipgateCommand
     });
 
     process.exit(getTruthpackDiffExitCode(result));
+  });
+
+shipgateCommand
+  .command('migrate <file>')
+  .description('Migrate ISL spec to newer version')
+  .option('-o, --output <file>', 'Output file (default: overwrites input)')
+  .option('-t, --target <version>', 'Target ISL version (default: 0.2)')
+  .option('--dry-run', 'Preview migration without writing files')
+  .option('-v, --verbose', 'Show detailed warnings')
+  .action(async (file: string, options) => {
+    const opts = program.opts();
+    const { CURRENT_ISL_VERSION } = await import('@isl-lang/parser');
+    
+    const result = await migrate(file, {
+      output: options.output,
+      targetVersion: (options.target || CURRENT_ISL_VERSION) as any,
+      dryRun: options.dryRun,
+      verbose: options.verbose || opts.verbose,
+    });
+
+    if (opts.format === 'json') {
+      console.log(JSON.stringify({
+        success: result.success,
+        inputFile: result.inputFile,
+        outputFile: result.outputFile,
+        sourceVersion: result.sourceVersion,
+        targetVersion: result.targetVersion,
+        migrated: result.migrated,
+        appliedRules: result.appliedRules,
+        warnings: result.warnings,
+        errors: result.errors,
+      }, null, 2));
+    } else {
+      printMigrateResult(result);
+    }
+
+    process.exit(getMigrateExitCode(result));
   });
 
 shipgateCommand
@@ -1720,6 +2095,167 @@ chaosCommand
     });
 
     process.exit(getShipGateChaosExitCode(result));
+  });
+
+// ── Packs Subcommand ────────────────────────────────────────────────────────
+
+const packsCommand = shipgateCommand
+  .command('packs')
+  .description('ISL pack marketplace - browse and install domain/spec packs');
+
+packsCommand
+  .command('install <name>')
+  .description('Install an ISL pack from the registry')
+  .option('-v, --version <version>', 'Pack version (default: latest)')
+  .option('-d, --dir <dir>', 'Install directory (default: ./shipgate/packs/<name>)')
+  .option('--skip-verify', 'Skip integrity verification')
+  .action(async (name: string, options) => {
+    const opts = program.opts();
+    const result = await installPack({
+      name,
+      version: options.version,
+      targetDir: options.dir,
+      skipVerify: options.skipVerify,
+      verbose: opts.verbose,
+      format: opts.format,
+    });
+    
+    printInstallResult(result, { format: opts.format });
+    process.exit(getInstallExitCode(result));
+  });
+
+packsCommand
+  .command('list')
+  .description('List installed packs')
+  .action(async () => {
+    const opts = program.opts();
+    const result = await listPacks();
+    
+    printListResult(result, { format: opts.format });
+    process.exit(ExitCode.SUCCESS);
+  });
+
+packsCommand
+  .command('verify <name>')
+  .description('Verify pack integrity')
+  .action(async (name: string) => {
+    const opts = program.opts();
+    const result = await verifyPackInstall(name);
+    
+    printVerifyResult(result, { format: opts.format });
+    process.exit(getVerifyExitCode(result));
+  });
+
+// ── Domain Pack Subcommand ──────────────────────────────────────────────────
+
+const domainCommand = shipgateCommand
+  .command('domain')
+  .description('Domain pack management - create, validate, and publish domain packs');
+
+domainCommand
+  .command('init')
+  .description('Initialize a new domain pack with specs, tests, and publish workflow')
+  .option('-n, --name <name>', 'Pack name (default: current directory name)')
+  .option('-d, --directory <dir>', 'Target directory (default: current directory)')
+  .option('--force', 'Overwrite existing files')
+  .option('--no-examples', 'Skip example spec file')
+  .action(async (options) => {
+    const opts = program.opts();
+    const isJson = opts.format === 'json';
+
+    const result = await domainInit({
+      name: options.name,
+      directory: options.directory,
+      force: options.force,
+      examples: options.examples !== false,
+    });
+
+    if (isJson) {
+      console.log(JSON.stringify({
+        success: result.success,
+        packPath: result.packPath,
+        files: result.files,
+        errors: result.errors,
+      }, null, 2));
+    } else {
+      printDomainInitResult(result);
+    }
+
+    process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
+  });
+
+domainCommand
+  .command('validate')
+  .description('Validate a domain pack structure and specs')
+  .option('-d, --directory <dir>', 'Pack directory (default: current directory)')
+  .option('-t, --test', 'Run pack unit tests')
+  .action(async (options) => {
+    const opts = program.opts();
+    const isJson = opts.format === 'json';
+
+    const result = await domainValidate({
+      directory: options.directory,
+      test: options.test,
+      verbose: opts.verbose,
+    });
+
+    if (isJson) {
+      console.log(JSON.stringify({
+        success: result.success,
+        valid: result.valid,
+        errors: result.errors,
+        warnings: result.warnings,
+        testResults: result.testResults,
+      }, null, 2));
+    } else {
+      printDomainValidateResult(result, { verbose: opts.verbose });
+    }
+
+    process.exit(getDomainValidateExitCode(result));
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Coverage Command
+// ─────────────────────────────────────────────────────────────────────────────
+
+shipgateCommand
+  .command('coverage')
+  .description('Generate coverage report for ISL specifications\n' +
+    '  Shows which behaviors have implementations bound,\n' +
+    '  which specs are exercised in runtime verification,\n' +
+    '  and which constraints are always "unknown".')
+  .option('-s, --specs <patterns...>', 'ISL spec file patterns (default: **/*.isl)', (val, prev) => {
+    prev = prev || [];
+    prev.push(val);
+    return prev;
+  }, [])
+  .option('-b, --bindings <file>', 'Bindings file path (default: .shipgate.bindings.json)')
+  .option('-t, --traces <dir>', 'Verification traces directory')
+  .option('-d, --detailed', 'Show detailed constraint breakdown')
+  .option('--json', 'Output as JSON')
+  .action(async (options) => {
+    const opts = program.opts();
+    const isJson = options.json || opts.format === 'json';
+
+    const specs = options.specs && options.specs.length > 0
+      ? options.specs
+      : ['**/*.isl'];
+
+    const result = await coverage({
+      specs,
+      bindingsFile: options.bindings,
+      tracesDir: options.traces,
+      format: isJson ? 'json' : 'text',
+      verbose: opts.verbose,
+      detailed: options.detailed,
+    });
+
+    printCoverageResult(result, {
+      format: isJson ? 'json' : 'text',
+      verbose: opts.verbose,
+    });
+
+    process.exit(getCoverageExitCode(result));
   });
 
 // ─────────────────────────────────────────────────────────────────────────────

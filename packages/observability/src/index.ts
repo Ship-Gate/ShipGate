@@ -26,6 +26,7 @@ export {
   shutdownTracing,
   isTracingEnabled,
   getTracer,
+  getCurrentTraceId,
   withSpan,
   withSpanSync,
   ISL_ATTR,

@@ -18,12 +18,12 @@ import type {
   handleBidiStreamingCall,
   sendUnaryData,
 } from '@grpc/grpc-js';
-import { ISLSemanticAttributes } from '../semantic-attributes';
+import { ISLSemanticAttributes } from '../semantic-attributes.js';
 import {
   ISL_HEADERS,
   ISLContextData,
   setISLContext,
-} from '../propagation/isl-context';
+} from '../propagation/isl-context.js';
 
 /**
  * gRPC instrumentation options

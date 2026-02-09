@@ -2,13 +2,16 @@
  * Network Failure Injector
  * 
  * Simulates network failures: timeouts, connection refused, DNS failures, etc.
+ * 
+ * Enhanced with HTTP proxy wrapper that intercepts fetch/axios/http requests
+ * and injects latency/errors measurably.
  */
 
 import type { Timeline } from '../timeline.js';
 
 export interface NetworkInjectorConfig {
   /** Type of network failure to inject */
-  failureType: 'timeout' | 'connection_refused' | 'dns_failure' | 'reset' | 'partial';
+  failureType: 'timeout' | 'connection_refused' | 'dns_failure' | 'reset' | 'partial' | 'latency';
   /** Target URL pattern to intercept (regex) */
   targetPattern?: string;
   /** Failure probability (0-1) */
@@ -17,6 +20,10 @@ export interface NetworkInjectorConfig {
   retrySucceeds?: boolean;
   /** Number of retries before success */
   retriesBeforeSuccess?: number;
+  /** Latency to inject in milliseconds (for latency failure type) */
+  latencyMs?: number;
+  /** Jitter range for latency (ms) */
+  latencyJitterMs?: number;
 }
 
 export interface NetworkInjectorState {
@@ -24,6 +31,9 @@ export interface NetworkInjectorState {
   interceptedRequests: number;
   failedRequests: number;
   successfulRetries: number;
+  totalLatencyInjected: number;
+  averageLatencyInjected: number;
+  latencyInjections: number;
 }
 
 /**
@@ -43,12 +53,17 @@ export class NetworkInjector {
       probability: config.probability ?? 1.0,
       retrySucceeds: config.retrySucceeds ?? false,
       retriesBeforeSuccess: config.retriesBeforeSuccess ?? 3,
+      latencyMs: config.latencyMs ?? 1000,
+      latencyJitterMs: config.latencyJitterMs ?? 0,
     };
     this.state = {
       active: false,
       interceptedRequests: 0,
       failedRequests: 0,
       successfulRetries: 0,
+      totalLatencyInjected: 0,
+      averageLatencyInjected: 0,
+      latencyInjections: 0,
     };
   }
 
@@ -179,7 +194,38 @@ export class NetworkInjector {
 
       self.state.interceptedRequests++;
 
-      if (self.matchesTarget(url) && self.shouldFail(url)) {
+      if (!self.matchesTarget(url)) {
+        return original(input, init);
+      }
+
+      // Handle latency injection
+      if (self.config.failureType === 'latency' && self.shouldFail(url)) {
+        const latency = self.calculateLatency();
+        self.state.latencyInjections++;
+        self.state.totalLatencyInjected += latency;
+        self.state.averageLatencyInjected = self.state.totalLatencyInjected / self.state.latencyInjections;
+        
+        self.timeline?.record('injection_start', {
+          injector: 'network',
+          failureType: 'latency',
+          url,
+          latencyMs: latency,
+        });
+        
+        await new Promise(resolve => setTimeout(resolve, latency));
+        
+        self.timeline?.record('injection_end', {
+          injector: 'network',
+          failureType: 'latency',
+          url,
+          latencyMs: latency,
+        });
+        
+        return original(input, init);
+      }
+
+      // Handle failure injection
+      if (self.shouldFail(url)) {
         self.state.failedRequests++;
         self.timeline?.record('error', {
           injector: 'network',
@@ -197,6 +243,18 @@ export class NetworkInjector {
 
       return original(input, init);
     };
+  }
+
+  /**
+   * Calculate latency with jitter
+   */
+  private calculateLatency(): number {
+    const base = this.config.latencyMs ?? 1000;
+    const jitter = this.config.latencyJitterMs ?? 0;
+    if (jitter > 0) {
+      return base + (Math.random() * 2 - 1) * jitter;
+    }
+    return base;
   }
 }
 

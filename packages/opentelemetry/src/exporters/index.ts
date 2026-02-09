@@ -4,8 +4,8 @@ export {
   configureJaegerProvider,
   defaultJaegerConfig,
   jaegerConfigFromEnv,
-} from './jaeger';
-export type { ISLJaegerConfig } from './jaeger';
+} from './jaeger.js';
+export type { ISLJaegerConfig } from './jaeger.js';
 
 export {
   createZipkinExporter,
@@ -14,8 +14,8 @@ export {
   defaultZipkinConfig,
   zipkinConfigFromEnv,
   ZipkinURLs,
-} from './zipkin';
-export type { ISLZipkinConfig } from './zipkin';
+} from './zipkin.js';
+export type { ISLZipkinConfig } from './zipkin.js';
 
 export {
   createOTLPTraceExporter,
@@ -27,5 +27,5 @@ export {
   defaultOTLPConfig,
   otlpConfigFromEnv,
   OTLPBackends,
-} from './otlp';
-export type { ISLOTLPConfig, OTLPProtocol } from './otlp';
+} from './otlp.js';
+export type { ISLOTLPConfig, OTLPProtocol } from './otlp.js';

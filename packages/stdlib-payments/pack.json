@@ -1,0 +1,30 @@
+{
+  "name": "stdlib-payments",
+  "version": "1.0.0",
+  "description": "Payment processing standard library - charges, refunds, subscriptions, invoices",
+  "author": "IntentOS Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/guardiavault-oss/ISL-LANG.git",
+    "directory": "packages/stdlib-payments"
+  },
+  "keywords": [
+    "isl",
+    "payments",
+    "billing",
+    "subscriptions",
+    "invoices",
+    "refunds"
+  ],
+  "domain": "Payments",
+  "dependencies": {},
+  "files": [
+    {
+      "path": "intents/domain.isl",
+      "checksum": "placeholder-checksum",
+      "size": 0
+    }
+  ],
+  "publishedAt": "2026-02-09T00:00:00Z"
+}

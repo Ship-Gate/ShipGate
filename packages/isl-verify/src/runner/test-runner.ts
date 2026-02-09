@@ -10,6 +10,7 @@ import { join, extname } from 'path';
 import { tmpdir } from 'os';
 import type { Domain } from '@isl-lang/parser';
 import { generate, type GeneratedFile } from '@isl-lang/codegen-tests';
+import { createSandboxRunner, type SandboxOptions } from '@isl-lang/verifier-sandbox';
 
 export interface TestResult {
   passed: number;
@@ -349,7 +350,14 @@ function mapToTSType(typeRef: unknown): string {
 }
 
 export class TestRunner {
-  private options: Required<Omit<RunnerOptions, 'language'>> & { language?: ImplementationLanguage };
+  private options: Required<Omit<RunnerOptions, 'language' | 'sandbox' | 'sandboxTimeout' | 'sandboxMemory' | 'sandboxEnv'>> & { 
+    language?: ImplementationLanguage;
+    sandbox?: 'auto' | 'worker' | 'docker' | 'off';
+    sandboxTimeout?: number;
+    sandboxMemory?: number;
+    sandboxEnv?: string;
+  };
+  private sandboxRunner?: ReturnType<typeof createSandboxRunner>;
 
   constructor(options: RunnerOptions = {}) {
     this.options = {
@@ -358,7 +366,31 @@ export class TestRunner {
       workDir: options.workDir ?? join(tmpdir(), 'isl-verify'),
       framework: options.framework ?? 'vitest',
       language: options.language,
+      sandbox: options.sandbox,
+      sandboxTimeout: options.sandboxTimeout,
+      sandboxMemory: options.sandboxMemory,
+      sandboxEnv: options.sandboxEnv,
     };
+
+    // Initialize sandbox runner if sandbox mode is enabled
+    if (this.options.sandbox && this.options.sandbox !== 'off') {
+      const allowedEnvVars = this.options.sandboxEnv
+        ? this.options.sandboxEnv.split(',').map(s => s.trim())
+        : ['NODE_ENV', 'PATH', 'HOME', 'TMPDIR', 'TMP'];
+
+      const sandboxOptions: SandboxOptions = {
+        mode: this.options.sandbox,
+        timeout: this.options.sandboxTimeout ?? this.options.timeout,
+        maxMemory: this.options.sandboxMemory ? this.options.sandboxMemory * 1024 * 1024 : undefined,
+        allowedEnvVars,
+        allowNetwork: false, // Block network by default
+        allowFilesystem: false, // Block filesystem access outside workDir
+        workDir: this.options.workDir,
+        verbose: this.options.verbose,
+      };
+
+      this.sandboxRunner = createSandboxRunner(sandboxOptions);
+    }
   }
 
   /**
@@ -719,6 +751,47 @@ export default defineConfig({
         }
       });
     });
+  }
+
+  /**
+   * Parse pytest output (for sandboxed execution)
+   */
+  private parsePytestOutput(output: string, duration: number): TestResult {
+    try {
+      // Try to read results.json if it exists
+      const jsonMatch = output.match(/\{[\s\S]*"tests"[\s\S]*\}/);
+      if (jsonMatch) {
+        const results = JSON.parse(jsonMatch[0]);
+        return this.parsePytestResults(results, duration);
+      }
+    } catch {
+      // Fall through to basic parsing
+    }
+
+    // Basic parsing from stdout
+    const passed = (output.match(/passed/g) || []).length;
+    const failed = (output.match(/failed/g) || []).length;
+    const skipped = (output.match(/skipped/g) || []).length;
+
+    return {
+      passed,
+      failed,
+      skipped,
+      duration,
+      details: [{
+        name: 'pytest-execution',
+        status: failed > 0 ? 'failed' : 'passed',
+        duration,
+        error: failed > 0 ? output : undefined,
+      }],
+    };
+  }
+
+  /**
+   * Parse Go test output (for sandboxed execution)
+   */
+  private parseGoTestOutput(output: string, duration: number): TestResult {
+    return this.parseGoTestResults(output, duration, null);
   }
 
   /**

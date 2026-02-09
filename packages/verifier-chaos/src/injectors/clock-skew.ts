@@ -5,9 +5,33 @@
  * jumps, and NTP corrections.  Verifies that implementations using
  * wall-clock time (timeouts, TTLs, token expiry, cache invalidation)
  * behave correctly when the system clock is unreliable.
+ * 
+ * Enhanced with time provider dependency injection pattern for better
+ * testability and control.
  */
 
 import type { Timeline } from '../timeline.js';
+
+/**
+ * Time provider interface for dependency injection
+ */
+export interface TimeProvider {
+  now(): number;
+  createDate(): Date;
+}
+
+/**
+ * Default time provider using system clock
+ */
+export class SystemTimeProvider implements TimeProvider {
+  now(): number {
+    return Date.now();
+  }
+  
+  createDate(): Date {
+    return new Date();
+  }
+}
 
 export type ClockSkewMode = 'fixed' | 'drift' | 'jump' | 'oscillate';
 
@@ -39,17 +63,20 @@ export class ClockSkewInjector {
   private config: Required<ClockSkewConfig>;
   private state: ClockSkewState;
   private timeline: Timeline | null = null;
+  private timeProvider: TimeProvider;
 
   private originalDateNow: typeof Date.now | null = null;
   private OriginalDate: DateConstructor | null = null;
   private activationRealTime: number = 0;
 
   constructor(config: ClockSkewConfig) {
+    this.timeProvider = config.timeProvider ?? new SystemTimeProvider();
     this.config = {
       offsetMs: config.offsetMs,
       mode: config.mode ?? 'fixed',
       driftRateMs: config.driftRateMs ?? 0,
       oscillatePeriodMs: config.oscillatePeriodMs ?? 60_000,
+      timeProvider: this.timeProvider,
     };
     this.state = this.createInitialState();
   }
@@ -75,8 +102,8 @@ export class ClockSkewInjector {
 
     this.state = this.createInitialState();
     this.state.active = true;
-    this.state.startedAt = Date.now();
-    this.activationRealTime = Date.now();
+    this.state.startedAt = this.timeProvider.now();
+    this.activationRealTime = this.timeProvider.now();
 
     // Capture originals
     this.originalDateNow = Date.now;
@@ -93,7 +120,16 @@ export class ClockSkewInjector {
         self.state.peakOffsetMs,
         Math.abs(offset),
       );
-      return real + offset;
+      const skewed = real + offset;
+      
+      self.timeline?.record('injection_start', {
+        injector: 'clock_skew',
+        realTime: real,
+        skewedTime: skewed,
+        offsetMs: offset,
+      });
+      
+      return skewed;
     };
 
     this.timeline?.record('injection_start', {
@@ -112,7 +148,7 @@ export class ClockSkewInjector {
     }
 
     this.state.active = false;
-    this.state.stoppedAt = Date.now();
+    this.state.stoppedAt = this.timeProvider.now();
 
     this.timeline?.record('injection_end', {
       injector: 'clock_skew',
@@ -139,6 +175,13 @@ export class ClockSkewInjector {
   /* ------------------------------------------------------------------ */
   /*  Internal offset computation                                       */
   /* ------------------------------------------------------------------ */
+
+  /**
+   * Get the time provider (for testing)
+   */
+  getTimeProvider(): TimeProvider {
+    return this.timeProvider;
+  }
 
   private computeOffset(realNow: number): number {
     const elapsed = realNow - this.activationRealTime;

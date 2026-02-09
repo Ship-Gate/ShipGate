@@ -7,7 +7,7 @@ import {
   context,
   Context,
 } from '@opentelemetry/api';
-import { ISLSemanticAttributes } from '../semantic-attributes';
+import { ISLSemanticAttributes } from '../semantic-attributes.js';
 
 /**
  * Configuration for behavior span

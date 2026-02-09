@@ -6,7 +6,7 @@ import {
   Meter,
   metrics,
 } from '@opentelemetry/api';
-import type { VerificationVerdict, CheckType } from '../semantic-attributes';
+import type { VerificationVerdict, CheckType } from '../semantic-attributes.js';
 
 /**
  * Verification metrics collector

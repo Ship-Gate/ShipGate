@@ -35,6 +35,12 @@ export interface HealOptions {
   format?: 'pretty' | 'json' | 'quiet';
   /** Verbose output */
   verbose?: boolean;
+  /** Dry-run mode: preview patches without applying */
+  dryRun?: boolean;
+  /** Interactive mode: ask for confirmation per patch */
+  interactive?: boolean;
+  /** Output directory for dry-run patches */
+  outputDir?: string;
 }
 
 export interface HealResult {

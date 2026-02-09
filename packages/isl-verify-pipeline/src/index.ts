@@ -158,6 +158,33 @@ export {
   applyResolutions,
 } from './stages/smt-resolution.js';
 
+// Unknown reduction (Agent 31)
+export {
+  classifyUnknown,
+  classifyAllUnknowns,
+  summarizeUnknowns,
+  type UnknownCategory,
+  type UnknownClassification,
+  type MitigationStrategy,
+} from './unknown-classifier.js';
+
+export {
+  attemptMitigations,
+  attemptRuntimeSampling,
+  attemptFallbackCheck,
+  attemptConstraintSlicing,
+  attemptSMTRetry,
+  applyMitigationResults,
+  type MitigationContext,
+  type MitigationResult,
+} from './unknown-mitigations.js';
+
+export {
+  formatUnknownSummary,
+  formatUnknownReason,
+  formatUnknownList,
+} from './unknown-formatter.js';
+
 // Output formatters
 export {
   generateCIOutput,

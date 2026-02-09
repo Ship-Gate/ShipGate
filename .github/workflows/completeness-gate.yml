@@ -1,0 +1,118 @@
+name: Completeness Gate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/**'
+      - '.capability-manifests/**'
+      - 'scripts/completeness*.ts'
+      - 'experimental.json'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/**'
+      - '.capability-manifests/**'
+      - 'scripts/completeness*.ts'
+      - 'experimental.json'
+
+concurrency:
+  group: completeness-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  completeness-check:
+    name: Completeness Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run completeness check
+        run: pnpm completeness:check
+
+      - name: Upload completeness report
+        uses: actions/upload-artifact@v4
+        with:
+          name: completeness-report
+          path: |
+            reports/completeness.json
+            reports/completeness-backlog.json
+            reports/completeness.md
+
+  completeness-enforcement:
+    name: Completeness Enforcement
+    runs-on: ubuntu-latest
+    needs: completeness-check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Enforce completeness claims
+        run: pnpm completeness:check:ci
+        # Fails if any package claims "complete" but lacks required deliverables
+
+  completeness-report:
+    name: Generate Completeness Report
+    runs-on: ubuntu-latest
+    needs: completeness-check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate completeness report
+        run: pnpm completeness:report
+
+      - name: Upload completeness report
+        uses: actions/upload-artifact@v4
+        with:
+          name: completeness-report-full
+          path: |
+            reports/completeness.json
+            reports/completeness-backlog.json
+            reports/completeness.md

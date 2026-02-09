@@ -13,6 +13,8 @@ import { readFile, stat } from 'fs/promises';
 import { existsSync } from 'fs';
 import { resolve, join } from 'path';
 import chalk from 'chalk';
+import { withSpan, ISL_ATTR } from '@isl-lang/observability';
+import { checkPolicyAgainstGate } from './policy-check.js';
 
 // Types
 export interface GateOptions {
@@ -65,75 +67,141 @@ export interface GateResult {
  * Run the gate command
  */
 export async function gate(specPath: string, options: GateOptions): Promise<GateResult> {
-  const {
-    impl,
-    threshold = 95,
-    output,
-    verbose = false,
-  } = options;
+  return await withSpan('cli.gate', {
+    attributes: {
+      [ISL_ATTR.COMMAND]: 'gate',
+      [ISL_ATTR.SPEC_FILE]: specPath,
+      [ISL_ATTR.IMPL_FILE]: options.impl,
+    },
+  }, async (gateSpan) => {
+    const {
+      impl,
+      threshold = 95,
+      output,
+      verbose = false,
+    } = options;
 
-  try {
-    // Read spec file
-    if (!existsSync(specPath)) {
-      return {
-        decision: 'NO-SHIP',
-        exitCode: 1,
-        trustScore: 0,
-        confidence: 0,
-        summary: `Spec file not found: ${specPath}`,
-        error: 'SPEC_NOT_FOUND',
-      };
-    }
+    gateSpan.setAttribute('isl.gate.threshold', threshold);
 
-    const specSource = await readFile(specPath, 'utf-8');
+    try {
+      // Read spec file
+      if (!existsSync(specPath)) {
+        gateSpan.setError('Spec file not found');
+        return {
+          decision: 'NO-SHIP',
+          exitCode: 1,
+          trustScore: 0,
+          confidence: 0,
+          summary: `Spec file not found: ${specPath}`,
+          error: 'SPEC_NOT_FOUND',
+        };
+      }
 
-    // Read implementation file
-    if (!existsSync(impl)) {
-      return {
-        decision: 'NO-SHIP',
-        exitCode: 1,
-        trustScore: 0,
-        confidence: 0,
-        summary: `Implementation file not found: ${impl}`,
-        error: 'IMPL_NOT_FOUND',
-      };
-    }
+      const specSource = await readFile(specPath, 'utf-8');
 
-    let implSource: string;
-    const implStats = await stat(impl);
-    
-    if (implStats.isDirectory()) {
-      // Read all .ts/.js files in directory
-      const { readdir } = await import('fs/promises');
-      const entries = await readdir(impl, { withFileTypes: true });
-      const files: string[] = [];
+      // Read implementation file
+      if (!existsSync(impl)) {
+        gateSpan.setError('Implementation file not found');
+        return {
+          decision: 'NO-SHIP',
+          exitCode: 1,
+          trustScore: 0,
+          confidence: 0,
+          summary: `Implementation file not found: ${impl}`,
+          error: 'IMPL_NOT_FOUND',
+        };
+      }
+
+      let implSource: string;
+      const implStats = await stat(impl);
       
-      for (const entry of entries) {
-        if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.js'))) {
-          if (entry.name.includes('.test.') || entry.name.includes('.spec.') || entry.name.endsWith('.d.ts')) {
-            continue;
+      if (implStats.isDirectory()) {
+        // Read all .ts/.js files in directory
+        const { readdir } = await import('fs/promises');
+        const entries = await readdir(impl, { withFileTypes: true });
+        const files: string[] = [];
+        
+        for (const entry of entries) {
+          if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.js'))) {
+            if (entry.name.includes('.test.') || entry.name.includes('.spec.') || entry.name.endsWith('.d.ts')) {
+              continue;
+            }
+            const content = await readFile(join(impl, entry.name), 'utf-8');
+            files.push(`// === ${entry.name} ===\n${content}`);
           }
-          const content = await readFile(join(impl, entry.name), 'utf-8');
-          files.push(`// === ${entry.name} ===\n${content}`);
+        }
+        implSource = files.join('\n\n');
+      } else {
+        implSource = await readFile(impl, 'utf-8');
+      }
+
+      // Run local gate implementation
+      const result = await runLocalGate(specSource, implSource, threshold, output, gateSpan);
+      
+      // Run policy checks if not skipped
+      if (!options.skipPolicy) {
+        try {
+          const policyResult = await checkPolicyAgainstGate(result, {
+            directory: process.cwd(),
+            policyFile: options.policyFile,
+            profile: options.policyProfile,
+            verbose: verbose,
+          });
+
+          // If policy check failed, override decision to NO-SHIP
+          if (!policyResult.passed) {
+            const policyViolations = policyResult.violations.filter(v => v.severity === 'error');
+            if (policyViolations.length > 0) {
+              result.decision = 'NO-SHIP';
+              result.exitCode = 1;
+              result.summary = `NO-SHIP: Policy violation - ${policyViolations.map(v => v.message).join('; ')}`;
+              result.error = 'POLICY_VIOLATION';
+              result.suggestion = `Fix policy violations: ${policyViolations.map(v => v.rule).join(', ')}`;
+              
+              // Add policy violations to blockers
+              if (!result.results) {
+                result.results = {
+                  clauses: [],
+                  summary: { total: 0, passed: 0, failed: 0, skipped: 0 },
+                  blockers: [],
+                };
+              }
+              result.results.blockers.push(...policyViolations.map(v => ({
+                clause: v.rule,
+                reason: v.message,
+                severity: v.severity === 'error' ? 'critical' : 'high',
+              })));
+            }
+          }
+        } catch (policyError) {
+          // If policy check fails to load, log but don't fail gate
+          if (verbose) {
+            console.warn(chalk.yellow(`Warning: Policy check failed: ${policyError instanceof Error ? policyError.message : String(policyError)}`));
+          }
         }
       }
-      implSource = files.join('\n\n');
-    } else {
-      implSource = await readFile(impl, 'utf-8');
+      
+      // Set span attributes from result
+      gateSpan.setAttribute(ISL_ATTR.VERIFY_VERDICT, result.decision);
+      gateSpan.setAttribute(ISL_ATTR.VERIFY_SCORE, result.trustScore);
+      gateSpan.setAttribute(ISL_ATTR.EXIT_CODE, result.exitCode);
+      if (result.error) {
+        gateSpan.setAttribute(ISL_ATTR.ERROR_TYPE, result.error);
+      }
+      
+      return result;
+    } catch (error) {
+      gateSpan.setError(error instanceof Error ? error.message : String(error));
+      return {
+        decision: 'NO-SHIP',
+        exitCode: 1,
+        trustScore: 0,
+        confidence: 0,
+        summary: `Gate error: ${error instanceof Error ? error.message : String(error)}`,
+        error: 'INTERNAL_ERROR',
+      };
     }
-
-    // Run local gate implementation
-    return await runLocalGate(specSource, implSource, threshold, output);
-  } catch (error) {
-    return {
-      decision: 'NO-SHIP',
-      exitCode: 1,
-      trustScore: 0,
-      confidence: 0,
-      summary: `Gate error: ${error instanceof Error ? error.message : String(error)}`,
-      error: 'INTERNAL_ERROR',
-    };
-  }
+  });
 }
 
 /**
@@ -156,18 +224,18 @@ async function runLocalGate(
   const implHash = hashContent(implSource);
 
   // Try to import core packages
-  let parse: typeof import('@isl-lang/parser').parse;
-  let check: typeof import('@isl-lang/typechecker').check;
-  let verify: typeof import('@isl-lang/isl-verify').verify;
+  let parseFn: typeof import('@isl-lang/parser').parse;
+  let checkFn: typeof import('@isl-lang/typechecker').check;
+  let verifyFn: typeof import('@isl-lang/isl-verify').verify;
 
   try {
     const parser = await import('@isl-lang/parser');
     const typechecker = await import('@isl-lang/typechecker');
     const verifier = await import('@isl-lang/isl-verify');
     
-    parse = parser.parse;
-    check = typechecker.check;
-    verify = verifier.verify;
+    parseFn = parser.parse;
+    checkFn = typechecker.check;
+    verifyFn = verifier.verify;
   } catch (error) {
     return {
       decision: 'NO-SHIP',
@@ -181,7 +249,16 @@ async function runLocalGate(
   }
 
   // Parse spec
-  const parseResult = parse(specSource, 'spec.isl');
+  const parseResult = await withSpan('gate.parse', {
+    attributes: { [ISL_ATTR.COMMAND]: 'parse' },
+  }, async (parseSpan) => {
+    const result = parseFn(specSource, 'spec.isl');
+    parseSpan.setAttribute('isl.parse.error_count', result.errors?.length ?? 0);
+    if (!result.success || result.errors?.length) {
+      parseSpan.setError(result.errors?.map(e => e.message).join('; ') ?? 'Parse failed');
+    }
+    return result;
+  });
   
   if (!parseResult.success || !parseResult.domain) {
     const errors = parseResult.errors?.map(e => e.message).join('; ') ?? 'Parse failed';
@@ -196,7 +273,18 @@ async function runLocalGate(
   }
 
   // Type check
-  const typeResult = check(parseResult.domain);
+  const typeResult = await withSpan('gate.check', {
+    attributes: { [ISL_ATTR.COMMAND]: 'check' },
+  }, async (checkSpan) => {
+    const result = checkFn(parseResult.domain);
+    const errorCount = result.diagnostics.filter(d => d.severity === 'error').length;
+    checkSpan.setAttribute('isl.check.error_count', errorCount);
+    if (errorCount > 0) {
+      checkSpan.setError(`${errorCount} type errors`);
+    }
+    return result;
+  });
+  
   const typeErrors = typeResult.diagnostics.filter(d => d.severity === 'error');
   
   if (typeErrors.length > 0) {
@@ -214,8 +302,16 @@ async function runLocalGate(
   // Run verification
   let verifyResult;
   try {
-    verifyResult = await verify(parseResult.domain, implSource, {
-      runner: { framework: 'vitest' },
+    verifyResult = await withSpan('gate.verify', {
+      attributes: { [ISL_ATTR.COMMAND]: 'verify' },
+    }, async (verifySpan) => {
+      const result = await verifyFn(parseResult.domain, implSource, {
+        runner: { framework: 'vitest' },
+      });
+      verifySpan.setAttribute(ISL_ATTR.VERIFY_SCORE, result.trustScore.overall);
+      verifySpan.setAttribute('isl.verify.passed', result.testResult.passed);
+      verifySpan.setAttribute('isl.verify.failed', result.testResult.failed);
+      return result;
     });
   } catch (error) {
     return {
@@ -423,6 +519,12 @@ export function printGateResult(result: GateResult, options: { format?: string; 
   // Fingerprint
   if (result.manifest?.fingerprint) {
     console.log(chalk.gray(`  Fingerprint: ${result.manifest.fingerprint}`));
+  }
+
+  // Trace ID for correlation
+  const traceId = getCurrentTraceId();
+  if (traceId) {
+    console.log(chalk.gray(`  Trace ID: ${traceId.slice(0, 16)}...`));
   }
 
   // Verified badge - only shown when SHIP

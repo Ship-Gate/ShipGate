@@ -4,24 +4,52 @@
 import { Auth } from "../domain.isl"
 
 # ============================================
-# Check Permission
+# Types
+# ============================================
+
+type PermissionAction = String {
+  pattern: /^(read|write|delete|admin|create|update)$/
+}
+
+type ResourceId = String?
+
+type ABACContext = Map<String, Any> {
+  # Common attributes:
+  # - ip_address: IPAddress
+  # - time_of_day: Int
+  # - day_of_week: Int
+  # - resource_owner_id: UserId
+  # - resource_metadata: Map<String, Any>
+}
+
+# ============================================
+# Check Permission (RBAC)
 # ============================================
 
 behavior CheckPermission {
-  description: "Check if user has permission for resource/action"
+  description: "Check if user has permission for resource/action using RBAC"
   
   input {
     user_id: UserId
     resource: String
     action: PermissionAction
-    context: Map<String, Any>?  # For ABAC conditions
+    resource_id: ResourceId?
   }
   
   output {
     success: {
       allowed: Boolean
       reason: String?
-      matched_permission: Permission?
+      matched_permission: PermissionId?
+      matched_role: RoleId?
+    }
+    
+    errors {
+      USER_NOT_FOUND {
+        when: "User does not exist"
+        retriable: false
+        http_status: 404
+      }
     }
   }
   
@@ -29,18 +57,32 @@ behavior CheckPermission {
     input.user_id != null
     input.resource != null
     input.action != null
+    User.exists(input.user_id)
   }
   
   postconditions {
-    result.allowed == true implies {
-      - User has direct permission
-        or User.role has permission
-        or User.role inherits permission from parent
+    success implies {
+      - result.allowed == true implies {
+          - User.lookup(input.user_id).has_permission(permission) == true
+            where permission == Permission(resource: input.resource, action: input.action)
+          - result.matched_permission != null or result.matched_role != null
+        }
+      - result.allowed == false implies {
+          - not User.lookup(input.user_id).has_permission(permission)
+            where permission == Permission(resource: input.resource, action: input.action)
+        }
     }
   }
   
+  invariants {
+    - permission check is idempotent (no side effects)
+    - permission check is fast (< 10ms)
+    - default deny if no permission matches
+  }
+  
   temporal {
-    - within 5.ms (p99): permission check
+    - within 5.ms (p50): permission check
+    - within 10.ms (p99): permission check
   }
   
   # Permission resolution order:
@@ -328,62 +370,192 @@ constants StandardRoles {
 }
 
 # ============================================
+# Token Invariants
+# ============================================
+
+invariants TokenSecurity {
+  scope: global
+  
+  always {
+    # Tokens are never stored in plaintext
+    - all Token: token_hash != null and token_hash.length >= 64
+    
+    # Expired tokens cannot be valid
+    - all Token: expires_at < now() implies is_valid == false
+    
+    # Revoked tokens cannot be valid
+    - all Token: revoked_at != null implies is_valid == false
+    
+    # Token reuse detection
+    - all Token: use_count <= max_uses if max_uses != null
+    
+    # Access tokens have shorter lifetime than refresh tokens
+    - all Token where type == ACCESS: expires_at <= 
+        Token.lookup_by_session(session_id).expires_at
+        where Token.type == REFRESH
+  }
+}
+
+# ============================================
 # Scenarios
 # ============================================
 
 scenarios CheckPermission {
   scenario "user has direct permission" {
     given {
-      User has Permission(resource: "orders", action: READ)
+      user = User.create({ email: "user@example.com" })
+      Permission.create({ 
+        user_id: user.id,
+        resource: "orders",
+        action: "read"
+      })
     }
     
     when {
       result = CheckPermission(
         user_id: user.id,
         resource: "orders",
-        action: READ
+        action: "read"
       )
     }
     
     then {
-      result.allowed == true
+      result.success == true
+      result.data.allowed == true
+      result.data.matched_permission != null
     }
   }
   
   scenario "user has permission via role" {
     given {
-      User has Role "admin"
-      Role "admin" has Permission(resource: "users", action: ALL)
+      user = User.create({ email: "admin@example.com" })
+      admin_role = Role.create({ id: "admin", permissions: ["users:all"] })
+      User.assign_role(user.id, admin_role.id)
     }
     
     when {
       result = CheckPermission(
         user_id: user.id,
         resource: "users",
-        action: DELETE
+        action: "delete"
       )
     }
     
     then {
-      result.allowed == true
+      result.success == true
+      result.data.allowed == true
+      result.data.matched_role == "admin"
     }
   }
   
   scenario "permission denied" {
     given {
-      User has no Permission for "admin_panel"
+      user = User.create({ email: "user@example.com" })
+      # No permissions assigned
     }
     
     when {
       result = CheckPermission(
         user_id: user.id,
         resource: "admin_panel",
-        action: READ
+        action: "read"
       )
     }
     
     then {
-      result.allowed == false
+      result.success == true
+      result.data.allowed == false
+    }
+  }
+  
+  scenario "user not found" {
+    when {
+      result = CheckPermission(
+        user_id: "non-existent-id",
+        resource: "orders",
+        action: "read"
+      )
+    }
+    
+    then {
+      result.success == false
+      result.error == USER_NOT_FOUND
+    }
+  }
+}
+
+scenarios EvaluatePolicy {
+  scenario "ABAC policy permits access" {
+    given {
+      user = User.create({ email: "user@example.com", department: "sales" })
+      Policy.create({
+        resource: "reports",
+        action: "read",
+        condition: "user.department == 'sales' and time_of_day >= 9 and time_of_day <= 17"
+      })
+    }
+    
+    when {
+      result = EvaluatePolicy(
+        user_id: user.id,
+        resource: "reports",
+        action: "read",
+        context: { time_of_day: 14 }
+      )
+    }
+    
+    then {
+      result.success == true
+      result.data.allowed == true
+      result.data.decision == PERMIT
+    }
+  }
+  
+  scenario "ABAC policy denies access" {
+    given {
+      user = User.create({ email: "user@example.com", department: "sales" })
+      Policy.create({
+        resource: "reports",
+        action: "read",
+        condition: "user.department == 'sales' and time_of_day >= 9 and time_of_day <= 17"
+      })
+    }
+    
+    when {
+      result = EvaluatePolicy(
+        user_id: user.id,
+        resource: "reports",
+        action: "read",
+        context: { time_of_day: 20 }  # Outside business hours
+      )
+    }
+    
+    then {
+      result.success == true
+      result.data.allowed == false
+      result.data.decision == DENY
+    }
+  }
+  
+  scenario "ABAC falls back to RBAC when no policy matches" {
+    given {
+      user = User.create({ email: "user@example.com" })
+      # No ABAC policy, but RBAC permission exists
+      Permission.create({ user_id: user.id, resource: "orders", action: "read" })
+    }
+    
+    when {
+      result = EvaluatePolicy(
+        user_id: user.id,
+        resource: "orders",
+        action: "read"
+      )
+    }
+    
+    then {
+      result.success == true
+      result.data.decision == NOT_APPLICABLE
+      # Should fallback to RBAC check
     }
   }
 }

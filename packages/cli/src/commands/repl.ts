@@ -658,7 +658,7 @@ async function handleGen(target: string, state: ReplState): Promise<boolean> {
 
   try {
     // Import codegen with timeout
-    const genModulePromise = import('../gen.js');
+    const genModulePromise = import('./gen.js');
     const genModule = await withTimeout(
       genModulePromise,
       state.timeout,

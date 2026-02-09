@@ -16,7 +16,7 @@ import {
   DEFAULT_AUTH_CONFIG,
   AuthException,
   AuthErrorCode,
-} from './types';
+} from './types.js';
 
 // ============================================================================
 // Password Utilities

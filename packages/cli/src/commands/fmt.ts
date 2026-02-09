@@ -1,8 +1,8 @@
 /**
  * Fmt Command
  * 
- * Format ISL files.
- * Usage: isl fmt <file>
+ * Format ISL files using AST-based formatting that preserves comments.
+ * Usage: isl fmt <file> [--check] [--write]
  */
 
 import { readFile, writeFile, access } from 'fs/promises';
@@ -13,6 +13,8 @@ import { parse as parseISL, type Domain as DomainDeclaration } from '@isl-lang/p
 import { output } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
 import { findSimilarFiles } from '../utils.js';
+import { Formatter } from './fmt/formatter.js';
+import { CommentExtractor } from './fmt/comments.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -36,171 +38,6 @@ export interface FmtResult {
   diff?: string;
   errors: string[];
   duration: number;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Formatting Configuration
-// ─────────────────────────────────────────────────────────────────────────────
-
-const FORMAT_CONFIG = {
-  indentSize: 2,
-  maxLineLength: 100,
-  blankLinesBetweenBlocks: 1,
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// AST Formatter
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Format a domain declaration to ISL source
- */
-function formatDomain(domain: DomainDeclaration): string {
-  const lines: string[] = [];
-  const indent = ' '.repeat(FORMAT_CONFIG.indentSize);
-  
-  // Domain header with description
-  if (domain.description) {
-    lines.push('/**');
-    lines.push(` * ${domain.description}`);
-    lines.push(' */');
-  }
-  
-  lines.push(`domain ${domain.name.name} {`);
-  
-  // Entities
-  if (domain.entities.length > 0) {
-    for (let i = 0; i < domain.entities.length; i++) {
-      const entity = domain.entities[i];
-      
-      if (i > 0) lines.push('');
-      
-      // Entity documentation
-      if (entity.description) {
-        lines.push(`${indent}/**`);
-        lines.push(`${indent} * ${entity.description}`);
-        lines.push(`${indent} */`);
-      }
-      
-      lines.push(`${indent}entity ${entity.name.name} {`);
-      
-      if (entity.fields) {
-        for (const field of entity.fields) {
-          const optional = field.optional ? '?' : '';
-          const type = field.type?.name ?? 'unknown';
-          lines.push(`${indent}${indent}${field.name.name}${optional}: ${type}`);
-        }
-      }
-      
-      lines.push(`${indent}}`);
-    }
-  }
-  
-  // Blank line before behaviors
-  if (domain.entities.length > 0 && domain.behaviors.length > 0) {
-    lines.push('');
-  }
-  
-  // Behaviors
-  if (domain.behaviors.length > 0) {
-    for (let i = 0; i < domain.behaviors.length; i++) {
-      const behavior = domain.behaviors[i];
-      
-      if (i > 0) lines.push('');
-      
-      // Behavior documentation
-      if (behavior.description) {
-        lines.push(`${indent}/**`);
-        lines.push(`${indent} * ${behavior.description}`);
-        lines.push(`${indent} */`);
-      }
-      
-      lines.push(`${indent}behavior ${behavior.name.name} {`);
-      
-      // Input
-      if (behavior.inputs && behavior.inputs.length > 0) {
-        lines.push(`${indent}${indent}input {`);
-        for (const input of behavior.inputs) {
-          const type = input.type?.name ?? 'unknown';
-          lines.push(`${indent}${indent}${indent}${input.name.name}: ${type}`);
-        }
-        lines.push(`${indent}${indent}}`);
-        lines.push('');
-      }
-      
-      // Output
-      if (behavior.output) {
-        lines.push(`${indent}${indent}output ${behavior.output.name}`);
-        lines.push('');
-      }
-      
-      // Preconditions
-      if (behavior.body?.preconditions && behavior.body.preconditions.length > 0) {
-        lines.push(`${indent}${indent}preconditions {`);
-        for (const pre of behavior.body.preconditions) {
-          if (pre.description) {
-            lines.push(`${indent}${indent}${indent}require ${pre.description}`);
-          }
-        }
-        lines.push(`${indent}${indent}}`);
-        lines.push('');
-      }
-      
-      // Postconditions
-      if (behavior.body?.postconditions && behavior.body.postconditions.length > 0) {
-        lines.push(`${indent}${indent}postconditions {`);
-        for (const post of behavior.body.postconditions) {
-          if (post.description) {
-            lines.push(`${indent}${indent}${indent}ensure ${post.description}`);
-          }
-        }
-        lines.push(`${indent}${indent}}`);
-      }
-      
-      // Scenarios
-      if (behavior.body?.scenarios && behavior.body.scenarios.length > 0) {
-        lines.push('');
-        for (const scenario of behavior.body.scenarios) {
-          lines.push(`${indent}${indent}scenario "${scenario.name}" {`);
-          
-          if (scenario.given) {
-            lines.push(`${indent}${indent}${indent}given ${JSON.stringify(scenario.given)}`);
-          }
-          if (scenario.when) {
-            lines.push(`${indent}${indent}${indent}when ${JSON.stringify(scenario.when)}`);
-          }
-          if (scenario.then) {
-            lines.push(`${indent}${indent}${indent}then ${JSON.stringify(scenario.then)}`);
-          }
-          
-          lines.push(`${indent}${indent}}`);
-        }
-      }
-      
-      lines.push(`${indent}}`);
-    }
-  }
-  
-  // Blank line before invariants
-  if ((domain.entities.length > 0 || domain.behaviors.length > 0) && domain.invariants && domain.invariants.length > 0) {
-    lines.push('');
-  }
-  
-  // Invariants
-  if (domain.invariants && domain.invariants.length > 0) {
-    for (const inv of domain.invariants) {
-      const name = inv.name?.name ? `"${inv.name.name}"` : '';
-      lines.push(`${indent}invariant ${name} {`);
-      if (inv.description) {
-        lines.push(`${indent}${indent}${inv.description}`);
-      }
-      lines.push(`${indent}}`);
-    }
-  }
-  
-  lines.push('}');
-  
-  return lines.join('\n') + '\n';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -250,7 +87,7 @@ function simpleDiff(original: string, formatted: string): string | null {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Format an ISL file
+ * Format an ISL file using AST-based formatting
  */
 export async function fmt(file: string, options: FmtOptions = {}): Promise<FmtResult> {
   const startTime = Date.now();
@@ -286,21 +123,35 @@ export async function fmt(file: string, options: FmtOptions = {}): Promise<FmtRe
     const source = await readFile(filePath, 'utf-8');
     spinner && (spinner.text = 'Parsing...');
     
-    const { domain: ast, errors: parseErrors } = parseISL(source, filePath);
+    const parseResult = parseISL(source, filePath);
     
-    if (parseErrors.length > 0 || !ast) {
+    if (!parseResult.success || !parseResult.domain) {
       spinner?.fail('Parse failed - cannot format invalid ISL');
+      const parseErrors = parseResult.errors || [];
       return {
         success: false,
         file: filePath,
         formatted: false,
-        errors: parseErrors.map(e => e.message),
+        errors: parseErrors.map(e => {
+          if (typeof e === 'string') return e;
+          if (e.message) return e.message;
+          if (e.code) return `[${e.code}] ${e.message || 'Parse error'}`;
+          return String(e);
+        }),
         duration: Date.now() - startTime,
       };
     }
     
     spinner && (spinner.text = 'Formatting...');
-    const formatted = formatDomain(ast);
+    
+    // Extract comments from source
+    const commentExtractor = new CommentExtractor(source);
+    const comments = commentExtractor.extract();
+    
+    // Format AST
+    const formatter = new Formatter();
+    const formatted = formatter.format(parseResult.domain, comments);
+    
     const diff = simpleDiff(source, formatted);
     const needsFormatting = diff !== null;
     

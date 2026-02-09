@@ -168,42 +168,80 @@ behavior RefreshToken {
   description: "Exchange refresh token for new access token"
   
   input {
-    refresh_token: String
+    refresh_token: String [sensitive]
   }
   
   output {
     success: {
-      access_token: String
-      refresh_token: String?  # Optional rotation
+      access_token: String [sensitive]
+      refresh_token: String? [sensitive]  # Optional rotation
       expires_in: Int
+      token_type: String [default: "Bearer"]
     }
     
     errors {
       INVALID_TOKEN {
-        when: "Token invalid or expired"
+        when: "Token invalid, expired, or malformed"
         retriable: false
+        http_status: 401
+      }
+      TOKEN_EXPIRED {
+        when: "Refresh token has expired"
+        retriable: false
+        http_status: 401
       }
       SESSION_REVOKED {
         when: "Session has been revoked"
         retriable: false
+        http_status: 401
+      }
+      TOKEN_REUSED {
+        when: "Token reuse detected - security breach"
+        retriable: false
+        http_status: 401
+        # All sessions should be revoked
       }
     }
   }
   
   preconditions {
     input.refresh_token != null
+    input.refresh_token.length > 0
   }
   
   postconditions {
     success implies {
-      - Session.last_activity_at updated
-      - new access_token is valid
+      - Token.exists(result.access_token) or Token.created(result.access_token)
+      - Session.lookup_by_refresh_token(input.refresh_token).last_activity_at == now()
+      - result.access_token != null
+      - result.expires_in > 0
+      - result.expires_in <= 3600  # Max 1 hour for access tokens
+      - AuditLog.created(action: TOKEN_REFRESHED, session_id: session.id)
+    }
+    
+    TOKEN_REUSED implies {
+      - all Session where user_id == session.user_id: status == REVOKED
+      - AuditLog.created(action: TOKEN_REUSE_DETECTED, severity: CRITICAL)
     }
   }
   
+  invariants {
+    - refresh tokens are single-use (if rotation enabled)
+    - token reuse detection via token hash tracking
+    - access token lifetime <= refresh token lifetime
+  }
+  
+  temporal {
+    - within 50.ms (p99): token validation
+    - within 100.ms (p99): token generation
+  }
+  
   security {
+    - rate_limit 10 per minute per IP
+    - rate_limit 20 per minute per session
     - refresh_token_rotation: recommended
     - detect_token_reuse: revoke_all_sessions
+    - constant_time token comparison
   }
 }
 

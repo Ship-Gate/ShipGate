@@ -4,5 +4,5 @@
  * Policy enforcement engine for ISL specifications
  */
 
-export * from './types';
-export { PolicyEngine } from './engine';
+export * from './types.js';
+export { PolicyEngine } from './engine.js';

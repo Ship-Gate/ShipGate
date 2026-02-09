@@ -10,7 +10,7 @@ import { CoverageBreakdown } from '@/components/CoverageChart'
 import { Timeline } from '@/components/Timeline'
 import { useVerification } from '@/hooks/useApi'
 import { formatDate, formatDuration, formatPercentage } from '@/lib/utils'
-import { ArrowLeft, Clock, Shield, Target, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Shield, Target, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 
 interface PageProps {
   params: Promise<{ id: string }>

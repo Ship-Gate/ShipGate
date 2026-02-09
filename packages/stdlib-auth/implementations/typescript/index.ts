@@ -34,7 +34,7 @@ import {
   SessionRepository,
   PasswordResetTokenRepository,
   EventEmitter,
-} from './types';
+} from './types.js';
 
 import {
   hashPassword,
@@ -48,19 +48,19 @@ import {
   updatePassword,
   isUserLocked,
   InMemoryUserRepository,
-} from './user';
+} from './user.js';
 
 import {
   createSession,
   revokeSession,
   hashToken,
   InMemorySessionRepository,
-} from './session';
+} from './session.js';
 
 // Re-export types
-export * from './types';
-export * from './user';
-export * from './session';
+export * from './types.js';
+export * from './user.js';
+export * from './session.js';
 
 // ============================================================================
 // Auth Service
@@ -188,7 +188,7 @@ export class AuthService {
           createdAt: user.createdAt,
         },
       });
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof AuthException) {
         return failure(error.toError());
       }
@@ -370,7 +370,7 @@ export class AuthService {
         token,
         expiresAt: session.expiresAt,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof AuthException) {
         return failure(error.toError());
       }
@@ -437,7 +437,7 @@ export class AuthService {
           ? `Successfully logged out of all ${revokedCount} sessions`
           : 'Successfully logged out',
       });
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof AuthException) {
         return failure(error.toError());
       }
@@ -522,7 +522,7 @@ export class AuthService {
           lastActivityAt: new Date(),
         },
       });
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof AuthException) {
         return failure(error.toError());
       }
@@ -823,7 +823,7 @@ export class AuthService {
         message: 'Password has been changed successfully',
         sessionsRevoked,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof AuthException) {
         return failure(error.toError());
       }

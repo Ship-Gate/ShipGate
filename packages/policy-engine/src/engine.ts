@@ -12,7 +12,7 @@ import type {
   PolicyAuditLog,
   PolicyStats,
   PolicyObligation,
-} from './types';
+} from './types.js';
 
 export class PolicyEngine {
   private policies: Map<string, Policy> = new Map();
@@ -171,8 +171,8 @@ export class PolicyEngine {
     if (!result.allowed) return [];
 
     return result.decisions
-      .filter(d => d.effect === 'ALLOW' && d.obligations)
-      .flatMap(d => d.obligations ?? []);
+      .filter((d: PolicyDecision) => d.effect === 'ALLOW' && d.obligations)
+      .flatMap((d: PolicyDecision) => d.obligations ?? []);
   }
 
   /**
@@ -290,10 +290,10 @@ export class PolicyEngine {
         return this.evaluateFunctionCondition(condition, context);
 
       case 'and':
-        return condition.children?.every(c => this.evaluateCondition(c, context)) ?? true;
+        return condition.children?.every((c: PolicyCondition) => this.evaluateCondition(c, context)) ?? true;
 
       case 'or':
-        return condition.children?.some(c => this.evaluateCondition(c, context)) ?? false;
+        return condition.children?.some((c: PolicyCondition) => this.evaluateCondition(c, context)) ?? false;
 
       case 'not':
         return condition.children && condition.children[0]
@@ -301,13 +301,13 @@ export class PolicyEngine {
           : true;
 
       case 'all':
-        return condition.children?.every(c => this.evaluateCondition(c, context)) ?? true;
+        return condition.children?.every((c: PolicyCondition) => this.evaluateCondition(c, context)) ?? true;
 
       case 'any':
-        return condition.children?.some(c => this.evaluateCondition(c, context)) ?? false;
+        return condition.children?.some((c: PolicyCondition) => this.evaluateCondition(c, context)) ?? false;
 
       case 'none':
-        return condition.children?.every(c => !this.evaluateCondition(c, context)) ?? true;
+        return condition.children?.every((c: PolicyCondition) => !this.evaluateCondition(c, context)) ?? true;
 
       default:
         return false;

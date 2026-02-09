@@ -28,6 +28,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as crypto from 'crypto';
+import { safeJSONStringify } from '@isl-lang/secrets-hygiene';
 import type {
   ProofBundleManifest,
   ManifestGateResult,
@@ -52,6 +53,7 @@ import type {
   SMTSolverTranscript,
   RunMetadata,
 } from './manifest.js';
+import type { CoverageReport } from '@isl-lang/isl-coverage';
 import {
   calculateVerdictV2,
   calculateBundleId,
@@ -186,6 +188,9 @@ export class ProofBundleWriter {
   private evaluatorTrace: EvaluatorDecisionTrace | null = null;
   private smtTranscript: SMTSolverTranscript | null = null;
   private runMetadata: RunMetadata | null = null;
+  
+  // V2.2 fields - coverage analytics
+  private coverage: CoverageReport | null = null;
 
   constructor(options: WriterOptions) {
     this.options = options;
@@ -266,6 +271,14 @@ export class ProofBundleWriter {
    */
   setChaosResult(result: ChaosTestResult): this {
     this.chaosResult = result;
+    return this;
+  }
+
+  /**
+   * Set coverage analytics report
+   */
+  setCoverage(coverage: CoverageReport): this {
+    this.coverage = coverage;
     return this;
   }
 
@@ -484,6 +497,17 @@ export class ProofBundleWriter {
       stdlibVersions: this.stdlibVersions.length > 0 ? this.stdlibVersions : undefined,
     });
 
+    // Collect tool versions
+    const toolVersions: ProofBundleManifest['toolVersions'] = {
+      nodeVersion: process.version,
+      platform: process.platform,
+      arch: process.arch,
+      buildTool: this.buildResult.tool,
+      buildToolVersion: this.buildResult.toolVersion,
+      testFramework: this.testResult.framework,
+      testFrameworkVersion: this.testResult.frameworkVersion,
+    };
+
     // Build manifest with v2 fields
     const manifestBase: Omit<ProofBundleManifest, 'bundleId' | 'signature'> = {
       schemaVersion: '2.0.0',
@@ -499,6 +523,7 @@ export class ProofBundleWriter {
         islStudioVersion: this.options.islStudioVersion || '1.0.0',
         packs: this.gateResult.rulepackVersions,
       },
+      toolVersions,
       // V2 fields
       importGraphHash: this.importGraph?.graphHash,
       importGraph: this.importGraph || undefined,
@@ -510,6 +535,8 @@ export class ProofBundleWriter {
       evaluatorTrace: this.evaluatorTrace || undefined,
       smtTranscript: this.smtTranscript || undefined,
       runMetadata: this.runMetadata || undefined,
+      // V2.2 fields - coverage analytics
+      coverage: this.coverage || undefined,
       // Original fields
       gateResult: this.gateResult,
       buildResult: this.buildResult,
@@ -540,24 +567,24 @@ export class ProofBundleWriter {
     await fs.writeFile(path.join(bundleDir, 'spec.isl'), this.spec.content);
     files.push('spec.isl');
 
-    // Write gate results
+    // Write gate results (secrets are automatically masked)
     await fs.writeFile(
       path.join(bundleDir, 'results', 'gate.json'),
-      JSON.stringify(this.gateResult, null, 2)
+      safeJSONStringify(this.gateResult, undefined, 2)
     );
     files.push('results/gate.json');
 
-    // Write build results
+    // Write build results (secrets are automatically masked)
     await fs.writeFile(
       path.join(bundleDir, 'results', 'build.json'),
-      JSON.stringify(this.buildResult, null, 2)
+      safeJSONStringify(this.buildResult, undefined, 2)
     );
     files.push('results/build.json');
 
-    // Write test results
+    // Write test results (secrets are automatically masked)
     await fs.writeFile(
       path.join(bundleDir, 'results', 'tests.json'),
-      JSON.stringify(this.testResult, null, 2)
+      safeJSONStringify(this.testResult, undefined, 2)
     );
     files.push('results/tests.json');
 
@@ -580,7 +607,7 @@ export class ProofBundleWriter {
         const traceFile = `traces/${trace.id}.json`;
         await fs.writeFile(
           path.join(bundleDir, traceFile),
-          JSON.stringify(trace, null, 2)
+          safeJSONStringify(trace, undefined, 2)
         );
         files.push(traceFile);
         traceIndex.push({
@@ -591,10 +618,10 @@ export class ProofBundleWriter {
         });
       }
 
-      // Write trace index
+      // Write trace index (secrets are automatically masked)
       await fs.writeFile(
         path.join(bundleDir, 'traces', 'index.json'),
-        JSON.stringify(traceIndex, null, 2)
+        safeJSONStringify(traceIndex, undefined, 2)
       );
       files.push('traces/index.json');
     }
@@ -621,47 +648,47 @@ export class ProofBundleWriter {
     // V2 Files - Import Graph, Stdlib Versions, Verify Results
     // ========================================================================
 
-    // Write import graph if available
+    // Write import graph if available (secrets are automatically masked)
     if (this.importGraph) {
       await fs.writeFile(
         path.join(bundleDir, 'results', 'import-graph.json'),
-        JSON.stringify(this.importGraph, null, 2)
+        safeJSONStringify(this.importGraph, undefined, 2)
       );
       files.push('results/import-graph.json');
     }
 
-    // Write stdlib versions if available
+    // Write stdlib versions if available (secrets are automatically masked)
     if (this.stdlibVersions.length > 0) {
       await fs.writeFile(
         path.join(bundleDir, 'results', 'stdlib-versions.json'),
-        JSON.stringify(this.stdlibVersions, null, 2)
+        safeJSONStringify(this.stdlibVersions, undefined, 2)
       );
       files.push('results/stdlib-versions.json');
     }
 
-    // Write verify results if available
+    // Write verify results if available (secrets are automatically masked)
     if (this.verifyResults) {
       await fs.writeFile(
         path.join(bundleDir, 'results', 'verify-results.json'),
-        JSON.stringify(this.verifyResults, null, 2)
+        safeJSONStringify(this.verifyResults, undefined, 2)
       );
       files.push('results/verify-results.json');
     }
 
-    // Write trace refs if available
+    // Write trace refs if available (secrets are automatically masked)
     if (this.traceRefs.length > 0) {
       await fs.writeFile(
         path.join(bundleDir, 'results', 'trace-refs.json'),
-        JSON.stringify(this.traceRefs, null, 2)
+        safeJSONStringify(this.traceRefs, undefined, 2)
       );
       files.push('results/trace-refs.json');
     }
 
-    // Write tests summary if available
+    // Write tests summary if available (secrets are automatically masked)
     if (this.testsSummary) {
       await fs.writeFile(
         path.join(bundleDir, 'results', 'tests-summary.json'),
-        JSON.stringify(this.testsSummary, null, 2)
+        safeJSONStringify(this.testsSummary, undefined, 2)
       );
       files.push('results/tests-summary.json');
     }
@@ -670,20 +697,20 @@ export class ProofBundleWriter {
     // V2.1 Files - Evaluator Trace, SMT Transcript, Run Metadata
     // ========================================================================
 
-    // Write evaluator decision trace if available
+    // Write evaluator decision trace if available (secrets are automatically masked)
     if (this.evaluatorTrace) {
       await fs.writeFile(
         path.join(bundleDir, 'results', 'evaluator-trace.json'),
-        JSON.stringify(this.evaluatorTrace, null, 2)
+        safeJSONStringify(this.evaluatorTrace, undefined, 2)
       );
       files.push('results/evaluator-trace.json');
     }
 
-    // Write SMT solver transcript if available (only when formal mode enabled)
+    // Write SMT solver transcript if available (only when formal mode enabled, secrets are automatically masked)
     if (this.smtTranscript && this.smtTranscript.formalModeEnabled) {
       await fs.writeFile(
         path.join(bundleDir, 'results', 'smt-transcript.json'),
-        JSON.stringify(this.smtTranscript, null, 2)
+        safeJSONStringify(this.smtTranscript, undefined, 2)
       );
       files.push('results/smt-transcript.json');
       
@@ -700,16 +727,16 @@ export class ProofBundleWriter {
       }
     }
 
-    // Write run metadata if available
+    // Write run metadata if available (secrets are automatically masked)
     if (this.runMetadata) {
       await fs.writeFile(
         path.join(bundleDir, 'results', 'run-metadata.json'),
-        JSON.stringify(this.runMetadata, null, 2)
+        safeJSONStringify(this.runMetadata, undefined, 2)
       );
       files.push('results/run-metadata.json');
     }
 
-    // Write iterations
+    // Write iterations (secrets are automatically masked)
     if (this.iterations.length > 0) {
       await fs.mkdir(path.join(bundleDir, 'iterations'), { recursive: true });
       
@@ -719,13 +746,13 @@ export class ProofBundleWriter {
 
         await fs.writeFile(
           path.join(iterDir, 'violations.json'),
-          JSON.stringify(iter.violations, null, 2)
+          safeJSONStringify(iter.violations, undefined, 2)
         );
         files.push(`iterations/${iter.iteration}/violations.json`);
 
         await fs.writeFile(
           path.join(iterDir, 'patches.json'),
-          JSON.stringify(iter.patches, null, 2)
+          safeJSONStringify(iter.patches, undefined, 2)
         );
         files.push(`iterations/${iter.iteration}/patches.json`);
 
@@ -756,9 +783,9 @@ export class ProofBundleWriter {
       manifest = signManifest(manifest, this.options.signSecret, this.options.signKeyId);
     }
 
-    // Write manifest
+    // Write manifest (secrets are automatically masked)
     const manifestPath = path.join(bundleDir, 'manifest.json');
-    await fs.writeFile(manifestPath, JSON.stringify(manifest, null, 2));
+    await fs.writeFile(manifestPath, safeJSONStringify(manifest, undefined, 2));
 
     return {
       bundleId: manifest.bundleId,

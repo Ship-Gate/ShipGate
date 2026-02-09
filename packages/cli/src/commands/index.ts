@@ -34,6 +34,8 @@ export { gate, printGateResult, getGateExitCode, type GateOptions, type GateResu
 
 export { trustScore, printTrustScoreResult, printTrustScoreHistory, getTrustScoreExitCode, type TrustScoreOptions, type TrustScoreCommandResult } from './trust-score.js';
 
+export { trustScoreExplain, printTrustScoreExplain, type TrustScoreExplainOptions, type TrustScoreExplainResult } from './trust-score-explain.js';
+
 export { heal, printHealResult, getHealExitCode, type HealOptions, type HealResult } from './heal.js';
 
 export { verifyProof, printProofVerifyResult, getProofVerifyExitCode, type ProofVerifyCommandOptions, type ProofVerifyResult } from './proof.js';
@@ -65,3 +67,29 @@ export { simulateCommand, printSimulateResult, getSimulateExitCode, type Simulat
 export { verifyRuntime, printVerifyRuntimeResult, getVerifyRuntimeExitCode, type VerifyRuntimeOptions, type VerifyRuntimeResult } from './verify-runtime.js';
 
 export { policyEngineCheck, printPolicyEngineResult, getPolicyEngineExitCode, type PolicyEngineCheckOptions, type PolicyEngineCheckResult } from './policy-engine.js';
+
+export { checkPolicy, checkPolicyAgainstGate, printPolicyCheckResult, getPolicyCheckExitCode, type PolicyCheckOptions, type PolicyCheckResult, type PolicyViolation } from './policy-check.js';
+
+export { loadPolicy, loadPolicyFile, getActiveExceptions, matchesExceptionScope, PolicyValidationError, type LoadedPolicy, type PolicyValidationError as PolicyValidationErrorType } from './policy-loader.js';
+
+export { generatePolicyTemplate } from './policy-template.js';
+
+export type { PolicyConfig, ThresholdProfile, EvidenceRequirement, PolicyException, EvidenceType } from './policy-schema.js';
+
+export { bind, printBindResult, getBindExitCode, type BindOptions, type BindResult } from './bind.js';
+
+export { detectDrift, printDriftResult, getDriftExitCode, type DriftOptions, type DriftResult, type DriftChange } from './drift.js';
+
+export { generateBadge, printBadgeResult, getBadgeExitCode, generateAttestation, printAttestationResult, getAttestationExitCode, generatePRComment, printCommentResult, getCommentExitCode, type ProofBadgeOptions, type ProofBadgeResult, type ProofAttestOptions, type ProofAttestResult, type ProofCommentOptions, type ProofCommentResult } from './proof-badge.js';
+
+export { domainInit, printDomainInitResult, domainValidate, printDomainValidateResult, getDomainValidateExitCode, type DomainInitOptions, type DomainInitResult, type DomainValidateOptions, type DomainValidateResult, type DomainPackManifest } from './domain.js';
+
+export { installPack, listPacks, verifyPackInstall, printInstallResult, printListResult, printVerifyResult, getInstallExitCode, getVerifyExitCode, type PackInstallOptions, type PackInstallResult, type PackListResult, type PackVerifyResult } from './packs.js';
+
+export { migrate, printMigrateResult, getMigrateExitCode, type MigrateOptions, type MigrateResult } from './migrate.js';
+
+export { importOpenAPI, printImportOpenAPIResult, getImportOpenAPIExitCode, type ImportOpenAPIOptions, type ImportOpenAPIResult } from './import-openapi.js';
+
+export { diffOpenAPI, printDiffOpenAPIResult, getDiffOpenAPIExitCode, type DiffOpenAPIOptions, type DiffOpenAPIResult, type DiffChange } from './diff-openapi.js';
+
+export { coverage, printCoverageResult, getCoverageExitCode, type CoverageCommandOptions, type CoverageCommandResult } from './coverage.js';

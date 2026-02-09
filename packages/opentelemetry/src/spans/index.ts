@@ -4,8 +4,8 @@ export {
   withBehaviorSpan,
   createBehaviorSpan,
   TraceBehavior,
-} from './behavior';
-export type { BehaviorSpanConfig, BehaviorResult } from './behavior';
+} from './behavior.js';
+export type { BehaviorSpanConfig, BehaviorResult } from './behavior.js';
 
 export {
   VerificationSpan,
@@ -13,13 +13,13 @@ export {
   withVerificationSpan,
   createVerificationSpan,
   TraceVerification,
-} from './verification';
+} from './verification.js';
 export type {
   VerificationSpanConfig,
   CheckResult,
   CoverageMetrics,
   VerificationResult,
-} from './verification';
+} from './verification.js';
 
 export {
   ChaosSpan,
@@ -27,5 +27,5 @@ export {
   withChaosSpan,
   createChaosSpan,
   ChaosUtils,
-} from './chaos';
-export type { ChaosSpanConfig, ChaosResult } from './chaos';
+} from './chaos.js';
+export type { ChaosSpanConfig, ChaosResult } from './chaos.js';

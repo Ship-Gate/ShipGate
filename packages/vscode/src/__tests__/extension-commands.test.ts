@@ -364,6 +364,7 @@ describe('Package.json Commands', () => {
     expect(commandIds).toContain('shipgate.verify');
     expect(commandIds).toContain('shipgate.generateSpec');
     expect(commandIds).toContain('shipgate.coverage');
+    expect(commandIds).toContain('shipgate.validateISL');
     expect(commandIds).toContain('isl.parseFile');
     expect(commandIds).toContain('isl.typeCheck');
     expect(commandIds).toContain('isl.restartServer');

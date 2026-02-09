@@ -1,0 +1,21 @@
+[
+  {
+    "code": "ISL_T002",
+    "severity": "error",
+    "message": "Module not found: ./nonexistent.isl",
+    "location": {
+      "file": "10-import-not-found.isl",
+      "line": 1,
+      "column": 1,
+      "endLine": 1,
+      "endColumn": 1
+    },
+    "source": "typechecker",
+    "notes": [
+      "Import path: entry"
+    ],
+    "help": [
+      "Check the import path and ensure the file exists"
+    ]
+  }
+]

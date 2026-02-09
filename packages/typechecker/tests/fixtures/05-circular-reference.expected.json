@@ -1,0 +1,23 @@
+[
+  {
+    "code": "ISL_T080",
+    "severity": "error",
+    "message": "Circular reference detected: A -> B -> A",
+    "location": {
+      "file": "05-circular-reference.isl",
+      "line": 4,
+      "column": 8,
+      "endLine": 4,
+      "endColumn": 9
+    },
+    "source": "typechecker",
+    "notes": [
+      "File: 05-circular-reference.isl",
+      "Range: 4:8-4:9",
+      "Circular type references create infinite types"
+    ],
+    "help": [
+      "Break the cycle by using Optional<T> or a reference type"
+    ]
+  }
+]

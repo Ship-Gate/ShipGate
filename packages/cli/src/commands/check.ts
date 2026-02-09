@@ -13,6 +13,7 @@ import ora from 'ora';
 import { parse as parseISL } from '@isl-lang/parser';
 import { output, type DiagnosticError } from '../output.js';
 import { loadConfig, type ISLConfig } from '../config.js';
+import { withSpan, ISL_ATTR } from '@isl-lang/observability';
 import {
   PassRunner,
   builtinPasses,
@@ -491,8 +492,14 @@ async function resolveFiles(patterns: string[], config?: ISLConfig): Promise<str
  * Check ISL files for syntax and semantic errors
  */
 export async function check(filePatterns: string[], options: CheckOptions = {}): Promise<CheckResult> {
-  const startTime = Date.now();
-  const spinner = !options.quiet ? ora('Checking ISL files...').start() : null;
+  return await withSpan('cli.check', {
+    attributes: {
+      [ISL_ATTR.COMMAND]: 'check',
+      [ISL_ATTR.FILE_COUNT]: filePatterns.length,
+    },
+  }, async (checkSpan) => {
+    const startTime = Date.now();
+    const spinner = !options.quiet ? ora('Checking ISL files...').start() : null;
 
   // Load config
   const { config } = await loadConfig();
@@ -587,23 +594,33 @@ export async function check(filePatterns: string[], options: CheckOptions = {}):
     results.push(result);
   }
 
-  const totalErrors = results.reduce((sum, r) => sum + r.errors.length, 0);
-  const totalWarnings = results.reduce((sum, r) => sum + r.warnings.length, 0);
-  const duration = Date.now() - startTime;
+    const totalErrors = results.reduce((sum, r) => sum + r.errors.length, 0);
+    const totalWarnings = results.reduce((sum, r) => sum + r.warnings.length, 0);
+    const duration = Date.now() - startTime;
 
-  if (totalErrors > 0) {
-    spinner?.fail(`Check failed with ${totalErrors} error${totalErrors === 1 ? '' : 's'}`);
-  } else {
-    spinner?.succeed(`Checked ${files.length} file${files.length === 1 ? '' : 's'} (${duration}ms)`);
-  }
+    // Set span attributes
+    checkSpan.setAttribute('isl.check.error_count', totalErrors);
+    checkSpan.setAttribute('isl.check.warning_count', totalWarnings);
+    checkSpan.setAttribute(ISL_ATTR.FILE_COUNT, files.length);
+    checkSpan.setAttribute(ISL_ATTR.DURATION_MS, duration);
+    if (totalErrors > 0) {
+      checkSpan.setError(`${totalErrors} errors found`);
+    }
 
-  return {
-    success: totalErrors === 0,
-    files: results,
-    totalErrors,
-    totalWarnings,
-    duration,
-  };
+    if (totalErrors > 0) {
+      spinner?.fail(`Check failed with ${totalErrors} error${totalErrors === 1 ? '' : 's'}`);
+    } else {
+      spinner?.succeed(`Checked ${files.length} file${files.length === 1 ? '' : 's'} (${duration}ms)`);
+    }
+
+    return {
+      success: totalErrors === 0,
+      files: results,
+      totalErrors,
+      totalWarnings,
+      duration,
+    };
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

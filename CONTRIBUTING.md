@@ -26,6 +26,24 @@ Thank you for your interest in contributing to ISL (Intent Specification Languag
    pnpm build
    ```
 
+### Build Reproducibility
+
+**Important:** This project enforces reproducible builds. The `pnpm-lock.yaml` file must be kept in sync with `package.json` files.
+
+- **Always use `pnpm install --frozen-lockfile` in CI** - This ensures installs are deterministic
+- **Never commit lockfile changes without corresponding package.json changes** - If you modify dependencies, run `pnpm install` and commit both files together
+- **Verify reproducibility locally** - Run `pnpm -w verify:repro` to ensure your changes don't break reproducibility:
+  ```bash
+  pnpm -w verify:repro
+  ```
+  This runs:
+  - `pnpm install --frozen-lockfile` (must succeed)
+  - `pnpm -w lint`
+  - `pnpm -w typecheck`
+  - `pnpm -w test`
+
+CI will fail if the lockfile changes after install, indicating drift that needs to be fixed.
+
 ## Development Workflow
 
 ### Branching Strategy

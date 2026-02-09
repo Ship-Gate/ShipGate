@@ -38,14 +38,20 @@
     "node": ">=18"
   },
   "bin": {
-    "shipgate": "./dist/cli.js",
-    "isl": "./dist/cli.js"
+    "shipgate": "./dist/cli.cjs",
+    "isl": "./dist/cli.cjs"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
-    "build": "tsup",
+    "prebuild": "node scripts/resolve-workspace-deps.js",
+    "build": "node scripts/build-with-esbuild.js",
+    "build:tsup": "tsup",
+    "build:deps": "node scripts/build-deps.js",
+    "build:full": "pnpm run build:deps && pnpm run build",
     "build:bundle": "bash scripts/build.sh",
     "dev": "tsup --watch",
     "test": "vitest run --passWithNoTests",
@@ -68,6 +74,8 @@
     "@isl-lang/inference": "workspace:*",
     "@isl-lang/intent-translator": "workspace:*",
     "@isl-lang/isl-core": "workspace:*",
+    "@isl-lang/isl-discovery": "workspace:*",
+    "@isl-lang/isl-coverage": "workspace:*",
     "@isl-lang/isl-smt": "workspace:*",
     "@isl-lang/isl-verify": "workspace:*",
     "@isl-lang/parser": "workspace:*",
@@ -83,7 +91,9 @@
     "@isl-lang/verifier-runtime": "workspace:*",
     "@isl-lang/verifier-temporal": "workspace:*",
     "@isl-lang/truthpack-v2": "workspace:*",
+    "@isl-lang/reality-probe": "workspace:*",
     "@isl-lang/observability": "workspace:*",
+    "@isl-lang/secrets-hygiene": "workspace:*",
     "@types/node": "^25.1.0",
     "@types/picomatch": "^4.0.2",
     "chalk": "^5.3.0",

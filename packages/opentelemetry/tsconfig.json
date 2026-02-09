@@ -22,7 +22,6 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    "composite": true,
     "noEmit": false,
     "baseUrl": ".",
     "paths": {
@@ -32,7 +31,7 @@
     }
   },
   "include": [
-    "src/**/*"
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",

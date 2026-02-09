@@ -140,9 +140,37 @@ class SMTSolverImpl implements ISMTSolver {
         if (available) {
           result = await this.solveWithExternalSolver(formula, declarations, this.config.solver);
         } else {
-          // Fall back to builtin if external solver not available
+          // Try WASM fallback for Z3
+          if (this.config.solver === 'z3') {
+            const wasmAvailable = await this.checkWasmSolverAvailable();
+            if (wasmAvailable) {
+              if (this.config.verbose) {
+                console.log('[SMT] Z3 not available, falling back to Z3 WASM');
+              }
+              result = await this.solveWithWasmSolver(formula, declarations);
+            } else {
+              // Fall back to builtin if WASM also not available
+              if (this.config.verbose) {
+                console.log('[SMT] Z3 and Z3 WASM not available, falling back to builtin solver');
+              }
+              result = await this.solveEnhancedBuiltin(formula, declarations);
+            }
+          } else {
+            // Fall back to builtin if external solver not available
+            if (this.config.verbose) {
+              console.log(`[SMT] ${this.config.solver.toUpperCase()} not available, falling back to builtin solver`);
+            }
+            result = await this.solveEnhancedBuiltin(formula, declarations);
+          }
+        }
+      } else if (this.config.solver === 'z3-wasm') {
+        // Use WASM solver directly
+        const wasmAvailable = await this.checkWasmSolverAvailable();
+        if (wasmAvailable) {
+          result = await this.solveWithWasmSolver(formula, declarations);
+        } else {
           if (this.config.verbose) {
-            console.log(`[SMT] ${this.config.solver.toUpperCase()} not available, falling back to builtin solver`);
+            console.log('[SMT] Z3 WASM not available, falling back to builtin solver');
           }
           result = await this.solveEnhancedBuiltin(formula, declarations);
         }
@@ -277,6 +305,42 @@ class SMTSolverImpl implements ISMTSolver {
     } as SMTCheckResult;
   }
   
+  /**
+   * Check if WASM solver is available
+   */
+  private async checkWasmSolverAvailable(): Promise<boolean> {
+    try {
+      // Dynamic import to avoid loading WASM unless needed
+      const { isZ3WasmAvailable } = await import('@isl-lang/solver-z3-wasm');
+      return await isZ3WasmAvailable();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Solve using WASM solver
+   */
+  private async solveWithWasmSolver(formula: SMTExpr, declarations: SMTDecl[]): Promise<SMTCheckResult> {
+    try {
+      // Dynamic import to avoid loading WASM unless needed
+      const { createWasmSolver } = await import('@isl-lang/solver-z3-wasm');
+      const wasmSolver = createWasmSolver({
+        timeout: this.config.timeout,
+        produceModels: this.config.produceModels,
+        verbose: this.config.verbose,
+        randomSeed: 0, // Fixed seed for deterministic execution
+      });
+      
+      return await wasmSolver.checkSat(formula, declarations);
+    } catch (error) {
+      return {
+        status: 'error',
+        message: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
   /**
    * Solve using enhanced builtin solver
    * 

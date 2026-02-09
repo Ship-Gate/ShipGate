@@ -9,9 +9,15 @@
  */
 
 import { existsSync } from 'fs';
-import { resolve } from 'path';
+import { resolve, extname } from 'path';
 import chalk from 'chalk';
-import { verifyProofBundle, formatVerificationResult, type VerifyOptions as ProofVerifyOptions } from '@isl-lang/proof';
+import { 
+  verifyProofBundle, 
+  formatVerificationResult, 
+  verifyZipBundle,
+  type VerifyOptions as ProofVerifyOptions,
+  type ZipVerifyOptions,
+} from '@isl-lang/proof';
 import { output } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
 import { isJsonOutput, isQuietOutput } from '../output.js';
@@ -93,15 +99,49 @@ export async function verifyProof(bundlePath: string, options: ProofVerifyComman
       };
     }
 
-    // Verify bundle
-    const verifyOptions: ProofVerifyOptions = {
-      signSecret: options.signSecret,
-      skipFileCheck: options.skipFileCheck,
-      skipSignatureCheck: options.skipSignatureCheck,
-      verbose: options.verbose ?? !isJson,
-    };
+    // Check if it's a ZIP file
+    const isZip = extname(resolvedPath).toLowerCase() === '.zip';
+    
+    let result;
+    if (isZip) {
+      // Verify ZIP bundle
+      const zipOptions: ZipVerifyOptions = {
+        zipPath: resolvedPath,
+        publicKey: options.signSecret, // For ed25519, signSecret is the public key
+        hmacSecret: options.signSecret, // For HMAC
+      };
+      
+      const zipResult = await verifyZipBundle(zipOptions);
+      
+      // Convert ZIP result to ProofVerifyResult format
+      result = {
+        valid: zipResult.valid,
+        verdict: zipResult.manifest?.verdict || 'UNPROVEN',
+        complete: zipResult.manifest ? true : false,
+        signatureValid: zipResult.signatureValid,
+        issues: zipResult.issues.map(i => ({
+          severity: i.severity,
+          code: i.code,
+          message: i.message,
+        })),
+        summary: {
+          totalChecks: zipResult.issues.length,
+          passedChecks: zipResult.issues.filter(i => i.severity !== 'error').length,
+          failedChecks: zipResult.issues.filter(i => i.severity === 'error').length,
+          warnings: zipResult.issues.filter(i => i.severity === 'warning').length,
+        },
+      };
+    } else {
+      // Verify directory bundle
+      const verifyOptions: ProofVerifyOptions = {
+        signSecret: options.signSecret,
+        skipFileCheck: options.skipFileCheck,
+        skipSignatureCheck: options.skipSignatureCheck,
+        verbose: options.verbose ?? !isJson,
+      };
 
-    const result = await verifyProofBundle(resolvedPath, verifyOptions);
+      result = await verifyProofBundle(resolvedPath, verifyOptions);
+    }
 
     return {
       success: result.valid,

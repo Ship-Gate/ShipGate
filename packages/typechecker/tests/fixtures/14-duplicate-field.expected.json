@@ -1,0 +1,30 @@
+[
+  {
+    "code": "ISL_T022",
+    "severity": "error",
+    "message": "Field 'name' is already defined in 'User'",
+    "location": {
+      "file": "14-duplicate-field.isl",
+      "line": 4,
+      "column": 5,
+      "endLine": 4,
+      "endColumn": 9
+    },
+    "source": "typechecker",
+    "relatedInformation": [
+      {
+        "message": "Previously defined here",
+        "location": {
+          "file": "14-duplicate-field.isl",
+          "line": 3,
+          "column": 5,
+          "endLine": 3,
+          "endColumn": 9
+        }
+      }
+    ],
+    "help": [
+      "Each field must have a unique name within its container"
+    ]
+  }
+]

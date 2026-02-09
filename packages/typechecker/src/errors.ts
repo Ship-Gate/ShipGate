@@ -41,51 +41,57 @@ export interface Diagnostic {
 // ============================================================================
 
 export const ErrorCodes = {
+  // Import resolution errors
+  CIRCULAR_IMPORT: 'ISL_T001',
+  MODULE_NOT_FOUND: 'ISL_T002',
+  READ_ERROR: 'ISL_T003',
+  PARSE_ERROR: 'ISL_T004',
+  
   // Type resolution errors
-  UNDEFINED_TYPE: TYPE_ERRORS.UNDEFINED_TYPE.code,
-  UNDEFINED_ENTITY: SEMANTIC_ERRORS.UNDEFINED_ENTITY.code,
-  UNDEFINED_FIELD: TYPE_ERRORS.UNDEFINED_FIELD.code,
-  UNDEFINED_VARIABLE: SEMANTIC_ERRORS.UNDEFINED_VARIABLE.code,
-  UNDEFINED_BEHAVIOR: SEMANTIC_ERRORS.UNDEFINED_BEHAVIOR.code,
-  UNDEFINED_ENUM_VARIANT: SEMANTIC_ERRORS.UNDEFINED_ENUM_VARIANT.code,
+  UNDEFINED_TYPE: 'ISL_T010',
+  UNDEFINED_ENTITY: 'ISL_T011',
+  UNDEFINED_FIELD: 'ISL_T012',
+  UNDEFINED_VARIABLE: 'ISL_T013',
+  UNDEFINED_BEHAVIOR: 'ISL_T014',
+  UNDEFINED_ENUM_VARIANT: 'ISL_T015',
   
   // Duplicate errors
-  DUPLICATE_TYPE: SEMANTIC_ERRORS.DUPLICATE_DEFINITION.code,
-  DUPLICATE_ENTITY: SEMANTIC_ERRORS.DUPLICATE_DEFINITION.code,
-  DUPLICATE_FIELD: SEMANTIC_ERRORS.DUPLICATE_DEFINITION.code,
-  DUPLICATE_BEHAVIOR: SEMANTIC_ERRORS.DUPLICATE_DEFINITION.code,
-  DUPLICATE_VARIABLE: SEMANTIC_ERRORS.DUPLICATE_DEFINITION.code,
-  DUPLICATE_PARAMETER: SEMANTIC_ERRORS.DUPLICATE_DEFINITION.code,
-  DUPLICATE_ENUM_VARIANT: SEMANTIC_ERRORS.DUPLICATE_DEFINITION.code,
+  DUPLICATE_TYPE: 'ISL_T020',
+  DUPLICATE_ENTITY: 'ISL_T021',
+  DUPLICATE_FIELD: 'ISL_T022',
+  DUPLICATE_BEHAVIOR: 'ISL_T023',
+  DUPLICATE_VARIABLE: 'ISL_T024',
+  DUPLICATE_PARAMETER: 'ISL_T025',
+  DUPLICATE_ENUM_VARIANT: 'ISL_T026',
   
   // Type mismatch errors
-  TYPE_MISMATCH: TYPE_ERRORS.TYPE_MISMATCH.code,
-  INCOMPATIBLE_TYPES: TYPE_ERRORS.INCOMPATIBLE_TYPES.code,
-  INVALID_OPERATOR: TYPE_ERRORS.INVALID_OPERATOR_FOR_TYPE.code,
-  INVALID_ARGUMENT_COUNT: TYPE_ERRORS.WRONG_NUMBER_OF_ARGUMENTS.code,
-  INVALID_ARGUMENT_TYPE: TYPE_ERRORS.INVALID_ARGUMENT_TYPE.code,
+  TYPE_MISMATCH: 'ISL_T030',
+  INCOMPATIBLE_TYPES: 'ISL_T031',
+  INVALID_OPERATOR: 'ISL_T032',
+  INVALID_ARGUMENT_COUNT: 'ISL_T033',
+  INVALID_ARGUMENT_TYPE: 'ISL_T034',
   
   // Context errors
-  OLD_OUTSIDE_POSTCONDITION: SEMANTIC_ERRORS.OLD_OUTSIDE_POSTCONDITION.code,
-  RESULT_OUTSIDE_POSTCONDITION: SEMANTIC_ERRORS.RESULT_OUTSIDE_POSTCONDITION.code,
-  INPUT_INVALID_FIELD: SEMANTIC_ERRORS.INPUT_INVALID_FIELD.code,
+  OLD_OUTSIDE_POSTCONDITION: 'ISL_T040',
+  RESULT_OUTSIDE_POSTCONDITION: 'ISL_T041',
+  INPUT_INVALID_FIELD: 'ISL_T042',
   
   // Lifecycle errors
-  INVALID_LIFECYCLE_STATE: SEMANTIC_ERRORS.INVALID_LIFECYCLE_STATE.code,
-  INVALID_LIFECYCLE_TRANSITION: SEMANTIC_ERRORS.INVALID_LIFECYCLE_TRANSITION.code,
-  UNDEFINED_LIFECYCLE_STATE: SEMANTIC_ERRORS.INVALID_LIFECYCLE_STATE.code,
+  INVALID_LIFECYCLE_STATE: 'ISL_T050',
+  INVALID_LIFECYCLE_TRANSITION: 'ISL_T051',
+  UNDEFINED_LIFECYCLE_STATE: 'ISL_T052',
   
   // Entity method errors
-  INVALID_ENTITY_LOOKUP: 'E0350',
-  INVALID_ENTITY_EXISTS: 'E0351',
+  INVALID_ENTITY_LOOKUP: 'ISL_T060',
+  INVALID_ENTITY_EXISTS: 'ISL_T061',
   
   // Constraint errors
-  INVALID_CONSTRAINT_VALUE: SEMANTIC_ERRORS.INVALID_CONSTRAINT_VALUE.code,
-  INVALID_CONSTRAINT_TYPE: SEMANTIC_ERRORS.INVALID_CONSTRAINT_VALUE.code,
+  INVALID_CONSTRAINT_VALUE: 'ISL_T070',
+  INVALID_CONSTRAINT_TYPE: 'ISL_T071',
   
   // Other errors
-  CIRCULAR_REFERENCE: TYPE_ERRORS.CIRCULAR_TYPE_REFERENCE.code,
-  INVALID_EXPRESSION: 'E0371',
+  CIRCULAR_REFERENCE: 'ISL_T080',
+  INVALID_EXPRESSION: 'ISL_T081',
 } as const;
 
 export type ErrorCode = typeof ErrorCodes[keyof typeof ErrorCodes];
@@ -160,7 +166,7 @@ export function undefinedTypeError(
     `Type '${name}' is not defined`,
     location,
     undefined,
-    undefined,
+    [`File: ${location.file}`, `Range: ${location.line}:${location.column}-${location.endLine}:${location.endColumn}`],
     help
   );
 }
@@ -207,7 +213,7 @@ export function undefinedFieldError(
     `Field '${fieldName}' does not exist on type '${typeName}'`,
     location,
     undefined,
-    undefined,
+    [`File: ${location.file}`, `Range: ${location.line}:${location.column}-${location.endLine}:${location.endColumn}`],
     help
   );
 }
@@ -525,7 +531,11 @@ export function circularReferenceError(
     `Circular reference detected: ${cycle.join(' -> ')} -> ${typeName}`,
     location,
     undefined,
-    ['Circular type references create infinite types'],
+    [
+      `File: ${location.file}`,
+      `Range: ${location.line}:${location.column}-${location.endLine}:${location.endColumn}`,
+      'Circular type references create infinite types',
+    ],
     ['Break the cycle by using Optional<T> or a reference type']
   );
 }

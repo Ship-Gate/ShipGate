@@ -7,7 +7,7 @@ import {
   context,
   Context,
 } from '@opentelemetry/api';
-import { ISLSemanticAttributes, ChaosInjectionType } from '../semantic-attributes';
+import { ISLSemanticAttributes, ChaosInjectionType } from '../semantic-attributes.js';
 
 /**
  * Configuration for chaos span

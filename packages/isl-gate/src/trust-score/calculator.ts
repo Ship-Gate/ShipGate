@@ -24,11 +24,13 @@ import type {
   ResolvedTrustConfig,
   ClauseStatus,
   TrustClauseResult,
+  EvidenceSource,
 } from './types.js';
 
 import {
   TRUST_CATEGORIES,
   DEFAULT_WEIGHTS,
+  EVIDENCE_PRIORITY,
 } from './types.js';
 
 // ============================================================================
@@ -128,6 +130,7 @@ export function calculateTrustScore(
 
 /**
  * Score a single category from its clause results.
+ * Applies evidence priority weighting and time decay if enabled.
  */
 function scoreSingleCategory(
   category: TrustCategory,
@@ -150,14 +153,43 @@ function scoreSingleCategory(
   }
 
   const counts = { pass: 0, fail: 0, partial: 0, unknown: 0 };
-  let scoreSum = 0;
+  let weightedScoreSum = 0;
+  let totalWeight = 0;
+  const now = Date.now();
 
   for (const clause of clauses) {
     counts[clause.status]++;
-    scoreSum += clauseStatusToScore(clause.status, config.unknownPenalty);
+    
+    // Base score from status
+    const baseScore = clauseStatusToScore(clause.status, config.unknownPenalty);
+    
+    // Evidence priority multiplier
+    const evidenceSource: EvidenceSource = clause.evidenceSource ?? 'heuristic';
+    const priorityMultiplier = config.enableEvidencePriority
+      ? EVIDENCE_PRIORITY[evidenceSource] / EVIDENCE_PRIORITY.heuristic
+      : 1.0;
+    
+    // Time decay multiplier
+    let decayMultiplier = 1.0;
+    if (config.evidenceDecayHalfLifeDays > 0 && clause.evidenceTimestamp) {
+      const evidenceTime = new Date(clause.evidenceTimestamp).getTime();
+      const ageDays = (now - evidenceTime) / (1000 * 60 * 60 * 24);
+      if (ageDays > 0) {
+        // Exponential decay: multiplier = 2^(-age/halfLife)
+        decayMultiplier = Math.pow(2, -ageDays / config.evidenceDecayHalfLifeDays);
+      }
+    }
+    
+    // Weighted score for this clause
+    const clauseWeight = priorityMultiplier * decayMultiplier;
+    weightedScoreSum += baseScore * clauseWeight;
+    totalWeight += clauseWeight;
   }
 
-  const rawScore = Math.round(scoreSum / clauses.length);
+  // Average weighted score
+  const rawScore = totalWeight > 0
+    ? Math.round(weightedScoreSum / totalWeight)
+    : 0;
   const score = clamp(rawScore, 0, 100);
 
   return {

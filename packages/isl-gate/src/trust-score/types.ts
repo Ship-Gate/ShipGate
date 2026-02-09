@@ -47,6 +47,21 @@ export type ClauseStatus = 'pass' | 'fail' | 'partial' | 'unknown';
 // ============================================================================
 
 /**
+ * Evidence source priority (higher = more trustworthy).
+ * Used to weight clause results based on verification method.
+ */
+export type EvidenceSource = 'smt' | 'runtime' | 'heuristic';
+
+/**
+ * Evidence source priority values (higher = more trustworthy).
+ */
+export const EVIDENCE_PRIORITY: Record<EvidenceSource, number> = {
+  smt: 3,      // Formal verification (highest trust)
+  runtime: 2,  // Runtime testing/verification
+  heuristic: 1, // Static analysis, heuristics (lowest trust)
+} as const;
+
+/**
  * A single clause result from verification.
  */
 export interface TrustClauseResult {
@@ -64,6 +79,10 @@ export interface TrustClauseResult {
   message?: string;
   /** Optional evidence artifact path */
   evidence?: string;
+  /** Evidence source type (defaults to 'heuristic' if not specified) */
+  evidenceSource?: EvidenceSource;
+  /** Timestamp when this evidence was collected (ISO string) */
+  evidenceTimestamp?: string;
 }
 
 /**
@@ -79,6 +98,10 @@ export interface TrustScoreInput {
     implFile?: string;
     timestamp?: string;
     durationMs?: number;
+    /** Project root directory for fingerprinting */
+    projectRoot?: string;
+    /** Project fingerprint (auto-computed if not provided) */
+    projectFingerprint?: string;
   };
 }
 
@@ -150,6 +173,22 @@ export interface TrustScoreConfig {
    * Default: 50
    */
   maxHistoryEntries?: number;
+
+  /**
+   * Enable evidence source priority weighting.
+   * When true, SMT evidence is weighted higher than runtime, which is higher than heuristics.
+   * Default: true
+   */
+  enableEvidencePriority?: boolean;
+
+  /**
+   * Enable time-based decay for evidence.
+   * When true, older evidence contributes less to the score.
+   * Decay half-life in days (default: 90 days).
+   * Set to 0 to disable decay.
+   * Default: 90
+   */
+  evidenceDecayHalfLifeDays?: number;
 }
 
 /**
@@ -164,6 +203,8 @@ export interface ResolvedTrustConfig {
   criticalFailsBlock: boolean;
   historyPath: string;
   maxHistoryEntries: number;
+  enableEvidencePriority: boolean;
+  evidenceDecayHalfLifeDays: number;
 }
 
 // ============================================================================
@@ -247,12 +288,20 @@ export interface TrustHistoryEntry {
   specFile?: string;
   /** Optional git commit hash */
   commitHash?: string;
+  /** Project fingerprint for this entry */
+  projectFingerprint?: string;
   /** Clause counts */
   counts: {
     pass: number;
     fail: number;
     partial: number;
     unknown: number;
+  };
+  /** Evidence breakdown by source */
+  evidenceBreakdown?: {
+    smt: number;
+    runtime: number;
+    heuristic: number;
   };
 }
 
@@ -288,6 +337,8 @@ export interface TrustHistory {
   entries: TrustHistoryEntry[];
   /** Last updated timestamp */
   lastUpdated: string;
+  /** Project fingerprint (computed from project root) */
+  projectFingerprint?: string;
 }
 
 // ============================================================================

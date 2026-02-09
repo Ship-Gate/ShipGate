@@ -116,6 +116,27 @@ export function isTracingEnabled(): boolean {
   return _enabled;
 }
 
+/**
+ * Get the current trace ID from the active span.
+ * Returns null if no active span or tracing is disabled.
+ */
+export function getCurrentTraceId(): string | null {
+  if (!_enabled) return null;
+  
+  const span = trace.getActiveSpan();
+  if (!span) return null;
+  
+  const spanContext = span.spanContext();
+  const traceId = spanContext.traceId;
+  
+  // Return null if trace ID is invalid (all zeros)
+  if (!traceId || traceId === '00000000000000000000000000000000') {
+    return null;
+  }
+  
+  return traceId;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Tracer access
 // ─────────────────────────────────────────────────────────────────────────────

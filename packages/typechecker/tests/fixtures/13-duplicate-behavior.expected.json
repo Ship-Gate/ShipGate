@@ -1,0 +1,30 @@
+[
+  {
+    "code": "ISL_T023",
+    "severity": "error",
+    "message": "Behavior 'CreateUser' is already defined",
+    "location": {
+      "file": "13-duplicate-behavior.isl",
+      "line": 11,
+      "column": 11,
+      "endLine": 11,
+      "endColumn": 21
+    },
+    "source": "typechecker",
+    "relatedInformation": [
+      {
+        "message": "Previously defined here",
+        "location": {
+          "file": "13-duplicate-behavior.isl",
+          "line": 3,
+          "column": 11,
+          "endLine": 3,
+          "endColumn": 21
+        }
+      }
+    ],
+    "help": [
+      "Rename one of the behaviors or remove the duplicate"
+    ]
+  }
+]

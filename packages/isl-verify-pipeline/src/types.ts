@@ -834,10 +834,28 @@ export interface UnknownReason {
     | 'evaluation_error'   // Error during expression evaluation
     | 'unsupported_expr'   // Expression type not supported
     | 'timeout'            // Evaluation timed out
-    | 'smt_unknown';       // SMT solver returned unknown
+    | 'smt_unknown'        // SMT solver returned unknown
+    | 'missing_bindings'   // Required variables/inputs not available
+    | 'unsupported_smt_fragment' // Expression cannot be encoded for SMT
+    | 'runtime_data_unavailable'; // Traces or runtime data missing
   
   /** Human-readable explanation */
   message: string;
+  
+  /** Actionable remediation steps */
+  remediation?: string[];
+  
+  /** Whether this unknown can potentially be resolved */
+  mitigatable?: boolean;
+  
+  /** Suggested mitigation strategies */
+  suggestedMitigations?: Array<
+    | 'runtime_sampling'
+    | 'fallback_check'
+    | 'constraint_slicing'
+    | 'smt_retry'
+    | 'add_bindings'
+  >;
   
   /** Additional context */
   details?: Record<string, unknown>;

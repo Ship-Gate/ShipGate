@@ -25,9 +25,60 @@ env:
 
 jobs:
   # ============================================================
+  # Lockfile reproducibility check — ensures lockfile is in sync
+  # ============================================================
+  lockfile-check:
+    name: Lockfile Reproducibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Store lockfile hash before install
+        id: before
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            echo "hash=$(sha256sum pnpm-lock.yaml | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+          else
+            echo "::error::pnpm-lock.yaml not found"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check lockfile unchanged
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            AFTER_HASH=$(sha256sum pnpm-lock.yaml | cut -d' ' -f1)
+            if [ "$AFTER_HASH" != "${{ steps.before.outputs.hash }}" ]; then
+              echo "::error::Lockfile changed after install. This indicates drift between package.json and pnpm-lock.yaml"
+              echo "Run 'pnpm install' locally and commit the updated pnpm-lock.yaml"
+              exit 1
+            fi
+            echo "✓ Lockfile is reproducible"
+          else
+            echo "::error::pnpm-lock.yaml missing after install"
+            exit 1
+          fi
+
+  # ============================================================
   # Fast gate: build + typecheck + lint  (single turbo call)
   # ============================================================
   build-check:
+    needs: lockfile-check
     name: Build / Typecheck / Lint
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -193,6 +244,34 @@ jobs:
           done
 
   # ============================================================
+  # License compliance check — verifies MIT licensing
+  # ============================================================
+  compliance-licenses:
+    name: License Compliance
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify license compliance
+        run: pnpm compliance:verify-licenses
+
+  # ============================================================
   # Security audit — parallel, non-blocking
   # ============================================================
   audit:
@@ -315,20 +394,92 @@ jobs:
           "
 
   # ============================================================
+  # Performance Regression Test — runs benchmarks and checks for regressions
+  # ============================================================
+  performance-regression:
+    name: Performance Regression Test
+    runs-on: ubuntu-latest
+    needs: build-check
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-node20-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-node20-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (from cache)
+        run: pnpm turbo run build --cache-dir=.turbo
+
+      - name: Restore baseline
+        uses: actions/cache@v4
+        with:
+          path: .test-temp/performance-baseline.json
+          key: performance-baseline-${{ runner.os }}-node20
+          restore-keys: |
+            performance-baseline-${{ runner.os }}-node20-
+
+      - name: Run performance benchmarks
+        run: pnpm bench:ci
+        continue-on-error: true
+
+      - name: Upload benchmark results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-benchmark-results
+          path: .test-temp/performance-benchmark-report.json
+          retention-days: 30
+
+      - name: Save baseline (main branch only)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          mkdir -p .test-temp
+          if [ -f .test-temp/performance-benchmark-report.json ]; then
+            cp .test-temp/performance-benchmark-report.json .test-temp/performance-baseline.json
+            echo "Baseline updated on main branch"
+          fi
+
+  # ============================================================
   # CI Gate — summarizes all required checks
   # ============================================================
   ci-gate:
     name: CI Gate
     runs-on: ubuntu-latest
-    needs: [build-check, test-unit]
+    needs: [lockfile-check, build-check, test-unit, compliance-licenses, performance-regression]
     if: always()
     steps:
       - name: Check required jobs
         run: |
-          echo "build-check: ${{ needs.build-check.result }}"
-          echo "test-unit:   ${{ needs.test-unit.result }}"
-          if [ "${{ needs.build-check.result }}" != "success" ] || [ "${{ needs.test-unit.result }}" != "success" ]; then
+          echo "lockfile-check:        ${{ needs.lockfile-check.result }}"
+          echo "build-check:           ${{ needs.build-check.result }}"
+          echo "test-unit:             ${{ needs.test-unit.result }}"
+          echo "compliance-licenses:   ${{ needs.compliance-licenses.result }}"
+          echo "performance-regression: ${{ needs.performance-regression.result }}"
+          if [ "${{ needs.lockfile-check.result }}" != "success" ] || [ "${{ needs.build-check.result }}" != "success" ] || [ "${{ needs.test-unit.result }}" != "success" ] || [ "${{ needs.compliance-licenses.result }}" != "success" ]; then
             echo "::error::Required CI checks failed"
             exit 1
+          fi
+          if [ "${{ needs.performance-regression.result }}" == "failure" ]; then
+            echo "::warning::Performance regression detected (non-blocking)"
           fi
           echo "All required checks passed"

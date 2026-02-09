@@ -1,15 +1,15 @@
 import { trace, context, SpanStatusCode, SpanKind, Attributes } from '@opentelemetry/api';
 import type { Request, Response, NextFunction, RequestHandler } from 'express';
-import { ISLSemanticAttributes } from '../semantic-attributes';
+import { ISLSemanticAttributes } from '../semantic-attributes.js';
 import {
   ISL_HEADERS,
   parseISLHeaders,
   ISLContextData,
   setISLContext,
   getISLContext,
-} from '../propagation/isl-context';
-import { BehaviorSpan } from '../spans/behavior';
-import { VerificationSpan } from '../spans/verification';
+} from '../propagation/isl-context.js';
+import { BehaviorSpan } from '../spans/behavior.js';
+import { VerificationSpan } from '../spans/verification.js';
 
 /**
  * Express instrumentation options
