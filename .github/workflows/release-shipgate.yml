@@ -1,3 +1,7 @@
+# Release Shipgate CLI to npm and create GitHub Release.
+# Tag triggers (shipgate@* or v*) run full publish. Use workflow_dispatch with dry_run: true to validate without publishing.
+# Prefer creating release tags from main after CI and critical-tests pass.
+
 name: Release Shipgate CLI
 
 on:
@@ -11,6 +15,11 @@ on:
         description: 'Version tag to publish (e.g., shipgate@1.0.0)'
         required: true
         type: string
+      dry_run:
+        description: 'If true, build and test only; do not publish to npm or create GitHub Release'
+        required: false
+        default: true
+        type: boolean
 
 concurrency:
   group: release-shipgate-${{ github.ref }}
@@ -28,6 +37,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Determine dry run
+        id: dry_run
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ github.event.inputs.dry_run }}" >> $GITHUB_OUTPUT
+          else
+            echo "value=false" >> $GITHUB_OUTPUT
+          fi
+          echo "Dry run: ${{ steps.dry_run.outputs.value }}"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
@@ -51,17 +70,17 @@ jobs:
       - name: Verify build output
         working-directory: packages/cli
         run: |
-          if [ ! -f dist/cli.js ]; then
-            echo "Error: dist/cli.js not found"
+          if [ ! -f dist/cli.cjs ]; then
+            echo "Error: dist/cli.cjs not found"
             exit 1
           fi
-          if [ ! -s dist/cli.js ]; then
-            echo "Error: dist/cli.js is empty"
+          if [ ! -s dist/cli.cjs ]; then
+            echo "Error: dist/cli.cjs is empty"
             exit 1
           fi
           # Verify shebang
-          if ! head -1 dist/cli.js | grep -q '#!/usr/bin/env node'; then
-            echo "Error: Missing shebang in dist/cli.js"
+          if ! head -1 dist/cli.cjs | grep -q '#!/usr/bin/env node'; then
+            echo "Error: Missing shebang in dist/cli.cjs"
             exit 1
           fi
           echo "✓ Build output verified"
@@ -91,12 +110,16 @@ jobs:
         working-directory: packages/cli
         run: |
           # Test CLI help
-          node dist/cli.js --help > /dev/null || exit 1
+          node dist/cli.cjs --help > /dev/null || exit 1
           # Test version
-          node dist/cli.js --version > /dev/null || exit 1
+          node dist/cli.cjs --version > /dev/null || exit 1
+          echo "✓ Inline smoke checks passed"
+          # Full smoke test suite (vitest)
+          pnpm run test:smoke
           echo "✓ Smoke tests passed"
 
       - name: Publish to npm
+        if: steps.dry_run.outputs.value != 'true'
         working-directory: packages/cli
         run: |
           npm publish --access public --provenance
@@ -104,12 +127,14 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Verify published package
+        if: steps.dry_run.outputs.value != 'true'
         run: |
           sleep 5
           npm view shipgate@${{ steps.version.outputs.version }} version || exit 1
           echo "✓ Package published successfully"
 
       - name: Create GitHub Release
+        if: steps.dry_run.outputs.value != 'true'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: shipgate@${{ steps.version.outputs.version }}
@@ -139,3 +164,8 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Dry run summary
+        if: steps.dry_run.outputs.value == 'true'
+        run: |
+          echo "✓ Dry run complete: build and tests passed; publish and GitHub Release skipped."
