@@ -45,13 +45,14 @@ export class OpenAIProvider extends BaseProvider {
 
     const content = response.choices[0]?.message?.content ?? '';
 
+    const usage = (response as { usage?: { prompt_tokens?: number; completion_tokens?: number } }).usage;
     return {
       content,
       type: 'isl',
       confidence: 0.85,
       tokens: {
-        input: response.usage?.prompt_tokens ?? 0,
-        output: response.usage?.completion_tokens ?? 0,
+        input: usage?.prompt_tokens ?? 0,
+        output: usage?.completion_tokens ?? 0,
       },
     };
   }
@@ -71,7 +72,7 @@ ${request.suffix ? `\nSuffix:\n\`\`\`isl\n${request.suffix}\n\`\`\`` : ''}
 
 Provide ${request.maxCompletions ?? 3} possible completions.`;
 
-    const response = await this.client.chat.completions.create({
+    const createOptions = {
       model: this.model,
       max_tokens: 1024,
       temperature: 0.3,
@@ -80,7 +81,8 @@ Provide ${request.maxCompletions ?? 3} possible completions.`;
         { role: 'system', content: this.buildSystemPrompt() },
         { role: 'user', content: prompt },
       ],
-    });
+    };
+    const response = await this.client.chat.completions.create(createOptions as Parameters<OpenAI['chat']['completions']['create']>[0]);
 
     return {
       completions: response.choices.map((choice, i) => ({
@@ -107,7 +109,7 @@ Provide ${request.maxCompletions ?? 3} possible completions.`;
 
     let fullContent = '';
 
-    const stream = await this.client.chat.completions.create({
+    const streamOpts = {
       model: this.model,
       max_tokens: this.config?.maxTokens ?? 4096,
       temperature: this.config?.temperature ?? 0.7,
@@ -116,10 +118,11 @@ Provide ${request.maxCompletions ?? 3} possible completions.`;
         { role: 'system', content: systemPrompt },
         { role: 'user', content: fullPrompt },
       ],
-    });
-
-    for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content ?? '';
+    };
+    const stream = await this.client.chat.completions.create(streamOpts as Parameters<OpenAI['chat']['completions']['create']>[0]);
+    const streamIter = stream as unknown as AsyncIterable<{ choices?: Array<{ delta?: { content?: string } }> }>;
+    for await (const chunk of streamIter) {
+      const content = chunk.choices?.[0]?.delta?.content ?? '';
       if (content) {
         fullContent += content;
         onChunk(content);

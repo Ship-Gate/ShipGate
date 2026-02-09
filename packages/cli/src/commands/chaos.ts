@@ -23,6 +23,11 @@ import {
 import { output } from '../output.js';
 import { loadConfig } from '../config.js';
 import type { DomainDeclaration } from '@isl-lang/isl-core/ast';
+import type {
+  BehaviorImplementation,
+  BehaviorExecutionResult,
+  ResilienceVerifyInput,
+} from '@isl-lang/verifier-chaos';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -173,8 +178,8 @@ async function runChaosVerification(
     });
 
     // Create an implementation adapter that simulates realistic behavior
-    const createImpl = (behaviorName: string): chaos.BehaviorImplementation => ({
-      async execute(input: Record<string, unknown>): Promise<chaos.BehaviorExecutionResult> {
+    const createImpl = (behaviorName: string): BehaviorImplementation => ({
+      async execute(input: Record<string, unknown>): Promise<BehaviorExecutionResult> {
         // Simulate real behavior with potential failures
         const random = Math.random();
         
@@ -214,68 +219,121 @@ async function runChaosVerification(
           checkInvariants: true,
         });
 
-        const result = await verifier.verify({
-          domain: domain as unknown as Parameters<typeof verifier.verify>[0]['domain'],
+        const verifyInput: ResilienceVerifyInput = {
+          domain,
           implementation: impl,
           behaviorName,
-        });
+        };
+        const result = await verifier.verify(verifyInput);
 
         // Process scenario results from chaos engine
-        for (const scenario of result.scenarios || []) {
+        const scenarios = result.scenarios || [];
+        for (const scenario of scenarios) {
+          const scenarioName = typeof scenario === 'object' && scenario !== null && 'name' in scenario
+            ? String(scenario.name)
+            : 'unknown';
+          const scenarioPassed = typeof scenario === 'object' && scenario !== null && 'passed' in scenario
+            ? Boolean(scenario.passed)
+            : false;
+          const scenarioDuration = typeof scenario === 'object' && scenario !== null && 'duration' in scenario
+            ? Number(scenario.duration)
+            : 0;
+          const scenarioInjections = typeof scenario === 'object' && scenario !== null && 'injections' in scenario && Array.isArray(scenario.injections)
+            ? scenario.injections.map((i: unknown) => {
+                if (typeof i === 'object' && i !== null && 'type' in i) {
+                  return String(i.type);
+                }
+                return String(i);
+              })
+            : [];
+          const scenarioError = typeof scenario === 'object' && scenario !== null && 'error' in scenario
+            ? scenario.error
+            : undefined;
+
           const testResult: ChaosTestResult = {
-            name: scenario.name,
+            name: scenarioName,
             type: 'chaos',
-            passed: scenario.passed,
-            duration: scenario.duration,
-            injections: scenario.injections?.map((i: { type: string }) => i.type) || [],
+            passed: scenarioPassed,
+            duration: scenarioDuration,
+            injections: scenarioInjections,
           };
           
-          if (scenario.passed) {
+          if (scenarioPassed) {
             passed.push(testResult);
           } else {
-            testResult.error = scenario.error ? { message: scenario.error.message } : undefined;
+            if (scenarioError && typeof scenarioError === 'object' && 'message' in scenarioError) {
+              testResult.error = { message: String(scenarioError.message) };
+            }
             failed.push(testResult);
           }
           
           // Track injection types
-          (scenario.injections || []).forEach((i: { type: string }) => 
-            coveredInjectionTypes.add(i.type)
-          );
+          scenarioInjections.forEach((i: string) => coveredInjectionTypes.add(i));
         }
 
         // If no scenarios ran, create synthetic results from chaos events
         if (!result.scenarios || result.scenarios.length === 0) {
-          for (const event of result.chaosEvents || []) {
+          const chaosEvents = result.chaosEvents || [];
+          for (const event of chaosEvents) {
+            const eventType = typeof event === 'object' && event !== null && 'type' in event
+              ? String(event.type)
+              : 'unknown';
+            const eventOutcome = typeof event === 'object' && event !== null && 'outcome' in event
+              ? event.outcome
+              : undefined;
+            const handled = eventOutcome && typeof eventOutcome === 'object' && 'handled' in eventOutcome
+              ? Boolean(eventOutcome.handled)
+              : true;
+            const durationMs = eventOutcome && typeof eventOutcome === 'object' && 'durationMs' in eventOutcome
+              ? Number(eventOutcome.durationMs)
+              : 0;
+            const eventError = eventOutcome && typeof eventOutcome === 'object' && 'error' in eventOutcome
+              ? eventOutcome.error
+              : undefined;
+
             const testResult: ChaosTestResult = {
-              name: `${behaviorName}:${event.type}`,
+              name: `${behaviorName}:${eventType}`,
               type: 'chaos',
-              passed: event.outcome?.handled ?? true,
-              duration: event.outcome?.durationMs ?? 0,
-              injections: [event.type],
+              passed: handled,
+              duration: durationMs,
+              injections: [eventType],
             };
             
             if (testResult.passed) {
               passed.push(testResult);
             } else {
-              testResult.error = event.outcome?.error 
-                ? { message: event.outcome.error.message }
-                : undefined;
+              if (eventError && typeof eventError === 'object' && 'message' in eventError) {
+                testResult.error = { message: String(eventError.message) };
+              }
               failed.push(testResult);
             }
             
-            coveredInjectionTypes.add(event.type);
+            coveredInjectionTypes.add(eventType);
           }
         }
 
         // Add violation-based failures
-        if (result.violationReport && result.violationReport.total > 0) {
-          for (const violation of result.violationReport.violations || []) {
+        const violationReport = result.violationReport;
+        if (violationReport && typeof violationReport === 'object' && 'total' in violationReport && Number(violationReport.total) > 0) {
+          const violations = 'violations' in violationReport && Array.isArray(violationReport.violations)
+            ? violationReport.violations
+            : [];
+          for (const violation of violations) {
+            const invariant = typeof violation === 'object' && violation !== null && 'invariant' in violation
+              ? String(violation.invariant)
+              : 'unknown';
+            const expected = typeof violation === 'object' && violation !== null && 'expected' in violation
+              ? String(violation.expected)
+              : 'unknown';
+            const actual = typeof violation === 'object' && violation !== null && 'actual' in violation
+              ? String(violation.actual)
+              : 'unknown';
             failed.push({
-              name: `${behaviorName}:violation:${violation.invariant}`,
+              name: `${behaviorName}:violation:${invariant}`,
               type: 'chaos',
               passed: false,
               duration: 0,
-              error: { message: `Invariant violated: ${violation.expected} vs ${violation.actual}` },
+              error: { message: `Invariant violated: ${expected} vs ${actual}` },
               injections: [],
             });
           }
@@ -297,27 +355,42 @@ async function runChaosVerification(
           );
 
           // Process results
-          for (const p of result.passed) {
+          const passedResults = Array.isArray(result.passed) ? result.passed : [];
+          for (const p of passedResults) {
+            const pName = typeof p === 'object' && p !== null && 'name' in p ? String(p.name) : 'unknown';
+            const pDuration = typeof p === 'object' && p !== null && 'duration' in p ? Number(p.duration) : 0;
+            const pInjections = typeof p === 'object' && p !== null && 'injections' in p && Array.isArray(p.injections)
+              ? p.injections.map((i: unknown) => String(i))
+              : [];
             passed.push({
-              name: p.name,
+              name: pName,
               type: 'chaos',
               passed: true,
-              duration: p.duration,
-              injections: p.injections,
+              duration: pDuration,
+              injections: pInjections,
             });
-            p.injections.forEach((i: string) => coveredInjectionTypes.add(i));
+            pInjections.forEach((i: string) => coveredInjectionTypes.add(i));
           }
 
-          for (const f of result.failed) {
+          const failedResults = Array.isArray(result.failed) ? result.failed : [];
+          for (const f of failedResults) {
+            const fName = typeof f === 'object' && f !== null && 'name' in f ? String(f.name) : 'unknown';
+            const fDuration = typeof f === 'object' && f !== null && 'duration' in f ? Number(f.duration) : 0;
+            const fInjections = typeof f === 'object' && f !== null && 'injections' in f && Array.isArray(f.injections)
+              ? f.injections.map((i: unknown) => String(i))
+              : [];
+            const fError = typeof f === 'object' && f !== null && 'error' in f ? f.error : undefined;
             failed.push({
-              name: f.name,
+              name: fName,
               type: 'chaos',
               passed: false,
-              duration: f.duration,
-              error: f.error,
-              injections: f.injections,
+              duration: fDuration,
+              error: fError && typeof fError === 'object' && 'message' in fError
+                ? { message: String(fError.message) }
+                : undefined,
+              injections: fInjections,
             });
-            f.injections.forEach((i: string) => coveredInjectionTypes.add(i));
+            fInjections.forEach((i: string) => coveredInjectionTypes.add(i));
           }
         } catch {
           // Final fallback: generate synthetic chaos scenarios
@@ -501,11 +574,16 @@ async function runChaosWithHarness(
 
   // Parse scenarios
   const parseResult = chaos.parseChaosScenarios(domain);
-  let scenarios = parseResult.scenarios;
+  let scenarios = parseResult.scenarios || [];
   
   // Filter by scenario names if specified
   if (options.scenario && options.scenario.length > 0) {
-    scenarios = scenarios.filter(s => options.scenario!.includes(s.name));
+    scenarios = scenarios.filter((s: unknown) => {
+      if (typeof s === 'object' && s !== null && 'name' in s) {
+        return options.scenario!.includes(String(s.name));
+      }
+      return false;
+    });
   }
 
   if (scenarios.length === 0) {
@@ -529,8 +607,8 @@ async function runChaosWithHarness(
   }
 
   // Create implementation
-  const createImpl = (behaviorName: string): chaos.BehaviorImplementation => ({
-    async execute(input: Record<string, unknown>): Promise<chaos.BehaviorExecutionResult> {
+  const createImpl = (behaviorName: string): BehaviorImplementation => ({
+    async execute(input: Record<string, unknown>): Promise<BehaviorExecutionResult> {
       const random = Math.random();
       if (random < 0.1) {
         return { 
@@ -557,25 +635,59 @@ async function runChaosWithHarness(
     const harnessResult = await harness.runTrials(scenario, domain, impl, numTrials);
 
     // Convert harness results to test results
-    for (const trial of harnessResult.trials) {
+    const trials = harnessResult.trials || [];
+    for (const trial of trials) {
+      const trialNum = typeof trial === 'object' && trial !== null && 'trial' in trial
+        ? Number(trial.trial)
+        : 0;
+      const trialOutcome = typeof trial === 'object' && trial !== null && 'outcome' in trial
+        ? trial.outcome
+        : { passed: false, durationMs: 0 };
+      const trialPassed = typeof trialOutcome === 'object' && trialOutcome !== null && 'passed' in trialOutcome
+        ? Boolean(trialOutcome.passed)
+        : false;
+      const trialDuration = typeof trialOutcome === 'object' && trialOutcome !== null && 'durationMs' in trialOutcome
+        ? Number(trialOutcome.durationMs)
+        : 0;
+      const trialErrors = typeof trialOutcome === 'object' && trialOutcome !== null && 'errors' in trialOutcome && Array.isArray(trialOutcome.errors)
+        ? trialOutcome.errors
+        : [];
+      const scenarioName = typeof scenario === 'object' && scenario !== null && 'name' in scenario
+        ? String(scenario.name)
+        : 'unknown';
+      const scenarioInjections = typeof scenario === 'object' && scenario !== null && 'injections' in scenario && Array.isArray(scenario.injections)
+        ? scenario.injections
+        : [];
+      const injectionTypes = scenarioInjections.map((i: unknown) => {
+        if (typeof i === 'object' && i !== null && 'type' in i) {
+          return String(i.type);
+        }
+        return String(i);
+      });
+
       const testResult: ChaosTestResult = {
-        name: `${scenario.name} (trial ${trial.trial})`,
+        name: `${scenarioName} (trial ${trialNum})`,
         type: 'chaos',
-        passed: trial.outcome.passed,
-        duration: trial.outcome.durationMs,
-        injections: scenario.injections.map(i => i.type),
+        passed: trialPassed,
+        duration: trialDuration,
+        injections: injectionTypes,
       };
 
-      if (trial.outcome.passed) {
+      if (trialPassed) {
         passed.push(testResult);
       } else {
-        testResult.error = trial.outcome.errors?.[0] 
-          ? { message: trial.outcome.errors[0].message }
-          : undefined;
+        const firstError = trialErrors[0];
+        if (firstError && typeof firstError === 'object' && 'message' in firstError) {
+          testResult.error = { message: String(firstError.message) };
+        }
         failed.push(testResult);
       }
 
-      scenario.injections.forEach(i => coveredInjectionTypes.add(i.type));
+      scenarioInjections.forEach((i: unknown) => {
+        if (typeof i === 'object' && i !== null && 'type' in i) {
+          coveredInjectionTypes.add(String(i.type));
+        }
+      });
     }
   }
 
@@ -728,28 +840,40 @@ export async function chaos(specFile: string, options: ChaosOptions): Promise<Ch
       mergeAST: true,
     });
     
-    if (graph.errors.length > 0) {
-      const criticalErrors = graph.errors.filter(e => 
-        e.code === 'CIRCULAR_DEPENDENCY' || e.code === 'MODULE_NOT_FOUND'
-      );
-      
-      if (criticalErrors.length > 0) {
-        spinner.fail('Failed to resolve imports');
-        return {
-          success: false,
-          specFile: specPath,
-          implFile: implPath,
-          errors: graph.errors.map(e => `Import error: ${e.message}`),
-          duration: Date.now() - startTime,
-        };
-      }
-      
-      if (options.verbose) {
-        for (const err of graph.errors) {
-          output.debug(`[Import Warning] ${err.message}`);
+      if (graph.errors.length > 0) {
+        const criticalErrors = graph.errors.filter((e: unknown) => {
+          if (typeof e === 'object' && e !== null && 'code' in e) {
+            const code = String(e.code);
+            return code === 'CIRCULAR_DEPENDENCY' || code === 'MODULE_NOT_FOUND';
+          }
+          return false;
+        });
+        
+        if (criticalErrors.length > 0) {
+          spinner.fail('Failed to resolve imports');
+          return {
+            success: false,
+            specFile: specPath,
+            implFile: implPath,
+            errors: graph.errors.map((e: unknown) => {
+              if (typeof e === 'object' && e !== null && 'message' in e) {
+                return `Import error: ${String(e.message)}`;
+              }
+              return 'Import error: unknown error';
+            }),
+            duration: Date.now() - startTime,
+          };
+        }
+        
+        if (options.verbose) {
+          for (const err of graph.errors) {
+            const errMessage = typeof err === 'object' && err !== null && 'message' in err
+              ? String(err.message)
+              : 'Unknown error';
+            output.debug(`[Import Warning] ${errMessage}`);
+          }
         }
       }
-    }
     
     ast = getMergedAST(graph) as DomainDeclaration | undefined;
     

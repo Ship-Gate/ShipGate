@@ -4,8 +4,8 @@
  * Removes unused dependencies or adds missing dependencies to package.json.
  */
 
-import type { Finding } from '@isl-lang/isl-gate';
-import type { FixContext, FixSuggestion } from '../shipgate-fixes.js';
+import type { Finding } from '@isl-lang/gate';
+import type { FixContext, ShipgateFixSuggestion } from '../shipgate-fixes.js';
 import { readFileSafe } from '../shipgate-fixes.js';
 import { createPatch } from '../patcher.js';
 import { join } from 'path';
@@ -197,8 +197,8 @@ function findDependencyLine(
 export async function fixPhantomDependency(
   finding: Finding,
   context: FixContext
-): Promise<FixSuggestion[]> {
-  const suggestions: FixSuggestion[] = [];
+): Promise<ShipgateFixSuggestion[]> {
+  const suggestions: ShipgateFixSuggestion[] = [];
   const depInfo = extractDependencyName(finding);
 
   if (!depInfo) {
@@ -227,7 +227,7 @@ export async function fixPhantomDependency(
     // Add missing dependency
     const section = determineDependencySection(depName, pkg);
     const newContent = addDependency(content, depName, section);
-    const lineNumber = findDependencyLine(content, depName, section);
+    findDependencyLine(content, depName, section);
 
     const patch = createPatch('replace', 1, {
       file: pkgJsonPath,
@@ -247,7 +247,7 @@ export async function fixPhantomDependency(
   } else {
     // Remove unused dependency (only in dry-run unless user confirms)
     const newContent = removeDependency(content, depName);
-    const lineNumber = findDependencyLine(
+    findDependencyLine(
       content,
       depName,
       'dependencies' // Simplified - would check all sections

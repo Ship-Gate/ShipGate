@@ -1,6 +1,7 @@
 {
   "name": "@isl-demos/e2e-login",
   "version": "0.1.0",
+  "license": "MIT",
   "description": "End-to-end demo: NL → ISL → Code → Gate → Heal → Test → Proof",
   "type": "module",
   "private": true,
@@ -15,7 +16,6 @@
     "@isl-lang/translator": "workspace:*",
     "@isl-lang/generator": "workspace:*",
     "@isl-lang/pipeline": "workspace:*",
-    "@isl-lang/healer": "workspace:*",
     "@isl-lang/proof": "workspace:*",
     "zod": "^3.22.0",
     "picocolors": "^1.1.1"

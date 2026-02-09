@@ -127,15 +127,21 @@ export async function fmt(file: string, options: FmtOptions = {}): Promise<FmtRe
     
     if (!parseResult.success || !parseResult.domain) {
       spinner?.fail('Parse failed - cannot format invalid ISL');
-      const parseErrors = parseResult.errors || [];
+      const parseErrors = Array.isArray(parseResult.errors) ? parseResult.errors : [];
       return {
         success: false,
         file: filePath,
         formatted: false,
-        errors: parseErrors.map(e => {
+        errors: parseErrors.map((e: unknown) => {
           if (typeof e === 'string') return e;
-          if (e.message) return e.message;
-          if (e.code) return `[${e.code}] ${e.message || 'Parse error'}`;
+          if (typeof e === 'object' && e !== null) {
+            if ('message' in e) return String(e.message);
+            if ('code' in e) {
+              const code = String(e.code);
+              const message = 'message' in e ? String(e.message) : 'Parse error';
+              return `[${code}] ${message}`;
+            }
+          }
           return String(e);
         }),
         duration: Date.now() - startTime,

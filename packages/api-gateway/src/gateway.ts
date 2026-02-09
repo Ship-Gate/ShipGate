@@ -4,7 +4,7 @@
  * Main gateway class that orchestrates ISL-aware request handling.
  */
 
-import { parseISL, type DomainDeclaration } from '@isl-lang/isl-core';
+import { parse as parseISL, type DomainDeclaration } from '@isl-lang/parser';
 import { RouteHandler, type RouteMatch } from './router.js';
 import { RequestValidator, type ValidationResult } from './validator.js';
 import { ResponseTransformer } from './transformer.js';
@@ -149,10 +149,11 @@ export class ISLGateway {
         );
       }
 
-      if (result.ast) {
-        this.domains.set(result.ast.name.name, result.ast);
-        this.router.registerDomain(result.ast);
-        this.validator.registerDomain(result.ast);
+      const domain = result.domain;
+      if (domain) {
+        this.domains.set(domain.name.name, domain);
+        this.router.registerDomain(domain);
+        this.validator.registerDomain(domain);
       }
     }
   }

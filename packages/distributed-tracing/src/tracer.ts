@@ -29,7 +29,7 @@ import type {
   SpanKind,
   TracedBehavior,
   TracingMetrics,
-} from './types';
+} from './types.js';
 
 // ISL-specific semantic conventions
 const ISL_ATTRIBUTES = {
@@ -304,7 +304,8 @@ export class ISLTracer {
     }
   }
 
-  private mapSpanKind(kind: SpanKind): OtelSpanKind {
+  private mapSpanKind(kind: SpanKind | undefined): OtelSpanKind {
+    const k: SpanKind = kind ?? 'INTERNAL';
     const mapping: Record<SpanKind, OtelSpanKind> = {
       INTERNAL: OtelSpanKind.INTERNAL,
       SERVER: OtelSpanKind.SERVER,
@@ -312,7 +313,7 @@ export class ISLTracer {
       PRODUCER: OtelSpanKind.PRODUCER,
       CONSUMER: OtelSpanKind.CONSUMER,
     };
-    return mapping[kind];
+    return mapping[k] ?? OtelSpanKind.INTERNAL;
   }
 
   private handleError(span: Span, error: Error, behaviorName: string): void {

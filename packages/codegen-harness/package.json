@@ -1,6 +1,7 @@
 {
   "name": "@isl-lang/codegen-harness",
   "version": "0.1.0",
+  "license": "MIT",
   "description": "Golden output + compile-check harness for ISL code generators",
   "private": true,
   "type": "module",

@@ -1,6 +1,7 @@
 {
   "name": "@isl-lang/ci-docker",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "Docker image for Shipgate CI integrations",
   "private": true,
   "scripts": {

@@ -17,7 +17,7 @@
     "intents"
   ],
   "scripts": {
-    "build": "tsup implementations/typescript/index.ts --format esm --dts --clean --outDir dist",
+    "build": "tsup implementations/typescript/index.ts --format esm --clean --outDir dist && tsc -p tsconfig.build.json",
     "dev": "tsup implementations/typescript/index.ts --format esm --dts --watch --outDir dist",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",

@@ -13,7 +13,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { execSync } from 'child_process';
 import { createHash, randomUUID } from 'crypto';
 
@@ -253,7 +253,8 @@ function main(): void {
   }
 }
 
-// Run if executed directly
-if (import.meta.url === `file://${process.argv[1]}` || import.meta.url.endsWith(process.argv[1])) {
+// Run if executed directly (cross-platform: Windows path vs file:// URL)
+const isMain = process.argv[1] && (import.meta.url === pathToFileURL(process.argv[1]).href || import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/')));
+if (isMain) {
   main();
 }

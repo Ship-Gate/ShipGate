@@ -56,10 +56,10 @@ runs:
       with:
         node-version: '20'
 
-    - name: Install ISL CLI
+    - name: Install Shipgate CLI
       shell: bash
       run: |
-        npm install -g @isl-lang/cli@latest || echo "Using local CLI"
+        npm install -g shipgate@latest || echo "Using local CLI (shipgate or isl)"
 
     - name: Run ISL Gate
       id: gate

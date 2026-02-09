@@ -8,17 +8,15 @@
 
 import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
-import { resolve, join } from 'path';
+import { join } from 'path';
 import type { Trace } from '@isl-lang/trace-format';
 import type { DomainDeclaration, TemporalRequirement } from '@isl-lang/isl-core';
 import {
   buildTemporalTrace,
   evaluateAlways,
   evaluateEventually,
-  evaluateUntil,
   evaluateWithin,
   evaluateNever,
-  type TemporalTrace,
   type StatePredicate,
   type TemporalEvaluationResult,
 } from './trace-model.js';
@@ -261,7 +259,13 @@ export function evaluateTemporalRequirement(
   
   // Evaluate based on requirement type
   const predicate = createPredicateFromRequirement(requirement);
-  let result: TemporalEvaluationResult;
+  let result: TemporalEvaluationResult = {
+    satisfied: false,
+    verdict: 'UNKNOWN',
+    snapshotsEvaluated: 0,
+    confidence: 0,
+    explanation: '',
+  };
   let allSatisfied = true;
   let violation: TemporalPropertyEvaluation['violation'] | undefined;
   
@@ -527,8 +531,9 @@ function formatTemporalRequirement(requirement: TemporalRequirement): string {
     parts.push(`(${requirement.percentile})`);
   }
   
-  if (requirement.eventKind) {
-    parts.push(`[${requirement.eventKind}]`);
+  const req = requirement as TemporalRequirement & { eventKind?: string };
+  if (req.eventKind) {
+    parts.push(`[${req.eventKind}]`);
   }
   
   return parts.join(' ');

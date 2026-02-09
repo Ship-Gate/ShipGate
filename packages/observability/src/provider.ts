@@ -6,12 +6,12 @@
  */
 
 import { trace, context, SpanStatusCode, SpanKind as OtelSpanKind } from '@opentelemetry/api';
-import type { Tracer as OtelTracer, Span, Context } from '@opentelemetry/api';
+import type { Tracer as OtelTracer, Span } from '@opentelemetry/api';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { SimpleSpanProcessor, BatchSpanProcessor, ConsoleSpanExporter } from '@opentelemetry/sdk-trace-base';
 import type { SpanExporter } from '@opentelemetry/sdk-trace-base';
 import { Resource } from '@opentelemetry/resources';
-import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION, ATTR_DEPLOYMENT_ENVIRONMENT_NAME } from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION, SEMRESATTRS_DEPLOYMENT_ENVIRONMENT } from '@opentelemetry/semantic-conventions';
 
 import type {
   ObservabilityConfig,
@@ -77,7 +77,7 @@ export function initTracing(config: ObservabilityConfig = {}): void {
   const resourceAttrs: Record<string, string> = {
     [ATTR_SERVICE_NAME]: serviceName,
     [ATTR_SERVICE_VERSION]: serviceVersion,
-    ...(config.environment ? { [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: config.environment } : {}),
+    ...(config.environment ? { [SEMRESATTRS_DEPLOYMENT_ENVIRONMENT]: config.environment } : {}),
     ...config.resourceAttributes,
   };
 
@@ -185,9 +185,7 @@ export async function withSpan<T>(
       const wrapped = wrapSpan(raw);
       try {
         const result = await fn(wrapped);
-        if (!raw.ended) {
-          raw.setStatus({ code: SpanStatusCode.OK });
-        }
+        raw.setStatus({ code: SpanStatusCode.OK });
         return result;
       } catch (err) {
         raw.setStatus({ code: SpanStatusCode.ERROR, message: (err as Error).message });

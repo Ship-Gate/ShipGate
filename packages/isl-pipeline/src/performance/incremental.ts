@@ -196,10 +196,10 @@ export async function parseIncremental(
     const source = await fs.readFile(file, 'utf-8');
     const parseResult = parseISL(source, file);
 
-    result.set(file, parseResult);
+    result.set(file, { ast: parseResult.ast as DomainDeclaration, errors: parseResult.errors });
 
     if (parseCache) {
-      parseCache.set(source, file, parseResult);
+      parseCache.set(source, file, { ast: parseResult.ast as DomainDeclaration, errors: parseResult.errors });
     }
 
     processedFiles.push(file);

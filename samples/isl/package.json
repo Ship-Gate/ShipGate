@@ -1,6 +1,7 @@
 {
   "name": "@isl/samples",
   "version": "1.0.0",
+  "license": "MIT",
   "private": true,
   "description": "Canonical ISL sample library — 10 domains used by every generator, verifier, and test harness",
   "type": "module",
@@ -25,7 +26,7 @@
     "hard-mode"
   ],
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

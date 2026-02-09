@@ -13,7 +13,7 @@ import ora from 'ora';
 import { parse as parseISL } from '@isl-lang/parser';
 import { output, type DiagnosticError } from '../output.js';
 import { loadConfig, type ISLConfig } from '../config.js';
-import { withSpan, ISL_ATTR } from '@isl-lang/observability';
+import { withSpan, ISL_ATTR, type TracedSpan } from '@isl-lang/observability';
 import {
   PassRunner,
   builtinPasses,
@@ -158,14 +158,33 @@ async function checkFile(
 
     // Convert parse errors to diagnostics
     for (const error of parseErrors) {
-      const line = 'span' in error ? error.span.start.line : error.line;
-      const column = 'span' in error ? error.span.start.column : error.column;
+      let line: number | undefined;
+      let column: number | undefined;
+      let message = 'Parse error';
+      
+      if (typeof error === 'object' && error !== null) {
+        if ('message' in error) {
+          message = String(error.message);
+        }
+        if ('span' in error && typeof error.span === 'object' && error.span !== null) {
+          const span = error.span as { start?: { line?: number; column?: number } };
+          if (span.start) {
+            line = typeof span.start.line === 'number' ? span.start.line : undefined;
+            column = typeof span.start.column === 'number' ? span.start.column : undefined;
+          }
+        } else if ('line' in error) {
+          line = typeof error.line === 'number' ? error.line : undefined;
+        }
+        if ('column' in error && line === undefined) {
+          column = typeof error.column === 'number' ? error.column : undefined;
+        }
+      }
       
       errors.push({
         file: filePath,
         line,
         column,
-        message: error.message,
+        message,
         severity: 'error',
       });
     }
@@ -186,9 +205,20 @@ async function checkFile(
       
       // Add types from imports
       for (const importDecl of ast.imports ?? []) {
-        const moduleName = importDecl.from?.value;
-        const isStdlib = moduleName?.startsWith('stdlib-') || moduleName?.startsWith('@isl/') || false;
-        const importNames = importDecl.names?.map(n => n.name) ?? [];
+        const moduleName = typeof importDecl === 'object' && importDecl !== null && 'from' in importDecl
+          ? typeof importDecl.from === 'object' && importDecl.from !== null && 'value' in importDecl.from
+            ? String(importDecl.from.value)
+            : undefined
+          : undefined;
+        const isStdlib = moduleName ? (moduleName.startsWith('stdlib-') || moduleName.startsWith('@isl/')) : false;
+        const importNames = typeof importDecl === 'object' && importDecl !== null && 'names' in importDecl && Array.isArray(importDecl.names)
+          ? importDecl.names.map((n: unknown) => {
+              if (typeof n === 'object' && n !== null && 'name' in n) {
+                return String(n.name);
+              }
+              return '';
+            }).filter((n: string) => n.length > 0)
+          : [];
         
         // Collect import info for debug output
         const importInfo: ResolvedImportInfo = {
@@ -202,14 +232,14 @@ async function checkFile(
           importInfo.resolvedPath = `stdlib:${moduleName}`;
           
           // If specific names imported, add those
-          if (importDecl.names?.length) {
-            for (const name of importDecl.names) {
-              if (stdlibTypes[moduleName].includes(name.name)) {
-                definedTypes.add(name.name);
+          if (importNames.length > 0) {
+            for (const name of importNames) {
+              if (stdlibTypes[moduleName].includes(name)) {
+                definedTypes.add(name);
               } else {
                 warnings.push({
                   file: filePath,
-                  message: `Type '${name.name}' is not exported from '${moduleName}'`,
+                  message: `Type '${name}' is not exported from '${moduleName}'`,
                   severity: 'warning',
                   help: [`Available types: ${stdlibTypes[moduleName].join(', ')}`],
                 });
@@ -307,13 +337,23 @@ async function checkFile(
 
       // Check entity fields for undefined types
       for (const entity of ast.entities) {
-        for (const field of entity.fields ?? []) {
+        const fields = Array.isArray(entity.fields) ? entity.fields : [];
+        for (const field of fields) {
           const typeName = getTypeName(field.type);
           if (typeName && !isValidType(typeName)) {
+            let line: number | undefined;
+            let column: number | undefined;
+            if (typeof field === 'object' && field !== null && 'location' in field) {
+              const location = field.location as { start?: { line?: number; column?: number } } | undefined;
+              if (location?.start) {
+                line = typeof location.start.line === 'number' ? location.start.line : undefined;
+                column = typeof location.start.column === 'number' ? location.start.column : undefined;
+              }
+            }
             errors.push({
               file: filePath,
-              line: field.location?.start?.line,
-              column: field.location?.start?.column,
+              line,
+              column,
               message: `Type '${typeName}' is not defined`,
               severity: 'error',
               code: 'E0100',
@@ -326,14 +366,29 @@ async function checkFile(
       // Check behavior inputs/outputs for undefined types
       for (const behavior of ast.behaviors) {
         // Check input fields (behavior.input.fields)
-        const inputBlock = behavior.input as { fields?: Array<{ type?: unknown; location?: { start?: { line?: number; column?: number } } }> } | undefined;
-        for (const field of inputBlock?.fields ?? []) {
-          const typeName = getTypeName(field.type);
+        const inputBlock = typeof behavior === 'object' && behavior !== null && 'input' in behavior
+          ? behavior.input
+          : undefined;
+        const inputFields = inputBlock && typeof inputBlock === 'object' && 'fields' in inputBlock && Array.isArray(inputBlock.fields)
+          ? inputBlock.fields
+          : [];
+        for (const field of inputFields) {
+          const fieldType = typeof field === 'object' && field !== null && 'type' in field ? field.type : undefined;
+          const typeName = getTypeName(fieldType);
           if (typeName && !isValidType(typeName)) {
+            let line: number | undefined;
+            let column: number | undefined;
+            if (typeof field === 'object' && field !== null && 'location' in field) {
+              const location = field.location as { start?: { line?: number; column?: number } } | undefined;
+              if (location?.start) {
+                line = typeof location.start.line === 'number' ? location.start.line : undefined;
+                column = typeof location.start.column === 'number' ? location.start.column : undefined;
+              }
+            }
             errors.push({
               file: filePath,
-              line: field.location?.start?.line,
-              column: field.location?.start?.column,
+              line,
+              column,
               message: `Type '${typeName}' is not defined`,
               severity: 'error',
               code: 'E0100',
@@ -343,13 +398,23 @@ async function checkFile(
         }
 
         // Check output type (behavior.output.success)
-        const outputBlock = behavior.output as { success?: unknown } | undefined;
-        if (outputBlock?.success) {
-          const typeName = getTypeName(outputBlock.success);
+        const outputBlock = typeof behavior === 'object' && behavior !== null && 'output' in behavior
+          ? behavior.output
+          : undefined;
+        const outputSuccess = outputBlock && typeof outputBlock === 'object' && 'success' in outputBlock
+          ? outputBlock.success
+          : undefined;
+        if (outputSuccess) {
+          const typeName = getTypeName(outputSuccess);
           if (typeName && !isValidType(typeName)) {
+            const behaviorName = typeof behavior === 'object' && behavior !== null && 'name' in behavior
+              ? typeof behavior.name === 'object' && behavior.name !== null && 'name' in behavior.name
+                ? String(behavior.name.name)
+                : 'unknown'
+              : 'unknown';
             errors.push({
               file: filePath,
-              message: `Output type '${typeName}' is not defined in behavior '${behavior.name.name}'`,
+              message: `Output type '${typeName}' is not defined in behavior '${behaviorName}'`,
               severity: 'error',
               code: 'E0100',
             });
@@ -359,12 +424,24 @@ async function checkFile(
 
       // Check for empty behaviors (postconditions are top-level, not under body)
       for (const behavior of ast.behaviors) {
-        const postconds = behavior.postconditions as { conditions?: unknown[] } | undefined;
-        const scenarios = behavior.scenarios as unknown[] | undefined;
-        if (!postconds?.conditions?.length && !scenarios?.length) {
+        const postconds = typeof behavior === 'object' && behavior !== null && 'postconditions' in behavior
+          ? behavior.postconditions
+          : undefined;
+        const postcondConditions = postconds && typeof postconds === 'object' && 'conditions' in postconds && Array.isArray(postconds.conditions)
+          ? postconds.conditions
+          : [];
+        const scenarios = typeof behavior === 'object' && behavior !== null && 'scenarios' in behavior && Array.isArray(behavior.scenarios)
+          ? behavior.scenarios
+          : [];
+        const behaviorName = typeof behavior === 'object' && behavior !== null && 'name' in behavior
+          ? typeof behavior.name === 'object' && behavior.name !== null && 'name' in behavior.name
+            ? String(behavior.name.name)
+            : 'unknown'
+          : 'unknown';
+        if (postcondConditions.length === 0 && scenarios.length === 0) {
           warnings.push({
             file: filePath,
-            message: `Behavior '${behavior.name.name}' has no postconditions or scenarios`,
+            message: `Behavior '${behaviorName}' has no postconditions or scenarios`,
             severity: 'warning',
           });
         }
@@ -497,7 +574,7 @@ export async function check(filePatterns: string[], options: CheckOptions = {}):
       [ISL_ATTR.COMMAND]: 'check',
       [ISL_ATTR.FILE_COUNT]: filePatterns.length,
     },
-  }, async (checkSpan) => {
+  }, async (checkSpan: TracedSpan) => {
     const startTime = Date.now();
     const spinner = !options.quiet ? ora('Checking ISL files...').start() : null;
 

@@ -11,9 +11,8 @@ import type {
   Behavior, 
   Field,
   TypeDefinition,
-  SourceLocation,
 } from '@isl-lang/parser';
-import type { TypeEnvironment, TypeInfo, SymbolEntry, SymbolKind, TypeConstraint } from './types.js';
+import type { TypeEnvironment, TypeInfo, SymbolEntry, SymbolKind } from './types.js';
 
 // ============================================================================
 // Type Environment Builder
@@ -38,7 +37,7 @@ class TypeEnvironmentImpl implements TypeEnvironment {
   private enums: Map<string, SymbolEntry> = new Map();
   private behaviors: Map<string, SymbolEntry> = new Map();
 
-  constructor(private domain: Domain) {
+  constructor(domain: Domain) {
     this.indexDomain(domain);
   }
 

@@ -44,7 +44,8 @@
   "files": [
     "dist/",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "scripts/postinstall.js"
   ],
   "scripts": {
     "prebuild": "node scripts/resolve-workspace-deps.js",
@@ -59,15 +60,25 @@
     "test:coverage": "vitest run --coverage",
     "test:smoke": "vitest run tests/smoke.test.ts",
     "lint": "eslint src --ext .ts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "clean": "rimraf dist",
     "prepack": "pnpm run build",
-    "postinstall": "node scripts/postinstall.js || true",
+    "postinstall": "node scripts/postinstall.js",
     "pack:check": "npm pack --dry-run",
     "test:unit": "vitest run --passWithNoTests"
   },
+  "dependencies": {
+    "@opentelemetry/api": "^1.8.0",
+    "@opentelemetry/resources": "^1.22.0",
+    "@opentelemetry/sdk-trace-base": "^1.22.0",
+    "@opentelemetry/sdk-trace-node": "^1.22.0",
+    "@opentelemetry/semantic-conventions": "^1.22.0"
+  },
   "devDependencies": {
+    "@isl-lang/autofix": "workspace:*",
     "@isl-lang/build-runner": "workspace:*",
+    "@isl-lang/codegen-openapi": "workspace:*",
+    "@isl-lang/core": "workspace:*",
     "@isl-lang/evaluator": "workspace:*",
     "@isl-lang/gate": "workspace:*",
     "@isl-lang/import-resolver": "workspace:*",
@@ -88,6 +99,7 @@
     "@isl-lang/semantic-analysis": "workspace:*",
     "@isl-lang/spec-assist": "workspace:*",
     "@isl-lang/typechecker": "workspace:*",
+    "@isl-lang/verifier-chaos": "workspace:*",
     "@isl-lang/verifier-runtime": "workspace:*",
     "@isl-lang/verifier-temporal": "workspace:*",
     "@isl-lang/truthpack-v2": "workspace:*",

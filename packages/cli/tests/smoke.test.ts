@@ -1,7 +1,7 @@
 /**
  * Bin-Level Smoke Tests for the shipgate CLI
  *
- * Validates that the *bundled* dist/cli.js works correctly:
+ * Validates that the *bundled* dist/cli.cjs works correctly:
  *   - Commands are accessible
  *   - --version returns a semver string
  *   - --help output is reasonable
@@ -17,7 +17,7 @@ import { resolve } from 'path';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const CLI_PATH = resolve(__dirname, '../dist/cli.js');
+const CLI_PATH = resolve(__dirname, '../dist/cli.cjs');
 const MAX_BUNDLE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ function exec(
 beforeAll(() => {
   if (!existsSync(CLI_PATH)) {
     throw new Error(
-      `dist/cli.js not found at ${CLI_PATH}. Run "pnpm build" first.`,
+      `dist/cli.cjs not found at ${CLI_PATH}. Run "pnpm build" first.`,
     );
   }
 });
@@ -55,7 +55,7 @@ beforeAll(() => {
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe('CLI Bundle', () => {
-  it('dist/cli.js exists and is non-empty', () => {
+  it('dist/cli.cjs exists and is non-empty', () => {
     expect(existsSync(CLI_PATH)).toBe(true);
     const stat = statSync(CLI_PATH);
     expect(stat.size).toBeGreaterThan(0);

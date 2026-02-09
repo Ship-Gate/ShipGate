@@ -9,12 +9,8 @@
  */
 
 import type { Diagnostic } from '@isl-lang/errors';
-import type { 
-  DomainDeclaration,
-  BehaviorDeclaration, 
-  Expression,
-  EntityDeclaration,
-} from '@isl-lang/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration, Expression } from '@isl-lang/isl-core';
+import type { EntityDeclaration } from '@isl-lang/isl-core/ast';
 import type { SemanticPass, PassContext } from '../types.js';
 import { spanToLocation } from '../types.js';
 
@@ -46,7 +42,7 @@ export const UnusedSymbolsPass: SemanticPass = {
           category: 'semantic',
           severity: 'hint',
           message: `Entity '${entity.name.name}' is declared but never referenced`,
-          location: spanToLocation(entity.span || entity.location || entity.name.span, filePath),
+          location: spanToLocation((entity as { span?: unknown }).span ?? (entity as { location?: unknown }).location ?? (entity.name as { span?: unknown }).span, filePath),
           source: 'verifier',
           tags: ['unnecessary'],
           help: ['Consider removing unused entities or adding references to them'],
@@ -54,7 +50,7 @@ export const UnusedSymbolsPass: SemanticPass = {
       }
 
       // Check for unused fields within entities
-      diagnostics.push(...checkUnusedEntityFields(entity, ast, filePath));
+      diagnostics.push(...checkUnusedEntityFields(entity as unknown as EntityDeclaration, ast as DomainDeclaration, filePath));
     }
 
     // Check for unused custom types
@@ -65,7 +61,7 @@ export const UnusedSymbolsPass: SemanticPass = {
           category: 'semantic',
           severity: 'hint',
           message: `Type '${type.name.name}' is declared but never used`,
-          location: spanToLocation(type.span || type.location || type.name.span, filePath),
+          location: spanToLocation((type as { span?: unknown }).span ?? (type as { location?: unknown }).location ?? (type.name as { span?: unknown }).span, filePath),
           source: 'verifier',
           tags: ['unnecessary'],
           help: ['Consider removing unused types'],
@@ -103,12 +99,14 @@ function collectReferencedSymbols(ast: DomainDeclaration): ReferencedSymbols {
 
   // Walk through all behaviors to find references
   for (const behavior of ast.behaviors || []) {
-    // Input/output types reference entities/types
-    for (const input of behavior.input || []) {
-      collectTypeReferences(input.type, result);
+    // Input/output types reference entities/types (input/output may be single object or array)
+    const inputs = Array.isArray(behavior.input) ? behavior.input : (behavior.input ? [behavior.input] : []);
+    const outputs = Array.isArray(behavior.output) ? behavior.output : (behavior.output ? [behavior.output] : []);
+    for (const input of inputs) {
+      collectTypeReferences((input as { type?: unknown }).type, result);
     }
-    for (const output of behavior.output || []) {
-      collectTypeReferences(output.type, result);
+    for (const output of outputs) {
+      collectTypeReferences((output as { type?: unknown }).type, result);
     }
 
     // Expressions in conditions reference fields/entities
@@ -223,8 +221,9 @@ function checkUnusedBehaviorSymbols(
   collectIdentifiers(behavior.temporal, usedIdentifiers);
   collectIdentifiers(behavior.security, usedIdentifiers);
 
-  // Check inputs
-  for (const input of behavior.input || []) {
+  // Check inputs (input may be single object or array)
+  const inputs = Array.isArray(behavior.input) ? behavior.input : (behavior.input ? [behavior.input] : []);
+  for (const input of inputs) {
     const name = input.name.name;
     if (!usedIdentifiers.has(name)) {
       diagnostics.push({
@@ -248,8 +247,9 @@ function checkUnusedBehaviorSymbols(
     }
   }
 
-  // Check outputs (they should appear in postconditions)
-  for (const output of behavior.output || []) {
+  // Check outputs (output may be single object or array)
+  const outputs = Array.isArray(behavior.output) ? behavior.output : (behavior.output ? [behavior.output] : []);
+  for (const output of outputs) {
     const name = output.name.name;
     if (!usedIdentifiers.has(name)) {
       diagnostics.push({
@@ -315,7 +315,7 @@ function checkUnusedEntityFields(
         category: 'semantic',
         severity: 'hint',
         message: `Field '${entity.name.name}.${name}' is declared but never referenced`,
-        location: spanToLocation(field.span || field.location || field.name?.span, filePath),
+        location: spanToLocation((field as { span?: unknown }).span ?? (field as { location?: unknown }).location ?? (field.name as { span?: unknown } | undefined)?.span, filePath),
         source: 'verifier',
         tags: ['unnecessary'],
         help: [

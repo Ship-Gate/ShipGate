@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: ['src/index.ts', 'src/shipgate-fix-cli.ts'],
   format: ['esm'],
-  dts: true,
+  dts: false,
   clean: true,
   external: [
     // Optional AI dependencies - only used if available

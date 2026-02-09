@@ -9,9 +9,6 @@
 
 import type {
   TrustEvidenceInput,
-  StaticCheckEvidence,
-  EvaluatorEvidence,
-  SMTProofEvidence,
   PBTEvidence,
   ChaosEvidence,
   SignalVerdict,

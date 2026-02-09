@@ -365,9 +365,9 @@ export async function generateAttestation(
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Generate GitHub PR comment from proof bundle
+ * Format proof bundle as GitHub PR comment markdown
  */
-function generatePRComment(manifest: ProofBundleManifest): string {
+function formatPRCommentBody(manifest: ProofBundleManifest): string {
   const verdict = manifest.verdict;
   const verdictEmoji = verdict === 'PROVEN' ? '✅' : verdict === 'VIOLATED' ? '❌' : '⚠️';
   
@@ -419,7 +419,7 @@ export async function generatePRComment(
 ): Promise<ProofCommentResult> {
   try {
     const manifest = await loadManifest(bundlePath);
-    const comment = generatePRComment(manifest);
+    const comment = formatPRCommentBody(manifest);
     
     if (options.output) {
       await writeFile(options.output, comment, 'utf-8');

@@ -1,6 +1,7 @@
 {
   "name": "reality-probe-demo",
   "version": "0.1.0",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "start": "tsx server.ts"

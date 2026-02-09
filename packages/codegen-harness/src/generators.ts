@@ -47,7 +47,8 @@ function mapToTypeScriptType(typeRef: TypeDefinition | { name: string } | undefi
   }
 
   if ('name' in typeRef) {
-    const name = typeof typeRef.name === 'string' ? typeRef.name : resolveQualifiedName(typeRef.name);
+    const ref = typeRef as { name: string | QualifiedName };
+    const name = typeof ref.name === 'string' ? ref.name : resolveQualifiedName(ref.name);
     const primitiveMap: Record<string, string> = {
       'String': 'string',
       'Int': 'number',

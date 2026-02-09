@@ -548,9 +548,10 @@ function evaluateSimple(expr: SMTExpr, model: Record<string, unknown>): boolean 
 function evaluateNumeric(expr: SMTExpr, model: Record<string, unknown>): number | undefined {
   switch (expr.kind) {
     case 'IntConst':
-      return expr.value;
-    case 'RealConst':
-      return expr.value;
+    case 'RealConst': {
+      const val = (expr as { value: number | bigint }).value;
+      return typeof val === 'bigint' ? Number(val) : val;
+    }
     case 'Var': {
       const val = model[expr.name];
       if (typeof val === 'number') return val;

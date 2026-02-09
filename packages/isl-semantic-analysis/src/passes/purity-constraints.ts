@@ -12,7 +12,6 @@
 
 import type { Diagnostic } from '@isl-lang/errors';
 import type {
-  DomainDeclaration,
   BehaviorDeclaration,
   Expression,
 } from '@isl-lang/isl-core';
@@ -41,23 +40,19 @@ const ERRORS = {
 
 type ContextType = 'precondition' | 'postcondition' | 'invariant' | 'temporal' | 'security' | 'other';
 
-interface ImpurityInfo {
-  reason: ImpurityReason;
-  expression: Expression;
-}
+// ImpurityInfo type (for internal use, not exported)
+// interface ImpurityInfo {
+//   reason: ImpurityReason;
+//   expression: Expression;
+// }
 
-type ImpurityReason = 
-  | 'mutation'
-  | 'external_call'
-  | 'nondeterministic'
-  | 'io_operation'
-  | 'assignment';
 
-interface PurityAnalysisResult {
-  pureExpressions: Set<Expression>;
-  impureExpressions: Map<Expression, ImpurityInfo>;
-  mutations: Set<Expression>;
-}
+// PurityAnalysisResult type (for internal use, not exported)
+// interface PurityAnalysisResult {
+//   pureExpressions: Set<Expression>;
+//   impureExpressions: Map<Expression, ImpurityInfo>;
+//   mutations: Set<Expression>;
+// }
 
 // ============================================================================
 // Known impure/mutating functions
@@ -138,12 +133,15 @@ function checkPreconditions(behavior: BehaviorDeclaration, filePath: string): Di
 
   if (!preconditions) return diagnostics;
 
-  for (const condition of preconditions.conditions || []) {
-    const stmts = condition.statements || [];
+  const preconditionsList = (preconditions as { conditions?: unknown[] }).conditions ?? (Array.isArray(preconditions) ? preconditions : []);
+  for (const condition of preconditionsList) {
+    const cond = condition as { statements?: unknown[]; guard?: Expression };
+    const stmts = cond.statements || [];
     for (const stmt of stmts) {
-      if (stmt.expression) {
+      const expr = (stmt as { expression?: Expression }).expression;
+      if (expr) {
         diagnostics.push(...checkExpressionPurity(
-          stmt.expression,
+          expr,
           'precondition',
           behavior.name.name,
           filePath
@@ -152,9 +150,9 @@ function checkPreconditions(behavior: BehaviorDeclaration, filePath: string): Di
     }
 
     // Also check guard expressions
-    if ((condition as { guard?: Expression }).guard) {
+    if (cond.guard) {
       diagnostics.push(...checkExpressionPurity(
-        (condition as { guard: Expression }).guard,
+        cond.guard,
         'precondition',
         behavior.name.name,
         filePath
@@ -175,13 +173,16 @@ function checkPostconditions(behavior: BehaviorDeclaration, filePath: string): D
 
   if (!postconditions) return diagnostics;
 
-  for (const condition of postconditions.conditions || []) {
-    const stmts = condition.statements || [];
+  const postconditionsList = (postconditions as { conditions?: unknown[] }).conditions ?? (Array.isArray(postconditions) ? postconditions : []);
+  for (const condition of postconditionsList) {
+    const cond = condition as { statements?: unknown[]; guard?: Expression };
+    const stmts = cond.statements || [];
     for (const stmt of stmts) {
-      if (stmt.expression) {
+      const expr = (stmt as { expression?: Expression }).expression;
+      if (expr) {
         // In postconditions, old() and result are allowed, but mutations are not
         diagnostics.push(...checkExpressionPurity(
-          stmt.expression,
+          expr,
           'postcondition',
           behavior.name.name,
           filePath
@@ -546,19 +547,14 @@ function getMethodName(node: Expression): string | null {
 function getNodeLocation(node: Expression, filePath: string) {
   const nodeWithSpan = node as { span?: { start: { line: number; column: number; offset?: number }; end: { line: number; column: number; offset?: number } } };
   if (nodeWithSpan.span) {
-    const span = {
-      start: { 
-        line: nodeWithSpan.span.start.line, 
-        column: nodeWithSpan.span.start.column, 
-        offset: nodeWithSpan.span.start.offset ?? 0 
-      },
-      end: { 
-        line: nodeWithSpan.span.end.line, 
-        column: nodeWithSpan.span.end.column, 
-        offset: nodeWithSpan.span.end.offset ?? 0 
-      },
+    const loc = {
+      file: filePath,
+      line: nodeWithSpan.span.start.line,
+      column: nodeWithSpan.span.start.column,
+      endLine: nodeWithSpan.span.end.line,
+      endColumn: nodeWithSpan.span.end.column,
     };
-    return spanToLocation(span, filePath);
+    return spanToLocation(loc, filePath);
   }
   return {
     file: filePath,

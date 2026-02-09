@@ -98,14 +98,6 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function indent(text: string, level: number): string {
-  const pad = '  '.repeat(level);
-  return text
-    .split('\n')
-    .map((line) => (line.trim() ? pad + line : line))
-    .join('\n');
-}
-
 // ============================================================================
 // Public API
 // ============================================================================

@@ -66,16 +66,19 @@ import {
   verifyRuntime, printVerifyRuntimeResult, getVerifyRuntimeExitCode,
   policyEngineCheck, printPolicyEngineResult, getPolicyEngineExitCode,
   detectDrift, printDriftResult, getDriftExitCode,
-  installPack, listPacks, verifyPackInstall, printInstallResult, printListResult, printVerifyResult, getInstallExitCode, getVerifyExitCode,
+  installPack, listPacks, verifyPackInstall, printInstallResult, printListResult, printPackVerifyResult, getInstallExitCode, getPackVerifyExitCode,
   domainInit, printDomainInitResult,
   domainValidate, printDomainValidateResult, getDomainValidateExitCode,
   coverage, printCoverageResult, getCoverageExitCode,
   demo, printDemoResult, getDemoExitCode,
   migrate, printMigrateResult, getMigrateExitCode,
+  bind, printBindResult, getBindExitCode,
+  truthpackBuild, printTruthpackBuildResult, getTruthpackBuildExitCode,
+  truthpackDiff, printTruthpackDiffResult, getTruthpackDiffExitCode,
 } from './commands/index.js';
 import type { FailOnLevel } from './commands/verify.js';
 import { TeamConfigError } from '@isl-lang/core';
-import { initTracing, shutdownTracing, getCurrentTraceId, withSpan, ISL_ATTR } from '@isl-lang/observability';
+import { initTracing, shutdownTracing, getCurrentTraceId, withSpan, ISL_ATTR, type TracedSpan } from '@isl-lang/observability';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Version
@@ -255,7 +258,7 @@ program
   .option('-o, --output <dir>', 'Output directory')
   .option('--force', 'Overwrite existing files')
   .action(async (target: string, file: string, options) => {
-    await withSpan('cli.gen', { attributes: { [ISL_ATTR.COMMAND]: 'gen', [ISL_ATTR.CODEGEN_TARGET]: target, [ISL_ATTR.CODEGEN_SOURCE]: file } }, async (genSpan) => {
+    await withSpan('cli.gen', { attributes: { [ISL_ATTR.COMMAND]: 'gen', [ISL_ATTR.CODEGEN_TARGET]: target, [ISL_ATTR.CODEGEN_SOURCE]: file } }, async (genSpan: TracedSpan) => {
     const opts = program.opts();
     const result = await gen(target, file, {
       output: options.output,
@@ -367,7 +370,7 @@ program
   .option('-o, --report-output <path>', 'Output path for formatted report file (default: stdout for text formats)')
   .option('--explain', 'Generate detailed explanation reports (verdict-explain.json and .md)')
   .action(async (path: string | undefined, options) => {
-    await withSpan('cli.verify', { attributes: { [ISL_ATTR.COMMAND]: 'verify' } }, async (cliSpan) => {
+    await withSpan('cli.verify', { attributes: { [ISL_ATTR.COMMAND]: 'verify' } }, async (cliSpan: TracedSpan) => {
     const opts = program.opts();
 
     // ── Proof bundle mode ────────────────────────────────────────────────
@@ -463,7 +466,7 @@ program
           ? parseInt(options.temporalMinSamples)
           : undefined,
         temporalTraceFiles: options.temporalTraceFiles
-          ? options.temporalTraceFiles.split(',').map(f => f.trim())
+          ? options.temporalTraceFiles.split(',').map((f: string) => f.trim())
           : undefined,
         temporalTraceDir: options.temporalTraceDir,
         reality: enableAll || options.reality,
@@ -473,7 +476,7 @@ program
       });
 
       if (isCiMode) {
-        printVerifyResult(singleResult, { json: true });
+        await printVerifyResult(singleResult, { json: true });
         const score = singleResult.evidenceScore?.overall ?? singleResult.trustScore ?? 0;
         const failCount = singleResult.evidenceScore?.failedChecks ?? 0;
         if (singleResult.success) {
@@ -484,7 +487,7 @@ program
           );
         }
       } else {
-        printVerifyResult(singleResult, {
+        await printVerifyResult(singleResult, {
           detailed: options.detailed,
           format: isJsonMode ? 'json' : 'text',
         });
@@ -517,7 +520,7 @@ program
       // Filter out ignored files from the result
       const ignorePatterns = vibeConfig.ci?.ignore ?? [];
       if (ignorePatterns.length > 0) {
-        result.files = result.files.filter(f => {
+        result.files = result.files.filter((f: { file: string }) => {
           const sv = shouldVerifyFile(f.file, vibeConfig!);
           return sv.verify;
         });
@@ -711,18 +714,22 @@ chaosCommandGroup
   .command('run <spec>')
   .description('Run chaos tests with scenario selection, N trials, and metrics output')
   .requiredOption('-i, --impl <file>', 'Implementation file to verify')
-  .option('-s, --scenario <name>', 'Select specific scenario by name (can be used multiple times)', (val, prev) => {
-    prev = prev || [];
-    prev.push(val);
-    return prev;
-  }, [])
+  .option('-s, --scenario <name>', 'Select specific scenario by name (can be used multiple times)', (val: string, prev: string[] | undefined) => {
+    if (prev) return [...prev, val];
+    return [val];
+  }, [] as string[])
   .option('-n, --trials <num>', 'Number of trials to run', '1')
   .option('-t, --timeout <ms>', 'Test timeout in milliseconds', '30000')
   .option('--seed <seed>', 'Random seed for reproducibility')
   .option('--continue-on-failure', 'Continue running scenarios after failure')
   .option('-d, --detailed', 'Show detailed breakdown')
   .option('--metrics', 'Show detailed metrics output')
-  .action(async (spec: string, options) => {
+  .option('--smt', 'Enable SMT verification for preconditions/postconditions')
+  .option('--smt-timeout <ms>', 'SMT solver timeout in milliseconds', '5000')
+  .option('--smt-solver <solver>', 'SMT solver to use: builtin, z3, cvc5, or auto (default: auto)', 'auto')
+  .option('--temporal', 'Enable temporal verification')
+  .option('--temporal-min-samples <num>', 'Minimum samples for temporal verification', '10')
+  .action(async (spec: string, options: { impl: string; scenario?: string[]; trials: string; timeout: string; seed?: string; continueOnFailure?: boolean; detailed?: boolean; metrics?: boolean; smt?: boolean; smtTimeout?: string; smtSolver?: string; temporal?: boolean; temporalMinSamples?: string }) => {
     const opts = program.opts();
     
     const result = await chaos(spec, {
@@ -735,46 +742,6 @@ chaosCommandGroup
       verbose: opts.verbose,
       format: opts.format === 'json' ? 'json' : 'text',
       metrics: options.metrics,
-    });
-    
-    printChaosResult(result, {
-      detailed: options.detailed,
-      format: opts.format === 'json' ? 'json' : 'text',
-      metrics: options.metrics,
-    });
-    
-    process.exit(getChaosExitCode(result));
-  });
-
-program
-  .command('chaos <spec>')
-  .description('Run chaos testing pipeline against an ISL specification (fault injection)')
-  .option('-i, --impl <file>', 'Implementation file to verify')
-  .option('-t, --timeout <ms>', 'Test timeout in milliseconds', '30000')
-  .option('--seed <seed>', 'Random seed for reproducibility')
-  .option('--continue-on-failure', 'Continue running scenarios after failure')
-  .option('-d, --detailed', 'Show detailed breakdown')
-  .option('--smt', 'Enable SMT verification for preconditions/postconditions')
-  .option('--smt-timeout <ms>', 'SMT solver timeout in milliseconds', '5000')
-  .option('--smt-solver <solver>', 'SMT solver to use: builtin, z3, cvc5, or auto (default: auto)', 'auto')
-  .option('--temporal', 'Enable temporal verification')
-  .option('--temporal-min-samples <num>', 'Minimum samples for temporal verification', '10')
-  .action(async (spec: string, options) => {
-    const opts = program.opts();
-    
-    if (!options.impl) {
-      console.error(chalk.red('Error: --impl is required'));
-      process.exit(ExitCode.USAGE_ERROR);
-      return;
-    }
-
-    const result = await chaos(spec, {
-      impl: options.impl,
-      timeout: parseInt(options.timeout),
-      seed: options.seed ? parseInt(options.seed) : undefined,
-      continueOnFailure: options.continueOnFailure,
-      verbose: opts.verbose,
-      format: opts.format === 'json' ? 'json' : 'text',
       smt: options.smt,
       smtTimeout: options.smtTimeout ? parseInt(options.smtTimeout) : undefined,
       temporal: options.temporal,
@@ -784,6 +751,7 @@ program
     printChaosResult(result, {
       detailed: options.detailed,
       format: opts.format === 'json' ? 'json' : 'text',
+      metrics: options.metrics,
     });
     
     process.exit(getChaosExitCode(result));
@@ -1075,7 +1043,7 @@ program
       } catch (error) {
         allSuccess = false;
         const message = error instanceof Error ? error.message : String(error);
-        results.push({ spec, result: { success: false, errors: [{ message, stage: 'build' }] } });
+        results.push({ spec, result: { success: false, errors: [{ message, stage: 'build', code: 'BUILD_ERROR' }] } });
       }
     }
 
@@ -1088,73 +1056,83 @@ program
           console.log(chalk.red('✗ Build failed'));
           console.log('');
           for (const error of result.errors) {
-            const location = error.file ? `${error.file}${error.line ? `:${error.line}` : ''}` : '';
-            console.log(chalk.red(`  [${error.stage}] ${error.message}${location ? ` at ${location}` : ''}`));
+            const errorFile = typeof error === 'object' && error !== null && 'file' in error ? String(error.file) : undefined;
+            const errorLine = typeof error === 'object' && error !== null && 'line' in error && typeof error.line === 'number' ? error.line : undefined;
+            const errorStage = typeof error === 'object' && error !== null && 'stage' in error ? String(error.stage) : 'unknown';
+            const errorMessage = typeof error === 'object' && error !== null && 'message' in error ? String(error.message) : String(error);
+            const location = errorFile ? `${errorFile}${errorLine ? `:${errorLine}` : ''}` : '';
+            console.log(chalk.red(`  [${errorStage}] ${errorMessage}${location ? ` at ${location}` : ''}`));
           }
         } else {
           console.log(JSON.stringify({
             success: false,
             errors: result.errors,
-            timing: result.timing,
           }, null, 2));
         }
         process.exit(ExitCode.ISL_ERROR);
         return;
       }
 
-      if (!isJson) {
-        console.log(chalk.bold.green('✓ Build complete!'));
-        console.log('');
-        
-        // Show summary
-        console.log(chalk.gray(`  Files generated: ${result.files.length}`));
-        console.log(chalk.gray(`  Output directory: ${result.outDir}`));
-        
-        if (result.evidence) {
-          const { summary } = result.evidence;
-          const verdictColor = summary.verdict === 'verified' ? chalk.green : 
-                              summary.verdict === 'risky' ? chalk.yellow : chalk.red;
+      // Type guard: result.success is true, so result is BuildResult
+      if ('files' in result && 'outDir' in result) {
+        if (!isJson) {
+          console.log(chalk.bold.green('✓ Build complete!'));
           console.log('');
-          console.log(chalk.bold('  Verification:'));
-          console.log(`    Score: ${verdictColor(`${summary.overallScore}/100`)}`);
-          console.log(`    Verdict: ${verdictColor(summary.verdict.toUpperCase())}`);
-          console.log(`    Behaviors: ${summary.passedBehaviors}/${summary.totalBehaviors} passed`);
-          console.log(`    Checks: ${summary.passedChecks}/${summary.totalChecks} passed`);
+          
+          // Show summary
+          console.log(chalk.gray(`  Files generated: ${result.files.length}`));
+          console.log(chalk.gray(`  Output directory: ${result.outDir}`));
+          
+          if (result.evidence) {
+            const { summary } = result.evidence;
+            const verdictColor = summary.verdict === 'verified' ? chalk.green : 
+                                summary.verdict === 'risky' ? chalk.yellow : chalk.red;
+            console.log('');
+            console.log(chalk.bold('  Verification:'));
+            console.log(`    Score: ${verdictColor(`${summary.overallScore}/100`)}`);
+            console.log(`    Verdict: ${verdictColor(summary.verdict.toUpperCase())}`);
+            console.log(`    Behaviors: ${summary.passedBehaviors}/${summary.totalBehaviors} passed`);
+            console.log(`    Checks: ${summary.passedChecks}/${summary.totalChecks} passed`);
+          }
+          
+          console.log('');
+          if (result.timing) {
+            console.log(chalk.gray(`  Total time: ${result.timing.total.toFixed(0)}ms`));
+          }
+          console.log('');
+          
+          // Show file breakdown
+          if (result.manifest) {
+            const counts = result.manifest.counts;
+            console.log(chalk.gray('  Output breakdown:'));
+            if (counts.types > 0) console.log(chalk.gray(`    Types: ${counts.types} files`));
+            if (counts.test > 0) console.log(chalk.gray(`    Tests: ${counts.test} files`));
+            if (counts.helper > 0) console.log(chalk.gray(`    Helpers: ${counts.helper} files`));
+            if (counts.evidence > 0) console.log(chalk.gray(`    Evidence: ${counts.evidence} files`));
+            if (counts.report > 0) console.log(chalk.gray(`    Reports: ${counts.report} files`));
+          }
+          console.log('');
+        } else {
+          console.log(JSON.stringify({
+            success: true,
+            files: result.files.length,
+            outDir: result.outDir,
+            evidence: result.evidence ? {
+              verdict: result.evidence.summary.verdict,
+              score: result.evidence.summary.overallScore,
+              behaviors: {
+                total: result.evidence.summary.totalBehaviors,
+                passed: result.evidence.summary.passedBehaviors,
+              },
+              checks: {
+                total: result.evidence.summary.totalChecks,
+                passed: result.evidence.summary.passedChecks,
+              },
+            } : null,
+            timing: result.timing,
+            manifest: result.manifest ? result.manifest.counts : undefined,
+          }, null, 2));
         }
-        
-        console.log('');
-        console.log(chalk.gray(`  Total time: ${result.timing.total.toFixed(0)}ms`));
-        console.log('');
-        
-        // Show file breakdown
-        const counts = result.manifest.counts;
-        console.log(chalk.gray('  Output breakdown:'));
-        if (counts.types > 0) console.log(chalk.gray(`    Types: ${counts.types} files`));
-        if (counts.test > 0) console.log(chalk.gray(`    Tests: ${counts.test} files`));
-        if (counts.helper > 0) console.log(chalk.gray(`    Helpers: ${counts.helper} files`));
-        if (counts.evidence > 0) console.log(chalk.gray(`    Evidence: ${counts.evidence} files`));
-        if (counts.report > 0) console.log(chalk.gray(`    Reports: ${counts.report} files`));
-        console.log('');
-      } else {
-        console.log(JSON.stringify({
-          success: true,
-          files: result.files.length,
-          outDir: result.outDir,
-          evidence: result.evidence ? {
-            verdict: result.evidence.summary.verdict,
-            score: result.evidence.summary.overallScore,
-            behaviors: {
-              total: result.evidence.summary.totalBehaviors,
-              passed: result.evidence.summary.passedBehaviors,
-            },
-            checks: {
-              total: result.evidence.summary.totalChecks,
-              passed: result.evidence.summary.passedChecks,
-            },
-          } : null,
-          timing: result.timing,
-          manifest: result.manifest.counts,
-        }, null, 2));
       }
 
       process.exit(ExitCode.SUCCESS);
@@ -1171,8 +1149,12 @@ program
           if (!result.success) {
             console.log(chalk.red(`  ✗ ${spec}`));
             for (const error of result.errors || []) {
-              const location = error.file ? `${error.file}${error.line ? `:${error.line}` : ''}` : '';
-              console.log(chalk.red(`    [${error.stage}] ${error.message}${location ? ` at ${location}` : ''}`));
+              const errorFile = typeof error === 'object' && error !== null && 'file' in error ? String(error.file) : undefined;
+              const errorLine = typeof error === 'object' && error !== null && 'line' in error && typeof error.line === 'number' ? error.line : undefined;
+              const errorStage = typeof error === 'object' && error !== null && 'stage' in error ? String(error.stage) : 'unknown';
+              const errorMessage = typeof error === 'object' && error !== null && 'message' in error ? String(error.message) : String(error);
+              const location = errorFile ? `${errorFile}${errorLine ? `:${errorLine}` : ''}` : '';
+              console.log(chalk.red(`    [${errorStage}] ${errorMessage}${location ? ` at ${location}` : ''}`));
             }
           } else {
             console.log(chalk.green(`  ✓ ${spec}`));
@@ -1185,7 +1167,7 @@ program
           results: results.map(({ spec, result }) => ({
             spec,
             success: result.success,
-            files: result.files?.length || 0,
+            files: ('files' in result && Array.isArray(result.files)) ? result.files.length : 0,
             errors: result.errors || [],
           })),
         }, null, 2));
@@ -1276,7 +1258,7 @@ policyCommand
       }
 
       process.exit(getPolicyCheckExitCode(result));
-    } catch (err) {
+    } catch (err: unknown) {
       if (err instanceof TeamConfigError) {
         if (isJson) {
           console.log(JSON.stringify({ error: err.message, validationErrors: err.validationErrors }, null, 2));
@@ -1397,7 +1379,6 @@ program
 
 program
   .command('gate:trust-score <spec>')
-  .alias('trust-score')
   .description('Compute a defensible 0-100 trust score from ISL verification results with per-category breakdown, history tracking, and gate enforcement.')
   .requiredOption('-i, --impl <file>', 'Implementation file or directory to verify')
   .option('-t, --threshold <score>', 'Minimum trust score to SHIP (default: 80)', '80')
@@ -1746,7 +1727,7 @@ program
     '  using filesystem heuristics, AST scanning, and naming conventions.\n' +
     '  Generates .shipgate.bindings.json with confidence scores.',
   )
-  .option('-s, --spec <file>', 'ISL spec file(s) (comma-separated or multiple)', (val, prev) => {
+  .option('-s, --spec <file>', 'ISL spec file(s) (comma-separated or multiple)', (val: string, prev: string[] | undefined) => {
     if (prev) return [...prev, val];
     return [val];
   })
@@ -1919,11 +1900,13 @@ shipgateCommand
   .option('-v, --verbose', 'Show detailed warnings')
   .action(async (file: string, options) => {
     const opts = program.opts();
-    const { CURRENT_ISL_VERSION } = await import('@isl-lang/parser');
+    const parserModule = await import('@isl-lang/parser');
+    const CURRENT_ISL_VERSION = (parserModule as { CURRENT_ISL_VERSION?: string }).CURRENT_ISL_VERSION || '0.2';
     
-    const result = await migrate(file, {
+    const result = await migrate({
+      input: file,
       output: options.output,
-      targetVersion: (options.target || CURRENT_ISL_VERSION) as any,
+      targetVersion: (options.target || CURRENT_ISL_VERSION) as '0.1' | '0.2',
       dryRun: options.dryRun,
       verbose: options.verbose || opts.verbose,
     });
@@ -1952,11 +1935,10 @@ shipgateCommand
   .description('Auto-fix Shipgate findings with safe, minimal diffs')
   .option('--dry-run', 'Preview fixes without applying (default)')
   .option('--apply', 'Apply fixes to files')
-  .option('--only <rule>', 'Only apply fixes for specific rule (can be used multiple times)', (val, prev) => {
-    prev = prev || [];
-    prev.push(val);
-    return prev;
-  }, [])
+  .option('--only <rule>', 'Only apply fixes for specific rule (can be used multiple times)', (val: string, prev: string[] | undefined) => {
+    if (prev) return [...prev, val];
+    return [val];
+  }, [] as string[])
   .option('--evidence <path>', 'Path to evidence bundle JSON (default: auto-detect)')
   .option('--min-confidence <score>', 'Minimum confidence threshold (0-1, default: 0.6)', '0.6')
   .action(async (options) => {
@@ -2142,8 +2124,8 @@ packsCommand
     const opts = program.opts();
     const result = await verifyPackInstall(name);
     
-    printVerifyResult(result, { format: opts.format });
-    process.exit(getVerifyExitCode(result));
+    printPackVerifyResult(result, { format: opts.format });
+    process.exit(getPackVerifyExitCode(result));
   });
 
 // ── Domain Pack Subcommand ──────────────────────────────────────────────────
@@ -2224,11 +2206,10 @@ shipgateCommand
     '  Shows which behaviors have implementations bound,\n' +
     '  which specs are exercised in runtime verification,\n' +
     '  and which constraints are always "unknown".')
-  .option('-s, --specs <patterns...>', 'ISL spec file patterns (default: **/*.isl)', (val, prev) => {
-    prev = prev || [];
-    prev.push(val);
-    return prev;
-  }, [])
+  .option('-s, --specs <patterns...>', 'ISL spec file patterns (default: **/*.isl)', (val: string, prev: string[] | undefined) => {
+    if (prev) return [...prev, val];
+    return [val];
+  }, [] as string[])
   .option('-b, --bindings <file>', 'Bindings file path (default: .shipgate.bindings.json)')
   .option('-t, --traces <dir>', 'Verification traces directory')
   .option('-d, --detailed', 'Show detailed constraint breakdown')

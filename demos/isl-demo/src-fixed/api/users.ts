@@ -8,7 +8,7 @@
  */
 
 import { Router } from 'express';
-import { requireAuth, requireRole, AuthenticatedRequest } from '../auth/middleware.js';
+import { requireAuth, requireRole, type AuthenticatedRequest } from '../../src/auth/middleware.js';
 
 const router = Router();
 

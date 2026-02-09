@@ -99,7 +99,7 @@ function parseHandlers(code: string): HandlerInfo[] {
 
   let match;
   while ((match = pattern.exec(code)) !== null) {
-    const method = match[2];
+    const method = match[2] ?? 'GET';
     const startOffset = match.index;
     const startLine = code.substring(0, startOffset).split('\n').length;
     const bodyStartOffset = code.indexOf('{', startOffset);
@@ -150,6 +150,7 @@ function extractExitPaths(handlerCode: string, handlerStartLine: number): ExitPa
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+    if (line === undefined) continue;
     const lineNum = handlerStartLine + i;
 
     for (const pattern of returnPatterns) {
@@ -178,12 +179,23 @@ function classifyExitPath(
   const contextEnd = Math.min(lines.length, lineIndex + 5);
   const context = lines.slice(contextStart, contextEnd).join('\n').toLowerCase();
   const currentLine = lines[lineIndex];
+  if (currentLine === undefined) {
+    return {
+      line: absoluteLine,
+      column: 1,
+      code: '',
+      type: 'unknown' as const,
+      isSuccessPath: true,
+      statusCode: undefined,
+      hasAudit: false,
+    };
+  }
 
   // Extract status code
   const statusMatch = currentLine.match(/status:\s*(\d{3})/i) ||
     context.match(/status:\s*(\d{3})/i) ||
     currentLine.match(/\b(4\d{2}|5\d{2}|2\d{2})\b/);
-  const statusCode = statusMatch ? parseInt(statusMatch[1], 10) : undefined;
+  const statusCode = statusMatch ? parseInt(statusMatch[1] ?? '0', 10) : undefined;
 
   // Check for audit in preceding lines (within 15 lines before return)
   const precedingStart = Math.max(0, lineIndex - 15);
@@ -238,7 +250,7 @@ function extractAuditCalls(handlerCode: string, handlerStartLine: number): Audit
   let match;
   while ((match = pattern.exec(handlerCode)) !== null) {
     const startIdx = match.index;
-    const methodName = match[2];
+    const methodName = match[2] ?? 'audit';
 
     // Find the closing brace of the object
     let braceCount = 0;
@@ -267,7 +279,7 @@ function extractAuditCalls(handlerCode: string, handlerStartLine: number): Audit
     // Extract success value
     let successValue: boolean | 'dynamic' | undefined;
     const successMatch = payload.match(/success\s*:\s*(true|false)/i);
-    if (successMatch) {
+    if (successMatch && successMatch[1]) {
       successValue = successMatch[1].toLowerCase() === 'true';
     } else if (/success\s*:/.test(payload)) {
       successValue = 'dynamic';

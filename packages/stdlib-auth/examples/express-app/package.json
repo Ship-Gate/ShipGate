@@ -1,6 +1,7 @@
 {
   "name": "stdlib-auth-express-example",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "Sample Express app using stdlib-auth",
   "type": "module",
   "main": "server.ts",

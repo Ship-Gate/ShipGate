@@ -1,0 +1,14 @@
+THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
+
+This file contains the licenses and copyright notices for third-party software
+components used in this project.
+
+Generated: 2026-02-09T19:20:23.299Z
+Total dependencies: 0
+
+─────────────────────────────────────────────────────────────────────────────
+
+
+================================================================================
+END OF THIRD-PARTY NOTICES
+================================================================================

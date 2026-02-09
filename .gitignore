@@ -40,6 +40,9 @@ tmp/
 temp/
 *.tmp
 
+# Post-release verification logs
+artifacts/post_release/
+
 # Package manager locks (keep pnpm-lock.yaml)
 package-lock.json
 yarn.lock

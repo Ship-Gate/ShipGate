@@ -7,7 +7,7 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import type { TruthpackV2, TruthpackRoute, TruthpackEnvVar } from './schema.js';
+import type { TruthpackV2, TruthpackRoute, TruthpackEnvVar, TruthpackDbSchema, TruthpackDbTable, TruthpackAuthModel, TruthpackDependency, TruthpackRuntimeProbe } from './schema.js';
 
 export interface DriftChange {
   type: 'added' | 'removed' | 'changed';
@@ -262,12 +262,12 @@ function compareEnvVars(
  * Compare dependencies
  */
 function compareDependencies(
-  oldDeps: typeof TruthpackV2.prototype.dependencies,
-  newDeps: typeof TruthpackV2.prototype.dependencies
+  oldDeps: TruthpackV2['dependencies'],
+  newDeps: TruthpackV2['dependencies']
 ): DriftChange[] {
   const changes: DriftChange[] = [];
-  const oldMap = new Map<string, typeof TruthpackV2.prototype.dependencies[0]>();
-  const newMap = new Map<string, typeof TruthpackV2.prototype.dependencies[0]>();
+  const oldMap = new Map<string, TruthpackDependency>();
+  const newMap = new Map<string, TruthpackDependency>();
 
   for (const dep of oldDeps) {
     oldMap.set(dep.name, dep);
@@ -368,8 +368,8 @@ function compareDbSchema(
 
   if (oldSchema && newSchema) {
     // Compare tables
-    const oldTables = new Set(oldSchema.tables.map(t => t.name));
-    const newTables = new Set(newSchema.tables.map(t => t.name));
+    const oldTables = new Set(oldSchema.tables.map((t: TruthpackDbTable) => t.name));
+    const newTables = new Set(newSchema.tables.map((t: TruthpackDbTable) => t.name));
 
     for (const tableName of newTables) {
       if (!oldTables.has(tableName)) {
@@ -377,7 +377,7 @@ function compareDbSchema(
           type: 'added',
           category: 'dbSchema',
           item: `table: ${tableName}`,
-          newValue: newSchema.tables.find(t => t.name === tableName),
+          newValue: newSchema.tables.find((t: TruthpackDbTable) => t.name === tableName),
           impact: 'high',
           description: `New table: ${tableName}`,
         });
@@ -390,7 +390,7 @@ function compareDbSchema(
           type: 'removed',
           category: 'dbSchema',
           item: `table: ${tableName}`,
-          oldValue: oldSchema.tables.find(t => t.name === tableName),
+          oldValue: oldSchema.tables.find((t: TruthpackDbTable) => t.name === tableName),
           impact: 'breaking',
           description: `Removed table: ${tableName}`,
         });
@@ -453,12 +453,12 @@ function compareAuthModel(
  * Compare runtime probes
  */
 function compareRuntimeProbes(
-  oldProbes: typeof TruthpackV2.prototype.runtimeProbes,
-  newProbes: typeof TruthpackV2.prototype.runtimeProbes
+  oldProbes: TruthpackV2['runtimeProbes'],
+  newProbes: TruthpackV2['runtimeProbes']
 ): DriftChange[] {
   const changes: DriftChange[] = [];
-  const oldMap = new Map<string, typeof TruthpackV2.prototype.runtimeProbes[0]>();
-  const newMap = new Map<string, typeof TruthpackV2.prototype.runtimeProbes[0]>();
+  const oldMap = new Map<string, TruthpackRuntimeProbe>();
+  const newMap = new Map<string, TruthpackRuntimeProbe>();
 
   for (const probe of oldProbes) {
     const key = `${probe.type}:${probe.endpoint}`;

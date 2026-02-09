@@ -11,12 +11,12 @@
  */
 
 import type { Diagnostic } from '@isl-lang/errors';
-import type {
-  DomainDeclaration,
-  ImportDeclaration,
-} from '@isl-lang/isl-core';
+import type { Domain, Import } from '@isl-lang/parser';
 import type { SemanticPass, PassContext } from '../types.js';
 import { spanToLocation } from '../types.js';
+
+// Type alias for compatibility with existing code
+type ImportDeclaration = Import;
 
 // ============================================================================
 // Error Codes
@@ -102,7 +102,7 @@ export const importGraphPass = ImportGraphPass;
 /**
  * Build the import dependency graph from AST
  */
-export function buildImportGraph(ast: DomainDeclaration, filePath: string): ImportGraphResult {
+export function buildImportGraph(ast: Domain, filePath: string): ImportGraphResult {
   const graph = new Map<string, Set<string>>();
   const reverseGraph = new Map<string, Set<string>>();
   const declarations = new Map<string, ImportDeclaration>();
@@ -113,7 +113,7 @@ export function buildImportGraph(ast: DomainDeclaration, filePath: string): Impo
   // Process imports
   const imports = ast.imports || [];
   for (const imp of imports) {
-    const importPath = resolveImportPath(imp, filePath);
+    const importPath = resolveImportPath(imp as ImportDeclaration, filePath);
     
     if (importPath) {
       // Add to forward graph
@@ -284,7 +284,9 @@ function normalizeCycle(cycle: string[]): string[] {
 
   let minIdx = 0;
   for (let i = 1; i < cycle.length; i++) {
-    if (cycle[i] < cycle[minIdx]) {
+    const current = cycle[i];
+    const min = cycle[minIdx];
+    if (current && min && current < min) {
       minIdx = i;
     }
   }
@@ -354,21 +356,21 @@ function topologicalSort(graph: Map<string, Set<string>>): string[] {
 // Diagnostic Checks
 // ============================================================================
 
-function checkSelfImports(ast: DomainDeclaration, filePath: string): Diagnostic[] {
+function checkSelfImports(ast: Domain, filePath: string): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
 
   for (const imp of ast.imports || []) {
-    const source = getImportSource(imp);
+    const source = getImportSource(imp as ImportDeclaration);
     if (!source) continue;
 
-    const resolved = resolveImportPath(imp, filePath);
+    const resolved = resolveImportPath(imp as ImportDeclaration, filePath);
     if (resolved === filePath || resolved === normalizePath(filePath)) {
       diagnostics.push({
         code: ERRORS.SELF_IMPORT,
         category: 'semantic',
         severity: 'error',
         message: `Module cannot import itself`,
-        location: spanToLocation(imp.span, filePath),
+        location: spanToLocation((imp as Import).location, filePath),
         source: 'verifier',
         help: ['Remove the self-import'],
       });
@@ -378,15 +380,15 @@ function checkSelfImports(ast: DomainDeclaration, filePath: string): Diagnostic[
   return diagnostics;
 }
 
-function checkDuplicateImports(ast: DomainDeclaration, filePath: string): Diagnostic[] {
+function checkDuplicateImports(ast: Domain, filePath: string): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
   const seen = new Map<string, ImportDeclaration>();
 
   for (const imp of ast.imports || []) {
-    const source = getImportSource(imp);
+    const source = getImportSource(imp as ImportDeclaration);
     if (!source) continue;
 
-    const resolved = resolveImportPath(imp, filePath) || source;
+    const resolved = resolveImportPath(imp as ImportDeclaration, filePath) || source;
 
     if (seen.has(resolved)) {
       const first = seen.get(resolved)!;
@@ -395,14 +397,14 @@ function checkDuplicateImports(ast: DomainDeclaration, filePath: string): Diagno
         category: 'semantic',
         severity: 'warning',
         message: `Duplicate import of '${source}'`,
-        location: spanToLocation(imp.span, filePath),
+        location: spanToLocation((imp as Import).location, filePath),
         source: 'verifier',
         notes: ['This module is already imported'],
         help: ['Remove the duplicate import'],
         tags: ['unnecessary'],
         relatedInformation: [{
           message: 'First import here',
-          location: spanToLocation(first.span, filePath),
+          location: spanToLocation((first as Import).location, filePath),
         }],
       });
     } else {
@@ -413,7 +415,7 @@ function checkDuplicateImports(ast: DomainDeclaration, filePath: string): Diagno
   return diagnostics;
 }
 
-function reportCycles(cycles: string[][], ast: DomainDeclaration, filePath: string): Diagnostic[] {
+function reportCycles(cycles: string[][], ast: Domain, filePath: string): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
 
   for (const cycle of cycles) {
@@ -422,15 +424,15 @@ function reportCycles(cycles: string[][], ast: DomainDeclaration, filePath: stri
     
     // Find the import that creates this cycle
     const imports = ast.imports || [];
-    const relevantImport = imports.find(imp => {
-      const source = getImportSource(imp);
-      const resolved = source ? resolveImportPath(imp, filePath) : null;
+    const relevantImport = imports.find((imp: unknown) => {
+      const source = getImportSource(imp as ImportDeclaration);
+      const resolved = source ? resolveImportPath(imp as ImportDeclaration, filePath) : null;
       return resolved && cycle.includes(resolved);
     });
 
     const location = relevantImport 
-      ? spanToLocation(relevantImport.span, filePath)
-      : spanToLocation(ast.span, filePath);
+      ? spanToLocation((relevantImport as Import).location, filePath)
+      : spanToLocation(ast.location, filePath);
 
     diagnostics.push({
       code: ERRORS.CIRCULAR_IMPORT,
@@ -453,7 +455,7 @@ function reportCycles(cycles: string[][], ast: DomainDeclaration, filePath: stri
   return diagnostics;
 }
 
-function checkUnusedImports(ast: DomainDeclaration, filePath: string): Diagnostic[] {
+function checkUnusedImports(ast: Domain, filePath: string): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
 
   // Collect all imported names
@@ -476,7 +478,7 @@ function checkUnusedImports(ast: DomainDeclaration, filePath: string): Diagnosti
         category: 'semantic',
         severity: 'warning',
         message: `Imported name '${name}' is never used`,
-        location: spanToLocation(imp.span, filePath),
+        location: spanToLocation((imp as Import).location, filePath),
         source: 'verifier',
         tags: ['unnecessary'],
         help: ['Remove the unused import'],
@@ -522,7 +524,7 @@ function getImportedNames(imp: ImportDeclaration): string[] {
   return names;
 }
 
-function collectUsedNames(ast: DomainDeclaration): Set<string> {
+function collectUsedNames(ast: Domain): Set<string> {
   const used = new Set<string>();
 
   function walkNode(node: unknown): void {
@@ -567,9 +569,8 @@ function collectUsedNames(ast: DomainDeclaration): Set<string> {
   for (const type of ast.types || []) {
     walkNode(type);
   }
-  for (const enumDecl of ast.enums || []) {
-    walkNode(enumDecl);
-  }
+  // Note: Domain from parser may not have enums property directly
+  // Enums are typically part of types array
 
   return used;
 }

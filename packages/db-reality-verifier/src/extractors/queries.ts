@@ -98,7 +98,7 @@ function extractPrismaQueries(content: string, filePath: string): ExtractedQuery
     }
 
     // Extract columns from the query (best-effort)
-    const columns = extractColumnsFromPrismaQuery(content, match.index, modelName);
+    const columns = extractColumnsFromPrismaQuery(content, match.index);
 
     queries.push({
       type: queryType,
@@ -208,7 +208,9 @@ function extractRawSqlQueries(content: string, filePath: string): ExtractedQuery
 
   let match: RegExpExecArray | null;
   while ((match = sqlStringPattern.exec(content)) !== null) {
-    const sql = match[2] + match[0].slice(match[2].length + 1, -1); // Remove quotes
+    const keyword = match[2];
+    if (keyword === undefined) continue;
+    const sql = keyword + match[0].slice(keyword.length + 1, -1); // Remove quotes
     const line = getLineNumber(content, match.index);
     const column = getColumnNumber(content, match.index);
 

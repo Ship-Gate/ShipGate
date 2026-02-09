@@ -9,7 +9,7 @@ import {
   ActorRef,
   ActorStatus,
   createActor,
-} from './actor';
+} from './actor.js';
 
 // ============================================================================
 // TYPES

@@ -11,11 +11,8 @@
  */
 
 import type { Diagnostic } from '@isl-lang/errors';
-import type {
-  DomainDeclaration,
-  EntityDeclaration,
-  BehaviorDeclaration,
-} from '@isl-lang/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration } from '@isl-lang/isl-core';
+import type { EntityDeclaration } from '@isl-lang/isl-core/ast';
 import type { SemanticPass, PassContext } from '../types.js';
 import { spanToLocation } from '../types.js';
 
@@ -54,7 +51,7 @@ export const CyclicDependenciesPass: SemanticPass = {
           category: 'semantic',
           severity: 'hint',
           message: `Circular entity dependency detected: ${cycle.join(' → ')} → ${cycle[0]}`,
-          location: spanToLocation(firstEntity.span, filePath),
+          location: spanToLocation((firstEntity as { span?: unknown }).span, filePath),
           source: 'verifier',
           notes: [
             'Circular entity references can cause serialization issues',
@@ -78,7 +75,7 @@ export const CyclicDependenciesPass: SemanticPass = {
           category: 'semantic',
           severity: 'warning',
           message: `Circular behavior dependency detected: ${cycle.join(' → ')} → ${cycle[0]}`,
-          location: spanToLocation(firstBehavior.span, filePath),
+          location: spanToLocation((firstBehavior as { span?: unknown }).span, filePath),
           source: 'verifier',
           notes: [
             'Circular behavior triggers can cause infinite loops',
@@ -102,7 +99,7 @@ export const CyclicDependenciesPass: SemanticPass = {
           category: 'semantic',
           severity: 'warning',
           message: `Circular type dependency detected: ${cycle.join(' → ')} → ${cycle[0]}`,
-          location: spanToLocation(firstType.span, filePath),
+          location: spanToLocation((firstType as { span?: unknown }).span, filePath),
           source: 'verifier',
           notes: [
             'Circular type definitions can cause infinite recursion',
@@ -126,7 +123,7 @@ export const CyclicDependenciesPass: SemanticPass = {
           category: 'semantic',
           severity: 'hint',
           message: `Entity '${entity}' has deep nesting (${depth} levels)`,
-          location: spanToLocation(entityDecl.span, filePath),
+          location: spanToLocation((entityDecl as { span?: unknown }).span, filePath),
           source: 'verifier',
           notes: [
             'Deep entity nesting can cause performance issues',
@@ -215,7 +212,7 @@ function buildTypeDependencyGraph(ast: DomainDeclaration): DependencyGraph {
   for (const typeDef of ast.types || []) {
     const deps = new Set<string>();
     
-    const referenced = extractAllReferencedTypes(typeDef.type);
+    const referenced = extractAllReferencedTypes((typeDef as { type?: unknown }).type);
     for (const ref of referenced) {
       if (typeNames.has(ref)) {
         deps.add(ref);

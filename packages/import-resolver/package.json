@@ -46,6 +46,7 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:types": "tsc --noEmit --project tests/fixtures/tsconfig.json",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",

@@ -18,12 +18,6 @@ import {
   type StatePredicate,
   type TemporalEvaluationResult,
 } from './trace-model.js';
-import {
-  verifyAlwaysFromTraces,
-  verifyNeverFromTraces,
-  type AlwaysNeverResult,
-} from './trace-timing.js';
-
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -336,7 +330,7 @@ function createPredicateFromSpec(spec: TemporalPropertySpec): StatePredicate {
  * Create a predicate that checks for event occurrence
  */
 function createEventPredicate(eventKind: string): StatePredicate {
-  return (_state, event) => event?.kind === eventKind;
+  return (_state: Record<string, unknown>, event?: TraceEvent) => event?.kind === eventKind;
 }
 
 /**
@@ -370,7 +364,7 @@ function calculateRecoveryMetrics(
       if (faultTime !== undefined && isRecoveryEvent(event)) {
         recoveryTime = snapshot.timestampMs;
         recovered = true;
-        recoveryTimeMs = recoveryTime - faultTime;
+        recoveryTimeMs = recoveryTime !== undefined ? recoveryTime - faultTime : undefined;
         break;
       }
     }
@@ -505,7 +499,7 @@ export function createDatabaseFailureScenario(
         id: 'graceful_error_handling',
         type: 'always',
         description: 'Errors should be handled gracefully',
-        predicate: (state, event) => {
+        predicate: (_state: Record<string, unknown>, event?: TraceEvent) => {
           if (event?.kind !== 'handler_error') return true;
           const outputs = event.outputs as Record<string, unknown>;
           const error = outputs?.error as Record<string, unknown> | undefined;
@@ -570,7 +564,7 @@ export function createConcurrentRequestsScenario(
         id: 'bounded_latency',
         type: 'always',
         description: `Response latency should stay within ${maxLatencyMs}ms`,
-        predicate: (state, event) => {
+        predicate: (_state: Record<string, unknown>, event?: TraceEvent) => {
           if (event?.kind !== 'handler_return') return true;
           const timing = event.timing;
           if (!timing?.durationMs) return true;

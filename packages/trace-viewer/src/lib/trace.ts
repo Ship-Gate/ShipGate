@@ -8,7 +8,6 @@ import type {
   Trace, 
   TraceEvent, 
   State, 
-  StateSnapshot,
   CheckEventData,
   StateChangeEventData,
   EventType,
@@ -92,7 +91,8 @@ export function computeStateAtIndex(trace: Trace, index: number): State {
   // Apply all state changes up to and including the index
   for (let i = 0; i <= index && i < trace.events.length; i++) {
     const event = trace.events[i];
-    if (event.type === 'state_change' && event.data.kind === 'state_change') {
+    if (!event || event.type !== 'state_change' || event.data.kind !== 'state_change') continue;
+    {
       const changeData = event.data as StateChangeEventData;
       state = applyStateChange(state, changeData.path, changeData.newValue);
     }
@@ -112,13 +112,15 @@ function applyStateChange(state: State, path: string[], value: unknown): State {
 
   for (let i = 0; i < path.length - 1; i++) {
     const key = path[i];
+    if (key === undefined) continue;
     if (!(key in current) || typeof current[key] !== 'object') {
       current[key] = {};
     }
     current = current[key] as Record<string, unknown>;
   }
 
-  current[path[path.length - 1]] = value;
+  const lastKey = path[path.length - 1];
+  if (lastKey !== undefined) current[lastKey] = value;
   return newState;
 }
 
@@ -205,6 +207,7 @@ export function getCallStackAtIndex(trace: Trace, index: number): string[] {
   
   for (let i = 0; i <= index; i++) {
     const event = trace.events[i];
+    if (!event) continue;
     if (event.type === 'call' && event.data.kind === 'call') {
       stack.push(event.data.function);
     } else if (event.type === 'return' && event.data.kind === 'return') {

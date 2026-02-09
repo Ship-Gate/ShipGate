@@ -63,9 +63,11 @@ export const ExhaustivenessPass: SemanticPass = {
   run(ctx: PassContext): Diagnostic[] {
     const diagnostics: Diagnostic[] = [];
     const { ast, filePath, typeEnv } = ctx;
+    // PassContext.ast is parser Domain; cast for pass logic that expects isl-core DomainDeclaration shape
+    const domainAst = ast as unknown as DomainDeclaration;
 
     // Collect enum definitions
-    const enums = collectEnums(ast);
+    const enums = collectEnums(domainAst);
 
     for (const behavior of ast.behaviors || []) {
       // Check precondition guard coverage
@@ -90,8 +92,8 @@ export const exhaustivenessPass = ExhaustivenessPass;
 
 function collectEnums(ast: DomainDeclaration): Map<string, EnumInfo> {
   const enums = new Map<string, EnumInfo>();
-
-  for (const enumDecl of ast.enums || []) {
+  const astWithEnums = ast as unknown as { enums?: Array<{ name?: { name?: string }; variants?: unknown[]; values?: unknown[]; members?: unknown[] }> };
+  for (const enumDecl of astWithEnums.enums || []) {
     const name = enumDecl.name?.name || '';
     const variants: string[] = [];
 
@@ -135,7 +137,8 @@ function checkPreconditionExhaustiveness(
   // Group guards by variable
   const guardsByVariable = new Map<string, PatternInfo[]>();
 
-  for (const condition of preconditions.conditions || []) {
+  const preconditionsList = (preconditions as { conditions?: unknown[] }).conditions ?? (Array.isArray(preconditions) ? preconditions : []);
+  for (const condition of preconditionsList) {
     const guard = (condition as { guard?: Expression }).guard;
     if (guard) {
       const pattern = analyzeGuardPattern(guard, enums);
@@ -244,7 +247,7 @@ function checkPostconditionErrorCoverage(
       category: 'semantic',
       severity: 'warning',
       message: `No postconditions defined for declared errors: ${declaredErrors.join(', ')}`,
-      location: spanToLocation(behavior.span, filePath),
+      location: spanToLocation((behavior as { span?: unknown }).span, filePath),
       source: 'verifier',
       notes: [
         `Behavior '${behavior.name.name}' declares errors but has no postconditions`,
@@ -260,7 +263,8 @@ function checkPostconditionErrorCoverage(
   // Find which error cases are covered
   const coveredErrors = new Set<string>();
 
-  for (const condition of postconditions.conditions || []) {
+  const postconditionsList = (postconditions as { conditions?: unknown[] }).conditions ?? (Array.isArray(postconditions) ? postconditions : []);
+  for (const condition of postconditionsList) {
     const guard = (condition as { guard?: Expression }).guard;
     const conditionType = (condition as { type?: string; condition?: string }).type 
       || (condition as { condition?: string }).condition;
@@ -299,7 +303,7 @@ function checkPostconditionErrorCoverage(
       category: 'semantic',
       severity: 'warning',
       message: `Missing postconditions for error cases: ${missingErrors.join(', ')}`,
-      location: spanToLocation(postconditions.span || behavior.span, filePath),
+      location: spanToLocation((postconditions as { span?: unknown }).span ?? (behavior as { span?: unknown }).span, filePath),
       source: 'verifier',
       notes: [
         `In behavior '${behavior.name.name}'`,
@@ -342,8 +346,8 @@ function checkConditionBlockExhaustiveness(
     }
   };
 
-  checkBlock(behavior.preconditions);
-  checkBlock(behavior.postconditions);
+  checkBlock(behavior.preconditions as unknown as { conditions?: unknown[] });
+  checkBlock(behavior.postconditions as unknown as { conditions?: unknown[] });
 
   return diagnostics;
 }
@@ -417,7 +421,7 @@ interface GuardPattern {
 
 function analyzeGuardPattern(guard: Expression, enums: Map<string, EnumInfo>): GuardPattern | null {
   // Handle comparison expressions: x == EnumType.Variant
-  if (guard.kind === 'ComparisonExpression' || guard.kind === 'BinaryExpression') {
+  if ((guard as { kind: string }).kind === 'ComparisonExpression' || (guard as { kind: string }).kind === 'BinaryExpression') {
     const comparison = guard as {
       left?: Expression;
       operator?: string;
@@ -459,7 +463,7 @@ function analyzeEnumComparison(
   expr: Expression,
   enums: Map<string, EnumInfo>
 ): { variable: string; value: string; enumType: string } | null {
-  if (expr.kind === 'ComparisonExpression' || expr.kind === 'BinaryExpression') {
+  if ((expr as { kind: string }).kind === 'ComparisonExpression' || (expr as { kind: string }).kind === 'BinaryExpression') {
     const comparison = expr as {
       left?: Expression;
       operator?: string;
@@ -543,7 +547,7 @@ function extractEnumValue(
 
 function extractErrorName(guard: Expression): string | null {
   // Look for patterns like: error.name == "NotFound" or error == NotFound
-  if (guard.kind === 'ComparisonExpression' || guard.kind === 'BinaryExpression') {
+  if ((guard as { kind: string }).kind === 'ComparisonExpression' || (guard as { kind: string }).kind === 'BinaryExpression') {
     const comparison = guard as {
       left?: Expression;
       right?: Expression;
@@ -591,7 +595,10 @@ function getNodeLocation(node: Expression, filePath: string) {
         offset: nodeWithSpan.span.end.offset ?? 0 
       },
     };
-    return spanToLocation(span, filePath);
+    return spanToLocation(
+      { file: filePath, line: span.start.line, column: span.start.column, endLine: span.end.line, endColumn: span.end.column },
+      filePath
+    );
   }
   return {
     file: filePath,

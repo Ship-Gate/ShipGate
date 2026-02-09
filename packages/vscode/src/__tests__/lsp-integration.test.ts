@@ -22,7 +22,7 @@ vi.mock('vscode', () => ({
         const uriStr = typeof uri === 'object' && uri !== null && 'toString' in uri
           ? (uri as { toString: () => string }).toString()
           : String(uri);
-        mockDiagnostics.set(uriStr, diags as typeof mockDiagnostics extends Map<string, infer V> ? V : never);
+        mockDiagnostics.set(uriStr, diags as Array<{ range: unknown; message: string; severity: number; code?: string }>);
       }),
       get: vi.fn((uri: unknown) => {
         const uriStr = typeof uri === 'object' && uri !== null && 'toString' in uri
@@ -35,7 +35,7 @@ vi.mock('vscode', () => ({
       dispose: vi.fn(),
       forEach: vi.fn(),
       has: vi.fn(),
-    }),
+    })),
     registerCodeActionsProvider: vi.fn(() => ({ dispose: vi.fn() })),
     registerCodeLensProvider: vi.fn(() => ({ dispose: vi.fn() })),
     onDidChangeDiagnostics: vi.fn(() => ({ dispose: vi.fn() })),

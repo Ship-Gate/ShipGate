@@ -20,6 +20,11 @@ import {
 import { output } from '../output.js';
 import { loadConfig } from '../config.js';
 import type { DomainDeclaration } from '@isl-lang/isl-core/ast';
+import type {
+  BehaviorImplementation,
+  BehaviorExecutionResult,
+  ResilienceVerifyInput,
+} from '@isl-lang/verifier-chaos';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -208,8 +213,8 @@ async function runShipGateChaosVerification(
     });
 
     // Create an implementation adapter
-    const createImpl = (behaviorName: string): chaos.BehaviorImplementation => ({
-      async execute(input: Record<string, unknown>): Promise<chaos.BehaviorExecutionResult> {
+    const createImpl = (behaviorName: string): BehaviorImplementation => ({
+      async execute(input: Record<string, unknown>): Promise<BehaviorExecutionResult> {
         // In a real implementation, this would execute the actual code
         // For now, we simulate behavior with deterministic failures based on seed
         const rng = verifier.getRNG();
@@ -249,11 +254,12 @@ async function runShipGateChaosVerification(
         });
 
         // Run verification with timeout protection
-        const verifyPromise = verifier.verify({
-          domain: domain as unknown as Parameters<typeof verifier.verify>[0]['domain'],
+        const verifyInput: ResilienceVerifyInput = {
+          domain,
           implementation: impl,
           behaviorName,
-        });
+        };
+        const verifyPromise = verifier.verify(verifyInput);
 
         const result = await Promise.race([verifyPromise, timeoutPromise]);
 
@@ -292,52 +298,91 @@ async function runShipGateChaosVerification(
         }
 
         // Process scenario results
-        if (result.scenarios && result.scenarios.length > 0) {
-          for (const scenario of result.scenarios) {
+        const scenarios = result.scenarios || [];
+        if (scenarios.length > 0) {
+          for (const scenario of scenarios) {
+            const scenarioName = typeof scenario === 'object' && scenario !== null && 'name' in scenario
+              ? String(scenario.name)
+              : 'unknown';
+            const scenarioPassed = typeof scenario === 'object' && scenario !== null && 'passed' in scenario
+              ? Boolean(scenario.passed)
+              : false;
+            const scenarioDuration = typeof scenario === 'object' && scenario !== null && 'duration' in scenario
+              ? Number(scenario.duration)
+              : 0;
+            const scenarioInjections = typeof scenario === 'object' && scenario !== null && 'injections' in scenario && Array.isArray(scenario.injections)
+              ? scenario.injections.map((i: unknown) => {
+                  if (typeof i === 'object' && i !== null && 'type' in i) {
+                    return String(i.type);
+                  }
+                  return String(i);
+                })
+              : [];
+            const scenarioError = typeof scenario === 'object' && scenario !== null && 'error' in scenario
+              ? scenario.error
+              : undefined;
+
             const testResult: ChaosTestResult = {
-              name: scenario.name,
+              name: scenarioName,
               type: 'chaos',
-              passed: scenario.passed,
-              duration: scenario.duration,
-              injections: scenario.injections?.map((i: { type: string }) => i.type) || [],
+              passed: scenarioPassed,
+              duration: scenarioDuration,
+              injections: scenarioInjections,
             };
             
-            if (scenario.passed) {
+            if (scenarioPassed) {
               passed.push(testResult);
             } else {
-              testResult.error = scenario.error ? { 
-                message: scenario.error.message,
-                injectionType: scenario.injections?.[0]?.type,
-              } : undefined;
+              if (scenarioError && typeof scenarioError === 'object' && 'message' in scenarioError) {
+                testResult.error = { 
+                  message: String(scenarioError.message),
+                  injectionType: scenarioInjections[0],
+                };
+              }
               failed.push(testResult);
             }
             
             // Track injection types
-            (scenario.injections || []).forEach((i: { type: string }) => 
-              coveredInjectionTypes.add(i.type)
-            );
+            scenarioInjections.forEach((i: string) => coveredInjectionTypes.add(i));
           }
         } else {
           // Process chaos events if no scenarios
-          for (const event of result.chaosEvents || []) {
+          const chaosEvents = result.chaosEvents || [];
+          for (const event of chaosEvents) {
+            const eventType = typeof event === 'object' && event !== null && 'type' in event
+              ? String(event.type)
+              : 'unknown';
+            const eventOutcome = typeof event === 'object' && event !== null && 'outcome' in event
+              ? event.outcome
+              : undefined;
+            const handled = eventOutcome && typeof eventOutcome === 'object' && 'handled' in eventOutcome
+              ? Boolean(eventOutcome.handled)
+              : true;
+            const durationMs = eventOutcome && typeof eventOutcome === 'object' && 'durationMs' in eventOutcome
+              ? Number(eventOutcome.durationMs)
+              : 0;
+            const eventError = eventOutcome && typeof eventOutcome === 'object' && 'error' in eventOutcome
+              ? eventOutcome.error
+              : undefined;
+
             const testResult: ChaosTestResult = {
-              name: `${behaviorName}:${event.type}`,
+              name: `${behaviorName}:${eventType}`,
               type: 'chaos',
-              passed: event.outcome?.handled ?? true,
-              duration: event.outcome?.durationMs ?? 0,
-              injections: [event.type],
+              passed: handled,
+              duration: durationMs,
+              injections: [eventType],
             };
             
             if (testResult.passed) {
               passed.push(testResult);
             } else {
-              testResult.error = event.outcome?.error 
-                ? { message: event.outcome.error.message }
-                : undefined;
+              if (eventError && typeof eventError === 'object' && 'message' in eventError) {
+                testResult.error = { message: String(eventError.message) };
+              }
               failed.push(testResult);
             }
             
-            coveredInjectionTypes.add(event.type);
+            coveredInjectionTypes.add(eventType);
           }
         }
       } catch (error) {
@@ -586,9 +631,13 @@ export async function shipgateChaosRun(
     });
     
     if (graph.errors.length > 0) {
-      const criticalErrors = graph.errors.filter(e => 
-        e.code === 'CIRCULAR_DEPENDENCY' || e.code === 'MODULE_NOT_FOUND'
-      );
+      const criticalErrors = graph.errors.filter((e: unknown) => {
+        if (typeof e === 'object' && e !== null && 'code' in e) {
+          const code = String(e.code);
+          return code === 'CIRCULAR_DEPENDENCY' || code === 'MODULE_NOT_FOUND';
+        }
+        return false;
+      });
       
       if (criticalErrors.length > 0) {
         spinner.fail('Failed to resolve imports');
@@ -599,14 +648,22 @@ export async function shipgateChaosRun(
           seed: options.seed!,
           violations: [],
           reproductionSteps: [],
-          errors: graph.errors.map(e => `Import error: ${e.message}`),
+          errors: graph.errors.map((e: unknown) => {
+            if (typeof e === 'object' && e !== null && 'message' in e) {
+              return `Import error: ${String(e.message)}`;
+            }
+            return 'Import error: unknown error';
+          }),
           duration: Date.now() - startTime,
         };
       }
       
       if (options.verbose) {
         for (const err of graph.errors) {
-          output.debug(`[Import Warning] ${err.message}`);
+          const errMessage = typeof err === 'object' && err !== null && 'message' in err
+            ? String(err.message)
+            : 'Unknown error';
+          output.debug(`[Import Warning] ${errMessage}`);
         }
       }
     }
@@ -631,7 +688,12 @@ export async function shipgateChaosRun(
           seed: options.seed!,
           violations: [],
           reproductionSteps: [],
-          errors: parseErrors.map(e => `Parse error: ${e.message}`),
+          errors: parseErrors.map((e: unknown) => {
+            if (typeof e === 'object' && e !== null && 'message' in e) {
+              return `Parse error: ${String(e.message)}`;
+            }
+            return 'Parse error: unknown error';
+          }),
           duration: Date.now() - startTime,
         };
       }

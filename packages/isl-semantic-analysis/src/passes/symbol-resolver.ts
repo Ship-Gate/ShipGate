@@ -712,15 +712,6 @@ export class SymbolResolverPass implements SemanticPass {
     this.diagnostics.push(builder.build());
   }
 
-  private reportUndefinedDomain(name: string, location: any): void {
-    const builder = diagnostic()
-      .error('E0303')
-      .message(`Domain '${name}' is not defined`)
-      .at(location)
-      .from('typechecker');
-
-    this.diagnostics.push(builder.build());
-  }
 
   // ==========================================================================
   // Helpers

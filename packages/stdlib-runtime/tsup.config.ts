@@ -15,7 +15,7 @@ export default defineConfig({
     url: 'src/url.ts',
   },
   format: ['esm'],
-  dts: true,
+  dts: false,
   clean: true,
   sourcemap: true,
 });

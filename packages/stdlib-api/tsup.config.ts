@@ -9,9 +9,7 @@ export default defineConfig({
     graphql: 'implementations/typescript/graphql.ts',
   },
   format: ['esm', 'cjs'],
-  dts: {
-    resolve: true,
-  },
+  dts: false,
   splitting: false,
   sourcemap: true,
   clean: true,

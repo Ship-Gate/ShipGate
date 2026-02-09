@@ -1,6 +1,7 @@
 {
   "name": "repo-isl-verified",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "Express API with ISL verification — all checks passing",
   "private": true,
   "type": "module",

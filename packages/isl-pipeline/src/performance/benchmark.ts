@@ -14,7 +14,7 @@ import * as path from 'path';
 import { parseISL, type DomainDeclaration } from '@isl-lang/isl-core';
 import { runSemanticRules, type SemanticViolation } from '../semantic-rules.js';
 import { SemanticHealer, type SemanticHealResult } from '../semantic-healer.js';
-import type { RepoContext } from '@isl-lang/translator';
+import type { RepoContext, ISLAST } from '@isl-lang/translator';
 
 // ============================================================================
 // Types
@@ -141,7 +141,7 @@ export class PerformanceBenchmark {
 
     // 1. Parse/Check
     const parseStart = Date.now();
-    const { domain: ast, errors: parseErrors } = parseISL(fixtures.islSpec, 'test.isl');
+    const { ast, errors: parseErrors } = parseISL(fixtures.islSpec, 'test.isl');
     const parseTime = Date.now() - parseStart;
 
     const checkStart = Date.now();
@@ -156,7 +156,7 @@ export class PerformanceBenchmark {
     // 3. Heal iterations
     const healIterations: Array<{ iteration: number; duration: number }> = [];
     
-    if (violations.length > 0) {
+    if (violations.length > 0 && ast) {
       const repoContext: RepoContext = {
         framework: 'nextjs',
         validationLib: 'zod',
@@ -164,7 +164,7 @@ export class PerformanceBenchmark {
         conventions: { apiPrefix: '/api' },
       };
 
-      const healer = new SemanticHealer(ast, repoContext, fixtures.codeMap, {
+      const healer = new SemanticHealer(ast as unknown as ISLAST, repoContext, fixtures.codeMap, {
         maxIterations: 5, // Limit for benchmarking
         verbose: false,
       });

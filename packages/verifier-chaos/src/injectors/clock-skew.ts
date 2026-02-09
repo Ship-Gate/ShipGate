@@ -44,6 +44,8 @@ export interface ClockSkewConfig {
   driftRateMs?: number;
   /** For oscillate mode: period in ms for one full cycle. */
   oscillatePeriodMs?: number;
+  /** Optional time provider for dependency injection (defaults to SystemTimeProvider). */
+  timeProvider?: TimeProvider;
 }
 
 export interface ClockSkewState {
@@ -60,7 +62,7 @@ export interface ClockSkewState {
  * Clock skew injector for chaos testing.
  */
 export class ClockSkewInjector {
-  private config: Required<ClockSkewConfig>;
+  private config: Required<Omit<ClockSkewConfig, 'timeProvider'>> & { timeProvider: TimeProvider };
   private state: ClockSkewState;
   private timeline: Timeline | null = null;
   private timeProvider: TimeProvider;

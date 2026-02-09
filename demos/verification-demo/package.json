@@ -1,6 +1,7 @@
 {
   "name": "@demos/verification-demo",
   "version": "1.0.0",
+  "license": "MIT",
   "private": true,
   "description": "Demo showing ISL verification: evaluator, stdlib imports, semantic analysis, and PROVEN output",
   "type": "module",

@@ -1,6 +1,7 @@
 {
   "name": "@isl-lang/isl-coverage",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "Coverage analytics engine for ISL specifications",
   "type": "module",
   "main": "./dist/index.js",
@@ -11,8 +12,11 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && tsc -p tsconfig.build.json",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
   },

@@ -194,7 +194,7 @@ For local development, use the ShipGate CLI:
 
 ```bash
 # Install
-npm install -g @isl-lang/cli
+npm install -g shipgate
 
 # Verify locally (same logic as the action)
 npx shipgate verify --ci

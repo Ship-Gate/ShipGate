@@ -1,6 +1,7 @@
 {
   "name": "@isl-lang/gate-calibration",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "Gate calibration benchmark corpus",
   "type": "module",
   "scripts": {

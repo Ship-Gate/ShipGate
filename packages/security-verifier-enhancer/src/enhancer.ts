@@ -3,7 +3,6 @@
  * Main class for detecting auth drift
  */
 
-import * as path from 'path';
 import type {
   ISLAuthRequirement,
   ObservedAuthPolicy,

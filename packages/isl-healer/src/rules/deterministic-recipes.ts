@@ -172,6 +172,7 @@ function findLastImportOffset(code: string): number {
   const importMatches = [...code.matchAll(/^import\s+.*?['"][^'"]+['"];?\s*$/gm)];
   if (importMatches.length > 0) {
     const lastImport = importMatches[importMatches.length - 1];
+    if (!lastImport) return 0;
     return (lastImport.index ?? 0) + lastImport[0].length;
   }
   return 0;
@@ -197,7 +198,7 @@ function getIndentationAt(code: string, offset: number): string {
 
 function inferActionFromFile(file: string): string {
   const parts = file.replace(/\\/g, '/').split('/');
-  const fileName = parts[parts.length - 1].replace(/\.(ts|tsx|js|jsx)$/, '');
+  const fileName = (parts[parts.length - 1] ?? '').replace(/\.(ts|tsx|js|jsx)$/, '');
 
   if (fileName === 'route') {
     return parts[parts.length - 2] || 'api_request';
@@ -265,12 +266,12 @@ function findAllExitPaths(code: string): ExitPath[] {
   while ((match = jsonReturnPattern.exec(code)) !== null) {
     const context = code.substring(match.index, Math.min(code.length, match.index + 300));
     const statusMatch = context.match(/status:\s*(\d{3})/);
-    const statusCode = statusMatch ? parseInt(statusMatch[1], 10) : undefined;
+    const statusCode = statusMatch ? parseInt(statusMatch[1] ?? '0', 10) : undefined;
 
     // Infer reason from error code or message
     let reason: string | undefined;
     const errorCodeMatch = context.match(/code:\s*['"](\w+)['"]/);
-    if (errorCodeMatch) {
+    if (errorCodeMatch && errorCodeMatch[1]) {
       reason = errorCodeMatch[1].toLowerCase().replace(/_/g, '_');
     }
 
@@ -446,7 +447,7 @@ export const auditRequiredRecipe: FixRecipe = {
       const context = patched.substring(contextStart, contextEnd);
 
       if (!context.includes('auditAttempt') && !context.includes('await audit(')) {
-        const exitSnippet = patched.substring(exitPath.offset, exitPath.offset + 50).split('\n')[0];
+        const exitSnippet = patched.substring(exitPath.offset, exitPath.offset + 50).split('\n')[0] ?? '';
         return {
           valid: false,
           reason: `Exit path at offset ${exitPath.offset} missing audit: ${exitSnippet.trim()}...`,
@@ -465,10 +466,11 @@ export const auditRequiredRecipe: FixRecipe = {
     // Check 5: Required fields present in audit calls
     const auditPayloads = [...patched.matchAll(/auditAttempt\s*\(\s*\{([^}]+)\}/g)];
     for (const [, payload] of auditPayloads) {
-      if (!payload.includes('action')) {
+      const p = payload ?? '';
+      if (!p.includes('action')) {
         return { valid: false, reason: 'Audit payload missing required "action" field' };
       }
-      if (!payload.includes('success')) {
+      if (!p.includes('success')) {
         return { valid: false, reason: 'Audit payload missing required "success" field' };
       }
     }
@@ -779,8 +781,8 @@ export const noPiiLoggingRecipe: FixRecipe = {
 
     let match;
     while ((match = consoleStatementPattern.exec(code)) !== null) {
-      const method = match[1];
-      const logContent = match[2];
+      const method = match[1] ?? 'log';
+      const logContent = match[2] ?? '';
       const sensitivity = containsSensitiveData(logContent);
 
       if (sensitivity.contains) {
@@ -810,8 +812,8 @@ export const noPiiLoggingRecipe: FixRecipe = {
     const errorPattern = /console\.error\s*\(\s*(['"`][^'"`]*['"`])\s*,?\s*([^)]*)\)\s*;?/g;
     let errorMatch;
     while ((errorMatch = errorPattern.exec(code)) !== null) {
-      const message = errorMatch[1];
-      const args = errorMatch[2].trim();
+      const message = errorMatch[1] ?? '';
+      const args = (errorMatch[2] ?? '').trim();
 
       // Always use safe logger with redaction for errors
       const replacement = args
@@ -1105,6 +1107,7 @@ function constantTimeCompare(a: string, b: string): boolean {
       const lines = patched.split('\n');
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
+        if (line === undefined) continue;
         if (pattern.test(line) && !line.includes('constantTimeCompare') && !line.includes('timingSafeEqual')) {
           return { valid: false, reason: `Unsafe direct comparison found: ${line.trim()}` };
         }

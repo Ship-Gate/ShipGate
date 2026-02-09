@@ -35,12 +35,24 @@
       }
     },
     "./builtins": {
-      "import": "./dist/builtins.js",
-      "require": "./dist/builtins.cjs"
+      "import": {
+        "types": "./dist/builtins.d.ts",
+        "default": "./dist/builtins.js"
+      },
+      "require": {
+        "types": "./dist/builtins.d.cts",
+        "default": "./dist/builtins.cjs"
+      }
     },
     "./combinators": {
-      "import": "./dist/combinators.js",
-      "require": "./dist/combinators.cjs"
+      "import": {
+        "types": "./dist/combinators.d.ts",
+        "default": "./dist/combinators.js"
+      },
+      "require": {
+        "types": "./dist/combinators.d.cts",
+        "default": "./dist/combinators.cjs"
+      }
     }
   },
   "files": [

@@ -4,12 +4,24 @@
 
 import { Request, Response, NextFunction } from 'express';
 
+/** Our auth user shape. */
+export interface AuthUser {
+  id: string;
+  email: string;
+  role: string;
+  name: string;
+  teams: string[];
+}
+
+declare global {
+  namespace Express {
+    interface User extends AuthUser {}
+  }
+}
+
+/** Request with our auth user shape. */
 export interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    role: string;
-  };
+  user?: AuthUser;
 }
 
 /**
@@ -31,6 +43,8 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
       id: '1',
       email,
       role: 'user',
+      name: '',
+      teams: [],
     };
 
     next();

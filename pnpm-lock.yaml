@@ -35,9 +35,6 @@ importers:
       '@isl-lang/generator':
         specifier: workspace:*
         version: link:../../packages/isl-generator
-      '@isl-lang/healer':
-        specifier: workspace:*
-        version: link:../../packages/isl-healer
       '@isl-lang/pipeline':
         specifier: workspace:*
         version: link:../../packages/isl-pipeline
@@ -116,6 +113,9 @@ importers:
       '@types/uuid':
         specifier: ^9.0.7
         version: 9.0.8
+      shipgate:
+        specifier: workspace:*
+        version: link:../../packages/cli
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -737,10 +737,35 @@ importers:
         version: 1.6.1(@types/node@20.19.30)
 
   packages/cli:
+    dependencies:
+      '@opentelemetry/api':
+        specifier: ^1.8.0
+        version: 1.9.0
+      '@opentelemetry/resources':
+        specifier: ^1.22.0
+        version: 1.30.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-base':
+        specifier: ^1.22.0
+        version: 1.30.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-node':
+        specifier: ^1.22.0
+        version: 1.30.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/semantic-conventions':
+        specifier: ^1.22.0
+        version: 1.39.0
     devDependencies:
+      '@isl-lang/autofix':
+        specifier: workspace:*
+        version: link:../autofix
       '@isl-lang/build-runner':
         specifier: workspace:*
         version: link:../build-runner
+      '@isl-lang/codegen-openapi':
+        specifier: workspace:*
+        version: link:../codegen-openapi
+      '@isl-lang/core':
+        specifier: workspace:*
+        version: link:../core
       '@isl-lang/evaluator':
         specifier: workspace:*
         version: link:../evaluator
@@ -759,6 +784,9 @@ importers:
       '@isl-lang/isl-core':
         specifier: workspace:*
         version: link:../isl-core
+      '@isl-lang/isl-coverage':
+        specifier: workspace:*
+        version: link:../isl-coverage
       '@isl-lang/isl-discovery':
         specifier: workspace:*
         version: link:../isl-discovery
@@ -810,6 +838,9 @@ importers:
       '@isl-lang/typechecker':
         specifier: workspace:*
         version: link:../typechecker
+      '@isl-lang/verifier-chaos':
+        specifier: workspace:*
+        version: link:../verifier-chaos
       '@isl-lang/verifier-runtime':
         specifier: workspace:*
         version: link:../verifier-runtime
@@ -2014,6 +2045,9 @@ importers:
       '@isl-lang/isl-core':
         specifier: workspace:*
         version: link:../isl-core
+      '@isl-lang/parser':
+        specifier: workspace:*
+        version: link:../parser
     devDependencies:
       '@types/node':
         specifier: ^20.11.0
@@ -3539,9 +3573,15 @@ importers:
       '@isl-lang/isl-core':
         specifier: workspace:*
         version: link:../isl-core
+      '@isl-lang/isl-coverage':
+        specifier: workspace:*
+        version: link:../isl-coverage
       '@isl-lang/parser':
         specifier: workspace:*
         version: link:../parser
+      '@isl-lang/secrets-hygiene':
+        specifier: workspace:*
+        version: link:../secrets-hygiene
       '@isl-lang/translator':
         specifier: workspace:*
         version: link:../isl-translator
@@ -3747,6 +3787,9 @@ importers:
       '@isl-lang/parser':
         specifier: workspace:*
         version: link:../parser
+      '@isl-lang/verifier-sandbox':
+        specifier: workspace:*
+        version: link:../verifier-sandbox
     devDependencies:
       '@types/node':
         specifier: ^25.1.0
@@ -4432,6 +4475,9 @@ importers:
       tsup:
         specifier: ^8.0.1
         version: 8.5.1(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)
+      tsx:
+        specifier: ^4.7.0
+        version: 4.21.0
       typescript:
         specifier: ^5.3.0
         version: 5.9.3

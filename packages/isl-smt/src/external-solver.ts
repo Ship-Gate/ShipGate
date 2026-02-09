@@ -47,7 +47,7 @@ export type SolverExecResult = SMTCheckResult & {
  */
 export interface SolverStats {
   /** Time spent in solver (ms) */
-  solverTimeMs: number;
+  solverTimeMs?: number;
   /** Peak memory usage estimate (bytes) */
   memoryUsed?: number;
   /** Number of conflicts (if reported) */

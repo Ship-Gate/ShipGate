@@ -97,10 +97,11 @@ function serve(req: import("node:http").IncomingMessage, res: import("node:http"
   }
   if (url === "/api/transfer" && req.method === "POST") {
     readJsonBody(req)
-      .then((body) => {
-        const fromId = typeof body?.fromId === "string" ? body.fromId : "";
-        const toId = typeof body?.toId === "string" ? body.toId : "";
-        const amount = typeof body?.amount === "number" ? body.amount : Number(body?.amount);
+      .then((body: unknown) => {
+        const b = body as Record<string, unknown>;
+        const fromId = typeof b?.fromId === "string" ? b.fromId : "";
+        const toId = typeof b?.toId === "string" ? b.toId : "";
+        const amount = typeof b?.amount === "number" ? b.amount : Number(b?.amount);
         if (!fromId || !toId || !Number.isFinite(amount)) {
           res.writeHead(400, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ success: false, error: "Invalid body: need fromId, toId, amount" }));

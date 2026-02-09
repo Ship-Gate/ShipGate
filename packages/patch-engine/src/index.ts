@@ -48,7 +48,7 @@ export type {
   // Validation types
   PatchValidationResult,
   PreflightResult,
-} from './types';
+} from './types.js';
 
 // ============================================================================
 // Type Guards
@@ -60,13 +60,13 @@ export {
   isWrapHandlerPatch,
   isReplaceCallPatch,
   isCreateFilePatch,
-} from './types';
+} from './types.js';
 
 // ============================================================================
 // Engine Exports
 // ============================================================================
 
-export { PatchEngine, applyPatches, preflightPatches } from './engine';
+export { PatchEngine, applyPatches, preflightPatches } from './engine.js';
 
 // ============================================================================
 // Patch Builders (Convenience Functions)
@@ -78,7 +78,7 @@ import type {
   WrapHandlerPatch,
   ReplaceCallPatch,
   CreateFilePatch,
-} from './types';
+} from './types.js';
 
 /**
  * Create an InsertImport patch

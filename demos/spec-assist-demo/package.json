@@ -1,6 +1,7 @@
 {
   "name": "@isl-demos/spec-assist",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "description": "Demo of AI-assisted ISL spec generation",
   "main": "demo.ts",

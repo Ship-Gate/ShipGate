@@ -47,6 +47,11 @@ export interface RunnerOptions {
   framework?: 'vitest' | 'jest';
   /** Language of the implementation */
   language?: 'typescript' | 'javascript' | 'python' | 'go';
+  /** Sandbox execution mode */
+  sandbox?: 'auto' | 'worker' | 'docker' | 'off';
+  sandboxTimeout?: number;
+  sandboxMemory?: number;
+  sandboxEnv?: string;
 }
 
 /**
@@ -357,7 +362,7 @@ export class TestRunner {
     sandboxMemory?: number;
     sandboxEnv?: string;
   };
-  private sandboxRunner?: ReturnType<typeof createSandboxRunner>;
+  private _sandboxRunner?: ReturnType<typeof createSandboxRunner>;
 
   constructor(options: RunnerOptions = {}) {
     this.options = {
@@ -389,7 +394,7 @@ export class TestRunner {
         verbose: this.options.verbose,
       };
 
-      this.sandboxRunner = createSandboxRunner(sandboxOptions);
+      this._sandboxRunner = createSandboxRunner(sandboxOptions);
     }
   }
 
@@ -756,7 +761,7 @@ export default defineConfig({
   /**
    * Parse pytest output (for sandboxed execution)
    */
-  private parsePytestOutput(output: string, duration: number): TestResult {
+  private _parsePytestOutput(output: string, duration: number): TestResult {
     try {
       // Try to read results.json if it exists
       const jsonMatch = output.match(/\{[\s\S]*"tests"[\s\S]*\}/);
@@ -790,7 +795,7 @@ export default defineConfig({
   /**
    * Parse Go test output (for sandboxed execution)
    */
-  private parseGoTestOutput(output: string, duration: number): TestResult {
+  private _parseGoTestOutput(output: string, duration: number): TestResult {
     return this.parseGoTestResults(output, duration, null);
   }
 

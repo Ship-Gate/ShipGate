@@ -45,6 +45,21 @@ export class Parser {
     this.limits = limits ?? DEFAULT_PARSER_LIMITS;
   }
 
+  private incrementDepth(): void {
+    this.parseDepth++;
+  }
+
+  private decrementDepth(): void {
+    this.parseDepth--;
+  }
+
+  private checkDepth(): void {
+    if (this.limits.enabled && this.parseDepth >= this.limits.maxDepth) {
+      throw new Error('Max parse depth exceeded');
+    }
+    this.incrementDepth();
+  }
+
   parse(source: string): ParseResult {
     // Check limits upfront
     try {
@@ -54,7 +69,7 @@ export class Parser {
         this.errors.addError(
           err.message,
           ErrorCode.UNEXPECTED_TOKEN,
-          { line: 1, column: 1, filename: this.filename }
+          { file: this.filename, line: 1, column: 1, endLine: 1, endColumn: 1 }
         );
         return {
           success: false,
@@ -78,7 +93,7 @@ export class Parser {
       this.errors.addError(
         `Token count ${tokens.length} exceeds maximum ${this.limits.maxTokens}`,
         ErrorCode.UNEXPECTED_TOKEN,
-        { line: 1, column: 1, filename: this.filename }
+        { file: this.filename, line: 1, column: 1, endLine: 1, endColumn: 1 }
       );
       return {
         success: false,
@@ -152,6 +167,8 @@ export class Parser {
 
   private parseDomain(): AST.Domain {
     const start = this.currentToken();
+    this.checkDepth();
+    try {
     this.expect('DOMAIN', "Expected 'domain'");
     const name = this.parseIdentifier();
     
@@ -219,7 +236,7 @@ export class Parser {
     }
 
     return domain;
-    } finally {
+  } finally {
       this.decrementDepth();
     }
   }

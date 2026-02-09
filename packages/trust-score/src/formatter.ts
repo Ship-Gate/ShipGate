@@ -9,8 +9,6 @@
 import type {
   TrustScore,
   SignalScore,
-  TrustReducer,
-  Recommendation,
   ShipDecision,
 } from './types.js';
 

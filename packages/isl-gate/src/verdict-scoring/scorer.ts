@@ -15,6 +15,7 @@ import type {
   ScoringConfig,
   BlastRadius,
   Severity,
+  ClaimVerdict,
 } from './types.js';
 import {
   BLAST_RADIUS,

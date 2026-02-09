@@ -17,7 +17,6 @@ import type {
   PassResult,
   AnalysisResult,
   AnalysisStats,
-  CacheInfo,
   AnalyzerConfig,
   TypeEnvironment,
 } from './types.js';

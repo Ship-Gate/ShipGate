@@ -9,10 +9,7 @@ import { readFile, writeFile } from 'fs/promises';
 import { resolve } from 'path';
 import type { FixSuggestion } from './fix-suggestion.js';
 import { runAllPatternDetectors } from './security-patterns.js';
-import {
-  generatePatchFromSuggestions,
-  generatePatchFile,
-} from './diff-generator.js';
+import { generatePatchFromSuggestions } from './diff-generator.js';
 
 // ============================================================================
 // Types

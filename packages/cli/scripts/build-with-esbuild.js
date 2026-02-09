@@ -61,6 +61,8 @@ const buildOptions = {
     '@isl-lang/interpreter',
     '@isl-lang/api-versioning',
     '@isl-lang/schema-evolution',
+    '@isl-lang/codegen-python',
+    '@isl-lang/codegen-graphql',
     'chromium-bidi',
     'playwright-core',
     // OpenTelemetry packages - mark as external to avoid ESM/CJS interop issues

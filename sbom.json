@@ -1,0 +1,22 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:5d1e86d8-ae16-4372-89a3-a89b6563d657",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-02-09T19:20:27.171Z",
+    "tools": [
+      {
+        "vendor": "ISL Lang",
+        "name": "sbom-generator",
+        "version": "1.0.0"
+      }
+    ],
+    "component": {
+      "type": "application",
+      "name": "isl-lang-monorepo",
+      "version": "0.1.0"
+    }
+  },
+  "components": []
+}

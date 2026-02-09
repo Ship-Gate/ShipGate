@@ -3,7 +3,7 @@
 // Caches parse results and provides incremental updates
 // ============================================================================
 
-import { ISLAnalyzer, type AnalysisResult } from './analyzer';
+import { ISLAnalyzer, type AnalysisResult } from './analyzer.js';
 
 // ============================================================================
 // Parse Cache Entry

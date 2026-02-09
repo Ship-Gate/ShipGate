@@ -451,7 +451,7 @@ export {
 } from './shipgate-fixes.js';
 export type {
   FixContext,
-  FixSuggestion,
+  ShipgateFixSuggestion,
   SuggestFixesResult,
   Fixer,
 } from './shipgate-fixes.js';

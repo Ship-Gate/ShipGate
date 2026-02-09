@@ -107,7 +107,7 @@ function verifyQuery(
 
   // Verify relations (if query involves joins)
   if (query.tables.length > 1) {
-    const relationMismatches = verifyRelations(schema, query);
+    const relationMismatches = verifyRelations(schema, query, options);
     mismatches.push(...relationMismatches);
   }
 
@@ -120,7 +120,7 @@ function verifyQuery(
 function verifyRelations(
   schema: DatabaseSchema,
   query: ExtractedQuery,
-  options: VerificationOptions
+  _options: VerificationOptions
 ): Mismatch[] {
   const mismatches: Mismatch[] = [];
 

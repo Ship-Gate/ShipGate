@@ -11,12 +11,8 @@
  */
 
 import type { Diagnostic } from '@isl-lang/errors';
-import type {
-  DomainDeclaration,
-  BehaviorDeclaration,
-  EntityDeclaration,
-  Expression,
-} from '@isl-lang/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration, Expression } from '@isl-lang/isl-core';
+import type { EntityDeclaration } from '@isl-lang/isl-core/ast';
 import type { SemanticPass, PassContext, TypeInfo } from '../types.js';
 import { spanToLocation } from '../types.js';
 
@@ -36,9 +32,9 @@ export const TypeCoherencePass: SemanticPass = {
     const diagnostics: Diagnostic[] = [];
     const { ast, filePath, typeEnv } = ctx;
 
-    // Check entity type coherence
+    // Check entity type coherence (ast.entities may be parser Entity[]; cast for span)
     for (const entity of ast.entities || []) {
-      diagnostics.push(...checkEntityTypeCoherence(entity, ast, filePath, typeEnv));
+      diagnostics.push(...checkEntityTypeCoherence(entity as unknown as EntityDeclaration, ast as DomainDeclaration, filePath, typeEnv));
     }
 
     // Check behavior type coherence
@@ -88,7 +84,7 @@ function checkEntityTypeCoherence(
               category: 'semantic',
               severity: 'error',
               message: `Numeric constraint '${constraint.kind}' is not valid for type '${fieldType}'`,
-              location: spanToLocation(field.span, filePath),
+              location: spanToLocation((field as { span?: unknown }).span, filePath),
               source: 'verifier',
               notes: [
                 `Field '${field.name.name}' in entity '${entity.name.name}'`,
@@ -167,17 +163,17 @@ function checkEntityTypeCoherence(
   for (const refName of referencedEntities) {
     const refEntity = ast.entities?.find(e => e.name.name === refName);
     if (refEntity) {
-      const backRefs = collectEntityReferences(refEntity);
+      const backRefs = collectEntityReferences(refEntity as unknown as EntityDeclaration);
       if (backRefs.has(entity.name.name)) {
         // This is a bidirectional reference - check if it's intentional
-        const hasBidirectionalAnnotation = checkForBidirectionalAnnotation(entity, refName);
+        const hasBidirectionalAnnotation = checkForBidirectionalAnnotation(entity as unknown as EntityDeclaration, refName);
         if (!hasBidirectionalAnnotation) {
           diagnostics.push({
             code: 'E0343',
             category: 'semantic',
             severity: 'hint',
             message: `Bidirectional reference between '${entity.name.name}' and '${refName}'`,
-            location: spanToLocation(entity.span, filePath),
+            location: spanToLocation((entity as { span?: unknown }).span, filePath),
             source: 'verifier',
             notes: [
               'Bidirectional entity references can cause serialization issues',
@@ -208,8 +204,9 @@ function checkBehaviorTypeCoherence(
 ): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
 
-  // Check input types
-  for (const input of behavior.input || []) {
+  // Check input types (input may be single object or array)
+  const inputs = Array.isArray(behavior.input) ? behavior.input : (behavior.input ? [behavior.input] : []);
+  for (const input of inputs) {
     const typeName = extractTypeName(input.type);
     
     // Check for optional types in required contexts
@@ -261,7 +258,8 @@ function checkExpressionTypeCoherence(
 ): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
 
-  if (expr.kind === 'BinaryExpression' || expr.kind === 'ComparisonExpression') {
+  const kind = (expr as { kind?: string }).kind ?? '';
+  if (kind === 'BinaryExpression' || kind === 'ComparisonExpression' || kind === 'BinaryExpr' || kind === 'ComparisonExpr') {
     const binary = expr as {
       left: Expression;
       operator: string;
@@ -326,7 +324,7 @@ function checkTypeShadowing(
         category: 'semantic',
         severity: 'warning',
         message: `Type '${name}' shadows a built-in type`,
-        location: spanToLocation(typeDef.span, filePath),
+        location: spanToLocation((typeDef as { span?: unknown }).span, filePath),
         source: 'verifier',
         notes: [
           `'${name}' is a built-in ISL type`,
@@ -348,7 +346,7 @@ function checkTypeShadowing(
         category: 'semantic',
         severity: 'warning',
         message: `Entity '${name}' shadows a built-in type`,
-        location: spanToLocation(entity.span, filePath),
+        location: spanToLocation((entity as { span?: unknown }).span, filePath),
         source: 'verifier',
         notes: [
           `'${name}' is a built-in ISL type`,
@@ -442,10 +440,12 @@ function checkGenericTypeUsage(
 
   // Check behaviors
   for (const behavior of ast.behaviors || []) {
-    for (const input of behavior.input || []) {
+    const inputs = Array.isArray(behavior.input) ? behavior.input : (behavior.input ? [behavior.input] : []);
+    const outputs = Array.isArray(behavior.output) ? behavior.output : (behavior.output ? [behavior.output] : []);
+    for (const input of inputs) {
       checkType(input.type, `Input '${input.name.name}' in behavior '${behavior.name.name}'`);
     }
-    for (const output of behavior.output || []) {
+    for (const output of outputs) {
       checkType(output.type, `Output '${output.name.name}' in behavior '${behavior.name.name}'`);
     }
   }

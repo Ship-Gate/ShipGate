@@ -234,7 +234,7 @@ const ExpressAdapter: FrameworkAdapter = {
 };
 
 export function getFrameworkAdapter(ctx: RepoContext): FrameworkAdapter {
-  switch (ctx.framework) {
+  switch (ctx.framework as string) {
     case 'nextjs':
     case 'nextjs-app-router':
       return NextJSAppRouterAdapter;

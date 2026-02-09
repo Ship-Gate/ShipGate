@@ -46,6 +46,7 @@ export function parseDrizzleSchema(filePath: string): DatabaseSchema {
   while ((relationMatch = relationPattern.exec(content)) !== null) {
     const tableName = relationMatch[2];
     const relationBody = relationMatch[3] || '';
+    if (!tableName) continue;
     const extractedRelations = extractDrizzleRelations(tableName, relationBody);
     relations.push(...extractedRelations);
   }
@@ -142,7 +143,9 @@ function extractDrizzleIndexes(tableBody: string): Array<{ name: string; columns
     // Pattern: indexName: index('index_name').on(table.column1, table.column2)
     const indexMatch = trimmed.match(/(\w+):\s*(?:index|unique)\(['"`]([\w_]+)['"`]\)\.on\(([^)]+)\)/);
     if (indexMatch) {
-      const [, , indexName, columnsStr] = indexMatch;
+      const indexName = indexMatch[2];
+      const columnsStr = indexMatch[3];
+      if (indexName === undefined || columnsStr === undefined) continue;
       const columns = columnsStr
         .split(',')
         .map((c) => c.trim().replace(/table\./g, ''))

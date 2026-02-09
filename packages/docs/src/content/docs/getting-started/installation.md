@@ -13,13 +13,13 @@ description: Install ShipGate CLI and set up ISL in your project.
 Install the ShipGate CLI globally:
 
 ```bash
-npm install -g @isl-lang/cli
+npm install -g shipgate
 ```
 
 Or with pnpm:
 
 ```bash
-pnpm add -g @isl-lang/cli
+pnpm add -g shipgate
 ```
 
 Verify the installation:
@@ -28,12 +28,14 @@ Verify the installation:
 shipgate --version
 ```
 
+When using the published CLI you'll use `shipgate`; when running from source (e.g. `pnpm --filter @isl-lang/cli exec isl ...`) the binary may be available as `isl`.
+
 ## Project-level installation
 
 For team projects, install as a dev dependency so everyone uses the same version:
 
 ```bash
-npm install --save-dev @isl-lang/cli
+npm install --save-dev shipgate
 ```
 
 Then add scripts to your `package.json`:

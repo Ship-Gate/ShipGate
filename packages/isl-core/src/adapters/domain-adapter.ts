@@ -509,6 +509,7 @@ export function domainDeclarationToDomain(decl: DomainDeclaration): ParserDomain
     entities: decl.entities.map(adaptEntity),
     behaviors: decl.behaviors.map(adaptBehavior),
     invariants: decl.invariants.map(adaptInvariantsBlock),
+    uses: [], // Parser uses are converted to imports above
     policies: [], // Not in isl-core AST
     views: [], // Not in isl-core AST
     scenarios: [], // Not in isl-core AST

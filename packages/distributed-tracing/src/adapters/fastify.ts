@@ -8,7 +8,7 @@
  * - Injects correlation IDs into outgoing responses
  */
 
-import { trace, context, SpanStatusCode, SpanKind } from '@opentelemetry/api';
+import { trace, context, SpanStatusCode, SpanKind, type Span } from '@opentelemetry/api';
 import type { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginOptions } from 'fastify';
 import {
   extractCorrelationFromHeaders,
@@ -67,7 +67,7 @@ declare module 'fastify' {
       spanId: string;
       correlationId: string;
     };
-    tracingSpan?: ReturnType<typeof trace.getTracer>['startSpan'];
+    tracingSpan?: import('@opentelemetry/api').Span;
     tracingContext?: ReturnType<typeof context.active>;
   }
 }
@@ -121,7 +121,7 @@ export async function fastifyTracingPlugin(
     const correlationCtx = extractCorrelationFromHeaders(request.headers as Record<string, string | string[] | undefined>);
 
     // Start span
-    const span = tracer.startSpan(`${request.method} ${request.url}`, {
+    const span: Span = tracer.startSpan(`${request.method} ${request.url}`, {
       kind: SpanKind.SERVER,
       attributes: {
         'http.method': request.method,
@@ -177,10 +177,12 @@ export async function fastifyTracingPlugin(
     // Set status code
     span.setAttribute('http.status_code', reply.statusCode);
 
-    // Record response body if enabled
-    if (recordResponseBody && reply.payload) {
+    // Record response body if enabled (FastifyReply type doesn't include payload; it exists at runtime)
+    const replyWithPayload = reply as FastifyReply & { payload?: unknown };
+    const replyPayload = replyWithPayload.payload;
+    if (recordResponseBody && replyPayload !== undefined) {
       try {
-        const payloadStr = typeof reply.payload === 'string' ? reply.payload : JSON.stringify(reply.payload);
+        const payloadStr = typeof replyPayload === 'string' ? replyPayload : JSON.stringify(replyPayload);
         span.setAttribute('http.response.body', payloadStr.slice(0, 1024)); // Limit size
       } catch {
         // Ignore serialization errors

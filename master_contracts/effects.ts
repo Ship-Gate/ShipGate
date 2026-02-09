@@ -256,7 +256,7 @@ export class EffectHandlerRegistry {
   private handlers = new Map<string, EffectHandler<Effect, unknown>>();
 
   register<E extends Effect>(handler: EffectHandler<E, unknown>): void {
-    this.handlers.set(handler.handles, handler as EffectHandler<Effect, unknown>);
+    this.handlers.set(handler.handles, handler as unknown as EffectHandler<Effect, unknown>);
   }
 
   get(tag: string): EffectHandler<Effect, unknown> | undefined {

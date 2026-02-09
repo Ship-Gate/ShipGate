@@ -149,7 +149,9 @@ export async function checkPolicyAgainstGate(
         // Check if there's an exception
         let hasException = false;
         for (const exc of activeExceptions) {
-          const matches = await matchesExceptionScope(undefined, undefined, exc);
+          const filePath: string | undefined = undefined;
+          const behaviorName: string | undefined = undefined;
+          const matches = await matchesExceptionScope(filePath, behaviorName, exc);
           if (matches && exc.scope.rules?.includes(evidenceReq.context.paths?.[0] ?? '')) {
             hasException = true;
             break;

@@ -103,7 +103,7 @@ export function generateHandlerSkeleton(
  */
 export function generateServiceImpl(
   serviceName: string,
-  behaviors: Behavior[],
+  _behaviors: Behavior[],
 ): { code: string; imports: GoImports } {
   const implName = `${toGoName(serviceName)}ServiceImpl`;
   const interfaceName = `${toGoName(serviceName)}Service`;

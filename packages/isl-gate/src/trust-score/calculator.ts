@@ -62,6 +62,8 @@ export function resolveConfig(config?: TrustScoreConfig): ResolvedTrustConfig {
     criticalFailsBlock: config?.criticalFailsBlock ?? true,
     historyPath: config?.historyPath ?? '.isl-gate/trust-history.json',
     maxHistoryEntries: config?.maxHistoryEntries ?? 50,
+    enableEvidencePriority: config?.enableEvidencePriority ?? true,
+    evidenceDecayHalfLifeDays: config?.evidenceDecayHalfLifeDays ?? 90,
   };
 }
 

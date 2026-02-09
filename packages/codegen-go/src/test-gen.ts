@@ -21,7 +21,6 @@ import type {
 
 import {
   toGoName,
-  toSnakeCase,
   type GoImports,
   emptyImports,
 } from './types.js';

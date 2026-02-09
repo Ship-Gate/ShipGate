@@ -301,29 +301,39 @@ export const DEFAULT_ANALYZER_CONFIG: Required<AnalyzerConfig> = {
 // Utility Types
 // ============================================================================
 
+/** Span-like shape (parser/isl-core) with start/end */
+interface SpanLike {
+  start: { line: number; column: number; offset?: number };
+  end: { line: number; column: number; offset?: number };
+}
+
 /**
- * Helper to extract location from an AST node
+ * Helper to extract location from an AST node or span
  * @deprecated Use node.location directly - parser AST nodes have SourceLocation
  */
 export function spanToLocation(
-  loc: ParserSourceLocation | SourceLocation | undefined | null, 
+  loc: ParserSourceLocation | SourceLocation | SpanLike | unknown,
   file: string
 ): SourceLocation {
-  if (!loc) {
+  if (loc == null) {
+    return { file, line: 1, column: 1, endLine: 1, endColumn: 1 };
+  }
+  const withSpan = loc as Partial<SpanLike & SourceLocation & { file?: string }>;
+  if ('start' in withSpan && withSpan.start && 'end' in withSpan && withSpan.end) {
     return {
       file,
-      line: 1,
-      column: 1,
-      endLine: 1,
-      endColumn: 1,
+      line: withSpan.start.line ?? 1,
+      column: withSpan.start.column ?? 1,
+      endLine: withSpan.end.line ?? 1,
+      endColumn: withSpan.end.column ?? 1,
     };
   }
   return {
-    file: loc.file || file,
-    line: loc.line || 1,
-    column: loc.column || 1,
-    endLine: loc.endLine || loc.line || 1,
-    endColumn: loc.endColumn || loc.column || 1,
+    file: withSpan.file || file,
+    line: (withSpan.line as number) ?? 1,
+    column: (withSpan.column as number) ?? 1,
+    endLine: (withSpan.endLine as number) ?? (withSpan.line as number) ?? 1,
+    endColumn: (withSpan.endColumn as number) ?? (withSpan.column as number) ?? 1,
   };
 }
 

@@ -153,7 +153,7 @@ export interface SolverEvidence {
   /** Hash of the SMT query (for caching and reproducibility) */
   queryHash: string;
   /** Solver used */
-  solver: 'builtin' | 'z3' | 'cvc5';
+  solver: 'builtin' | 'z3' | 'cvc5' | 'z3-wasm';
   /** Solver version (if external) */
   solverVersion?: string;
   /** Result status */

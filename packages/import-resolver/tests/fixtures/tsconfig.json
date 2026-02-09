@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "skipLibCheck": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rootDir": "."
+  },
+  "include": [
+    "type-consumer-test.ts"
+  ],
+  "exclude": []
+}

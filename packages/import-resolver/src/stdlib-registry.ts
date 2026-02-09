@@ -305,11 +305,17 @@ export class StdlibRegistryManager {
         return null;
       }
       const [, alias, file] = aliasMatch;
+      if (!alias) {
+        return null;
+      }
       const canonical = this.resolveAlias(alias);
       return this.resolveModuleFile(file ? `${canonical}/${file}` : canonical);
     }
 
     const [, moduleName, subPath] = match;
+    if (!moduleName) {
+      return null;
+    }
     const resolved = this.resolveModule(moduleName);
     
     if (!resolved) {
@@ -324,8 +330,9 @@ export class StdlibRegistryManager {
 
     // Try to match the subpath to a file
     const fileName = subPath.replace(/\.isl$/, '');
-    if (fileName in resolved.files) {
-      return resolved.files[fileName];
+    const filePath = resolved.files[fileName];
+    if (filePath !== undefined) {
+      return filePath;
     }
 
     // Try direct file lookup

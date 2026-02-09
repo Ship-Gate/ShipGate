@@ -24,7 +24,8 @@
     "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@isl-lang/isl-core": "workspace:*"
+    "@isl-lang/isl-core": "workspace:*",
+    "@isl-lang/parser": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.1",

@@ -11,7 +11,7 @@
  * @module @isl-lang/verifier-temporal/trace-timing
  */
 
-import type { TraceEvent, Trace, TimingInfo } from '@isl-lang/trace-format';
+import type { TraceEvent, Trace } from '@isl-lang/trace-format';
 import { calculatePercentile, calculateLatencyStats, type LatencyStats } from './percentiles.js';
 import type { TimingSample } from './timing.js';
 import {
@@ -19,7 +19,6 @@ import {
   evaluateAlways,
   evaluateNever,
   type StatePredicate,
-  type TemporalEvaluationResult,
 } from './trace-model.js';
 
 // ============================================================================
@@ -928,7 +927,7 @@ export function verifyTemporalClauses(
           verdict: alwaysResult.verdict,
           success: alwaysResult.success,
           timing: {
-            thresholdMs: clause.thresholdMs,
+            thresholdMs: clause.thresholdMs ?? 0,
             sampleCount: alwaysResult.snapshotsChecked,
           },
           error: alwaysResult.error,
@@ -951,7 +950,7 @@ export function verifyTemporalClauses(
           verdict: neverResult.verdict,
           success: neverResult.success,
           timing: {
-            thresholdMs: clause.thresholdMs,
+            thresholdMs: clause.thresholdMs ?? 0,
             sampleCount: neverResult.snapshotsChecked,
           },
           error: neverResult.error,

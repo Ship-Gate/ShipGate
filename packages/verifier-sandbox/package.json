@@ -11,8 +11,11 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && tsc -p tsconfig.build.json",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
   },

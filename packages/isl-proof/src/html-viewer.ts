@@ -545,7 +545,6 @@ function getVerdictIcon(verdict: string): string {
 }
 
 function escapeHtml(text: string): string {
-  const div = { textContent: text } as { innerHTML: string };
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -571,10 +570,3 @@ function formatDate(isoString: string): string {
   }
 }
 
-// ============================================================================
-// Exports
-// ============================================================================
-
-export {
-  generateHtmlViewer,
-};

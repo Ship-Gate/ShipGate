@@ -1,11 +1,23 @@
 /**
  * Truthpack Claim Integration
- * 
- * Convert truthpack routes to claim graph format
+ *
+ * Convert truthpack routes to claim graph format (local types; no @isl-lang/proof dependency).
  */
 
 import type { TruthpackRoute } from './schema.js';
-import type { ClaimCollection } from '@isl-lang/proof/claim-integration';
+
+/** Route claim shape for proof/claim integration */
+export interface RouteClaim {
+  route: string;
+  method: string;
+  locations: Array<{ file: string; line: number; column?: number }>;
+}
+
+/** Env var claim shape for proof/claim integration */
+export interface EnvVarClaim {
+  name: string;
+  locations: Array<{ file: string; line: number; column?: number }>;
+}
 
 /**
  * Convert truthpack routes to claim collection format

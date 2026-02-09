@@ -63,7 +63,7 @@ export interface Binding {
  */
 export interface Evidence {
   /** Type of evidence */
-  type: 'name_match' | 'path_match' | 'ast_pattern' | 'config_hint' | 'naming_convention';
+  type: 'name_match' | 'path_match' | 'ast_pattern' | 'config_hint' | 'naming_convention' | 'route_matching';
   /** Description */
   description: string;
   /** Confidence contribution (0-1) */

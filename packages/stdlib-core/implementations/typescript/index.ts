@@ -4,10 +4,10 @@
 // ============================================================================
 
 // Re-export all modules
-export * from './primitives';
-export * from './validation';
-export * from './time';
-export * from './geo';
+export * from './primitives.js';
+export * from './validation.js';
+export * from './time.js';
+export * from './geo.js';
 // Re-export ids module excluding duplicates from primitives
 // Types need separate export for isolatedModules compatibility
 export type {
@@ -18,7 +18,7 @@ export type {
   ObjectId,
   SnowflakeId,
   Cursor,
-} from './ids';
+} from './ids.js';
 // Values
 export {
   ID_PATTERNS,
@@ -54,21 +54,21 @@ export {
   ulidToDate,
   snowflakeToTimestamp,
   snowflakeToDate,
-} from './ids';
+} from './ids.js';
 
 // Re-export default objects
-export { default as Primitives } from './primitives';
-export { default as Validation } from './validation';
-export { default as Time } from './time';
-export { default as Geo } from './geo';
-export { default as Ids } from './ids';
+export { default as Primitives } from './primitives.js';
+export { default as Validation } from './validation.js';
+export { default as Time } from './time.js';
+export { default as Geo } from './geo.js';
+export { default as Ids } from './ids.js';
 
 // Convenience namespace export
-import Primitives from './primitives';
-import Validation from './validation';
-import Time from './time';
-import Geo from './geo';
-import Ids from './ids';
+import Primitives from './primitives.js';
+import Validation from './validation.js';
+import Time from './time.js';
+import Geo from './geo.js';
+import Ids from './ids.js';
 
 export const StdLib = {
   Primitives,

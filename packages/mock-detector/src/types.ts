@@ -80,7 +80,7 @@ export interface MockDetectionResult {
  * Configuration for mock detection
  */
 export interface MockDetectorConfig {
-  /** Paths/patterns to allowlist (e.g., ['**/tests/**', '**/mocks/**']) */
+  /** Paths/patterns to allowlist (e.g. **\/tests/** or **\/mocks/**) */
   allowlist: string[];
   /** Whether to check dev-only build paths */
   checkDevPaths: boolean;

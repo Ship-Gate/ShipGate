@@ -8,7 +8,6 @@
  */
 
 import { trace, context, propagation } from '@opentelemetry/api';
-import type { Context } from '@opentelemetry/api';
 
 /**
  * Standard correlation ID header names
@@ -78,7 +77,7 @@ export function extractCorrelationFromHeaders(
         spanId: parsed.spanId,
         correlationId: parsed.traceId,
         traceFlags: parsed.traceFlags,
-        traceState: getHeaderValue(headers, CORRELATION_HEADERS.TRACESTATE),
+        traceState: getHeaderValue(headers, CORRELATION_HEADERS.TRACESTATE) || undefined,
       };
     }
   }
@@ -193,7 +192,7 @@ function parseTraceparent(traceparent: string): {
   if (parts.length !== 4) return null;
 
   const [, traceId, spanId, traceFlagsStr] = parts;
-  const traceFlags = parseInt(traceFlagsStr, 16);
+  const traceFlags = parseInt(traceFlagsStr ?? '0', 16);
 
   if (!traceId || !spanId || isNaN(traceFlags)) {
     return null;

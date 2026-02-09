@@ -1,6 +1,7 @@
 {
   "name": "@isl-lang/dashboard-api",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "REST API for ISL verification dashboard — stores reports, coverage, and trends",
   "type": "module",
   "main": "./dist/index.js",

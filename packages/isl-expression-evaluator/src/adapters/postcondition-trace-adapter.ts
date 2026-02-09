@@ -494,7 +494,7 @@ export class PostconditionTraceAdapter implements PostconditionAdapter {
       return count;
     }
     
-    return events?.length ?? 0;
+    return 0;
   }
 
   /**

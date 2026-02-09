@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useCodeSync } from '@/hooks/useCodeSync';
 
 export function CodePreview() {
-  const { islCode, domainName, domainVersion } = useCodeSync();
+  const { islCode } = useCodeSync();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {

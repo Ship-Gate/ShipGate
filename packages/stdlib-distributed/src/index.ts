@@ -4,11 +4,11 @@
 // ============================================================================
 
 // Shared Types (exported once to avoid conflicts)
-export type { NodeId } from './consensus';
+export type { NodeId } from './consensus.js';
 
 // Actor System
-export * from './actor';
-export * from './actor-system';
+export * from './actor.js';
+export * from './actor-system.js';
 
 // Consensus - Types
 export type {
@@ -21,10 +21,10 @@ export type {
   AppendEntriesRequest,
   AppendEntriesResponse,
   ProposalResult,
-} from './consensus';
+} from './consensus.js';
 
 // Consensus - Values
-export { RaftNode, createRaftNode } from './consensus';
+export { RaftNode, createRaftNode } from './consensus.js';
 
 // CRDTs - Types
 export type {
@@ -36,7 +36,7 @@ export type {
   ORSet,
   LWWRegister,
   MVRegister,
-} from './crdt';
+} from './crdt.js';
 
 // CRDTs - Values
 export {
@@ -73,13 +73,13 @@ export {
   createHLC,
   tickHLC,
   receiveHLC,
-} from './crdt';
+} from './crdt.js';
 
 // Saga / Distributed Transactions
-export * from './saga';
+export * from './saga.js';
 
 // Service Mesh
-export * from './service-mesh';
+export * from './service-mesh.js';
 
 // Leader Election & Distributed Locks - Types
 export type {
@@ -89,7 +89,7 @@ export type {
   LockAcquireResult,
   LockReleaseResult,
   FencingToken,
-} from './coordination';
+} from './coordination.js';
 
 // Leader Election & Distributed Locks - Values
 export {
@@ -98,4 +98,4 @@ export {
   createDistributedLock,
   createLeaderElection,
   FencingTokenGenerator,
-} from './coordination';
+} from './coordination.js';

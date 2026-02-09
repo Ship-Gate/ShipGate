@@ -1,6 +1,7 @@
 {
   "name": "stdlib-auth-fastify-example",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "Sample Fastify app using stdlib-auth",
   "type": "module",
   "main": "server.ts",

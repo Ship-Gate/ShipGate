@@ -38,7 +38,7 @@ export function detectCatchReturnsSuccess(
               if (isSuccessReturn) {
                 // Find the try statement parent
                 let tryNode: ts.TryStatement | null = null;
-                let parent = node.parent;
+                let parent: ts.Node | undefined = node.parent;
                 while (parent) {
                   if (ts.isTryStatement(parent)) {
                     tryNode = parent;

@@ -44,8 +44,6 @@ export class TrustScoreCalculator {
   private readonly weights: Required<SignalWeights>;
   private readonly thresholds: Required<typeof DEFAULT_THRESHOLDS>;
   private readonly penalties: Required<typeof DEFAULT_PENALTIES>;
-  private readonly maxSingleSignalWeight: number;
-
   constructor(config: TrustScoreConfig = {}) {
     // Initialize weights, ensuring no signal dominates
     const rawWeights = { ...DEFAULT_WEIGHTS, ...config.weights };
@@ -53,7 +51,6 @@ export class TrustScoreCalculator {
     
     this.thresholds = { ...DEFAULT_THRESHOLDS, ...config.thresholds };
     this.penalties = { ...DEFAULT_PENALTIES, ...config.penalties };
-    this.maxSingleSignalWeight = config.maxSingleSignalWeight ?? MAX_SINGLE_SIGNAL_WEIGHT;
   }
 
   /**

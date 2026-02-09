@@ -868,7 +868,7 @@ export function consistencyCheckerPass(options: ConsistencyCheckerOptions = {}) 
         checkInvariantVariables(domain, diagnostics);
       }
       
-      return diagnostics;
+      return diagnostics as unknown as Diagnostic[];
     },
   };
 }

@@ -21,16 +21,17 @@ const EVENT_COLORS: Record<string, string> = {
 function getEventColor(event: TraceEvent): string {
   if (event.type === 'check' && event.data.kind === 'check') {
     const checkData = event.data as CheckEventData;
-    return checkData.passed ? EVENT_COLORS.check : EVENT_COLORS.check_failed;
+    return checkData.passed ? (EVENT_COLORS['check'] ?? 'bg-green-400') : (EVENT_COLORS['check_failed'] ?? 'bg-red-500');
   }
-  return EVENT_COLORS[event.type] ?? 'bg-gray-400';
+  const key = event.type ?? 'state_change';
+  return (EVENT_COLORS as Record<string, string>)[key] ?? 'bg-gray-400';
 }
 
 export function TraceTimeline() {
   const { filteredEvents, currentIndex, jumpTo, trace } = useTracePlayer();
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
-  const [dragStart, setDragStart] = useState<number | null>(null);
+  const [_dragStart, _setDragStart] = useState<number | null>(null);
 
   // Auto-scroll to current event
   useEffect(() => {

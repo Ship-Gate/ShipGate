@@ -168,7 +168,6 @@ async function askApply(
 
 const STATUS_FAIL = '\u2717 FAIL';
 const STATUS_FIX = '\u2713 FIXED';
-const STATUS_SKIP = '\u25CB SKIP';
 const BREAKING_TAG = '[BREAKING]';
 
 function printHumanReadable(result: FixEngineResult, mode: FixMode): void {

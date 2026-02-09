@@ -12,6 +12,8 @@ import type {
   TruthpackProvenance,
   TruthpackDependency,
   TruthpackDbSchema,
+  TruthpackDbTable,
+  TruthpackDbColumn,
   TruthpackAuthModel,
   TruthpackRuntimeProbe,
   TruthpackRoute,
@@ -303,8 +305,8 @@ function deduplicateRoutes(routes: TruthpackRoute[]): TruthpackRoute[] {
   });
 }
 
-function deduplicateEnvVars(envVars: typeof envVars): typeof envVars {
-  const seen = new Map<string, typeof envVars[0]>();
+function deduplicateEnvVars(envVars: TruthpackEnvVar[]): TruthpackEnvVar[] {
+  const seen = new Map<string, TruthpackEnvVar>();
   for (const envVar of envVars) {
     const existing = seen.get(envVar.name);
     if (!existing || envVar.confidence > existing.confidence) {
@@ -376,21 +378,23 @@ async function detectDbSchema(repoRoot: string): Promise<TruthpackDbSchema | und
   return undefined;
 }
 
-function extractPrismaTables(content: string): typeof TruthpackDbSchema.prototype.tables {
-  const tables: typeof TruthpackDbSchema.prototype.tables = [];
+function extractPrismaTables(content: string): TruthpackDbTable[] {
+  const tables: TruthpackDbTable[] = [];
   const modelPattern = /model\s+(\w+)\s*\{([^}]+)\}/gs;
   let match: RegExpExecArray | null;
 
   while ((match = modelPattern.exec(content)) !== null) {
     const tableName = match[1];
     const fieldsContent = match[2];
-    const columns: typeof TruthpackDbTable.prototype.columns = [];
+    if (tableName === undefined || fieldsContent === undefined) continue;
+    const columns: TruthpackDbColumn[] = [];
 
     const fieldPattern = /(\w+)\s+(\w+)(\??)(\s+@.*)?/g;
     let fieldMatch: RegExpExecArray | null;
     while ((fieldMatch = fieldPattern.exec(fieldsContent)) !== null) {
       const fieldName = fieldMatch[1];
       const fieldType = fieldMatch[2];
+      if (fieldName === undefined || fieldType === undefined) continue;
       const nullable = fieldMatch[3] === '?';
       const isPrimaryKey = fieldMatch[4]?.includes('@id') ?? false;
 
@@ -410,7 +414,7 @@ function extractPrismaTables(content: string): typeof TruthpackDbSchema.prototyp
 
 async function detectAuthModel(
   repoRoot: string,
-  routes: typeof routes
+  routes: TruthpackRoute[]
 ): Promise<TruthpackAuthModel | undefined> {
   // Look for auth-related routes
   const authRoutes: Record<string, string> = {};
@@ -449,8 +453,8 @@ async function detectAuthModel(
 }
 
 async function detectRuntimeProbes(
-  repoRoot: string,
-  routes: typeof routes
+  _repoRoot: string,
+  routes: TruthpackRoute[]
 ): Promise<TruthpackRuntimeProbe[]> {
   const probes: TruthpackRuntimeProbe[] = [];
 
@@ -479,20 +483,6 @@ function computeAverageConfidence(truthpack: TruthpackV2): number {
 
   if (confidences.length === 0) return 0;
   return confidences.reduce((a, b) => a + b, 0) / confidences.length;
-}
-
-async function savePreviousTruthpack(outputDir: string): Promise<void> {
-  try {
-    const truthpackPath = path.join(outputDir, 'truthpack.json');
-    if (await fileExists(truthpackPath)) {
-      const previousDir = path.join(outputDir, '.previous');
-      await fs.mkdir(previousDir, { recursive: true });
-      const content = await fs.readFile(truthpackPath, 'utf-8');
-      await fs.writeFile(path.join(previousDir, 'truthpack.json'), content, 'utf-8');
-    }
-  } catch {
-    // Ignore errors when saving previous
-  }
 }
 
 async function writeTruthpack(truthpack: TruthpackV2, outputDir: string): Promise<void> {
@@ -554,10 +544,10 @@ function extractFastifyRegistrations(content: string): Array<{ pluginId: string;
   let match: RegExpExecArray | null;
 
   while ((match = registerPattern.exec(content)) !== null) {
-    const pluginId = match[1].trim();
-    const optionsStr = match[2] || '';
+    const pluginId = (match[1] ?? '').trim();
+    const optionsStr = match[2] ?? '';
     const prefixMatch = optionsStr.match(/prefix\s*:\s*['"`]([^'"`]+)['"`]/);
-    const prefix = prefixMatch ? prefixMatch[1] : '';
+    const prefix = prefixMatch ? prefixMatch[1] ?? '' : '';
 
     registrations.push({ pluginId, prefix });
   }

@@ -15,7 +15,6 @@ export async function extractISLAuthRequirements(
   content: string
 ): Promise<ISLAuthRequirement[]> {
   const requirements: ISLAuthRequirement[] = [];
-  const lines = content.split('\n');
 
   // Pattern 1: security { requires auth }
   const securityRequiresPattern = /security\s*\{[^}]*requires\s+(auth|role|permission)[^}]*\}/gis;
@@ -80,7 +79,7 @@ export async function extractISLAuthRequirements(
     if (roleCheckMatch) {
       const behaviorName = extractBehaviorName(content, match.index);
       const role = roleCheckMatch[1];
-      
+      if (!role) continue;
       // Check if this is already captured in security block
       const alreadyCaptured = requirements.some(
         r => r.behaviorName === behaviorName && r.line === line
@@ -133,6 +132,7 @@ function extractBehaviorName(content: string, index: number): string | null {
   const behaviorMatch = beforeIndex.match(/behavior\s+(\w+)/g);
   if (behaviorMatch && behaviorMatch.length > 0) {
     const lastMatch = behaviorMatch[behaviorMatch.length - 1];
+    if (!lastMatch) return null;
     const nameMatch = lastMatch.match(/behavior\s+(\w+)/);
     return nameMatch?.[1] || null;
   }

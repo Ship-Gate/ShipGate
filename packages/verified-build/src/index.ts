@@ -456,9 +456,9 @@ export async function runUnifiedGate(input: UnifiedGateInput): Promise<CombinedV
   }
 
   // 3. Run firewall (verified-build) on those files
-  if (filesToCheck.length > 0) {
+  if ((filesToCheck ?? []).length > 0) {
     const fileContents = await Promise.all(
-      filesToCheck.map(async (p) => {
+      (filesToCheck ?? []).map(async (p) => {
         try {
           const absPath = p.startsWith('/') || /^[A-Za-z]:/.test(p) ? p : resolve(input.projectRoot, p);
           const content = await readFile(absPath, 'utf-8');

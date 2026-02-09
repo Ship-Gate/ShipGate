@@ -59,7 +59,7 @@ export async function evaluateTrust(
   const result = calculateTrustScore(input, options);
 
   // 2. Load history and compute delta (filtered by project fingerprint)
-  const history = await loadHistory(config.historyPath, projectFingerprint);
+  const history = await loadHistory(config.historyPath);
   const delta = computeDelta(result, history);
 
   // 3. Generate report

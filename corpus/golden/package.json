@@ -1,6 +1,7 @@
 {
   "name": "@isl/golden-corpus",
   "version": "1.0.0",
+  "license": "MIT",
   "private": true,
   "description": "Golden corpus for ISL regression testing",
   "type": "module",

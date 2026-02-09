@@ -109,6 +109,8 @@ export default defineConfig({
         {
           label: "CLI Reference",
           items: [
+            { label: "check", slug: "cli/check" },
+            { label: "gate", slug: "cli/gate" },
             { label: "verify", slug: "cli/verify" },
             { label: "generate", slug: "cli/generate" },
             { label: "lint", slug: "cli/lint" },

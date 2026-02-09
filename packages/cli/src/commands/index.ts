@@ -68,7 +68,7 @@ export { verifyRuntime, printVerifyRuntimeResult, getVerifyRuntimeExitCode, type
 
 export { policyEngineCheck, printPolicyEngineResult, getPolicyEngineExitCode, type PolicyEngineCheckOptions, type PolicyEngineCheckResult } from './policy-engine.js';
 
-export { checkPolicy, checkPolicyAgainstGate, printPolicyCheckResult, getPolicyCheckExitCode, type PolicyCheckOptions, type PolicyCheckResult, type PolicyViolation } from './policy-check.js';
+export { checkPolicy, checkPolicyAgainstGate, printPolicyCheckResult as printPolicyCheckResultFromCheck, getPolicyCheckExitCode as getPolicyCheckExitCodeFromCheck, type PolicyCheckOptions, type PolicyCheckResult, type PolicyViolation } from './policy-check.js';
 
 export { loadPolicy, loadPolicyFile, getActiveExceptions, matchesExceptionScope, PolicyValidationError, type LoadedPolicy, type PolicyValidationError as PolicyValidationErrorType } from './policy-loader.js';
 
@@ -84,7 +84,7 @@ export { generateBadge, printBadgeResult, getBadgeExitCode, generateAttestation,
 
 export { domainInit, printDomainInitResult, domainValidate, printDomainValidateResult, getDomainValidateExitCode, type DomainInitOptions, type DomainInitResult, type DomainValidateOptions, type DomainValidateResult, type DomainPackManifest } from './domain.js';
 
-export { installPack, listPacks, verifyPackInstall, printInstallResult, printListResult, printVerifyResult, getInstallExitCode, getVerifyExitCode, type PackInstallOptions, type PackInstallResult, type PackListResult, type PackVerifyResult } from './packs.js';
+export { installPack, listPacks, verifyPackInstall, printInstallResult, printListResult, printVerifyResult as printPackVerifyResult, getInstallExitCode, getVerifyExitCode as getPackVerifyExitCode, type PackInstallOptions, type PackInstallResult, type PackListResult, type PackVerifyResult } from './packs.js';
 
 export { migrate, printMigrateResult, getMigrateExitCode, type MigrateOptions, type MigrateResult } from './migrate.js';
 
@@ -93,3 +93,5 @@ export { importOpenAPI, printImportOpenAPIResult, getImportOpenAPIExitCode, type
 export { diffOpenAPI, printDiffOpenAPIResult, getDiffOpenAPIExitCode, type DiffOpenAPIOptions, type DiffOpenAPIResult, type DiffChange } from './diff-openapi.js';
 
 export { coverage, printCoverageResult, getCoverageExitCode, type CoverageCommandOptions, type CoverageCommandResult } from './coverage.js';
+
+export { demo, printDemoResult, getDemoExitCode, type DemoOptions, type DemoResult } from './demo.js';

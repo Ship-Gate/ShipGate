@@ -305,7 +305,7 @@ export function parseModuleSpecifier(specifier: string): {
 
   const asMatch = specifier.match(/^(.+?)\s+as\s+(\w+)$/);
   if (asMatch) {
-    remaining = asMatch[1].trim();
+    remaining = (asMatch[1] ?? remaining).trim();
     alias = asMatch[2];
   }
 
@@ -315,7 +315,7 @@ export function parseModuleSpecifier(specifier: string): {
 
   const versionMatch = remaining.match(/^(.+?)@([^@]+)$/);
   if (versionMatch) {
-    name = versionMatch[1];
+    name = versionMatch[1] ?? remaining;
     version = versionMatch[2];
   }
 

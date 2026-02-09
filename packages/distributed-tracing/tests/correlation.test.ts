@@ -14,6 +14,7 @@ import {
   getCorrelationMetadata,
   runWithCorrelationContext,
   CORRELATION_HEADERS,
+  type CorrelationContext,
 } from '../src/correlation.js';
 
 describe('Correlation ID utilities', () => {
@@ -37,7 +38,7 @@ describe('Correlation ID utilities', () => {
 
     it('should return correlation context from active span', () => {
       const tracer = trace.getTracer('test');
-      let correlationCtx: ReturnType<typeof getCorrelationContext> | null = null;
+      let correlationCtx: CorrelationContext | null = null;
 
       tracer.startActiveSpan('test-span', {}, (span) => {
         correlationCtx = getCorrelationContext();
@@ -169,7 +170,7 @@ describe('Correlation ID utilities', () => {
   describe('getCorrelationMetadata', () => {
     it('should return correlation metadata from active span', () => {
       const tracer = trace.getTracer('test');
-      let metadata: ReturnType<typeof getCorrelationMetadata> | null = null;
+      let metadata: Record<string, string> | null = null;
 
       tracer.startActiveSpan('test-span', {}, (span) => {
         metadata = getCorrelationMetadata();

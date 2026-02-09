@@ -115,7 +115,7 @@ export function requirePermission(permission: string) {
     request: FastifyRequest,
     reply: FastifyReply,
     options: FastifyAuthOptions
-  ): Promise<void> {
+  ): Promise<void> => {
     const authReq = request as AuthenticatedRequest;
     
     if (!authReq.user) {
@@ -147,7 +147,7 @@ export function requireRole(...roles: string[]) {
     request: FastifyRequest,
     reply: FastifyReply,
     options: FastifyAuthOptions
-  ): Promise<void> {
+  ): Promise<void> => {
     const authReq = request as AuthenticatedRequest;
     
     if (!authReq.user) {

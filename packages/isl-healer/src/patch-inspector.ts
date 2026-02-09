@@ -600,9 +600,11 @@ export function parseDiff(
 
   for (const section of fileSections) {
     const lines = ('diff --git' + section).split('\n');
-    const headerMatch = lines[0].match(/^diff --git a\/(.+) b\/(.+)$/);
+    const firstLine = lines[0];
+    if (firstLine === undefined) continue;
+    const headerMatch = firstLine.match(/^diff --git a\/(.+) b\/(.+)$/);
 
-    if (!headerMatch) continue;
+    if (!headerMatch || headerMatch[1] === undefined || headerMatch[2] === undefined) continue;
 
     const oldPath = headerMatch[1];
     const newPath = headerMatch[2];
@@ -614,6 +616,7 @@ export function parseDiff(
 
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
+      if (line === undefined) continue;
 
       if (line.startsWith('new file mode')) {
         isNewFile = true;
@@ -629,12 +632,14 @@ export function parseDiff(
           /^@@ -(\d+),?(\d*) \+(\d+),?(\d*) @@/
         );
         if (hunkMatch) {
+          const oldStart = parseInt(hunkMatch[1] ?? '0', 10);
+          const newStart = parseInt(hunkMatch[3] ?? '0', 10);
           currentHunk = {
             oldPath,
             newPath,
-            oldStart: parseInt(hunkMatch[1], 10),
+            oldStart,
             oldLines: parseInt(hunkMatch[2] || '1', 10),
-            newStart: parseInt(hunkMatch[3], 10),
+            newStart,
             newLines: parseInt(hunkMatch[4] || '1', 10),
             removals: [],
             additions: [],

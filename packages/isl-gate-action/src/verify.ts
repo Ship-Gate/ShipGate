@@ -125,7 +125,7 @@ function findCLI(): string {
     }
   }
 
-  core.warning('ShipGate CLI not found. Install: npm install -g @isl-lang/cli');
+  core.warning('ShipGate CLI not found. Install: npm install -g shipgate');
   return 'npx shipgate';
 }
 
@@ -311,9 +311,9 @@ function fallbackVerify(changedFiles: string[]): VerifyResult {
     score: 0,
     summary: `ShipGate CLI not found — ${changedFiles.length} files skipped`,
     files,
-    blockers: ['ShipGate CLI not installed. Add `npm install @isl-lang/cli` to your workflow.'],
+    blockers: ['ShipGate CLI not installed. Add `npm install -g shipgate` to your workflow.'],
     recommendations: [
-      'Install the CLI: `npm install -g @isl-lang/cli`',
+      'Install the CLI: `npm install -g shipgate`',
       'Or add a setup step before the verify action',
     ],
     coverage: { specced: 0, total: changedFiles.length },

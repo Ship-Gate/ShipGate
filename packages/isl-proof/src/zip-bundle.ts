@@ -117,7 +117,7 @@ export async function createZipBundle(
 /**
  * Collect files from bundle directory
  */
-async function collectFiles(
+export async function collectFiles(
   bundleDir: string,
   manifestFiles: string[]
 ): Promise<Array<{ path: string; content: Buffer }>> {
@@ -145,7 +145,7 @@ async function collectFiles(
 /**
  * Scan directory recursively for files
  */
-async function scanDirectory(dir: string, baseDir: string = dir): Promise<string[]> {
+export async function scanDirectory(dir: string, baseDir: string = dir): Promise<string[]> {
   const files: string[] = [];
   const entries = await fs.readdir(dir, { withFileTypes: true });
 
@@ -435,6 +435,7 @@ async function signZipWithEd25519(
     if (keyBuffer.length === 64) {
       // Raw ed25519 private key (64 bytes: 32-byte seed + 32-byte public key)
       // Node.js expects just the seed (first 32 bytes) or full 64 bytes
+      // @ts-expect-error - Node.js supports 'raw' format for ed25519 but TypeScript types don't
       keyObject = crypto.createPrivateKey({
         key: keyBuffer,
         format: 'raw',
@@ -449,6 +450,7 @@ async function signZipWithEd25519(
     }
   } catch {
     // Fallback: try creating from raw buffer
+    // @ts-expect-error - Node.js supports 'raw' format for ed25519 but TypeScript types don't
     keyObject = crypto.createPrivateKey({
       key: keyBuffer.slice(0, 32), // Use first 32 bytes as seed
       format: 'raw',
@@ -461,7 +463,12 @@ async function signZipWithEd25519(
 
   // Extract public key
   const publicKeyObj = crypto.createPublicKey(keyObject);
-  const publicKeyBuffer = publicKeyObj.export({ format: 'raw', type: 'spki' });
+  // For ed25519, export as der format and extract the raw key bytes
+  // Note: TypeScript types don't fully support raw format, so we use der
+  const publicKeyDer = publicKeyObj.export({ format: 'der', type: 'spki' }) as Buffer;
+  // Extract the raw 32-byte public key from the DER structure
+  // For ed25519 SPKI, the public key is in the last 32 bytes
+  const publicKeyBuffer = publicKeyDer.subarray(-32);
 
   return {
     signature: signature.toString('base64'),
@@ -469,12 +476,3 @@ async function signZipWithEd25519(
   };
 }
 
-// ============================================================================
-// Exports
-// ============================================================================
-
-export {
-  createZipBundle,
-  collectFiles,
-  scanDirectory,
-};

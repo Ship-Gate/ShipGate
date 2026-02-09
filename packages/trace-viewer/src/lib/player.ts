@@ -5,7 +5,7 @@
  */
 
 import { create } from 'zustand';
-import type { Trace, TraceEvent, State, EventType, ViewerFilter, PlaybackState } from '@/types';
+import type { Trace, TraceEvent, State, ViewerFilter, PlaybackState } from '@/types';
 import { computeStateAtIndex, computeStateDiff, filterEventsByType, searchEvents } from './trace';
 
 interface TracePlayerState {
@@ -64,19 +64,19 @@ export const useTracePlayer = create<TracePlayerState>((set, get) => {
 
   const startPlayback = () => {
     stopPlayback();
-    const { speed, filteredEvents, looping } = get();
+    const { speed } = get();
     const intervalMs = 1000 / speed;
 
     playInterval = setInterval(() => {
-      const { currentIndex, playing, filteredEvents, looping } = get();
+      const { currentIndex, playing, filteredEvents: fe, looping: loop } = get();
       
       if (!playing) {
         stopPlayback();
         return;
       }
 
-      if (currentIndex >= filteredEvents.length - 1) {
-        if (looping) {
+      if (currentIndex >= fe.length - 1) {
+        if (loop) {
           get().jumpToStart();
         } else {
           get().pause();
@@ -99,6 +99,7 @@ export const useTracePlayer = create<TracePlayerState>((set, get) => {
     const stack: string[] = [];
     for (let i = 0; i <= index; i++) {
       const event = trace.events[i];
+      if (!event) continue;
       if (event.type === 'call' && event.data.kind === 'call') {
         stack.push(event.data.function);
       } else if (event.type === 'return' && event.data.kind === 'return') {

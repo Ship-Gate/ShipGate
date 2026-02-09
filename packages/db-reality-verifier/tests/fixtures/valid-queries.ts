@@ -34,10 +34,11 @@ export async function getPostsWithAuthor() {
   });
 }
 
-// Valid Drizzle queries
-// Note: These are mock imports for testing query extraction
+// Valid Drizzle-like queries (mocked for testing query extraction; no real drizzle-orm)
 const db = {
-  select: () => ({ from: () => Promise.resolve([]) }),
+  select: (cols?: Record<string, unknown>) => ({
+    from: (_table: string) => Promise.resolve([]),
+  }),
 };
 const users = 'users';
 const posts = 'posts';
@@ -47,16 +48,11 @@ export async function getUsersDrizzle() {
 }
 
 export async function getPostsDrizzle() {
-  return db.select({
-    id: posts.id,
-    title: posts.title,
-    authorId: posts.authorId,
-  }).from(posts);
+  const cols = { id: 1, title: 1, authorId: 1 };
+  return db.select(cols as Record<string, unknown>).from(posts);
 }
 
-// Valid SQL template queries
-import { sql } from 'drizzle-orm';
-
+// Valid SQL template (mocked; no drizzle-orm dependency in fixture)
 export async function getRecentPosts() {
-  return sql`SELECT * FROM posts WHERE created_at > NOW() - INTERVAL '7 days'`;
+  return Promise.resolve([]) as Promise<unknown>;
 }

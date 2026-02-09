@@ -79,6 +79,14 @@ export interface VerifyOptions {
   temporalTraceFiles?: string[];
   /** Trace directory to search for trace files */
   temporalTraceDir?: string;
+  /** Enable reality probe (route and env var verification) */
+  reality?: boolean;
+  /** Base URL for reality probe (e.g., http://localhost:3000) */
+  realityBaseUrl?: string;
+  /** Path to route map or OpenAPI spec (default: .shipgate/truthpack/routes.json) */
+  realityRouteMap?: string;
+  /** Path to env vars JSON (default: .shipgate/truthpack/env.json) */
+  realityEnvVars?: string;
   /** Enable import resolution (resolves use statements and imports) */
   resolveImports?: boolean;
 }
@@ -1535,6 +1543,12 @@ export async function verifyWithDiscovery(options: VerifyOptions): Promise<Verif
           passedChecks: gateResult.aggregation.tests.passed,
           failedChecks: gateResult.aggregation.tests.failed + gateResult.aggregation.findings.critical + gateResult.aggregation.findings.high,
           recommendation: success ? 'Production Ready' : 'Critical Issues',
+          categories: {
+            postconditions: { score: 0, passed: 0, failed: 0, total: 0, weight: 0 },
+            invariants: { score: 0, passed: 0, failed: 0, total: 0, weight: 0 },
+            scenarios: { score: 0, passed: 0, failed: 0, total: 0, weight: 0 },
+            temporal: { score: 0, passed: 0, failed: 0, total: 0, weight: 0 },
+          },
         },
       }];
     } catch (err) {
@@ -1649,7 +1663,7 @@ function printEvidenceScore(evidence: EvidenceScore): void {
  * Print verify results to console
  * Secrets are automatically masked in output.
  */
-export function printVerifyResult(result: VerifyResult, options?: { detailed?: boolean; format?: string; json?: boolean }): void {
+export async function printVerifyResult(result: VerifyResult, options?: { detailed?: boolean; format?: string; json?: boolean }): Promise<void> {
   // JSON output (secrets are automatically masked)
   if (options?.json || options?.format === 'json') {
     console.log(safeJSONStringify({
@@ -1815,7 +1829,7 @@ export function printVerifyResult(result: VerifyResult, options?: { detailed?: b
 
   // Unknown clauses with remediation (if verification result has unknown reasons)
   if (result.verification && 'unknownReasons' in result.verification) {
-    const verificationResult = result.verification as any;
+    const verificationResult = result.verification as { unknownReasons?: unknown[] };
     if (verificationResult.unknownReasons && verificationResult.unknownReasons.length > 0) {
       try {
         const { formatUnknownSummary } = await import('@isl-lang/verify-pipeline');
@@ -1826,7 +1840,7 @@ export function printVerifyResult(result: VerifyResult, options?: { detailed?: b
         if (unknownOutput) {
           console.log(unknownOutput);
         }
-      } catch (err) {
+      } catch {
         // Fallback if formatter not available
         console.log('');
         console.log(chalk.yellow(`? ${verificationResult.unknownReasons.length} unknown clause(s)`));

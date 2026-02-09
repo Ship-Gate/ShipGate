@@ -6,9 +6,9 @@
 
 import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
-import { resolve, join } from 'path';
+import { join, resolve } from 'path';
 import chalk from 'chalk';
-import type { Finding } from '@isl-lang/isl-gate';
+import type { Finding } from '@isl-lang/gate';
 import { suggestFixes } from './shipgate-fixes.js';
 import { applyPatches, previewPatches } from './patch-engine.js';
 import type { FixContext } from './shipgate-fixes.js';
@@ -205,14 +205,16 @@ async function loadTruthpack(projectRoot: string): Promise<FixContext['truthpack
   const routesPath = join(truthpackDir, 'routes.json');
   const envPath = join(truthpackDir, 'env.json');
 
-  let routes: FixContext['truthpack'] extends { routes?: unknown } ? unknown : never;
-  let env: FixContext['truthpack'] extends { env?: unknown } ? unknown : never;
+  type TRoutes = NonNullable<FixContext['truthpack']>['routes'];
+  type TEnv = NonNullable<FixContext['truthpack']>['env'];
+  let routes: TRoutes = [];
+  let env: TEnv = [];
 
   if (existsSync(routesPath)) {
     try {
       const content = await readFile(routesPath, 'utf-8');
-      const data = JSON.parse(content);
-      routes = data.routes || [];
+      const data = JSON.parse(content) as { routes?: TRoutes };
+      routes = (Array.isArray(data.routes) ? data.routes : []) as TRoutes;
     } catch {
       // Ignore
     }
@@ -221,8 +223,8 @@ async function loadTruthpack(projectRoot: string): Promise<FixContext['truthpack
   if (existsSync(envPath)) {
     try {
       const content = await readFile(envPath, 'utf-8');
-      const data = JSON.parse(content);
-      env = data.variables || [];
+      const data = JSON.parse(content) as { variables?: TEnv };
+      env = (Array.isArray(data.variables) ? data.variables : []) as TEnv;
     } catch {
       // Ignore
     }
@@ -274,7 +276,7 @@ function printPreviewResult(
  */
 function printApplyResult(
   applyResult: Awaited<ReturnType<typeof applyPatches>>,
-  suggestionsResult: Awaited<ReturnType<typeof suggestFixes>>
+  _suggestionsResult: Awaited<ReturnType<typeof suggestFixes>>
 ): void {
   console.log(chalk.bold.cyan('\n✅ Shipgate Fix Applied\n'));
 

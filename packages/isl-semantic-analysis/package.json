@@ -1,6 +1,7 @@
 {
   "name": "@isl-lang/semantic-analysis",
   "version": "0.1.0",
+  "license": "MIT",
   "description": "Semantic analysis passes for ISL specifications",
   "type": "module",
   "main": "./dist/index.js",
@@ -16,7 +17,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && tsc -p tsconfig.build.json",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "lint": "eslint src --ext .ts",

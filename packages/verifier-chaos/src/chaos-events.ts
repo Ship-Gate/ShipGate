@@ -5,6 +5,7 @@
  * Events are bounded and repeatable for deterministic verification.
  */
 
+// TimelineEvent type is used in type definitions below
 import type { TimelineEvent } from './timeline.js';
 
 /* ------------------------------------------------------------------ */

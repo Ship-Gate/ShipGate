@@ -7,7 +7,7 @@
  * @module @isl-lang/verifier-temporal/trace-model
  */
 
-import type { Trace, TraceEvent, TimingInfo } from '@isl-lang/trace-format';
+import type { Trace, TraceEvent } from '@isl-lang/trace-format';
 
 // ============================================================================
 // TYPES
@@ -396,7 +396,6 @@ export function evaluateWithin(
   boundMs: number,
   options: TemporalEvaluationOptions = {}
 ): TemporalEvaluationResult {
-  const description = options.description ?? `${eventKind} within ${boundMs}ms`;
   const startOffsetMs = options.startOffsetMs ?? 0;
   
   // Find the first occurrence of the event kind

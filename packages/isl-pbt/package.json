@@ -23,7 +23,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup --config false src/index.ts src/cli.ts --format esm --clean --sourcemap --dts --external @isl-lang/parser --external @isl-lang/verifier-runtime",
+    "build": "tsup --config false src/index.ts src/cli.ts --format esm --clean --sourcemap --no-dts --external @isl-lang/parser --external @isl-lang/verifier-runtime && tsc -p tsconfig.build.json",
     "dev": "tsup --watch",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",

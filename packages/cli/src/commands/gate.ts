@@ -24,6 +24,9 @@ export interface GateOptions {
   ci?: boolean;
   verbose?: boolean;
   format?: 'pretty' | 'json' | 'quiet';
+  skipPolicy?: boolean;
+  policyFile?: string;
+  policyProfile?: 'strict' | 'standard' | 'lenient';
 }
 
 export interface GateResult {

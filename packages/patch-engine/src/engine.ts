@@ -25,14 +25,14 @@ import type {
   ReplaceCallPatch,
   CreateFilePatch,
   AllowedFileCategory,
-} from './types';
+} from './types.js';
 import {
   isInsertImportPatch,
   isAddHelperFunctionPatch,
   isWrapHandlerPatch,
   isReplaceCallPatch,
   isCreateFilePatch,
-} from './types';
+} from './types.js';
 
 // ============================================================================
 // Patch Engine Class
@@ -633,7 +633,7 @@ export class PatchEngine {
           const match = content.match(importRegex);
           if (match) {
             const importLine = match[0];
-            return patch.importedNames.every(name => 
+            return patch.importedNames.every((name: string) => 
               importLine.includes(name)
             );
           }

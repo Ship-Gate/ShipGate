@@ -14,6 +14,7 @@
  * - Same query → same result (deterministic via caching)
  * - Cross-platform binary detection
  */
+/// <reference path="../solver-z3-wasm.d.ts" />
 
 import { toSMTLib, declToSMTLib, Expr, Decl } from '@isl-lang/prover';
 import type { SMTExpr, SMTDecl, SMTSort } from '@isl-lang/prover';
@@ -332,7 +333,7 @@ class SMTSolverImpl implements ISMTSolver {
         randomSeed: 0, // Fixed seed for deterministic execution
       });
       
-      return await wasmSolver.checkSat(formula, declarations);
+      return (await wasmSolver.checkSat(formula, declarations)) as SMTCheckResult;
     } catch (error) {
       return {
         status: 'error',

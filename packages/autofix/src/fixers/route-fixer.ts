@@ -4,8 +4,8 @@
  * Replaces dead route references with closest match or adds TODO annotation.
  */
 
-import type { Finding } from '@isl-lang/isl-gate';
-import type { FixContext, FixSuggestion } from '../shipgate-fixes.js';
+import type { Finding } from '@isl-lang/gate';
+import type { FixContext, ShipgateFixSuggestion } from '../shipgate-fixes.js';
 import { readFileSafe } from '../shipgate-fixes.js';
 import { createPatch } from '../patcher.js';
 
@@ -111,7 +111,7 @@ function calculatePathSimilarity(path1: string, path2: string): number {
 function findRouteReference(
   content: string,
   routePath: string,
-  method?: string
+  _method?: string
 ): { line: number; column?: number; original: string } | null {
   const lines = content.split('\n');
   
@@ -148,8 +148,8 @@ function findRouteReference(
 export async function fixDeadRoute(
   finding: Finding,
   context: FixContext
-): Promise<FixSuggestion[]> {
-  const suggestions: FixSuggestion[] = [];
+): Promise<ShipgateFixSuggestion[]> {
+  const suggestions: ShipgateFixSuggestion[] = [];
   const routeInfo = extractRoutePath(finding);
 
   if (!routeInfo) {

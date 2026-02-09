@@ -1,6 +1,7 @@
 {
   "name": "isl-demo",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "ISL Studio Demo - SHIP/NO_SHIP in action",
   "type": "module",
   "scripts": {

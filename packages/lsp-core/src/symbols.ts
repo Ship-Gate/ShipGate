@@ -4,7 +4,7 @@
 // ============================================================================
 
 import type { SourceLocation } from '@isl-lang/parser';
-import type { ISLSymbolInfo, SymbolKind } from './types';
+import type { ISLSymbolInfo, SymbolKind } from './types.js';
 
 // ============================================================================
 // Indexed Symbol

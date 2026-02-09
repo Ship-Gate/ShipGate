@@ -762,10 +762,14 @@ function walkObject(obj: unknown, visitor: (node: unknown) => void): void {
 
 function extractExpressionText(expr: unknown, source: string): string {
   if (!expr || typeof expr !== 'object') return '';
-  
-  const exprObj = expr as { location?: { line?: number; column?: number; endLine?: number; endColumn?: number } };
+
+  const exprObj = expr as {
+    location?: { line?: number; column?: number; endLine?: number; endColumn?: number };
+    span?: { start?: { line?: number; column?: number }; end?: { line?: number; column?: number } };
+  };
+  const lines = source.split('\n');
+
   if (exprObj.location) {
-    const lines = source.split('\n');
     const startLine = (exprObj.location.line ?? 1) - 1;
     const endLine = (exprObj.location.endLine ?? exprObj.location.line ?? 1) - 1;
     if (startLine >= 0 && endLine < lines.length) {
@@ -777,6 +781,18 @@ function extractExpressionText(expr: unknown, source: string): string {
       return lines.slice(startLine, endLine + 1).join(' ').trim();
     }
   }
+
+  if (exprObj.span?.start && exprObj.span?.end) {
+    const startLine = (exprObj.span.start.line ?? 1) - 1;
+    const endLine = (exprObj.span.end.line ?? 1) - 1;
+    if (startLine >= 0 && endLine < lines.length) {
+      if (startLine === endLine) {
+        return lines[startLine]!.substring(exprObj.span.start.column ?? 0, exprObj.span.end.column ?? lines[startLine]!.length).trim();
+      }
+      return lines.slice(startLine, endLine + 1).join(' ').trim();
+    }
+  }
+
   return '';
 }
 
@@ -827,24 +843,6 @@ function extractConditionExpressions(block: unknown, source: string): string[] {
   }
   
   return exprs;
-}
-
-function extractExpressionText(expr: unknown, source: string): string {
-  if (expr && typeof expr === 'object') {
-    const exprObj = expr as { span?: { start?: { line?: number; column?: number }; end?: { line?: number; column?: number } } };
-    if (exprObj.span && exprObj.span.start && exprObj.span.end) {
-      const lines = source.split('\n');
-      const startLine = (exprObj.span.start.line ?? 1) - 1;
-      const endLine = (exprObj.span.end.line ?? 1) - 1;
-      if (startLine >= 0 && endLine < lines.length) {
-        if (startLine === endLine) {
-          return lines[startLine]!.substring(exprObj.span.start.column ?? 0, exprObj.span.end.column ?? lines[startLine]!.length).trim();
-        }
-        return lines.slice(startLine, endLine + 1).join(' ').trim();
-      }
-    }
-  }
-  return '';
 }
 
 function contradicts(preExpr: string, postExpr: string): boolean {

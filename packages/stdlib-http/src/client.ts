@@ -195,7 +195,7 @@ export class HTTPClient {
       const response = await fetch(url, {
         method: options.method || 'GET',
         headers: options.headers as Record<string, string>,
-        body: options.body as BodyInit_ | undefined,
+        body: options.body as BodyInit | undefined,
         signal: options.signal || controller.signal,
       });
 

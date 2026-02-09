@@ -9,8 +9,8 @@
     "check": "isl check spec/simple-test.isl",
     "lint": "isl lint spec/simple-test.isl",
     "gen": "isl generate spec/simple-test.isl --types --tests --output generated/",
-    "build": "isl build spec/simple-test.isl --output generated/",
-    "build:all": "isl build spec/simple-test.isl -o generated/ && echo Build complete",
+    "build": "pnpm exec shipgate build spec/simple-test.isl --output generated/",
+    "build:all": "pnpm exec shipgate build spec/simple-test.isl -o generated/ && echo Build complete",
     "verify": "isl verify spec/simple-test.isl --impl src/handlers/auth.ts --detailed",
     "evidence": "node scripts/generate-evidence.js",
     "demo": "node scripts/run-demo.js",
@@ -31,6 +31,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "shipgate": "workspace:*",
     "@isl-lang/islstudio": "workspace:*",
     "@isl-lang/parser": "workspace:*",
     "@isl-lang/isl-verify": "workspace:*",

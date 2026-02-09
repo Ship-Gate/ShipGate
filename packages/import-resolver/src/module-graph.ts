@@ -211,7 +211,7 @@ function simpleHash(content: string): string {
  * resolving all imports including stdlib modules.
  */
 export class ModuleGraphBuilder {
-  private options: Required<ModuleGraphOptions> & { astCache?: ASTCache; enableCaching: boolean };
+  private options: Required<Omit<ModuleGraphOptions, 'astCache' | 'tsconfigPath'>> & { astCache?: ASTCache | undefined; tsconfigPath?: string; enableCaching: boolean };
   private stdlibRegistry: StdlibRegistryManager;
   private moduleCache: Map<string, GraphModule> = new Map();
   private astCache: ASTCache | undefined;
@@ -235,13 +235,17 @@ export class ModuleGraphBuilder {
       enableImports: options.enableImports ?? true,
       maxDepth: options.maxDepth ?? 100,
       defaultExtension: options.defaultExtension ?? '.isl',
+      extensions: options.extensions ?? [options.defaultExtension ?? '.isl'],
+      tsconfigPath: options.tsconfigPath ?? undefined,
+      projectRoot: options.projectRoot ?? options.basePath ?? process.cwd(),
+      enableCache: options.enableCache ?? true,
       debug: options.debug ?? false,
       mergeAST: options.mergeAST ?? true,
       includeSource: options.includeSource ?? false,
       readFile: options.readFile ?? this.defaultReadFile.bind(this),
       fileExists: options.fileExists ?? this.defaultFileExists.bind(this),
       stdlibRegistry: this.stdlibRegistry,
-      astCache: this.astCache,
+      astCache: this.astCache as ASTCache | undefined,
       enableCaching,
     };
   }
@@ -650,24 +654,38 @@ export class ModuleGraphBuilder {
       matrix[i] = [i];
     }
     for (let j = 0; j <= a.length; j++) {
-      matrix[0][j] = j;
+      const row = matrix[0];
+      if (row) {
+        row[j] = j;
+      }
     }
     
     for (let i = 1; i <= b.length; i++) {
+      const row = matrix[i];
+      if (!row) continue;
       for (let j = 1; j <= a.length; j++) {
+        const prevRow = matrix[i - 1];
+        if (!prevRow) continue;
         if (b.charAt(i - 1) === a.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
+          const prevValue = prevRow[j - 1];
+          row[j] = prevValue ?? 0;
         } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
+          const diag = prevRow[j - 1] ?? 0;
+          const left = row[j - 1] ?? 0;
+          const up = prevRow[j] ?? 0;
+          row[j] = Math.min(
+            diag + 1,
+            left + 1,
+            up + 1
           );
         }
       }
     }
     
-    return matrix[b.length][a.length];
+    const finalRow = matrix[b.length];
+    if (!finalRow) return 0;
+    const result = finalRow[a.length];
+    return result ?? 0;
   }
 
   /**

@@ -15,7 +15,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean",
+    "build": "tsup src/index.ts --format esm --no-dts --clean && tsc -p tsconfig.build.json",
     "dev": "tsup src/index.ts --format esm --dts --watch",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
@@ -26,7 +26,8 @@
   "dependencies": {
     "@isl-lang/parser": "workspace:*",
     "@isl-lang/evaluator": "workspace:*",
-    "@isl-lang/codegen-tests": "workspace:*"
+    "@isl-lang/codegen-tests": "workspace:*",
+    "@isl-lang/verifier-sandbox": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.1.0",

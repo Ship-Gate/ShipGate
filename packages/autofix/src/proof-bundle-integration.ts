@@ -4,7 +4,7 @@
  * Integrates applied patches metadata into proof bundle artifacts.
  */
 
-import type { FixSuggestion } from './shipgate-fixes.js';
+import type { ShipgateFixSuggestion } from './shipgate-fixes.js';
 import type { ApplyPatchesResult } from './patch-engine.js';
 
 /**
@@ -35,7 +35,7 @@ export interface AppliedPatchesMetadata {
  * Create applied patches metadata from fix suggestions and apply result
  */
 export function createPatchesMetadata(
-  suggestions: FixSuggestion[],
+  suggestions: ShipgateFixSuggestion[],
   applyResult: ApplyPatchesResult
 ): AppliedPatchesMetadata {
   return {

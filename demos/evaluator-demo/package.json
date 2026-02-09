@@ -1,6 +1,7 @@
 {
   "name": "evaluator-demo",
   "version": "1.0.0",
+  "license": "MIT",
   "private": true,
   "description": "Demo showing ISL Expression Evaluator capabilities",
   "type": "module",

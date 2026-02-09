@@ -15,7 +15,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean",
+    "build": "tsup src/index.ts --format esm --clean && tsc -p tsconfig.build.json",
     "build:no-dts": "tsup src/index.ts --format esm --clean",
     "dev": "tsup src/index.ts --format esm --watch",
     "test": "vitest run --passWithNoTests",

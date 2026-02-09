@@ -4,7 +4,36 @@
  * Build and analyze dependency graphs from ISL domains.
  */
 
-import { parseISL, type DomainDeclaration } from '@isl-lang/isl-core';
+import { parse } from '@isl-lang/parser';
+import { domainToDomainDeclaration } from '@isl-lang/isl-core/adapters';
+import type { DomainDeclaration } from '@isl-lang/isl-core';
+import type { ParseError } from '@isl-lang/isl-core';
+
+export interface ParseResult {
+  ast: DomainDeclaration | null;
+  errors: ParseError[];
+}
+
+function parseISL(source: string, filename?: string): ParseResult {
+  const result = parse(source, filename);
+  if (!result.success || !result.domain) {
+    return {
+      ast: null,
+      errors: result.errors.map((d: { message: string; location?: { file?: string; line?: number; column?: number; endLine?: number; endColumn?: number } }) => ({
+        message: d.message,
+        span: {
+          file: d.location?.file ?? '',
+          start: { line: d.location?.line ?? 0, column: d.location?.column ?? 0, offset: 0 },
+          end: { line: d.location?.endLine ?? 0, column: d.location?.endColumn ?? 0, offset: 0 },
+        },
+      })),
+    };
+  }
+  return {
+    ast: domainToDomainDeclaration(result.domain),
+    errors: [],
+  };
+}
 
 export interface AnalyzerOptions {
   /** Include entity dependencies */
@@ -132,26 +161,15 @@ export class DependencyAnalyzer {
       importedBy: [],
     };
 
-    // Process imports
+    // Process imports (support both ImportDeclaration.names and parser Import.items)
     for (const imp of domain.imports) {
-      const importedFrom = imp.from.value;
+      const importedFrom = (imp as { from: { value: string } }).from.value;
       summary.imports.push(importedFrom);
-
-      // Add edge for domain import
-      this.graph.edges.push({
-        from: domainId,
-        to: `domain:${importedFrom}`,
-        type: 'import',
-        label: imp.names.map((n) => n.name).join(', '),
-      });
-
-      // Add imported items
-      for (const name of imp.names) {
-        this.graph.edges.push({
-          from: domainId,
-          to: `${importedFrom}:${name.name}`,
-          type: 'import',
-        });
+      const names = 'names' in imp ? (imp as { names: { name: string }[] }).names : (imp as { items: { name: { name: string } }[] }).items.map((i) => ({ name: i.name.name }));
+      const label = names.map((n) => n.name).join(', ');
+      this.graph.edges.push({ from: domainId, to: `domain:${importedFrom}`, type: 'import', label });
+      for (const n of names) {
+        this.graph.edges.push({ from: domainId, to: `${importedFrom}:${n.name}`, type: 'import' });
       }
     }
 
@@ -204,11 +222,11 @@ export class DependencyAnalyzer {
           metadata: {
             hasInput: !!behavior.input,
             hasOutput: !!behavior.output,
-            hasPreconditions: !!(behavior.preconditions?.conditions.length),
-            hasPostconditions: !!(behavior.postconditions?.conditions.length),
-            hasTemporal: !!(behavior.temporal?.requirements.length),
-            hasSecurity: !!(behavior.security?.requirements.length),
-            hasCompliance: !!(behavior.compliance?.standards.length),
+            hasPreconditions: !!((behavior.preconditions as { conditions?: unknown[] } | undefined)?.conditions?.length),
+            hasPostconditions: !!((behavior.postconditions as { conditions?: unknown[] } | undefined)?.conditions?.length),
+            hasTemporal: !!((behavior.temporal as { requirements?: unknown[] } | undefined)?.requirements?.length),
+            hasSecurity: !!((behavior.security as { requirements?: unknown[] } | undefined)?.requirements?.length),
+            hasCompliance: !!((behavior.compliance as { standards?: unknown[] } | undefined)?.standards?.length),
           },
         });
 
@@ -256,8 +274,9 @@ export class DependencyAnalyzer {
           file,
         });
 
-        // Track base type reference
-        const baseName = this.extractTypeName(type.baseType);
+        // Track base type reference (support both baseType and parser's definition)
+        const baseType = (type as { baseType?: unknown }).baseType ?? (type as { definition?: unknown }).definition;
+        const baseName = baseType ? this.extractTypeName(baseType) : undefined;
         if (baseName && !this.isPrimitiveType(baseName)) {
           this.graph.edges.push({
             from: typeId,
@@ -267,7 +286,8 @@ export class DependencyAnalyzer {
         }
       }
 
-      for (const enumDecl of domain.enums) {
+      const enums = (domain as { enums?: { name: { name: string }; variants: { name: string }[] }[] }).enums ?? [];
+      for (const enumDecl of enums) {
         const enumId = `${domainName}:enum:${enumDecl.name.name}`;
         summary.enums.push(enumDecl.name.name);
 
@@ -278,7 +298,7 @@ export class DependencyAnalyzer {
           domain: domainName,
           file,
           metadata: {
-            variants: enumDecl.variants.map((v) => v.name),
+            variants: enumDecl.variants.map((v: { name: string }) => v.name),
           },
         });
       }

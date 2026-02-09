@@ -45,10 +45,8 @@ export class OpenAIClient {
       );
     }
 
-    this.client = new OpenAI({ 
-      apiKey,
-      organization: options.organization ?? process.env['OPENAI_ORGANIZATION'],
-    });
+    const org = options.organization ?? process.env['OPENAI_ORGANIZATION'];
+    this.client = new OpenAI({ apiKey, ...(org ? { organization: org } : {}) } as { apiKey: string; organization?: string });
     this.model = options.model ?? DEFAULT_MODEL;
     this.maxTokens = options.maxTokens ?? DEFAULT_MAX_TOKENS;
     this.temperature = options.temperature ?? DEFAULT_TEMPERATURE;
@@ -92,15 +90,17 @@ export class OpenAIClient {
       throw new Error('Empty content returned from OpenAI');
     }
 
+    const res = response as { model?: string; usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number } };
+    const choiceExt = choice as { finish_reason?: string };
     return {
       content,
-      model: response.model,
+      model: res.model ?? model,
       usage: {
-        inputTokens: response.usage?.prompt_tokens ?? 0,
-        outputTokens: response.usage?.completion_tokens ?? 0,
-        totalTokens: response.usage?.total_tokens ?? 0,
+        inputTokens: res.usage?.prompt_tokens ?? 0,
+        outputTokens: res.usage?.completion_tokens ?? 0,
+        totalTokens: res.usage?.total_tokens ?? 0,
       },
-      finishReason: choice.finish_reason ?? 'unknown',
+      finishReason: choiceExt.finish_reason ?? 'unknown',
     };
   }
 
@@ -149,34 +149,29 @@ export class OpenAIClient {
     const maxTokens = options?.maxTokens ?? this.maxTokens;
     const temperature = options?.temperature ?? this.temperature;
 
-    const stream = await this.client.chat.completions.create({
+    const streamOpts = {
       model,
       max_tokens: maxTokens,
       temperature,
       stream: true,
       messages: [
-        {
-          role: 'system',
-          content: systemPrompt,
-        },
-        {
-          role: 'user',
-          content: userPrompt,
-        },
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
       ],
-    });
-
+    };
+    const stream = await this.client.chat.completions.create(streamOpts as Parameters<OpenAI['chat']['completions']['create']>[0]);
+    const streamIter = stream as unknown as AsyncIterable<{ choices?: Array<{ delta?: { content?: string }; finish_reason?: string }> }>;
     let fullContent = '';
     let finishReason = 'unknown';
-    
-    for await (const chunk of stream) {
-      const delta = chunk.choices[0]?.delta?.content;
+
+    for await (const chunk of streamIter) {
+      const delta = chunk.choices?.[0]?.delta?.content;
       if (delta) {
         fullContent += delta;
         onChunk(delta);
       }
-      
-      const reason = chunk.choices[0]?.finish_reason;
+
+      const reason = chunk.choices?.[0]?.finish_reason;
       if (reason) {
         finishReason = reason;
       }
@@ -206,53 +201,52 @@ export class OpenAIClient {
     const maxTokens = options?.maxTokens ?? this.maxTokens;
     const temperature = options?.temperature ?? this.temperature;
 
-    const response = await this.client.chat.completions.create({
+    const jsonOpts = {
       model,
       max_tokens: maxTokens,
       temperature,
-      response_format: { type: 'json_object' },
+      response_format: { type: 'json_object' as const },
       messages: [
-        {
-          role: 'system',
-          content: systemPrompt + '\n\nRespond with valid JSON only.',
-        },
-        {
-          role: 'user',
-          content: userPrompt,
-        },
+        { role: 'system' as const, content: systemPrompt + '\n\nRespond with valid JSON only.' },
+        { role: 'user' as const, content: userPrompt },
       ],
-    });
-
-    const choice = response.choices[0];
-    if (!choice?.message.content) {
+    };
+    const response = await this.client.chat.completions.create(jsonOpts as Parameters<OpenAI['chat']['completions']['create']>[0]);
+    const completion = response as { choices?: Array<{ message?: { content?: string }; finish_reason?: string }>; model?: string; usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number } };
+    const choice = completion.choices?.[0];
+    const messageContent = choice?.message?.content;
+    if (!messageContent) {
       throw new Error('No content returned from OpenAI');
     }
 
+    const choiceExt = choice as { finish_reason?: string };
     const raw: OpenAIResponse = {
-      content: choice.message.content,
-      model: response.model,
+      content: messageContent,
+      model: completion.model ?? model,
       usage: {
-        inputTokens: response.usage?.prompt_tokens ?? 0,
-        outputTokens: response.usage?.completion_tokens ?? 0,
-        totalTokens: response.usage?.total_tokens ?? 0,
+        inputTokens: completion.usage?.prompt_tokens ?? 0,
+        outputTokens: completion.usage?.completion_tokens ?? 0,
+        totalTokens: completion.usage?.total_tokens ?? 0,
       },
-      finishReason: choice.finish_reason ?? 'unknown',
+      finishReason: choiceExt.finish_reason ?? 'unknown',
     };
 
     try {
-      const content = JSON.parse(choice.message.content) as T;
+      const content = JSON.parse(messageContent) as T;
       return { content, raw };
     } catch {
-      throw new Error(`Failed to parse JSON response: ${choice.message.content}`);
+      throw new Error(`Failed to parse JSON response: ${messageContent}`);
     }
   }
 
   private isRateLimitError(error: unknown): boolean {
-    if (error instanceof OpenAI.RateLimitError) {
-      return true;
-    }
-    if (error instanceof Error && error.message.includes('rate_limit')) {
-      return true;
+    if (error instanceof Error) {
+      if (error.name === 'RateLimitError' || (error as { constructor?: { name?: string } }).constructor?.name === 'RateLimitError') {
+        return true;
+      }
+      if (error.message.includes('rate_limit')) {
+        return true;
+      }
     }
     return false;
   }

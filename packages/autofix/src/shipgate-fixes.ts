@@ -16,8 +16,8 @@
 
 import { readFile, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
-import { join, resolve } from 'path';
-import type { Finding } from '@isl-lang/isl-gate';
+import { resolve } from 'path';
+import type { Finding } from '@isl-lang/gate';
 import type { Patch } from './patcher.js';
 import { generateUnifiedDiff } from './diff-generator.js';
 
@@ -54,9 +54,9 @@ export interface FixContext {
 }
 
 /**
- * A fix suggestion with patch information
+ * A fix suggestion with patch information (shipgate/evidence-based fixes)
  */
-export interface FixSuggestion {
+export interface ShipgateFixSuggestion {
   /** Rule identifier */
   rule: string;
   /** Human-readable description */
@@ -74,7 +74,7 @@ export interface FixSuggestion {
  */
 export interface SuggestFixesResult {
   /** All suggested fixes */
-  suggestions: FixSuggestion[];
+  suggestions: ShipgateFixSuggestion[];
   /** Counts by rule */
   counts: Record<string, number>;
   /** Total count */
@@ -91,7 +91,7 @@ export interface SuggestFixesResult {
 export type Fixer = (
   finding: Finding,
   context: FixContext
-) => Promise<FixSuggestion[]>;
+) => Promise<ShipgateFixSuggestion[]>;
 
 /**
  * Fixer registry entry
@@ -159,7 +159,7 @@ export async function suggestFixes(
     onlyRules = [],
   } = context;
 
-  const suggestions: FixSuggestion[] = [];
+  const suggestions: ShipgateFixSuggestion[] = [];
   const counts: Record<string, number> = {};
 
   // Filter claims by rule if specified

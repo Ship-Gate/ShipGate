@@ -1,6 +1,7 @@
 {
   "name": "rest-api-tutorial",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "REST API tutorial sample",
   "type": "module",
   "scripts": {

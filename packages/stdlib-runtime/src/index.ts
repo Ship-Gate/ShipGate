@@ -18,28 +18,28 @@
  */
 
 // Re-export all modules
-export * as String from './string';
-export * as Math from './math';
-export * as Collections from './collections';
-export * as JSON from './json';
-export * as DateTime from './datetime';
-export * as UUID from './uuid';
-export * as Crypto from './crypto';
-export * as Encoding from './encoding';
-export * as Regex from './regex';
-export * as URL from './url';
+export * as String from './string.js';
+export * as Math from './math.js';
+export * as Collections from './collections.js';
+export * as JSON from './json.js';
+export * as DateTime from './datetime.js';
+export * as UUID from './uuid.js';
+export * as Crypto from './crypto.js';
+export * as Encoding from './encoding.js';
+export * as Regex from './regex.js';
+export * as URL from './url.js';
 
 // Import default exports
-import String from './string';
-import Math from './math';
-import Collections from './collections';
-import JSON from './json';
-import DateTime from './datetime';
-import UUID from './uuid';
-import Crypto from './crypto';
-import Encoding from './encoding';
-import Regex from './regex';
-import URL from './url';
+import String from './string.js';
+import Math from './math.js';
+import Collections from './collections.js';
+import JSON from './json.js';
+import DateTime from './datetime.js';
+import UUID from './uuid.js';
+import Crypto from './crypto.js';
+import Encoding from './encoding.js';
+import Regex from './regex.js';
+import URL from './url.js';
 
 /**
  * ISL Standard Library

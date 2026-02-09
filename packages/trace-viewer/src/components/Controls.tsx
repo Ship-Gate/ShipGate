@@ -22,8 +22,6 @@ export function Controls() {
     speed,
     looping,
     filter,
-    play,
-    pause,
     togglePlay,
     stepForward,
     stepBack,

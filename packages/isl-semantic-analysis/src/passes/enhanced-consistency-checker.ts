@@ -8,14 +8,8 @@
  */
 
 import type { Diagnostic, SourceLocation } from '@isl-lang/errors';
-import type { 
-  DomainDeclaration, 
-  BehaviorDeclaration, 
-  Expression,
-  ConditionBlock,
-  SecurityBlock,
-  TemporalBlock,
-} from '@isl-lang/isl-core';
+import type { DomainDeclaration, BehaviorDeclaration, Expression } from '@isl-lang/isl-core';
+import type { ConditionBlock, SecurityBlock, TemporalBlock } from '@isl-lang/isl-core/ast';
 import type { SemanticPass, PassContext } from '../types.js';
 import { spanToLocation } from '../types.js';
 
@@ -121,20 +115,23 @@ function checkContradictoryPreconditions(
   const boolConstraints: BooleanConstraint[] = [];
   const eqConstraints: EqualityConstraint[] = [];
 
-  for (const condition of preconditions.conditions || []) {
-    // Check each condition's statements
-    for (const stmt of condition.statements || []) {
-      if (!stmt.expression) continue;
+  const conditionList = (preconditions as { conditions?: Array<{ statements?: Array<{ expression?: Expression; span?: unknown }> }> }).conditions
+    ?? (Array.isArray(preconditions) ? (preconditions as Expression[]).map(e => ({ statements: [{ expression: e }] })) : []);
+  for (const condition of conditionList) {
+    const statements = (condition as { statements?: Array<{ expression?: Expression; span?: unknown }> }).statements ?? [];
+    for (const stmt of statements) {
+      const expr = (stmt as { expression?: Expression }).expression;
+      if (!expr) continue;
       
       // Check for inline contradictions within a single expression (e.g., x >= 8 and x < 8)
-      const inlineContradiction = checkInlineContradiction(stmt.expression);
+      const inlineContradiction = checkInlineContradiction(expr);
       if (inlineContradiction) {
         diagnostics.push({
           code: ERRORS.INLINE_CONTRADICTION,
           category: 'semantic',
           severity: 'error',
           message: `Contradictory condition: ${inlineContradiction.reason}`,
-          location: spanToLocation(stmt.span, filePath),
+          location: spanToLocation((stmt as { span?: unknown }).span, filePath),
           source: 'verifier',
           notes: [`In behavior '${behavior.name.name}'`, 'This condition can never be true'],
           help: ['Review the condition and remove the contradiction'],
@@ -143,14 +140,14 @@ function checkContradictoryPreconditions(
       }
 
       // Check for always-false expressions
-      const alwaysFalse = checkAlwaysFalse(stmt.expression);
+      const alwaysFalse = checkAlwaysFalse(expr);
       if (alwaysFalse) {
         diagnostics.push({
           code: ERRORS.ALWAYS_FALSE_EXPRESSION,
           category: 'semantic',
           severity: 'error',
           message: `Always-false expression: ${alwaysFalse.reason}`,
-          location: spanToLocation(stmt.span, filePath),
+          location: spanToLocation((stmt as { span?: unknown }).span, filePath),
           source: 'verifier',
           notes: [`In behavior '${behavior.name.name}'`],
           help: ['This precondition will never be satisfied'],
@@ -159,7 +156,8 @@ function checkContradictoryPreconditions(
       }
       
       // Extract constraints for cross-statement analysis
-      extractConstraints(stmt.expression, stmt.span, numericConstraints, boolConstraints, eqConstraints);
+      const stmtSpan = (stmt as { span?: SourceSpan }).span ?? { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 0, offset: 0 } };
+      extractConstraints(expr, stmtSpan, numericConstraints, boolConstraints, eqConstraints);
     }
   }
 
@@ -175,8 +173,9 @@ function checkContradictoryPreconditions(
  * Check for inline contradictions in a single expression (e.g., x >= 8 and x < 8)
  */
 function checkInlineContradiction(expr: Expression): { reason: string } | null {
+  const kind = (expr as { kind?: string }).kind ?? '';
   // Handle 'and' / '&&' binary expressions
-  if (expr.kind === 'BinaryExpression' || expr.kind === 'LogicalExpression') {
+  if (kind === 'BinaryExpression' || kind === 'LogicalExpression' || kind === 'BinaryExpr' || kind === 'LogicalExpr') {
     const binary = expr as { left?: Expression; operator?: string; right?: Expression };
     
     if (binary.operator === 'and' || binary.operator === '&&') {
@@ -209,13 +208,15 @@ function checkInlineContradiction(expr: Expression): { reason: string } | null {
  * Check for always-false expressions (x != x, false, etc.)
  */
 function checkAlwaysFalse(expr: Expression): { reason: string } | null {
+  const k = (expr as { kind?: string }).kind ?? '';
   // Check for literal false
-  if (expr.kind === 'BooleanLiteral' && (expr as { value: boolean }).value === false) {
+  if (k === 'BooleanLiteral' && (expr as { value: boolean }).value === false) {
     return { reason: "Literal 'false' precondition" };
   }
 
+  const kindAf = (expr as { kind?: string }).kind ?? '';
   // Check for x != x patterns
-  if (expr.kind === 'ComparisonExpression' || expr.kind === 'BinaryExpression') {
+  if (kindAf === 'ComparisonExpression' || kindAf === 'BinaryExpression' || kindAf === 'ComparisonExpr' || kindAf === 'BinaryExpr') {
     const binary = expr as { left?: Expression; operator?: string; right?: Expression };
     
     if (binary.operator === '!=' || binary.operator === '!==') {
@@ -246,8 +247,8 @@ function checkAlwaysFalse(expr: Expression): { reason: string } | null {
  */
 function extractSingleConstraint(expr: Expression | undefined): NumericConstraint | null {
   if (!expr) return null;
-  
-  if (expr.kind === 'ComparisonExpression' || expr.kind === 'BinaryExpression') {
+  const kindSc = (expr as { kind?: string }).kind ?? '';
+  if (kindSc === 'ComparisonExpression' || kindSc === 'BinaryExpression' || kindSc === 'ComparisonExpr' || kindSc === 'BinaryExpr') {
     const binary = expr as { left?: Expression; operator?: string; right?: Expression };
     
     if (!binary.left || !binary.right || !binary.operator) return null;
@@ -260,12 +261,8 @@ function extractSingleConstraint(expr: Expression | undefined): NumericConstrain
     const rightNum = extractNumberValue(binary.right);
     
     if (leftVar && rightNum !== null) {
-      return {
-        variable: leftVar,
-        operator: op,
-        value: rightNum,
-        span: expr.span || { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 0, offset: 0 } },
-      };
+      const span = (expr as { span?: SourceSpan }).span ?? { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 0, offset: 0 } };
+      return { variable: leftVar, operator: op, value: rightNum, span };
     }
     
     // number op variable (flip the operator)
@@ -273,12 +270,8 @@ function extractSingleConstraint(expr: Expression | undefined): NumericConstrain
     const rightVar = extractVariableName(binary.right);
     
     if (leftNum !== null && rightVar) {
-      return {
-        variable: rightVar,
-        operator: flipOperator(op),
-        value: leftNum,
-        span: expr.span || { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 0, offset: 0 } },
-      };
+      const span = (expr as { span?: SourceSpan }).span ?? { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 0, offset: 0 } };
+      return { variable: rightVar, operator: flipOperator(op), value: leftNum, span };
     }
   }
   
@@ -394,7 +387,8 @@ function extractConstraints(
   boolean: BooleanConstraint[],
   equality: EqualityConstraint[]
 ): void {
-  if (expr.kind === 'ComparisonExpression' || expr.kind === 'BinaryExpression') {
+  const kindEc = (expr as { kind?: string }).kind ?? '';
+  if (kindEc === 'ComparisonExpression' || kindEc === 'BinaryExpression' || kindEc === 'ComparisonExpr' || kindEc === 'BinaryExpr') {
     const binary = expr as { left?: Expression; operator?: string; right?: Expression };
     
     if (!binary.left || !binary.right || !binary.operator) return;
@@ -434,7 +428,7 @@ function extractConstraints(
   }
   
   // Recursively process logical conjunctions
-  if (expr.kind === 'BinaryExpression' || expr.kind === 'LogicalExpression') {
+  if (kindEc === 'BinaryExpression' || kindEc === 'LogicalExpression' || kindEc === 'BinaryExpr' || kindEc === 'LogicalExpr') {
     const binary = expr as { left?: Expression; operator?: string; right?: Expression };
     if (binary.operator === 'and' || binary.operator === '&&') {
       if (binary.left) extractConstraints(binary.left, span, numeric, boolean, equality);
@@ -615,25 +609,26 @@ function checkUnusedBehaviorSymbols(
   // Collect all identifiers used in the behavior body
   const usedIdentifiers = new Set<string>();
   
-  // Collect from preconditions
-  collectIdentifiersFromBlock(behavior.preconditions, usedIdentifiers);
+  // Collect from preconditions (may be ConditionBlock or Expression[])
+  collectIdentifiersFromBlock(behavior.preconditions as unknown as ConditionBlock | undefined, usedIdentifiers);
   
-  // Collect from postconditions
-  collectIdentifiersFromBlock(behavior.postconditions, usedIdentifiers);
+  // Collect from postconditions (may be ConditionBlock or array)
+  collectIdentifiersFromBlock(behavior.postconditions as unknown as ConditionBlock | undefined, usedIdentifiers);
   
   // Collect from invariants
   for (const inv of behavior.invariants || []) {
-    collectIdentifiersFromExpression(inv.expression || inv, usedIdentifiers);
+    const invExpr = (inv as { expression?: Expression }).expression ?? inv;
+    collectIdentifiersFromExpression(invExpr as Expression, usedIdentifiers);
   }
   
   // Collect from temporal block
   if (behavior.temporal) {
-    collectIdentifiersFromTemporal(behavior.temporal, usedIdentifiers);
+    collectIdentifiersFromTemporal(behavior.temporal as unknown as TemporalBlock, usedIdentifiers);
   }
   
   // Collect from security block
   if (behavior.security) {
-    collectIdentifiersFromSecurity(behavior.security, usedIdentifiers);
+    collectIdentifiersFromSecurity(behavior.security as unknown as SecurityBlock, usedIdentifiers);
   }
   
   // Check inputs
@@ -660,7 +655,7 @@ function checkUnusedBehaviorSymbols(
           category: 'semantic',
           severity: 'warning',
           message: `Input parameter '${name}' is declared but never used in behavior '${behavior.name.name}'`,
-          location: spanToLocation(field.span, filePath),
+          location: spanToLocation((field as { span?: unknown }).span, filePath),
           source: 'verifier',
           tags: ['unnecessary'],
           help: [
@@ -686,7 +681,7 @@ function checkUnusedBehaviorSymbols(
             category: 'semantic',
             severity: 'warning',
             message: `Output field '${name}' is declared but never constrained in postconditions of '${behavior.name.name}'`,
-            location: spanToLocation(field.span || outputBlock.span, filePath),
+            location: spanToLocation((field as { span?: unknown }).span ?? (outputBlock as { span?: unknown }).span, filePath),
             source: 'verifier',
             notes: ['Output fields should typically be constrained in postconditions'],
             help: [
@@ -732,8 +727,8 @@ function checkSecurityMetadata(
     }
   }
   
-  // Check rate_limit references
-  for (const req of security.requirements || []) {
+  const securityBlock = security as { requirements?: Array<{ type?: string; expression?: Expression; span?: unknown }>; span?: unknown };
+  for (const req of securityBlock.requirements || []) {
     if (req.type === 'rate_limit' || req.type === 'rate-limit') {
       // Rate limits often reference "per <field>" - extract and validate
       const referencedVars = extractReferencedVariables(req.expression);
@@ -748,7 +743,7 @@ function checkSecurityMetadata(
             category: 'semantic',
             severity: 'warning',
             message: `Security rate_limit references '${varName}' which is not a declared input`,
-            location: spanToLocation(req.span || security.span, filePath),
+            location: spanToLocation((req as { span?: unknown }).span ?? securityBlock.span, filePath),
             source: 'verifier',
             notes: [`In behavior '${behavior.name.name}'`, `Declared inputs: ${Array.from(inputNames).join(', ') || '(none)'}`],
             help: [
@@ -778,7 +773,7 @@ function checkTemporalMetadata(
   filePath: string
 ): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
-  const temporal = behavior.temporal!;
+  const temporal = behavior.temporal! as { requirements?: Array<{ type?: string; duration?: unknown; condition?: Expression; span?: unknown }>; span?: unknown };
   
   for (const req of temporal.requirements || []) {
     // "within" requirements need a duration
@@ -788,7 +783,7 @@ function checkTemporalMetadata(
         category: 'semantic',
         severity: 'error',
         message: `Temporal 'within' requirement is missing a duration`,
-        location: spanToLocation(req.span || temporal.span, filePath),
+        location: spanToLocation((req as { span?: unknown }).span ?? temporal.span, filePath),
         source: 'verifier',
         notes: [`In behavior '${behavior.name.name}'`],
         help: [
@@ -808,7 +803,7 @@ function checkTemporalMetadata(
           category: 'semantic',
           severity: 'hint',
           message: `Temporal condition doesn't reference any behavior variables`,
-          location: spanToLocation(req.span || temporal.span, filePath),
+          location: spanToLocation((req as { span?: unknown }).span ?? temporal.span, filePath),
           source: 'verifier',
           notes: [`In behavior '${behavior.name.name}'`],
           help: ['Temporal conditions typically constrain response time or state changes'],
@@ -821,10 +816,10 @@ function checkTemporalMetadata(
 }
 
 function isSimpleCondition(expr: Expression): boolean {
-  // Simple conditions like "response returned" are valid
-  if (expr.kind === 'Identifier') return true;
-  if (expr.kind === 'MemberExpression') return true;
-  if (expr.kind === 'CallExpression') return true;
+  const k = (expr as { kind?: string }).kind ?? '';
+  if (k === 'Identifier') return true;
+  if (k === 'MemberExpression' || k === 'MemberExpr') return true;
+  if (k === 'CallExpression' || k === 'CallExpr') return true;
   return false;
 }
 
@@ -834,12 +829,12 @@ function isSimpleCondition(expr: Expression): boolean {
 
 function extractVariableName(expr: Expression | undefined): string | null {
   if (!expr) return null;
-  
-  if (expr.kind === 'Identifier') {
+  const k = (expr as { kind?: string }).kind ?? '';
+  if (k === 'Identifier') {
     return (expr as { name: string }).name;
   }
   
-  if (expr.kind === 'MemberExpression') {
+  if (k === 'MemberExpression' || k === 'MemberExpr') {
     const member = expr as { object?: Expression; property?: { name?: string } };
     const obj = extractVariableName(member.object);
     const prop = member.property?.name;
@@ -852,8 +847,7 @@ function extractVariableName(expr: Expression | undefined): string | null {
 
 function extractNumberValue(expr: Expression | undefined): number | null {
   if (!expr) return null;
-  
-  if (expr.kind === 'NumberLiteral') {
+  if ((expr as { kind?: string }).kind === 'NumberLiteral') {
     return (expr as { value: number }).value;
   }
   
@@ -882,10 +876,12 @@ function extractStringValue(expr: Expression | undefined): string | undefined {
 
 function collectIdentifiersFromBlock(block: ConditionBlock | undefined, identifiers: Set<string>): void {
   if (!block) return;
-  
-  for (const condition of block.conditions || []) {
-    for (const stmt of condition.statements || []) {
-      collectIdentifiersFromExpression(stmt.expression, identifiers);
+  const conditions = (block as unknown as { conditions?: Array<{ statements?: Array<{ expression?: Expression }> }> }).conditions ?? [];
+  for (const condition of conditions) {
+    const statements = (condition as { statements?: Array<{ expression?: Expression }> }).statements ?? [];
+    for (const stmt of statements) {
+      const ex = (stmt as { expression?: Expression }).expression;
+      if (ex) collectIdentifiersFromExpression(ex, identifiers);
     }
   }
 }
@@ -894,20 +890,20 @@ function collectIdentifiersFromExpression(expr: Expression | undefined, identifi
   if (!expr) return;
   
   walkExpression(expr, (node) => {
-    if (node.kind === 'Identifier') {
+    const nk = (node as { kind?: string }).kind ?? '';
+    if (nk === 'Identifier') {
       identifiers.add((node as { name: string }).name);
     }
-    if (node.kind === 'MemberExpression') {
+    if (nk === 'MemberExpression' || nk === 'MemberExpr') {
       const member = node as { object?: Expression; property?: Expression | { name?: string } };
       const objName = extractVariableName(member.object);
       
       // Property can be an Identifier or a simple object with name
       let propName: string | null = null;
       if (member.property) {
-        if (typeof member.property === 'object' && 'kind' in member.property && member.property.kind === 'Identifier') {
-          propName = (member.property as { name: string }).name;
-        } else if (typeof member.property === 'object' && 'name' in member.property) {
-          propName = member.property.name || null;
+        const prop = member.property as { kind?: string; name?: string };
+        if (typeof member.property === 'object' && (prop.kind === 'Identifier' || 'name' in member.property)) {
+          propName = prop.name ?? null;
         }
       }
       
@@ -919,18 +915,16 @@ function collectIdentifiersFromExpression(expr: Expression | undefined, identifi
 }
 
 function collectIdentifiersFromTemporal(temporal: TemporalBlock, identifiers: Set<string>): void {
-  for (const req of temporal.requirements || []) {
-    if (req.condition) {
-      collectIdentifiersFromExpression(req.condition, identifiers);
-    }
+  const reqs = (temporal as unknown as { requirements?: Array<{ condition?: Expression }> }).requirements ?? [];
+  for (const req of reqs) {
+    if (req.condition) collectIdentifiersFromExpression(req.condition, identifiers);
   }
 }
 
 function collectIdentifiersFromSecurity(security: SecurityBlock, identifiers: Set<string>): void {
-  for (const req of security.requirements || []) {
-    if (req.expression) {
-      collectIdentifiersFromExpression(req.expression, identifiers);
-    }
+  const reqs = (security as unknown as { requirements?: Array<{ expression?: Expression }> }).requirements ?? [];
+  for (const req of reqs) {
+    if (req.expression) collectIdentifiersFromExpression(req.expression, identifiers);
   }
 }
 
@@ -939,7 +933,7 @@ function extractReferencedVariables(expr: Expression | undefined): Set<string> {
   if (!expr) return vars;
   
   walkExpression(expr, (node) => {
-    if (node.kind === 'Identifier') {
+    if ((node as { kind?: string }).kind === 'Identifier') {
       const name = (node as { name: string }).name;
       // Skip keywords and common built-ins
       if (!isKeyword(name)) {
@@ -965,7 +959,7 @@ function walkExpression(expr: Expression | undefined, visitor: (node: Expression
   visitor(expr);
   
   // Walk children based on expression kind
-  const e = expr as Record<string, unknown>;
+  const e = expr as unknown as Record<string, unknown>;
   
   if (e.left) walkExpression(e.left as Expression, visitor);
   if (e.right) walkExpression(e.right as Expression, visitor);

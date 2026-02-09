@@ -24,7 +24,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsup src/index.ts src/exporters/console.ts src/exporters/otlp.ts --format esm --dts --clean",
+    "build": "tsup src/index.ts src/exporters/console.ts src/exporters/otlp.ts --format esm --no-dts --clean && tsc -p tsconfig.build.json",
     "dev": "tsup src/index.ts src/exporters/console.ts src/exporters/otlp.ts --format esm --dts --watch",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",

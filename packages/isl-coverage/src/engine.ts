@@ -69,8 +69,8 @@ export async function analyzeCoverage(
           name: behavior.name,
           domain: behavior.domain,
           file: behavior.location.file || specFile,
-          line: behavior.location.start?.line || 0,
-          column: behavior.location.start?.column,
+          line: behavior.location?.line ?? 0,
+          column: behavior.location?.column ?? 0,
         });
       }
 
@@ -94,8 +94,8 @@ export async function analyzeCoverage(
             behavior: behavior.name,
             domain: behavior.domain,
             file: constraint.location.file || specFile,
-            line: constraint.location.start?.line || 0,
-            column: constraint.location.start?.column,
+            line: constraint.location?.line ?? 0,
+            column: constraint.location?.column ?? 0,
             unknownReasons: constraint.unknownReasons,
             evaluationCount: constraint.evaluationCount,
           });
@@ -184,7 +184,7 @@ function analyzeDomain(
       detailed
     );
     const postconditions = analyzeConstraints(
-      behavior.postconditions?.flatMap((pc) => pc.conditions || []) || [],
+      behavior.postconditions?.flatMap((pc) => pc.predicates ?? []) ?? [],
       trace?.postconditions || [],
       specFile,
       detailed
@@ -303,7 +303,7 @@ function constraintToString(expr: Expression): string {
       case 'UnaryExpr':
         return `${expr.operator}${constraintToString(expr.operand)}`;
       case 'Identifier':
-        return expr.name;
+        return (expr as { name: string }).name;
       case 'BooleanLiteral':
         return String(expr.value);
       case 'StringLiteral':
@@ -311,7 +311,8 @@ function constraintToString(expr: Expression): string {
       case 'NumberLiteral':
         return String(expr.value);
       case 'CallExpr':
-        return `${expr.callee.name}(${expr.args.map(constraintToString).join(', ')})`;
+        const callExpr = expr as { callee: { name?: string }; arguments?: Expression[] };
+        return `${callExpr.callee?.name ?? 'call'}(${callExpr.arguments?.map((e: Expression) => constraintToString(e)).join(', ') ?? ''})`;
       default:
         return '[expression]';
     }
@@ -329,8 +330,10 @@ function createLocation(
 ): SourceLocation {
   return {
     file,
-    start: { line, column: column || 0 },
-    end: { line, column: column || 0 },
+    line,
+    column: column ?? 0,
+    endLine: line,
+    endColumn: column ?? 0,
   };
 }
 

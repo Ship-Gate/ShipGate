@@ -22,26 +22,21 @@ export async function extractISLSymbols(specFiles: string[]): Promise<ISLSymbol[
       }
 
       const domain = parseResult.domain;
-      const domainName = domain.name?.value || 'Unknown';
+      const domainName = domain.name?.name ?? 'Unknown';
 
       // Extract behaviors
       if (domain.behaviors) {
         for (const behavior of domain.behaviors) {
-          if (behavior.name?.value) {
+          if (behavior.name?.name) {
+            const loc = behavior.location;
             symbols.push({
               type: 'behavior',
-              name: behavior.name.value,
+              name: behavior.name.name,
               domain: domainName,
               specFile,
               location: {
-                start: {
-                  line: behavior.location?.start?.line || 1,
-                  column: behavior.location?.start?.column || 1,
-                },
-                end: {
-                  line: behavior.location?.end?.line || 1,
-                  column: behavior.location?.end?.column || 1,
-                },
+                start: { line: loc?.line ?? 1, column: loc?.column ?? 1 },
+                end: { line: loc?.endLine ?? 1, column: loc?.endColumn ?? 1 },
               },
               metadata: {
                 hasInput: !!behavior.input,
@@ -57,21 +52,16 @@ export async function extractISLSymbols(specFiles: string[]): Promise<ISLSymbol[
       // Extract entities
       if (domain.entities) {
         for (const entity of domain.entities) {
-          if (entity.name?.value) {
+          if (entity.name?.name) {
+            const loc = entity.location;
             symbols.push({
               type: 'entity',
-              name: entity.name.value,
+              name: entity.name.name,
               domain: domainName,
               specFile,
               location: {
-                start: {
-                  line: entity.location?.start?.line || 1,
-                  column: entity.location?.start?.column || 1,
-                },
-                end: {
-                  line: entity.location?.end?.line || 1,
-                  column: entity.location?.end?.column || 1,
-                },
+                start: { line: loc?.line ?? 1, column: loc?.column ?? 1 },
+                end: { line: loc?.endLine ?? 1, column: loc?.endColumn ?? 1 },
               },
               metadata: {
                 fieldCount: entity.fields?.length || 0,
@@ -81,51 +71,36 @@ export async function extractISLSymbols(specFiles: string[]): Promise<ISLSymbol[
         }
       }
 
-      // Extract types
+      // Extract types and enums (enums are TypeDeclaration with definition.kind === 'EnumType')
       if (domain.types) {
         for (const type of domain.types) {
-          if (type.name?.value) {
+          if (type.name?.name) {
+            const loc = type.location;
             symbols.push({
               type: 'type',
-              name: type.name.value,
+              name: type.name.name,
               domain: domainName,
               specFile,
               location: {
-                start: {
-                  line: type.location?.start?.line || 1,
-                  column: type.location?.start?.column || 1,
-                },
-                end: {
-                  line: type.location?.end?.line || 1,
-                  column: type.location?.end?.column || 1,
-                },
+                start: { line: loc?.line ?? 1, column: loc?.column ?? 1 },
+                end: { line: loc?.endLine ?? 1, column: loc?.endColumn ?? 1 },
               },
             });
           }
-        }
-      }
-
-      // Extract enums
-      if (domain.enums) {
-        for (const enumDef of domain.enums) {
-          if (enumDef.name?.value) {
+          if (type.definition?.kind === 'EnumType' && type.name?.name) {
+            const loc = type.location;
+            const enumDef = type.definition as { values?: unknown[] };
             symbols.push({
               type: 'enum',
-              name: enumDef.name.value,
+              name: type.name.name,
               domain: domainName,
               specFile,
               location: {
-                start: {
-                  line: enumDef.location?.start?.line || 1,
-                  column: enumDef.location?.start?.column || 1,
-                },
-                end: {
-                  line: enumDef.location?.end?.line || 1,
-                  column: enumDef.location?.end?.column || 1,
-                },
+                start: { line: loc?.line ?? 1, column: loc?.column ?? 1 },
+                end: { line: loc?.endLine ?? 1, column: loc?.endColumn ?? 1 },
               },
               metadata: {
-                valueCount: enumDef.values?.length || 0,
+                valueCount: enumDef.values?.length ?? 0,
               },
             });
           }

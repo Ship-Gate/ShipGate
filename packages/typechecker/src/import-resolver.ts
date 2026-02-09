@@ -2,6 +2,7 @@
 // Import Graph Resolution for TypeChecker
 // ============================================================================
 
+import path from 'node:path';
 import type { SourceLocation, Symbol } from './types';
 import type { Diagnostic } from './errors';
 import { SymbolTableBuilder } from './symbols';

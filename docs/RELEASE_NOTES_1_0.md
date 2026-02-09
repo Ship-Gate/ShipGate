@@ -1,125 +1,97 @@
-# ISL 1.0.0 Release Notes
+# Shipgate 1.0.0 Release Notes
 
 **Release Date:** February 2026  
 **Status:** Release Candidate
 
 ## Overview
 
-ISL (Intent Specification Language) 1.0.0 is the first stable release of the Intent Specification Language toolchain. This release provides a complete workflow for specifying, verifying, and shipping AI-generated code with confidence.
+Shipgate 1.0.0 is the first stable release of **Shipgate** — stop AI from shipping fake features. The toolchain is powered by **ISL (Intent Specification Language)** and provides a workflow to specify, verify, and gate AI-generated code with evidence and SHIP/NO-SHIP decisions.
+
+---
 
 ## Highlights
 
-### Core Features
+- **Shipgate CLI** — Single entry point: `shipgate` or `isl` (same binary). Commands: `init`, `check`, `build`, `verify`, `gate`, `heal`, and proof verification.
+- **ISL core** — Parser, typechecker, and expression evaluator with refinement types, tri-state evaluation (TRUE/FALSE/UNKNOWN), and structural typing.
+- **Verification pipeline** — Parse → check → codegen → verify with evidence; trust score and proof bundles for auditability.
+- **Proof bundles** — Enhanced evidence: evaluator decision traces, unknown reason codes, optional SMT transcript, run metadata, import graph, stdlib version hashes.
+- **Production package set** — Core, pipeline, verification, codegen (TypeScript/OpenAPI/GraphQL/Python scaffolds), LSP, and production stdlib modules are included in the 1.0 build and test pipeline.
 
-- **Full ISL Parser** - Complete support for domains, entities, behaviors, types, refinements, and contracts
-- **Type Checker** - Refinement types, type constraints, and structural typing
-- **Expression Evaluator** - Tri-state evaluation (TRUE/FALSE/UNKNOWN) for preconditions and postconditions
-- **Test Generation** - Automatic test scaffold generation for Vitest/Jest
-- **Code Generation** - TypeScript types, OpenAPI specs, and GraphQL schemas
-- **Trust Score** - Evidence-based verification with quantified confidence
+---
 
-### CLI Commands
+## What’s Included (Core)
 
-| Command | Description |
-|---------|-------------|
-| `isl init` | Initialize a new ISL project |
-| `isl check` | Parse and type check ISL specifications |
-| `isl build` | Full pipeline: parse → check → codegen → verify |
-| `isl verify` | Verify implementation against spec with evidence |
-| `isl gate` | SHIP/NO-SHIP decision with proof bundle |
-| `isl heal` | Automatically fix violations |
-| `isl proof verify` | Verify proof bundle integrity |
+### CLI
 
-### Proof Bundles
+- **Package:** `shipgate` (npm), published at 1.0.0.
+- **Binaries:** `shipgate` and `isl` (both point to the same CLI).
+- **Commands:** `init`, `check`, `build`, `verify`, `gate`, `heal`, `proof verify`.
 
-Proof bundles in 1.0 include enhanced evidence:
+### Core packages (production)
 
-- **Evaluator Decision Trace** - Records how the evaluator made TRUE/FALSE/UNKNOWN decisions
-- **Unknown Reason Codes** - Explains why certain clauses could not be determined
-- **SMT Solver Transcript** - Full SMT-LIB queries and solver responses (when `--smt` enabled)
-- **Run Metadata** - Environment, versions, and timing information
-- **Import Graph** - Resolved imports with version tracking
-- **Stdlib Versions** - SHA-256 hashes of stdlib modules used
+- **Language:** `@isl-lang/parser`, `@isl-lang/typechecker`, `@isl-lang/evaluator`, `@isl-lang/isl-core`, `@isl-lang/errors`, `@isl-lang/semantics`.
+- **Pipeline:** `@isl-lang/pipeline`, `@isl-lang/import-resolver`, and related compiler/static-analysis packages.
+- **Verification:** `@isl-lang/verifier-runtime`, `@isl-lang/isl-verify`, `@isl-lang/isl-gate`, `@isl-lang/isl-proof` (published as `@isl-lang/proof`), `@isl-lang/evidence-*`, `@isl-lang/isl-healer`.
+- **Codegen:** `@isl-lang/codegen`, `@isl-lang/codegen-core`, `@isl-lang/codegen-tests`, `@isl-lang/codegen-openapi`, `@isl-lang/codegen-graphql`, `@isl-lang/codegen-python`, `@isl-lang/codegen-types`, `@isl-lang/codegen-runtime`.
+- **LSP:** `@isl-lang/lsp-core`, `@isl-lang/lsp-server`, `@isl-lang/language-server`.
+- **Stdlib (production):** `@isl-lang/stdlib-core`, `@isl-lang/stdlib-auth`, `@isl-lang/stdlib-payments`, `@isl-lang/stdlib-idempotency`, `@isl-lang/stdlib-cache`, `@isl-lang/stdlib-files`, `@isl-lang/stdlib-workflow`, and other production stdlib modules listed in `experimental.json`.
 
-### Verification Output
+### Partial / in progress (included in repo, lower readiness)
 
-When verification passes, the CLI displays:
+- **Codegen (other languages):** Go, Rust, C#, JVM — real implementation, may have incomplete tests or features.
+- **Stdlib (untested / partial):** e.g. `stdlib-api`, `stdlib-events`, `stdlib-queue`, `stdlib-search`, `stdlib-distributed`, and others — may have build or test gaps.
+- **Verification (advanced):** SMT, PBT, formal/chaos/security/temporal verifiers — included but not all at full readiness.
+- **Tooling:** Test generator, test runtime, autofix, patch engine, snapshot/contract testing — partial.
 
-```
-  ┌─────────────────────────────────────┐
-  │            ✓  SHIP                  │
-  └─────────────────────────────────────┘
+---
 
-  Trust Score: 98%
-  Confidence:  95%
+## What’s Explicitly NOT Included / Experimental
 
-  Tests: 24 passed 0 failed 0 skipped
+The following are **excluded from the default production build** (see `experimental.json` and `scripts/run-production.ts`). They are **not** part of the 1.0 promise:
 
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Verified by ShipGate ✓
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
+- **Experimental / quarantined packages** — Effect handlers, effect system, formal-verification, mutation-testing, fuzzer; codegen shells (Terraform, WASM, Kubernetes, edge, pipelines, migrations, mocks, loadtest, docs, db, SDK, validators, property-tests, gRPC, UI, Python-advanced, graphql-codegen, db-generator, api-generator); SDK shells (TypeScript, web, React Native, generator-sdk, runtime-sdk); platform shells (marketplace, dashboard, agent-os, ai-copilot, spec-assist, intent-translator, inference, etc.); infrastructure, observability, and integration shells.
+- **Internal / next** — Not published as part of 1.0: visual-editor, trace-viewer, playground, marketplace-web, dashboard-web, docs apps, diff-viewer, audit-viewer, vscode/vscode-islstudio (internal build), islstudio, lsp (legacy), isl-cli, isl-compiler, isl-runtime, isl-generator, isl-evidence, contracts, core, runtime, verifier (legacy).
 
-## Gate Checklist Results
+The **VS Code extension** (vscode-islstudio) may be available separately; it is maintained in-repo but is in the internal set and not part of the 1.0 core guarantee.
 
-### Build Status
-
-| Check | Status | Notes |
-|-------|--------|-------|
-| `pnpm build` | ✓ PASS | All packages build successfully |
-| `pnpm typecheck` | ✓ PASS | No TypeScript errors |
-| `pnpm test` | ✓ PASS | >90% test pass rate |
-
-### Package Verification
-
-| Package | Version | Status |
-|---------|---------|--------|
-| `@isl-lang/parser` | 1.0.0 | ✓ Published |
-| `@isl-lang/typechecker` | 1.0.0 | ✓ Published |
-| `@isl-lang/evaluator` | 1.0.0 | ✓ Published |
-| `@isl-lang/cli` | 1.0.0 | ✓ Published |
-| `@isl-lang/proof` | 1.0.0 | ✓ Published |
-| `vscode-islstudio` | 1.0.0 | ✓ Published |
-
-### Verification Tiers
-
-| Tier | Coverage | Notes |
-|------|----------|-------|
-| Expression Evaluator | 95% | Arithmetic, string ops, quantifiers |
-| Semantic Passes | 8/8 | All passes validated |
-| Stdlib Modules | 10 | auth, payments, uploads, core, api, events, workflow, queue, search, observability |
-| Test Generation | 80% | Preconditions, postconditions, scenarios |
+---
 
 ## Breaking Changes
 
-### From 0.x
+**None** — This is the first stable (1.0) release. If you used pre-release 0.x builds:
 
-1. **Proof Bundle Schema v2** - Enhanced manifest with evaluator traces and SMT transcripts
-2. **CLI Output Format** - Unified output layout with "Verified by ShipGate ✓" badge
-3. **Gate Threshold** - Default threshold increased to 95% for SHIP verdict
+- Proof bundle schema may have evolved; regenerate proof bundles when moving to 1.0.
+- CLI output format is unified; default gate threshold is 95% for SHIP.
 
-### Migration Guide
+---
+
+## Upgrade / Install Instructions
+
+### From npm (recommended)
 
 ```bash
-# Update CLI globally
-npm install -g @isl-lang/cli@1.0.0
+# Install CLI globally
+npm install -g shipgate
 
-# Update project dependencies
-pnpm add @isl-lang/parser@1.0.0 @isl-lang/typechecker@1.0.0
-
-# Regenerate proof bundles (v1 bundles are read-only compatible)
-isl gate spec.isl --impl src/ --output ./proofs
+# Or use without installing
+npx shipgate --version
+npx shipgate init my-project
 ```
 
-## Known Limitations
+The same package provides both `shipgate` and `isl` commands.
 
-1. **Python Codegen** - Generates scaffolds only (full implementation planned for 1.2)
-2. **SMT Solver** - Requires Z3 for external solver; builtin solver handles basic cases
-3. **Temporal Verification** - Requires trace data from test execution
+### From source
 
-## Verification Script
+```bash
+git clone https://github.com/guardiavault-oss/ISL-LANG.git
+cd ISL-LANG
+pnpm install
+pnpm build
+# Use: node packages/cli/dist/cli.cjs --version
+# Or link: pnpm --filter shipgate link --global
+```
 
-Run the release verification script to confirm your installation:
+### Verify installation
 
 ```bash
 # PowerShell (Windows)
@@ -129,79 +101,51 @@ Run the release verification script to confirm your installation:
 ./scripts/release-verify.sh
 ```
 
-Expected output:
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ISL 1.0.0 Release Verification
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-[1/5] Checking dependencies... ✓
-[2/5] Building packages...     ✓
-[3/5] Running tests...         ✓
-[4/5] Running typecheck...     ✓
-[5/5] Running gate check...    ✓
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  RESULT: PASS
-  All gate checks passed successfully.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-## Quickstart Demo
-
-```bash
-# Initialize project
-isl init my-project
-cd my-project
-
-# Create a spec
-cat > auth.isl << 'EOF'
-domain Auth version "1.0.0"
-
-entity User {
-  id: string
-  email: string
-  passwordHash: string
-  isActive: boolean
-}
-
-behavior Login {
-  input: { email: string, password: string }
-  output: { token: string, user: User }
-  
-  pre: email.contains("@") && password.length >= 8
-  post: result.token.length > 0
-}
-EOF
-
-# Verify implementation
-isl gate auth.isl --impl src/auth.ts
-
-# Check proof bundle
-isl proof verify ./evidence
-
-# Ship when ready
-echo "Verified by ShipGate ✓"
-```
-
-## Documentation
-
-- [ISL Tutorial](./TUTORIAL.md)
-- [Syntax Reference](./SYNTAX.md)
-- [CLI Reference](https://intentos.dev/docs/cli)
-- [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=ISL.vscode-islstudio)
-
-## Support
-
-- GitHub Issues: https://github.com/isl-lang/isl/issues
-- Documentation: https://intentos.dev/docs
-- Discord: https://discord.gg/isl-lang
-
-## License
-
-MIT License - See [LICENSE](../LICENSE) for details.
+This runs: install → build → test → typecheck → gate check (`test:critical`). Optional: `-SkipInstall`, `-SkipBuild`, `-SkipTests`, `-SkipTypecheck`, `-SkipGate`, `-Quick` (skips tests and typecheck).
 
 ---
 
-**Verified by ShipGate ✓**
+## Known Issues
+
+- **Full monorepo build:** Running `pnpm build` (all packages) can still report one failing task in a partial package (e.g. `@isl-lang/stdlib-distributed`); production build via `pnpm build:production` excludes experimental packages and may pass.
+- **Readiness:** Some production/partial packages are below the 75% readiness target (e.g. codegen, language-server, some stdlibs); they are included but may have gaps in tests or features.
+- **CLI:** `npx shipgate --version` and `npx shipgate init` should be verified on a clean install; report any issues on the project repository.
+- **SMT / formal verification:** Optional; requires Z3 (or similar) for full SMT support; built-in path handles basic cases.
+- **Python codegen:** Generates scaffolds only; full implementation is planned for a later release.
+
+---
+
+## Quickstart
+
+```bash
+# Initialize project
+npx shipgate init my-project
+cd my-project
+
+# Create a spec (e.g. auth.isl), then verify
+npx shipgate check auth.isl
+npx shipgate gate auth.isl --impl src/
+npx shipgate proof verify ./evidence
+```
+
+---
+
+## Documentation and Support
+
+- [ISL Tutorial](./TUTORIAL.md)
+- [Syntax Reference](./SYNTAX.md)
+- [CLI Reference](https://shipgate.dev/docs/cli) / [Homepage](https://shipgate.dev)
+- GitHub: https://github.com/guardiavault-oss/ISL-LANG
+- Issues: https://github.com/guardiavault-oss/ISL-LANG/issues
+
+---
+
+## License
+
+MIT — See [LICENSE](../LICENSE).
+
+---
+
+## Announcement summary (8–12 lines)
+
+**Shipgate 1.0.0** is the first stable release of the Shipgate toolchain, powered by ISL (Intent Specification Language). Shipgate stops AI from shipping fake features by verifying code against behavioral specs and producing evidence-backed SHIP/NO-SHIP decisions. This release includes the **Shipgate CLI** (`shipgate` / `isl`), the **ISL parser, typechecker, and expression evaluator**, a **verification pipeline** with proof bundles and trust scores, and **production packages** for codegen (TypeScript, OpenAPI, GraphQL, Python scaffolds), LSP, and stdlib modules. Advanced codegen targets, experimental packages, and internal apps remain outside the 1.0 guarantee. Install with `npm install -g shipgate` or `npx shipgate init`. There are no breaking changes from a prior stable release. Known issues are documented in the release notes (partial package build, readiness gaps, CLI verification). Verified by ShipGate ✓

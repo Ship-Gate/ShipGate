@@ -4,9 +4,9 @@
  * Adds missing environment variables to .env.example and schema files.
  */
 
-import type { Finding } from '@isl-lang/isl-gate';
-import type { FixContext, FixSuggestion } from '../shipgate-fixes.js';
-import { readFileSafe, writeFileSafe } from '../shipgate-fixes.js';
+import type { Finding } from '@isl-lang/gate';
+import type { FixContext, ShipgateFixSuggestion } from '../shipgate-fixes.js';
+import { readFileSafe } from '../shipgate-fixes.js';
 import { createPatch } from '../patcher.js';
 import { join } from 'path';
 
@@ -123,8 +123,8 @@ function addToEnvExample(
 export async function fixMissingEnvVar(
   finding: Finding,
   context: FixContext
-): Promise<FixSuggestion[]> {
-  const suggestions: FixSuggestion[] = [];
+): Promise<ShipgateFixSuggestion[]> {
+  const suggestions: ShipgateFixSuggestion[] = [];
   const varName = extractEnvVarName(finding);
 
   if (!varName) {

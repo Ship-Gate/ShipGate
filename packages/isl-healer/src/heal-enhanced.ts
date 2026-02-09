@@ -9,7 +9,7 @@ import { existsSync } from 'fs';
 import { resolve, join } from 'path';
 import chalk from 'chalk';
 import { createInterface } from 'readline';
-import type { GateResult, Violation, PatchRecord, HealResult } from './types.js';
+import type { GateResult, Violation, PatchRecord, HealReason, GateVerdict, Severity } from './types.js';
 import { generatePatchSet, formatPatchSet, writePatchSet } from './patch-writer.js';
 import { getHealableFinding } from './healable-findings.js';
 
@@ -24,7 +24,24 @@ export interface EnhancedHealOptions {
   projectRoot?: string;
 }
 
-export interface EnhancedHealResult extends HealResult {
+/** Simplified history entry for enhanced heal (not full IterationSnapshot) */
+export interface EnhancedHealHistoryEntry {
+  iteration: number;
+  violations: Array<{ ruleId: string; file: string; line: number; message: string; severity: Severity }>;
+  patchesApplied: string[];
+  fingerprint: string;
+  duration: number;
+}
+
+export interface EnhancedHealResult {
+  success: boolean;
+  reason: HealReason;
+  iterations: number;
+  finalScore: number;
+  finalVerdict: GateVerdict;
+  history: EnhancedHealHistoryEntry[];
+  files: string[];
+  errors?: string[];
   /** Patch set generated (if dry-run or interactive) */
   patchSet?: {
     patches: Array<{

@@ -303,10 +303,10 @@ describe('Injection Verification', () => {
 
     const originalFetch = globalThis.fetch;
     let intercepted = false;
-    globalThis.fetch = async () => {
+    globalThis.fetch = (async () => {
       intercepted = true;
       return new Response('OK');
-    } as typeof fetch;
+    }) as typeof fetch;
 
     const startTime = Date.now();
     await injector['createInterceptedFetch']().call(globalThis, 'http://test.com');

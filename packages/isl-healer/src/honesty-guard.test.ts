@@ -291,7 +291,8 @@ describe('Honesty Guard', () => {
       expect(result.inspection.edits.some(
         (e) => e.type === 'suppression_insertion'
       )).toBe(true);
-      expect(result.inspection.edits[0].description).toContain(
+      expect(result.inspection.edits[0]).toBeDefined();
+      expect(result.inspection.edits[0]!.description).toContain(
         'ISL Studio suppression'
       );
     });
@@ -750,9 +751,11 @@ describe('Patch Inspector', () => {
 
       expect(patchSet.source).toBe('git');
       expect(patchSet.files).toHaveLength(1);
-      expect(patchSet.files[0].path).toBe('src/api/users.ts');
-      expect(patchSet.files[0].type).toBe('modify');
-      expect(patchSet.files[0].hunks).toHaveLength(1);
+      const file0 = patchSet.files[0];
+      expect(file0).toBeDefined();
+      expect(file0!.path).toBe('src/api/users.ts');
+      expect(file0!.type).toBe('modify');
+      expect(file0!.hunks).toHaveLength(1);
     });
 
     it('should detect new files', () => {
@@ -769,7 +772,8 @@ index 0000000..abcdefg
 
       const patchSet = parseDiff(diff, 'git');
 
-      expect(patchSet.files[0].type).toBe('add');
+      expect(patchSet.files[0]).toBeDefined();
+      expect(patchSet.files[0]!.type).toBe('add');
     });
 
     it('should detect deleted files', () => {
@@ -786,15 +790,19 @@ index abcdefg..0000000
 
       const patchSet = parseDiff(diff, 'git');
 
-      expect(patchSet.files[0].type).toBe('delete');
+      expect(patchSet.files[0]).toBeDefined();
+      expect(patchSet.files[0]!.type).toBe('delete');
     });
 
     it('should capture additions and removals', () => {
       const patchSet = parseDiff(DIFF_REMOVE_INTENT, 'git');
 
-      const hunk = patchSet.files[0].hunks[0];
-      expect(hunk.removals.length).toBeGreaterThan(0);
-      expect(hunk.removals.some((r) => r.includes('intent rate-limit'))).toBe(
+      const file0 = patchSet.files[0];
+      const hunk = file0?.hunks[0];
+      expect(file0).toBeDefined();
+      expect(hunk).toBeDefined();
+      expect(hunk!.removals.length).toBeGreaterThan(0);
+      expect(hunk!.removals.some((r) => r.includes('intent rate-limit'))).toBe(
         true
       );
     });

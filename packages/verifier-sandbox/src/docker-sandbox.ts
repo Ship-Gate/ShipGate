@@ -114,13 +114,12 @@ export class DockerSandbox implements SandboxRunner {
   /**
    * Filter environment variables based on allowlist
    */
-  private filterEnv(env: Record<string, string>): Record<string, string> {
+  private filterEnv(env: Record<string, string | undefined>): Record<string, string> {
     const filtered: Record<string, string> = {};
     
     for (const key of this.options.allowedEnvVars) {
-      if (key in env) {
-        filtered[key] = env[key]!;
-      }
+      const v = env[key];
+      if (typeof v === 'string') filtered[key] = v;
     }
     
     return filtered;

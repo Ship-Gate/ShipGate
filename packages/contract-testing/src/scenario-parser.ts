@@ -63,8 +63,9 @@ export class ScenarioParser {
 
     const parsedScenarios: ParsedScenarios[] = [];
 
-    // Find scenario blocks in the domain
-    for (const item of domain.items || []) {
+    // Find scenario blocks in the domain (AST may include scenario blocks from parser adapter)
+    const domainWithItems = domain as DomainDeclaration & { items?: Array<{ kind: string; scenarios?: unknown[]; behaviorName?: { name: string } }> };
+    for (const item of domainWithItems.items || []) {
       if (item.kind === 'ScenarioBlock') {
         const scenarioBlock = item as any;
         const behaviorName = scenarioBlock.behaviorName?.name || '';

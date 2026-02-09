@@ -13,7 +13,7 @@ export default defineConfig({
     'src/isl-agent/verification/index.ts',
   ],
   format: ['esm'],
-  dts: true,
+  dts: false,
   clean: true,
   splitting: false,
   sourcemap: true,

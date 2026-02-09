@@ -196,7 +196,7 @@ export async function verifyZipBundle(
  * 
  * Note: This is a basic implementation. For production, use 'yauzl' package.
  */
-async function extractZip(
+export async function extractZip(
   zipBuffer: Buffer,
   extractDir?: string
 ): Promise<{
@@ -248,7 +248,7 @@ async function extractZip(
 /**
  * Verify ed25519 signature
  */
-async function verifyEd25519Signature(
+export async function verifyEd25519Signature(
   data: Buffer,
   signature: string,
   publicKey: string
@@ -258,6 +258,8 @@ async function verifyEd25519Signature(
     const publicKeyBuffer = Buffer.from(publicKey, 'base64');
 
     // Create public key object
+    // For ed25519, Node.js supports raw format but TypeScript types don't
+    // @ts-expect-error - Node.js supports 'raw' format for ed25519 but TypeScript types don't
     const keyObject = crypto.createPublicKey({
       key: publicKeyBuffer,
       format: 'raw',
@@ -271,12 +273,3 @@ async function verifyEd25519Signature(
   }
 }
 
-// ============================================================================
-// Exports
-// ============================================================================
-
-export {
-  verifyZipBundle,
-  extractZip,
-  verifyEd25519Signature,
-};

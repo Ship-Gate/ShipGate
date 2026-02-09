@@ -81,10 +81,10 @@ function extractPrismaColumns(modelBody: string): Column[] {
       unique: attributes.includes('@unique') || attributes.includes('@id'),
     };
 
-    // Extract default value
+    // Extract default value (only set when present; exactOptionalPropertyTypes)
     const defaultMatch = attributes.match(/@default\(([^)]+)\)/);
-    if (defaultMatch) {
-      column.defaultValue = defaultMatch[1] || undefined;
+    if (defaultMatch?.[1]) {
+      column.defaultValue = defaultMatch[1];
     }
 
     // Extract foreign key from relation

@@ -26,14 +26,23 @@ let detectRoutesFn: ((content: string, filePath: string, options: { minConfidenc
 async function getRouteDetector() {
   if (!detectRoutesFn) {
     try {
-      // Try to import from @isl-lang/core
+      // Try to import from @isl-lang/core (check if audit-v2 is exported)
       const coreModule = await import('@isl-lang/core');
       if (coreModule && typeof (coreModule as any).detectRoutes === 'function') {
         detectRoutesFn = (coreModule as any).detectRoutes;
       } else {
-        // Try direct import
-        const detectorModule = await import('@isl-lang/core/src/audit-v2/detectors/routeDetector.js');
-        detectRoutesFn = detectorModule.detectRoutes;
+        // Try importing from audit-v2 subpath if available
+        try {
+          const auditV2Module = await import('@isl-lang/core/audit-v2');
+          if (auditV2Module && typeof auditV2Module.detectRoutes === 'function') {
+            detectRoutesFn = auditV2Module.detectRoutes;
+          } else {
+            throw new Error('detectRoutes not found');
+          }
+        } catch {
+          // Fallback: use simple regex-based detection
+          detectRoutesFn = detectRoutesSimple;
+        }
       }
     } catch {
       // Fallback: use simple regex-based detection

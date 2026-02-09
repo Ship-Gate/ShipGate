@@ -2,7 +2,7 @@
 // ISL → Visual Parser
 // ============================================================================
 
-import type { ISLNode, ISLEdge, ParseResult, EntityNodeData, BehaviorNodeData, TypeNodeData } from '@/types';
+import type { ISLNode, ISLEdge, ParseResult, EntityNodeData, BehaviorNodeData } from '@/types';
 
 let nodeIdCounter = 0;
 const generateId = () => `node_${++nodeIdCounter}`;
@@ -35,7 +35,7 @@ export function parseISL(code: string): ParseResult {
       // Version
       const versionMatch = trimmed.match(/version:\s*"([^"]+)"/);
       if (versionMatch) {
-        domainVersion = versionMatch[1];
+        domainVersion = versionMatch[1] ?? '1.0.0';
         continue;
       }
       
@@ -43,7 +43,7 @@ export function parseISL(code: string): ParseResult {
       const entityMatch = trimmed.match(/^entity\s+(\w+)\s*\{$/);
       if (entityMatch) {
         currentBlock = 'entity';
-        currentBlockName = entityMatch[1];
+        currentBlockName = entityMatch[1] ?? '';
         blockContent = [];
         braceCount++;
         continue;
@@ -53,7 +53,7 @@ export function parseISL(code: string): ParseResult {
       const behaviorMatch = trimmed.match(/^behavior\s+(\w+)\s*\{$/);
       if (behaviorMatch) {
         currentBlock = 'behavior';
-        currentBlockName = behaviorMatch[1];
+        currentBlockName = behaviorMatch[1] ?? '';
         blockContent = [];
         braceCount++;
         continue;
@@ -62,7 +62,7 @@ export function parseISL(code: string): ParseResult {
       // Type declaration
       const typeMatch = trimmed.match(/^type\s+(\w+)\s*=\s*(.+)$/);
       if (typeMatch) {
-        const node = createTypeNode(typeMatch[1], typeMatch[2], position);
+        const node = createTypeNode(typeMatch[1] ?? '', typeMatch[2] ?? '', position);
         nodes.push(node);
         position = { x: position.x + 250, y: position.y };
         continue;

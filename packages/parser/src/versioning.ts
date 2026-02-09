@@ -134,7 +134,7 @@ const MIGRATION_RULES_V01_TO_V02: MigrationRule[] = [
       
       // Skip shebang and empty lines
       while (insertIndex < lines.length) {
-        const line = lines[insertIndex].trim();
+        const line = lines[insertIndex]?.trim() ?? '';
         if (line && !line.startsWith('#!') && !line.match(/^#\s*islVersion/i)) {
           break;
         }

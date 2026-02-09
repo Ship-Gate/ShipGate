@@ -83,7 +83,7 @@ export function detectAuthDrift(
               line: 0,
               confidence: 0.5,
             },
-            observedPolicy,
+            observedPolicy: policy,
             driftType: 'extra-auth',
             severity: 'info', // Extra auth is usually less critical
             confidence: policy.confidence * 0.8, // Lower confidence for extra-auth detection

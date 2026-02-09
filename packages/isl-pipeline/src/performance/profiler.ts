@@ -227,7 +227,7 @@ export async function profileAsync<T extends (...args: unknown[]) => Promise<unk
     const end = Date.now();
     const memoryAfter = getMemoryUsage();
     recordProfile(name, end - start, memoryAfter - memoryBefore);
-    return result;
+    return result as ReturnType<T>;
   } catch (error) {
     const end = Date.now();
     const memoryAfter = getMemoryUsage();

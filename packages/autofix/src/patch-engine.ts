@@ -57,7 +57,6 @@ export async function applyPatches(
   const {
     projectRoot,
     dryRun = false,
-    useAST = true,
   } = options;
 
   const applied: Patch[] = [];

@@ -8,8 +8,10 @@ This guide takes you from installation to a verified specification in under 5 mi
 ## 1. Install ShipGate
 
 ```bash
-npm install -g @isl-lang/cli
+npm install -g shipgate
 ```
+
+If you're building from source, you may have the CLI as `isl`; use `isl` instead of `shipgate` in the examples below.
 
 ## 2. Create a spec file
 

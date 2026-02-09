@@ -667,7 +667,7 @@ function createCoherenceDiagnostic(
 
   // Create code fix suggestion
   const fix: CodeFix | undefined = suggestions.length > 0 ? {
-    description: `Add required metadata for ${intent.name}`,
+    title: `Add required metadata for ${intent.name}`,
     edits: [], // Actual edits would require AST manipulation
   } : undefined;
 
@@ -677,7 +677,7 @@ function createCoherenceDiagnostic(
     severity: 'error',
     message: messageLines.join('\n'),
     location: intent.location,
-    source: 'intent-coherence',
+    source: 'verifier' as const,
     notes: suggestions,
     fix,
   };
@@ -788,13 +788,14 @@ export const IntentCoherencePass: SemanticPass = {
       if (securityConfig.authRequirements.length > 0) {
         if (!securityConfig.hasAuditLog && !checkForAuditableAction(behavior as unknown as Behavior)) {
           const behaviorName = behavior.name.name;
-          const location = behavior.span 
+          const span = (behavior as { span?: { file?: string; start?: { line?: number; column?: number }; end?: { line?: number; column?: number } } }).span;
+          const location = span
             ? {
-                file: behavior.span.file || filePath,
-                line: behavior.span.start?.line || 1,
-                column: behavior.span.start?.column || 0,
-                endLine: behavior.span.end?.line || 1,
-                endColumn: behavior.span.end?.column || 0,
+                file: span.file || filePath,
+                line: span.start?.line ?? 1,
+                column: span.start?.column ?? 0,
+                endLine: span.end?.line ?? 1,
+                endColumn: span.end?.column ?? 0,
               }
             : { file: filePath, line: 1, column: 0, endLine: 1, endColumn: 0 };
           
@@ -804,7 +805,7 @@ export const IntentCoherencePass: SemanticPass = {
             severity: 'warning',
             message: `Behavior '${behaviorName}' has auth requirements but no audit configuration`,
             location,
-            source: 'intent-coherence',
+            source: 'verifier' as const,
             notes: [
               'Authentication endpoints should have audit logging enabled',
               'Add "audit_log required" to the security block',

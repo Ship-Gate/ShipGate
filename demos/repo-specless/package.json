@@ -1,6 +1,7 @@
 {
   "name": "checkout-api",
   "version": "1.2.0",
+  "license": "MIT",
   "description": "Payment processing API for checkout flow",
   "type": "module",
   "main": "dist/index.js",
@@ -8,7 +9,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit"
   },

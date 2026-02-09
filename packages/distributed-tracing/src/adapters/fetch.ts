@@ -7,8 +7,8 @@
  * - Propagates trace context across service boundaries
  */
 
-import { trace, context, SpanStatusCode, SpanKind } from '@opentelemetry/api';
-import { injectCorrelationToHeaders, getCorrelationContext } from '../correlation.js';
+import { trace, SpanStatusCode, SpanKind } from '@opentelemetry/api';
+import { injectCorrelationToHeaders } from '../correlation.js';
 
 /**
  * Options for traced fetch
@@ -41,9 +41,14 @@ export interface TracedFetchOptions extends RequestInit {
 }
 
 /**
- * Original fetch function type
+ * Original fetch function type (standard fetch)
  */
-type FetchFunction = typeof fetch;
+type FetchFunction = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+
+/**
+ * Traced fetch function type (accepts TracedFetchOptions)
+ */
+export type TracedFetchFunction = (input: RequestInfo | URL, init?: TracedFetchOptions) => Promise<Response>;
 
 /**
  * Create a traced fetch wrapper
@@ -65,9 +70,9 @@ type FetchFunction = typeof fetch;
  * ```
  */
 export function createTracedFetch(
-  baseFetch: FetchFunction = fetch,
+  baseFetch: FetchFunction = fetch as FetchFunction,
   defaultServiceName: string = 'http-client'
-): FetchFunction {
+): TracedFetchFunction {
   return async function tracedFetch(
     input: RequestInfo | URL,
     init?: TracedFetchOptions

@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0.0",
-  "timestamp": "2026-02-09T09:25:06.809Z",
+  "timestamp": "2026-02-09T19:20:04.417Z",
   "git": {
-    "commitSha": "403f4b6862276e7fedbe9e0af2514f4c1c2f1dbc",
-    "branch": "main",
+    "commitSha": "5823fbcb7a3eeb979cfebfecc89db95e203a89cb",
+    "branch": "release/workflow-audit-dry-run",
     "tag": null,
     "dirty": true
   },
@@ -14,7 +14,7 @@
     "arch": "x64",
     "ci": false
   },
-  "lockfileHash": "aec48edc8bdc67df3e564922a677cfeb71eeb361085a4c26bafe7e54cdb08a8c",
+  "lockfileHash": "c88c121cf890fbe9d8ee08d09b19314c931b1e0dade2e5bf0496d9c43bc92da2",
   "packages": [
     {
       "name": "@isl-lang/adapters",
@@ -143,6 +143,11 @@
     },
     {
       "name": "@isl-lang/codegen-jvm",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-k8s",
       "version": "0.1.0",
       "private": true
     },
@@ -512,6 +517,16 @@
       "private": false
     },
     {
+      "name": "@isl-lang/isl-coverage",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/isl-discovery",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
       "name": "@isl-lang/isl-federation",
       "version": "0.1.0",
       "private": true
@@ -697,6 +712,11 @@
       "private": false
     },
     {
+      "name": "@isl-lang/reality-probe",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
       "name": "@isl-lang/registry-client",
       "version": "0.1.0",
       "private": true
@@ -710,6 +730,11 @@
       "name": "@isl-lang/runtime",
       "version": "0.1.0",
       "private": true
+    },
+    {
+      "name": "@isl-lang/runtime-adapters",
+      "version": "0.1.0",
+      "private": false
     },
     {
       "name": "@isl-lang/runtime-interpreter",
@@ -749,6 +774,11 @@
     {
       "name": "@isl-lang/sdk-web",
       "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/secrets-hygiene",
+      "version": "0.1.0",
       "private": false
     },
     {
@@ -793,6 +823,11 @@
     },
     {
       "name": "@isl-lang/snapshot-testing",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/solver-z3-wasm",
       "version": "0.1.0",
       "private": false
     },
@@ -1022,6 +1057,11 @@
       "private": false
     },
     {
+      "name": "@isl-lang/ui-generator",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
       "name": "@isl-lang/verified-build",
       "version": "0.1.0",
       "private": false
@@ -1044,6 +1084,11 @@
     {
       "name": "@isl-lang/verifier-runtime",
       "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/verifier-sandbox",
+      "version": "1.0.0",
       "private": false
     },
     {

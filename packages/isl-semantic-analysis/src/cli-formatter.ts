@@ -150,8 +150,10 @@ export class CLIFormatter {
     // Display diagnostics
     const displayCount = Math.min(diagnostics.length, this.options.maxErrors);
     for (let i = 0; i < displayCount; i++) {
+      const diagnostic = diagnostics[i];
+      if (!diagnostic) continue;
       if (i > 0) lines.push('');
-      lines.push(this.formatPrettyDiagnostic(diagnostics[i]));
+      lines.push(this.formatPrettyDiagnostic(diagnostic));
     }
 
     // Truncation notice
@@ -263,7 +265,7 @@ export class CLIFormatter {
     return output.join('\n');
   }
 
-  private createUnderline(line: string, startCol: number, endCol: number): string {
+  private createUnderline(_line: string, startCol: number, endCol: number): string {
     const leadingSpaces = ' '.repeat(Math.max(0, startCol - 1));
     const underlineLength = Math.max(1, endCol - startCol);
     const underline = '^'.repeat(underlineLength);

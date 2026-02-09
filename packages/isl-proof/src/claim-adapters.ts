@@ -7,7 +7,7 @@
  */
 
 import * as crypto from 'crypto';
-import type { UnifiedClaim, ClaimKind, ClaimStatus } from './claim-graph.js';
+import type { UnifiedClaim, ClaimKind, ClaimStatus, ClaimSubject, ClaimEvidence } from './claim-graph.js';
 import type { BundleClaim } from './bundle-hash.js';
 
 // ============================================================================

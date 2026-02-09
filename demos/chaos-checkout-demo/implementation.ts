@@ -245,6 +245,6 @@ export class CheckoutError extends Error {
  */
 export const checkoutImplementation = {
   async execute(input: Record<string, unknown>): Promise<unknown> {
-    return createCheckoutSession(input as CreateCheckoutInput);
+    return createCheckoutSession(input as unknown as CreateCheckoutInput);
   },
 };

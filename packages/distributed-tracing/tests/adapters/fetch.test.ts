@@ -31,7 +31,7 @@ describe('Fetch adapter', () => {
   });
 
   it('should inject correlation headers into requests', async () => {
-    const tracedFetch = createTracedFetch(mockFetch);
+    const tracedFetch = createTracedFetch(mockFetch as typeof fetch);
 
     await tracedFetch('https://api.example.com/test');
 
@@ -49,7 +49,7 @@ describe('Fetch adapter', () => {
   });
 
   it('should merge with existing headers', async () => {
-    const tracedFetch = createTracedFetch(mockFetch);
+    const tracedFetch = createTracedFetch(mockFetch as typeof fetch);
 
     await tracedFetch('https://api.example.com/test', {
       headers: {
@@ -66,7 +66,7 @@ describe('Fetch adapter', () => {
   });
 
   it('should create spans for requests', async () => {
-    const tracedFetch = createTracedFetch(mockFetch, 'test-service');
+    const tracedFetch = createTracedFetch(mockFetch as typeof fetch, 'test-service');
 
     await tracedFetch('https://api.example.com/test');
 
@@ -78,7 +78,7 @@ describe('Fetch adapter', () => {
     const errorResponse = new Response('Error', { status: 500 });
     mockFetch.mockResolvedValueOnce(errorResponse);
 
-    const tracedFetch = createTracedFetch(mockFetch);
+    const tracedFetch = createTracedFetch(mockFetch as typeof fetch);
 
     await tracedFetch('https://api.example.com/test');
 
@@ -90,14 +90,14 @@ describe('Fetch adapter', () => {
     const fetchError = new Error('Network error');
     mockFetch.mockRejectedValueOnce(fetchError);
 
-    const tracedFetch = createTracedFetch(mockFetch);
+    const tracedFetch = createTracedFetch(mockFetch as typeof fetch);
 
     await expect(tracedFetch('https://api.example.com/test')).rejects.toThrow('Network error');
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
   it('should skip span creation when createSpan is false', async () => {
-    const tracedFetch = createTracedFetch(mockFetch);
+    const tracedFetch = createTracedFetch(mockFetch as typeof fetch);
 
     await tracedFetch('https://api.example.com/test', {
       createSpan: false,
@@ -112,7 +112,7 @@ describe('Fetch adapter', () => {
   });
 
   it('should use custom span name when provided', async () => {
-    const tracedFetch = createTracedFetch(mockFetch);
+    const tracedFetch = createTracedFetch(mockFetch as typeof fetch);
 
     await tracedFetch('https://api.example.com/test', {
       spanName: 'custom-operation',

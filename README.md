@@ -19,12 +19,12 @@
 
 ---
 
-> **Status: Pre-release (v0.1.0).** Phase 3 (Verification) is complete.  
-> Quick start: `npx shipgate init` — or build from source. See [Install](#install-from-source).
+> **Status: v1.0.0** — Production ready.  
+> Quick start: build from source (see [Install](#install-from-source)), then `pnpm isl:check` or `node packages/cli/dist/cli.cjs init my-project`. When the CLI is published to npm: `npx shipgate init`.
 
 ## What is Shipgate?
 
-**Shipgate** blocks AI-generated "ghost features" — code that compiles but doesn't work (fake APIs, wrong env vars, type mismatches). It auto-generates a **Truthpack** from your codebase (routes, env, contracts), then verifies every PR against it. **SHIP** or **NO_SHIP.**
+**Shipgate** blocks AI-generated "ghost features" — code that compiles but doesn't work (fake APIs, wrong env vars, type mismatches). It auto-generates a **Truthpack** from your codebase (routes, env, contracts), then verifies every PR against it. **SHIP** or **NO-SHIP.**
 
 Under the hood, Shipgate uses **ISL (Intent Specification Language)** — behavioral specs with pre/postconditions, invariants, and side-effect constraints.
 
@@ -80,64 +80,66 @@ pnpm build
 
 Requires Node >= 18 and pnpm >= 8.
 
+If full `pnpm build` fails (e.g. due to experimental packages), use the production-only build: `npx tsx scripts/run-production.ts build`. You can also build just the CLI from `packages/cli` after its dependencies are built.
+
 ## CLI Usage (Real Examples)
 
-After building from source, run commands via the workspace:
+After building from source, run the CLI from the repo root. Use `specs/create-user.isl` for parse/check/gen (it parses with the current parser); `specs/example.isl` may use syntax not yet supported.
 
 ```bash
 # Parse an ISL file and print the AST
-pnpm --filter @isl-lang/cli exec isl parse specs/example.isl
+node packages/cli/dist/cli.cjs parse specs/create-user.isl
 
 # Type-check one or more ISL files
-pnpm --filter @isl-lang/cli exec isl check specs/example.isl
+node packages/cli/dist/cli.cjs check specs/create-user.isl
 
 # Generate TypeScript types from a spec
-pnpm --filter @isl-lang/cli exec isl gen ts specs/example.isl -o ./generated
+node packages/cli/dist/cli.cjs gen ts specs/create-user.isl -o ./generated
 
 # Generate Rust structs/traits
-pnpm --filter @isl-lang/cli exec isl gen rust specs/example.isl
+node packages/cli/dist/cli.cjs gen rust specs/create-user.isl
 
 # Generate Go structs/interfaces
-pnpm --filter @isl-lang/cli exec isl gen go specs/example.isl
+node packages/cli/dist/cli.cjs gen go specs/create-user.isl
 
 # Generate an OpenAPI 3.0 YAML spec
-pnpm --filter @isl-lang/cli exec isl gen openapi specs/example.isl
+node packages/cli/dist/cli.cjs gen openapi specs/create-user.isl
 
 # Format an ISL file
-pnpm --filter @isl-lang/cli exec isl fmt specs/example.isl
+node packages/cli/dist/cli.cjs fmt specs/create-user.isl
 
 # Lint an ISL file for best practices
-pnpm --filter @isl-lang/cli exec isl lint specs/example.isl
+node packages/cli/dist/cli.cjs lint specs/create-user.isl
 
 # Initialize a new ISL project scaffold
-pnpm --filter @isl-lang/cli exec isl init my-project
+node packages/cli/dist/cli.cjs init my-project
 
 # Verify an implementation against a spec
-pnpm --filter @isl-lang/cli exec isl verify src/auth.isl --impl src/auth.ts
+node packages/cli/dist/cli.cjs verify src/auth.isl --impl src/auth.ts
 
 # Full verification with all engines (SMT, PBT, Temporal, Chaos)
-pnpm --filter @isl-lang/cli exec isl verify src/auth.isl --impl src/auth.ts --all
+node packages/cli/dist/cli.cjs verify src/auth.isl --impl src/auth.ts --all
 
 # Property-Based Testing (Phase 3)
-pnpm --filter @isl-lang/cli exec isl pbt specs/auth.isl
-pnpm --filter @isl-lang/cli exec isl pbt specs/auth.isl --num-tests 500 --seed 12345
+node packages/cli/dist/cli.cjs pbt specs/auth.isl
+node packages/cli/dist/cli.cjs pbt specs/auth.isl --num-tests 500 --seed 12345
 
 # Chaos Engineering (Phase 3)
-pnpm --filter @isl-lang/cli exec isl chaos specs/payments.isl
-pnpm --filter @isl-lang/cli exec isl chaos specs/payments.isl --scenario network_failure
+node packages/cli/dist/cli.cjs chaos specs/payments.isl
+node packages/cli/dist/cli.cjs chaos specs/payments.isl --scenario network_failure
 
 # SHIP/NO-SHIP gate (verify + trust score + evidence bundle)
-pnpm --filter @isl-lang/cli exec isl gate src/auth.isl --impl src/auth.ts
-pnpm --filter @isl-lang/cli exec isl gate src/auth.isl --impl src/auth.ts --min-score 80
+node packages/cli/dist/cli.cjs gate src/auth.isl --impl src/auth.ts
+node packages/cli/dist/cli.cjs gate src/auth.isl --impl src/auth.ts --threshold 80
 
 # Start the interactive REPL
-pnpm --filter @isl-lang/cli exec isl repl
+node packages/cli/dist/cli.cjs repl
 
 # Watch ISL files and re-check on changes
-pnpm --filter @isl-lang/cli exec isl watch
+node packages/cli/dist/cli.cjs watch
 ```
 
-**Tip:** For shorter invocations, `cd packages/cli && pnpm exec isl parse ../../specs/example.isl` also works.
+**Tip:** From repo root use `pnpm isl:check`, `pnpm isl:gen`, `pnpm isl:verify`, `pnpm isl:gate`. Or from the CLI package: `cd packages/cli && node dist/cli.cjs parse ../../specs/create-user.isl`.
 
 ### Quick ISL loop (root scripts)
 
@@ -196,7 +198,7 @@ These exist as packages with partial implementations. They are **not production-
 
 ## Limitations
 
-- **CLI not yet published.** Run `npx shipgate init` (when published) or build from source. `@isl-lang/cli` is a placeholder.
+- **CLI not yet published to npm.** Build from source, then run `node packages/cli/dist/cli.cjs <command>` from repo root or use `pnpm isl:check`, `pnpm isl:gen`, etc. When published: `npx shipgate init`.
 - **Code generation is structural only.** `isl gen ts` emits TypeScript interfaces and type aliases — not runnable application code. You (or an LLM) write the implementation; ISL verifies it.
 - **No refinement types.** The type checker validates AST structure and resolves type references. It does not do refinement type checking or dependent type analysis.
 - **Verification requires an implementation file.** `isl verify` and `isl gate` need a `--impl` flag pointing to your code. There is no automatic implementation discovery.
@@ -222,7 +224,7 @@ ISL does **not** call LLM APIs itself. It provides the specification and verific
 | `@isl-lang/parser` | ✅ Production | Recursive-descent ISL parser |
 | `@isl-lang/typechecker` | ✅ Production | AST validation and type resolution |
 | `@isl-lang/evaluator` | ✅ Production | Expression and contract evaluator |
-| `@isl-lang/cli` | ✅ Production | Full CLI (source-only, not published to npm) |
+| `shipgate` | ✅ Production | Full CLI (bin: `isl`, `shipgate`); build from source; publish TBD |
 | `@isl-lang/repl` | ✅ Production | Interactive REPL |
 | `@isl-lang/verifier-runtime` | ✅ Production | Runtime pre/postcondition verification |
 | `@isl-lang/import-resolver` | ✅ Production | Cross-file import resolution |
@@ -245,6 +247,7 @@ For the full package categorization, see [`experimental.json`](./experimental.js
 - [Phase 3 Release Notes](./docs/PHASE3_RELEASE.md)
 - [Phase 3 Completion Checklist](./PHASE-3-COMPLETION-CHECKLIST.md)
 - [Verification System](./docs/VERIFICATION.md)
+- [README Verification (v1.0)](./docs/README_VERIFICATION_1_0.md) — Commands and link status for v1.0.0
 - [Examples](./examples/)
 - [Package Categorization](./experimental.json)
 

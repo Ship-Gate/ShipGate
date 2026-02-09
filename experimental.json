@@ -26,18 +26,14 @@
     ],
     "verification": [
       "@isl-lang/verifier-runtime",
-      "@isl-lang/isl-verify",
-      "@isl-lang/isl-verify-pipeline",
       "@isl-lang/evidence-schema",
       "@isl-lang/evidence-html",
       "@isl-lang/isl-gate",
-      "@isl-lang/isl-healer",
       "@isl-lang/isl-proof"
     ],
     "codegen": [
       "@isl-lang/codegen",
       "@isl-lang/codegen-core",
-      "@isl-lang/codegen-tests",
       "@isl-lang/codegen-openapi",
       "@isl-lang/codegen-python",
       "@isl-lang/codegen-graphql",
@@ -59,7 +55,6 @@
       "@isl-lang/stdlib-auth",
       "@isl-lang/stdlib-payments",
       "@isl-lang/stdlib-rate-limit",
-      "@isl-lang/stdlib-idempotency",
       "@isl-lang/stdlib-cache",
       "@isl-lang/stdlib-files",
       "@isl-lang/stdlib-workflow",
@@ -87,13 +82,11 @@
       "@isl-lang/stdlib-email",
       "@isl-lang/stdlib-database",
       "@isl-lang/stdlib-http",
-      "@isl-lang/stdlib-observability",
       "@isl-lang/stdlib-realtime",
       "@isl-lang/stdlib-distributed",
       "@isl-lang/stdlib-audit",
       "@isl-lang/stdlib-saas",
-      "@isl-lang/stdlib-actors",
-      "@isl-lang/stdlib-ai"
+      "@isl-lang/stdlib-actors"
     ],
     "verification_advanced": [
       "@isl-lang/isl-smt",
@@ -226,6 +219,26 @@
       "@isl-lang/isl-policy-packs",
       "@isl-lang/isl-trace-format",
       "@isl-lang/error-catalog"
+    ]
+  },
+
+  "quarantine": {
+    "description": "Build broken or blocked - do not publish; exclude from production pipeline until fixed",
+    "packages": [
+      "@isl-lang/codegen-tests",
+      "@isl-lang/isl-verify",
+      "@isl-lang/isl-verify-pipeline",
+      "@isl-lang/isl-healer",
+      "@isl-lang/claims-verifier",
+      "@isl-lang/test-generator",
+      "@isl-lang/mock-detector",
+      "@isl-lang/solver-z3-wasm",
+      "@isl-lang/stdlib-observability",
+      "@isl-lang/stdlib-ai",
+      "@isl-lang/stdlib-idempotency",
+      "@isl-lang/verifier-formal",
+      "@isl-lang/codegen-jvm",
+      "@isl-lang/semantic-analysis"
     ]
   },
   

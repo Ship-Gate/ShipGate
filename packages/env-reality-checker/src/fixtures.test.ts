@@ -136,7 +136,7 @@ const key2 = process.env["SECRET_KEY"];
       expect(result.claims[0].severity).toBe('warning');
     });
 
-    it('should handle zod schema extraction', () => {
+    it('should handle zod schema extraction', async () => {
       const zodCode = `
 import { z } from 'zod';
 
