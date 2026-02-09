@@ -534,7 +534,7 @@ interface WeakeningCheck {
 
 const WEAKENING_PATTERNS: WeakeningCheck[] = [
   { pattern: /\/\/\s*islstudio-ignore/i, description: 'Automatic suppression detected' },
-  { pattern: /\/\/\s*vibecheck-ignore/i, description: 'Automatic suppression detected' },
+  { pattern: /\/\/\s*shipgate-ignore/i, description: 'Automatic suppression detected' },
   { pattern: /\/\/\s*@ts-ignore/i, description: 'TypeScript ignore detected' },
   { pattern: /eslint-disable/i, description: 'ESLint disable detected' },
   { pattern: /severity:\s*['"]low['"]/i, description: 'Severity downgrade detected' },

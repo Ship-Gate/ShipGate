@@ -36,9 +36,9 @@ function AuthActionsWithClerk() {
 }
 
 const NAV_LINKS = [
-  { to: '/', hash: '#how-it-works', label: 'Overview' },
-  { to: '/', hash: '#what-we-catch', label: 'Catches' },
-  { to: '/pricing', hash: undefined, label: 'Pricing' },
+  { to: '/', hash: '#how-it-works', label: 'How it works' },
+  { to: '/', hash: '#terminal-demo', label: 'Demo' },
+  { to: '/', hash: '#pricing', label: 'Pricing' },
   { to: '/', hash: '#faq', label: 'FAQ' },
 ];
 

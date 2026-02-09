@@ -19,6 +19,7 @@
     "@isl-lang/translator": "workspace:*",
     "@isl-lang/generator": "workspace:*",
     "@isl-lang/isl-core": "workspace:*",
+    "@isl-lang/parser": "workspace:*",
     "@isl-lang/evaluator": "workspace:*"
   },
   "devDependencies": {

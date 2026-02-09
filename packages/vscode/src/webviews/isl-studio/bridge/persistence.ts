@@ -6,7 +6,7 @@
  * - Last selected spec path
  * - Last selected report path
  * 
- * All state is stored in .vibecheck/studio/state.json
+ * All state is stored in .shipgate/studio/state.json
  */
 
 import { createStudioPaths, type StudioPaths } from '../shared/paths';

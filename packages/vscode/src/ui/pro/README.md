@@ -164,7 +164,7 @@ All copy in `proCopy.ts` follows these principles:
 
 ## Billing URLs
 
-All billing URLs point to `https://app.vibecheckai.dev`:
+All billing URLs point to `https://app.shipgateai.dev`:
 
 - `/billing` - Main billing dashboard
 - `/plans` - Plan comparison page

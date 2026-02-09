@@ -1,0 +1,27 @@
+# ShipGate configuration for ISL violation demo
+# Runs ISL spec verification against source files
+
+version: "1.0"
+
+# Verify source code against co-located ISL specs
+verify:
+  # Directories to scan
+  include:
+    - src/
+
+  # Match source files to their .isl specs by co-location
+  spec_discovery: colocated
+
+  # Fail on any spec violation
+  fail_on: violation
+
+  # Gate verdict threshold
+  gate:
+    verdict_on_violation: NO_SHIP
+    block_merge: true
+
+# Output format for CI
+output:
+  format: table
+  show_spec_excerpt: true
+  show_found_pattern: true

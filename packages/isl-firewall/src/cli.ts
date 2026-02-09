@@ -2,7 +2,7 @@
 /**
  * ISL Firewall CLI
  * 
- * Unified gate command for VibeCheck + ISL Studio integration.
+ * Unified gate command for ShipGate + ISL Studio integration.
  * 
  * Usage:
  *   npx @isl-lang/firewall gate [file]     # Check a file
@@ -139,7 +139,7 @@ async function runGate(args: string[]) {
     // Text output
     console.log();
     console.log(`┌${'─'.repeat(50)}┐`);
-    console.log(`│ VibeCheck + ISL Studio Gate${' '.repeat(21)}│`);
+    console.log(`│ ShipGate + ISL Studio Gate${' '.repeat(21)}│`);
     console.log(`├${'─'.repeat(50)}┤`);
     console.log(`│ Verdict: ${verdict === 'SHIP' ? '✓ SHIP' : '✗ NO_SHIP'}${' '.repeat(verdict === 'SHIP' ? 32 : 30)}│`);
     console.log(`│ Score:   ${score}/100${' '.repeat(36)}│`);
@@ -179,12 +179,12 @@ function showStatus() {
   const status = firewall.getStatus();
 
   console.log();
-  console.log('VibeCheck + ISL Studio Firewall Status');
+  console.log('ShipGate + ISL Studio Firewall Status');
   console.log('─'.repeat(40));
   console.log(`Mode: ${status.mode}`);
   console.log();
-  console.log('VibeCheck Policies:');
-  for (const p of status.vibecheckPolicies) {
+  console.log('ShipGate Policies:');
+  for (const p of status.shipgatePolicies) {
     console.log(`  • ${p}`);
   }
   console.log();
@@ -197,7 +197,7 @@ function showStatus() {
 
 function showHelp() {
   console.log(`
-VibeCheck + ISL Studio Firewall CLI
+ShipGate + ISL Studio Firewall CLI
 
 Usage:
   firewall gate [files...]      Check files for violations
@@ -216,7 +216,7 @@ Examples:
   firewall gate --ci            Run in CI with JSON output
   firewall status               Show active rules
 
-VibeCheck validates against truthpack (routes, env, contracts).
+ShipGate validates against truthpack (routes, env, contracts).
 ISL Studio enforces policy packs (auth, pii, payments, rate-limit, intent).
 
 Combined verdict: SHIP (safe to merge) or NO_SHIP (blocked).
@@ -241,7 +241,7 @@ function generateSARIF(results: Array<{ file: string; result: IntegratedGateResu
     runs: [{
       tool: {
         driver: {
-          name: 'VibeCheck + ISL Studio',
+          name: 'ShipGate + ISL Studio',
           version: '0.1.0',
           informationUri: 'https://islstudio.dev',
           rules: [

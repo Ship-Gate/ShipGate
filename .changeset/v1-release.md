@@ -61,7 +61,7 @@ First stable release of the Intent Specification Language toolchain.
 - Import graph and stdlib version tracking
 
 ## Verified Output
-- "Verified by VibeCheck ✓" badge for passing verification
+- "Verified by ShipGate ✓" badge for passing verification
 
 ## Known Limitations
 - Python/Go codegen generates scaffolds only (full implementation planned for v1.2)

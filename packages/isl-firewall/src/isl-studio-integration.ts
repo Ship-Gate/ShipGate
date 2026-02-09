@@ -1,7 +1,7 @@
 /**
- * ISL Studio Integration for VibeCheck
+ * ISL Studio Integration for ShipGate
  * 
- * Combines VibeCheck's truthpack validation with ISL Studio's policy packs
+ * Combines ShipGate's truthpack validation with ISL Studio's policy packs
  * for comprehensive code governance.
  * 
  * @module @isl-lang/firewall/isl-studio
@@ -47,7 +47,7 @@ interface ISLGateResult {
 }
 
 /**
- * Combined VibeCheck + ISL Studio result
+ * Combined ShipGate + ISL Studio result
  */
 export interface IntegratedGateResult extends FirewallResult {
   islStudio: {
@@ -65,16 +65,16 @@ export interface IntegratedGateResult extends FirewallResult {
 }
 
 /**
- * Integrated ISL Studio + VibeCheck Firewall
+ * Integrated ISL Studio + ShipGate Firewall
  * 
- * Runs both VibeCheck's truthpack validation AND ISL Studio's policy packs
+ * Runs both ShipGate's truthpack validation AND ISL Studio's policy packs
  */
 export class IntegratedFirewall {
-  private vibecheck: AgentFirewall;
+  private shipgate: AgentFirewall;
   private islPolicies: Map<string, ISLPolicy>;
 
   constructor(config: Partial<FirewallConfig> = {}) {
-    this.vibecheck = new AgentFirewall(config);
+    this.shipgate = new AgentFirewall(config);
     this.islPolicies = new Map();
     this.loadISLPolicies();
   }
@@ -314,24 +314,24 @@ export class IntegratedFirewall {
   }
 
   /**
-   * Evaluate content with both VibeCheck and ISL Studio
+   * Evaluate content with both ShipGate and ISL Studio
    */
   async evaluate(request: FirewallRequest): Promise<IntegratedGateResult> {
-    // Run VibeCheck (truthpack validation)
-    const vibecheckResult = await this.vibecheck.evaluate(request);
+    // Run ShipGate (truthpack validation)
+    const shipgateResult = await this.shipgate.evaluate(request);
 
     // Run ISL Studio policies
     const islResult = this.runISLPolicies(request);
 
     // Combine results
-    const totalHardBlocks = vibecheckResult.stats.hardBlocks + 
+    const totalHardBlocks = shipgateResult.stats.hardBlocks + 
       islResult.violations.filter(v => v.tier === 'hard_block').length;
-    const totalSoftBlocks = vibecheckResult.stats.softBlocks +
+    const totalSoftBlocks = shipgateResult.stats.softBlocks +
       islResult.violations.filter(v => v.tier === 'soft_block').length;
-    const totalWarnings = vibecheckResult.stats.warnings +
+    const totalWarnings = shipgateResult.stats.warnings +
       islResult.violations.filter(v => v.tier === 'warn').length;
 
-    const combinedVerdict = (totalHardBlocks > 0 || !vibecheckResult.allowed) 
+    const combinedVerdict = (totalHardBlocks > 0 || !shipgateResult.allowed) 
       ? 'NO_SHIP' 
       : 'SHIP';
 
@@ -346,9 +346,9 @@ export class IntegratedFirewall {
     }));
 
     return {
-      ...vibecheckResult,
+      ...shipgateResult,
       // Add ISL violations to main violations array
-      violations: [...vibecheckResult.violations, ...islPolicyViolations],
+      violations: [...shipgateResult.violations, ...islPolicyViolations],
       // ISL Studio specific results
       islStudio: {
         verdict: islResult.verdict,
@@ -358,7 +358,7 @@ export class IntegratedFirewall {
       // Combined summary
       combined: {
         verdict: combinedVerdict,
-        totalViolations: vibecheckResult.violations.length + islResult.violations.length,
+        totalViolations: shipgateResult.violations.length + islResult.violations.length,
         hardBlocks: totalHardBlocks,
         softBlocks: totalSoftBlocks,
         warnings: totalWarnings,
@@ -389,7 +389,7 @@ export class IntegratedFirewall {
         if (line.includes('islstudio-ignore') && line.includes(policy.id)) {
           continue;
         }
-        if (line.includes('vibecheck-ignore')) {
+        if (line.includes('shipgate-ignore')) {
           continue;
         }
 
@@ -426,7 +426,7 @@ export class IntegratedFirewall {
 
   /**
    * Run Reality-Gap scanner only (ISL Studio policies).
-   * Does not run VibeCheck/truthpack validation.
+   * Does not run ShipGate/truthpack validation.
    */
   async evaluateRealityGapOnly(request: FirewallRequest): Promise<ISLGateResult> {
     return this.runISLPolicies(request);
@@ -457,12 +457,12 @@ export class IntegratedFirewall {
    */
   getStatus(): {
     mode: string;
-    vibecheckPolicies: string[];
+    shipgatePolicies: string[];
     islStudioRules: string[];
   } {
     return {
-      mode: this.vibecheck.getMode(),
-      vibecheckPolicies: this.vibecheck.getStatus().policies,
+      mode: this.shipgate.getMode(),
+      shipgatePolicies: this.shipgate.getStatus().policies,
       islStudioRules: Array.from(this.islPolicies.keys()),
     };
   }
@@ -471,7 +471,7 @@ export class IntegratedFirewall {
    * Set firewall mode
    */
   setMode(mode: 'observe' | 'enforce' | 'lockdown'): void {
-    this.vibecheck.setMode(mode);
+    this.shipgate.setMode(mode);
   }
 }
 
@@ -511,12 +511,12 @@ export function createIntegratedFirewall(config?: Partial<FirewallConfig>): Inte
  */
 export const integratedGate = {
   /**
-   * Run the integrated gate (VibeCheck + ISL Studio)
+   * Run the integrated gate (ShipGate + ISL Studio)
    */
   async run(filePath: string, content: string, projectRoot?: string): Promise<{
     verdict: 'SHIP' | 'NO_SHIP';
     score: number;
-    vibecheck: { allowed: boolean; violations: number };
+    shipgate: { allowed: boolean; violations: number };
     islStudio: { violations: number };
     total: { violations: number; hardBlocks: number };
   }> {
@@ -526,7 +526,7 @@ export const integratedGate = {
     return {
       verdict: result.combined.verdict,
       score: result.islStudio.score,
-      vibecheck: {
+      shipgate: {
         allowed: result.allowed,
         violations: result.violations.filter(v => !v.policyId.startsWith('isl-')).length,
       },

@@ -1,0 +1,16 @@
+# Shipgate ISL Verify — Bitbucket Pipelines Template
+#
+# Usage: Copy this into your bitbucket-pipelines.yml
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: Shipgate ISL Verify
+          image: ghcr.io/shipgate/shipgate:v1
+          script:
+            - shipgate verify src/ --ci --format junit > test-reports/shipgate.xml
+          after-script:
+            - pipe: atlassian/upload-test-results:0.1.0
+              variables:
+                FILES: 'test-reports/shipgate.xml'

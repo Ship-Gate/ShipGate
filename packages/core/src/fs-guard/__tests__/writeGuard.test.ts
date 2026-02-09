@@ -52,8 +52,8 @@ describe('WriteGuard', () => {
       expect(result.allowed).toBe(true);
     });
 
-    it('should allow writes to .vibecheck/', () => {
-      const result = guard.validate('.vibecheck/evidence.json');
+    it('should allow writes to .shipgate/', () => {
+      const result = guard.validate('.shipgate/evidence.json');
       expect(result.allowed).toBe(true);
     });
 

@@ -11,7 +11,7 @@ async function createCheckoutSession(): Promise<{ url: string }> {
   const res = await fetch(`${API_BASE}/api/create-checkout-session`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ planId: 'team' }),
+    body: JSON.stringify({ planId: 'pro' }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -96,7 +96,7 @@ export default function Pricing() {
                     {cta}
                   </Link>
                 )}
-                {id === 'team' && (
+                {id === 'pro' && (
                   <>
                     <button
                       type="button"

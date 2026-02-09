@@ -1,0 +1,16 @@
+{
+  "runId": "2026-02-09T07-12-487888a3",
+  "command": "polish",
+  "tier": "free",
+  "timestamp": "2026-02-09T07:12:54.634Z",
+  "manifestHash": "36192124cc1c22985440ac077c4a72ef95833e7f4de99ab27cb5e69e5b9e0b64",
+  "verification": {
+    "algorithm": "SHA-256",
+    "signature": "TODO: Implement server-side signing"
+  },
+  "billing": {
+    "tier": "free",
+    "charged": false,
+    "usage": {}
+  }
+}

@@ -36,7 +36,7 @@ export interface PipelineOptions {
   /** Workspace path containing the codebase */
   workspacePath: string;
 
-  /** Output directory for evidence reports (default: .vibecheck/reports) */
+  /** Output directory for evidence reports (default: .shipgate/reports) */
   outDir?: string;
 
   /** Context extraction options */
@@ -239,7 +239,7 @@ export interface PipelineState {
  * Default pipeline options
  */
 export const DEFAULT_PIPELINE_OPTIONS: Omit<Required<PipelineOptions>, 'workspacePath'> = {
-  outDir: '.vibecheck/reports',
+  outDir: '.shipgate/reports',
   contextOptions: {},
   skipContext: false,
   writeReport: true,

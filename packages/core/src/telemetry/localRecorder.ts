@@ -4,7 +4,7 @@
  * Writes telemetry events to a local JSONL file.
  * No network calls are made - all data stays local.
  * 
- * File location: .vibecheck/telemetry/events.jsonl
+ * File location: .shipgate/telemetry/events.jsonl
  */
 
 import { existsSync, mkdirSync, appendFileSync, statSync, renameSync } from 'fs';

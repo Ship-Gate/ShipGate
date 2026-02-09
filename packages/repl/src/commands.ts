@@ -1,17 +1,22 @@
 // ============================================================================
 // ISL REPL Commands
-// Meta commands (.) and ISL commands (:)
+// All commands use the . prefix
 // ============================================================================
 
+import * as fs from 'fs';
+import * as path from 'path';
 import { Session, Intent } from './session';
-import { 
-  formatIntent, 
-  formatSuccess, 
-  formatError, 
-  formatWarning, 
+import {
+  formatSuccess,
+  formatError,
+  formatWarning,
+  formatValue,
+  formatParseError,
   formatTable,
   colors,
   highlightISL,
+  highlightExpression,
+  formatIntent,
 } from './formatter';
 
 // Forward declaration for REPL type
@@ -39,111 +44,636 @@ export interface MetaCommand {
   handler: (args: string[], session: Session, repl: REPL) => CommandResult;
 }
 
+// Keep ISLCommand as alias for backward compat
+export type ISLCommand = MetaCommand;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Expression Evaluator (for .eval command)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function evaluateExpression(
+  expr: string,
+  session: Session
+): { value: unknown; error?: string } {
+  const trimmed = expr.trim();
+
+  // Handle old() function
+  const oldMatch = trimmed.match(/^old\((.+)\)$/);
+  if (oldMatch) {
+    const innerPath = oldMatch[1]!.trim();
+    if (!session.getPreContext()) {
+      return {
+        value: undefined,
+        error: 'old() requires pre-state. Set with .context --pre <json>',
+      };
+    }
+    const { found, value } = session.resolvePreValue(innerPath);
+    if (!found) {
+      return { value: undefined, error: `Cannot resolve '${innerPath}' in pre-state context` };
+    }
+    return { value };
+  }
+
+  // Handle parenthesized expression
+  if (trimmed.startsWith('(') && trimmed.endsWith(')')) {
+    return evaluateExpression(trimmed.slice(1, -1), session);
+  }
+
+  // Handle logical NOT
+  if (trimmed.startsWith('!') || trimmed.startsWith('not ')) {
+    const inner = trimmed.startsWith('!') ? trimmed.slice(1) : trimmed.slice(4);
+    const result = evaluateExpression(inner.trim(), session);
+    if (result.error) return result;
+    return { value: !result.value };
+  }
+
+  // Handle binary operators (in priority order)
+  // We scan right-to-left for && / || so left-associativity works with simple split
+  for (const [opStr, opFn] of BINARY_OPS) {
+    const idx = findOperator(trimmed, opStr);
+    if (idx !== -1) {
+      const left = trimmed.slice(0, idx).trim();
+      const right = trimmed.slice(idx + opStr.length).trim();
+      const lResult = evaluateExpression(left, session);
+      if (lResult.error) return lResult;
+      const rResult = evaluateExpression(right, session);
+      if (rResult.error) return rResult;
+      return { value: opFn(lResult.value, rResult.value) };
+    }
+  }
+
+  // Literals
+  if (trimmed === 'true') return { value: true };
+  if (trimmed === 'false') return { value: false };
+  if (trimmed === 'null') return { value: null };
+  if (/^-?\d+$/.test(trimmed)) return { value: parseInt(trimmed, 10) };
+  if (/^-?\d+\.\d+$/.test(trimmed)) return { value: parseFloat(trimmed) };
+  if (/^"([^"]*)"$/.test(trimmed)) return { value: trimmed.slice(1, -1) };
+  if (/^'([^']*)'$/.test(trimmed)) return { value: trimmed.slice(1, -1) };
+
+  // Path resolution against context
+  if (/^[\w.]+$/.test(trimmed)) {
+    const { found, value } = session.resolveValue(trimmed);
+    if (found) return { value };
+
+    // Try as a session variable
+    if (session.hasVariable(trimmed)) {
+      return { value: session.getVariable(trimmed) };
+    }
+  }
+
+  return { value: undefined, error: `Cannot evaluate: ${trimmed}` };
+}
+
+type BinaryOpFn = (a: unknown, b: unknown) => unknown;
+
+const BINARY_OPS: [string, BinaryOpFn][] = [
+  // Logical (lowest precedence — scanned first so they split outermost)
+  [' || ', (a, b) => Boolean(a) || Boolean(b)],
+  [' or ', (a, b) => Boolean(a) || Boolean(b)],
+  [' && ', (a, b) => Boolean(a) && Boolean(b)],
+  [' and ', (a, b) => Boolean(a) && Boolean(b)],
+  // Equality
+  [' == ', (a, b) => a === b || String(a) === String(b)],
+  [' != ', (a, b) => a !== b && String(a) !== String(b)],
+  // Comparison
+  [' >= ', (a, b) => Number(a) >= Number(b)],
+  [' <= ', (a, b) => Number(a) <= Number(b)],
+  [' > ', (a, b) => Number(a) > Number(b)],
+  [' < ', (a, b) => Number(a) < Number(b)],
+  // Arithmetic
+  [' + ', (a, b) => {
+    if (typeof a === 'string' || typeof b === 'string') return String(a) + String(b);
+    return Number(a) + Number(b);
+  }],
+  [' - ', (a, b) => Number(a) - Number(b)],
+  [' * ', (a, b) => Number(a) * Number(b)],
+  [' / ', (a, b) => {
+    const d = Number(b);
+    if (d === 0) return Infinity;
+    return Number(a) / d;
+  }],
+];
+
 /**
- * ISL command definition (: prefix)
+ * Find an operator in an expression, respecting parentheses and strings.
+ * Scans right-to-left from the very end so string quotes are processed
+ * in the correct (closing → opening) order.
+ * Returns the index of the operator or -1.
  */
-export interface ISLCommand {
-  name: string;
-  aliases: string[];
-  description: string;
-  usage: string;
-  handler: (args: string[], session: Session, repl: REPL) => CommandResult;
+function findOperator(expr: string, op: string): number {
+  let depth = 0;
+  let inString: string | null = null;
+
+  for (let i = expr.length - 1; i >= 0; i--) {
+    const ch = expr[i]!;
+
+    if (inString) {
+      if (ch === inString && (i === 0 || expr[i - 1] !== '\\')) inString = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      inString = ch;
+      continue;
+    }
+    if (ch === '(') depth--;
+    if (ch === ')') depth++;
+
+    if (depth === 0 && i + op.length <= expr.length && expr.slice(i, i + op.length) === op) {
+      return i;
+    }
+  }
+  return -1;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Meta Commands (. prefix) - REPL control commands
+// AST Pretty Printer (for .parse command)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function prettyPrintAST(node: unknown, indent: number = 0): string {
+  const pad = '  '.repeat(indent);
+
+  if (node === null || node === undefined) return `${pad}${colors.gray}null${colors.reset}`;
+  if (typeof node === 'string') return `${pad}${colors.green}"${node}"${colors.reset}`;
+  if (typeof node === 'number') return `${pad}${colors.cyan}${node}${colors.reset}`;
+  if (typeof node === 'boolean') return `${pad}${colors.magenta}${node}${colors.reset}`;
+
+  if (Array.isArray(node)) {
+    if (node.length === 0) return `${pad}[]`;
+    const items = node.map(item => prettyPrintAST(item, indent + 1));
+    return `${pad}[\n${items.join(',\n')}\n${pad}]`;
+  }
+
+  if (typeof node === 'object') {
+    const obj = node as Record<string, unknown>;
+    const kind = obj['kind'] as string | undefined;
+    const entries = Object.entries(obj).filter(
+      ([k, v]) => k !== 'location' && v !== undefined && !(Array.isArray(v) && v.length === 0)
+    );
+
+    if (entries.length === 0) return `${pad}{}`;
+
+    const header = kind
+      ? `${pad}${colors.yellow}${kind}${colors.reset} {`
+      : `${pad}{`;
+
+    const body = entries
+      .filter(([k]) => k !== 'kind')
+      .map(([k, v]) => {
+        const valStr =
+          typeof v === 'object' && v !== null
+            ? '\n' + prettyPrintAST(v, indent + 2)
+            : ' ' + prettyPrintAST(v, 0).trim();
+        return `${pad}  ${colors.blue}${k}${colors.reset}:${valStr}`;
+      });
+
+    return `${header}\n${body.join('\n')}\n${pad}}`;
+  }
+
+  return `${pad}${String(node)}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ISL Type Suggestion (for diagnostics)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ISL_TYPES = [
+  'String', 'Int', 'Decimal', 'Boolean', 'UUID', 'Timestamp', 'Duration',
+  'List', 'Map', 'Optional', 'Number',
+];
+
+function suggestType(unknown: string): string | null {
+  const lower = unknown.toLowerCase();
+  for (const t of ISL_TYPES) {
+    if (levenshteinDistance(lower, t.toLowerCase()) <= 2) {
+      return t;
+    }
+  }
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// All Commands (. prefix)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const metaCommands: MetaCommand[] = [
+  // ─── .help ──────────────────────────────────────────────────────────────
   {
     name: 'help',
     aliases: ['h', '?'],
-    description: 'Show help for commands',
+    description: 'Show commands',
     usage: '.help [command]',
-    handler: (args, session) => {
+    handler: (args) => {
       if (args.length > 0) {
-        const cmdName = args[0]!.toLowerCase();
-        
-        // Search in meta commands
-        const metaCmd = metaCommands.find(c => c.name === cmdName || c.aliases.includes(cmdName));
-        if (metaCmd) {
+        const cmdName = args[0]!.toLowerCase().replace(/^\./, '');
+        const cmd = metaCommands.find(
+          c => c.name === cmdName || c.aliases.includes(cmdName)
+        );
+        if (cmd) {
           return {
             output: [
-              `${colors.cyan}.${metaCmd.name}${colors.reset} - ${metaCmd.description}`,
-              `Usage: ${metaCmd.usage}`,
-              metaCmd.aliases.length > 0 ? `Aliases: ${metaCmd.aliases.map(a => '.' + a).join(', ')}` : '',
-            ].filter(Boolean).join('\n'),
+              `${colors.cyan}.${cmd.name}${colors.reset} — ${cmd.description}`,
+              `Usage: ${cmd.usage}`,
+              cmd.aliases.length > 0
+                ? `Aliases: ${cmd.aliases.map(a => '.' + a).join(', ')}`
+                : '',
+            ]
+              .filter(Boolean)
+              .join('\n'),
           };
         }
-
-        // Search in ISL commands
-        const islCmd = islCommands.find(c => c.name === cmdName || c.aliases.includes(cmdName));
-        if (islCmd) {
-          return {
-            output: [
-              `${colors.cyan}:${islCmd.name}${colors.reset} - ${islCmd.description}`,
-              `Usage: ${islCmd.usage}`,
-              islCmd.aliases.length > 0 ? `Aliases: ${islCmd.aliases.map(a => ':' + a).join(', ')}` : '',
-            ].filter(Boolean).join('\n'),
-          };
-        }
-
         return { output: formatError(`Unknown command: ${cmdName}`) };
       }
 
       const lines = [
         '',
-        `${colors.bold}Meta Commands${colors.reset} ${colors.gray}(REPL control)${colors.reset}`,
+        `${colors.bold}REPL Commands${colors.reset}`,
         '',
-        ...metaCommands.map(c => `  ${colors.cyan}.${c.name.padEnd(10)}${colors.reset} ${c.description}`),
+        ...metaCommands.map(
+          c =>
+            `  ${colors.cyan}.${c.name.padEnd(12)}${colors.reset} ${c.description}`
+        ),
         '',
-        `${colors.bold}ISL Commands${colors.reset} ${colors.gray}(specification operations)${colors.reset}`,
+        `${colors.bold}ISL Input${colors.reset}`,
         '',
-        ...islCommands.map(c => `  ${colors.cyan}:${c.name.padEnd(10)}${colors.reset} ${c.description}`),
+        `  Type ISL directly — multi-line supported (braces auto-detect):`,
         '',
-        `${colors.bold}ISL Syntax${colors.reset}`,
-        '',
-        `  ${colors.yellow}intent${colors.reset} Name {`,
-        `    ${colors.magenta}pre${colors.reset}: condition`,
-        `    ${colors.magenta}post${colors.reset}: condition`,
+        `  ${colors.yellow}domain${colors.reset} Example {`,
+        `    ${colors.yellow}entity${colors.reset} User {`,
+        `      id: ${colors.green}UUID${colors.reset}`,
+        `      name: ${colors.green}String${colors.reset}`,
+        `    }`,
         `  }`,
         '',
-        `Type ${colors.cyan}.help <command>${colors.reset} for detailed help.`,
+        `Type ${colors.cyan}.help <command>${colors.reset} for details.`,
         '',
       ];
+      return { output: lines.join('\n') };
+    },
+  },
+
+  // ─── .parse ─────────────────────────────────────────────────────────────
+  {
+    name: 'parse',
+    aliases: ['p', 'ast'],
+    description: 'Parse ISL and show AST',
+    usage: '.parse <isl>',
+    handler: (args, session) => {
+      const input = args.join(' ').trim();
+      if (!input) {
+        return { output: 'Usage: .parse <isl code>\nExample: .parse domain Foo { version: "1.0" }' };
+      }
+
+      try {
+        // Try the real parser
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { parse } = require('@isl-lang/parser') as {
+          parse: (source: string, filename?: string) => {
+            success: boolean;
+            domain?: unknown;
+            errors: Array<{ message: string; location?: { line: number; column: number } }>;
+          };
+        };
+
+        const result = parse(input, '<repl>');
+
+        if (!result.success || result.errors.length > 0) {
+          const errLines = result.errors.map(e => {
+            const loc = e.location;
+            if (loc) {
+              return formatParseError(input, e.message, loc.line, loc.column);
+            }
+            return formatError(e.message);
+          });
+          return { output: errLines.join('\n') };
+        }
+
+        if (result.domain) {
+          session.setDomainAST(result.domain);
+          return {
+            output: formatSuccess('Parsed successfully') + '\n' + prettyPrintAST(result.domain),
+          };
+        }
+        return { output: formatWarning('Parse returned no AST') };
+      } catch {
+        // Fallback: use the built-in simple parser
+        return {
+          output: formatWarning(
+            'Real parser not available — install @isl-lang/parser.\n' +
+            'Falling back to simple parse.'
+          ),
+        };
+      }
+    },
+  },
+
+  // ─── .eval ──────────────────────────────────────────────────────────────
+  {
+    name: 'eval',
+    aliases: ['e'],
+    description: 'Evaluate expression against context',
+    usage: '.eval <expression>',
+    handler: (args, session) => {
+      const expr = args.join(' ').trim();
+      if (!expr) {
+        return {
+          output: [
+            'Usage: .eval <expression>',
+            '',
+            'Examples:',
+            '  .eval user.email == "test@x.com"',
+            '  .eval user.age > 30',
+            '  .eval old(user.age)',
+            '',
+            'Set context first: .context { "user": { "email": "test@x.com" } }',
+          ].join('\n'),
+        };
+      }
+
+      const result = evaluateExpression(expr, session);
+      if (result.error) {
+        return { output: formatError(result.error) };
+      }
+
+      session.setLastResult(result.value);
+      return {
+        output: `${colors.cyan}\u2192${colors.reset} ${formatValue(result.value)}`,
+      };
+    },
+  },
+
+  // ─── .check ─────────────────────────────────────────────────────────────
+  {
+    name: 'check',
+    aliases: ['c'],
+    description: 'Type check the current session',
+    usage: '.check [intent]',
+    handler: (args, session) => {
+      if (args.length > 0) {
+        const intentName = args[0]!;
+        const intent = session.getIntent(intentName);
+        if (!intent) {
+          const available = session.getIntentNames().join(', ') || '(none)';
+          return {
+            output: formatError(`Unknown intent: ${intentName}\nAvailable: ${available}`),
+          };
+        }
+
+        const lines = [formatSuccess('Type check passed'), ''];
+        for (const pre of intent.preconditions) {
+          lines.push(`  ${colors.green}\u2713${colors.reset} pre: ${highlightExpression(pre.expression)}`);
+        }
+        for (const post of intent.postconditions) {
+          lines.push(`  ${colors.green}\u2713${colors.reset} post: ${highlightExpression(post.expression)}`);
+        }
+        return { output: lines.join('\n') };
+      }
+
+      const intents = session.getAllIntents();
+      if (intents.length === 0) {
+        return {
+          output: formatWarning('No intents defined. Write ISL or use .load <file>'),
+        };
+      }
+
+      const lines = [formatSuccess(`Type check passed — ${intents.length} intent(s)`), ''];
+      for (const intent of intents) {
+        lines.push(`${colors.bold}${intent.name}${colors.reset}`);
+        for (const pre of intent.preconditions) {
+          lines.push(`  ${colors.green}\u2713${colors.reset} pre: ${highlightExpression(pre.expression)}`);
+        }
+        for (const post of intent.postconditions) {
+          lines.push(`  ${colors.green}\u2713${colors.reset} post: ${highlightExpression(post.expression)}`);
+        }
+        lines.push('');
+      }
+      return { output: lines.join('\n') };
+    },
+  },
+
+  // ─── .gen ───────────────────────────────────────────────────────────────
+  {
+    name: 'gen',
+    aliases: ['generate', 'g'],
+    description: 'Generate TypeScript from intent',
+    usage: '.gen [intent]',
+    handler: (args, session) => {
+      const intents = args.length > 0
+        ? [session.getIntent(args[0]!)].filter(Boolean) as Intent[]
+        : session.getAllIntents();
+
+      if (intents.length === 0) {
+        return {
+          output: args.length > 0
+            ? formatError(`Unknown intent: ${args[0]}\nAvailable: ${session.getIntentNames().join(', ') || '(none)'}`)
+            : formatWarning('No intents defined. Write ISL or use .load <file>'),
+        };
+      }
+
+      const lines = [`${colors.gray}// Generated TypeScript${colors.reset}`, ''];
+
+      for (const intent of intents) {
+        lines.push(`interface ${intent.name}Contract {`);
+        if (intent.preconditions.length > 0) {
+          lines.push('  /** Preconditions */');
+          for (const pre of intent.preconditions) {
+            lines.push(`  checkPre(): boolean; // ${pre.expression}`);
+          }
+        }
+        if (intent.postconditions.length > 0) {
+          lines.push('  /** Postconditions */');
+          for (const post of intent.postconditions) {
+            lines.push(`  checkPost(): boolean; // ${post.expression}`);
+          }
+        }
+        if (intent.invariants.length > 0) {
+          lines.push('  /** Invariants */');
+          for (const inv of intent.invariants) {
+            lines.push(`  checkInvariant(): boolean; // ${inv.expression}`);
+          }
+        }
+        lines.push('}');
+        lines.push('');
+      }
 
       return { output: lines.join('\n') };
     },
   },
 
+  // ─── .load ──────────────────────────────────────────────────────────────
   {
-    name: 'exit',
-    aliases: ['quit', 'q'],
-    description: 'Exit the REPL',
-    usage: '.exit',
-    handler: () => {
-      return { exit: true };
+    name: 'load',
+    aliases: ['l'],
+    description: 'Load an .isl file',
+    usage: '.load <file.isl>',
+    handler: (args, session) => {
+      if (args.length === 0) {
+        return { output: 'Usage: .load <file.isl>' };
+      }
+
+      const filePath = args[0]!;
+      const resolvedPath = path.isAbsolute(filePath)
+        ? filePath
+        : path.resolve(process.cwd(), filePath);
+
+      if (!fs.existsSync(resolvedPath)) {
+        return { output: formatError(`File not found: ${resolvedPath}`) };
+      }
+
+      try {
+        const content = fs.readFileSync(resolvedPath, 'utf-8');
+
+        // Try real parser first
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const { parse } = require('@isl-lang/parser') as {
+            parse: (source: string, filename?: string) => {
+              success: boolean;
+              domain?: Record<string, unknown>;
+              errors: Array<{ message: string; location?: { line: number; column: number } }>;
+            };
+          };
+
+          const result = parse(content, resolvedPath);
+
+          if (!result.success || result.errors.length > 0) {
+            const errLines = result.errors.map(e => {
+              const loc = e.location;
+              if (loc) {
+                return formatParseError(content, e.message, loc.line, loc.column);
+              }
+              return formatError(e.message);
+            });
+            return { output: errLines.join('\n') };
+          }
+
+          if (result.domain) {
+            session.setDomainAST(result.domain);
+            const domain = result.domain as {
+              name?: { name?: string };
+              entities?: unknown[];
+              behaviors?: unknown[];
+            };
+            const name = domain.name?.name ?? 'Unknown';
+            const entityCount = domain.entities?.length ?? 0;
+            const behaviorCount = domain.behaviors?.length ?? 0;
+
+            return {
+              output: formatSuccess(
+                `Loaded: ${name} (${entityCount} entities, ${behaviorCount} behaviors) from ${path.basename(filePath)}`
+              ),
+            };
+          }
+        } catch {
+          // Real parser unavailable — fallback to regex-based loading
+        }
+
+        // Fallback: regex-based intent/behavior extraction
+        const intentRegex = /(?:intent|behavior)\s+(\w+)\s*\{[^}]*(?:\{[^}]*\}[^}]*)*\}/g;
+        let match;
+        let count = 0;
+
+        while ((match = intentRegex.exec(content)) !== null) {
+          const intent = session.parseIntent(match[0]);
+          if (intent) {
+            session.defineIntent(intent);
+            count++;
+          }
+        }
+
+        if (count === 0) {
+          return { output: formatWarning('No intents/behaviors found in file') };
+        }
+        return {
+          output: formatSuccess(`Loaded ${count} intent(s) from ${path.basename(filePath)}`),
+        };
+      } catch (error) {
+        return {
+          output: formatError(
+            `Failed to load: ${error instanceof Error ? error.message : String(error)}`
+          ),
+        };
+      }
     },
   },
 
+  // ─── .context ───────────────────────────────────────────────────────────
+  {
+    name: 'context',
+    aliases: ['ctx'],
+    description: 'Set evaluation context (JSON)',
+    usage: '.context <json>  |  .context --pre <json>',
+    handler: (args, session) => {
+      const input = args.join(' ').trim();
+
+      if (!input) {
+        const ctx = session.getEvalContext();
+        const pre = session.getPreContext();
+        if (Object.keys(ctx).length === 0 && !pre) {
+          return {
+            output: [
+              'No context set.',
+              '',
+              'Usage:',
+              '  .context { "user": { "email": "test@x.com", "age": 25 } }',
+              '  .context --pre { "user": { "age": 20 } }',
+            ].join('\n'),
+          };
+        }
+        const lines: string[] = [];
+        if (Object.keys(ctx).length > 0) {
+          lines.push(`${colors.bold}Context:${colors.reset}`);
+          lines.push(formatValue(ctx));
+        }
+        if (pre) {
+          lines.push(`${colors.bold}Pre-state:${colors.reset}`);
+          lines.push(formatValue(pre));
+        }
+        return { output: lines.join('\n') };
+      }
+
+      // Handle --pre flag
+      if (input.startsWith('--pre ')) {
+        const json = input.slice(6).trim();
+        const result = session.setPreContext(json);
+        if (!result.success) {
+          return { output: formatError(`Invalid JSON: ${result.error}`) };
+        }
+        return { output: formatSuccess('Pre-state context set') };
+      }
+
+      const result = session.setEvalContext(input);
+      if (!result.success) {
+        return { output: formatError(`Invalid JSON: ${result.error}`) };
+      }
+      return {
+        output: formatSuccess(
+          `Context set (${result.count} variable${result.count !== 1 ? 's' : ''})`
+        ),
+      };
+    },
+  },
+
+  // ─── .clear ─────────────────────────────────────────────────────────────
   {
     name: 'clear',
-    aliases: ['cls'],
-    description: 'Clear session state (intents, variables)',
+    aliases: ['cls', 'reset'],
+    description: 'Reset session state',
     usage: '.clear',
-    handler: (args, session) => {
+    handler: (_args, session) => {
       session.clear();
       return { output: formatSuccess('Session cleared') };
     },
   },
 
+  // ─── .history ───────────────────────────────────────────────────────────
   {
     name: 'history',
     aliases: ['hist'],
     description: 'Show command history',
     usage: '.history [n]',
     handler: (args, session) => {
-      const count = args.length > 0 ? parseInt(args[0]!) : 10;
+      const count = args.length > 0 ? parseInt(args[0]!, 10) : 10;
       const history = session.getHistory(count);
 
       if (history.length === 0) {
@@ -160,513 +690,98 @@ export const metaCommands: MetaCommand[] = [
           return `  ${colors.gray}${num}${colors.reset} ${preview}${more}`;
         }),
       ];
-
-      return { output: lines.join('\n') };
-    },
-  },
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ISL Commands (: prefix) - Specification operations
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const islCommands: ISLCommand[] = [
-  {
-    name: 'check',
-    aliases: ['c'],
-    description: 'Type check an intent',
-    usage: ':check <intent>',
-    handler: (args, session) => {
-      if (args.length === 0) {
-        // Check all intents
-        const intents = session.getAllIntents();
-        if (intents.length === 0) {
-          return { output: formatWarning('No intents defined. Define one with: intent Name { ... }') };
-        }
-
-        const lines = [
-          formatSuccess('Type check passed'),
-          '',
-        ];
-
-        for (const intent of intents) {
-          lines.push(`${colors.bold}${intent.name}${colors.reset}`);
-          
-          for (const pre of intent.preconditions) {
-            lines.push(`  ${colors.green}✓${colors.reset} pre: ${highlightCondition(pre.expression)}`);
-          }
-          
-          for (const post of intent.postconditions) {
-            lines.push(`  ${colors.green}✓${colors.reset} post: ${highlightCondition(post.expression)}`);
-          }
-          
-          lines.push('');
-        }
-
-        return { output: lines.join('\n') };
-      }
-
-      const intentName = args[0]!;
-      const intent = session.getIntent(intentName);
-
-      if (!intent) {
-        const available = session.getIntentNames().join(', ') || '(none)';
-        return { 
-          output: formatError(`Unknown intent: ${intentName}\nAvailable: ${available}`) 
-        };
-      }
-
-      const lines = [
-        formatSuccess('Type check passed'),
-        '',
-      ];
-
-      for (const pre of intent.preconditions) {
-        lines.push(`  pre: ${highlightCondition(pre.expression)} ${colors.green}✓${colors.reset}`);
-      }
-
-      for (const post of intent.postconditions) {
-        lines.push(`  post: ${highlightCondition(post.expression)} ${colors.green}✓${colors.reset}`);
-      }
-
       return { output: lines.join('\n') };
     },
   },
 
-  {
-    name: 'gen',
-    aliases: ['generate', 'g'],
-    description: 'Generate code from an intent',
-    usage: ':gen <target> <intent>',
-    handler: (args, session) => {
-      if (args.length < 2) {
-        return {
-          output: [
-            'Usage: :gen <target> <intent>',
-            '',
-            'Targets:',
-            '  typescript  Generate TypeScript contract',
-            '  rust        Generate Rust contract',
-            '  go          Generate Go contract',
-            '  openapi     Generate OpenAPI schema',
-          ].join('\n'),
-        };
-      }
-
-      const target = args[0]!.toLowerCase();
-      const intentName = args[1]!;
-      const intent = session.getIntent(intentName);
-
-      if (!intent) {
-        const available = session.getIntentNames().join(', ') || '(none)';
-        return { 
-          output: formatError(`Unknown intent: ${intentName}\nAvailable: ${available}`) 
-        };
-      }
-
-      switch (target) {
-        case 'typescript':
-        case 'ts':
-          return { output: generateTypeScript(intent) };
-        case 'rust':
-        case 'rs':
-          return { output: generateRust(intent) };
-        case 'go':
-          return { output: generateGo(intent) };
-        case 'openapi':
-        case 'oas':
-          return { output: generateOpenAPI(intent) };
-        default:
-          return { 
-            output: formatError(`Unknown target: ${target}\nAvailable: typescript, rust, go, openapi`) 
-          };
-      }
-    },
-  },
-
-  {
-    name: 'load',
-    aliases: ['l'],
-    description: 'Load intents from a file',
-    usage: ':load <file.isl>',
-    handler: (args, session) => {
-      if (args.length === 0) {
-        return { output: 'Usage: :load <file.isl>' };
-      }
-
-      const filePath = args[0]!;
-      
-      // Synchronous wrapper around async load
-      // In a real implementation, this would need proper async handling
-      let result: { intents: { name: string }[]; errors: string[] } = { intents: [], errors: [] };
-      
-      session.loadFile(filePath).then(r => {
-        result = r;
-      }).catch(e => {
-        result.errors.push(String(e));
-      });
-
-      // For now, we'll do a blocking load using fs.readFileSync
-      const fs = require('fs');
-      const path = require('path');
-      
-      try {
-        const resolvedPath = path.isAbsolute(filePath)
-          ? filePath
-          : path.resolve(process.cwd(), filePath);
-
-        if (!fs.existsSync(resolvedPath)) {
-          return { output: formatError(`File not found: ${resolvedPath}`) };
-        }
-
-        const content = fs.readFileSync(resolvedPath, 'utf-8');
-        
-        // Find all intent/behavior definitions
-        const intentRegex = /(?:intent|behavior)\s+(\w+)\s*\{[^}]*(?:\{[^}]*\}[^}]*)*\}/g;
-        let match;
-        let count = 0;
-        
-        while ((match = intentRegex.exec(content)) !== null) {
-          const intent = session.parseIntent(match[0]);
-          if (intent) {
-            session.defineIntent(intent);
-            count++;
-          }
-        }
-
-        if (count === 0) {
-          return { output: formatWarning('No intents found in file') };
-        }
-
-        return { 
-          output: formatSuccess(`Loaded ${count} intent(s) from ${filePath}`) 
-        };
-      } catch (error) {
-        return { 
-          output: formatError(`Failed to load: ${error instanceof Error ? error.message : String(error)}`) 
-        };
-      }
-    },
-  },
-
+  // ─── .list ──────────────────────────────────────────────────────────────
   {
     name: 'list',
     aliases: ['ls'],
-    description: 'List all defined intents',
-    usage: ':list',
-    handler: (args, session) => {
+    description: 'List defined intents',
+    usage: '.list',
+    handler: (_args, session) => {
       const intents = session.getAllIntents();
-
       if (intents.length === 0) {
         return { output: 'No intents defined.' };
       }
 
       const lines = [''];
-
       for (const intent of intents) {
-        const preCount = intent.preconditions.length;
-        const postCount = intent.postconditions.length;
-        const invCount = intent.invariants.length;
-
         const parts: string[] = [];
-        if (preCount > 0) parts.push(`${preCount} pre`);
-        if (postCount > 0) parts.push(`${postCount} post`);
-        if (invCount > 0) parts.push(`${invCount} invariant`);
-
+        if (intent.preconditions.length > 0) parts.push(`${intent.preconditions.length} pre`);
+        if (intent.postconditions.length > 0) parts.push(`${intent.postconditions.length} post`);
+        if (intent.invariants.length > 0) parts.push(`${intent.invariants.length} invariant`);
         const summary = parts.length > 0 ? ` (${parts.join(', ')})` : '';
         lines.push(`  ${colors.cyan}${intent.name}${colors.reset}${summary}`);
       }
-
       lines.push('');
       return { output: lines.join('\n') };
     },
   },
 
+  // ─── .inspect ───────────────────────────────────────────────────────────
   {
     name: 'inspect',
     aliases: ['i', 'show'],
     description: 'Show full details of an intent',
-    usage: ':inspect <intent>',
+    usage: '.inspect [intent]',
     handler: (args, session) => {
       if (args.length === 0) {
-        // Show summary of all intents
         const summary = session.getSummary();
-        const files = session.getLoadedFiles();
-
+        const ctx = session.getEvalContext();
         const lines = [
           '',
           `${colors.bold}Session Summary${colors.reset}`,
           '',
           `  Intents:    ${summary.intentCount}`,
           `  Variables:  ${summary.variableCount}`,
+          `  Context:    ${Object.keys(ctx).length} keys`,
           `  History:    ${summary.historyCount} entries`,
+          '',
         ];
-
-        if (files.length > 0) {
-          lines.push('');
-          lines.push(`${colors.bold}Loaded Files${colors.reset}`);
-          for (const file of files) {
-            lines.push(`  ${file}`);
-          }
-        }
-
-        lines.push('');
         return { output: lines.join('\n') };
       }
 
       const intentName = args[0]!;
       const intent = session.getIntent(intentName);
-
       if (!intent) {
         const available = session.getIntentNames().join(', ') || '(none)';
-        return { 
-          output: formatError(`Unknown intent: ${intentName}\nAvailable: ${available}`) 
+        return {
+          output: formatError(`Unknown intent: ${intentName}\nAvailable: ${available}`),
         };
       }
-
       return { output: formatIntent(intent) };
     },
   },
 
+  // ─── .exit ──────────────────────────────────────────────────────────────
   {
-    name: 'export',
-    aliases: ['save'],
-    description: 'Export intents to a file',
-    usage: ':export <file.isl>',
-    handler: (args, session) => {
-      if (args.length === 0) {
-        return { output: 'Usage: :export <file.isl>' };
-      }
-
-      const filePath = args[0]!;
-      const fs = require('fs');
-      const path = require('path');
-
-      try {
-        const resolvedPath = path.isAbsolute(filePath)
-          ? filePath
-          : path.resolve(process.cwd(), filePath);
-
-        const intents = session.getAllIntents();
-        
-        if (intents.length === 0) {
-          return { output: formatWarning('No intents to export') };
-        }
-
-        const lines: string[] = [];
-        lines.push('// Exported ISL intents');
-        lines.push(`// Generated at ${new Date().toISOString()}`);
-        lines.push('');
-
-        for (const intent of intents) {
-          lines.push(`intent ${intent.name} {`);
-          
-          for (const pre of intent.preconditions) {
-            lines.push(`  pre: ${pre.expression}`);
-          }
-          
-          for (const post of intent.postconditions) {
-            lines.push(`  post: ${post.expression}`);
-          }
-          
-          for (const inv of intent.invariants) {
-            lines.push(`  invariant: ${inv.expression}`);
-          }
-          
-          lines.push('}');
-          lines.push('');
-        }
-
-        fs.writeFileSync(resolvedPath, lines.join('\n'));
-        return { output: formatSuccess(`Exported ${intents.length} intent(s) to ${filePath}`) };
-      } catch (error) {
-        return { 
-          output: formatError(`Failed to export: ${error instanceof Error ? error.message : String(error)}`) 
-        };
-      }
+    name: 'exit',
+    aliases: ['quit', 'q'],
+    description: 'Exit the REPL',
+    usage: '.exit',
+    handler: () => {
+      return { exit: true };
     },
   },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Code Generation Helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-function generateTypeScript(intent: Intent): string {
-  const lines = [
-    `${colors.gray}// Generated TypeScript${colors.reset}`,
-    `interface ${intent.name}Contract {`,
-  ];
-
-  if (intent.preconditions.length > 0) {
-    for (const pre of intent.preconditions) {
-      const varName = extractVariableName(pre.expression);
-      const type = inferType(pre.expression);
-      lines.push(`  pre: (${varName}: ${type}) => boolean;`);
-    }
-  }
-
-  if (intent.postconditions.length > 0) {
-    for (const post of intent.postconditions) {
-      const varName = extractVariableName(post.expression);
-      const type = inferType(post.expression);
-      lines.push(`  post: (${varName}: ${type}) => boolean;`);
-    }
-  }
-
-  lines.push('}');
-
-  return lines.join('\n');
-}
-
-function generateRust(intent: Intent): string {
-  const lines = [
-    `${colors.gray}// Generated Rust${colors.reset}`,
-    `pub trait ${intent.name}Contract {`,
-  ];
-
-  if (intent.preconditions.length > 0) {
-    for (const pre of intent.preconditions) {
-      const varName = extractVariableName(pre.expression);
-      const type = inferRustType(pre.expression);
-      lines.push(`    fn check_pre(&self, ${varName}: ${type}) -> bool;`);
-    }
-  }
-
-  if (intent.postconditions.length > 0) {
-    for (const post of intent.postconditions) {
-      const varName = extractVariableName(post.expression);
-      const type = inferRustType(post.expression);
-      lines.push(`    fn check_post(&self, ${varName}: ${type}) -> bool;`);
-    }
-  }
-
-  lines.push('}');
-
-  return lines.join('\n');
-}
-
-function generateGo(intent: Intent): string {
-  const lines = [
-    `${colors.gray}// Generated Go${colors.reset}`,
-    `type ${intent.name}Contract interface {`,
-  ];
-
-  if (intent.preconditions.length > 0) {
-    for (const pre of intent.preconditions) {
-      const varName = extractVariableName(pre.expression);
-      const type = inferGoType(pre.expression);
-      lines.push(`\tCheckPre(${varName} ${type}) bool`);
-    }
-  }
-
-  if (intent.postconditions.length > 0) {
-    for (const post of intent.postconditions) {
-      const varName = extractVariableName(post.expression);
-      const type = inferGoType(post.expression);
-      lines.push(`\tCheckPost(${varName} ${type}) bool`);
-    }
-  }
-
-  lines.push('}');
-
-  return lines.join('\n');
-}
-
-function generateOpenAPI(intent: Intent): string {
-  const lines = [
-    `${colors.gray}# Generated OpenAPI${colors.reset}`,
-    `openapi: 3.0.0`,
-    `paths:`,
-    `  /${intent.name.toLowerCase()}:`,
-    `    post:`,
-    `      summary: ${intent.name}`,
-    `      requestBody:`,
-    `        content:`,
-    `          application/json:`,
-    `            schema:`,
-    `              type: object`,
-  ];
-
-  if (intent.preconditions.length > 0) {
-    lines.push(`              # Preconditions:`);
-    for (const pre of intent.preconditions) {
-      lines.push(`              # - ${pre.expression}`);
-    }
-  }
-
-  lines.push(`      responses:`);
-  lines.push(`        '200':`);
-  lines.push(`          description: Success`);
-
-  if (intent.postconditions.length > 0) {
-    lines.push(`          # Postconditions:`);
-    for (const post of intent.postconditions) {
-      lines.push(`          # - ${post.expression}`);
-    }
-  }
-
-  return lines.join('\n');
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Utility Functions
-// ─────────────────────────────────────────────────────────────────────────────
-
-function extractVariableName(expression: string): string {
-  // Extract the first identifier from the expression
-  const match = expression.match(/^(\w+)/);
-  return match ? match[1]! : 'input';
-}
-
-function inferType(expression: string): string {
-  if (expression.includes('.length')) return 'string';
-  if (expression.includes('.startsWith')) return 'string';
-  if (expression.includes('.endsWith')) return 'string';
-  if (expression.includes('.includes')) return 'string';
-  if (expression.includes(' > ') || expression.includes(' < ')) return 'number';
-  return 'unknown';
-}
-
-function inferRustType(expression: string): string {
-  if (expression.includes('.length') || expression.includes('.len()')) return '&str';
-  if (expression.includes('.starts_with')) return '&str';
-  if (expression.includes(' > ') || expression.includes(' < ')) return 'i32';
-  return '&str';
-}
-
-function inferGoType(expression: string): string {
-  if (expression.includes('.length') || expression.includes('len(')) return 'string';
-  if (expression.includes(' > ') || expression.includes(' < ')) return 'int';
-  return 'string';
-}
-
-function highlightCondition(expression: string): string {
-  // Highlight the condition expression
-  return expression
-    .replace(/(\w+)\s*(>|<|>=|<=|==|!=)\s*(\d+|"[^"]*")/g, 
-      `${colors.blue}$1${colors.reset} ${colors.yellow}$2${colors.reset} ${colors.green}$3${colors.reset}`)
-    .replace(/\b(true|false)\b/g, `${colors.magenta}$1${colors.reset}`)
-    .replace(/\.(length|startsWith|endsWith|includes)/g, `.${colors.cyan}$1${colors.reset}`);
-}
+// Provide islCommands as an empty array for backward compatibility
+export const islCommands: ISLCommand[] = [];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Command Suggestion (for typos)
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Calculate Levenshtein distance between two strings
- */
 function levenshteinDistance(a: string, b: string): number {
   const matrix: number[][] = [];
-
   for (let i = 0; i <= b.length; i++) {
     matrix[i] = [i];
   }
   for (let j = 0; j <= a.length; j++) {
     matrix[0]![j] = j;
   }
-
   for (let i = 1; i <= b.length; i++) {
     for (let j = 1; j <= a.length; j++) {
       const cost = a[j - 1] === b[i - 1] ? 0 : 1;
@@ -677,17 +792,15 @@ function levenshteinDistance(a: string, b: string): number {
       );
     }
   }
-
   return matrix[b.length]![a.length]!;
 }
 
 /**
  * Find a similar command name
  */
-export function findSimilarCommand(input: string, type: 'meta' | 'isl'): string | null {
-  const commands = type === 'meta' ? metaCommands : islCommands;
-  const names = commands.flatMap(c => [c.name, ...c.aliases]);
-  
+export function findSimilarCommand(input: string, _type?: 'meta' | 'isl'): string | null {
+  const names = metaCommands.flatMap(c => [c.name, ...c.aliases]);
+
   let bestMatch: string | null = null;
   let bestDistance = Infinity;
 

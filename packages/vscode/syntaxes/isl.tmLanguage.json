@@ -13,6 +13,7 @@
     { "include": "#entity-definition" },
     { "include": "#behavior-definition" },
     { "include": "#type-definition" },
+    { "include": "#builtin-functions" },
     { "include": "#keywords" },
     { "include": "#operators" },
     { "include": "#types" },
@@ -155,6 +156,13 @@
             "2": { "name": "entity.name.type.isl" },
             "3": { "name": "keyword.control.from.isl" }
           }
+        },
+        {
+          "match": "\\b(use)\\s+([A-Z][a-zA-Z0-9_.]*)",
+          "captures": {
+            "1": { "name": "keyword.control.use.isl" },
+            "2": { "name": "entity.name.type.isl" }
+          }
         }
       ]
     },
@@ -208,6 +216,14 @@
         }
       ]
     },
+    "builtin-functions": {
+      "patterns": [
+        {
+          "name": "support.function.builtin.isl",
+          "match": "\\b(old|exists|forall|len|sum|count|min|max|avg|abs|contains)\\s*(?=\\()"
+        }
+      ]
+    },
     "keywords": {
       "patterns": [
         {
@@ -232,7 +248,7 @@
         },
         {
           "name": "keyword.control.modifier.isl",
-          "match": "\\b(retriable|retry_after|rate_limit|per|enabled|requires|authentication|extends|from|import|export)\\b"
+          "match": "\\b(retriable|retry_after|rate_limit|per|enabled|requires|authentication|extends|from|import|export|use)\\b"
         },
         {
           "name": "keyword.control.flow.isl",
@@ -256,7 +272,7 @@
         },
         {
           "name": "keyword.operator.assignment.isl",
-          "match": "="
+          "match": "(?<![=!<>])=(?!=)"
         },
         {
           "name": "keyword.operator.arrow.isl",

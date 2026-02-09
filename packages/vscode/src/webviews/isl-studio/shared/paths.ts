@@ -2,15 +2,15 @@
  * ISL Studio - Path Utilities
  * 
  * Provides consistent paths for ISL Studio storage locations.
- * All paths are relative to the workspace root and stored within .vibecheck/
+ * All paths are relative to the workspace root and stored within .shipgate/
  */
 
 import * as path from 'path';
 
 /**
- * Base directory for all vibecheck storage
+ * Base directory for all shipgate storage
  */
-export const VIBECHECK_DIR = '.vibecheck';
+export const SHIPGATE_DIR = '.shipgate';
 
 /**
  * Studio-specific subdirectory
@@ -23,24 +23,24 @@ export const STUDIO_DIR = 'studio';
 export const STATE_FILE = 'state.json';
 
 /**
- * Get the full path to the .vibecheck directory
+ * Get the full path to the .shipgate directory
  */
-export function getVibecheckDir(workspaceRoot: string): string {
-  return path.join(workspaceRoot, VIBECHECK_DIR);
+export function getShipgateDir(workspaceRoot: string): string {
+  return path.join(workspaceRoot, SHIPGATE_DIR);
 }
 
 /**
  * Get the full path to the studio directory
  */
 export function getStudioDir(workspaceRoot: string): string {
-  return path.join(workspaceRoot, VIBECHECK_DIR, STUDIO_DIR);
+  return path.join(workspaceRoot, SHIPGATE_DIR, STUDIO_DIR);
 }
 
 /**
  * Get the full path to the state file
  */
 export function getStatePath(workspaceRoot: string): string {
-  return path.join(workspaceRoot, VIBECHECK_DIR, STUDIO_DIR, STATE_FILE);
+  return path.join(workspaceRoot, SHIPGATE_DIR, STUDIO_DIR, STATE_FILE);
 }
 
 /**
@@ -71,11 +71,11 @@ export function getBackupPath(targetPath: string): string {
 export interface StudioPaths {
   /** Workspace root directory */
   workspaceRoot: string;
-  /** .vibecheck directory */
-  vibecheckDir: string;
-  /** .vibecheck/studio directory */
+  /** .shipgate directory */
+  shipgateDir: string;
+  /** .shipgate/studio directory */
   studioDir: string;
-  /** .vibecheck/studio/state.json */
+  /** .shipgate/studio/state.json */
   statePath: string;
 }
 
@@ -85,7 +85,7 @@ export interface StudioPaths {
 export function createStudioPaths(workspaceRoot: string): StudioPaths {
   return {
     workspaceRoot,
-    vibecheckDir: getVibecheckDir(workspaceRoot),
+    shipgateDir: getShipgateDir(workspaceRoot),
     studioDir: getStudioDir(workspaceRoot),
     statePath: getStatePath(workspaceRoot),
   };

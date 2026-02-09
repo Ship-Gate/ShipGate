@@ -210,7 +210,7 @@ export function parseSingleFile(
 }
 
 /**
- * Check if a source file has imports
+ * Check if a source file has imports or use statements
  * 
  * Useful for determining whether to use single-file or multi-file mode.
  */
@@ -219,7 +219,7 @@ export function hasImports(source: string, filename: string = 'input.isl'): bool
   if (!parseResult.success || !parseResult.domain) {
     return false;
   }
-  return parseResult.domain.imports.length > 0;
+  return parseResult.domain.imports.length > 0 || (parseResult.domain.uses?.length ?? 0) > 0;
 }
 
 /**

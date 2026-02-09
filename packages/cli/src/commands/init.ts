@@ -11,11 +11,20 @@
  */
 
 import { writeFile, mkdir, access, readFile, readdir, stat } from 'fs/promises';
-import { join, resolve, extname } from 'path';
+import { existsSync } from 'fs';
+import { join, resolve, extname, dirname } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import { output } from '../output.js';
 import { createConfigTemplate, createJsonConfigTemplate } from '../config.js';
+
+// Interactive init imports
+import { detectProject, scanForPatterns, getSubDirs } from './init/detect.js';
+import type { ProjectProfile, DetectedPattern } from './init/detect.js';
+import { select, multiSelect, closePrompts } from './init/prompts.js';
+import type { SelectOption } from './init/prompts.js';
+import { generateShipGateYml, generateISLSpecs } from './init/templates.js';
+import { generateGitHubWorkflow, getWorkflowPath } from './init/workflow-gen.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -900,6 +909,369 @@ export function printInitResult(result: InitResult): void {
       console.log(chalk.red(`  ${error}`));
     }
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Interactive Init — Guided Onboarding Flow
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface InteractiveInitOptions {
+  /** Root directory to initialize (defaults to cwd) */
+  root?: string;
+  /** Force overwrite existing files */
+  force?: boolean;
+  /** Output format */
+  format?: string;
+}
+
+export interface InteractiveInitResult {
+  success: boolean;
+  profile: ProjectProfile;
+  configPath: string | null;
+  workflowPath: string | null;
+  islFiles: Array<{ path: string; behaviors: number; confidence: number }>;
+  errors: string[];
+}
+
+const LANGUAGE_OPTIONS: SelectOption[] = [
+  { label: 'Node.js / TypeScript', value: 'typescript' },
+  { label: 'Node.js / JavaScript', value: 'javascript' },
+  { label: 'Python', value: 'python' },
+  { label: 'Go', value: 'go' },
+  { label: 'Other', value: 'unknown' },
+];
+
+function getLanguageIndex(lang: ProjectProfile['language']): number {
+  const idx = LANGUAGE_OPTIONS.findIndex((o) => o.value === lang);
+  return idx >= 0 ? idx : 0;
+}
+
+/**
+ * Run the interactive `shipgate init` guided setup.
+ *
+ * Flow:
+ *   1. Show banner
+ *   2. Detect project characteristics
+ *   3. Ask project type (with detected default)
+ *   4. Ask source directory
+ *   5. Ask critical directories
+ *   6. Scan for patterns
+ *   7. Ask about ISL generation
+ *   8. Generate .shipgate.yml, ISL specs, CI workflow
+ *   9. Run quick verification summary
+ *  10. Show next steps
+ */
+export async function interactiveInit(
+  options: InteractiveInitOptions = {},
+): Promise<InteractiveInitResult> {
+  const root = resolve(options.root ?? process.cwd());
+  const errors: string[] = [];
+  const islFilesWritten: InteractiveInitResult['islFiles'] = [];
+  let configPath: string | null = null;
+  let workflowPath: string | null = null;
+
+  // ── Banner ──────────────────────────────────────────────────────────────
+  process.stderr.write('\n');
+  process.stderr.write(chalk.bold.cyan('  ShipGate ISL') + chalk.gray(' — Behavioral verification for AI-generated code') + '\n');
+  process.stderr.write(chalk.gray('  Let\'s set up your project.\n'));
+
+  // ── Step 1: Detect project ──────────────────────────────────────────────
+  const spinner = ora('Detecting project...').start();
+  let profile: ProjectProfile;
+
+  try {
+    profile = await detectProject(root);
+    spinner.succeed(
+      `Detected: ${chalk.cyan(profile.language)}` +
+      (profile.framework ? ` (${profile.framework})` : '') +
+      (profile.packageManager ? ` via ${profile.packageManager}` : ''),
+    );
+  } catch (err) {
+    spinner.fail('Failed to detect project');
+    profile = {
+      language: 'unknown',
+      srcDirs: ['.'],
+      criticalDirs: [],
+      testPattern: '*.test.*',
+    };
+  }
+
+  // ── Step 2: Ask project type ────────────────────────────────────────────
+  const langOptions = LANGUAGE_OPTIONS.map((o) => ({
+    ...o,
+    hint: o.value === profile.language ? 'detected' : undefined,
+  }));
+
+  const selectedLang = await select(
+    'What kind of project is this?',
+    langOptions,
+    getLanguageIndex(profile.language),
+  );
+  profile.language = selectedLang as ProjectProfile['language'];
+
+  // ── Step 3: Ask source directory ────────────────────────────────────────
+  const srcOptions: SelectOption[] = [
+    ...profile.srcDirs.map((d) => ({ label: `${d}/`, value: d })),
+  ];
+
+  // Add common dirs not yet listed
+  for (const candidate of ['src', 'lib', 'app']) {
+    if (!srcOptions.some((o) => o.value === candidate)) {
+      srcOptions.push({ label: `${candidate}/`, value: candidate });
+    }
+  }
+  srcOptions.push({ label: 'Custom path...', value: '__custom__' });
+
+  let selectedSrc = await select(
+    'Where is your source code?',
+    srcOptions,
+    0,
+  );
+
+  if (selectedSrc === '__custom__') {
+    const { input: promptInput } = await import('./init/prompts.js');
+    selectedSrc = await promptInput('Enter source directory:', 'src');
+  }
+
+  // Update profile with selected source dir
+  if (!profile.srcDirs.includes(selectedSrc)) {
+    profile.srcDirs = [selectedSrc, ...profile.srcDirs];
+  }
+
+  // ── Step 4: Discover and select critical directories ────────────────────
+  const allSubDirs = await getSubDirs(root, selectedSrc);
+
+  if (allSubDirs.length > 0) {
+    const criticalOptions: SelectOption[] = allSubDirs.map((dir) => {
+      const isCritical = profile.criticalDirs.includes(dir);
+      return {
+        label: `${dir}/`,
+        value: dir,
+        hint: isCritical ? 'detected as critical' : undefined,
+      };
+    });
+
+    const selectedCritical = await multiSelect(
+      'Which directories are most critical?',
+      criticalOptions,
+      profile.criticalDirs.filter((d) => allSubDirs.includes(d)),
+    );
+
+    profile.criticalDirs = selectedCritical;
+  }
+
+  // ── Step 5: Scan critical dirs for patterns ─────────────────────────────
+  let allPatterns: DetectedPattern[] = [];
+
+  if (profile.criticalDirs.length > 0) {
+    const scanSpinner = ora('Scanning for patterns...').start();
+    const scanDirs = profile.criticalDirs.length > 0 ? profile.criticalDirs : [selectedSrc];
+
+    for (const dir of scanDirs) {
+      scanSpinner.text = `Scanning ${dir}/ for patterns...`;
+      const patterns = await scanForPatterns(root, dir);
+      allPatterns.push(...patterns);
+    }
+
+    scanSpinner.stop();
+
+    if (allPatterns.length > 0) {
+      for (const p of allPatterns) {
+        process.stderr.write(
+          chalk.green('  ✓ ') +
+          `Detected: ${chalk.white(p.pattern.replace(/-/g, ' '))} ` +
+          chalk.gray(`(${p.pattern} pattern)`) + '\n',
+        );
+      }
+    } else {
+      process.stderr.write(chalk.gray('  No specific patterns detected in selected directories.\n'));
+    }
+  }
+
+  // ── Step 6: Ask about ISL generation ────────────────────────────────────
+  type GenChoice = 'generate' | 'manual' | 'config-only';
+  let genChoice: GenChoice = 'config-only';
+
+  if (allPatterns.length > 0) {
+    const genAnswer = await select(
+      'Generate ISL specs for detected patterns?',
+      [
+        { label: 'Yes, generate and review', value: 'generate' },
+        { label: 'No, I\'ll write them manually', value: 'manual' },
+        { label: 'Just create .shipgate.yml for now', value: 'config-only' },
+      ],
+      0,
+    );
+    genChoice = genAnswer as GenChoice;
+  }
+
+  // ── Step 7: Generate files ──────────────────────────────────────────────
+  const writeSpinner = ora('Generating configuration...').start();
+
+  try {
+    // 7a: Generate .shipgate.yml
+    const shipGateYml = generateShipGateYml({
+      criticalDirs: profile.criticalDirs,
+      testPattern: profile.testPattern,
+      language: profile.language,
+    });
+
+    const shipGatePath = join(root, '.shipgate.yml');
+    if (!existsSync(shipGatePath) || options.force) {
+      await writeFile(shipGatePath, shipGateYml, 'utf-8');
+      configPath = '.shipgate.yml';
+    } else {
+      errors.push('.shipgate.yml already exists (use --force to overwrite)');
+    }
+
+    // 7b: Generate ISL specs (if requested)
+    if (genChoice === 'generate' && allPatterns.length > 0) {
+      writeSpinner.text = 'Generating ISL specs...';
+      const specs = generateISLSpecs(allPatterns);
+
+      for (const spec of specs) {
+        const specPath = join(root, spec.filePath);
+        const specDir = dirname(specPath);
+
+        if (existsSync(specPath) && !options.force) {
+          errors.push(`${spec.filePath} already exists (skipped)`);
+          continue;
+        }
+
+        if (!existsSync(specDir)) {
+          await mkdir(specDir, { recursive: true });
+        }
+
+        await writeFile(specPath, spec.content, 'utf-8');
+        islFilesWritten.push({
+          path: spec.filePath,
+          behaviors: spec.behaviors,
+          confidence: spec.confidence,
+        });
+      }
+    }
+
+    // 7c: Generate CI workflow
+    writeSpinner.text = 'Generating CI workflow...';
+    const wfRelPath = getWorkflowPath(profile);
+
+    if (wfRelPath) {
+      const wfAbsPath = join(root, wfRelPath);
+      const wfDir = dirname(wfAbsPath);
+
+      if (!existsSync(wfAbsPath) || options.force) {
+        if (!existsSync(wfDir)) {
+          await mkdir(wfDir, { recursive: true });
+        }
+
+        const workflow = generateGitHubWorkflow(profile, {
+          srcPaths: [selectedSrc],
+          failOn: 'error',
+        });
+
+        await writeFile(wfAbsPath, workflow, 'utf-8');
+        workflowPath = wfRelPath;
+      } else {
+        errors.push(`${wfRelPath} already exists (skipped)`);
+      }
+    }
+
+    writeSpinner.succeed('Configuration generated');
+  } catch (err) {
+    writeSpinner.fail('Failed to generate files');
+    const msg = err instanceof Error ? err.message : String(err);
+    errors.push(msg);
+  }
+
+  // ── Clean up readline ───────────────────────────────────────────────────
+  closePrompts();
+
+  return {
+    success: errors.filter((e) => !e.includes('already exists')).length === 0,
+    profile,
+    configPath,
+    workflowPath,
+    islFiles: islFilesWritten,
+    errors,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Interactive Init Output
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Print the interactive init results with generated file list and next steps.
+ */
+export function printInteractiveInitResult(result: InteractiveInitResult): void {
+  process.stderr.write('\n');
+
+  // Generated files
+  process.stderr.write(chalk.bold('Generated:\n'));
+
+  for (const isl of result.islFiles) {
+    const conf = chalk.gray(`(${isl.behaviors} behavior${isl.behaviors > 1 ? 's' : ''}, confidence: ${isl.confidence.toFixed(2)})`);
+    process.stderr.write(chalk.green('  ✓ ') + chalk.white(isl.path) + ' ' + conf + '\n');
+  }
+
+  if (result.configPath) {
+    process.stderr.write(chalk.green('  ✓ ') + chalk.white(result.configPath) + chalk.gray(' (default config)') + '\n');
+  }
+
+  if (result.workflowPath) {
+    process.stderr.write(chalk.green('  ✓ ') + chalk.white(result.workflowPath) + chalk.gray(' (CI workflow)') + '\n');
+  }
+
+  // Warnings for skipped files
+  const skipped = result.errors.filter((e) => e.includes('already exists'));
+  if (skipped.length > 0) {
+    process.stderr.write('\n');
+    for (const s of skipped) {
+      process.stderr.write(chalk.yellow('  ⚠ ') + chalk.gray(s) + '\n');
+    }
+  }
+
+  // Quick verify summary
+  if (result.islFiles.length > 0) {
+    process.stderr.write('\n');
+    process.stderr.write(chalk.bold('Quick verify:\n'));
+
+    for (const isl of result.islFiles) {
+      const status = isl.confidence >= 0.7
+        ? chalk.green('✓ ISL verified')
+        : chalk.yellow('⚠ Review needed');
+      const score = isl.confidence >= 0.7
+        ? chalk.green(isl.confidence.toFixed(2))
+        : chalk.yellow(isl.confidence.toFixed(2));
+      process.stderr.write(`  ${isl.path.padEnd(35)} ${status}    ${score}\n`);
+    }
+
+    process.stderr.write(
+      chalk.gray(
+        `\n  ${result.islFiles.length} spec${result.islFiles.length > 1 ? 's' : ''} generated. ` +
+        `Review and adjust before committing.\n`,
+      ),
+    );
+  }
+
+  // Next steps
+  process.stderr.write('\n');
+  process.stderr.write(chalk.bold('Next steps:\n'));
+
+  if (result.islFiles.length > 0) {
+    const firstFile = result.islFiles[0]!.path;
+    process.stderr.write(chalk.gray('  1. Review generated specs:  ') + chalk.cyan(`code ${firstFile}`) + '\n');
+    process.stderr.write(chalk.gray('  2. Run verification:        ') + chalk.cyan('shipgate verify src/') + '\n');
+    process.stderr.write(chalk.gray('  3. Commit and push:         ') + chalk.cyan('git add -A && git push') + '\n');
+  } else {
+    process.stderr.write(chalk.gray('  1. Write your first ISL spec: ') + chalk.cyan('shipgate spec new') + '\n');
+    process.stderr.write(chalk.gray('  2. Run verification:          ') + chalk.cyan('shipgate verify src/') + '\n');
+    process.stderr.write(chalk.gray('  3. Commit and push:           ') + chalk.cyan('git add -A && git push') + '\n');
+  }
+
+  process.stderr.write('\n');
+  process.stderr.write(chalk.gray('  Docs: ') + chalk.cyan('https://shipgate.dev/docs/getting-started') + '\n');
+  process.stderr.write('\n');
 }
 
 export default init;

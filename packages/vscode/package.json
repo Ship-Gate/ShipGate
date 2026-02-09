@@ -1,42 +1,39 @@
 {
-  "name": "isl-lang",
-  "displayName": "ISL - Intent Specification Language",
-  "description": "Language support for Intent Specification Language (.isl) files - syntax highlighting, LSP, code generation, and more",
+  "name": "shipgate-isl",
+  "displayName": "Shipgate ISL — Behavioral Verification",
+  "description": "Behavioral verification for AI-generated code. Write intent specs, catch violations before they ship.",
   "version": "0.1.0",
-  "publisher": "isl-lang",
+  "publisher": "shipgate",
   "license": "MIT",
-  "author": "ISL Team",
+  "author": "Shipgate Team",
   "repository": {
     "type": "git",
-    "url": "https://github.com/isl-lang/isl.git",
-    "directory": "packages/vscode"
+    "url": "https://github.com/shipgate/shipgate"
   },
-  "homepage": "https://isl-lang.dev",
+  "homepage": "https://shipgate.dev",
   "bugs": {
-    "url": "https://github.com/isl-lang/isl/issues"
+    "url": "https://github.com/shipgate/shipgate/issues"
   },
   "galleryBanner": {
-    "color": "#1E1E1E",
+    "color": "#0a0a0a",
     "theme": "dark"
   },
-  "icon": "icons/isl-icon.png",
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
     "Programming Languages",
     "Linters",
-    "Snippets",
-    "Formatters"
+    "Testing"
   ],
   "keywords": [
     "isl",
-    "intent",
-    "specification",
-    "domain",
-    "contracts",
-    "design-by-contract",
-    "formal-methods"
+    "behavioral verification",
+    "ai-generated code",
+    "intent specification",
+    "security",
+    "code quality"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
@@ -48,8 +45,8 @@
       {
         "id": "isl",
         "aliases": [
-          "Intent Specification Language",
-          "ISL"
+          "ISL",
+          "Intent Specification Language"
         ],
         "extensions": [
           ".isl"
@@ -75,6 +72,30 @@
       }
     ],
     "commands": [
+      {
+        "command": "shipgate.generateSpec",
+        "title": "ShipGate: Generate ISL Spec",
+        "category": "ShipGate",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "shipgate.verify",
+        "title": "ShipGate: Verify Current File",
+        "category": "ShipGate",
+        "icon": "$(verified)"
+      },
+      {
+        "command": "shipgate.verifyAll",
+        "title": "ShipGate: Verify Workspace",
+        "category": "ShipGate",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "shipgate.coverage",
+        "title": "ShipGate: Show ISL Coverage",
+        "category": "ShipGate",
+        "icon": "$(graph)"
+      },
       {
         "command": "isl.parseFile",
         "title": "ISL: Parse Current File",
@@ -128,6 +149,21 @@
       "editor/context": [
         {
           "when": "resourceLangId == isl",
+          "command": "shipgate.verify",
+          "group": "shipgate@1"
+        },
+        {
+          "when": "resourceLangId == isl",
+          "command": "shipgate.coverage",
+          "group": "shipgate@2"
+        },
+        {
+          "when": "resourceLangId == typescript || resourceLangId == javascript",
+          "command": "shipgate.generateSpec",
+          "group": "shipgate@1"
+        },
+        {
+          "when": "resourceLangId == isl",
           "command": "isl.parseFile",
           "group": "isl@1"
         },
@@ -150,11 +186,23 @@
       "editor/title": [
         {
           "when": "resourceLangId == isl",
-          "command": "isl.typeCheck",
+          "command": "shipgate.verify",
           "group": "navigation"
         }
       ],
       "commandPalette": [
+        {
+          "command": "shipgate.generateSpec"
+        },
+        {
+          "command": "shipgate.verify"
+        },
+        {
+          "command": "shipgate.verifyAll"
+        },
+        {
+          "command": "shipgate.coverage"
+        },
         {
           "command": "isl.parseFile",
           "when": "resourceLangId == isl"
@@ -188,58 +236,54 @@
     },
     "configuration": {
       "type": "object",
-      "title": "ISL Configuration",
+      "title": "ShipGate ISL Configuration",
       "properties": {
-        "isl.server.path": {
+        "shipgate.server.path": {
           "type": "string",
           "default": "",
           "description": "Custom path to the ISL language server executable. Leave empty to use bundled server."
         },
-        "isl.defaultTarget": {
+        "shipgate.defaultTarget": {
           "type": "string",
-          "enum": [
-            "typescript",
-            "rust",
-            "go",
-            "python"
-          ],
+          "enum": ["typescript", "rust", "go", "python"],
           "default": "typescript",
           "description": "Default code generation target language"
         },
-        "isl.formatOnSave": {
+        "shipgate.formatOnSave": {
           "type": "boolean",
           "default": true,
           "description": "Automatically format ISL files on save"
         },
-        "isl.lintOnSave": {
+        "shipgate.lintOnSave": {
           "type": "boolean",
           "default": true,
           "description": "Run linter on save"
         },
-        "isl.trace.server": {
+        "shipgate.trace.server": {
           "type": "string",
-          "enum": [
-            "off",
-            "messages",
-            "verbose"
-          ],
+          "enum": ["off", "messages", "verbose"],
           "default": "off",
           "description": "Trace communication between VS Code and the ISL language server"
         },
-        "isl.languageServer.enabled": {
+        "shipgate.languageServer.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Enable the ISL language server for advanced features"
         },
-        "isl.codegen.outputDir": {
+        "shipgate.codegen.outputDir": {
           "type": "string",
           "default": "generated",
           "description": "Output directory for generated code"
         },
-        "isl.validation.enabled": {
+        "shipgate.validation.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Enable real-time validation of ISL files"
+        },
+        "shipgate.coverage.autoRefresh": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically refresh coverage decorations on save"
         }
       }
     },
@@ -257,7 +301,7 @@
     "build": "node esbuild.js --production",
     "watch": "node esbuild.js --watch",
     "lint": "eslint src --ext ts",
-    "typecheck": "echo 'TODO: Fix bridge type system and readonly property issues' && exit 0",
+    "typecheck": "tsc --noEmit",
     "test": "node ./out/test/runTest.js",
     "clean": "rimraf dist out",
     "package": "vsce package --no-dependencies",
@@ -275,7 +319,5 @@
     "esbuild": "^0.19.8",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.0"
-  },
-  "private": true,
-  "experimental": true
+  }
 }

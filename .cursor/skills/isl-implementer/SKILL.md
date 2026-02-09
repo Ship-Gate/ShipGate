@@ -9,7 +9,7 @@ Use this skill when:
 
 ## Prerequisites
 
-1. **Locate the spec** – Find the `.isl` file that defines the behavior (e.g. `specs/*.isl`, `.vibecheck/specs/*.isl`, `examples/*.isl`).
+1. **Locate the spec** – Find the `.isl` file that defines the behavior (e.g. `specs/*.isl`, `.shipgate/specs/*.isl`, `examples/*.isl`).
 2. **Ensure spec is valid** – Run `pnpm isl:check` from repo root (or `pnpm exec isl check <path>`).
 
 ## Implementation Steps
@@ -46,7 +46,7 @@ From the ISL file, extract for the target behavior:
 
 | What        | Location(s) |
 |------------|-------------|
-| Specs      | `specs/`, `.vibecheck/specs/`, `examples/*.isl`, `corpus/`, `stdlib/` |
+| Specs      | `specs/`, `.shipgate/specs/`, `examples/*.isl`, `corpus/`, `stdlib/` |
 | Generated  | `examples/generated/`, `generated/ts/`, package `src/generated/` |
 | Config     | `.islrc.json` |
 | Gate/CI    | `.github/workflows/isl-gate.yml` |

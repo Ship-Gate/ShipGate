@@ -1,0 +1,551 @@
+{
+  "isRepo": true,
+  "commits": {
+    "commits": [
+      {
+        "hash": "4c6cc85",
+        "message": "docs: simplify VS Code extension README for non-coders",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "7289ad0",
+        "message": "fix: auto-reset database on failed migrations to resolve Railway deployment",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "fe76c5f",
+        "message": "fix: auto-reset database on failed migrations to resolve Railway deployment",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "cb9036d",
+        "message": "fix: auto-reset database on failed migrations to resolve Railway deployment",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "026e715",
+        "message": "yo",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "c89a2f4",
+        "message": "feat: Production-ready code templates + CLI",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "17e46bf",
+        "message": "feat: Semantic rules - real checks, not string matching",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "68e567b",
+        "message": "feat: Robust self-healing with contract enforcement",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "17e8681",
+        "message": "feat: Self-healing ISL pipeline",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "a84bc1d",
+        "message": "feat: Complete ISL pipeline - NL → ISL → Code → Gate → Proof",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "5f62cda",
+        "message": "feat: ISL as intermediate representation for software",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "22f9590",
+        "message": "feat: Unified ShipGate + ISL Studio VS Code extension v0.2.0",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "818fe15",
+        "message": "feat: Complete 25 ISL Studio rules across 5 packs",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "b57e2a9",
+        "message": "feat: Unified CLI and MCP tool for ShipGate + ISL Studio",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "51e0f5d",
+        "message": "feat: ShipGate + ISL Studio integration",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "f382e6c",
+        "message": "fix: Paper cuts + VS Code UX improvements",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "0d87e62",
+        "message": "feat: GitHub Action live + VS Code extension packaged",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "c9fd4c3",
+        "message": "feat: Scale infrastructure (10 → 100+ repos)",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "aefa08e",
+        "message": "docs: Comprehensive documentation suite",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      },
+      {
+        "hash": "addca9e",
+        "message": "feat: Intent Pack + Adoption Materials",
+        "patterns": {
+          "hasTicket": false,
+          "isBreaking": false,
+          "hasScope": false,
+          "isWIP": false,
+          "isMerge": false
+        }
+      }
+    ],
+    "analysis": {
+      "totalCommits": 20,
+      "withTickets": 0,
+      "breakingChanges": 0,
+      "withScopes": 0,
+      "commonScopes": {},
+      "ticketTypes": {}
+    }
+  },
+  "branches": {
+    "current": "main",
+    "default": null,
+    "total": 1,
+    "local": [
+      "main"
+    ],
+    "remote": [
+      "remotes/isl-studio/main",
+      "HEAD -> origin/main",
+      "main"
+    ],
+    "patterns": {
+      "hasFeaturePrefix": false,
+      "hasBugfixPrefix": false,
+      "hasHotfixPrefix": false,
+      "hasIssueNumber": false,
+      "usesSlashes": false,
+      "usesKebabCase": false
+    },
+    "commonPrefixes": []
+  },
+  "prTemplate": null,
+  "teamPatterns": {
+    "topAuthors": [
+      {
+        "name": "guardiavault-oss",
+        "lines": 1785
+      }
+    ],
+    "totalAuthors": 1,
+    "patterns": {
+      "commonImports": {},
+      "commentStyles": {},
+      "functionPatterns": {},
+      "authorPatterns": {
+        "guardiavault-oss": {
+          "imports": [
+            "named",
+            "named",
+            "named",
+            "named",
+            "named",
+            "named",
+            "named",
+            "named",
+            "named",
+            "default",
+            "default",
+            "named",
+            "named",
+            "named",
+            "named",
+            "named",
+            "default",
+            "named",
+            "named",
+            "named",
+            "named",
+            "named"
+          ],
+          "comments": [
+            "// Types generated from ISL specification",
+            "// Types generated from ISL specification",
+            "// ============================================================================",
+            "// Types",
+            "// ============================================================================",
+            "// ============================================================================",
+            "// Default Configuration",
+            "// ============================================================================",
+            "    translate: 60_000,  // 1 minute",
+            "    generate: 120_000,  // 2 minutes",
+            "    verify: 180_000,    // 3 minutes",
+            "// ============================================================================",
+            "// Configuration Loader",
+            "// ============================================================================",
+            "  // Default to the directory containing this file",
+            "  // Try to load custom config if provided",
+            "  // Try to auto-discover samples",
+            "  // Look for sample.json files in subdirectories",
+            "            // Skip invalid sample configs",
+            "    // Directory doesn't exist or can't be read",
+            "// Re-export types for convenience",
+            "// ============================================================================",
+            "// Types",
+            "// ============================================================================",
+            "// ============================================================================",
+            "// Report Builder",
+            "// ============================================================================",
+            "      // Determine overall status based on step statuses",
+            "// ============================================================================",
+            "// Report Output",
+            "// ============================================================================",
+            "  // Ensure output directory exists",
+            "  // Print individual sample results",
+            "  // Summary table",
+            "  // Sample details",
+            "  // Environment",
+            "// ============================================================================",
+            "// CLI Argument Parsing",
+            "// ============================================================================",
+            "// ============================================================================",
+            "// Command Execution",
+            "// ============================================================================",
+            "    // Use shell on Windows for better compatibility",
+            "// ============================================================================",
+            "// Pipeline Steps",
+            "// ============================================================================",
+            "  // TODO: Replace with actual translator integration",
+            "  // Currently returns a stub result",
+            "  // Simulate translation work",
+            "  // TODO: Actual integration point",
+            "  // const translator = await import('@isl-lang/translator');",
+            "  // const result = await translator.translate(promptContext.prompt, promptContext.context);",
+            "  // TODO: Replace with actual generator integration",
+            "  // Currently returns a stub result",
+            "  // Simulate generation work",
+            "  // TODO: Actual integration point",
+            "  // const compiler = await import('@isl-lang/isl-compiler');",
+            "  // const result = await compiler.compile(islContent, { target: 'typescript' });",
+            "  // Run typecheck commands",
+            "  // Run test commands",
+            "// ============================================================================",
+            "// Main Runner",
+            "// ============================================================================",
+            "  // Load prompt and context",
+            "  // Step 1: Translate",
+            "  // Step 2: Generate",
+            "  // Step 3: Verify",
+            "  // Complete the sample",
+            "  // Load configuration",
+            "  // Ensure output directory exists",
+            "  // Filter samples",
+            "  // Initialize report builder",
+            "  // Run samples",
+            "  // Generate and write report",
+            "  // Also write markdown report",
+            "  // Print summary",
+            "  // Exit with appropriate code",
+            "// Run if executed directly",
+            "// Resolve paths",
+            "// Import the migrator (dynamic import for ESM)",
+            "  // Try direct import first, fall back to reading from dist",
+            "    // If direct import fails, try to load from the built output",
+            "// Types",
+            "// Parse CLI arguments",
+            "// Load sample files",
+            "  // OpenAPI sample",
+            "  // Zod sample",
+            "  // TypeScript sample",
+            "// Format output with colors (basic ANSI)",
+            "// Main demo function",
+            "  // Load migrator",
+            "  // Load samples",
+            "  // Run migration for each source individually for better output",
+            "      // Print canonical ISL output",
+            "      // Print summary",
+            "      // Print open questions if verbose",
+            "  // Combined migration summary",
+            "// Run the demo",
+            "// Rate limiting check - target for bypass-precondition mutation",
+            "// Password validation - target for remove-assert mutation",
+            "// Mock user store",
+            "// Lockout check - target for change-comparator mutation",
+            "// Rate limit check",
+            "  // Check rate limiting",
+            "  // Track request",
+            "  // Validate password format",
+            "  // Find user",
+            "  // Check lockout",
+            "  // Verify password (simulated)",
+            "  // Reset failed attempts on success",
+            "  // Create session",
+            "    expires_at: new Date(Date.now() + 3600000), // 1 hour",
+            "// Helper functions",
+            "  // Create mock user for testing",
+            "  // Simplified verification for testing",
+            "// Test helpers",
+            "      // Target for delete-expectation mutation",
+            "      // Verify session is stored",
+            "      // First failed attempt",
+            "      // Subsequent attempts should still work until lockout",
+            "      // Make 5 failed attempts",
+            "          // Expected",
+            "      // 6th attempt should be locked",
+            "      // Make a failed attempt",
+            "        // Expected",
+            "      // Successful login should reset",
+            "      // Should be able to fail again without lockout",
+            "        // Expected",
+            "      // Even after lockout, failed_attempts shouldn't exceed max",
+            "          // Expected",
+            "      // System should still be consistent",
+            "// Validation function - target for bypass-precondition mutation",
+            "// Boundary check - target for change-comparator mutation  ",
+            "// Main increment function",
+            "  // Assertion - target for remove-assert mutation",
+            "  // Simulate fetching current counter value",
+            "  // Calculate new value",
+            "  // Check boundary conditions",
+            "  // Update and return",
+            "// Decrement function",
+            "// Helper: Get counter value (simulated store)",
+            "  // In a real implementation, this would fetch from a store",
+            "  // For testing, return a default value",
+            "  return 10; // Simulated current value",
+            "// Custom assertion helper",
+            "// Custom error class"
+          ],
+          "functions": [
+            "export type CreateUserFn = () => Promise<unknown>;",
+            "export function resolveBenchRoot(customRoot?: string): string {",
+            "export function loadConfig(configPath?: string): BenchConfig {",
+            "export function discoverSamples(samplesDir: string): SampleConfig[] {",
+            "export function loadPromptContext(sampleDir: string, config: SampleConfig): PromptContext {",
+            "export function validateSampleConfig(config: SampleConfig): string[] {",
+            "      const hasFailed = steps.some(s => s.status === 'failed');",
+            "      const allPassed = steps.every(s => s.status === 'passed' || s.status === 'skipped');",
+            "      passed: samples.filter(s => s.status === 'passed').length,",
+            "      failed: samples.filter(s => s.status === 'failed').length,",
+            "      skipped: samples.filter(s => s.status === 'skipped').length,",
+            "export function writeReport(report: EvidenceReport, outputDir: string): string {",
+            "export function printReportSummary(report: EvidenceReport): void {",
+            "export function generateMarkdownReport(report: EvidenceReport): string {",
+            "function parseCliArgs(): CLIOptions {",
+            "function printHelp(): void {",
+            "async function executeCommand(",
+            "  return new Promise((resolve) => {",
+            "    child.stdout?.on('data', (data: Buffer) => {",
+            "    child.stderr?.on('data', (data: Buffer) => {",
+            "    child.on('error', (error) => {",
+            "    child.on('close', (code) => {",
+            " * This function should call the actual ISL translator to convert",
+            "async function runTranslateStep(",
+            "  await new Promise(resolve => setTimeout(resolve, 100));",
+            " * This function should call the actual ISL compiler/generator to",
+            "async function runGenerateStep(",
+            "  await new Promise(resolve => setTimeout(resolve, 100));",
+            "async function runVerifyStep(",
+            "async function runSample(",
+            "async function main(): Promise<void> {",
+            "  let samples = config.samples.filter(s => s.enabled);",
+            "    samples = samples.filter(s => s.id === options.sample);",
+            "    samples = samples.filter(s => s.tags.includes(options.tag!));",
+            "main().catch((error) => {",
+            "async function loadMigrator() {",
+            "function parseArgs(): DemoOptions {",
+            "function printHelp() {",
+            "function loadSamples(options: DemoOptions): MigrationSource[] {",
+            "function printHeader(text: string) {",
+            "function printSubHeader(text: string) {",
+            "async function runDemo() {",
+            "runDemo().catch((error) => {",
+            "function checkRateLimit(email: string): boolean {",
+            "function validatePassword(password: string): void {",
+            "function isLockedOut(user: User): boolean {",
+            "function isRateLimited(email: string): boolean {",
+            "export function login(email: string, password: string): Session {",
+            "function findUserByEmail(email: string): User | undefined {",
+            "function verifyPassword(password: string, hash: string): boolean {",
+            "function assert(condition: boolean, message: string): void {",
+            "export function resetState(): void {",
+            "export function getSession(id: string): Session | undefined {",
+            "describe('Authentication', () => {",
+            "  beforeEach(() => {",
+            "  describe('login', () => {",
+            "    it('should create session on successful login', () => {",
+            "    it('should reject passwords shorter than 8 characters', () => {",
+            "      expect(() => login('test@example.com', 'short')).toThrow(AuthError);",
+            "    it('should reject passwords without uppercase', () => {",
+            "      expect(() => login('test@example.com', 'password123')).toThrow(AuthError);",
+            "    it('should reject passwords without numbers', () => {",
+            "      expect(() => login('test@example.com', 'PasswordABC')).toThrow(AuthError);",
+            "    it('should track failed attempts', () => {",
+            "      expect(() => login(email, 'WrongPass1')).toThrow('Invalid email or password');",
+            "      expect(() => login(email, 'WrongPass2')).toThrow('Invalid email or password');",
+            "    it('should lock account after too many failed attempts', () => {",
+            "      expect(() => login(email, 'Password123')).toThrow(AuthError);",
+            "  describe('postconditions', () => {",
+            "    it('should have valid session expiry', () => {",
+            "    it('should reset failed attempts on success', () => {",
+            "  describe('invariants', () => {",
+            "    it('should maintain failed_attempts bounds', () => {",
+            "      expect(() => login(email, 'Password123')).toThrow();",
+            "// Validation function - target for bypass-precondition mutation",
+            "function validateInput(amount: number): boolean {",
+            "function checkBoundary(value: number): boolean {",
+            "export function increment(counterId: string, amount: number): { ",
+            "export function decrement(counterId: string, amount: number): {",
+            "function getCounterValue(counterId: string): number {",
+            "function assert(condition: boolean, message: string): void {"
+          ]
+        }
+      }
+    }
+  },
+  "conventions": {
+    "commitMessages": {
+      "totalCommits": 20,
+      "withTickets": 0,
+      "breakingChanges": 0,
+      "withScopes": 0,
+      "commonScopes": {},
+      "ticketTypes": {}
+    },
+    "branchNaming": {
+      "hasFeaturePrefix": false,
+      "hasBugfixPrefix": false,
+      "hasHotfixPrefix": false,
+      "hasIssueNumber": false,
+      "usesSlashes": false,
+      "usesKebabCase": false
+    },
+    "hasPRTemplate": false,
+    "teamSize": 1
+  }
+}

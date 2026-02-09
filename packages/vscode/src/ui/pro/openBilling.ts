@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 // Constants
 // ============================================================================
 
-const BILLING_BASE_URL = 'https://app.vibecheckai.dev';
+const BILLING_BASE_URL = 'https://app.shipgateai.dev';
 
 export const BillingUrls = {
   BILLING: `${BILLING_BASE_URL}/billing`,

@@ -113,8 +113,49 @@ export {
 // v1 Module Namespace (for explicit versioned access)
 // ============================================================================
 // Usage:
-//   import { v1 } from '@isl-lang/expression-evaluator';
+//   import { v1 } from '@isl-lang/static-analyzer';
 //   const result = v1.evaluate(expr, v1.createEvalContext({ ... }));
 // ============================================================================
 
 export * as v1 from './v1/index.js';
+
+// ============================================================================
+// Static Analysis API (NEW - compile-time proof/disproof of ISL conditions)
+// ============================================================================
+// Usage:
+//   import { analyzeStatically, createTypeContext, typeInfo } from '@isl-lang/static-analyzer';
+//   const ctx = createTypeContext({ types: new Map([['Email', typeInfo('string', { minLength: 1 })]]) });
+//   const result = analyzeStatically(exprAst, ctx);
+//   // result: { verdict: 'true' | 'false' | 'unknown', reason: string, confidence: number }
+// ============================================================================
+
+// Core static analysis
+export {
+  analyzeStatically,
+  analyzeAll,
+  summarizeResults,
+} from './static/analyzer.js';
+
+// Static analysis types
+export type {
+  TypeContext,
+  TypeConstraintInfo,
+  TypeConstraints,
+  BaseType,
+  FieldInfo,
+  EntityInfo,
+  StaticAnalysisResult,
+  StaticVerdict,
+  AnalysisCategory,
+} from './static/types.js';
+
+// Factory helpers for constructing type contexts
+export {
+  createTypeContext,
+  typeInfo,
+  fieldInfo,
+  entityInfo,
+} from './static/types.js';
+
+// Static analysis module namespace (for explicit access)
+export * as staticAnalysis from './static/index.js';

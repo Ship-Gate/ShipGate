@@ -34,6 +34,13 @@
  */
 
 // ============================================================================
+// Auto-register built-in specless check adapters
+// (hallucination, security, firewall scanners)
+// ============================================================================
+
+import './specless/index.js';
+
+// ============================================================================
 // Authoritative Gate (RECOMMENDED)
 // ============================================================================
 
@@ -51,6 +58,20 @@ export {
   EXIT_CODES,
   DEFAULT_THRESHOLDS,
   DEV_THRESHOLDS,
+  // Verdict engine (SHIP / WARN / NO_SHIP)
+  SCORING_THRESHOLDS,
+  CRITICAL_FAILURES,
+  createGateEvidence,
+  computeScore,
+  findCriticalFailures,
+  hasCriticalFailure,
+  produceVerdict,
+  // Specless check registry
+  registerSpeclessCheck,
+  unregisterSpeclessCheck,
+  getSpeclessChecks,
+  clearSpeclessChecks,
+  runSpeclessChecks,
 } from './authoritative/index.js';
 
 export type {
@@ -67,6 +88,16 @@ export type {
   EvidenceArtifact,
   VerdictSource,
   CombinedVerdictResult,
+  // Verdict engine types
+  ScoringThresholds,
+  CriticalFailureKind,
+  GateEvidenceSource,
+  GateEvidence,
+  VerdictDecision,
+  GateVerdict as GateVerdictResult,
+  // Specless registry types
+  GateContext,
+  SpeclessCheck,
 } from './authoritative/index.js';
 
 // ============================================================================
@@ -153,3 +184,41 @@ export type {
   TrustReportJSON,
   ResolvedTrustConfig,
 } from './trust-score/index.js';
+
+// PR Analysis
+export {
+  analyzePR,
+  buildVerificationPlan,
+  formatVerificationPlan,
+  riskSummary,
+  getChangedFiles,
+  parseNameStatus,
+  isTestFile,
+  isTypeOnly,
+  isConfigFile,
+  isCriticalPath,
+  isISLSpec,
+  isSourceFile,
+  resolveConfig as resolvePRConfig,
+  discoverSpecs,
+  findMatchingSpec,
+  findAffectedSpecs,
+  selectFilesForVerification,
+  calculatePRRisk,
+  riskLabel,
+} from './pr-analysis/index.js';
+
+export type {
+  PRAnalysis,
+  FileChange,
+  ChangeType,
+  DiffHunk,
+  VerificationPlan,
+  SpecVerification,
+  SkippedFile,
+  SkipReason,
+  RiskLabel,
+  PRAnalysisConfig,
+  AnalyzePROptions,
+  ResolvedPRAnalysisConfig,
+} from './pr-analysis/index.js';

@@ -33,7 +33,7 @@ export type TokenKind =
   | 'SECURITY' | 'REQUIRES' | 'RATE_LIMIT' | 'COMPLIANCE'
   | 'OBSERVABILITY' | 'METRICS' | 'TRACES' | 'LOGS' | 'SPAN'
   | 'ACTORS' | 'MUST' | 'DESCRIPTION' | 'LIFECYCLE'
-  | 'GIVEN' | 'THEN' | 'INJECT' | 'SCENARIO'
+  | 'GIVEN' | 'THEN' | 'INJECT' | 'SCENARIO' | 'EXPECT' | 'WITH'
   | 'FOR' | 'FIELDS' | 'CONSISTENCY' | 'CACHE' | 'TTL' | 'INVALIDATE_ON'
   | 'SCOPE' | 'GLOBAL' | 'TRANSACTION' | 'APPLIES_TO' | 'RULES' | 'DEFAULT'
   | 'STEP' | 'COMPENSATIONS' | 'TIMEOUT' | 'ON_FAILURE'
@@ -152,6 +152,8 @@ export const KEYWORDS: Map<string, TokenKind> = new Map([
   ['then', 'THEN'],
   ['inject', 'INJECT'],
   ['scenario', 'SCENARIO'],
+  ['expect', 'EXPECT'],
+  ['with', 'WITH'],
   
   // Views
   ['for', 'FOR'],

@@ -88,7 +88,7 @@ write_result() {
         echo -e "${GREEN}  RESULT: PASS${NC}"
         echo -e "${GREEN}  All gate checks passed successfully.${NC}"
         echo ""
-        echo -e "${GREEN}  Verified by VibeCheck ✓${NC}"
+        echo -e "${GREEN}  Verified by ShipGate ✓${NC}"
         echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     else
         echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

@@ -154,7 +154,7 @@ describe('Stdlib 1.0 Registry Integration', () => {
   });
 
   describe('Module File Resolution', () => {
-    const workspaceRoot = path.resolve(__dirname, '../../../..');
+    const workspaceRoot = path.resolve(__dirname, '../../..');
 
     test('each module path points to existing directory', () => {
       for (const moduleName of STDLIB_1_0_MODULES) {
@@ -164,21 +164,27 @@ describe('Stdlib 1.0 Registry Integration', () => {
       }
     });
 
-    test('each module has index.isl file', () => {
+    test('each module has at least one ISL file', () => {
       for (const moduleName of STDLIB_1_0_MODULES) {
         const mod = registry.modules[moduleName];
-        expect(mod.files.index).toBe('index.isl');
+        expect(Object.keys(mod.files).length).toBeGreaterThan(0);
         
-        const indexPath = path.join(workspaceRoot, mod.path, 'index.isl');
-        expect(fs.existsSync(indexPath)).toBe(true);
+        // Check that the first file in the files map exists
+        const firstFileKey = Object.keys(mod.files)[0];
+        const firstFileName = mod.files[firstFileKey];
+        const filePath = path.join(workspaceRoot, mod.path, firstFileName);
+        expect(fs.existsSync(filePath)).toBe(true);
       }
     });
 
     test('module ISL files contain module declaration', () => {
       for (const moduleName of STDLIB_1_0_MODULES) {
         const mod = registry.modules[moduleName];
-        const indexPath = path.join(workspaceRoot, mod.path, 'index.isl');
-        const content = fs.readFileSync(indexPath, 'utf-8');
+        // Use the first file in the module's files map
+        const firstFileKey = Object.keys(mod.files)[0];
+        const firstFileName = mod.files[firstFileKey];
+        const filePath = path.join(workspaceRoot, mod.path, firstFileName);
+        const content = fs.readFileSync(filePath, 'utf-8');
         
         // Should contain "module" declaration
         expect(content).toMatch(/^module\s+\w+\s+version/m);
@@ -239,23 +245,25 @@ describe('Stdlib 1.0 Registry Integration', () => {
 });
 
 describe('Stdlib Module Content Validation', () => {
-  const workspaceRoot = path.resolve(__dirname, '../../../..');
+  const workspaceRoot = path.resolve(__dirname, '../../..');
 
   test('@isl/string module is 100% deterministic', () => {
-    const content = fs.readFileSync(
-      path.join(workspaceRoot, 'stdlib/string/index.isl'),
-      'utf-8'
-    );
+    const mod = registry.modules['@isl/string'];
+    const firstFileKey = Object.keys(mod.files)[0];
+    const firstFileName = mod.files[firstFileKey];
+    const filePath = path.join(workspaceRoot, mod.path, firstFileName);
+    const content = fs.readFileSync(filePath, 'utf-8');
     
     // Should not have deterministic: false
     expect(content).not.toMatch(/deterministic:\s*false/i);
   });
 
   test('@isl/datetime module marks Now as non-deterministic', () => {
-    const content = fs.readFileSync(
-      path.join(workspaceRoot, 'stdlib/datetime/index.isl'),
-      'utf-8'
-    );
+    const mod = registry.modules['@isl/datetime'];
+    const firstFileKey = Object.keys(mod.files)[0];
+    const firstFileName = mod.files[firstFileKey];
+    const filePath = path.join(workspaceRoot, mod.path, firstFileName);
+    const content = fs.readFileSync(filePath, 'utf-8');
     
     // Find Now behavior and check it's marked non-deterministic
     const nowMatch = content.match(/behavior\s+Now\s*\{[\s\S]*?deterministic:\s*(true|false)/);
@@ -264,10 +272,11 @@ describe('Stdlib Module Content Validation', () => {
   });
 
   test('@isl/uuid module marks GenerateUUID as non-deterministic', () => {
-    const content = fs.readFileSync(
-      path.join(workspaceRoot, 'stdlib/uuid/index.isl'),
-      'utf-8'
-    );
+    const mod = registry.modules['@isl/uuid'];
+    const firstFileKey = Object.keys(mod.files)[0];
+    const firstFileName = mod.files[firstFileKey];
+    const filePath = path.join(workspaceRoot, mod.path, firstFileName);
+    const content = fs.readFileSync(filePath, 'utf-8');
     
     // GenerateUUID should be non-deterministic
     const genMatch = content.match(/behavior\s+GenerateUUID\s*\{[\s\S]*?deterministic:\s*(true|false)/);

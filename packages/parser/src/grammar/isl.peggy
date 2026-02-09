@@ -617,12 +617,96 @@ ChaosBlock
     }
 
 ChaosScenarioItem
-  = "scenario" __ name:StringLit _ "{" _ inject:InjectBlock when:WhenBlock then:ThenBlock "}" _ {
-      return { kind: 'ChaosScenario', name, inject: inject || [], when: when || [], then: then || [], location: loc() };
+  = "scenario" __ name:StringLit _ "{" _ members:ChaosScenarioMember* _ "}" _ {
+      const inject = [];
+      const when = [];
+      const thenExprs = [];
+      const expectBlock = [];
+      let withClause = undefined;
+      for (const m of members) {
+        if (!m) continue;
+        switch (m._kind) {
+          case 'injectBlock': inject.push(...m.value); break;
+          case 'inlineInject': inject.push(m.value); break;
+          case 'when': when.push(...m.value); break;
+          case 'then': thenExprs.push(...m.value); break;
+          case 'expect': expectBlock.push(...m.value); break;
+          case 'with': withClause = m.value; break;
+        }
+      }
+      const injections = inject.map(inj => ({
+        kind: 'ChaosInjection',
+        type: { kind: 'Identifier', name: typeof inj.type === 'string' ? inj.type : 'database_failure', location: inj.location },
+        arguments: (inj.parameters || []).map(p => ({ kind: 'ChaosArgument', name: p.name, value: p.value, location: p.location })),
+        location: inj.location,
+      }));
+      const thenExpectations = thenExprs.map(e => ({
+        kind: 'ChaosExpectation', condition: e, expression: e, location: e.location,
+      }));
+      const expectations = [...expectBlock, ...thenExpectations];
+      return {
+        kind: 'ChaosScenario', name, inject, when, then: thenExprs,
+        injections, expectations,
+        withClause, withClauses: withClause ? [withClause] : [],
+        location: loc(),
+      };
     }
+
+ChaosScenarioMember
+  = m:InjectBlock       { return { _kind: 'injectBlock', value: m }; }
+  / m:ChaosInlineInject { return { _kind: 'inlineInject', value: m }; }
+  / m:ChaosExpectBlock  { return { _kind: 'expect', value: m }; }
+  / m:WhenBlock         { return { _kind: 'when', value: m }; }
+  / m:ThenBlock         { return { _kind: 'then', value: m }; }
+  / m:ChaosWithBlock    { return { _kind: 'with', value: m }; }
 
 InjectBlock
   = "inject" _ "{" _ injections:InjectionItem* _ "}" _ { return injections; }
+
+ChaosInlineInject
+  = "inject" __ type:IdentifierName __ "on" __ target:PostfixExpr _ withParams:ChaosInlineWith? _ {
+      return {
+        kind: 'Injection',
+        type: type,
+        target: target,
+        parameters: withParams || [],
+        location: loc(),
+      };
+    }
+
+ChaosInlineWith
+  = "with" _ "{" _ params:InjectionParamList _ "}" {
+      return params;
+    }
+
+InjectionParamList
+  = head:InjectionParam tail:(_ ","? _ InjectionParam)* { return [head, ...tail.map(t => t[3])]; }
+  / _ { return []; }
+
+ChaosExpectBlock
+  = "expect" _ "{" _ exprs:ExpressionList _ "}" _ {
+      return exprs.map(e => ({
+        kind: 'ChaosExpectation',
+        condition: e,
+        expression: e,
+        description: undefined,
+        location: e.location,
+      }));
+    }
+
+ChaosWithBlock
+  = "with" _ "{" _ args:ChaosArgList _ "}" _ {
+      return { kind: 'ChaosWithClause', args, location: loc() };
+    }
+
+ChaosArgList
+  = head:ChaosArgItem tail:(_ ","? _ ChaosArgItem)* { return [head, ...tail.map(t => t[3])]; }
+  / _ { return []; }
+
+ChaosArgItem
+  = name:Identifier _ ":" _ value:Expression _ {
+      return { kind: 'ChaosArgument', name, value, location: loc() };
+    }
 
 InjectionItem
   = type:InjectionTypeName _ target:Expression _ params:InjectionParams? _ {

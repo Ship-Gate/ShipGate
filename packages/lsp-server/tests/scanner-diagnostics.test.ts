@@ -95,8 +95,8 @@ describe('ScannerDiagnosticsProvider', () => {
 
   describe('source constants', () => {
     it('should export correct source strings', () => {
-      expect(SOURCE_HOST).toBe('vibecheck-host');
-      expect(SOURCE_REALITY_GAP).toBe('vibecheck-reality-gap');
+      expect(SOURCE_HOST).toBe('shipgate-host');
+      expect(SOURCE_REALITY_GAP).toBe('shipgate-reality-gap');
     });
   });
 });
@@ -223,9 +223,9 @@ describe('Diagnostic Deduplication', () => {
 // ============================================================================
 
 describe('Suppression Comments', () => {
-  it('should generate correct vibecheck-ignore comment for Host diagnostics', () => {
-    const comment = `// vibecheck-ignore`;
-    expect(comment).toContain('vibecheck-ignore');
+  it('should generate correct shipgate-ignore comment for Host diagnostics', () => {
+    const comment = `// shipgate-ignore`;
+    expect(comment).toContain('shipgate-ignore');
   });
 
   it('should generate correct islstudio-ignore comment for Reality-Gap diagnostics', () => {
@@ -252,9 +252,9 @@ describe('Example Diagnostic Payloads', () => {
           message: 'Ghost route detected: POST /api/checkout is not in truthpack routes.json',
           severity: DiagnosticSeverity.Error,
           code: 'ghost-route',
-          source: 'vibecheck-host',
+          source: 'shipgate-host',
           data: {
-            suggestion: 'Add POST /api/checkout to .vibecheck/truthpack/routes.json or remove this route',
+            suggestion: 'Add POST /api/checkout to .shipgate/truthpack/routes.json or remove this route',
             tier: 'hard_block',
             quickFixes: [],
           },
@@ -263,7 +263,7 @@ describe('Example Diagnostic Payloads', () => {
     };
 
     expect(payload.diagnostics).toHaveLength(1);
-    expect(payload.diagnostics[0].source).toBe('vibecheck-host');
+    expect(payload.diagnostics[0].source).toBe('shipgate-host');
     expect(payload.diagnostics[0].severity).toBe(DiagnosticSeverity.Error);
     expect(payload.diagnostics[0].code).toBe('ghost-route');
   });
@@ -280,7 +280,7 @@ describe('Example Diagnostic Payloads', () => {
           message: 'Sensitive data must be encrypted before storage',
           severity: DiagnosticSeverity.Warning,
           code: 'pii-storage',
-          source: 'vibecheck-reality-gap',
+          source: 'shipgate-reality-gap',
           data: {
             suggestion: 'Use bcrypt for passwords, encryption for tokens',
             tier: 'soft_block',
@@ -291,7 +291,7 @@ describe('Example Diagnostic Payloads', () => {
     };
 
     expect(payload.diagnostics).toHaveLength(1);
-    expect(payload.diagnostics[0].source).toBe('vibecheck-reality-gap');
+    expect(payload.diagnostics[0].source).toBe('shipgate-reality-gap');
     expect(payload.diagnostics[0].severity).toBe(DiagnosticSeverity.Warning);
   });
 

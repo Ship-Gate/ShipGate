@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-02-01T00:00:00.000Z",
-  "source": "C:\\Users\\mevla\\OneDrive\\Desktop\\VibeCheck-Real",
+  "source": "C:\\Users\\mevla\\OneDrive\\Desktop\\ShipGate-Real",
   "target": "c:\\Users\\mevla\\OneDrive\\Desktop\\IntentOS",
   "packages": [
     {
@@ -41,7 +41,7 @@
         {
           "source_path": "packages/core/src/utils/errors.ts",
           "dest_path": "packages/isl-gate/src/utils/errors.ts",
-          "reason": "Error types - VibeCheckError, FirewallBlockedError, etc.",
+          "reason": "Error types - ShipGateError, FirewallBlockedError, etc.",
           "used_by": ["all"]
         },
         {
@@ -399,7 +399,7 @@
       "category": "Advanced Scanners",
       "paths": [
         "packages/core/src/scanners/*",
-        "packages/core/src/vibecheck-mock-detector/*"
+        "packages/core/src/shipgate-mock-detector/*"
       ],
       "reason": "Over-engineered - use policy packs instead"
     },
@@ -460,7 +460,7 @@
       "category": "Additional Scanners as Policy Packs",
       "paths": [
         "packages/core/src/secrets/*",
-        "packages/core/src/vibecheck-mock-detector/*"
+        "packages/core/src/shipgate-mock-detector/*"
       ],
       "reason": "Implement as policy packs later",
       "targetPhase": "Phase 4+"

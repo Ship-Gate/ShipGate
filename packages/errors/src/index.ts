@@ -103,6 +103,28 @@ export {
   DiagnosticCollector,
 } from './builder.js';
 
+// Verdict formatter
+export {
+  formatVerdict,
+  formatViolationMessage,
+  formatVerdictCompact,
+  type Verdict,
+  type ViolationSeverity,
+  type VerdictViolation,
+  type VerdictResult,
+  type VerdictFormatOptions,
+} from './verdict.js';
+
+// Bridge (legacy code mapping)
+export {
+  LEGACY_CODE_MAP,
+  resolveErrorCode,
+  categoryFromCode,
+  fromParserDiagnostic,
+  fromParserDiagnostics,
+  type LegacyParserDiagnostic,
+} from './bridge.js';
+
 // ============================================================================
 // CONVENIENCE RE-EXPORTS
 // ============================================================================

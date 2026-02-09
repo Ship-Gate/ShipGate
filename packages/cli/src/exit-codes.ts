@@ -11,10 +11,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const ExitCode = {
-  /** Success - command completed successfully */
+  /** Success - command completed successfully (SHIP) */
   SUCCESS: 0,
   
-  /** ISL Error - parse, type check, or verification failure */
+  /** ISL Error - parse, type check, or verification failure (NO_SHIP) */
   ISL_ERROR: 1,
   
   /** Usage Error - bad flags, missing file, invalid arguments */
@@ -22,6 +22,9 @@ export const ExitCode = {
   
   /** Internal Error - bugs, unexpected errors */
   INTERNAL_ERROR: 3,
+
+  /** Warning - non-critical issues detected (for --fail-on warning) */
+  WARN: 4,
 } as const;
 
 export type ExitCodeValue = typeof ExitCode[keyof typeof ExitCode];

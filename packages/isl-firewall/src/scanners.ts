@@ -2,7 +2,7 @@
  * Host and Reality-Gap Scanner Entrypoints
  *
  * Exposes standalone scanner functions for CLI and programmatic use.
- * - Host: VibeCheck truthpack validation (routes, env, imports, files)
+ * - Host: ShipGate truthpack validation (routes, env, imports, files)
  * - Reality-Gap: ISL Studio policy packs (auth, pii, payments, rate-limit, intent)
  *
  * @module @isl-lang/firewall/scanners
@@ -74,7 +74,7 @@ export async function runHostScan(
   const projectRoot = options.projectRoot ?? process.cwd();
   const firewall = createAgentFirewall({
     projectRoot,
-    truthpackPath: options.truthpackPath ?? '.vibecheck/truthpack',
+    truthpackPath: options.truthpackPath ?? '.shipgate/truthpack',
     mode: 'enforce',
   });
 
@@ -144,7 +144,7 @@ export async function runRealityGapScan(
   const projectRoot = options.projectRoot ?? process.cwd();
   const firewall = createIntegratedFirewall({
     projectRoot,
-    truthpackPath: options.truthpackPath ?? '.vibecheck/truthpack',
+    truthpackPath: options.truthpackPath ?? '.shipgate/truthpack',
   });
 
   const results: Array<{ file: string; verdict: 'SHIP' | 'NO_SHIP'; violations: ScannerViolation[] }> = [];

@@ -149,7 +149,7 @@ Run verification and collect evidence.
 ```typescript
 {
   workspacePath?: string;       // Workspace root
-  specsPath?: string;           // Path to specs (default: .vibecheck/specs)
+  specsPath?: string;           // Path to specs (default: .shipgate/specs)
   implementationPath?: string;  // Path to impl (auto-detected)
   behaviors?: string[];         // Specific behaviors to verify
   framework?: 'vitest' | 'jest';

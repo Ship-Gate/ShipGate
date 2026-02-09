@@ -181,3 +181,75 @@ export * from './isl-diff/index.js';
 // ============================================================================
 
 export * from './assumption-enforcement/index.js';
+
+// ============================================================================
+// Spec Quality Scorer (ISL spec linter)
+// ============================================================================
+
+// Export everything except DEFAULT_WEIGHTS to avoid conflict with isl-agent/scoring
+export {
+  scoreSpec,
+  formatReport,
+  completenessChecker,
+  specificityChecker,
+  securityChecker,
+  testabilityChecker,
+  consistencyChecker,
+  type SpecQualityReport,
+  type SpecQualityOptions,
+  type DimensionScore,
+  type QualitySuggestion,
+  type QualityDimension,
+  type DimensionChecker,
+  type DimensionCheckResult,
+} from './spec-quality/index.js';
+// Export DEFAULT_WEIGHTS with alias
+export { DEFAULT_WEIGHTS as SpecQualityWeights } from './spec-quality/types.js';
+
+// ============================================================================
+// Team Config (org-level policy enforcement)
+// ============================================================================
+
+// Export everything except PolicySeverity and PolicyViolation to avoid conflict with policies
+export {
+  TEAM_CONFIG_FILE_NAMES,
+  KNOWN_CHECKS,
+  DEFAULT_SECURITY_POLICY,
+  DEFAULT_TEAM_POLICIES,
+  DEFAULT_TEAM_CONFIG,
+  applyPolicyDefaults,
+  applyTeamConfigDefaults,
+  mergeTeamPolicies,
+  generateTeamConfigTemplate,
+  validateTeamConfig,
+  formatTeamConfigErrors,
+  loadTeamConfig,
+  loadTeamConfigFromFile,
+  parseTeamConfigString,
+  TeamConfigError,
+  resolveConfig,
+  resolveConfigSync,
+  enforceTeamPolicies,
+  formatPolicyResult,
+  type BannedPattern,
+  type SecurityPolicy,
+  type SpecTemplate,
+  type TeamPolicies,
+  type TeamConfig,
+  type ResolvedConfig,
+  type PolicyResult,
+  type CoverageInfo,
+  type PolicyVerifyInput,
+  type TeamConfigValidationError,
+  type TeamConfigValidationResult,
+  type LoadTeamConfigResult,
+  type ResolveConfigOptions,
+} from './team-config/index.js';
+// Export PolicySeverity and PolicyViolation with aliases
+export type { PolicySeverity as TeamPolicySeverity, PolicyViolation as TeamPolicyViolation } from './team-config/teamConfigTypes.js';
+
+// ============================================================================
+// Reporting (Markdown, PDF, JSON, HTML verification reports)
+// ============================================================================
+
+export * from './reporting/index.js';

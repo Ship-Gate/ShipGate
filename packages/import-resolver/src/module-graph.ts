@@ -530,14 +530,14 @@ export class ModuleGraphBuilder {
   private extractUseStatements(ast: AST.Domain, fromPath: string): UseStatementSpec[] {
     const useStatements: UseStatementSpec[] = [];
     
-    // Access uses array from AST (DomainDeclaration has 'uses' field)
-    const uses = (ast as any).uses ?? [];
+    // Access uses array from AST (Domain has 'uses' field for UseStatement nodes)
+    const uses: AST.UseStatement[] = ast.uses ?? [];
     
     for (const use of uses) {
       // Get module name - can be Identifier or StringLiteral
       const moduleName = use.module?.kind === 'StringLiteral' 
-        ? use.module.value 
-        : use.module?.name;
+        ? (use.module as AST.StringLiteral).value 
+        : (use.module as AST.Identifier).name;
       
       if (!moduleName) continue;
       
@@ -547,7 +547,7 @@ export class ModuleGraphBuilder {
         module: moduleName,
         alias: use.alias?.name,
         version: use.version?.value,
-        location: use.span ? this.spanToLocation(use.span, fromPath) : this.defaultLocation(fromPath),
+        location: use.location ?? this.defaultLocation(fromPath),
         isStdlib,
       });
     }
@@ -606,11 +606,12 @@ export class ModuleGraphBuilder {
     }
     
     message += `\n\nAvailable stdlib modules:\n` +
-      `  • stdlib-auth (authentication, sessions, OAuth)\n` +
-      `  • stdlib-rate-limit (rate limiting, quotas)\n` +
-      `  • stdlib-audit (audit logging)\n` +
-      `  • stdlib-payments (payment processing)\n` +
-      `  • stdlib-uploads (file uploads)`;
+      `  • stdlib-core (base types: Email, URL, UUID, Currency, pagination)\n` +
+      `  • stdlib-auth (authentication, sessions, OAuth, password reset)\n` +
+      `  • stdlib-http (HTTP contracts: Request, Response, middleware)\n` +
+      `  • stdlib-payments (payment processing, refunds, subscriptions)\n` +
+      `  • stdlib-storage (CRUD, pagination, search, soft-delete)\n` +
+      `  • stdlib-security (rate limiting, CORS, CSRF, input validation)`;
     
     return {
       code: 'MODULE_NOT_FOUND' as any,
@@ -876,6 +877,7 @@ export class ModuleGraphBuilder {
       kind: 'Domain',
       name: { kind: 'Identifier', name: 'merged', location: defaultLocation },
       version: { kind: 'StringLiteral', value: '1.0.0', location: defaultLocation },
+      uses: [],
       imports: [],
       types: [],
       entities: [],

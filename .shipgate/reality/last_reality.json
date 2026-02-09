@@ -1,0 +1,79 @@
+{
+  "meta": {
+    "startedAt": "2026-02-09T03:24:34.209Z",
+    "finishedAt": "2026-02-09T03:24:35.909Z",
+    "durationMs": 1700,
+    "baseUrl": "http://localhost:3000/",
+    "verifyAuth": false,
+    "maxPages": 18,
+    "maxDepth": 2,
+    "truthpackLoaded": false,
+    "protectedMatcherCount": 0,
+    "savedStorageState": null,
+    "recordVideo": false,
+    "recordTrace": false,
+    "recordHar": false,
+    "stabilityRuns": 1,
+    "flakyThreshold": 0.66,
+    "filteredFlakyCount": 0
+  },
+  "artifacts": {
+    "screenshots": ".shipgate/reality/20260208_202434/screenshots",
+    "videos": null,
+    "traces": null,
+    "har": null
+  },
+  "coverage": null,
+  "passes": {
+    "anon": {
+      "label": "ANON",
+      "pagesVisited": [
+        {
+          "url": "http://localhost:3000/",
+          "depth": 0,
+          "status": 200,
+          "loginLike": false
+        }
+      ],
+      "findings": [
+        {
+          "id": "R_ANON_FAKE_2419e5d3",
+          "severity": "WARN",
+          "category": "FakeDomain",
+          "title": "[ANON] Fake Data: URL matches fake domain pattern: Localhost API",
+          "page": "http://localhost:3000/api/accounts",
+          "reason": "URL matches fake domain pattern: Localhost API",
+          "confidence": 0.75,
+          "pattern": "localhost:\\d+"
+        }
+      ],
+      "consoleErrors": [],
+      "networkErrors": [],
+      "fakeDataDetections": [
+        {
+          "type": "fake-domain",
+          "severity": "WARN",
+          "evidence": "URL matches fake domain pattern: Localhost API",
+          "url": "http://localhost:3000/api/accounts",
+          "confidence": 0.75,
+          "pattern": "localhost:\\d+"
+        }
+      ]
+    },
+    "auth": null
+  },
+  "findings": [
+    {
+      "id": "R_ANON_FAKE_2419e5d3",
+      "severity": "WARN",
+      "category": "FakeDomain",
+      "title": "[ANON] Fake Data: URL matches fake domain pattern: Localhost API",
+      "page": "http://localhost:3000/api/accounts",
+      "reason": "URL matches fake domain pattern: Localhost API",
+      "confidence": 0.75,
+      "pattern": "localhost:\\d+"
+    }
+  ],
+  "consoleErrors": [],
+  "networkErrors": []
+}

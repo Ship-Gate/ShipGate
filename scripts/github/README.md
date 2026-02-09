@@ -76,7 +76,7 @@ npx tsx scripts/github/commentEvidence.ts ./path/to/evidence-report.json
 
 ### Running in CI
 
-See `.github/workflows/vibecheck-isl-comment.yml` for the GitHub Actions workflow.
+See `.github/workflows/shipgate-isl-comment.yml` for the GitHub Actions workflow.
 
 ```yaml
 - name: Post Evidence Comment
@@ -84,7 +84,7 @@ See `.github/workflows/vibecheck-isl-comment.yml` for the GitHub Actions workflo
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     GITHUB_REPOSITORY: ${{ github.repository }}
     GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
-  run: npx tsx scripts/github/commentEvidence.ts .vibecheck/reports/evidence.json
+  run: npx tsx scripts/github/commentEvidence.ts .shipgate/reports/evidence.json
 ```
 
 ### Comment Marker
@@ -92,7 +92,7 @@ See `.github/workflows/vibecheck-isl-comment.yml` for the GitHub Actions workflo
 The script uses a hidden HTML comment marker to identify its comments:
 
 ```html
-<!-- VIBECHECK_ISL_REPORT -->
+<!-- SHIPGATE_ISL_REPORT -->
 ```
 
 This allows the script to find and update existing comments instead of creating duplicates on each run.

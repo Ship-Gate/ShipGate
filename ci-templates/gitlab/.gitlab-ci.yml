@@ -1,0 +1,20 @@
+# Shipgate ISL Verify — GitLab CI Template
+# 
+# Usage:
+#   include:
+#     - local: 'ci-templates/gitlab/.gitlab-ci.yml'
+#
+# Or copy this into your .gitlab-ci.yml
+
+shipgate:
+  image: ghcr.io/shipgate/shipgate:v1
+  stage: test
+  script:
+    - shipgate verify src/ --ci --format gitlab > gl-code-quality-report.json
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+    when: always
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'

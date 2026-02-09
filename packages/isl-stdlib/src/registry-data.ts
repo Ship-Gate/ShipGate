@@ -2,7 +2,7 @@
  * Registry Data
  * 
  * AUTO-GENERATED - DO NOT EDIT
- * Generated: 2026-02-03T00:26:36.820Z
+ * Generated: 2026-02-08T22:00:00.000Z
  * 
  * Run `pnpm run generate-registry` to regenerate.
  */
@@ -13,13 +13,92 @@ export const REGISTRY_DATA: StdlibRegistry = {
   "$schema": "./registry.schema.json",
   "version": "1.0.0",
   "description": "ISL Standard Library Canonical Registry",
-  "generated": "2026-02-03T00:26:36.820Z",
+  "generated": "2026-02-08T22:00:00.000Z",
   "stdlibRoot": "stdlib",
   "modules": {
+    "stdlib-core": {
+      "name": "@isl-lang/stdlib-core",
+      "version": "1.0.0",
+      "description": "Base types and primitives (Email, URL, UUID, Timestamp, Currency, pagination, audit metadata)",
+      "category": "data",
+      "status": "implemented",
+      "entryPoint": "core/base-types.isl",
+      "exports": {
+        ".": "core/base-types.isl",
+        "/base-types": "core/base-types.isl"
+      },
+      "files": [
+        {
+          "path": "core/base-types.isl",
+          "contentHash": "06663cca713043f2a6b6d471ec84257db69d699502cf7b11004ea353fe0edb87"
+        }
+      ],
+      "moduleHash": "d3fe6034db6fa59d96532180a46f4255a64d38c115e7c0f0b2b86dd03136beef",
+      "provides": {
+        "entities": [
+          "PageInfo",
+          "AuditMetadata"
+        ],
+        "behaviors": [],
+        "enums": [
+          "Currency",
+          "SortDirection"
+        ],
+        "types": [
+          "Email",
+          "URL",
+          "Phone",
+          "Slug",
+          "Locale",
+          "CountryCode",
+          "IPv4",
+          "IPv6",
+          "IPAddress",
+          "SemVer",
+          "MimeType",
+          "UUID",
+          "ULID",
+          "CUID",
+          "Timestamp",
+          "Duration",
+          "DateString",
+          "TimeString",
+          "DateTimeString",
+          "TimeZone",
+          "Currency",
+          "Money",
+          "MonetaryAmount",
+          "Percentage",
+          "PositiveInt",
+          "NonNegativeInt",
+          "ByteSize",
+          "Markdown",
+          "HTML",
+          "JSON",
+          "PageSize",
+          "PageOffset",
+          "Cursor",
+          "SortDirection"
+        ]
+      },
+      "dependencies": [],
+      "peerDependencies": [],
+      "keywords": [
+        "types",
+        "primitives",
+        "email",
+        "url",
+        "uuid",
+        "timestamp",
+        "currency",
+        "pagination",
+        "core"
+      ]
+    },
     "stdlib-auth": {
       "name": "@isl-lang/stdlib-auth",
       "version": "1.0.0",
-      "description": "Authentication and authorization (OAuth, sessions, rate limiting)",
+      "description": "Authentication and authorization (OAuth, sessions, rate limiting, password reset)",
       "category": "security",
       "status": "implemented",
       "entryPoint": "auth/oauth-login.isl",
@@ -103,7 +182,9 @@ export const REGISTRY_DATA: StdlibRegistry = {
           "SessionDuration"
         ]
       },
-      "dependencies": [],
+      "dependencies": [
+        "stdlib-core"
+      ],
       "peerDependencies": [],
       "keywords": [
         "auth",
@@ -111,7 +192,91 @@ export const REGISTRY_DATA: StdlibRegistry = {
         "oauth",
         "session",
         "login",
-        "security"
+        "security",
+        "password"
+      ]
+    },
+    "stdlib-http": {
+      "name": "@isl-lang/stdlib-http",
+      "version": "1.0.0",
+      "description": "HTTP contracts (Request, Response, StatusCode, Headers, middleware patterns)",
+      "category": "infrastructure",
+      "status": "implemented",
+      "entryPoint": "http/request-response.isl",
+      "exports": {
+        ".": "http/request-response.isl",
+        "/request-response": "http/request-response.isl",
+        "/middleware": "http/middleware.isl"
+      },
+      "files": [
+        {
+          "path": "http/request-response.isl",
+          "contentHash": "048b45ab72023e4a466795303dbe00ec0ec688bf6b159a967f494b1f8d9bf441"
+        },
+        {
+          "path": "http/middleware.isl",
+          "contentHash": "7d14ea85ec916266540f21e4d55b937fc74512442c49b2bdbc8642774d9ecc11"
+        }
+      ],
+      "moduleHash": "f45130f57f315b93d8bd83cb5cb286d743a7d269fa35267981d170a87413c129",
+      "provides": {
+        "entities": [
+          "HTTPRequest",
+          "HTTPResponse",
+          "HTTPError",
+          "CacheControl",
+          "RequestLog",
+          "RetryConfig",
+          "CircuitBreakerConfig"
+        ],
+        "behaviors": [
+          "SendRequest",
+          "ParseRequest",
+          "BuildErrorResponse",
+          "ValidateContentType",
+          "LogRequest",
+          "CompressResponse",
+          "CalculateRetryDelay",
+          "CheckCircuitBreaker"
+        ],
+        "enums": [
+          "HTTPMethod",
+          "HTTPStatusCode",
+          "ContentType",
+          "AuthScheme",
+          "LogLevel",
+          "CompressionAlgorithm",
+          "RetryStrategy"
+        ],
+        "types": [
+          "HTTPMethod",
+          "HTTPStatusCode",
+          "ContentType",
+          "AuthScheme",
+          "HeaderName",
+          "HeaderValue",
+          "QueryParam",
+          "PathSegment",
+          "BearerToken",
+          "APIKey",
+          "LogLevel",
+          "CompressionAlgorithm",
+          "RetryStrategy"
+        ]
+      },
+      "dependencies": [
+        "stdlib-core"
+      ],
+      "peerDependencies": [],
+      "keywords": [
+        "http",
+        "request",
+        "response",
+        "rest",
+        "api",
+        "middleware",
+        "headers",
+        "status"
       ]
     },
     "stdlib-payments": {
@@ -217,7 +382,9 @@ export const REGISTRY_DATA: StdlibRegistry = {
           "WebhookStatus"
         ]
       },
-      "dependencies": [],
+      "dependencies": [
+        "stdlib-core"
+      ],
       "peerDependencies": [
         "stdlib-auth"
       ],
@@ -227,117 +394,218 @@ export const REGISTRY_DATA: StdlibRegistry = {
         "stripe",
         "subscriptions",
         "billing",
-        "refunds"
+        "refunds",
+        "webhooks"
       ]
     },
-    "stdlib-uploads": {
-      "name": "@isl-lang/stdlib-uploads",
+    "stdlib-storage": {
+      "name": "@isl-lang/stdlib-storage",
       "version": "1.0.0",
-      "description": "File upload, storage, and MIME validation",
+      "description": "Data persistence patterns (CRUD, pagination, search, soft-delete, batch operations)",
       "category": "storage",
       "status": "implemented",
-      "entryPoint": "uploads/store-blob.isl",
+      "entryPoint": "storage/crud.isl",
       "exports": {
-        ".": "uploads/store-blob.isl",
-        "/store-blob": "uploads/store-blob.isl",
-        "/upload-image": "uploads/upload-image.isl",
-        "/validate-mime": "uploads/validate-mime.isl"
+        ".": "storage/crud.isl",
+        "/crud": "storage/crud.isl",
+        "/search": "storage/search.isl"
       },
       "files": [
         {
-          "path": "uploads/store-blob.isl",
-          "contentHash": "5c131d29b3610faa2f45cf4aadf3bcfadf6d93cfa77ddd44f87d481f9f69e4ae"
+          "path": "storage/crud.isl",
+          "contentHash": "121f4b1e508adaa95aee2743cd20ca7abe11871986d6c3a05626bd2f7140f5c6"
         },
         {
-          "path": "uploads/upload-image.isl",
-          "contentHash": "89c204e919d5aabb15dc62f804c093e4d22608935b729a1535617d13118bc6ba"
-        },
-        {
-          "path": "uploads/validate-mime.isl",
-          "contentHash": "51e08701cbc82fc6ea1cefc27bd15525aa775e816315aca5ef0f724d0a282a4a"
+          "path": "storage/search.isl",
+          "contentHash": "3619740176de87f6f9458c1e32b7c0ddf5355f9d037e629fa11c4675e80fc1dd"
         }
       ],
-      "moduleHash": "2f34825b5a1024a98f4f132ed01a552c916f0ade87fa0374890cc903262f8a1f",
+      "moduleHash": "e604743b75d3566da7376bd64b22c81272dfdbc0178c8318a45b5bd2df9f5e86",
       "provides": {
         "entities": [
-          "Blob",
-          "StorageBucket",
-          "UploadPart",
-          "Image",
-          "ImageUploadSession",
-          "MimeTypeDefinition",
-          "ValidationLog"
+          "SortSpec",
+          "FilterSpec",
+          "PaginationSpec",
+          "PaginatedResult",
+          "SoftDeleteMetadata",
+          "SearchResult",
+          "SearchFacet",
+          "FacetBucket",
+          "SearchSuggestion",
+          "SearchIndex",
+          "SearchIndexField"
         ],
         "behaviors": [
-          "StoreBlob",
-          "InitiateMultipartUpload",
-          "UploadPart",
-          "CompleteMultipartUpload",
-          "AbortMultipartUpload",
-          "GetBlob",
-          "GetBlobContent",
-          "GeneratePresignedUrl",
-          "DeleteBlob",
-          "CopyBlob",
-          "ListBlobs",
-          "InitiateImageUpload",
-          "CompleteImageUpload",
-          "UploadImageDirect",
-          "ResizeImage",
-          "DeleteImage",
-          "GetImage",
-          "ListUserImages",
-          "ValidateMimeType",
-          "CheckFileSafety",
-          "ValidateImageMime",
-          "ValidateDocumentMime",
-          "GetMimeTypeInfo",
-          "DetectMimeFromExtension",
-          "ValidateMimeConsistency"
+          "Create",
+          "Read",
+          "Update",
+          "Delete",
+          "List",
+          "Restore",
+          "BatchCreate",
+          "Search",
+          "Suggest",
+          "IndexDocument",
+          "DeleteFromIndex",
+          "ReindexAll"
         ],
         "enums": [
-          "StorageProvider",
-          "StorageClass",
-          "ImageFormat",
-          "ThumbnailSize",
-          "FileCategory",
-          "ValidationResult"
+          "SortDirection",
+          "FilterOperator",
+          "ConflictStrategy",
+          "IsolationLevel",
+          "SearchScoreMode",
+          "IndexType",
+          "FacetType"
         ],
         "types": [
-          "BlobId",
-          "StorageProvider",
-          "StorageClass",
-          "ByteSize",
-          "ContentHash",
-          "PresignedUrlDuration",
-          "ImageId",
-          "ImageFormat",
-          "ImageSize",
-          "ImageQuality",
-          "ThumbnailSize",
-          "MimeType",
-          "FileCategory",
-          "ValidationResult"
+          "RecordId",
+          "SortDirection",
+          "FilterOperator",
+          "ConflictStrategy",
+          "IsolationLevel",
+          "SearchQuery",
+          "SearchScoreMode",
+          "IndexType",
+          "FacetType"
         ]
       },
-      "dependencies": [],
+      "dependencies": [
+        "stdlib-core"
+      ],
       "peerDependencies": [],
       "keywords": [
-        "files",
-        "uploads",
         "storage",
-        "s3",
-        "blobs",
-        "mime"
+        "crud",
+        "database",
+        "pagination",
+        "search",
+        "soft-delete",
+        "batch"
+      ]
+    },
+    "stdlib-security": {
+      "name": "@isl-lang/stdlib-security",
+      "version": "1.0.0",
+      "description": "Security primitives (rate limiting, CORS, CSRF, input validation, XSS prevention)",
+      "category": "security",
+      "status": "implemented",
+      "entryPoint": "security/rate-limit.isl",
+      "exports": {
+        ".": "security/rate-limit.isl",
+        "/rate-limit": "security/rate-limit.isl",
+        "/input-validation": "security/input-validation.isl",
+        "/cors": "security/cors.isl"
+      },
+      "files": [
+        {
+          "path": "security/rate-limit.isl",
+          "contentHash": "d690a64950f30d80327e9b7d06a1dafe0e901452989d20a4ad7c28eebcbadfcf"
+        },
+        {
+          "path": "security/input-validation.isl",
+          "contentHash": "4b56e73a67cd3f9bc0ac975986a3d26c583b8c282946abffbbf8725441d290c6"
+        },
+        {
+          "path": "security/cors.isl",
+          "contentHash": "a24d4fa8f23981b96ab26a9ce9d1ae8593c6f321aa8baf12712ffdfbd840e799"
+        }
+      ],
+      "moduleHash": "6ac75889f28ec359daa62e4df252401b5cec571b35f21a50f91ae80935b51766",
+      "provides": {
+        "entities": [
+          "RateLimitConfig",
+          "RateLimitState",
+          "RateLimitResult",
+          "TokenBucketState",
+          "ValidationError",
+          "ValidationResult",
+          "SanitizationConfig",
+          "CORSConfig",
+          "CORSResult",
+          "CSRFConfig",
+          "CSRFToken"
+        ],
+        "behaviors": [
+          "CheckRateLimit",
+          "ConsumeToken",
+          "ResetRateLimit",
+          "GetRateLimitStatus",
+          "ValidateInput",
+          "SanitizeString",
+          "DetectInjection",
+          "ValidateEmail",
+          "ValidateURL",
+          "SanitizeBatch",
+          "CheckCORS",
+          "HandlePreflight",
+          "GenerateCSRFToken",
+          "ValidateCSRFToken"
+        ],
+        "enums": [
+          "RateLimitAlgorithm",
+          "RateLimitScope",
+          "RateLimitAction",
+          "ThrottleMode",
+          "SanitizationMode",
+          "ValidationSeverity",
+          "XSSVector",
+          "InjectionType",
+          "CORSMethod",
+          "SameSitePolicy",
+          "CSRFTokenPlacement"
+        ],
+        "types": [
+          "RateLimitAlgorithm",
+          "RateLimitScope",
+          "RateLimitAction",
+          "ThrottleMode",
+          "SanitizationMode",
+          "ValidationSeverity",
+          "XSSVector",
+          "InjectionType",
+          "CORSMethod",
+          "SameSitePolicy",
+          "CSRFTokenPlacement"
+        ]
+      },
+      "dependencies": [
+        "stdlib-core"
+      ],
+      "peerDependencies": [],
+      "keywords": [
+        "security",
+        "rate-limit",
+        "cors",
+        "csrf",
+        "xss",
+        "validation",
+        "sanitization",
+        "injection"
       ]
     }
   },
   "categories": {
+    "data": {
+      "name": "Data & Primitives",
+      "description": "Base types, formats, and data primitives",
+      "modules": [
+        "stdlib-core"
+      ]
+    },
     "security": {
       "name": "Security",
       "description": "Authentication, authorization, and security patterns",
       "modules": [
-        "stdlib-auth"
+        "stdlib-auth",
+        "stdlib-security"
+      ]
+    },
+    "infrastructure": {
+      "name": "Infrastructure",
+      "description": "HTTP, networking, and infrastructure patterns",
+      "modules": [
+        "stdlib-http"
       ]
     },
     "business": {
@@ -349,18 +617,24 @@ export const REGISTRY_DATA: StdlibRegistry = {
     },
     "storage": {
       "name": "Storage",
-      "description": "File storage and management",
+      "description": "Data persistence, search, and file management",
       "modules": [
-        "stdlib-uploads"
+        "stdlib-storage"
       ]
     }
   },
   "importAliases": {
+    "@isl/stdlib-core": "stdlib-core",
+    "@isl/core": "stdlib-core",
     "@isl/stdlib-auth": "stdlib-auth",
     "@isl/auth": "stdlib-auth",
+    "@isl/stdlib-http": "stdlib-http",
+    "@isl/http": "stdlib-http",
     "@isl/stdlib-payments": "stdlib-payments",
     "@isl/payments": "stdlib-payments",
-    "@isl/stdlib-uploads": "stdlib-uploads",
-    "@isl/uploads": "stdlib-uploads"
+    "@isl/stdlib-storage": "stdlib-storage",
+    "@isl/storage": "stdlib-storage",
+    "@isl/stdlib-security": "stdlib-security",
+    "@isl/security": "stdlib-security"
   }
 };

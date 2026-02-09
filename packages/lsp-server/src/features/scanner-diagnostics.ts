@@ -1,6 +1,6 @@
 // ============================================================================
 // Host & Reality-Gap Scanner Diagnostics
-// Maps firewall (VibeCheck + ISL Studio) verdicts to LSP diagnostics.
+// Maps firewall (ShipGate + ISL Studio) verdicts to LSP diagnostics.
 // Severity, codes, and messages match CLI output; suppressions/allowlists
 // are applied inside the firewall.
 // ============================================================================
@@ -17,8 +17,8 @@ import { createIntegratedFirewall } from '@isl-lang/firewall';
 // ============================================================================
 
 const SUPPORTED_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx']);
-const SOURCE_HOST = 'vibecheck-host';
-const SOURCE_REALITY_GAP = 'vibecheck-reality-gap';
+const SOURCE_HOST = 'shipgate-host';
+const SOURCE_REALITY_GAP = 'shipgate-reality-gap';
 
 // ============================================================================
 // Severity mapping: CLI tier/severity → LSP DiagnosticSeverity

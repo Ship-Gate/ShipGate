@@ -1,186 +1,163 @@
 /**
- * Smoke Tests for CLI Commands
- * 
- * Tests basic CLI functionality on Windows + Linux.
- * These are minimal tests to ensure commands don't crash.
+ * Bin-Level Smoke Tests for the shipgate CLI
+ *
+ * Validates that the *bundled* dist/cli.js works correctly:
+ *   - Commands are accessible
+ *   - --version returns a semver string
+ *   - --help output is reasonable
+ *   - Exit codes are correct
+ *
+ * These tests require a prior `pnpm build` (they run against dist/).
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { execSync } from 'child_process';
-import { existsSync } from 'fs';
+import { existsSync, statSync } from 'fs';
 import { resolve } from 'path';
 
-const CLI_PATH = resolve(__dirname, '../dist/index.js');
-const IS_WINDOWS = process.platform === 'win32';
+// ─── Constants ───────────────────────────────────────────────────────────────
 
-function runCommand(args: string[]): { stdout: string; stderr: string; exitCode: number } {
+const CLI_PATH = resolve(__dirname, '../dist/cli.js');
+const MAX_BUNDLE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function exec(
+  args: string,
+): { stdout: string; stderr: string; exitCode: number } {
   try {
-    const cmd = IS_WINDOWS 
-      ? `node ${CLI_PATH} ${args.join(' ')}`
-      : `node ${CLI_PATH} ${args.join(' ')}`;
-    const stdout = execSync(cmd, { 
+    const stdout = execSync(`node "${CLI_PATH}" ${args}`, {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 10000,
+      timeout: 15_000,
     });
     return { stdout, stderr: '', exitCode: 0 };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const e = error as { stdout?: string; stderr?: string; status?: number };
     return {
-      stdout: error.stdout?.toString() || '',
-      stderr: error.stderr?.toString() || '',
-      exitCode: error.status || 1,
+      stdout: e.stdout ?? '',
+      stderr: e.stderr ?? '',
+      exitCode: e.status ?? 1,
     };
   }
 }
 
-describe('CLI Smoke Tests', () => {
-  describe('Help Command', () => {
-    it('should show help without crashing', () => {
-      const result = runCommand(['--help']);
-      expect(result.stdout).toContain('ISL');
-      expect(result.stdout).toContain('Commands');
-    });
+// ─── Pre-flight ──────────────────────────────────────────────────────────────
 
-    it('should show version', () => {
-      const result = runCommand(['--version']);
-      expect(result.stdout).toMatch(/\d+\.\d+\.\d+/);
-    });
+beforeAll(() => {
+  if (!existsSync(CLI_PATH)) {
+    throw new Error(
+      `dist/cli.js not found at ${CLI_PATH}. Run "pnpm build" first.`,
+    );
+  }
+});
+
+// ─── Tests ───────────────────────────────────────────────────────────────────
+
+describe('CLI Bundle', () => {
+  it('dist/cli.js exists and is non-empty', () => {
+    expect(existsSync(CLI_PATH)).toBe(true);
+    const stat = statSync(CLI_PATH);
+    expect(stat.size).toBeGreaterThan(0);
   });
 
-  describe('Init Command', () => {
-    it('should show init help', () => {
-      const result = runCommand(['init', '--help']);
-      expect(result.stdout).toContain('init');
-      expect(result.exitCode).toBe(0);
-    });
+  it('bundle size is under 10 MB', () => {
+    const stat = statSync(CLI_PATH);
+    expect(stat.size).toBeLessThan(MAX_BUNDLE_SIZE_BYTES);
   });
 
-  describe('Build Command', () => {
-    it('should show build help', () => {
-      const result = runCommand(['build', '--help']);
-      expect(result.stdout).toContain('build');
-      expect(result.exitCode).toBe(0);
-    });
+  it('starts with a shebang', () => {
+    // Read just the first line
+    const { readFileSync } = require('fs');
+    const firstLine = readFileSync(CLI_PATH, 'utf-8').split('\n')[0];
+    expect(firstLine).toBe('#!/usr/bin/env node');
+  });
+});
 
-    it('should handle missing file gracefully', () => {
-      const result = runCommand(['build', 'nonexistent.isl', '--json']);
-      expect(result.exitCode).not.toBe(0);
-      // Should output JSON error
-      if (result.stdout) {
-        try {
-          JSON.parse(result.stdout);
-        } catch {
-          // Not JSON, that's ok for error cases
-        }
-      }
-    });
+describe('shipgate --version', () => {
+  it('prints a semver version string', () => {
+    const { stdout, exitCode } = exec('--version');
+    expect(exitCode).toBe(0);
+    expect(stdout.trim()).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+});
+
+describe('shipgate --help', () => {
+  it('displays help text with command list', () => {
+    const { stdout, exitCode } = exec('--help');
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('verify');
+    expect(stdout).toContain('init');
+    expect(stdout).toContain('gate');
+  });
+});
+
+describe('shipgate verify --help', () => {
+  it('shows verify command help', () => {
+    const { stdout, exitCode } = exec('verify --help');
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('Verify');
+  });
+});
+
+describe('shipgate init --help', () => {
+  it('shows init command help', () => {
+    const { stdout, exitCode } = exec('init --help');
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('init');
+  });
+});
+
+describe('shipgate gate --help', () => {
+  it('shows gate command help', () => {
+    const { stdout, exitCode } = exec('gate --help');
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('gate');
+  });
+});
+
+describe('shipgate build --help', () => {
+  it('shows build command help', () => {
+    const { stdout, exitCode } = exec('build --help');
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('build');
+  });
+});
+
+describe('shipgate isl-generate --help', () => {
+  it('shows isl-generate command help', () => {
+    const { stdout, exitCode } = exec('isl-generate --help');
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('Generate ISL spec');
+  });
+});
+
+describe('shipgate generate --help', () => {
+  it('shows generate command help', () => {
+    const { stdout, exitCode } = exec('generate --help');
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('Generate');
+  });
+});
+
+describe('Exit codes', () => {
+  it('returns exit code 2 for unknown commands', () => {
+    const { exitCode, stderr, stdout } = exec('nonexistent-command');
+    expect(exitCode).toBe(2);
+    const output = stderr || stdout;
+    expect(output).toContain('Unknown command');
   });
 
-  describe('Heal Command', () => {
-    it('should show heal help', () => {
-      const result = runCommand(['heal', '--help']);
-      expect(result.stdout).toContain('heal');
-      expect(result.exitCode).toBe(0);
-    });
-
-    it('should handle missing pattern gracefully', () => {
-      const result = runCommand(['heal', 'nonexistent/**/*.ts', '--json']);
-      expect(result.exitCode).not.toBe(0);
-      // Should output JSON error
-      if (result.stdout) {
-        try {
-          const json = JSON.parse(result.stdout);
-          expect(json).toHaveProperty('success');
-        } catch {
-          // Not JSON, that's ok for error cases
-        }
-      }
-    });
+  it('returns non-zero for missing required arguments', () => {
+    const { exitCode } = exec('build');
+    expect(exitCode).not.toBe(0);
   });
+});
 
-  describe('Verify Command', () => {
-    it('should show verify help', () => {
-      const result = runCommand(['verify', '--help']);
-      expect(result.stdout).toContain('verify');
-      expect(result.exitCode).toBe(0);
-    });
-  });
-
-  describe('Proof Command', () => {
-    it('should show proof help', () => {
-      const result = runCommand(['proof', '--help']);
-      expect(result.stdout).toContain('proof');
-      expect(result.exitCode).toBe(0);
-    });
-
-    it('should show proof verify help', () => {
-      const result = runCommand(['proof', 'verify', '--help']);
-      expect(result.stdout).toContain('verify');
-      expect(result.exitCode).toBe(0);
-    });
-
-    it('should handle missing bundle gracefully', () => {
-      const result = runCommand(['proof', 'verify', 'nonexistent-bundle', '--json']);
-      expect(result.exitCode).not.toBe(0);
-      // Should output JSON error
-      if (result.stdout) {
-        try {
-          const json = JSON.parse(result.stdout);
-          expect(json).toHaveProperty('success');
-        } catch {
-          // Not JSON, that's ok for error cases
-        }
-      }
-    });
-  });
-
-  describe('JSON Output', () => {
-    it('should support --json flag on all commands', () => {
-      const commands = [
-        ['init', '--help', '--json'],
-        ['build', '--help', '--json'],
-        ['heal', '--help', '--json'],
-        ['verify', '--help', '--json'],
-        ['proof', 'verify', '--help', '--json'],
-      ];
-
-      for (const cmd of commands) {
-        const result = runCommand(cmd);
-        // Help commands don't necessarily output JSON, but shouldn't crash
-        expect(result.exitCode).toBe(0);
-      }
-    });
-  });
-
-  describe('Exit Codes', () => {
-    it('should return correct exit code for usage errors', () => {
-      const result = runCommand(['unknown-command']);
-      expect(result.exitCode).toBe(2); // USAGE_ERROR
-    });
-
-    it('should return correct exit code for missing required args', () => {
-      const result = runCommand(['build']);
-      // Commander.js uses exit code 1 for missing required arguments
-      // This is acceptable behavior - the error message is clear
-      expect(result.exitCode).not.toBe(0);
-      expect(result.stderr || result.stdout).toContain('missing required argument');
-    });
-  });
-
-  describe('Error Messages', () => {
-    it('should provide friendly error messages', () => {
-      const result = runCommand(['unknown-command']);
-      expect(result.stderr || result.stdout).toContain('Unknown command');
-      // Help text is in the output (either stdout or stderr)
-      const output = (result.stderr || result.stdout).toLowerCase();
-      expect(output).toMatch(/help|--help/);
-    });
-
-    it('should suggest similar commands', () => {
-      const result = runCommand(['buil']); // typo
-      // Should suggest 'build' or show help
-      const output = (result.stderr || result.stdout).toLowerCase();
-      expect(output).toMatch(/build|help|did you mean/i);
-    });
+describe('Error handling', () => {
+  it('suggests similar command on typo', () => {
+    const { stderr, stdout } = exec('verifiy'); // typo
+    const output = stderr || stdout;
+    expect(output.toLowerCase()).toMatch(/did you mean|verify|unknown/i);
   });
 });

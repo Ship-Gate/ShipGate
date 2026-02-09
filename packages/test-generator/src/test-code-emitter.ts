@@ -17,6 +17,8 @@ import {
 } from './data-synthesizer';
 import {
   synthesizeExpectedOutcome,
+  compileTemporalAssertion,
+  compileSecurityAssertion,
   type ExpectedOutcomeResult,
 } from './expected-outcome';
 import type { TestFramework } from './types';
@@ -252,6 +254,51 @@ function generateFileContent(
     lines.push('  });');
   }
 
+  // Temporal constraint tests
+  if (behavior.temporal && behavior.temporal.length > 0) {
+    lines.push('');
+    lines.push(`  describe('Temporal Constraints', () => {`);
+
+    for (const temporal of behavior.temporal) {
+      const assertion = compileTemporalAssertion(temporal, behaviorName);
+      lines.push('');
+      lines.push(`    it('${escapeString(assertion.description)}', async () => {`);
+      // Use first valid input for temporal tests
+      const validInput = tests.find(t => t.category === 'valid');
+      if (validInput) {
+        lines.push(indentCode('// Arrange — reuse a valid input', 6));
+        lines.push(indentCode(`const input = ${formatInlineInput(validInput)};`, 6));
+        lines.push('');
+      }
+      lines.push(indentCode(assertion.code, 6));
+      lines.push('    });');
+    }
+
+    lines.push('  });');
+  }
+
+  // Security constraint tests
+  if (behavior.security && behavior.security.length > 0) {
+    lines.push('');
+    lines.push(`  describe('Security Constraints', () => {`);
+
+    for (const security of behavior.security) {
+      const assertion = compileSecurityAssertion(security, behaviorName);
+      lines.push('');
+      lines.push(`    it('${escapeString(assertion.description)}', async () => {`);
+      const validInput = tests.find(t => t.category === 'valid');
+      if (validInput) {
+        lines.push(indentCode('// Arrange — reuse a valid input', 6));
+        lines.push(indentCode(`const input = ${formatInlineInput(validInput)};`, 6));
+        lines.push('');
+      }
+      lines.push(indentCode(assertion.code, 6));
+      lines.push('    });');
+    }
+
+    lines.push('  });');
+  }
+
   lines.push('});');
 
   // Helper functions
@@ -461,6 +508,15 @@ function getCategoryLabel(category: string): string {
     case 'precondition_violation': return 'Precondition Violations';
     default: return category;
   }
+}
+
+function formatInlineInput(test: EmittedTest): string {
+  // Extract the input object from the test code (between the first { and matching })
+  const match = test.code.match(/const input[^=]*=\s*(\{[\s\S]*?\});/);
+  if (match && match[1]) {
+    return match[1].replace(/\n\s*/g, ' ');
+  }
+  return '{}';
 }
 
 // ============================================================================

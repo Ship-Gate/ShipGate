@@ -67,7 +67,7 @@ function Write-Result {
         Write-Host "  RESULT: PASS" -ForegroundColor Green
         Write-Host "  All gate checks passed successfully." -ForegroundColor Green
         Write-Host ""
-        Write-Host "  Verified by VibeCheck ✓" -ForegroundColor Green
+        Write-Host "  Verified by ShipGate ✓" -ForegroundColor Green
     } else {
         Write-Host "  RESULT: FAIL" -ForegroundColor Red
         Write-Host "  $script:ChecksFailed check(s) failed." -ForegroundColor Red

@@ -40,7 +40,7 @@ import {
  * Default options for the pipeline
  */
 const DEFAULTS: Omit<Required<PipelineOptions>, 'workspacePath'> = {
-  outDir: '.vibecheck/reports',
+  outDir: '.shipgate/reports',
   contextOptions: {},
   skipContext: false,
   writeReport: true,

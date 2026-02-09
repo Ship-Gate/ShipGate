@@ -17,7 +17,7 @@ import { resolve, relative, dirname, basename, join } from 'path';
 import { glob } from 'glob';
 import chalk from 'chalk';
 import ora from 'ora';
-import { parse as parseISL } from '@isl-lang/parser';
+import { parse as parseISL, type Domain } from '@isl-lang/parser';
 import { verify as verifyDomain, type VerificationResult, type TrustScore, type TestResult } from '@isl-lang/isl-verify';
 import {
   buildModuleGraph,
@@ -26,8 +26,8 @@ import {
 } from '@isl-lang/import-resolver';
 import { output } from '../output.js';
 import { loadConfig } from '../config.js';
-import type { DomainDeclaration } from '@isl-lang/isl-core/ast';
 import type { TemporalClauseResult } from '@isl-lang/verifier-temporal';
+import { formatGitLab, formatJUnit } from './output-formats.js';
 
 // Re-export types for use
 export type { VerificationResult, TrustScore, TestResult };
@@ -210,11 +210,11 @@ export interface CategoryEvidence {
 
 /**
  * Auto-discover ISL spec files
- * Searches in .vibecheck/specs/*.isl, specs/*.isl, and *.isl in cwd
+ * Searches in .shipgate/specs/*.isl, specs/*.isl, and *.isl in cwd
  */
 async function discoverSpecs(cwd: string = process.cwd()): Promise<string[]> {
   const searchPaths = [
-    '.vibecheck/specs/**/*.isl',
+    '.shipgate/specs/**/*.isl',
     'specs/**/*.isl',
     '*.isl',
   ];
@@ -640,7 +640,7 @@ async function writeEvidenceReport(result: VerifyResult, reportPath: string): Pr
  * Generates random inputs satisfying preconditions and verifies postconditions
  */
 async function runPBTVerification(
-  domain: DomainDeclaration,
+  domain: Domain,
   implSource: string,
   options: {
     numTests?: number;
@@ -810,7 +810,7 @@ async function runPBTVerification(
  * - eventually within (event occurs within time bound, e.g., "eventually within 5s: audit log updated")
  */
 async function runTemporalVerification(
-  domain: DomainDeclaration,
+  domain: Domain,
   options: { minSamples?: number; verbose?: boolean }
 ): Promise<TemporalVerifyResult> {
   const start = Date.now();
@@ -1032,7 +1032,7 @@ function extractEventKind(req: { expression?: unknown }): string | undefined {
  * - Refinement type constraints (are constraints satisfiable?)
  */
 async function runSMTVerification(
-  domain: DomainDeclaration,
+  domain: Domain,
   options: { timeout?: number; verbose?: boolean }
 ): Promise<SMTVerifyResult> {
   const start = Date.now();
@@ -1141,7 +1141,7 @@ export async function verify(specFile: string, options: VerifyOptions): Promise<
     
     // Resolve imports if enabled (default: true)
     const resolveImports = options.resolveImports ?? true;
-    let ast: DomainDeclaration | undefined;
+    let ast: Domain | undefined;
     
     if (resolveImports) {
       spinner.text = 'Resolving imports...';
@@ -1178,12 +1178,12 @@ export async function verify(specFile: string, options: VerifyOptions): Promise<
       }
       
       // Use merged AST if available
-      ast = getMergedAST(graph) as DomainDeclaration | undefined;
+      ast = getMergedAST(graph) as Domain | undefined;
       
       if (!ast && graph.graphModules.size > 0) {
         // Fallback to entry module's AST
         const entryModule = graph.graphModules.get(graph.entryPoint);
-        ast = entryModule?.ast as DomainDeclaration | undefined;
+        ast = entryModule?.ast as Domain | undefined;
       }
     }
     
@@ -1202,7 +1202,7 @@ export async function verify(specFile: string, options: VerifyOptions): Promise<
         };
       }
       
-      ast = parsedAst as DomainDeclaration;
+      ast = parsedAst;
     }
 
     // Read implementation
@@ -1378,7 +1378,7 @@ export async function verifyWithDiscovery(options: VerifyOptions): Promise<Verif
 
   if (specs.length === 0) {
     console.error(chalk.red('No ISL spec files found'));
-    console.log(chalk.gray('Searched in: .vibecheck/specs/*.isl, specs/*.isl, *.isl'));
+    console.log(chalk.gray('Searched in: .shipgate/specs/*.isl, specs/*.isl, *.isl'));
     console.log(chalk.gray('Use --spec <path> to specify a spec file, or --impl <path> for specless verification'));
     return [{
       success: false,
@@ -1817,6 +1817,795 @@ function printTemporalResults(temporalResult: TemporalVerifyResult, detailed?: b
  */
 export function getVerifyExitCode(result: VerifyResult): number {
   return result.success ? 0 : 1;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Unified Verify — Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Verification mode auto-detected from file structure */
+export type VerificationMode = 'isl' | 'specless' | 'mixed';
+
+/** Strictness level for --fail-on */
+export type FailOnLevel = 'error' | 'warning' | 'unspecced';
+
+/** Overall verification verdict */
+export type UnifiedVerdict = 'SHIP' | 'NO_SHIP' | 'WARN';
+
+/** File-level verification status */
+export type FileVerifyStatus = 'PASS' | 'WARN' | 'FAIL';
+
+/** How a file was verified */
+export type FileVerifyMode = 'ISL verified' | 'Specless' | 'Fake feature' | 'Skipped';
+
+/** Output format options */
+export type OutputFormat = 'json' | 'text' | 'gitlab' | 'junit' | 'github';
+
+/** Options for the unified verify command */
+export interface UnifiedVerifyOptions {
+  /** Explicit ISL spec file (enables legacy single-spec mode) */
+  spec?: string;
+  /** Explicit implementation file */
+  impl?: string;
+  /** Output JSON to stdout */
+  json?: boolean;
+  /** CI mode with sensible defaults */
+  ci?: boolean;
+  /** Output format: json, text, gitlab, junit, github */
+  format?: OutputFormat;
+  /** Strictness level (default: 'error') */
+  failOn?: FailOnLevel;
+  /** Verbose output */
+  verbose?: boolean;
+  /** Minimum trust score to consider PASS (default: 70) */
+  minScore?: number;
+  /** Show detailed breakdown */
+  detailed?: boolean;
+  /** Evidence report output path */
+  report?: string;
+  /** Test timeout in ms (default: 30000) */
+  timeout?: number;
+}
+
+/** Per-file verification result */
+export interface FileVerifyResultEntry {
+  /** Relative file path */
+  file: string;
+  /** PASS / WARN / FAIL */
+  status: FileVerifyStatus;
+  /** How this file was verified */
+  mode: FileVerifyMode;
+  /** Normalized score 0.00 - 1.00 */
+  score: number;
+  /** Which ISL spec verified this file (if any) */
+  specFile?: string;
+  /** Human-readable blocker messages */
+  blockers: string[];
+  /** Errors encountered */
+  errors: string[];
+  /** Duration in ms */
+  duration: number;
+}
+
+/** Overall unified verification result */
+export interface UnifiedVerifyResult {
+  /** SHIP / NO_SHIP / WARN */
+  verdict: UnifiedVerdict;
+  /** Overall score 0.00 - 1.00 */
+  score: number;
+  /** ISL spec coverage */
+  coverage: { specced: number; total: number };
+  /** Per-file results */
+  files: FileVerifyResultEntry[];
+  /** Aggregated blockers */
+  blockers: string[];
+  /** Suggested next steps */
+  recommendations: string[];
+  /** Detected verification mode */
+  mode: VerificationMode;
+  /** Total duration in ms */
+  duration: number;
+  /** Process exit code */
+  exitCode: number;
+}
+
+/** Detection result from path analysis */
+interface ModeDetectionResult {
+  mode: VerificationMode;
+  islFiles: string[];
+  codeFiles: string[];
+  /** Map from code file path to its matching ISL spec path */
+  specMap: Map<string, string>;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Unified Verify — Auto-Detection
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CODE_EXTENSIONS = ['ts', 'js', 'tsx', 'jsx'];
+const CODE_GLOB = `**/*.{${CODE_EXTENSIONS.join(',')}}`;
+const IGNORE_PATTERNS = [
+  'node_modules/**',
+  'dist/**',
+  '.git/**',
+  'coverage/**',
+  '**/*.test.*',
+  '**/*.spec.*',
+  '**/*.d.ts',
+];
+
+/**
+ * Detect verification mode from the target path.
+ * Scans for ISL specs and code files, then matches them.
+ */
+async function detectVerificationMode(targetPath: string): Promise<ModeDetectionResult> {
+  const absTarget = resolve(targetPath);
+
+  // 1. Find code files in the target directory
+  const codeFiles = await glob(CODE_GLOB, {
+    cwd: absTarget,
+    ignore: IGNORE_PATTERNS,
+    absolute: true,
+  });
+
+  // 2. Find ISL files: in the target, specs/, and .shipgate/specs/
+  const islSearchPaths = [
+    '**/*.isl',
+  ];
+
+  const islInTarget = await glob('**/*.isl', {
+    cwd: absTarget,
+    ignore: IGNORE_PATTERNS,
+    absolute: true,
+  });
+
+  // Also check standard spec locations relative to the target
+  const specDirs = [
+    resolve(absTarget, 'specs'),
+    resolve(absTarget, '.shipgate/specs'),
+    resolve(absTarget, '../specs'),
+    resolve(absTarget, '../.shipgate/specs'),
+  ];
+
+  const externalSpecs: string[] = [];
+  for (const dir of specDirs) {
+    if (existsSync(dir)) {
+      const found = await glob('**/*.isl', {
+        cwd: dir,
+        ignore: IGNORE_PATTERNS,
+        absolute: true,
+      });
+      externalSpecs.push(...found);
+    }
+  }
+
+  const allIslFiles = [...new Set([...islInTarget, ...externalSpecs])];
+
+  // 3. Build spec-to-code mapping by filename convention
+  const specMap = new Map<string, string>();
+
+  for (const codeFile of codeFiles) {
+    const codeBase = basename(codeFile).replace(/\.(ts|js|tsx|jsx)$/, '');
+
+    // Try to find a matching ISL spec by name
+    const matchingSpec = allIslFiles.find(islFile => {
+      const islBase = basename(islFile, '.isl');
+      return (
+        islBase === codeBase ||
+        islBase === codeBase.replace(/\.impl$/, '') ||
+        islBase.toLowerCase() === codeBase.toLowerCase()
+      );
+    });
+
+    if (matchingSpec) {
+      specMap.set(codeFile, matchingSpec);
+    }
+  }
+
+  // 4. Determine mode
+  let mode: VerificationMode;
+  if (allIslFiles.length === 0) {
+    mode = 'specless';
+  } else if (specMap.size >= codeFiles.length && codeFiles.length > 0) {
+    mode = 'isl';
+  } else if (specMap.size > 0) {
+    mode = 'mixed';
+  } else if (allIslFiles.length > 0 && codeFiles.length === 0) {
+    mode = 'isl';
+  } else {
+    mode = 'specless';
+  }
+
+  return { mode, islFiles: allIslFiles, codeFiles, specMap };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Unified Verify — Specless Verification (via @isl-lang/gate)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Run specless verification on a single file using the gate package.
+ */
+async function runSpeclessFileVerification(
+  codeFile: string,
+  projectRoot: string,
+): Promise<FileVerifyResultEntry> {
+  const startTime = Date.now();
+  const relPath = relative(process.cwd(), codeFile);
+
+  try {
+    const { runAuthoritativeGate } = await import('@isl-lang/gate');
+    const gateResult = await runAuthoritativeGate({
+      projectRoot,
+      spec: '',
+      implementation: codeFile,
+      specOptional: true,
+      dependencyAudit: true,
+      writeBundle: false,
+    });
+
+    const score = gateResult.score / 100;
+    const isFake = score < 0.3;
+    const isWarn = score < 0.7;
+
+    let status: FileVerifyStatus;
+    let mode: FileVerifyMode;
+
+    if (isFake) {
+      status = 'FAIL';
+      mode = 'Fake feature';
+    } else if (isWarn) {
+      status = 'WARN';
+      mode = 'Specless';
+    } else {
+      status = 'PASS';
+      mode = 'Specless';
+    }
+
+    const blockers = gateResult.verdict === 'NO_SHIP'
+      ? gateResult.reasons.map((r: { message: string }) => `${relPath}: ${r.message}`)
+      : [];
+
+    return {
+      file: relPath,
+      status,
+      mode,
+      score: Math.round(score * 100) / 100,
+      blockers,
+      errors: [],
+      duration: gateResult.durationMs ?? (Date.now() - startTime),
+    };
+  } catch (err) {
+    // Gate package not available — fall back to marking as Skipped
+    return {
+      file: relPath,
+      status: 'WARN',
+      mode: 'Skipped',
+      score: 0,
+      blockers: [],
+      errors: [err instanceof Error ? err.message : String(err)],
+      duration: Date.now() - startTime,
+    };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Unified Verify — ISL Verification Wrapper
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Run ISL verification on a code file against its matched spec.
+ */
+async function runISLFileVerification(
+  codeFile: string,
+  specFile: string,
+  options: UnifiedVerifyOptions,
+): Promise<FileVerifyResultEntry> {
+  const relPath = relative(process.cwd(), codeFile);
+  const relSpec = relative(process.cwd(), specFile);
+
+  try {
+    const result = await verify(specFile, {
+      impl: codeFile,
+      timeout: options.timeout ?? 30000,
+      minScore: options.minScore ?? 70,
+      verbose: options.verbose,
+    });
+
+    const score = result.trustScore
+      ? Math.round((result.trustScore / 100) * 100) / 100
+      : (result.success ? 0.85 : 0.3);
+
+    let status: FileVerifyStatus;
+    if (!result.success) {
+      status = 'FAIL';
+    } else if (score < 0.7) {
+      status = 'WARN';
+    } else {
+      status = 'PASS';
+    }
+
+    const blockers: string[] = [];
+    if (!result.success && result.verification) {
+      const failures = result.verification.trustScore.details.filter(
+        (d: { status: string }) => d.status === 'failed'
+      );
+      for (const failure of failures) {
+        blockers.push(`${relPath}: ${failure.name} — ${failure.message ?? 'failed'}`);
+      }
+    }
+    if (!result.success && result.errors.length > 0) {
+      for (const error of result.errors) {
+        blockers.push(`${relPath}: ${error}`);
+      }
+    }
+
+    return {
+      file: relPath,
+      status,
+      mode: 'ISL verified',
+      score,
+      specFile: relSpec,
+      blockers,
+      errors: result.errors,
+      duration: result.duration,
+    };
+  } catch (err) {
+    return {
+      file: relPath,
+      status: 'FAIL',
+      mode: 'ISL verified',
+      score: 0,
+      specFile: relSpec,
+      blockers: [`${relPath}: ${err instanceof Error ? err.message : String(err)}`],
+      errors: [err instanceof Error ? err.message : String(err)],
+      duration: 0,
+    };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Unified Verify — Orchestration
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Calculate the overall verdict from per-file results and options.
+ */
+function calculateVerdict(
+  files: FileVerifyResultEntry[],
+  options: UnifiedVerifyOptions,
+): UnifiedVerdict {
+  const failOn = options.failOn ?? 'error';
+
+  const hasFail = files.some(f => f.status === 'FAIL');
+  const hasWarn = files.some(f => f.status === 'WARN');
+  const hasUnspecced = files.some(f => f.mode === 'Specless' || f.mode === 'Skipped');
+
+  if (hasFail) return 'NO_SHIP';
+
+  if (failOn === 'warning' && hasWarn) return 'NO_SHIP';
+  if (failOn === 'unspecced' && hasUnspecced) return 'NO_SHIP';
+
+  if (hasWarn) return 'WARN';
+  return 'SHIP';
+}
+
+/**
+ * Generate recommendations based on verification results.
+ */
+function generateUnifiedRecommendations(
+  files: FileVerifyResultEntry[],
+  coverage: { specced: number; total: number },
+): string[] {
+  const recs: string[] = [];
+
+  // Recommend ISL spec generation for unspecced files
+  const unspeccedFiles = files.filter(f => f.mode === 'Specless' || f.mode === 'Skipped');
+  if (unspeccedFiles.length > 0) {
+    // Group by directory
+    const dirs = new Set(unspeccedFiles.map(f => dirname(f.file)));
+    for (const dir of dirs) {
+      recs.push(`Generate ISL specs: shipgate isl generate ${dir}/`);
+    }
+  }
+
+  // Recommend fixing fake features
+  const fakeFiles = files.filter(f => f.mode === 'Fake feature');
+  if (fakeFiles.length > 0) {
+    recs.push(`Fix fake/stub implementations in: ${fakeFiles.map(f => f.file).join(', ')}`);
+  }
+
+  // Recommend increasing coverage
+  if (coverage.total > 0 && coverage.specced < coverage.total) {
+    const pct = Math.round((coverage.specced / coverage.total) * 100);
+    if (pct < 50) {
+      recs.push(`ISL coverage is ${pct}% — aim for at least 80% spec coverage`);
+    }
+  }
+
+  return recs;
+}
+
+/**
+ * Unified verify entry point.
+ * Auto-detects verification mode and runs the appropriate strategy.
+ *
+ * Usage:
+ *   unifiedVerify('src/')                           — auto-detect
+ *   unifiedVerify(undefined, { spec: 'a.isl', impl: 'a.ts' })  — explicit
+ */
+export async function unifiedVerify(
+  targetPath: string | undefined,
+  options: UnifiedVerifyOptions,
+): Promise<UnifiedVerifyResult> {
+  const startTime = Date.now();
+
+  // ── Legacy single-spec mode ──────────────────────────────────────────────
+  if (options.spec && options.impl) {
+    const result = await verify(options.spec, {
+      impl: options.impl,
+      timeout: options.timeout ?? 30000,
+      minScore: options.minScore ?? 70,
+      verbose: options.verbose,
+      report: options.report,
+    });
+
+    const relImpl = relative(process.cwd(), resolve(options.impl));
+    const relSpec = relative(process.cwd(), resolve(options.spec));
+    const score = result.trustScore
+      ? Math.round((result.trustScore / 100) * 100) / 100
+      : (result.success ? 0.85 : 0.3);
+
+    const fileEntry: FileVerifyResultEntry = {
+      file: relImpl,
+      status: result.success ? 'PASS' : 'FAIL',
+      mode: 'ISL verified',
+      score,
+      specFile: relSpec,
+      blockers: result.errors.map(e => `${relImpl}: ${e}`),
+      errors: result.errors,
+      duration: result.duration,
+    };
+
+    const verdict: UnifiedVerdict = result.success ? 'SHIP' : 'NO_SHIP';
+
+    return {
+      verdict,
+      score,
+      coverage: { specced: 1, total: 1 },
+      files: [fileEntry],
+      blockers: fileEntry.blockers,
+      recommendations: [],
+      mode: 'isl',
+      duration: Date.now() - startTime,
+      exitCode: result.success ? 0 : 1,
+    };
+  }
+
+  // ── Auto-detect mode ──────────────────────────────────────────────────────
+  const resolvedTarget = resolve(targetPath ?? '.');
+
+  if (!existsSync(resolvedTarget)) {
+    return {
+      verdict: 'NO_SHIP',
+      score: 0,
+      coverage: { specced: 0, total: 0 },
+      files: [],
+      blockers: [`Path does not exist: ${targetPath}`],
+      recommendations: [],
+      mode: 'specless',
+      duration: Date.now() - startTime,
+      exitCode: 1,
+    };
+  }
+
+  const detection = await detectVerificationMode(resolvedTarget);
+  const { mode, codeFiles, specMap } = detection;
+  const fileResults: FileVerifyResultEntry[] = [];
+  const projectRoot = resolvedTarget;
+
+  // Process each code file
+  for (const codeFile of codeFiles) {
+    const matchedSpec = specMap.get(codeFile);
+
+    if (matchedSpec) {
+      // ISL verification
+      const result = await runISLFileVerification(codeFile, matchedSpec, options);
+      fileResults.push(result);
+    } else {
+      // Specless verification via gate
+      const result = await runSpeclessFileVerification(codeFile, projectRoot);
+      fileResults.push(result);
+    }
+  }
+
+  // If we found ISL files but no code files, report on the ISL files themselves
+  if (codeFiles.length === 0 && detection.islFiles.length > 0) {
+    for (const islFile of detection.islFiles) {
+      const relPath = relative(process.cwd(), islFile);
+      fileResults.push({
+        file: relPath,
+        status: 'WARN',
+        mode: 'Skipped',
+        score: 0,
+        blockers: [`${relPath}: ISL spec found but no matching implementation`],
+        errors: [],
+        duration: 0,
+      });
+    }
+  }
+
+  // Calculate coverage
+  const specced = fileResults.filter(f => f.mode === 'ISL verified').length;
+  const total = fileResults.length;
+  const coverage = { specced, total };
+
+  // Calculate overall score
+  const avgScore = total > 0
+    ? Math.round((fileResults.reduce((sum, f) => sum + f.score, 0) / total) * 100) / 100
+    : 0;
+
+  // Determine verdict
+  const verdict = calculateVerdict(fileResults, options);
+
+  // Collect blockers
+  const blockers = fileResults.flatMap(f => f.blockers);
+
+  // Generate recommendations
+  const recommendations = generateUnifiedRecommendations(fileResults, coverage);
+
+  // Calculate exit code
+  let exitCode: number;
+  switch (verdict) {
+    case 'SHIP': exitCode = 0; break;
+    case 'NO_SHIP': exitCode = 1; break;
+    case 'WARN': exitCode = 4; break;
+  }
+
+  return {
+    verdict,
+    score: avgScore,
+    coverage,
+    files: fileResults,
+    blockers,
+    recommendations,
+    mode,
+    duration: Date.now() - startTime,
+    exitCode,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Unified Verify — Exit Code
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Get process exit code for a unified verify result.
+ */
+export function getUnifiedExitCode(result: UnifiedVerifyResult): number {
+  return result.exitCode;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Unified Verify — Terminal Output
+// ─────────────────────────────────────────────────────────────────────────────
+
+const VERSION_TAG = 'v0.1.0';
+
+/**
+ * Print the structured terminal output for unified verification.
+ *
+ * Example:
+ * ```
+ * ShipGate ISL Verify v0.1.0
+ * ─────────────────────────────────────────────
+ * src/auth/login.ts        ✓ PASS   ISL verified    0.95
+ * src/payments/checkout.ts ⚠ WARN   Specless        0.71
+ * ─────────────────────────────────────────────
+ * Coverage: 1/2 files have ISL specs (50%)
+ * Verdict:  SHIP
+ * ```
+ */
+export function printUnifiedVerifyResult(
+  result: UnifiedVerifyResult,
+  options: {
+    json?: boolean;
+    ci?: boolean;
+    format?: OutputFormat;
+    verbose?: boolean;
+    detailed?: boolean;
+  } = {},
+): void {
+  // ── Format-specific output ─────────────────────────────────────────────
+  const format = options.format || (options.json ? 'json' : undefined) || (options.ci ? 'github' : undefined);
+  
+  if (format === 'gitlab') {
+    console.log(formatGitLab(result));
+    return;
+  }
+  
+  if (format === 'junit') {
+    console.log(formatJUnit(result));
+    return;
+  }
+  
+  // ── JSON output ──────────────────────────────────────────────────────────
+  if (format === 'json' || options.json) {
+    printUnifiedJSON(result);
+    return;
+  }
+
+  // ── CI output (GitHub Actions annotations) ───────────────────────────────
+  if (format === 'github' || options.ci) {
+    printUnifiedCI(result);
+    return;
+  }
+
+  // ── Pretty terminal output ───────────────────────────────────────────────
+  const separator = chalk.gray('─'.repeat(65));
+
+  console.log('');
+  console.log(chalk.bold.cyan(`ShipGate ISL Verify ${VERSION_TAG}`));
+  console.log(separator);
+
+  // File table
+  if (result.files.length === 0) {
+    console.log(chalk.gray('  No files found to verify.'));
+  } else {
+    for (const file of result.files) {
+      const statusIcon = file.status === 'PASS'
+        ? chalk.green('\u2713')
+        : file.status === 'WARN'
+          ? chalk.yellow('\u26A0')
+          : chalk.red('\u2717');
+
+      const statusLabel = file.status === 'PASS'
+        ? chalk.green('PASS')
+        : file.status === 'WARN'
+          ? chalk.yellow('WARN')
+          : chalk.red('FAIL');
+
+      const modeLabel = file.mode === 'ISL verified'
+        ? chalk.cyan('ISL verified')
+        : file.mode === 'Specless'
+          ? chalk.yellow('Specless')
+          : file.mode === 'Fake feature'
+            ? chalk.red('Fake feature')
+            : chalk.gray('Skipped');
+
+      const scoreStr = file.score > 0
+        ? (file.score >= 0.8 ? chalk.green : file.score >= 0.5 ? chalk.yellow : chalk.red)(
+            file.score.toFixed(2),
+          )
+        : chalk.gray('-.--');
+
+      const filePad = file.file.padEnd(35);
+      console.log(
+        `  ${filePad} ${statusIcon} ${statusLabel.padEnd(14)} ${modeLabel.padEnd(22)} ${scoreStr}`,
+      );
+    }
+  }
+
+  console.log(separator);
+
+  // Coverage
+  const covPct = result.coverage.total > 0
+    ? Math.round((result.coverage.specced / result.coverage.total) * 100)
+    : 0;
+  console.log(
+    chalk.bold('Coverage: ') +
+      `${result.coverage.specced}/${result.coverage.total} files have ISL specs (${covPct}%)`,
+  );
+
+  // Verdict
+  const verdictColor =
+    result.verdict === 'SHIP'
+      ? chalk.green
+      : result.verdict === 'WARN'
+        ? chalk.yellow
+        : chalk.red;
+  const failCount = result.files.filter(f => f.status === 'FAIL').length;
+  const verdictSuffix =
+    result.verdict === 'NO_SHIP' && failCount > 0
+      ? ` (${failCount} critical failure${failCount > 1 ? 's' : ''})`
+      : '';
+  console.log(chalk.bold('Verdict:  ') + verdictColor.bold(`${result.verdict}${verdictSuffix}`));
+  console.log(chalk.bold('Score:    ') + chalk.bold(`${result.score.toFixed(2)}`));
+  console.log(chalk.gray(`Mode:     ${result.mode} (auto-detected)`));
+  console.log(chalk.gray(`Duration: ${result.duration}ms`));
+
+  // Blockers
+  if (result.blockers.length > 0) {
+    console.log('');
+    console.log(chalk.bold.red('Blockers:'));
+    for (const blocker of result.blockers) {
+      console.log(chalk.red(`  \u2022 ${blocker}`));
+    }
+  }
+
+  // Recommendations
+  if (result.recommendations.length > 0) {
+    console.log('');
+    console.log(chalk.bold.cyan('Recommendations:'));
+    for (const rec of result.recommendations) {
+      console.log(chalk.cyan(`  \u2022 ${rec}`));
+    }
+  }
+
+  console.log('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Unified Verify — JSON Output
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Print machine-readable JSON output for CI pipelines.
+ */
+function printUnifiedJSON(result: UnifiedVerifyResult): void {
+  const payload = {
+    verdict: result.verdict,
+    score: result.score,
+    coverage: result.coverage,
+    mode: result.mode,
+    files: result.files.map(f => ({
+      file: f.file,
+      status: f.status,
+      mode: f.mode,
+      score: f.score,
+      specFile: f.specFile ?? null,
+      blockers: f.blockers,
+      errors: f.errors,
+      duration: f.duration,
+    })),
+    blockers: result.blockers,
+    recommendations: result.recommendations,
+    duration: result.duration,
+    exitCode: result.exitCode,
+  };
+  console.log(JSON.stringify(payload, null, 2));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Unified Verify — CI Output (GitHub Actions Annotations)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Print CI-friendly output:
+ * - JSON to stdout
+ * - GitHub Actions annotations to stderr
+ * - One-line summary to stderr
+ */
+function printUnifiedCI(result: UnifiedVerifyResult): void {
+  // JSON payload to stdout (for artifact capture)
+  printUnifiedJSON(result);
+
+  // GitHub Actions annotations to stderr
+  for (const file of result.files) {
+    if (file.status === 'FAIL') {
+      const msg = file.blockers.length > 0 ? file.blockers[0] : `Verification failed (score: ${file.score})`;
+      process.stderr.write(`::error file=${file.file}::${msg}\n`);
+    } else if (file.status === 'WARN') {
+      const msg = file.mode === 'Specless'
+        ? `No ISL spec found (specless verification, score: ${file.score})`
+        : `Warning (score: ${file.score})`;
+      process.stderr.write(`::warning file=${file.file}::${msg}\n`);
+    } else {
+      process.stderr.write(`::notice file=${file.file}::PASS (${file.mode}, score: ${file.score})\n`);
+    }
+  }
+
+  // One-line summary to stderr
+  const covPct = result.coverage.total > 0
+    ? Math.round((result.coverage.specced / result.coverage.total) * 100)
+    : 0;
+  const summary = `ShipGate: ${result.verdict} | score: ${result.score.toFixed(2)} | coverage: ${covPct}% | files: ${result.files.length}`;
+
+  if (result.verdict === 'SHIP') {
+    process.stderr.write(`\n${summary}\n`);
+  } else {
+    process.stderr.write(`\n${summary} | blockers: ${result.blockers.length}\n`);
+  }
 }
 
 export default verify;

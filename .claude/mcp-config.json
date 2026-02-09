@@ -1,13 +1,13 @@
 {
   "mcpServers": {
-    "vibecheck": {
+    "shipgate": {
       "command": "npx",
       "args": [
         "-y",
-        "@vibecheck/mcp-server"
+        "@shipgate/mcp-server"
       ],
       "env": {
-        "VIBECHECK_PROJECT_PATH": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS"
+        "SHIPGATE_PROJECT_PATH": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS"
       }
     }
   }

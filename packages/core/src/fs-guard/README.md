@@ -214,7 +214,7 @@ const DEFAULT_ALLOWED_DIRS = [
   'lib/',
   'components/',
   'generated/',
-  '.vibecheck/',
+  '.shipgate/',
 ];
 ```
 

@@ -389,3 +389,52 @@ export type {
   AIFixResult,
   AIFixContext,
 } from './ai/generator.js';
+
+// ── New: Fix Suggestion ──────────────────────────────────────────────────────
+export {
+  createFixSuggestion,
+  formatFixSuggestion,
+  fixSuggestionsToJSON,
+} from './fix-suggestion.js';
+export type {
+  FixSuggestion,
+  FixLocation,
+  FixTag,
+  SecurityPatternId,
+  FixSuggestionInit,
+} from './fix-suggestion.js';
+
+// ── New: Security Pattern Detectors ──────────────────────────────────────────
+export {
+  runAllPatternDetectors,
+  getDetector,
+  ALL_DETECTORS,
+} from './security-patterns.js';
+export type {
+  PatternDetector,
+  PatternDetectorOptions,
+} from './security-patterns.js';
+
+// ── New: Fix Engine ──────────────────────────────────────────────────────────
+export { FixEngine } from './fix-engine.js';
+export type {
+  FixMode,
+  FixEngineOptions,
+  FixEngineResult,
+  FileSummary,
+  PromptChoice,
+} from './fix-engine.js';
+
+// ── New: Diff Generator ─────────────────────────────────────────────────────
+export {
+  generateUnifiedDiff,
+  generateInlineDiff,
+  generatePatchFile,
+  generatePatchFromSuggestions,
+  formatDiffBlock,
+} from './diff-generator.js';
+export type { PatchEntry } from './diff-generator.js';
+
+// ── New: CLI Integration ─────────────────────────────────────────────────────
+export { runFixCLI } from './cli-integration.js';
+export type { FixCLIOptions } from './cli-integration.js';

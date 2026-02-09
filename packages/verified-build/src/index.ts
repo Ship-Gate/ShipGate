@@ -334,7 +334,7 @@ function getFixForCode(code: string): string | undefined {
     'auth/hardcoded-credentials': 'Move secrets to environment variables.',
     'pii/logged-sensitive-data': 'Use structured logging with PII redaction.',
     'rate-limit/auth-endpoint': 'Add rate limiting: rateLimit({ windowMs: 60000, max: 5 })',
-    'GHOST_ROUTE': 'Register the route in your truthpack: .vibecheck/truthpack/routes.json',
+    'GHOST_ROUTE': 'Register the route in your truthpack: .shipgate/truthpack/routes.json',
     'GHOST_ENV': 'Add environment variable to .env.example',
   };
   return fixes[code];

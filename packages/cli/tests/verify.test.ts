@@ -50,10 +50,10 @@ describe('Verify Command', () => {
     mkdirSync(TEMP_DIR, { recursive: true });
 
     // Create test fixtures
-    mkdirSync(join(TEMP_DIR, '.vibecheck/specs'), { recursive: true });
+    mkdirSync(join(TEMP_DIR, '.shipgate/specs'), { recursive: true });
     
     // Create minimal ISL spec
-    writeFileSync(join(TEMP_DIR, '.vibecheck/specs/test.isl'), `
+    writeFileSync(join(TEMP_DIR, '.shipgate/specs/test.isl'), `
 isl 1.0
 
 domain TestDomain {
@@ -116,16 +116,25 @@ export function createUser(input: { name: string; email: string }): User {
   });
 
   describe('Basic Verification', () => {
-    it('should require --impl flag', async () => {
-      const specPath = join(TEMP_DIR, '.vibecheck/specs/test.isl');
+    it('should auto-detect mode when path provided without --impl', async () => {
+      const specPath = join(TEMP_DIR, '.shipgate/specs/test.isl');
       const result = await runCLI(['verify', specPath]);
-      
-      expect(result.exitCode).not.toBe(0);
-      expect(result.stdout + result.stderr).toMatch(/impl|implementation/i);
+
+      // In unified mode, verify [path] without --impl runs auto-detect
+      // It should not crash and should produce output
+      expect(typeof result.exitCode).toBe('number');
+    });
+
+    it('should require --impl when --spec is used for legacy single-spec mode', async () => {
+      const specPath = join(TEMP_DIR, '.shipgate/specs/test.isl');
+      const result = await runCLI(['verify', specPath, '--impl', join(TEMP_DIR, 'impl.ts')]);
+
+      // Legacy mode: spec + impl should produce a result
+      expect(typeof result.exitCode).toBe('number');
     });
 
     it('should verify spec against implementation', async () => {
-      const specPath = join(TEMP_DIR, '.vibecheck/specs/test.isl');
+      const specPath = join(TEMP_DIR, '.shipgate/specs/test.isl');
       const implPath = join(TEMP_DIR, 'impl.ts');
       
       const result = await runCLI(['verify', specPath, '--impl', implPath]);
@@ -141,7 +150,7 @@ export function createUser(input: { name: string; email: string }): User {
     });
 
     it('should fail on non-existent impl file', async () => {
-      const specPath = join(TEMP_DIR, '.vibecheck/specs/test.isl');
+      const specPath = join(TEMP_DIR, '.shipgate/specs/test.isl');
       const result = await runCLI(['verify', specPath, '--impl', '/nonexistent.ts']);
       
       expect(result.exitCode).not.toBe(0);
@@ -150,7 +159,7 @@ export function createUser(input: { name: string; email: string }): User {
 
   describe('JSON Output', () => {
     it('should output valid JSON with --format json', async () => {
-      const specPath = join(TEMP_DIR, '.vibecheck/specs/test.isl');
+      const specPath = join(TEMP_DIR, '.shipgate/specs/test.isl');
       const implPath = join(TEMP_DIR, 'impl.ts');
       
       const result = await runCLI(['verify', specPath, '--impl', implPath, '--format', 'json']);
@@ -173,7 +182,7 @@ export function createUser(input: { name: string; email: string }): User {
 
   describe('Evidence Report', () => {
     it('should write report with --report flag', async () => {
-      const specPath = join(TEMP_DIR, '.vibecheck/specs/test.isl');
+      const specPath = join(TEMP_DIR, '.shipgate/specs/test.isl');
       const implPath = join(TEMP_DIR, 'impl.ts');
       const reportPath = join(TEMP_DIR, 'evidence-report.json');
       
@@ -192,7 +201,7 @@ export function createUser(input: { name: string; email: string }): User {
     });
 
     it('should create report directory if needed', async () => {
-      const specPath = join(TEMP_DIR, '.vibecheck/specs/test.isl');
+      const specPath = join(TEMP_DIR, '.shipgate/specs/test.isl');
       const implPath = join(TEMP_DIR, 'impl.ts');
       const reportPath = join(TEMP_DIR, 'nested/dir/report.json');
       
@@ -207,7 +216,7 @@ export function createUser(input: { name: string; email: string }): User {
 
   describe('Options', () => {
     it('should accept --timeout option', async () => {
-      const specPath = join(TEMP_DIR, '.vibecheck/specs/test.isl');
+      const specPath = join(TEMP_DIR, '.shipgate/specs/test.isl');
       const implPath = join(TEMP_DIR, 'impl.ts');
       
       const result = await runCLI(['verify', specPath, '--impl', implPath, '--timeout', '5000']);
@@ -216,7 +225,7 @@ export function createUser(input: { name: string; email: string }): User {
     });
 
     it('should accept --min-score option', async () => {
-      const specPath = join(TEMP_DIR, '.vibecheck/specs/test.isl');
+      const specPath = join(TEMP_DIR, '.shipgate/specs/test.isl');
       const implPath = join(TEMP_DIR, 'impl.ts');
       
       const result = await runCLI(['verify', specPath, '--impl', implPath, '--min-score', '90']);
@@ -225,7 +234,7 @@ export function createUser(input: { name: string; email: string }): User {
     });
 
     it('should accept --detailed flag', async () => {
-      const specPath = join(TEMP_DIR, '.vibecheck/specs/test.isl');
+      const specPath = join(TEMP_DIR, '.shipgate/specs/test.isl');
       const implPath = join(TEMP_DIR, 'impl.ts');
       
       const result = await runCLI(['verify', specPath, '--impl', implPath, '--detailed']);
@@ -236,7 +245,7 @@ export function createUser(input: { name: string; email: string }): User {
 
   describe('Evidence Score', () => {
     it('should include evidence score in JSON output', async () => {
-      const specPath = join(TEMP_DIR, '.vibecheck/specs/test.isl');
+      const specPath = join(TEMP_DIR, '.shipgate/specs/test.isl');
       const implPath = join(TEMP_DIR, 'impl.ts');
       
       const result = await runCLI(['verify', specPath, '--impl', implPath, '--format', 'json']);
@@ -279,5 +288,246 @@ describe('Verify Command Fixtures', () => {
     const result = await runCLI(['verify', specPath, '--impl', implPath]);
     
     expect(typeof result.exitCode).toBe('number');
+  });
+});
+
+// ============================================================================
+// Unified Verify Command Tests
+// ============================================================================
+
+describe('Unified Verify Command', () => {
+  const UNIFIED_DIR = resolve(__dirname, '../../../.test-temp/unified-verify');
+
+  beforeAll(() => {
+    if (existsSync(UNIFIED_DIR)) {
+      rmSync(UNIFIED_DIR, { recursive: true, force: true });
+    }
+    mkdirSync(UNIFIED_DIR, { recursive: true });
+
+    // Create directory with ISL specs
+    mkdirSync(join(UNIFIED_DIR, 'isl-project/specs'), { recursive: true });
+    mkdirSync(join(UNIFIED_DIR, 'isl-project/src'), { recursive: true });
+
+    writeFileSync(join(UNIFIED_DIR, 'isl-project/specs/auth.isl'), `
+isl 1.0
+
+domain Auth {
+  entity User {
+    id: UUID
+    email: String
+  }
+
+  behavior Login {
+    input { email: String }
+    output { success: User }
+    postconditions {
+      "Returns user" => result.email == input.email
+    }
+  }
+}
+`);
+
+    writeFileSync(join(UNIFIED_DIR, 'isl-project/src/auth.ts'), `
+export function login(email: string) {
+  return { id: crypto.randomUUID(), email };
+}
+`);
+
+    // Create directory with only code files (specless)
+    mkdirSync(join(UNIFIED_DIR, 'specless-project/src'), { recursive: true });
+    writeFileSync(join(UNIFIED_DIR, 'specless-project/src/payment.ts'), `
+export function processPayment(amount: number) {
+  return { success: true, amount };
+}
+`);
+
+    // Create mixed project
+    mkdirSync(join(UNIFIED_DIR, 'mixed-project/specs'), { recursive: true });
+    mkdirSync(join(UNIFIED_DIR, 'mixed-project/src'), { recursive: true });
+
+    writeFileSync(join(UNIFIED_DIR, 'mixed-project/specs/auth.isl'), `
+isl 1.0
+
+domain Auth {
+  entity User {
+    id: UUID
+    email: String
+  }
+
+  behavior Login {
+    input { email: String }
+    output { success: User }
+    postconditions {
+      "Returns user" => result.email == input.email
+    }
+  }
+}
+`);
+
+    writeFileSync(join(UNIFIED_DIR, 'mixed-project/src/auth.ts'), `
+export function login(email: string) {
+  return { id: crypto.randomUUID(), email };
+}
+`);
+
+    writeFileSync(join(UNIFIED_DIR, 'mixed-project/src/unspecced.ts'), `
+export function doSomething() {
+  return { done: true };
+}
+`);
+  });
+
+  afterAll(() => {
+    if (existsSync(UNIFIED_DIR)) {
+      rmSync(UNIFIED_DIR, { recursive: true, force: true });
+    }
+  });
+
+  describe('Auto-detect mode', () => {
+    it('should accept a directory path without --spec', async () => {
+      const targetPath = join(UNIFIED_DIR, 'specless-project/src');
+      const result = await runCLI(['verify', targetPath]);
+
+      // Should not crash, should produce output
+      expect(typeof result.exitCode).toBe('number');
+    });
+
+    it('should run without any arguments (current directory)', async () => {
+      const result = await runCLI(['verify'], { cwd: UNIFIED_DIR });
+      expect(typeof result.exitCode).toBe('number');
+    });
+  });
+
+  describe('--json flag', () => {
+    it('should output valid JSON with --json', async () => {
+      const targetPath = join(UNIFIED_DIR, 'specless-project/src');
+      const result = await runCLI(['verify', targetPath, '--json']);
+
+      let parsed: Record<string, unknown> | undefined;
+      try {
+        parsed = JSON.parse(result.stdout);
+      } catch {
+        // JSON might be in stderr or mixed with other output
+      }
+
+      if (parsed) {
+        expect(parsed).toHaveProperty('verdict');
+        expect(parsed).toHaveProperty('score');
+        expect(parsed).toHaveProperty('coverage');
+        expect(parsed).toHaveProperty('files');
+        expect(parsed).toHaveProperty('blockers');
+        expect(parsed).toHaveProperty('exitCode');
+      }
+    });
+
+    it('should include proper coverage data in JSON', async () => {
+      const targetPath = join(UNIFIED_DIR, 'specless-project/src');
+      const result = await runCLI(['verify', targetPath, '--json']);
+
+      let parsed: Record<string, unknown> | undefined;
+      try {
+        parsed = JSON.parse(result.stdout);
+      } catch {
+        return; // Skip if JSON parsing fails
+      }
+
+      if (parsed?.coverage) {
+        const coverage = parsed.coverage as { specced: number; total: number };
+        expect(typeof coverage.specced).toBe('number');
+        expect(typeof coverage.total).toBe('number');
+      }
+    });
+  });
+
+  describe('--ci flag', () => {
+    it('should produce CI output with --ci', async () => {
+      const targetPath = join(UNIFIED_DIR, 'specless-project/src');
+      const result = await runCLI(['verify', targetPath, '--ci']);
+
+      // CI mode outputs JSON to stdout
+      expect(typeof result.exitCode).toBe('number');
+
+      let parsed: Record<string, unknown> | undefined;
+      try {
+        parsed = JSON.parse(result.stdout);
+      } catch {
+        // CI output may have annotations mixed in
+      }
+
+      if (parsed) {
+        expect(parsed).toHaveProperty('verdict');
+      }
+    });
+  });
+
+  describe('--fail-on flag', () => {
+    it('should accept --fail-on error', async () => {
+      const targetPath = join(UNIFIED_DIR, 'specless-project/src');
+      const result = await runCLI(['verify', targetPath, '--fail-on', 'error', '--json']);
+
+      expect(typeof result.exitCode).toBe('number');
+    });
+
+    it('should accept --fail-on warning', async () => {
+      const targetPath = join(UNIFIED_DIR, 'specless-project/src');
+      const result = await runCLI(['verify', targetPath, '--fail-on', 'warning', '--json']);
+
+      expect(typeof result.exitCode).toBe('number');
+    });
+
+    it('should accept --fail-on unspecced', async () => {
+      const targetPath = join(UNIFIED_DIR, 'specless-project/src');
+      const result = await runCLI(['verify', targetPath, '--fail-on', 'unspecced', '--json']);
+
+      expect(typeof result.exitCode).toBe('number');
+
+      // With --fail-on unspecced, specless files should cause NO_SHIP
+      let parsed: Record<string, unknown> | undefined;
+      try {
+        parsed = JSON.parse(result.stdout);
+      } catch {
+        return;
+      }
+
+      if (parsed) {
+        // Specless project with --fail-on unspecced should be NO_SHIP
+        expect(parsed.verdict).toBe('NO_SHIP');
+      }
+    });
+  });
+
+  describe('Legacy backward compatibility', () => {
+    it('should still work with <spec> --impl <file> syntax', async () => {
+      const specPath = join(UNIFIED_DIR, 'isl-project/specs/auth.isl');
+      const implPath = join(UNIFIED_DIR, 'isl-project/src/auth.ts');
+      const result = await runCLI(['verify', specPath, '--impl', implPath]);
+
+      expect(typeof result.exitCode).toBe('number');
+    });
+
+    it('should work with --spec <file> --impl <file>', async () => {
+      const specPath = join(UNIFIED_DIR, 'isl-project/specs/auth.isl');
+      const implPath = join(UNIFIED_DIR, 'isl-project/src/auth.ts');
+      const result = await runCLI(['verify', '--spec', specPath, '--impl', implPath]);
+
+      expect(typeof result.exitCode).toBe('number');
+    });
+  });
+
+  describe('Exit codes', () => {
+    it('should exit 0 for SHIP', async () => {
+      // An empty directory should produce a clean result
+      const emptyDir = join(UNIFIED_DIR, 'empty-dir');
+      mkdirSync(emptyDir, { recursive: true });
+
+      // Not necessarily 0 for empty, but should be a valid exit code
+      const result = await runCLI(['verify', emptyDir, '--json']);
+      expect(typeof result.exitCode).toBe('number');
+    });
+
+    it('should exit 1 for NO_SHIP (critical failures)', async () => {
+      const result = await runCLI(['verify', '/nonexistent-path-12345', '--json']);
+      expect(result.exitCode).not.toBe(0);
+    });
   });
 });

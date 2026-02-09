@@ -56,7 +56,7 @@ When verification passes, the CLI displays:
   Tests: 24 passed 0 failed 0 skipped
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Verified by VibeCheck ✓
+  Verified by ShipGate ✓
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -95,7 +95,7 @@ When verification passes, the CLI displays:
 ### From 0.x
 
 1. **Proof Bundle Schema v2** - Enhanced manifest with evaluator traces and SMT transcripts
-2. **CLI Output Format** - Unified output layout with "Verified by VibeCheck ✓" badge
+2. **CLI Output Format** - Unified output layout with "Verified by ShipGate ✓" badge
 3. **Gate Threshold** - Default threshold increased to 95% for SHIP verdict
 
 ### Migration Guide
@@ -182,7 +182,7 @@ isl gate auth.isl --impl src/auth.ts
 isl proof verify ./evidence
 
 # Ship when ready
-echo "Verified by VibeCheck ✓"
+echo "Verified by ShipGate ✓"
 ```
 
 ## Documentation
@@ -204,4 +204,4 @@ MIT License - See [LICENSE](../LICENSE) for details.
 
 ---
 
-**Verified by VibeCheck ✓**
+**Verified by ShipGate ✓**

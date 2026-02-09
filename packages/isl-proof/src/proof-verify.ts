@@ -17,7 +17,7 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { parse } from '@isl-lang/isl-core/parser';
+import { parse } from '@isl-lang/parser';
 import { verifyDomain, type TraceEvent } from './verification-engine.js';
 import type { VerificationResult } from './verification-engine.js';
 import type { 

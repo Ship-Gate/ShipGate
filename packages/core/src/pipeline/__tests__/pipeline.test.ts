@@ -332,7 +332,7 @@ describe('Pipeline Steps', () => {
         input: { mode: 'ast', ast: MINIMAL_AST },
         options: {
           workspacePath: TEST_WORKSPACE,
-          outDir: '.vibecheck/reports',
+          outDir: '.shipgate/reports',
           contextOptions: {},
           skipContext: true,
           writeReport: false,
@@ -365,7 +365,7 @@ describe('Pipeline Steps', () => {
         input: { mode: 'ast', ast: MINIMAL_AST },
         options: {
           workspacePath: TEST_WORKSPACE,
-          outDir: '.vibecheck/reports',
+          outDir: '.shipgate/reports',
           contextOptions: {},
           skipContext: true,
           writeReport: false,
@@ -395,7 +395,7 @@ describe('Pipeline Steps', () => {
         input: { mode: 'prompt', prompt: 'test' },
         options: {
           workspacePath: TEST_WORKSPACE,
-          outDir: '.vibecheck/reports',
+          outDir: '.shipgate/reports',
           contextOptions: {},
           skipContext: true,
           writeReport: false,
@@ -428,7 +428,7 @@ describe('Pipeline Steps', () => {
         ast: MINIMAL_AST,
         options: {
           workspacePath: TEST_WORKSPACE,
-          outDir: '.vibecheck/reports',
+          outDir: '.shipgate/reports',
           contextOptions: {},
           skipContext: true,
           writeReport: false,
@@ -459,7 +459,7 @@ describe('Pipeline Steps', () => {
         // No ast set
         options: {
           workspacePath: TEST_WORKSPACE,
-          outDir: '.vibecheck/reports',
+          outDir: '.shipgate/reports',
           contextOptions: {},
           skipContext: true,
           writeReport: false,
@@ -491,7 +491,7 @@ describe('Pipeline Steps', () => {
         ast: MINIMAL_AST,
         options: {
           workspacePath: TEST_WORKSPACE,
-          outDir: '.vibecheck/reports',
+          outDir: '.shipgate/reports',
           contextOptions: {},
           skipContext: true,
           writeReport: false,
@@ -528,7 +528,7 @@ describe('Pipeline Steps', () => {
         ast: EMPTY_AST,
         options: {
           workspacePath: TEST_WORKSPACE,
-          outDir: '.vibecheck/reports',
+          outDir: '.shipgate/reports',
           contextOptions: {},
           skipContext: true,
           writeReport: false,
@@ -568,7 +568,7 @@ describe('Pipeline Steps', () => {
         clauseResults,
         options: {
           workspacePath: TEST_WORKSPACE,
-          outDir: '.vibecheck/reports',
+          outDir: '.shipgate/reports',
           contextOptions: {},
           skipContext: true,
           writeReport: false,
@@ -606,7 +606,7 @@ describe('Pipeline Steps', () => {
         // No clauseResults
         options: {
           workspacePath: TEST_WORKSPACE,
-          outDir: '.vibecheck/reports',
+          outDir: '.shipgate/reports',
           contextOptions: {},
           skipContext: true,
           writeReport: false,

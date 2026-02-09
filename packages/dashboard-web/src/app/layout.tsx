@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
+import { CookieConsent } from '@/components/CookieConsent'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,6 +19,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={cn(inter.className, 'min-h-screen bg-background antialiased')}>
+        {/* Skip to main content link for accessibility */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          Skip to main content
+        </a>
         <div className="relative flex min-h-screen flex-col">
           <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-14 items-center">
@@ -61,7 +69,7 @@ export default function RootLayout({
               </div>
             </div>
           </header>
-          <main className="flex-1">
+          <main id="main-content" className="flex-1" tabIndex={-1}>
             {children}
           </main>
           <footer className="border-t py-6">
@@ -69,9 +77,15 @@ export default function RootLayout({
               <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
                 IntentOS Verification Dashboard
               </p>
+              <div className="flex gap-4 text-sm">
+                <a href="/privacy" className="text-muted-foreground hover:text-foreground">
+                  Privacy Policy
+                </a>
+              </div>
             </div>
           </footer>
         </div>
+        <CookieConsent />
       </body>
     </html>
   )

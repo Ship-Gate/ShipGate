@@ -1,13 +1,13 @@
 {
   "name": "@isl-lang/firewall",
   "version": "0.2.0",
-  "description": "ISL Firewall - Agent file write governance with VibeCheck + ISL Studio integration",
+  "description": "ISL Firewall - Agent file write governance with ShipGate + ISL Studio integration",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
     "isl-firewall": "./dist/cli.js",
-    "vibecheck-gate": "./dist/cli.js"
+    "shipgate-gate": "./dist/cli.js"
   },
   "exports": {
     ".": {

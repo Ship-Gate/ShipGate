@@ -28,6 +28,14 @@ export type {
 export {
   synthesizeExpectedOutcome,
   compilePostconditionExpression,
+  compileToAssertion,
+  compileBinaryToAssertion,
+  compileQuantifierToAssertion,
+  compileTemporalAssertion,
+  compileSecurityAssertion,
+  compileLifecycleAssertion,
+  compileNegativeAssertion,
+  durationToMs,
   expressionToDescription,
   inferResultTypeAssertions,
 } from './expected-outcome';

@@ -4,7 +4,7 @@ File watcher helper that triggers verification after code generation completes.
 
 ## Overview
 
-The auto-verify module monitors a workspace for a "generation complete" marker file (e.g., `.vibecheck/.gen-complete`). When detected, it automatically:
+The auto-verify module monitors a workspace for a "generation complete" marker file (e.g., `.shipgate/.gen-complete`). When detected, it automatically:
 
 1. Finds ISL specification files
 2. Runs verification against implementations
@@ -20,7 +20,7 @@ import { watchAndVerify } from '@isl-lang/core/auto-verify';
 const handle = watchAndVerify({
   workspacePath: '/path/to/project',
   specPath: 'specs',           // Where ISL specs live
-  markerFile: '.vibecheck/.gen-complete',
+  markerFile: '.shipgate/.gen-complete',
   debounceMs: 500,
   verbose: true,
 }, (event) => {
@@ -61,11 +61,11 @@ await handle.stop();
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `workspacePath` | `string` | **required** | Root path of the workspace to watch |
-| `markerFile` | `string` | `.vibecheck/.gen-complete` | Path to generation complete marker file |
+| `markerFile` | `string` | `.shipgate/.gen-complete` | Path to generation complete marker file |
 | `debounceMs` | `number` | `500` | Debounce interval in milliseconds |
 | `watchPatterns` | `string[]` | `['**/*.ts', ...]` | Glob patterns for files to watch |
 | `ignorePatterns` | `string[]` | `['**/node_modules/**', ...]` | Glob patterns to ignore |
-| `evidencePath` | `string` | `.vibecheck/evidence` | Where to write evidence reports |
+| `evidencePath` | `string` | `.shipgate/evidence` | Where to write evidence reports |
 | `specPath` | `string` | `specs` | Path to ISL specification files |
 | `verbose` | `boolean` | `false` | Enable verbose logging |
 
@@ -110,7 +110,7 @@ The watcher emits events during its lifecycle:
 Evidence reports are written in JSON or YAML format to the configured `evidencePath`:
 
 ```
-.vibecheck/evidence/
+.shipgate/evidence/
   ├── auth-1705312200123.evidence.json
   └── auth-1705312200123.summary.md
 ```
@@ -166,7 +166,7 @@ To trigger verification in a CI pipeline:
 pnpm isl gen specs/auth.isl
 
 # Create marker file to trigger verification
-echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > .vibecheck/.gen-complete
+echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > .shipgate/.gen-complete
 
 # The watcher will automatically pick up the change
 ```

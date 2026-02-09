@@ -249,7 +249,7 @@ function isConfigFile(path: string): boolean {
     /eslint\.config/i,
     /tsconfig/i,
     /package\.json$/i,
-    /\.vibecheck/i,
+    /\.shipgate/i,
     /firewall\.json$/i,
   ];
   return patterns.some((p) => p.test(path));

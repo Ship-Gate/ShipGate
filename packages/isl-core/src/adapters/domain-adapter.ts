@@ -15,6 +15,7 @@ import type {
   FieldDeclaration,
   EnumDeclaration,
   TypeDeclaration,
+  ImportDeclaration,
   UseStatement,
   Identifier,
   StringLiteral,

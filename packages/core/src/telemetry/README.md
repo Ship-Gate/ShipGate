@@ -1,6 +1,6 @@
 # ISL Telemetry
 
-Opt-in local telemetry for ISL operations. All data is stored locally in `.vibecheck/telemetry/events.jsonl` - **no network calls are made**.
+Opt-in local telemetry for ISL operations. All data is stored locally in `.shipgate/telemetry/events.jsonl` - **no network calls are made**.
 
 ## Features
 
@@ -180,7 +180,7 @@ Create a telemetry recorder that writes to local file.
 ```typescript
 const telemetry = await createLocalTelemetry({
   enabled: true,                          // Required to enable
-  outputDir: '.vibecheck/telemetry',      // Output directory
+  outputDir: '.shipgate/telemetry',      // Output directory
   filename: 'events.jsonl',               // Output filename
   redactSecrets: true,                    // Enable secret redaction
   includeMetadata: true,                  // Include system metadata
@@ -263,7 +263,7 @@ telemetry.clearEvents();
 
 ## File Location
 
-Default: `.vibecheck/telemetry/events.jsonl`
+Default: `.shipgate/telemetry/events.jsonl`
 
 The telemetry directory is created automatically if it doesn't exist.
 
@@ -272,11 +272,11 @@ The telemetry directory is created automatically if it doesn't exist.
 - **No network calls** - Data stays on your machine
 - **Opt-in only** - Disabled by default
 - **Secret redaction** - Sensitive data automatically removed
-- **Local control** - Delete `.vibecheck/telemetry/` anytime
+- **Local control** - Delete `.shipgate/telemetry/` anytime
 
 ## Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `ISL_TELEMETRY` | Enable telemetry (`1`, `true`, `yes`) | Disabled |
-| `ISL_TELEMETRY_DIR` | Custom output directory | `.vibecheck/telemetry` |
+| `ISL_TELEMETRY_DIR` | Custom output directory | `.shipgate/telemetry` |

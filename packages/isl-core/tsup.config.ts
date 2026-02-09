@@ -10,7 +10,6 @@ export default defineConfig({
     'src/testgen/index.ts',
     'src/ast/index.ts',
     'src/lexer/index.ts',
-    'src/parser/index.ts',
     'src/isl-agent/verification/index.ts',
   ],
   format: ['esm'],

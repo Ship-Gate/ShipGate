@@ -1,7 +1,7 @@
 /**
  * EvidenceStorageService
  * 
- * Manages persistence of evidence reports to the .vibecheck/reports/ directory.
+ * Manages persistence of evidence reports to the .shipgate/reports/ directory.
  * Evidence reports capture the results of spec verification, build outcomes,
  * and trust score calculations.
  */
@@ -99,7 +99,7 @@ export class EvidenceStorageService {
   private indexCache: Map<string, EvidenceReportIndex> = new Map();
 
   constructor(options: EvidenceStorageOptions) {
-    this.reportsDir = path.join(options.workspaceRoot, '.vibecheck', 'reports');
+    this.reportsDir = path.join(options.workspaceRoot, '.shipgate', 'reports');
     this.indexFile = path.join(this.reportsDir, '_index.json');
     this.ensureDirectoryExists();
     this.loadIndexCache();

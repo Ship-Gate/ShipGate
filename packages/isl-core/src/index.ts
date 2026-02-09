@@ -11,7 +11,10 @@
 
 export * from './lexer/index.js';
 export * from './ast/index.js';
-export * from './parser/index.js';
+
+// Re-export canonical parser API (was formerly in ./parser/index.js, now direct)
+export { parse, parseFile, Parser } from '@isl-lang/parser';
+export type { Diagnostic } from '@isl-lang/parser';
 
 // ============================================================================
 // Type Checker, Formatter, Linter, Imports, Modules, Verification, Testgen

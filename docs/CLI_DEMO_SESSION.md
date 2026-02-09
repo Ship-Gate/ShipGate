@@ -255,7 +255,7 @@ $ isl gate specs/auth.isl --impl src/auth.ts
   Fingerprint: a1b2c3d4e5f6g7h8
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Verified by VibeCheck ✓
+  Verified by ShipGate ✓
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -304,7 +304,7 @@ VERDICT: PROVEN
 All requirements met: Gate SHIP, Verify PROVEN, 12 tests, imports resolved
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Verified by VibeCheck ✓
+Verified by ShipGate ✓
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -324,7 +324,7 @@ Verified by VibeCheck ✓
                               │
                               ▼
                    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                   Verified by VibeCheck ✓
+                   Verified by ShipGate ✓
                    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -381,4 +381,4 @@ $ isl gate specs/auth.isl --impl src/ --json
 
 ---
 
-**Verified by VibeCheck ✓**
+**Verified by ShipGate ✓**

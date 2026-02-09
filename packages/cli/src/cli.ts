@@ -21,11 +21,21 @@ import { ExitCode } from './exit-codes.js';
 import { findClosestMatch, isCI, isTTY } from './utils.js';
 import { loadConfig, loadConfigFromFile } from './config.js';
 import {
+  loadShipGateConfig,
+  ShipGateConfigError,
+  shouldVerify as shouldVerifyFile,
+  findMissingRequiredSpecs,
+  generateStarterConfig,
+} from './config/index.js';
+import type { ShipGateConfig } from './config/index.js';
+import {
   // Commands
   check, printCheckResult,
   generate, printGenerateResult,
   verify, printVerifyResult,
+  unifiedVerify, printUnifiedVerifyResult, getUnifiedExitCode,
   init, printInitResult,
+  interactiveInit, printInteractiveInitResult,
   parse, printParseResult, getParseExitCode,
   gen, printGenResult, getGenExitCode, VALID_TARGETS,
   repl,
@@ -40,7 +50,13 @@ import {
   watch,
   pbt, printPBTResult, getPBTExitCode,
   chaos, printChaosResult, getChaosExitCode,
+  islGenerate, printIslGenerateResult, getIslGenerateExitCode,
+  specQuality, printSpecQualityResult, getSpecQualityExitCode,
+  policyCheck, printPolicyCheckResult, getPolicyCheckExitCode,
+  policyInit, printPolicyInitResult,
 } from './commands/index.js';
+import type { FailOnLevel } from './commands/verify.js';
+import { TeamConfigError } from '@isl-lang/core';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Version
@@ -62,6 +78,10 @@ const COMMANDS = [
   'watch', // Watch mode
   'pbt', // Property-based testing
   'chaos', // Chaos testing
+  'isl-generate', // Generate ISL specs from source code
+  'spec-quality', // Score ISL spec quality
+  'shipgate', // ShipGate config management
+  'policy', 'policy check', 'policy team-init', // Team policy enforcement
 ];
 
 
@@ -233,14 +253,27 @@ program
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Verify Command
+// Verify Command (Unified — auto-detects ISL, specless, or mixed mode)
 // ─────────────────────────────────────────────────────────────────────────────
 
 program
-  .command('verify <spec>')
-  .description('Verify an implementation against an ISL specification')
-  .option('-i, --impl <file>', 'Implementation file to verify')
-  .option('--proof <bundleDir>', 'Verify using proof bundle (instead of --impl)')
+  .command('verify [path]')
+  .description(
+    'Verify code against ISL specifications (auto-detects mode)\n\n' +
+    '  Modes:\n' +
+    '    ISL       — path contains .isl specs for all code files\n' +
+    '    Specless  — path has code but no .isl specs\n' +
+    '    Mixed     — ISL where specs exist, specless elsewhere\n\n' +
+    '  Legacy:\n' +
+    '    --spec <file> --impl <file>  — verify one spec against one impl'
+  )
+  .option('--spec <file>', 'ISL spec file (legacy: verify this spec against --impl)')
+  .option('-i, --impl <file>', 'Implementation file (used with --spec or as target)')
+  .option('--proof <bundleDir>', 'Verify using proof bundle (instead of path)')
+  .option('--json', 'Output structured JSON to stdout')
+  .option('--ci', 'CI mode: JSON stdout, GitHub Actions annotations, no color')
+  .option('--format <format>', 'Output format: json, text, gitlab, junit, github', 'text')
+  .option('--fail-on <level>', 'Strictness: error (default), warning, unspecced', 'error')
   .option('-t, --timeout <ms>', 'Test timeout in milliseconds', '30000')
   .option('-s, --min-score <score>', 'Minimum trust score to pass', '70')
   .option('-d, --detailed', 'Show detailed breakdown')
@@ -250,89 +283,272 @@ program
   .option('--pbt-tests <num>', 'Number of PBT test iterations', '100')
   .option('--pbt-seed <seed>', 'PBT random seed for reproducibility')
   .option('--pbt-max-shrinks <num>', 'Maximum PBT shrinking iterations', '100')
-  .option('--temporal', 'Enable temporal verification (latency SLAs, eventually within)')
+  .option('--temporal', 'Enable temporal verification (latency SLAs)')
   .option('--temporal-min-samples <num>', 'Minimum samples for temporal verification', '10')
-  .option('--chaos', 'Enable chaos verification (fault injection)')
-  .option('--all', 'Enable all verification modes (SMT + PBT + Temporal + Chaos)')
-  .option('-r, --report <path>', 'Write evidence report to file')
-  .option('--ci', 'CI mode: JSON to stdout, one-line summary to stderr, exit code 1 on failure')
-  .action(async (spec: string, options) => {
+  .option('--all', 'Enable all verification modes (SMT + PBT + Temporal)')
+  .option('-r, --report <format>', 'Generate formatted report: md, pdf, json, html (or legacy: path to write evidence report)')
+  .option('-o, --report-output <path>', 'Output path for formatted report file (default: stdout for text formats)')
+  .action(async (path: string | undefined, options) => {
     const opts = program.opts();
-    
-    // Handle proof bundle verification
+
+    // ── Proof bundle mode ────────────────────────────────────────────────
     if (options.proof) {
       try {
-        const { verifyProof, formatProofVerificationResult } = await import('@isl-lang/proof');
-        const result = await verifyProof(options.proof, {
+        const { verifyProof: vp, formatProofVerificationResult } = await import('@isl-lang/proof');
+        const proofResult = await vp(options.proof, {
           bundleDir: options.proof,
           verbose: opts.verbose,
           format: opts.format === 'json' ? 'json' : 'pretty',
         });
-        
-        const output = formatProofVerificationResult(result, {
+
+        const formatted = formatProofVerificationResult(proofResult, {
           format: opts.format === 'json' ? 'json' : 'pretty',
         });
-        console.log(output);
-        
-        process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
+        console.log(formatted);
+
+        process.exit(proofResult.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
         return;
       } catch (error) {
-        console.error(chalk.red(`Error verifying proof bundle: ${error instanceof Error ? error.message : String(error)}`));
+        console.error(
+          chalk.red(
+            `Error verifying proof bundle: ${error instanceof Error ? error.message : String(error)}`,
+          ),
+        );
         process.exit(ExitCode.ISL_ERROR);
         return;
       }
     }
-    
-    // Regular verification (requires --impl)
-    if (!options.impl) {
-      console.error(chalk.red('Error: --impl is required when not using --proof'));
-      process.exit(ExitCode.USAGE_ERROR);
+
+    // ── Load ShipGate config ─────────────────────────────────────────
+    let vibeConfig: ShipGateConfig | undefined;
+    try {
+      const vcResult = await loadShipGateConfig(path ?? '.');
+      vibeConfig = vcResult.config;
+      if (opts.verbose && vcResult.source === 'file') {
+        console.error(chalk.gray(`[shipgate] Loaded config from ${vcResult.configPath}`));
+      }
+    } catch (err) {
+      if (err instanceof ShipGateConfigError) {
+        console.error(chalk.red(err.message));
+        process.exit(ExitCode.USAGE_ERROR);
+        return;
+      }
+      // Non-fatal: proceed with defaults
+      if (opts.verbose) {
+        console.error(chalk.gray(`[shipgate] Config load warning: ${err instanceof Error ? err.message : String(err)}`));
+      }
+    }
+
+    // ── Determine mode ──────────────────────────────────────────────────
+    const isCiMode = options.ci || isCI();
+    const outputFormat = options.format || opts.format || (options.json ? 'json' : undefined) || (isCiMode ? 'github' : 'text');
+    const isJsonMode = options.json || outputFormat === 'json' || isCiMode;
+    // CLI --fail-on takes precedence, then config, then default 'error'
+    const failOn = (
+      options.failOn !== 'error' ? options.failOn
+        : vibeConfig?.ci?.failOn
+          ?? 'error'
+    ) as FailOnLevel;
+
+    // Legacy: --spec + --impl → single-file ISL verification
+    // Also legacy: path ends in .isl and --impl provided
+    const isLegacySingleSpec =
+      (options.spec && options.impl) ||
+      (path && path.endsWith('.isl') && options.impl);
+
+    if (isLegacySingleSpec) {
+      const specFile = options.spec ?? path!;
+      const enableAll = options.all;
+
+      const singleResult = await verify(specFile, {
+        impl: options.impl,
+        timeout: parseInt(options.timeout),
+        minScore: parseInt(options.minScore),
+        detailed: options.detailed,
+        report: options.report,
+        format: isJsonMode ? 'json' : 'text',
+        verbose: opts.verbose,
+        json: isJsonMode,
+        smt: enableAll || options.smt,
+        smtTimeout: options.smtTimeout ? parseInt(options.smtTimeout) : undefined,
+        pbt: enableAll || options.pbt,
+        pbtTests: options.pbtTests ? parseInt(options.pbtTests) : undefined,
+        pbtSeed: options.pbtSeed ? parseInt(options.pbtSeed) : undefined,
+        pbtMaxShrinks: options.pbtMaxShrinks ? parseInt(options.pbtMaxShrinks) : undefined,
+        temporal: enableAll || options.temporal,
+        temporalMinSamples: options.temporalMinSamples
+          ? parseInt(options.temporalMinSamples)
+          : undefined,
+      });
+
+      if (isCiMode) {
+        printVerifyResult(singleResult, { json: true });
+        const score = singleResult.evidenceScore?.overall ?? singleResult.trustScore ?? 0;
+        const failCount = singleResult.evidenceScore?.failedChecks ?? 0;
+        if (singleResult.success) {
+          process.stderr.write(`ShipGate: SHIP (score: ${score}/100)\n`);
+        } else {
+          process.stderr.write(
+            `ShipGate: NO_SHIP (score: ${score}/100, ${failCount} failures)\n`,
+          );
+        }
+      } else {
+        printVerifyResult(singleResult, {
+          detailed: options.detailed,
+          format: isJsonMode ? 'json' : 'text',
+        });
+      }
+
+      process.exit(singleResult.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
       return;
     }
-    
-    // --all enables everything
-    const enableAll = options.all;
 
-    const isCiMode = options.ci || isCI();
+    // ── Unified auto-detect mode ─────────────────────────────────────────
+    const targetPath = path ?? options.impl ?? '.';
 
-    const result = await verify(spec, {
+    const result = await unifiedVerify(targetPath, {
+      spec: options.spec,
       impl: options.impl,
-      timeout: parseInt(options.timeout),
+      json: isJsonMode,
+      ci: isCiMode,
+      format: outputFormat as 'json' | 'text' | 'gitlab' | 'junit' | 'github',
+      failOn,
+      verbose: opts.verbose,
       minScore: parseInt(options.minScore),
       detailed: options.detailed,
       report: options.report,
-      format: isCiMode ? 'json' : (opts.format === 'json' ? 'json' : 'text'),
-      verbose: opts.verbose,
-      json: isCiMode,
-      smt: enableAll || options.smt,
-      smtTimeout: options.smtTimeout ? parseInt(options.smtTimeout) : undefined,
-      pbt: enableAll || options.pbt,
-      pbtTests: options.pbtTests ? parseInt(options.pbtTests) : undefined,
-      pbtSeed: options.pbtSeed ? parseInt(options.pbtSeed) : undefined,
-      pbtMaxShrinks: options.pbtMaxShrinks ? parseInt(options.pbtMaxShrinks) : undefined,
-      temporal: enableAll || options.temporal,
-      temporalMinSamples: options.temporalMinSamples ? parseInt(options.temporalMinSamples) : undefined,
+      timeout: parseInt(options.timeout),
     });
 
-    if (isCiMode) {
-      // CI mode: JSON to stdout, one-line summary to stderr
-      printVerifyResult(result, { json: true });
-      const score = result.evidenceScore?.overall ?? result.trustScore ?? 0;
-      const failCount = result.evidenceScore?.failedChecks ?? 0;
-      if (result.success) {
-        process.stderr.write(`Shipgate: SHIP (score: ${score}/100)\n`);
-      } else {
-        process.stderr.write(`Shipgate: NO_SHIP (score: ${score}/100, ${failCount} failures)\n`);
+    // ── Apply ShipGate config enforcement ───────────────────────────────
+    if (vibeConfig) {
+      // Filter out ignored files from the result
+      const ignorePatterns = vibeConfig.ci?.ignore ?? [];
+      if (ignorePatterns.length > 0) {
+        result.files = result.files.filter(f => {
+          const sv = shouldVerifyFile(f.file, vibeConfig!);
+          return sv.verify;
+        });
       }
-    } else {
-      printVerifyResult(result, {
-        detailed: options.detailed,
-        format: opts.format === 'json' ? 'json' : 'text',
-      });
+
+      // Check requireIsl enforcement
+      const requireIslPatterns = vibeConfig.ci?.requireIsl ?? [];
+      if (requireIslPatterns.length > 0) {
+        const specMap = new Map<string, string>();
+        for (const f of result.files) {
+          if (f.specFile) {
+            specMap.set(f.file, f.specFile);
+          }
+        }
+        const missingSpecs = findMissingRequiredSpecs(
+          result.files.map(f => f.file),
+          specMap,
+          vibeConfig,
+        );
+        if (missingSpecs.length > 0) {
+          for (const fp of missingSpecs) {
+            result.blockers.push(`${fp}: ISL spec required by ci.require_isl but missing`);
+          }
+          if (result.verdict !== 'NO_SHIP') {
+            result.verdict = 'NO_SHIP';
+            result.exitCode = 1;
+          }
+        }
+      }
     }
-    
-    process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
+
+    printUnifiedVerifyResult(result, {
+      json: isJsonMode,
+      ci: isCiMode,
+      format: outputFormat as 'json' | 'text' | 'gitlab' | 'junit' | 'github',
+      verbose: opts.verbose,
+      detailed: options.detailed,
+    });
+
+    // ── Report generation (--report <format> [-o <path>]) ──────────────
+    if (options.report) {
+      const KNOWN_FORMATS: Record<string, 'markdown' | 'pdf' | 'json' | 'html'> = {
+        md: 'markdown',
+        markdown: 'markdown',
+        pdf: 'pdf',
+        json: 'json',
+        html: 'html',
+      };
+
+      const formatKey = options.report.toLowerCase();
+      if (KNOWN_FORMATS[formatKey]) {
+        try {
+          const { generateReport, buildReportData } = await import('@isl-lang/core/reporting');
+          const gitInfo = await getGitInfo(targetPath);
+
+          const reportData = buildReportData(result, {
+            repository: gitInfo.repository,
+            branch: gitInfo.branch,
+            commit: gitInfo.commit,
+          });
+
+          const reportFormat = KNOWN_FORMATS[formatKey]!;
+          const reportOutput = options.reportOutput ?? '-';
+
+          const reportResult = await generateReport(reportData, {
+            format: reportFormat,
+            scope: 'full',
+            includeRecommendations: true,
+            includeTrends: false,
+            outputPath: reportOutput,
+          });
+
+          if (reportResult.success) {
+            if (reportOutput === '-' && reportResult.content) {
+              // stdout mode — content already written by generateReport
+              process.stdout.write(reportResult.content);
+            } else if (reportResult.outputPath) {
+              console.error(chalk.gray(`\nReport written to: ${reportResult.outputPath}`));
+            }
+          } else {
+            console.error(chalk.yellow(`Warning: Report generation failed: ${reportResult.error}`));
+          }
+        } catch (err) {
+          console.error(chalk.yellow(`Warning: Report generation failed: ${err instanceof Error ? err.message : String(err)}`));
+        }
+      }
+      // Legacy behavior: if --report value is a file path, it was already
+      // handled by the verify internals (options.report passed through).
+    }
+
+    process.exit(getUnifiedExitCode(result));
   });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Git Info Helper (for report headers)
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function getGitInfo(cwd: string): Promise<{
+  repository: string;
+  branch: string;
+  commit?: string;
+}> {
+  const { execSync } = await import('child_process');
+  const defaults = { repository: 'unknown', branch: 'unknown', commit: undefined };
+
+  try {
+    const branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd, encoding: 'utf-8' }).trim();
+    const commit = execSync('git rev-parse --short HEAD', { cwd, encoding: 'utf-8' }).trim();
+    let repository = 'unknown';
+    try {
+      const remote = execSync('git remote get-url origin', { cwd, encoding: 'utf-8' }).trim();
+      repository = remote
+        .replace(/^(https?:\/\/|git@)/, '')
+        .replace(/\.git$/, '')
+        .replace(':', '/');
+    } catch {
+      // No remote configured
+    }
+    return { repository, branch, commit };
+  } catch {
+    return defaults;
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PBT Command (Property-Based Testing)
@@ -434,10 +650,10 @@ program
 
 program
   .command('init [name]')
-  .description('Initialize a new ISL project')
+  .description('Set up ShipGate for your project (interactive), or create a new ISL project')
   .option('-t, --template <template>', 'Project template (minimal, full, api)', 'minimal')
   .option('-d, --directory <dir>', 'Target directory')
-  .option('--force', 'Overwrite existing directory')
+  .option('--force', 'Overwrite existing files')
   .option('--no-git', 'Skip git initialization')
   .option('-e, --examples', 'Include example files')
   .option('--from-code <path>', 'Generate ISL spec from existing source code (file or directory)')
@@ -446,6 +662,33 @@ program
   .option('--api-key <key>', 'API key for AI provider (or use ANTHROPIC_API_KEY env)')
   .action(async (name: string | undefined, options) => {
     const opts = program.opts();
+
+    // When called without a name: run interactive onboarding in the current directory
+    if (!name && !options.fromCode && !options.fromPrompt) {
+      const result = await interactiveInit({
+        root: options.directory,
+        force: options.force,
+        format: opts.format,
+      });
+
+      if (opts.format === 'json') {
+        console.log(JSON.stringify({
+          success: result.success,
+          profile: result.profile,
+          configPath: result.configPath,
+          workflowPath: result.workflowPath,
+          islFiles: result.islFiles,
+          errors: result.errors,
+        }, null, 2));
+      } else {
+        printInteractiveInitResult(result);
+      }
+
+      process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
+      return;
+    }
+
+    // When called with a name: create a new ISL project (original behavior)
     const projectName = name ?? 'my-isl-project';
 
     const result = await init(projectName, {
@@ -480,10 +723,18 @@ program
 
 program
   .command('repl')
-  .description('Start interactive REPL')
-  .action(async () => {
+  .description('Start interactive ISL REPL')
+  .option('--load <file>', 'Load an ISL file on start')
+  .option('--context <json>', 'Set initial evaluation context')
+  .option('--parse', 'Parse mode (non-interactive, for piped input)')
+  .action(async (options) => {
     const opts = program.opts();
-    await repl({ verbose: opts.verbose });
+    await repl({
+      verbose: opts.verbose,
+      load: options.load,
+      context: options.context,
+      parse: options.parse,
+    });
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -526,6 +777,34 @@ program
     
     printLintResult(result, { verbose: opts.verbose, format: opts.format });
     process.exit(getLintExitCode(result));
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Spec Quality Command (Score ISL specs on 5 dimensions)
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('spec-quality <file>')
+  .description('Score an ISL spec on quality dimensions (completeness, specificity, security, testability, consistency)')
+  .option('-s, --min-score <score>', 'Minimum score to pass (fail if below)', '0')
+  .option('--fix', 'Show detailed fix suggestions with ISL examples')
+  .action(async (file: string, options) => {
+    const opts = program.opts();
+    const result = await specQuality(file, {
+      verbose: opts.verbose,
+      format: opts.format,
+      minScore: parseInt(options.minScore),
+      fix: options.fix,
+    });
+
+    printSpecQualityResult(result, {
+      verbose: opts.verbose,
+      format: opts.format,
+      minScore: parseInt(options.minScore),
+      fix: options.fix,
+    });
+
+    process.exit(getSpecQualityExitCode(result));
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -783,6 +1062,80 @@ bundleCommand
     process.exit(getVerifyBundleExitCode(result));
   });
 
+// ─── Team Policy Sub-commands ────────────────────────────────────────────────
+
+policyCommand
+  .command('check')
+  .description('Validate current repo against team policies (.shipgate-team.yml)')
+  .option('--team-config <path>', 'Path to team config file (default: auto-detect)')
+  .option('-d, --directory <dir>', 'Repository root directory (default: cwd)')
+  .action(async (options) => {
+    const opts = program.opts();
+    const isJson = opts.format === 'json';
+
+    try {
+      const result = await policyCheck({
+        teamConfig: options.teamConfig,
+        directory: options.directory,
+        json: isJson,
+        verbose: opts.verbose,
+      });
+
+      if (isJson) {
+        console.log(JSON.stringify({
+          passed: result.passed,
+          team: result.config.team,
+          violations: result.policyResult.violations,
+          summary: result.policyResult.summary,
+          source: result.config.source,
+        }, null, 2));
+      } else {
+        printPolicyCheckResult(result, { verbose: opts.verbose });
+      }
+
+      process.exit(getPolicyCheckExitCode(result));
+    } catch (err) {
+      if (err instanceof TeamConfigError) {
+        if (isJson) {
+          console.log(JSON.stringify({ error: err.message, validationErrors: err.validationErrors }, null, 2));
+        } else {
+          console.error(chalk.red(err.message));
+        }
+        process.exit(ExitCode.USAGE_ERROR);
+      }
+      throw err;
+    }
+  });
+
+policyCommand
+  .command('team-init')
+  .description('Generate a .shipgate-team.yml team config template')
+  .option('-t, --team <name>', 'Team name (default: "my-team")')
+  .option('-d, --directory <dir>', 'Directory to write the file (default: cwd)')
+  .option('--force', 'Overwrite existing file')
+  .action(async (options) => {
+    const opts = program.opts();
+    const isJson = opts.format === 'json';
+
+    const result = await policyInit({
+      team: options.team,
+      directory: options.directory,
+      force: options.force,
+    });
+
+    if (isJson) {
+      console.log(JSON.stringify({
+        success: result.success,
+        filePath: result.filePath,
+        error: result.error,
+      }, null, 2));
+    } else {
+      printPolicyInitResult(result);
+    }
+
+    process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
+  });
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Gate Command (SHIP/NO-SHIP)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -978,6 +1331,97 @@ program
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ISL Generate Command (Generate ISL specs from source code)
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('isl-generate <path>')
+  .description(
+    'Generate ISL spec files from existing source code\n\n' +
+    '  Scans source files (.ts, .js, .py, .go), analyzes their structure,\n' +
+    '  and produces ISL specification files for review and commit.',
+  )
+  .option('-o, --output <dir>', 'Output directory for .isl files (default: alongside source)')
+  .option('--dry-run', 'Print specs to stdout instead of writing files')
+  .option('--interactive', 'Ask for confirmation before writing each file')
+  .option('--overwrite', 'Overwrite existing .isl files (default: skip)')
+  .option('--force', 'Generate specs even for low-confidence files')
+  .option('--confidence <threshold>', 'Minimum confidence threshold (0-1)', '0.3')
+  .option('--ai', 'Use AI enhancement for spec generation')
+  .action(async (path: string, options) => {
+    const opts = program.opts();
+    const isJson = opts.format === 'json';
+
+    if (!isJson && !options.dryRun) {
+      console.log('');
+      console.log(chalk.bold.cyan('ShipGate ISL Generate'));
+      console.log(chalk.gray(`  Path: ${path}`));
+      if (options.output) {
+        console.log(chalk.gray(`  Output: ${options.output}`));
+      }
+      console.log('');
+    }
+
+    const result = await islGenerate(path, {
+      output: options.output,
+      dryRun: options.dryRun,
+      interactive: options.interactive,
+      overwrite: options.overwrite,
+      force: options.force,
+      verbose: opts.verbose,
+      format: opts.format,
+      confidenceThreshold: parseFloat(options.confidence),
+      ai: options.ai,
+    });
+
+    printIslGenerateResult(result, {
+      format: opts.format,
+      verbose: opts.verbose,
+    });
+
+    process.exit(getIslGenerateExitCode(result));
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ShipGate Command Group
+// ─────────────────────────────────────────────────────────────────────────────
+
+const shipgateCommand = program
+  .command('shipgate')
+  .description('ShipGate configuration management');
+
+shipgateCommand
+  .command('init')
+  .description('Interactive project setup — generates .shipgate.yml, ISL specs, and CI workflow')
+  .option('--force', 'Overwrite existing files')
+  .option('-d, --directory <dir>', 'Project root directory (default: cwd)')
+  .action(async (options) => {
+    const opts = program.opts();
+    const isJson = opts.format === 'json';
+
+    const result = await interactiveInit({
+      root: options.directory,
+      force: options.force,
+      format: opts.format,
+    });
+
+    if (isJson) {
+      console.log(JSON.stringify({
+        success: result.success,
+        profile: result.profile,
+        configPath: result.configPath,
+        workflowPath: result.workflowPath,
+        islFiles: result.islFiles,
+        errors: result.errors,
+      }, null, 2));
+    } else {
+      printInteractiveInitResult(result);
+    }
+
+    process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Unknown Command Handler
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1010,8 +1454,20 @@ ${chalk.bold('Examples:')}
   ${chalk.gray('# Heal code to fix violations automatically')}
   $ isl heal src/**/*.ts
 
-  ${chalk.gray('# Verify implementation against spec')}
+  ${chalk.gray('# Verify a directory (auto-detect mode)')}
+  $ isl verify src/
+
+  ${chalk.gray('# Verify with JSON output for CI')}
+  $ isl verify src/ --json
+
+  ${chalk.gray('# Verify with strictness control')}
+  $ isl verify src/ --fail-on unspecced
+
+  ${chalk.gray('# Verify implementation against specific spec (legacy)')}
   $ isl verify src/auth.isl --impl src/auth.ts
+
+  ${chalk.gray('# Verify with --spec and --impl flags')}
+  $ isl verify --spec src/auth.isl --impl src/auth.ts
 
   ${chalk.gray('# Verify proof bundle')}
   $ isl proof verify ./proof-bundles/auth-bundle
@@ -1042,6 +1498,15 @@ ${chalk.bold('Examples:')}
 
   ${chalk.gray('# Watch only changed files')}
   $ isl watch --changed-only
+
+  ${chalk.gray('# Generate ISL specs from existing source code')}
+  $ isl isl-generate src/auth/
+
+  ${chalk.gray('# Dry-run: preview specs without writing files')}
+  $ isl isl-generate src/ --dry-run
+
+  ${chalk.gray('# Generate with interactive confirmation')}
+  $ isl isl-generate src/ --interactive
 
 ${chalk.bold('JSON Output:')}
   All commands support --json or --format json for machine-readable output:

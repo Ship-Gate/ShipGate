@@ -1,0 +1,26 @@
+# CircleCI Orb Configuration for Shipgate ISL Verify
+#
+# Usage:
+#   orbs:
+#     shipgate: shipgate/isl-verify@1.0.0
+#
+#   workflows:
+#     verify:
+#       jobs:
+#         - shipgate/verify:
+#             path: src/
+#             fail_on: error
+#             mode: auto
+
+version: 2.1
+
+orbs:
+  shipgate: shipgate/isl-verify@1.0.0
+
+workflows:
+  verify:
+    jobs:
+      - shipgate/verify:
+          path: src/
+          fail_on: error
+          mode: auto

@@ -1756,21 +1756,44 @@ export class Parser {
   }
 
   private parseChaosScenario(): AST.ChaosScenario {
-    this.expect('CHAOS', "Expected 'chaos'");
+    // Accept both 'chaos' and 'scenario' keywords inside chaos blocks
+    if (this.check('CHAOS')) {
+      this.advance();
+    } else if (this.check('SCENARIO')) {
+      this.advance();
+    } else {
+      throw expectedToken("'chaos' or 'scenario'", this.currentToken());
+    }
+
     const name = this.parseStringLiteral();
     this.expect('LBRACE', "Expected '{'");
 
     const inject: AST.Injection[] = [];
     const when: AST.Statement[] = [];
     const then: AST.Expression[] = [];
+    const expectBlock: AST.ChaosExpectation[] = [];
+    let withClause: AST.ChaosWithClause | undefined;
 
     while (!this.check('RBRACE') && !this.isAtEnd()) {
       const token = this.currentToken();
       if (token.kind === 'INJECT' || token.value === 'inject') {
-        this.advance();
+        this.advance(); // consume 'inject'
+        if (this.check('LBRACE')) {
+          // Old block syntax: inject { ... }
+          this.advance(); // consume '{'
+          while (!this.check('RBRACE') && !this.isAtEnd()) {
+            inject.push(this.parseInjection());
+          }
+          this.expect('RBRACE', "Expected '}'");
+        } else {
+          // New inline syntax: inject <type> on <target> [with { ... }]
+          inject.push(this.parseChaosInlineInjection());
+        }
+      } else if (token.kind === 'EXPECT' || token.value === 'expect') {
+        this.advance(); // consume 'expect'
         this.expect('LBRACE', "Expected '{'");
         while (!this.check('RBRACE') && !this.isAtEnd()) {
-          inject.push(this.parseInjection());
+          expectBlock.push(this.parseChaosExpectation());
         }
         this.expect('RBRACE', "Expected '}'");
       } else if (token.kind === 'WHEN') {
@@ -1787,6 +1810,8 @@ export class Parser {
           then.push(this.parseExpression());
         }
         this.expect('RBRACE', "Expected '}'");
+      } else if (token.kind === 'WITH' || token.value === 'with') {
+        withClause = this.parseChaosWithClause();
       } else {
         throw unexpectedToken(token, 'chaos scenario block');
       }
@@ -1794,7 +1819,7 @@ export class Parser {
 
     const end = this.expect('RBRACE', "Expected '}'");
 
-    // Populate granular nodes for isl-core compatibility
+    // Populate granular ChaosInjection nodes for isl-core compatibility
     const injections: AST.ChaosInjection[] = inject.map((inj): AST.ChaosInjection => ({
       kind: 'ChaosInjection',
       type: {
@@ -1810,11 +1835,17 @@ export class Parser {
       })),
       location: inj.location,
     }));
-    const expectations: AST.ChaosExpectation[] = then.map((expr): AST.ChaosExpectation => ({
+
+    // Bridge: derive expectations from then expressions for backward compat
+    const thenExpectations: AST.ChaosExpectation[] = then.map((expr): AST.ChaosExpectation => ({
       kind: 'ChaosExpectation',
+      condition: expr,
       expression: expr,
       location: expr.location,
     }));
+
+    // Merge direct expect-block expectations with then-derived expectations
+    const expectations: AST.ChaosExpectation[] = [...expectBlock, ...thenExpectations];
 
     return {
       kind: 'ChaosScenario',
@@ -1824,8 +1855,117 @@ export class Parser {
       then,
       injections,
       expectations,
-      withClauses: [],
+      withClause,
+      withClauses: withClause ? [withClause] : [],
       location: AST.mergeLocations(name.location, end.location),
+    };
+  }
+
+  /**
+   * Parse inline chaos injection: inject <type> on <target> [with { key: value, ... }]
+   * Called after 'inject' has been consumed.
+   */
+  private parseChaosInlineInjection(): AST.Injection {
+    const startLoc = this.previousToken().location; // location of consumed 'inject'
+
+    const typeId = this.parseIdentifier();
+
+    // Expect 'on' keyword
+    if (this.check('ON') || this.currentToken().value === 'on') {
+      this.advance();
+    } else {
+      throw expectedToken("'on'", this.currentToken());
+    }
+
+    const target = this.parseExpression();
+
+    // Optional with { ... } clause for injection parameters
+    const parameters: AST.InjectionParam[] = [];
+    if (this.check('WITH') || this.currentToken().value === 'with') {
+      this.advance(); // consume 'with'
+      this.expect('LBRACE', "Expected '{'");
+      while (!this.check('RBRACE') && !this.isAtEnd()) {
+        const paramName = this.parseIdentifier();
+        this.expect('COLON', "Expected ':'");
+        const paramValue = this.parseExpression();
+        parameters.push({
+          kind: 'InjectionParam',
+          name: paramName,
+          value: paramValue,
+          location: AST.mergeLocations(paramName.location, paramValue.location),
+        });
+        this.match('COMMA'); // optional trailing comma
+      }
+      this.expect('RBRACE', "Expected '}'");
+    }
+
+    return {
+      kind: 'Injection',
+      type: typeId.name as AST.InjectionType,
+      target,
+      parameters,
+      location: AST.mergeLocations(startLoc, this.previousToken().location),
+    };
+  }
+
+  /**
+   * Parse a single expectation expression inside an expect { } block.
+   */
+  private parseChaosExpectation(): AST.ChaosExpectation {
+    const condition = this.parseExpression();
+
+    // Optional description string after the condition expression
+    let description: AST.StringLiteral | undefined;
+    if (this.check('STRING_LITERAL')) {
+      description = this.parseStringLiteral();
+    }
+
+    return {
+      kind: 'ChaosExpectation',
+      condition,
+      description,
+      expression: condition,
+      location: description
+        ? AST.mergeLocations(condition.location, description.location)
+        : condition.location,
+    };
+  }
+
+  /**
+   * Parse scenario-level with { key: value, ... } clause → ChaosWithClause.
+   */
+  private parseChaosWithClause(): AST.ChaosWithClause {
+    const start = this.advance(); // consume 'with'
+    this.expect('LBRACE', "Expected '{'");
+
+    const args: AST.ChaosArgument[] = [];
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      args.push(this.parseChaosArgument());
+      this.match('COMMA'); // optional trailing comma
+    }
+
+    const end = this.expect('RBRACE', "Expected '}'");
+
+    return {
+      kind: 'ChaosWithClause',
+      args,
+      location: AST.mergeLocations(start.location, end.location),
+    };
+  }
+
+  /**
+   * Parse a single key: value argument inside a with { } clause → ChaosArgument.
+   */
+  private parseChaosArgument(): AST.ChaosArgument {
+    const name = this.parseIdentifier();
+    this.expect('COLON', "Expected ':'");
+    const value = this.parseExpression();
+
+    return {
+      kind: 'ChaosArgument',
+      name,
+      value,
+      location: AST.mergeLocations(name.location, value.location),
     };
   }
 

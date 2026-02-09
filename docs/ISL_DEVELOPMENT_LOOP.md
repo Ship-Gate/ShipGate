@@ -7,7 +7,7 @@ This doc describes how to integrate ISL (Intent Specification Language) into you
 | What | Location(s) |
 |------|-------------|
 | **Project specs** | `specs/**/*.isl` (main; referenced by `.islrc.json`) |
-| **VibeCheck / session specs** | `.vibecheck/specs/*.isl` |
+| **ShipGate / session specs** | `.shipgate/specs/*.isl` |
 | **Examples** | `examples/*.isl`, `corpus/`, `demos/**/*.isl` |
 | **Stdlib** | `stdlib/**/*.isl` (shared domains; use via `use stdlib-*`) |
 | **Generated TypeScript** | `examples/generated/`, `generated/ts/`, package `src/generated/` |

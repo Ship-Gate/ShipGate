@@ -25,11 +25,31 @@ export interface CompletionItem {
  * ISL keywords
  */
 export const KEYWORDS: CompletionItem[] = [
-  { text: 'intent', type: 'keyword', description: 'Define an intent' },
+  // Structure keywords
+  { text: 'domain', type: 'keyword', description: 'Define a domain' },
+  { text: 'entity', type: 'keyword', description: 'Define an entity' },
   { text: 'behavior', type: 'keyword', description: 'Define a behavior' },
+  { text: 'intent', type: 'keyword', description: 'Define an intent' },
+  { text: 'input', type: 'keyword', description: 'Input block' },
+  { text: 'output', type: 'keyword', description: 'Output block' },
   { text: 'pre', type: 'keyword', description: 'Precondition' },
   { text: 'post', type: 'keyword', description: 'Postcondition' },
   { text: 'invariant', type: 'keyword', description: 'Invariant' },
+  { text: 'scenario', type: 'keyword', description: 'Scenario block' },
+  { text: 'version', type: 'keyword', description: 'Version declaration' },
+  // Types
+  { text: 'String', type: 'keyword', description: 'String type' },
+  { text: 'Number', type: 'keyword', description: 'Number type' },
+  { text: 'Int', type: 'keyword', description: 'Integer type' },
+  { text: 'Decimal', type: 'keyword', description: 'Decimal type' },
+  { text: 'Boolean', type: 'keyword', description: 'Boolean type' },
+  { text: 'UUID', type: 'keyword', description: 'UUID type' },
+  { text: 'Timestamp', type: 'keyword', description: 'Timestamp type' },
+  { text: 'Duration', type: 'keyword', description: 'Duration type' },
+  { text: 'List', type: 'keyword', description: 'List<T> type' },
+  { text: 'Map', type: 'keyword', description: 'Map<K,V> type' },
+  { text: 'Optional', type: 'keyword', description: 'Optional<T> type' },
+  // Literals and operators
   { text: 'true', type: 'keyword', description: 'Boolean true' },
   { text: 'false', type: 'keyword', description: 'Boolean false' },
   { text: 'null', type: 'keyword', description: 'Null value' },
@@ -40,6 +60,7 @@ export const KEYWORDS: CompletionItem[] = [
   { text: 'forall', type: 'keyword', description: 'Universal quantifier' },
   { text: 'exists', type: 'keyword', description: 'Existential quantifier' },
   { text: 'in', type: 'keyword', description: 'Membership test' },
+  { text: 'old', type: 'keyword', description: 'Pre-state value (old(x))' },
 ];
 
 /**
@@ -52,18 +73,14 @@ export const META_COMMANDS: CompletionItem[] = metaCommands.map(cmd => ({
 }));
 
 /**
- * ISL commands (: prefix)
+ * ISL commands (kept empty for backward compat — all commands use . prefix)
  */
-export const ISL_COMMANDS: CompletionItem[] = islCommands.map(cmd => ({
-  text: `:${cmd.name}`,
-  type: 'command' as const,
-  description: cmd.description,
-}));
+export const ISL_COMMANDS: CompletionItem[] = [];
 
 /**
  * All commands
  */
-export const COMMANDS: CompletionItem[] = [...META_COMMANDS, ...ISL_COMMANDS];
+export const COMMANDS: CompletionItem[] = [...META_COMMANDS];
 
 /**
  * Generate targets for :gen command
@@ -103,9 +120,9 @@ export class CompletionProvider {
       return this.completeMetaCommand(trimmed);
     }
 
-    // ISL command completion (: prefix)
+    // Legacy ISL command completion (: prefix) — redirect to meta
     if (trimmed.startsWith(':')) {
-      return this.completeISLCommand(trimmed);
+      return this.completeMetaCommand('.' + trimmed.slice(1));
     }
 
     // Expression completion

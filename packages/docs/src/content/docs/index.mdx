@@ -1,0 +1,124 @@
+---
+title: ShipGate Documentation
+description: Stop AI from shipping fake features. Specify intent, verify code, ship with confidence.
+template: splash
+hero:
+  title: |
+    Specify intent.
+    <br/>Verify code.
+    <br/><span style="color: var(--sl-color-accent);">Ship with confidence.</span>
+  tagline: ISL is a specification language for validating AI-generated code. Define what your code should do, then verify it actually does it.
+  actions:
+    - text: Get Started
+      link: /getting-started/installation/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/guardiavault-oss/ISL-LANG
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Install in seconds
+
+```bash
+npm install -g @isl-lang/cli
+```
+
+## Write specs that catch fake features
+
+```isl
+domain PaymentService {
+  entity Payment {
+    id: UUID [immutable, unique]
+    amount: Money [positive]
+    status: PaymentStatus
+  }
+
+  behavior ProcessPayment {
+    input {
+      amount: Money
+      card: Card
+    }
+
+    preconditions {
+      amount > 0
+      card.is_valid
+      not order.already_paid
+    }
+
+    postconditions {
+      success implies {
+        payment.charged == amount
+        order.status == "paid"
+        receipt.sent(customer.email)
+      }
+      failure implies {
+        order.status == old(order.status)
+        error.logged
+      }
+    }
+  }
+}
+```
+
+## Why ShipGate?
+
+<CardGrid stagger>
+  <Card title="Catch fake features" icon="warning">
+    AI can generate code that looks right but doesn't work. ISL catches functions that return hardcoded values, skip validation, or silently ignore errors.
+  </Card>
+  <Card title="Verify AI-generated code" icon="approve-check-circle">
+    Write specs before asking AI to generate code. Then verify the implementation matches your intent — not just your tests.
+  </Card>
+  <Card title="Generate type-safe code" icon="document">
+    From one ISL spec, generate TypeScript types, Rust structs, Go interfaces, and OpenAPI schemas. One source of truth.
+  </Card>
+  <Card title="Ship with evidence" icon="rocket">
+    Every verification produces an evidence bundle with a trust score. Gate your CI pipeline so only verified code ships.
+  </Card>
+</CardGrid>
+
+## How it works
+
+1. **Write an ISL spec** describing what your code should do
+2. **Generate code** — TypeScript types, validators, and test stubs
+3. **Implement** — or let AI generate the implementation
+4. **Verify** — run `shipgate verify` to check the implementation against the spec
+5. **Ship** — if it passes, you get a SHIP verdict with a trust score
+
+```bash
+$ shipgate verify payment.isl --impl ./src/payment.ts
+
+ProcessPayment:
+  ✓ Precondition: amount > 0 (passed)
+  ✓ Precondition: card.is_valid (passed)
+  ✓ Postcondition: payment.charged == amount (passed)
+  ✓ Postcondition: order.status == "paid" (passed)
+  ✓ Invariant: amount > 0 (holds)
+
+Verdict: SHIP ✓  Trust Score: 97/100
+```
+
+## Explore the docs
+
+<CardGrid>
+  <Card title="Quick Start" icon="rocket">
+    Go from zero to a verified spec in 5 minutes.
+    [Get started →](/getting-started/quickstart/)
+  </Card>
+  <Card title="ISL Syntax Reference" icon="open-book">
+    Complete language reference with all constructs.
+    [Read the reference →](/isl-language/syntax-reference/)
+  </Card>
+  <Card title="CLI Reference" icon="setting">
+    All commands, flags, and options.
+    [Explore commands →](/cli/verify/)
+  </Card>
+  <Card title="CI/CD Integration" icon="github">
+    Add ShipGate to your GitHub Actions pipeline.
+    [Set up CI →](/guides/ci-integration/)
+  </Card>
+</CardGrid>

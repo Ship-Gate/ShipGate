@@ -31,7 +31,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@isl-lang/cli": "workspace:*",
+    "@isl-lang/islstudio": "workspace:*",
     "@isl-lang/parser": "workspace:*",
     "@isl-lang/isl-verify": "workspace:*",
     "@isl-lang/build-runner": "workspace:*",

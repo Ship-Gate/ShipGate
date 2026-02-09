@@ -133,7 +133,7 @@ console.log('  │   └──────────────────�
 console.log('  │                     │                               │');
 console.log('  │                     ▼                               │');
 console.log('  │   ┌─────────────────────────────────────┐           │');
-console.log('  │   │  VibeCheck + ISL Gate               │           │');
+console.log('  │   │  ShipGate + ISL Gate               │           │');
 console.log('  │   │  - Truthpack validation             │           │');
 console.log('  │   │  - 25 policy rules                  │           │');
 console.log('  │   │  - Intent enforcement               │           │');

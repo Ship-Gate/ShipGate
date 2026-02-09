@@ -436,5 +436,5 @@ export const DEFAULT_CONFIG: TestGeneratorConfig = {
   generateBoundaryTests: true,
   strategies: ['oauth', 'payments', 'uploads'],
   framework: 'vitest',
-  outputDir: '.vibecheck/tests',
+  outputDir: '.shipgate/tests',
 };

@@ -1,23 +1,12 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "strict": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true,
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "noEmit": false,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "sourceMap": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "tests"]

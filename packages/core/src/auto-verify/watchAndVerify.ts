@@ -2,7 +2,7 @@
  * Watch and Verify
  *
  * File watcher helper that triggers verification after code generation completes.
- * Watches for a marker file (e.g., .vibecheck/.gen-complete), then runs the
+ * Watches for a marker file (e.g., .shipgate/.gen-complete), then runs the
  * verifier, computes trust scores, and writes evidence reports.
  */
 

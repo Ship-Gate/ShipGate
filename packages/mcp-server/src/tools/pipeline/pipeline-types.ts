@@ -6,8 +6,8 @@
  * Standard output paths for the pipeline
  */
 export interface OutputPaths {
-  /** Path to the .vibecheck directory */
-  vibecheck: string;
+  /** Path to the .shipgate directory */
+  shipgate: string;
   /** Path to generated specs */
   specs: string;
   /** Path to generated reports */
@@ -125,7 +125,7 @@ export type BuildErrorCode =
 export interface VerifyInput {
   /** Workspace path (defaults to process.cwd()) */
   workspacePath?: string;
-  /** Path to specs directory (defaults to .vibecheck/specs) */
+  /** Path to specs directory (defaults to .shipgate/specs) */
   specsPath?: string;
   /** Path to implementation files (optional, auto-detected if not provided) */
   implementationPath?: string;
@@ -271,7 +271,7 @@ export const PIPELINE_TOOL_SCHEMAS = {
         },
         specsPath: {
           type: 'string' as const,
-          description: 'Path to specs directory (default: .vibecheck/specs)',
+          description: 'Path to specs directory (default: .shipgate/specs)',
         },
         implementationPath: {
           type: 'string' as const,

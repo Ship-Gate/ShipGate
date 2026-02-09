@@ -16,20 +16,21 @@ describe('StdlibRegistryManager', () => {
   });
 
   describe('Module Registration', () => {
-    it('should have 10 registered stdlib modules', () => {
+    it('should have 11 registered stdlib modules', () => {
       const registry = getStdlibRegistry();
       const modules = registry.getAvailableModules();
       
-      expect(modules.length).toBe(10);
+      expect(modules.length).toBe(11);
       
-      // Original 5 modules
+      // 6 canonical modules
+      expect(modules).toContain('@isl/core');
       expect(modules).toContain('@isl/auth');
-      expect(modules).toContain('@isl/rate-limit');
-      expect(modules).toContain('@isl/audit');
+      expect(modules).toContain('@isl/http');
       expect(modules).toContain('@isl/payments');
-      expect(modules).toContain('@isl/uploads');
+      expect(modules).toContain('@isl/storage');
+      expect(modules).toContain('@isl/security');
       
-      // New 5 modules
+      // 5 utility modules
       expect(modules).toContain('@isl/datetime');
       expect(modules).toContain('@isl/strings');
       expect(modules).toContain('@isl/crypto');
@@ -41,13 +42,17 @@ describe('StdlibRegistryManager', () => {
       const registry = getStdlibRegistry();
       const aliases = registry.getAliases();
       
-      // Original aliases
+      // Canonical module aliases
+      expect(aliases['stdlib-core']).toBe('@isl/core');
       expect(aliases['stdlib-auth']).toBe('@isl/auth');
-      expect(aliases['stdlib-rate-limit']).toBe('@isl/rate-limit');
-      expect(aliases['stdlib-audit']).toBe('@isl/audit');
+      expect(aliases['stdlib-http']).toBe('@isl/http');
       expect(aliases['stdlib-payments']).toBe('@isl/payments');
-      expect(aliases['stdlib-uploads']).toBe('@isl/uploads');
+      expect(aliases['stdlib-storage']).toBe('@isl/storage');
+      expect(aliases['stdlib-security']).toBe('@isl/security');
+      // Convenience aliases
       expect(aliases['stdlib-billing']).toBe('@isl/payments');
+      expect(aliases['stdlib-uploads']).toBe('@isl/storage');
+      expect(aliases['stdlib-rate-limit']).toBe('@isl/security');
       
       // New aliases
       expect(aliases['stdlib-datetime']).toBe('@isl/datetime');
@@ -131,9 +136,10 @@ describe('StdlibRegistryManager', () => {
       expect(exports).toContain('IsValidPhone');
       expect(exports).toContain('MatchesPattern');
       
-      // Encoding
-      expect(exports).toContain('EncodeBase64');
-      expect(exports).toContain('DecodeBase64');
+      // Core string functions
+      expect(exports).toContain('Contains');
+      expect(exports).toContain('StartsWith');
+      expect(exports).toContain('Replace');
     });
   });
 
@@ -163,7 +169,6 @@ describe('StdlibRegistryManager', () => {
       // Non-deterministic
       expect(exports).toContain('GenerateToken');
       expect(exports).toContain('GenerateApiKey');
-      expect(exports).toContain('GenerateBytes');
     });
   });
 
@@ -190,11 +195,9 @@ describe('StdlibRegistryManager', () => {
       
       // Deterministic generation
       expect(exports).toContain('GenerateUUIDv5');
-      expect(exports).toContain('GenerateUUIDv3');
       
       // Validation
       expect(exports).toContain('IsValidUUID');
-      expect(exports).toContain('IsNilUUID');
       expect(exports).toContain('NormalizeUUID');
     });
   });
@@ -308,18 +311,21 @@ describe('StdlibRegistryManager', () => {
 });
 
 describe('Stdlib Module Count Verification', () => {
-  it('should have exactly 10 modules for 1.0 release', () => {
+  it('should have 11 modules (6 canonical + 5 utility)', () => {
     const registry = getStdlibRegistry();
     const modules = registry.getAvailableModules();
     
-    expect(modules.length).toBeGreaterThanOrEqual(10);
+    expect(modules.length).toBe(11);
     
     const requiredModules = [
+      // 6 canonical
+      '@isl/core',
       '@isl/auth',
-      '@isl/rate-limit',
-      '@isl/audit',
+      '@isl/http',
       '@isl/payments',
-      '@isl/uploads',
+      '@isl/storage',
+      '@isl/security',
+      // 5 utility
       '@isl/datetime',
       '@isl/strings',
       '@isl/crypto',

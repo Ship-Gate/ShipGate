@@ -181,7 +181,7 @@ async function generateSpec(prompt: string): Promise<void> {
 
 ## Persistence
 
-State is stored in `.vibecheck/studio/state.json`:
+State is stored in `.shipgate/studio/state.json`:
 
 ```json
 {
@@ -191,7 +191,7 @@ State is stored in `.vibecheck/studio/state.json`:
     { "text": "Payment processing service", "timestamp": 1706742000000 }
   ],
   "lastSpecPath": "/workspace/specs/auth.isl",
-  "lastReportPath": "/workspace/.vibecheck/evidence/auth-report.json",
+  "lastReportPath": "/workspace/.shipgate/evidence/auth-report.json",
   "lastModified": 1706745600000
 }
 ```

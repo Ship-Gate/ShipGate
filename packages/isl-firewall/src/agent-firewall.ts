@@ -38,7 +38,7 @@ export class AgentFirewall {
     this.config = {
       mode: 'observe',
       projectRoot: process.cwd(),
-      truthpackPath: '.vibecheck/truthpack',
+      truthpackPath: '.shipgate/truthpack',
       policies: ['ghost-route', 'ghost-env', 'ghost-import', 'ghost-file'],
       timeout: 5000,
       enableCaching: true,

@@ -17,33 +17,30 @@ import {
 } from 'vscode-languageclient/node';
 
 /**
- * Create the language client
+ * Create the language client that connects to the ISL LSP server.
  */
 export function createLanguageClient(
   context: vscode.ExtensionContext,
   outputChannel: vscode.OutputChannel
 ): LanguageClient {
-  const config = vscode.workspace.getConfiguration('isl');
-  
-  // Check for custom server path first (isl.server.path takes precedence)
-  const customServerPath = config.get<string>('server.path') || config.get<string>('languageServer.path');
+  const config = vscode.workspace.getConfiguration('shipgate');
 
-  // Determine server module path
+  // Custom path takes precedence
+  const customServerPath = config.get<string>('server.path');
   const serverModule = customServerPath || findServerModule(context);
 
   if (!serverModule) {
     throw new Error(
-      'ISL language server not found. The extension will work with basic syntax highlighting only. ' +
-      'For full LSP support, either:\n' +
-      '1. Build the extension with `npm run build` to bundle the server\n' +
-      '2. Install @isl-lang/lsp-server globally: npm install -g @isl-lang/lsp-server\n' +
-      '3. Set isl.server.path in settings to point to the server'
+      'ISL language server not found. The extension will provide syntax highlighting only.\n' +
+        'For full LSP support:\n' +
+        '  1. Build the monorepo: pnpm build\n' +
+        '  2. Install globally: npm install -g @isl-lang/lsp-server\n' +
+        '  3. Set shipgate.server.path in settings'
     );
   }
 
-  outputChannel.appendLine(`Using language server: ${serverModule}`);
+  outputChannel.appendLine(`[ShipGate] Using language server: ${serverModule}`);
 
-  // Server options - run the server as a Node.js module
   const serverOptions: ServerOptions = {
     run: {
       module: serverModule,
@@ -69,17 +66,14 @@ export function createLanguageClient(
     },
   };
 
-  // Get trace level from settings
   const traceLevel = config.get<string>('trace.server', 'off');
 
-  // Client options
   const clientOptions: LanguageClientOptions = {
     documentSelector: [
       { scheme: 'file', language: 'isl' },
       { scheme: 'untitled', language: 'isl' },
     ],
     synchronize: {
-      // Notify server about file changes to .isl files and config files
       fileEvents: [
         vscode.workspace.createFileSystemWatcher('**/*.isl'),
         vscode.workspace.createFileSystemWatcher('**/.islrc.json'),
@@ -90,29 +84,12 @@ export function createLanguageClient(
     traceOutputChannel: outputChannel,
     initializationOptions: {
       settings: getServerSettings(),
-      workspaceFolders: vscode.workspace.workspaceFolders?.map(f => f.uri.toString()),
+      workspaceFolders: vscode.workspace.workspaceFolders?.map((f) => f.uri.toString()),
     },
-    // Progress reporting
     progressOnInitialization: true,
-    // Middleware for custom handling
-    middleware: {
-      // Log workspace configuration requests
-      workspace: {
-        configuration: async (params, token, next) => {
-          const result = await next(params, token);
-          outputChannel.appendLine(`Configuration requested: ${JSON.stringify(params.items)}`);
-          return result;
-        },
-      },
-    },
   };
 
-  const client = new LanguageClient(
-    'isl',
-    'ISL Language Server',
-    serverOptions,
-    clientOptions
-  );
+  const client = new LanguageClient('isl', 'ISL Language Server', serverOptions, clientOptions);
 
   // Set trace level
   switch (traceLevel) {
@@ -130,37 +107,17 @@ export function createLanguageClient(
 }
 
 /**
- * Start the language client
+ * Start the language client and register notification handlers.
  */
 export async function startClient(client: LanguageClient): Promise<void> {
   await client.start();
 
-  // Register custom request handlers
-  client.onRequest('isl/getConfiguration', () => {
-    return getServerSettings();
-  });
-
-  // Handle server notifications
-  client.onNotification('isl/status', (params: { status: string; message?: string }) => {
-    if (params.status === 'ready') {
-      vscode.window.setStatusBarMessage('ISL: Ready', 3000);
-    } else if (params.status === 'error' && params.message) {
-      vscode.window.showErrorMessage(`ISL Server: ${params.message}`);
-    }
-  });
-
-  // Handle window/logMessage for debugging
-  client.onNotification('window/logMessage', (params: { type: number; message: string }) => {
-    const config = vscode.workspace.getConfiguration('isl');
-    const traceLevel = config.get<string>('trace.server', 'off');
-    if (traceLevel !== 'off') {
-      client.outputChannel.appendLine(`[Server] ${params.message}`);
-    }
-  });
+  // Respond to server config requests
+  client.onRequest('isl/getConfiguration', () => getServerSettings());
 }
 
 /**
- * Stop the language client
+ * Gracefully stop the language client.
  */
 export async function stopClient(client: LanguageClient): Promise<void> {
   if (client.isRunning()) {
@@ -168,50 +125,59 @@ export async function stopClient(client: LanguageClient): Promise<void> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Server discovery
+// ---------------------------------------------------------------------------
+
 /**
- * Find the server module in common locations
+ * Find the server module in common locations.
+ *
  * Priority:
- * 1. Bundled with extension (server/index.js)
- * 2. Workspace node_modules
- * 3. Global npm installation
+ *   1. Bundled with extension (server/index.js — copied by esbuild plugin)
+ *   2. Monorepo sibling (../lsp-server/dist/index.js)
+ *   3. Workspace node_modules (@isl-lang/lsp-server)
+ *   4. Global npm installation
  */
 function findServerModule(context: vscode.ExtensionContext): string | undefined {
-  const possiblePaths = [
-    // Bundled with extension (primary - created by esbuild)
+  const candidates = [
+    // Bundled with extension
     context.asAbsolutePath(path.join('server', 'index.js')),
-    context.asAbsolutePath(path.join('server', 'server.js')),
     context.asAbsolutePath(path.join('server', 'cli.js')),
-    
-    // Alternative bundle locations
-    context.asAbsolutePath(path.join('dist', 'server', 'index.js')),
-    context.asAbsolutePath(path.join('node_modules', '@intentos', 'lsp-server', 'dist', 'index.js')),
 
-    // Workspace installation (monorepo sibling)
+    // Alternative bundle location
+    context.asAbsolutePath(path.join('dist', 'server', 'index.js')),
+
+    // Monorepo sibling
     path.join(context.extensionPath, '..', 'lsp-server', 'dist', 'index.js'),
 
-    // Workspace node_modules
-    ...(vscode.workspace.workspaceFolders?.map(folder =>
-      path.join(folder.uri.fsPath, 'node_modules', '@intentos', 'lsp-server', 'dist', 'index.js')
-    ) || []),
+    // node_modules (@isl-lang scope)
+    context.asAbsolutePath(
+      path.join('node_modules', '@isl-lang', 'lsp-server', 'dist', 'index.js')
+    ),
 
-    // Global npm installation (Windows)
+    // Workspace node_modules
+    ...(vscode.workspace.workspaceFolders?.map((folder) =>
+      path.join(folder.uri.fsPath, 'node_modules', '@isl-lang', 'lsp-server', 'dist', 'index.js')
+    ) ?? []),
+
+    // Global npm (Windows)
     path.join(
-      process.env.APPDATA || '',
+      process.env.APPDATA ?? '',
       'npm',
       'node_modules',
-      '@intentos',
+      '@isl-lang',
       'lsp-server',
       'dist',
       'index.js'
     ),
 
-    // Global npm installation (Unix)
+    // Global npm (Unix)
     path.join(
-      process.env.HOME || '',
+      process.env.HOME ?? '',
       '.npm-global',
       'lib',
       'node_modules',
-      '@intentos',
+      '@isl-lang',
       'lsp-server',
       'dist',
       'index.js'
@@ -219,31 +185,33 @@ function findServerModule(context: vscode.ExtensionContext): string | undefined 
 
     // pnpm global
     path.join(
-      process.env.PNPM_HOME || path.join(process.env.HOME || '', '.local', 'share', 'pnpm'),
+      process.env.PNPM_HOME ??
+        path.join(process.env.HOME ?? '', '.local', 'share', 'pnpm'),
       'global',
       '5',
       'node_modules',
-      '@intentos',
+      '@isl-lang',
       'lsp-server',
       'dist',
       'index.js'
     ),
   ];
 
-  for (const serverPath of possiblePaths) {
-    if (serverPath && fs.existsSync(serverPath)) {
-      return serverPath;
+  for (const candidate of candidates) {
+    if (candidate && fs.existsSync(candidate)) {
+      return candidate;
     }
   }
 
   return undefined;
 }
 
-/**
- * Get server settings from VS Code configuration
- */
+// ---------------------------------------------------------------------------
+// Settings
+// ---------------------------------------------------------------------------
+
 function getServerSettings(): Record<string, unknown> {
-  const config = vscode.workspace.getConfiguration('isl');
+  const config = vscode.workspace.getConfiguration('shipgate');
 
   return {
     validation: {

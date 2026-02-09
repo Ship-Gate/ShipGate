@@ -11,7 +11,7 @@
 |-------|------|---------|
 | **Product** | **Shipgate** | The gate that decides if code is ready to ship. SHIP or NO_SHIP. |
 | **Spec language** | ISL (Intent Specification Language) | The behavioral contract DSL. Think "TypeScript for behavior." |
-| **Truth source** | Truthpack | Auto-generated contracts (routes, env, types) in `.vibecheck/truthpack` |
+| **Truth source** | Truthpack | Auto-generated contracts (routes, env, types) in `.shipgate/truthpack` |
 | **CLI binary** | `shipgate` or `sg` | User-facing command |
 
 **Brand hierarchy:** Shipgate (product) uses ISL (language) + Truthpack (truth source) to enforce behavioral contracts.
@@ -26,7 +26,7 @@
 |-----------|--------|-------|
 | ISL parser + type checker | ✅ Production | 95%+ expression eval, semantic passes |
 | SHIP/NO_SHIP gate engine | ✅ Production | `isl-gate`, trust score 0–100 |
-| Truthpack generation | ✅ Working | `.vibecheck/truthpack` (routes, contracts, env, auth) |
+| Truthpack generation | ✅ Working | `.shipgate/truthpack` (routes, contracts, env, auth) |
 | AI Firewall (MCP) | ✅ Working | Blocks ghost routes, ghost env, auth bypass |
 | Policy packs | ✅ 25 rules | auth, PII, payments, rate-limit, intent |
 | CLI commands | ✅ Working | `gate`, `verify`, `pbt`, `chaos`, `trust-score` |

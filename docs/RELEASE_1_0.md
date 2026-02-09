@@ -217,7 +217,7 @@ This document tracks the ISL 1.0 release progress, gate status, and evidence art
 
 ## CLI Demo Commands
 
-Each gate must produce a CLI run ending in "Verified by VibeCheck ✓":
+Each gate must produce a CLI run ending in "Verified by ShipGate ✓":
 
 ```bash
 # Gate A: Expression Evaluator
@@ -249,5 +249,5 @@ The 1.0 release is complete when:
 2. ✅ `pnpm build` exits 0
 3. ✅ `pnpm typecheck` exits 0  
 4. ✅ `pnpm test` passes with >90% pass rate
-5. ✅ Each gate has CLI demo with "Verified by VibeCheck ✓"
+5. ✅ Each gate has CLI demo with "Verified by ShipGate ✓"
 6. ✅ Evidence artifacts collected for all gates

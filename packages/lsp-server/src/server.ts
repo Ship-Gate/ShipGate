@@ -214,7 +214,7 @@ export class ISLServer {
 
         // Suppress-line action: insert a comment above the offending line
         const suppressComment = diag.source === SOURCE_HOST
-          ? `// vibecheck-ignore`
+          ? `// shipgate-ignore`
           : `// islstudio-ignore ${diag.code}`;
 
         actions.push({

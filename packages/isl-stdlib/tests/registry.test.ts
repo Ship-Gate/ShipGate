@@ -30,12 +30,15 @@ describe('Registry', () => {
   });
 
   describe('getModuleNames', () => {
-    it('returns all module names', () => {
+    it('returns all 6 module names', () => {
       const names = getModuleNames();
+      expect(names).toContain('stdlib-core');
       expect(names).toContain('stdlib-auth');
-      expect(names).toContain('stdlib-rate-limit');
-      expect(names).toContain('stdlib-audit');
+      expect(names).toContain('stdlib-http');
       expect(names).toContain('stdlib-payments');
+      expect(names).toContain('stdlib-storage');
+      expect(names).toContain('stdlib-security');
+      expect(names).toHaveLength(6);
     });
   });
 
@@ -64,13 +67,19 @@ describe('Registry', () => {
       const modules = getModulesByCategory('security');
       expect(modules.length).toBeGreaterThan(0);
       expect(modules.some(m => m.name.includes('auth'))).toBe(true);
-      expect(modules.some(m => m.name.includes('rate-limit'))).toBe(true);
+      expect(modules.some(m => m.name.includes('security'))).toBe(true);
     });
 
     it('returns modules in the business category', () => {
       const modules = getModulesByCategory('business');
       expect(modules.length).toBeGreaterThan(0);
       expect(modules.some(m => m.name.includes('payments'))).toBe(true);
+    });
+
+    it('returns modules in the data category', () => {
+      const modules = getModulesByCategory('data');
+      expect(modules.length).toBeGreaterThan(0);
+      expect(modules.some(m => m.name.includes('core'))).toBe(true);
     });
   });
 
@@ -85,41 +94,70 @@ describe('Registry', () => {
       const modules = searchModules('payment');
       expect(modules.length).toBeGreaterThan(0);
     });
+
+    it('finds modules by security keyword', () => {
+      const modules = searchModules('rate-limit');
+      expect(modules.length).toBeGreaterThan(0);
+    });
   });
 
   describe('findModulesWithEntity', () => {
-    it('finds modules that provide User entity', () => {
-      const modules = findModulesWithEntity('User');
+    it('finds modules that provide Payment entity', () => {
+      const modules = findModulesWithEntity('Payment');
       expect(modules.length).toBeGreaterThan(0);
-      expect(modules[0]?.name).toContain('auth');
+      expect(modules[0]?.name).toContain('payments');
     });
 
     it('finds modules that provide Session entity', () => {
       const modules = findModulesWithEntity('Session');
       expect(modules.length).toBeGreaterThan(0);
     });
+
+    it('finds modules that provide HTTPRequest entity', () => {
+      const modules = findModulesWithEntity('HTTPRequest');
+      expect(modules.length).toBeGreaterThan(0);
+      expect(modules[0]?.name).toContain('http');
+    });
+
+    it('finds modules that provide RateLimitConfig entity', () => {
+      const modules = findModulesWithEntity('RateLimitConfig');
+      expect(modules.length).toBeGreaterThan(0);
+      expect(modules[0]?.name).toContain('security');
+    });
   });
 
   describe('findModulesWithBehavior', () => {
-    it('finds modules that provide Login behavior', () => {
-      const modules = findModulesWithBehavior('Login');
+    it('finds modules that provide InitiateOAuth behavior', () => {
+      const modules = findModulesWithBehavior('InitiateOAuth');
       expect(modules.length).toBeGreaterThan(0);
       expect(modules[0]?.name).toContain('auth');
+    });
+
+    it('finds modules that provide Create behavior', () => {
+      const modules = findModulesWithBehavior('Create');
+      expect(modules.length).toBeGreaterThan(0);
+      expect(modules[0]?.name).toContain('storage');
+    });
+
+    it('finds modules that provide CheckRateLimit behavior', () => {
+      const modules = findModulesWithBehavior('CheckRateLimit');
+      expect(modules.length).toBeGreaterThan(0);
+      expect(modules[0]?.name).toContain('security');
     });
   });
 
   describe('resolveDependencyTree', () => {
     it('resolves dependencies in topological order', () => {
-      const deps = resolveDependencyTree('stdlib-saas');
-      expect(deps).toContain('stdlib-auth');
-      expect(deps).toContain('stdlib-saas');
-      // Auth should come before saas
-      expect(deps.indexOf('stdlib-auth')).toBeLessThan(deps.indexOf('stdlib-saas'));
+      const deps = resolveDependencyTree('stdlib-payments');
+      expect(deps).toContain('stdlib-core');
+      expect(deps).toContain('stdlib-payments');
+      expect(deps.indexOf('stdlib-core')).toBeLessThan(deps.indexOf('stdlib-payments'));
     });
 
-    it('returns single module for no dependencies', () => {
-      const deps = resolveDependencyTree('stdlib-cache');
-      expect(deps).toContain('stdlib-cache');
+    it('resolves core with no dependencies', () => {
+      const deps = resolveDependencyTree('stdlib-core');
+      expect(deps).toHaveLength(1);
+      expect(deps).toContain('stdlib-core');
     });
   });
 
@@ -127,6 +165,21 @@ describe('Registry', () => {
     it('resolves @isl/stdlib-auth alias', () => {
       const result = resolveImportAlias('@isl/stdlib-auth');
       expect(result).toBe('stdlib-auth');
+    });
+
+    it('resolves @isl/auth short alias', () => {
+      const result = resolveImportAlias('@isl/auth');
+      expect(result).toBe('stdlib-auth');
+    });
+
+    it('resolves @isl/stdlib-core alias', () => {
+      const result = resolveImportAlias('@isl/stdlib-core');
+      expect(result).toBe('stdlib-core');
+    });
+
+    it('resolves @isl/stdlib-security alias', () => {
+      const result = resolveImportAlias('@isl/stdlib-security');
+      expect(result).toBe('stdlib-security');
     });
 
     it('resolves subpath imports', () => {
@@ -151,9 +204,10 @@ describe('Registry', () => {
   describe('getRegistryStats', () => {
     it('returns registry statistics', () => {
       const stats = getRegistryStats();
-      expect(stats.totalModules).toBeGreaterThan(0);
+      expect(stats.totalModules).toBe(6);
       expect(stats.totalEntities).toBeGreaterThan(0);
       expect(stats.totalBehaviors).toBeGreaterThan(0);
+      expect(stats.totalTypes).toBeGreaterThan(0);
       expect(stats.byCategory).toBeDefined();
     });
   });

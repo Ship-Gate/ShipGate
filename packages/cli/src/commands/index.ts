@@ -14,9 +14,9 @@ export { check, printCheckResult, type CheckOptions, type CheckResult, type File
 
 export { generate, printGenerateResult, type GenerateOptions, type GenerateResult, type GeneratedFile } from './generate.js';
 
-export { verify, verifyWithDiscovery, printVerifyResult, getVerifyExitCode, type VerifyOptions, type VerifyResult, type EvidenceScore } from './verify.js';
+export { verify, verifyWithDiscovery, printVerifyResult, getVerifyExitCode, unifiedVerify, printUnifiedVerifyResult, getUnifiedExitCode, type VerifyOptions, type VerifyResult, type EvidenceScore, type UnifiedVerifyOptions, type UnifiedVerifyResult, type FileVerifyResultEntry, type VerificationMode, type FailOnLevel, type UnifiedVerdict } from './verify.js';
 
-export { init, printInitResult, type InitOptions, type InitResult } from './init.js';
+export { init, printInitResult, interactiveInit, printInteractiveInitResult, type InitOptions, type InitResult, type InteractiveInitOptions, type InteractiveInitResult } from './init.js';
 
 export { parse, printParseResult, getParseExitCode, type ParseOptions, type ParseResult } from './parse.js';
 
@@ -45,3 +45,9 @@ export { watch, type WatchOptions, type WatchResult } from './watch.js';
 export { pbt, printPBTResult, getPBTExitCode, type PBTOptions, type PBTResult, type PBTVerifyResult } from './pbt.js';
 
 export { chaos, printChaosResult, getChaosExitCode, type ChaosOptions, type ChaosResult, type ChaosVerifyResult } from './chaos.js';
+
+export { islGenerate, printIslGenerateResult, getIslGenerateExitCode, type IslGenerateOptions, type IslGenerateResult, type GeneratedFileEntry } from './isl-generate.js';
+
+export { specQuality, printSpecQualityResult, getSpecQualityExitCode, type SpecQualityCommandOptions, type SpecQualityCommandResult } from './spec-quality.js';
+
+export { policyCheck, printPolicyCheckResult, getPolicyCheckExitCode, policyInit, printPolicyInitResult, type PolicyCheckOptions, type PolicyCheckResult, type PolicyInitOptions, type PolicyInitResult } from './policy-team.js';

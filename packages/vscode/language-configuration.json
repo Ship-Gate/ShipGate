@@ -25,12 +25,9 @@
   ],
   "folding": {
     "markers": {
-      "start": "^\\s*(//\\s*#?region|/\\*\\s*#?region)",
-      "end": "^\\s*(//\\s*#?endregion|/\\*\\s*#?endregion)"
+      "start": "^\\s*(domain|entity|behavior|chaos|scenarios|security|temporal|compliance)\\s",
+      "end": "^\\s*\\}"
     }
-  },
-  "foldingRules": {
-    "offSide": false
   },
   "indentationRules": {
     "increaseIndentPattern": "^.*\\{[^}]*$|^.*\\[[^\\]]*$",
@@ -69,13 +66,6 @@
     },
     {
       "beforeText": "^(\\t|[ ])*[ ]\\*/\\s*$",
-      "action": {
-        "indent": "none",
-        "removeText": 1
-      }
-    },
-    {
-      "beforeText": "^(\\t|[ ])*[ ]\\*[^/]*\\*/\\s*$",
       "action": {
         "indent": "none",
         "removeText": 1

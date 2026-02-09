@@ -1,0 +1,101 @@
+/* ShipGate Documentation — Custom Starlight Theme */
+
+:root {
+  /* Brand colors */
+  --sl-color-accent-low: #1a1f36;
+  --sl-color-accent: #6366f1;
+  --sl-color-accent-high: #c7d2fe;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #eef0f6;
+  --sl-color-gray-2: #c2c7d6;
+  --sl-color-gray-3: #8b92a8;
+  --sl-color-gray-4: #585e72;
+  --sl-color-gray-5: #393e52;
+  --sl-color-gray-6: #23273a;
+  --sl-color-black: #13151f;
+
+  /* Typography */
+  --sl-font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, sans-serif;
+  --sl-font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code",
+    "Source Code Pro", monospace;
+
+  /* Content width */
+  --sl-content-width: 55rem;
+}
+
+/* Dark mode overrides */
+:root[data-theme="dark"] {
+  --sl-color-accent-low: #1e1b4b;
+  --sl-color-accent: #818cf8;
+  --sl-color-accent-high: #e0e7ff;
+}
+
+/* Hero section on landing page */
+.hero-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--sl-color-accent-low) 0%,
+    var(--sl-color-black) 50%,
+    #0f172a 100%
+  );
+}
+
+/* Code block enhancements */
+.expressive-code .frame {
+  border-radius: 0.75rem;
+}
+
+/* Callout / aside styling */
+.starlight-aside {
+  border-radius: 0.5rem;
+}
+
+/* Try it button for ISL examples */
+.try-it-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--sl-color-accent);
+  background: var(--sl-color-accent-low);
+  border: 1px solid var(--sl-color-accent);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  margin-top: 0.5rem;
+}
+
+.try-it-btn:hover {
+  background: var(--sl-color-accent);
+  color: var(--sl-color-white);
+}
+
+/* Badge styles for SHIP/NO_SHIP */
+.badge-ship {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 0.25rem;
+  background: #065f46;
+  color: #6ee7b7;
+}
+
+.badge-noship {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 0.25rem;
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
+/* Navigation section icons */
+.sl-sidebar-group summary {
+  font-weight: 600;
+}

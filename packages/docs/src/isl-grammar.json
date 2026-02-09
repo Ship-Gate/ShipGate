@@ -1,0 +1,193 @@
+{
+  "name": "isl",
+  "scopeName": "source.isl",
+  "fileTypes": ["isl"],
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#domain-block" },
+    { "include": "#keywords-declaration" },
+    { "include": "#keywords-control" },
+    { "include": "#keywords-temporal" },
+    { "include": "#keywords-other" },
+    { "include": "#types-primitive" },
+    { "include": "#types-collection" },
+    { "include": "#modifiers" },
+    { "include": "#operators" },
+    { "include": "#numbers" },
+    { "include": "#types-user" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.isl",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.isl",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.isl",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.isl",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "domain-block": {
+      "patterns": [
+        {
+          "match": "\\b(domain|module)\\s+([A-Z][a-zA-Z0-9_]*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.domain.isl" },
+            "2": { "name": "entity.name.type.domain.isl" }
+          }
+        },
+        {
+          "match": "\\b(entity|behavior|type|enum|scenarios|chaos)\\s+([A-Z][a-zA-Z0-9_]*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.isl" },
+            "2": { "name": "entity.name.type.isl" }
+          }
+        }
+      ]
+    },
+    "keywords-declaration": {
+      "patterns": [
+        {
+          "name": "keyword.declaration.isl",
+          "match": "\\b(domain|entity|behavior|type|enum|struct|input|output|preconditions|postconditions|invariants|temporal|security|compliance|actors|errors|lifecycle|version|description|scope|module|use|from|as|extends|implements|import|export|policy|view|ui_blueprint|blueprint|scenarios|chaos|scenario)\\b"
+        }
+      ]
+    },
+    "keywords-control": {
+      "patterns": [
+        {
+          "name": "keyword.control.isl",
+          "match": "\\b(intent|pre|post|invariant|given|when|then|inject|expect|forall|exists|implies|iff|old|if|else|return|where|for|in|with|retries|must|owns|is|rate_limit|per|never_logged|retriable)\\b"
+        }
+      ]
+    },
+    "keywords-temporal": {
+      "patterns": [
+        {
+          "name": "keyword.control.temporal.isl",
+          "match": "\\b(eventually|within|immediately|never|always|before|after)\\b"
+        }
+      ]
+    },
+    "keywords-other": {
+      "patterns": [
+        {
+          "name": "constant.language.isl",
+          "match": "\\b(success|failure|true|false|null|nil)\\b"
+        },
+        {
+          "name": "variable.language.isl",
+          "match": "\\b(result|this|self|now)\\b"
+        },
+        {
+          "name": "keyword.operator.quantifier.isl",
+          "match": "\\b(all|any|none|count|sum|filter)\\b"
+        }
+      ]
+    },
+    "types-primitive": {
+      "patterns": [
+        {
+          "name": "support.type.primitive.isl",
+          "match": "\\b(Boolean|Int|Decimal|String|Bytes|UUID|Email|URL|Phone|Timestamp|Duration|Money|Percentage|Regex)\\b"
+        }
+      ]
+    },
+    "types-collection": {
+      "patterns": [
+        {
+          "name": "support.type.collection.isl",
+          "match": "\\b(List|Map|Set|Optional|Result)\\b"
+        }
+      ]
+    },
+    "types-user": {
+      "patterns": [
+        {
+          "name": "entity.name.type.isl",
+          "match": "\\b[A-Z][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    },
+    "modifiers": {
+      "patterns": [
+        {
+          "name": "storage.modifier.isl",
+          "match": "\\[\\s*(immutable|unique|indexed|secret|sensitive|default|positive|optional|required|nullable|readonly|private|public|internal)[^\\]]*\\]"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.comparison.isl",
+          "match": "(==|!=|<=|>=|<|>)"
+        },
+        {
+          "name": "keyword.operator.logical.isl",
+          "match": "(&&|\\|\\|)"
+        },
+        {
+          "name": "keyword.operator.word.isl",
+          "match": "\\b(and|or|not)\\b"
+        },
+        {
+          "name": "keyword.operator.arithmetic.isl",
+          "match": "(\\+|-|\\*|/|%)"
+        },
+        {
+          "name": "keyword.operator.arrow.isl",
+          "match": "(->|=>)"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.isl",
+          "match": "\\b\\d+\\.\\d+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.isl",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.block.isl",
+          "match": "[{}]"
+        },
+        {
+          "name": "punctuation.definition.parameters.isl",
+          "match": "[()]"
+        },
+        {
+          "name": "punctuation.separator.isl",
+          "match": "[,;]"
+        }
+      ]
+    }
+  }
+}

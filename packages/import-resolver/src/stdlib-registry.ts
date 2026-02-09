@@ -111,6 +111,16 @@ export class StdlibRegistryManager {
       version: '1.0.0',
       description: 'ISL Standard Library Module Registry',
       modules: {
+        // ======= Canonical 6 Stdlib Modules =======
+        '@isl/core': {
+          version: '1.0.0',
+          path: 'stdlib/core',
+          files: {
+            'base-types': 'base-types.isl',
+          },
+          exports: ['Email', 'URL', 'Phone', 'Slug', 'Locale', 'CountryCode', 'IPv4', 'IPv6', 'IPAddress', 'SemVer', 'MimeType', 'UUID', 'ULID', 'CUID', 'Timestamp', 'Duration', 'DateString', 'TimeString', 'DateTimeString', 'TimeZone', 'Currency', 'Money', 'MonetaryAmount', 'Percentage', 'PositiveInt', 'NonNegativeInt', 'ByteSize', 'Markdown', 'HTML', 'JSON', 'PageSize', 'PageOffset', 'Cursor', 'SortDirection', 'PageInfo', 'AuditMetadata'],
+          description: 'Base types and primitives (Email, URL, UUID, Timestamp, Currency, pagination)',
+        },
         '@isl/auth': {
           version: '1.0.0',
           path: 'stdlib/auth',
@@ -120,32 +130,18 @@ export class StdlibRegistryManager {
             'rate-limit-login': 'rate-limit-login.isl',
             'session-create': 'session-create.isl',
           },
-          exports: ['User', 'Session', 'Role', 'Permission', 'Token', 'Credential', 'AuthResult', 'LoginAttempt'],
-          description: 'Authentication and authorization specifications',
+          exports: ['OAuthCredential', 'PasswordResetRequest', 'LoginAttempt', 'RateLimitBucket', 'LoginBlock', 'Session', 'InitiateOAuth', 'ExchangeOAuthCode', 'RefreshOAuthToken', 'RevokeOAuthCredential', 'RequestPasswordReset', 'ValidateResetToken', 'ResetPassword', 'CheckPasswordStrength', 'CheckLoginRateLimit', 'RecordLoginAttempt', 'CreateSession', 'ValidateSession', 'RevokeSession'],
+          description: 'Authentication and authorization (OAuth, sessions, rate limiting)',
         },
-        '@isl/rate-limit': {
+        '@isl/http': {
           version: '1.0.0',
-          path: 'packages/stdlib-rate-limit/src',
+          path: 'stdlib/http',
           files: {
-            'index': 'index.isl',
-            'sliding-window': 'sliding-window.isl',
-            'token-bucket': 'token-bucket.isl',
-            'fixed-window': 'fixed-window.isl',
+            'request-response': 'request-response.isl',
+            'middleware': 'middleware.isl',
           },
-          exports: ['RateLimitConfig', 'RateLimitResult', 'RateLimitKey', 'QuotaConfig', 'QuotaUsage', 'SlidingWindowConfig', 'TokenBucketConfig', 'FixedWindowConfig'],
-          description: 'Rate limiting and quota management specifications',
-        },
-        '@isl/audit': {
-          version: '1.0.0',
-          path: 'packages/stdlib-audit/src',
-          files: {
-            'index': 'index.isl',
-            'log-entry': 'log-entry.isl',
-            'retention': 'retention.isl',
-            'query': 'query.isl',
-          },
-          exports: ['AuditEntry', 'AuditLog', 'AuditQuery', 'AuditRetention', 'AuditEvent', 'AuditActor', 'AuditContext'],
-          description: 'Audit logging and compliance specifications',
+          exports: ['HTTPRequest', 'HTTPResponse', 'HTTPError', 'CacheControl', 'RequestLog', 'RetryConfig', 'CircuitBreakerConfig', 'SendRequest', 'ParseRequest', 'BuildErrorResponse', 'ValidateContentType', 'LogRequest', 'CompressResponse', 'CalculateRetryDelay', 'CheckCircuitBreaker', 'HTTPMethod', 'HTTPStatusCode', 'ContentType', 'AuthScheme'],
+          description: 'HTTP contracts (Request, Response, StatusCode, Headers, middleware)',
         },
         '@isl/payments': {
           version: '1.0.0',
@@ -156,78 +152,88 @@ export class StdlibRegistryManager {
             'subscription-create': 'subscription-create.isl',
             'webhook-handle': 'webhook-handle.isl',
           },
-          exports: ['Payment', 'Invoice', 'Subscription', 'Price', 'Currency', 'Transaction', 'Refund', 'Webhook'],
-          description: 'Payment processing specifications',
+          exports: ['Payment', 'PaymentCard', 'Refund', 'Plan', 'Subscription', 'SubscriptionInvoice', 'WebhookEvent', 'WebhookEndpoint', 'CreatePayment', 'ProcessPaymentIntent', 'CancelPayment', 'CreateRefund', 'CreateSubscription', 'ReceiveWebhook'],
+          description: 'PCI-compliant payment processing (payments, refunds, subscriptions, webhooks)',
         },
-        '@isl/uploads': {
+        '@isl/storage': {
           version: '1.0.0',
-          path: 'stdlib/uploads',
+          path: 'stdlib/storage',
           files: {
-            'store-blob': 'store-blob.isl',
-            'upload-image': 'upload-image.isl',
-            'validate-mime': 'validate-mime.isl',
+            'crud': 'crud.isl',
+            'search': 'search.isl',
           },
-          exports: ['File', 'FileMetadata', 'StorageProvider', 'UploadResult', 'MimeType', 'Blob'],
-          description: 'File upload and storage specifications',
+          exports: ['SortSpec', 'FilterSpec', 'PaginationSpec', 'PaginatedResult', 'SoftDeleteMetadata', 'SearchResult', 'SearchFacet', 'SearchIndex', 'Create', 'Read', 'Update', 'Delete', 'List', 'Restore', 'BatchCreate', 'Search', 'Suggest', 'IndexDocument'],
+          description: 'Data persistence patterns (CRUD, pagination, search, soft-delete)',
         },
+        '@isl/security': {
+          version: '1.0.0',
+          path: 'stdlib/security',
+          files: {
+            'rate-limit': 'rate-limit.isl',
+            'input-validation': 'input-validation.isl',
+            'cors': 'cors.isl',
+          },
+          exports: ['RateLimitConfig', 'RateLimitState', 'RateLimitResult', 'TokenBucketState', 'ValidationError', 'ValidationResult', 'SanitizationConfig', 'CORSConfig', 'CSRFConfig', 'CSRFToken', 'CheckRateLimit', 'ConsumeToken', 'ValidateInput', 'SanitizeString', 'DetectInjection', 'ValidateEmail', 'ValidateURL', 'CheckCORS', 'HandlePreflight', 'GenerateCSRFToken', 'ValidateCSRFToken'],
+          description: 'Security primitives (rate limiting, CORS, CSRF, input validation)',
+        },
+        // ======= Utility Modules (available via stdlib-* aliases) =======
         '@isl/datetime': {
           version: '1.0.0',
           path: 'stdlib/datetime',
-          files: {
-            'index': 'index.isl',
-          },
+          files: { 'index': 'index.isl' },
           exports: ['Timestamp', 'Duration', 'TimeZone', 'DateFormat', 'DatePart', 'DayOfWeek', 'DateTimeComponents', 'DurationComponents', 'Now', 'AddDuration', 'SubtractDuration', 'DiffTimestamps', 'FormatTimestamp', 'ParseTimestamp', 'GetDatePart', 'ToComponents', 'FromComponents', 'DurationToMs', 'MsToDuration', 'IsLeapYear', 'DaysInMonth', 'CompareTimestamps', 'IsBefore', 'IsAfter', 'IsBetween'],
-          description: 'Date and time operations (deterministic subset with explicit non-deterministic Now)',
+          description: 'Date and time operations',
         },
         '@isl/strings': {
           version: '1.0.0',
           path: 'stdlib/strings',
-          files: {
-            'index': 'index.isl',
-          },
-          exports: ['StringCase', 'TrimMode', 'EmailFormat', 'UrlFormat', 'PhoneFormat', 'StringValidationResult', 'SplitResult', 'Length', 'IsEmpty', 'IsBlank', 'ToLowerCase', 'ToUpperCase', 'ToTitleCase', 'ChangeCase', 'Trim', 'TrimStart', 'TrimEnd', 'TrimChars', 'Contains', 'StartsWith', 'EndsWith', 'IndexOf', 'LastIndexOf', 'Substring', 'Replace', 'ReplaceAll', 'Split', 'Join', 'Concat', 'Repeat', 'PadStart', 'PadEnd', 'Reverse', 'IsValidEmail', 'IsValidUrl', 'IsValidPhone', 'MatchesPattern', 'IsAlpha', 'IsAlphanumeric', 'IsNumeric', 'IsHexadecimal', 'EncodeBase64', 'DecodeBase64', 'EncodeUrl', 'DecodeUrl', 'EscapeHtml', 'UnescapeHtml'],
-          description: 'String manipulation and validation operations (all deterministic)',
+          files: { 'index': 'index.isl' },
+          exports: ['StringCase', 'TrimMode', 'Length', 'IsEmpty', 'IsBlank', 'ToLowerCase', 'ToUpperCase', 'ToTitleCase', 'Contains', 'StartsWith', 'EndsWith', 'Split', 'Join', 'Concat', 'Replace', 'ReplaceAll', 'Trim', 'IsValidEmail', 'IsValidUrl', 'IsValidPhone', 'MatchesPattern'],
+          description: 'String manipulation and validation operations',
         },
         '@isl/crypto': {
           version: '1.0.0',
           path: 'stdlib/crypto',
-          files: {
-            'index': 'index.isl',
-          },
-          exports: ['HashAlgorithm', 'PasswordHashAlgorithm', 'HmacAlgorithm', 'HashOutput', 'PasswordHash', 'SecureToken', 'HmacSignature', 'SecretKey', 'HashResult', 'PasswordHashConfig', 'Hash', 'HashSHA256', 'HashSHA512', 'HashSHA3', 'HashBlake3', 'HashPassword', 'VerifyPassword', 'NeedsRehash', 'Hmac', 'VerifyHmac', 'GenerateToken', 'GenerateApiKey', 'GenerateBytes', 'DeriveKey', 'ConstantTimeEquals', 'HashFile'],
+          files: { 'index': 'index.isl' },
+          exports: ['HashAlgorithm', 'PasswordHashAlgorithm', 'HmacAlgorithm', 'HashOutput', 'PasswordHash', 'SecureToken', 'HmacSignature', 'SecretKey', 'HashResult', 'PasswordHashConfig', 'Hash', 'HashSHA256', 'HashSHA512', 'HashPassword', 'VerifyPassword', 'Hmac', 'VerifyHmac', 'GenerateToken', 'GenerateApiKey', 'DeriveKey', 'ConstantTimeEquals'],
           description: 'Cryptographic hashing and secure operations',
         },
         '@isl/uuid': {
           version: '1.0.0',
           path: 'stdlib/uuid',
-          files: {
-            'index': 'index.isl',
-          },
-          exports: ['UUID', 'UUIDVersion', 'UUIDNamespace', 'UUIDFormat', 'UUIDInfo', 'UUIDComponents', 'GenerateUUID', 'GenerateUUIDv7', 'GenerateUUIDv5', 'GenerateUUIDv3', 'GenerateNamespacedUUID', 'IsValidUUID', 'IsNilUUID', 'IsMaxUUID', 'ParseUUID', 'FormatUUID', 'NormalizeUUID', 'GetUUIDVersion', 'ToComponents', 'FromComponents', 'CompareUUIDs', 'UUIDsEqual'],
+          files: { 'index': 'index.isl' },
+          exports: ['UUID', 'UUIDVersion', 'UUIDNamespace', 'UUIDFormat', 'UUIDInfo', 'UUIDComponents', 'GenerateUUID', 'GenerateUUIDv7', 'GenerateUUIDv5', 'IsValidUUID', 'ParseUUID', 'FormatUUID', 'NormalizeUUID', 'GetUUIDVersion', 'CompareUUIDs', 'UUIDsEqual'],
           description: 'UUID generation, validation, and parsing',
         },
         '@isl/json': {
           version: '1.0.0',
           path: 'stdlib/json',
-          files: {
-            'index': 'index.isl',
-          },
-          exports: ['JSONValue', 'JSONObject', 'JSONArray', 'JSONPath', 'JSONPointer', 'JSONPatchOp', 'JSONFormatOptions', 'JSONParseResult', 'JSONPatch', 'JSONDiff', 'JSONSchemaValidation', 'Parse', 'TryParse', 'Stringify', 'StringifyPretty', 'StringifyCompact', 'Get', 'GetString', 'GetNumber', 'GetBoolean', 'GetArray', 'GetObject', 'Has', 'Set', 'Remove', 'Merge', 'Clone', 'Keys', 'Values', 'Entries', 'Query', 'Equals', 'Diff', 'ApplyPatches', 'IsValid', 'IsObject', 'IsArray', 'IsString', 'IsNumber', 'IsBoolean', 'IsNull', 'Flatten', 'Unflatten', 'Pick', 'Omit'],
-          description: 'JSON parsing, serialization, and manipulation (all deterministic)',
+          files: { 'index': 'index.isl' },
+          exports: ['JSONValue', 'JSONObject', 'JSONArray', 'JSONPath', 'JSONPatchOp', 'Parse', 'TryParse', 'Stringify', 'Get', 'Has', 'Set', 'Remove', 'Merge', 'Clone', 'Keys', 'Values', 'Entries', 'Equals', 'Diff', 'IsValid', 'Flatten', 'Unflatten', 'Pick', 'Omit'],
+          description: 'JSON parsing, serialization, and manipulation',
         },
       },
       aliases: {
+        // Canonical stdlib-* → @isl/* mappings
+        'stdlib-core': '@isl/core',
         'stdlib-auth': '@isl/auth',
-        'stdlib-rate-limit': '@isl/rate-limit',
-        'stdlib-audit': '@isl/audit',
+        'stdlib-http': '@isl/http',
         'stdlib-payments': '@isl/payments',
-        'stdlib-uploads': '@isl/uploads',
-        'stdlib-billing': '@isl/payments',
+        'stdlib-storage': '@isl/storage',
+        'stdlib-security': '@isl/security',
+        // Utility module aliases
         'stdlib-datetime': '@isl/datetime',
         'stdlib-strings': '@isl/strings',
         'stdlib-crypto': '@isl/crypto',
         'stdlib-uuid': '@isl/uuid',
         'stdlib-json': '@isl/json',
+        // Convenience aliases (backward compatibility)
+        'stdlib-billing': '@isl/payments',
+        'stdlib-uploads': '@isl/storage',
+        'stdlib-rate-limit': '@isl/security',
+        'stdlib-audit': '@isl/security',
+        'stdlib-validation': '@isl/security',
+        'stdlib-cors': '@isl/security',
       },
     };
   }

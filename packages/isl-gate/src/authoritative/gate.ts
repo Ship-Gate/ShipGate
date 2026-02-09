@@ -16,6 +16,7 @@ import type {
   AuthoritativeGateResult,
   AuthoritativeVerdict,
   VerificationSignal,
+  SignalSource,
   ThresholdConfig,
   EvidenceBundle,
   EvidenceArtifact,
@@ -25,6 +26,7 @@ import { DEFAULT_THRESHOLDS, EXIT_CODES } from './types.js';
 import { aggregateSignals, createSignal, createBlockingSignal, createFinding } from './aggregator.js';
 import { makeDecision, getSuggestions } from './decision-engine.js';
 import { hashContent, createBundle, createArtifact, writeBundle } from './evidence-bundle.js';
+import { runSpeclessChecks, type GateContext } from './specless-registry.js';
 
 // ISL version for evidence bundle
 const ISL_VERSION = '0.2.0';
@@ -284,7 +286,8 @@ async function readDirectoryFiles(dir: string): Promise<string> {
 
 /**
  * Collect signals when no ISL spec is present.
- * Runs dependency audit (if enabled) and reports specless verification.
+ * Runs registered specless checks (hallucination scanner, security scanner,
+ * firewall scanners) and dependency audit (if enabled).
  */
 async function collectSpeclessSignals(
   input: AuthoritativeGateInput,
@@ -297,11 +300,59 @@ async function collectSpeclessSignals(
     createSignal(
       'static_analysis',
       true,
-      'Specless verification: no ISL spec; ran dependency and project checks only.',
+      'Specless verification: no ISL spec; running registered specless checks.',
       { score: 100, blocking: false }
     )
   );
 
+  // ── Run all registered specless checks ───────────────────────────────
+  const gateContext: GateContext = {
+    projectRoot: input.projectRoot,
+    implementation: implSource,
+    specOptional: true,
+  };
+
+  const speclessEvidence = await runSpeclessChecks(input.implementation, gateContext);
+
+  for (const evidence of speclessEvidence) {
+    // Skip 'skip' results — they indicate unavailable scanners
+    if (evidence.result === 'skip') {
+      continue;
+    }
+
+    // Map evidence source to SignalSource
+    const signalSource = mapEvidenceToSignalSource(evidence.check);
+    const passed = evidence.result === 'pass';
+    const blocking = evidence.result === 'fail';
+
+    // Map severity for findings
+    const severity = blocking ? 'critical' as const
+      : evidence.result === 'warn' ? 'medium' as const
+      : 'low' as const;
+
+    const findingId = evidence.check
+      .replace(/[^a-zA-Z0-9-]/g, '-')
+      .replace(/-+/g, '-')
+      .toLowerCase()
+      .slice(0, 64);
+
+    signals.push(
+      createSignal(
+        signalSource,
+        passed,
+        evidence.details,
+        {
+          score: evidence.confidence * 100,
+          blocking,
+          findings: !passed
+            ? [createFinding(findingId, severity, evidence.details, { blocking })]
+            : [],
+        }
+      )
+    );
+  }
+
+  // ── Dependency audit ─────────────────────────────────────────────────
   if (input.dependencyAudit && input.projectRoot) {
     try {
       const auditSignal = await collectDependencyAuditSignal(input.projectRoot);
@@ -312,6 +363,22 @@ async function collectSpeclessSignals(
   }
 
   return signals;
+}
+
+/**
+ * Map a specless check name to the appropriate SignalSource.
+ */
+function mapEvidenceToSignalSource(check: string): SignalSource {
+  if (check.startsWith('hallucination:') || check.startsWith('fake_feature_detected:')) {
+    return 'hallucination_scan';
+  }
+  if (check.startsWith('security') || check.startsWith('security_violation:')) {
+    return 'security_scan';
+  }
+  if (check.startsWith('firewall-') || check.startsWith('security_violation: host/') || check.startsWith('security_violation: reality-gap/')) {
+    return 'gate_firewall';
+  }
+  return 'static_analysis';
 }
 
 // ============================================================================

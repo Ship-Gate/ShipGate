@@ -6,7 +6,7 @@
 
  * Exposes hallucination scanners directly via CLI:
 
- * - Host: VibeCheck truthpack validation (routes, env, imports, files)
+ * - Host: ShipGate truthpack validation (routes, env, imports, files)
 
  * - Reality-Gap: ISL Studio policy packs (auth, pii, payments, rate-limit, intent)
 

@@ -337,66 +337,22 @@ function processPostconditionPredicate(
   const captures: string[] = [];
   const entityNames = domain.entities.map(e => e.name.name);
 
-  switch (predicate.kind) {
-    case 'BinaryExpr': {
-      const code = compilePostconditionExpression(predicate, entityNames, captures);
-      return {
-        assertion: {
-          code: `expect(${code}).toBe(true);`,
-          description: expressionToDescription(predicate),
-          source: 'postcondition',
-          confidence: 'high',
-        },
-        captures,
-      };
-    }
+  const code = compileToAssertion(predicate, entityNames, captures);
 
-    case 'CallExpr': {
-      // Handle entity method calls like Entity.exists(...)
-      const code = compileCallExpression(predicate, entityNames, captures);
-      return {
-        assertion: {
-          code: `expect(${code}).toBe(true);`,
-          description: expressionToDescription(predicate),
-          source: 'postcondition',
-          confidence: 'high',
-        },
-        captures,
-      };
-    }
-
-    case 'UnaryExpr': {
-      if (predicate.operator === 'not') {
-        const inner = compilePostconditionExpression(predicate.operand, entityNames, captures);
-        return {
-          assertion: {
-            code: `expect(${inner}).toBe(false);`,
-            description: `NOT ${expressionToDescription(predicate.operand)}`,
-            source: 'postcondition',
-            confidence: 'high',
-          },
-          captures,
-        };
-      }
-      break;
-    }
-
-    case 'MemberExpr': {
-      // Handle result.field assertions
-      const code = compilePostconditionExpression(predicate, entityNames, captures);
-      return {
-        assertion: {
-          code: `expect(${code}).toBeTruthy();`,
-          description: expressionToDescription(predicate),
-          source: 'postcondition',
-          confidence: 'medium',
-        },
-        captures,
-      };
-    }
+  let confidence: 'high' | 'medium' | 'low' = 'high';
+  if (predicate.kind === 'MemberExpr') {
+    confidence = 'medium';
   }
 
-  return null;
+  return {
+    assertion: {
+      code,
+      description: expressionToDescription(predicate),
+      source: 'postcondition',
+      confidence,
+    },
+    captures,
+  };
 }
 
 // ============================================================================
@@ -463,8 +419,30 @@ function compilePostconditionExpression(
       return `__old__.${innerCode.replace(/\./g, '_')}`;
     }
 
+    case 'QuantifierExpr': {
+      const collection = compilePostconditionExpression(expr.collection, entityNames, captures);
+      const varName = expr.variable.name;
+      const predicateCode = compilePostconditionExpression(expr.predicate, entityNames, captures);
+      switch (expr.quantifier) {
+        case 'all':
+          return `${collection}.every((${varName}) => ${predicateCode})`;
+        case 'any':
+          return `${collection}.some((${varName}) => ${predicateCode})`;
+        case 'none':
+          return `${collection}.every((${varName}) => !(${predicateCode}))`;
+        case 'count':
+          return `${collection}.filter((${varName}) => ${predicateCode}).length`;
+        case 'sum':
+          return `${collection}.reduce((acc, ${varName}) => acc + (${predicateCode}), 0)`;
+        case 'filter':
+          return `${collection}.filter((${varName}) => ${predicateCode})`;
+        default:
+          return `${collection}.length`;
+      }
+    }
+
     default:
-      return `/* TODO: ${expr.kind} */`;
+      return expressionToDescription(expr);
   }
 }
 
@@ -553,6 +531,345 @@ function compileOldExpression(
       return expr.name;
     default:
       return 'captured_value';
+  }
+}
+
+// ============================================================================
+// SMART ASSERTION COMPILATION
+// ============================================================================
+
+/**
+ * Compile any postcondition predicate to assertion code using proper matchers.
+ * Produces real expect() calls — never TODO comments.
+ */
+function compileToAssertion(
+  expr: AST.Expression,
+  entityNames: string[],
+  captures: string[]
+): string {
+  switch (expr.kind) {
+    case 'BinaryExpr':
+      return compileBinaryToAssertion(expr, entityNames, captures);
+
+    case 'CallExpr': {
+      const code = compileCallExpression(expr, entityNames, captures);
+      return `expect(${code}).toBe(true);`;
+    }
+
+    case 'UnaryExpr': {
+      if (expr.operator === 'not') {
+        const inner = compilePostconditionExpression(expr.operand, entityNames, captures);
+        return `expect(${inner}).toBe(false);`;
+      }
+      const compiled = compilePostconditionExpression(expr, entityNames, captures);
+      return `expect(${compiled}).toBeTruthy();`;
+    }
+
+    case 'MemberExpr': {
+      const compiled = compilePostconditionExpression(expr, entityNames, captures);
+      return `expect(${compiled}).toBeTruthy();`;
+    }
+
+    case 'QuantifierExpr':
+      return compileQuantifierToAssertion(expr, entityNames, captures);
+
+    default: {
+      const compiled = compilePostconditionExpression(expr, entityNames, captures);
+      return `expect(${compiled}).toBeTruthy();`;
+    }
+  }
+}
+
+/**
+ * Compile binary expressions to proper Jest/Vitest matchers:
+ *   ==  → expect(left).toBe(right)
+ *   !=  → expect(left).not.toBe(right)
+ *   >   → expect(left).toBeGreaterThan(right)
+ *   >=  → expect(left).toBeGreaterThanOrEqual(right)
+ *   <   → expect(left).toBeLessThan(right)
+ *   <=  → expect(left).toBeLessThanOrEqual(right)
+ *   and → two separate assertions
+ *   or  → expect(left || right).toBe(true)
+ */
+function compileBinaryToAssertion(
+  expr: AST.BinaryExpr,
+  entityNames: string[],
+  captures: string[]
+): string {
+  const left = compilePostconditionExpression(expr.left, entityNames, captures);
+  const right = compilePostconditionExpression(expr.right, entityNames, captures);
+
+  switch (expr.operator) {
+    case '==':
+      return `expect(${left}).toBe(${right});`;
+    case '!=':
+      return `expect(${left}).not.toBe(${right});`;
+    case '>':
+      return `expect(${left}).toBeGreaterThan(${right});`;
+    case '>=':
+      return `expect(${left}).toBeGreaterThanOrEqual(${right});`;
+    case '<':
+      return `expect(${left}).toBeLessThan(${right});`;
+    case '<=':
+      return `expect(${left}).toBeLessThanOrEqual(${right});`;
+    case 'and':
+      return compileToAssertion(expr.left, entityNames, captures) + '\n' +
+             compileToAssertion(expr.right, entityNames, captures);
+    case 'or':
+      return `expect(${left} || ${right}).toBe(true);`;
+    case 'implies':
+      return `if (${left}) {\n  ${compileToAssertion(expr.right, entityNames, captures)}\n}`;
+    default:
+      return `expect(${left} ${mapOperator(expr.operator)} ${right}).toBe(true);`;
+  }
+}
+
+/**
+ * Compile quantifier expressions to iteration-based assertions:
+ *   all(items, i => i.valid)  → items.forEach(i => { expect(i.valid).toBe(true); })
+ *   any(items, i => i.valid)  → expect(items.some(...)).toBe(true)
+ *   none(items, i => i.valid) → expect(items.every(i => !...)).toBe(true)
+ */
+function compileQuantifierToAssertion(
+  expr: AST.QuantifierExpr,
+  entityNames: string[],
+  captures: string[]
+): string {
+  const collection = compilePostconditionExpression(expr.collection, entityNames, captures);
+  const varName = expr.variable.name;
+
+  switch (expr.quantifier) {
+    case 'all': {
+      const innerAssertion = compileToAssertion(expr.predicate, entityNames, captures);
+      return `${collection}.forEach((${varName}) => {\n  ${innerAssertion}\n});`;
+    }
+    case 'any': {
+      const predicateCode = compilePostconditionExpression(expr.predicate, entityNames, captures);
+      return `expect(${collection}.some((${varName}) => ${predicateCode})).toBe(true);`;
+    }
+    case 'none': {
+      const predicateCode = compilePostconditionExpression(expr.predicate, entityNames, captures);
+      return `expect(${collection}.every((${varName}) => !(${predicateCode}))).toBe(true);`;
+    }
+    default:
+      return `expect(${collection}).toBeDefined();`;
+  }
+}
+
+// ============================================================================
+// TEMPORAL & SECURITY ASSERTION COMPILATION
+// ============================================================================
+
+/**
+ * Compile a temporal spec to assertion code.
+ *   within 200.ms → timing wrapper with expect(elapsed).toBeLessThanOrEqual(200)
+ *   eventually X  → polling loop with deadline
+ */
+function compileTemporalAssertion(
+  temporal: AST.TemporalSpec,
+  behaviorName: string
+): ComputedAssertion {
+  const funcName = behaviorName.charAt(0).toLowerCase() + behaviorName.slice(1);
+
+  switch (temporal.operator) {
+    case 'within':
+    case 'response': {
+      const ms = temporal.duration ? durationToMs(temporal.duration) : 1000;
+      const percentileNote = temporal.percentile ? ` (p${temporal.percentile})` : '';
+      return {
+        code: [
+          `const start = performance.now();`,
+          `const timedResult = await ${funcName}(input);`,
+          `const elapsed = performance.now() - start;`,
+          `expect(elapsed).toBeLessThanOrEqual(${ms});${percentileNote ? ` // ${percentileNote}` : ''}`,
+          `expect(timedResult.success).toBe(true);`,
+        ].join('\n'),
+        description: `Should complete within ${ms}ms${percentileNote}`,
+        source: 'postcondition',
+        confidence: 'high',
+      };
+    }
+    case 'eventually': {
+      const ms = temporal.duration ? durationToMs(temporal.duration) : 5000;
+      const predicateDesc = expressionToDescription(temporal.predicate);
+      return {
+        code: [
+          `let satisfied = false;`,
+          `const deadline = Date.now() + ${ms};`,
+          `while (Date.now() < deadline && !satisfied) {`,
+          `  const pollResult = await ${funcName}(input);`,
+          `  satisfied = Boolean(pollResult.data);`,
+          `  if (!satisfied) await new Promise(r => setTimeout(r, 100));`,
+          `}`,
+          `expect(satisfied).toBe(true); // ${predicateDesc}`,
+        ].join('\n'),
+        description: `Should eventually satisfy: ${predicateDesc}`,
+        source: 'postcondition',
+        confidence: 'medium',
+      };
+    }
+    case 'never': {
+      const predicateDesc = expressionToDescription(temporal.predicate);
+      return {
+        code: [
+          `const neverResult = await ${funcName}(input);`,
+          `expect(neverResult.data).not.toSatisfy((v: unknown) => Boolean(v)); // ${predicateDesc} should never hold`,
+        ].join('\n'),
+        description: `Should never: ${predicateDesc}`,
+        source: 'postcondition',
+        confidence: 'medium',
+      };
+    }
+    case 'immediately': {
+      const predicateDesc = expressionToDescription(temporal.predicate);
+      return {
+        code: [
+          `const immediateResult = await ${funcName}(input);`,
+          `expect(immediateResult.success).toBe(true); // Should complete immediately: ${predicateDesc}`,
+        ].join('\n'),
+        description: `Should immediately satisfy: ${predicateDesc}`,
+        source: 'postcondition',
+        confidence: 'medium',
+      };
+    }
+    default: {
+      return {
+        code: [
+          `const temporalResult = await ${funcName}(input);`,
+          `expect(temporalResult.success).toBe(true);`,
+        ].join('\n'),
+        description: `Temporal: ${temporal.operator}`,
+        source: 'postcondition',
+        confidence: 'low',
+      };
+    }
+  }
+}
+
+/**
+ * Compile a security spec to assertion code.
+ *   rate_limit 100/minute → repeated call test
+ *   requires authenticated → unauthorized access test
+ */
+function compileSecurityAssertion(
+  security: AST.SecuritySpec,
+  behaviorName: string
+): ComputedAssertion {
+  const funcName = behaviorName.charAt(0).toLowerCase() + behaviorName.slice(1);
+
+  switch (security.type) {
+    case 'rate_limit': {
+      const desc = expressionToDescription(security.details);
+      return {
+        code: [
+          `const requests: unknown[] = [];`,
+          `for (let i = 0; i < 101; i++) {`,
+          `  requests.push(await ${funcName}(input));`,
+          `}`,
+          `const successes = requests.filter(`,
+          `  (r) => (r as Record<string, unknown>).success`,
+          `);`,
+          `expect(successes.length).toBeLessThanOrEqual(100);`,
+          `const lastResult = requests[requests.length - 1] as Record<string, unknown>;`,
+          `expect(lastResult.success).toBe(false);`,
+        ].join('\n'),
+        description: `Rate limit: ${desc}`,
+        source: 'postcondition',
+        confidence: 'medium',
+      };
+    }
+    case 'requires': {
+      const desc = expressionToDescription(security.details);
+      return {
+        code: [
+          `const unauthResult = await ${funcName}({ ...input, auth: undefined });`,
+          `expect(unauthResult.success).toBe(false);`,
+          `expect(unauthResult.error?.code ?? unauthResult.error).toBe('UNAUTHORIZED');`,
+        ].join('\n'),
+        description: `Requires: ${desc}`,
+        source: 'postcondition',
+        confidence: 'medium',
+      };
+    }
+    case 'fraud_check': {
+      const desc = expressionToDescription(security.details);
+      return {
+        code: [
+          `const fraudResult = await ${funcName}(input);`,
+          `expect(fraudResult.success).toBeDefined();`,
+          `// Fraud check: ${desc}`,
+        ].join('\n'),
+        description: `Fraud check: ${desc}`,
+        source: 'postcondition',
+        confidence: 'low',
+      };
+    }
+    default: {
+      const desc = expressionToDescription(security.details);
+      return {
+        code: [
+          `const secResult = await ${funcName}(input);`,
+          `expect(secResult.success).toBe(true);`,
+        ].join('\n'),
+        description: `Security: ${desc}`,
+        source: 'postcondition',
+        confidence: 'low',
+      };
+    }
+  }
+}
+
+/**
+ * Compile a lifecycle transition to assertion code.
+ *   PENDING -> ACTIVE → state transition test
+ */
+function compileLifecycleAssertion(
+  fromState: string,
+  toState: string,
+  entityName: string,
+  behaviorName: string
+): ComputedAssertion {
+  const funcName = behaviorName.charAt(0).toLowerCase() + behaviorName.slice(1);
+  return {
+    code: [
+      `const entity = await ${entityName}.create({ status: '${fromState}' });`,
+      `const lifecycleResult = await ${funcName}({ ...input, id: entity.id });`,
+      `expect(lifecycleResult.success).toBe(true);`,
+      `const updated = await ${entityName}.findById(entity.id);`,
+      `expect(updated?.status).toBe('${toState}');`,
+    ].join('\n'),
+    description: `Lifecycle: ${entityName} transitions from ${fromState} to ${toState}`,
+    source: 'postcondition',
+    confidence: 'high',
+  };
+}
+
+/**
+ * Compile a negative (must_not) assertion.
+ *   Verifies that a condition does NOT hold after execution.
+ */
+function compileNegativeAssertion(
+  expr: AST.Expression,
+  entityNames: string[]
+): ComputedAssertion {
+  const captures: string[] = [];
+  const compiled = compilePostconditionExpression(expr, entityNames, captures);
+  return {
+    code: `expect(${compiled}).toBeFalsy();`,
+    description: `Must NOT: ${expressionToDescription(expr)}`,
+    source: 'postcondition',
+    confidence: 'high',
+  };
+}
+
+function durationToMs(duration: AST.DurationLiteral): number {
+  switch (duration.unit) {
+    case 'ms': return duration.value;
+    case 'seconds': return duration.value * 1000;
+    case 'minutes': return duration.value * 60000;
+    case 'hours': return duration.value * 3600000;
+    case 'days': return duration.value * 86400000;
+    default: return duration.value;
   }
 }
 
@@ -821,6 +1138,14 @@ function expressionToDescription(expr: AST.Expression): string {
 
 export {
   compilePostconditionExpression,
+  compileToAssertion,
+  compileBinaryToAssertion,
+  compileQuantifierToAssertion,
+  compileTemporalAssertion,
+  compileSecurityAssertion,
+  compileLifecycleAssertion,
+  compileNegativeAssertion,
+  durationToMs,
   expressionToDescription,
   inferResultTypeAssertions,
   computeExpectedFromPostconditions,

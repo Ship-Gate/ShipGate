@@ -135,13 +135,13 @@ interface EvidenceReport {
 
 ## Report File Naming
 
-Reports are written to `.vibecheck/reports/<fingerprint>.json` by default:
+Reports are written to `.shipgate/reports/<fingerprint>.json` by default:
 
 - **Deterministic naming**: Uses first 16 characters of the spec fingerprint
 - **No timestamps**: Same AST always produces same filename
 - **Custom outDir**: Can be overridden with `outDir` option
 
-Example: `.vibecheck/reports/a1b2c3d4e5f67890.json`
+Example: `.shipgate/reports/a1b2c3d4e5f67890.json`
 
 ## Running Individual Steps
 

@@ -307,7 +307,7 @@ export async function assertPipelineAssumptions(
 ): Promise<void> {
   assertPipelineInput(input);
   await assertWorkspacePath(options.workspacePath);
-  const outDir = options.outDir ?? '.vibecheck/reports';
+  const outDir = options.outDir ?? '.shipgate/reports';
   if (options.writeReport !== false) {
     await assertWritableOutDir(outDir, options.workspacePath);
   }

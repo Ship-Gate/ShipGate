@@ -4,7 +4,7 @@ When implementing code that corresponds to an ISL specification (behaviors, enti
 
 ## Spec and Generated Code Locations
 
-- **Specs**: `specs/**/*.isl`, `.vibecheck/specs/*.isl`, `examples/*.isl`, `corpus/**/*.isl`, `stdlib/**/*.isl`
+- **Specs**: `specs/**/*.isl`, `.shipgate/specs/*.isl`, `examples/*.isl`, `corpus/**/*.isl`, `stdlib/**/*.isl`
 - **Generated TypeScript**: `examples/generated/`, `generated/ts/`, package-specific `src/generated/` (e.g. `packages/sdk-react-native/src/generated/`)
 - **Config**: `.islrc.json` (spec paths, codegen targets)
 

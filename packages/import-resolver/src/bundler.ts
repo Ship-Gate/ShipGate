@@ -268,6 +268,7 @@ export class Bundler {
         ? { kind: 'StringLiteral', value: this.options.bundleVersion, location: entryAst.version.location }
         : entryAst.version,
       owner: entryAst.owner,
+      uses: [],
       imports: this.options.stripImports ? [] : entryAst.imports,
       types: [],
       entities: [],
@@ -448,6 +449,7 @@ export function createEmptyBundle(
     kind: 'Domain',
     name: { kind: 'Identifier', name: domainName, location },
     version: { kind: 'StringLiteral', value: version, location },
+    uses: [],
     imports: [],
     types: [],
     entities: [],

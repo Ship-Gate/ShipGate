@@ -40,7 +40,7 @@ export { PolicyEngine, createPolicyEngine, getAvailablePolicies } from './policy
 // Allowlist
 export { AllowlistManager, createAllowlistManager } from './allowlist.js';
 
-// ISL Studio Integration (VibeCheck + ISL Studio combined)
+// ISL Studio Integration (ShipGate + ISL Studio combined)
 export { 
   IntegratedFirewall, 
   createIntegratedFirewall, 

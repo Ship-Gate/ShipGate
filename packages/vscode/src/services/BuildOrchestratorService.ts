@@ -3,10 +3,10 @@
  * 
  * Orchestrates the "Generate & Build" workflow:
  * 1. Translate prompt to ISL spec via MCP tool (isl_translate)
- * 2. Save spec to .vibecheck/specs/
+ * 2. Save spec to .shipgate/specs/
  * 3. Execute spec verification via MCP tool (execute_spec)
- * 4. Trigger vibecheck scan/verify
- * 5. Write evidence report to .vibecheck/reports/<fingerprint>.json
+ * 4. Trigger shipgate scan/verify
+ * 5. Write evidence report to .shipgate/reports/<fingerprint>.json
  */
 
 import * as vscode from 'vscode';
@@ -84,11 +84,11 @@ class DefaultMcpClient implements McpClientAbstraction {
       case 'isl_generate':
         return this.handleIslGenerate(args);
       
-      case 'vibecheck_scan':
-        return this.handleVibecheckScan(args);
+      case 'shipgate_scan':
+        return this.handleShipgateScan(args);
       
-      case 'vibecheck_verify':
-        return this.handleVibecheckVerify(args);
+      case 'shipgate_verify':
+        return this.handleShipgateVerify(args);
       
       default:
         return {
@@ -216,12 +216,12 @@ class DefaultMcpClient implements McpClientAbstraction {
   }
 
   /**
-   * Handle vibecheck_scan - Scan for implementation files
+   * Handle shipgate_scan - Scan for implementation files
    */
-  private async handleVibecheckScan(args: Record<string, unknown>): Promise<McpToolResponse> {
+  private async handleShipgateScan(args: Record<string, unknown>): Promise<McpToolResponse> {
     const specPath = args['specPath'] as string;
 
-    this.log(`vibecheck_scan called for: ${specPath}`);
+    this.log(`shipgate_scan called for: ${specPath}`);
 
     // TODO: Implement actual scan logic
     return {
@@ -229,18 +229,18 @@ class DefaultMcpClient implements McpClientAbstraction {
       content: {
         _stub: true,
         implementations: [],
-        message: 'Vibecheck scan placeholder',
+        message: 'Shipgate scan placeholder',
       },
     };
   }
 
   /**
-   * Handle vibecheck_verify - Verify implementation against spec
+   * Handle shipgate_verify - Verify implementation against spec
    */
-  private async handleVibecheckVerify(args: Record<string, unknown>): Promise<McpToolResponse> {
+  private async handleShipgateVerify(args: Record<string, unknown>): Promise<McpToolResponse> {
     const specPath = args['specPath'] as string;
 
-    this.log(`vibecheck_verify called for: ${specPath}`);
+    this.log(`shipgate_verify called for: ${specPath}`);
 
     // TODO: Implement actual verification logic
     return {
@@ -258,7 +258,7 @@ class DefaultMcpClient implements McpClientAbstraction {
             scenarios: 0,
           },
         },
-        message: 'Vibecheck verify placeholder',
+        message: 'Shipgate verify placeholder',
       },
     };
   }
@@ -353,7 +353,7 @@ export class BuildOrchestratorService {
       errors.push(`Spec validation failed: ${checkResult.error}`);
     }
 
-    // Step 3: Save spec to .vibecheck/specs/
+    // Step 3: Save spec to .shipgate/specs/
     this.log('Saving spec to storage...');
     const storedSpec = await this.specStorage.saveSpec(islSpec, {
       source: isIslSpec ? 'clipboard' : 'prompt',
@@ -393,15 +393,15 @@ export class BuildOrchestratorService {
       warnings.push(`Spec execution: ${executeResult.error}`);
     }
 
-    // Step 6: Trigger vibecheck scan/verify
-    this.log('Running vibecheck verification...');
-    const vibecheckResult = await this.mcpClient.callTool('vibecheck_verify', {
+    // Step 6: Trigger shipgate scan/verify
+    this.log('Running shipgate verification...');
+    const shipgateResult = await this.mcpClient.callTool('shipgate_verify', {
       specPath: storedSpec.filePath,
     });
 
     let trustScore: TrustScore | undefined;
-    if (vibecheckResult.success && vibecheckResult.content) {
-      const content = vibecheckResult.content as { trustScore?: TrustScore };
+    if (shipgateResult.success && shipgateResult.content) {
+      const content = shipgateResult.content as { trustScore?: TrustScore };
       trustScore = content.trustScore;
     }
 
@@ -429,7 +429,7 @@ export class BuildOrchestratorService {
         check: checkResult,
         generate: generateResult,
         execute: executeResult,
-        vibecheck: vibecheckResult,
+        shipgate: shipgateResult,
       },
     });
 
@@ -459,16 +459,16 @@ export class BuildOrchestratorService {
 
     const startTime = Date.now();
 
-    // Run vibecheck verification
-    const vibecheckResult = await this.mcpClient.callTool('vibecheck_verify', {
+    // Run shipgate verification
+    const shipgateResult = await this.mcpClient.callTool('shipgate_verify', {
       specPath: spec.filePath,
     });
 
     let verificationResults: VerificationResult[] = [];
     let trustScore: TrustScore | undefined;
 
-    if (vibecheckResult.success && vibecheckResult.content) {
-      const content = vibecheckResult.content as {
+    if (shipgateResult.success && shipgateResult.content) {
+      const content = shipgateResult.content as {
         results?: VerificationResult[];
         trustScore?: TrustScore;
       };
@@ -492,7 +492,7 @@ export class BuildOrchestratorService {
       },
       trustScore,
       mcpResponses: {
-        vibecheck: vibecheckResult,
+        shipgate: shipgateResult,
       },
     });
   }

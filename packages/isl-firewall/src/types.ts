@@ -255,7 +255,7 @@ export interface FirewallConfig {
 export const DEFAULT_FIREWALL_CONFIG: FirewallConfig = {
   mode: 'observe',
   projectRoot: process.cwd(),
-  truthpackPath: '.vibecheck/truthpack',
+  truthpackPath: '.shipgate/truthpack',
   policies: ['ghost-route', 'ghost-env', 'ghost-import', 'ghost-file'],
   timeout: 5000,
   enableCaching: true,

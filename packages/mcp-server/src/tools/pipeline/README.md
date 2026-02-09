@@ -63,7 +63,7 @@ interface BuildResult {
   
   /** Output paths */
   paths?: {
-    vibecheck: string;
+    shipgate: string;
     specs: string;
     reports: string;
     runtime?: string;
@@ -107,15 +107,15 @@ interface BuildResult {
     "errorCount": 0
   },
   "files": [
-    { "path": ".vibecheck/specs/userauth.isl", "type": "spec", "sizeBytes": 423 },
-    { "path": ".vibecheck/runtime/types.ts", "type": "types", "sizeBytes": 156 },
-    { "path": ".vibecheck/runtime/runtime.ts", "type": "runtime", "sizeBytes": 892 }
+    { "path": ".shipgate/specs/userauth.isl", "type": "spec", "sizeBytes": 423 },
+    { "path": ".shipgate/runtime/types.ts", "type": "types", "sizeBytes": 156 },
+    { "path": ".shipgate/runtime/runtime.ts", "type": "runtime", "sizeBytes": 892 }
   ],
   "paths": {
-    "vibecheck": "/workspace/.vibecheck",
-    "specs": "/workspace/.vibecheck/specs",
-    "reports": "/workspace/.vibecheck/reports",
-    "runtime": "/workspace/.vibecheck/runtime"
+    "shipgate": "/workspace/.shipgate",
+    "specs": "/workspace/.shipgate/specs",
+    "reports": "/workspace/.shipgate/reports",
+    "runtime": "/workspace/.shipgate/runtime"
   }
 }
 ```
@@ -144,7 +144,7 @@ interface VerifyInput {
   /** Workspace root path (default: current directory) */
   workspacePath?: string;
   
-  /** Path to specs directory (default: .vibecheck/specs) */
+  /** Path to specs directory (default: .shipgate/specs) */
   specsPath?: string;
   
   /** Path to implementation files (auto-detected if not provided) */
@@ -263,7 +263,7 @@ Uses current directory as workspace, auto-detects specs and implementation.
       }
     ]
   },
-  "reportPath": ".vibecheck/reports/verify-report.json"
+  "reportPath": ".shipgate/reports/verify-report.json"
 }
 ```
 
@@ -274,7 +274,7 @@ Uses current directory as workspace, auto-detects specs and implementation.
   "success": false,
   "error": "No ISL specification files found",
   "errorCode": "NO_SPECS_FOUND",
-  "suggestion": "Create .isl files in .vibecheck/specs or run isl_build first"
+  "suggestion": "Create .isl files in .shipgate/specs or run isl_build first"
 }
 ```
 
@@ -292,18 +292,18 @@ const workspace = await initWorkspace('/path/to/project');
 // {
 //   root: '/path/to/project',
 //   paths: {
-//     vibecheck: '/path/to/project/.vibecheck',
-//     specs: '/path/to/project/.vibecheck/specs',
-//     reports: '/path/to/project/.vibecheck/reports',
-//     runtime: '/path/to/project/.vibecheck/runtime'
+//     shipgate: '/path/to/project/.shipgate',
+//     specs: '/path/to/project/.shipgate/specs',
+//     reports: '/path/to/project/.shipgate/reports',
+//     runtime: '/path/to/project/.shipgate/runtime'
 //   }
 // }
 ```
 
 The helper:
 - Resolves workspace path (defaults to `process.cwd()`)
-- Creates `.vibecheck/reports` if missing
-- Creates `.vibecheck/specs` if missing
+- Creates `.shipgate/reports` if missing
+- Creates `.shipgate/specs` if missing
 - Returns consistent output shape for MCP tools
 
 ---
@@ -359,7 +359,7 @@ Both tools return structured errors with:
 After running the tools, your workspace will have:
 
 ```
-.vibecheck/
+.shipgate/
 ├── specs/           # ISL specification files
 │   └── domain.isl
 ├── reports/         # Build and verification reports

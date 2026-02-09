@@ -8,10 +8,10 @@
 
 // Paths
 export {
-  VIBECHECK_DIR,
+  SHIPGATE_DIR,
   STUDIO_DIR,
   STATE_FILE,
-  getVibecheckDir,
+  getShipgateDir,
   getStudioDir,
   getStatePath,
   getTempPath,

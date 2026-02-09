@@ -263,9 +263,10 @@ describe('CompletionProvider', () => {
     expect(items.some(i => i.text === '.help')).toBe(true);
   });
 
-  it('completes ISL commands', () => {
+  it('completes colon-prefix commands (redirects to .)', () => {
     const [items] = provider.complete(':ch');
-    expect(items.some(i => i.text === ':check')).toBe(true);
+    // : prefix redirects to . prefix for completion
+    expect(items.some(i => i.text === '.check')).toBe(true);
   });
 
   it('completes all meta commands for bare .', () => {
@@ -274,10 +275,10 @@ describe('CompletionProvider', () => {
     expect(items.every(i => i.text.startsWith('.'))).toBe(true);
   });
 
-  it('completes all ISL commands for bare :', () => {
+  it('completes all commands for bare : (redirects to .)', () => {
     const [items] = provider.complete(':');
     expect(items.length).toBeGreaterThan(0);
-    expect(items.every(i => i.text.startsWith(':'))).toBe(true);
+    expect(items.every(i => i.text.startsWith('.'))).toBe(true);
   });
 
   it('completes intent names', () => {
@@ -293,7 +294,6 @@ describe('CompletionProvider', () => {
   it('gets all completions', () => {
     const all = provider.getAllCompletions();
     expect(all.metaCommands.length).toBeGreaterThan(0);
-    expect(all.islCommands.length).toBeGreaterThan(0);
     expect(all.keywords.length).toBeGreaterThan(0);
     expect(all.intents.length).toBeGreaterThan(0);
   });
@@ -328,40 +328,52 @@ describe('Commands', () => {
     });
   });
 
-  describe('ISL Commands', () => {
+  describe('Unified Commands (all under .)', () => {
     it('has check command', () => {
-      const checkCmd = islCommands.find(c => c.name === 'check');
+      const checkCmd = metaCommands.find(c => c.name === 'check');
       expect(checkCmd).toBeDefined();
       expect(checkCmd!.aliases).toContain('c');
     });
 
     it('has gen command', () => {
-      const genCmd = islCommands.find(c => c.name === 'gen');
+      const genCmd = metaCommands.find(c => c.name === 'gen');
       expect(genCmd).toBeDefined();
       expect(genCmd!.aliases).toContain('generate');
     });
 
     it('has load command', () => {
-      const loadCmd = islCommands.find(c => c.name === 'load');
+      const loadCmd = metaCommands.find(c => c.name === 'load');
       expect(loadCmd).toBeDefined();
     });
 
     it('has list command', () => {
-      const listCmd = islCommands.find(c => c.name === 'list');
+      const listCmd = metaCommands.find(c => c.name === 'list');
       expect(listCmd).toBeDefined();
       expect(listCmd!.aliases).toContain('ls');
     });
 
     it('has inspect command', () => {
-      const inspectCmd = islCommands.find(c => c.name === 'inspect');
+      const inspectCmd = metaCommands.find(c => c.name === 'inspect');
       expect(inspectCmd).toBeDefined();
       expect(inspectCmd!.aliases).toContain('i');
     });
 
-    it('has export command', () => {
-      const exportCmd = islCommands.find(c => c.name === 'export');
-      expect(exportCmd).toBeDefined();
-      expect(exportCmd!.aliases).toContain('save');
+    it('has parse command', () => {
+      const parseCmd = metaCommands.find(c => c.name === 'parse');
+      expect(parseCmd).toBeDefined();
+      expect(parseCmd!.aliases).toContain('p');
+    });
+
+    it('has eval command', () => {
+      const evalCmd = metaCommands.find(c => c.name === 'eval');
+      expect(evalCmd).toBeDefined();
+      expect(evalCmd!.aliases).toContain('e');
+    });
+
+    it('has context command', () => {
+      const ctxCmd = metaCommands.find(c => c.name === 'context');
+      expect(ctxCmd).toBeDefined();
+      expect(ctxCmd!.aliases).toContain('ctx');
     });
   });
 
@@ -371,9 +383,9 @@ describe('Commands', () => {
       expect(findSimilarCommand('exti', 'meta')).toBe('exit');
     });
 
-    it('suggests similar ISL command', () => {
-      expect(findSimilarCommand('chekc', 'isl')).toBe('check');
-      expect(findSimilarCommand('listt', 'isl')).toBe('list');
+    it('suggests similar command (all unified)', () => {
+      expect(findSimilarCommand('chekc')).toBe('check');
+      expect(findSimilarCommand('listt')).toBe('list');
     });
 
     it('returns null for very different input', () => {
@@ -462,11 +474,16 @@ describe('ISLREPL', () => {
   it('executes help command', async () => {
     const result = await repl.executeOnce('.help');
     expect(result.success).toBe(true);
-    expect(result.output).toContain('Meta Commands');
-    expect(result.output).toContain('ISL Commands');
+    expect(result.output).toContain('REPL Commands');
   });
 
   it('executes list command with no intents', async () => {
+    const result = await repl.executeOnce('.list');
+    expect(result.success).toBe(true);
+    expect(result.output).toContain('No intents defined');
+  });
+
+  it('handles colon prefix as alias', async () => {
     const result = await repl.executeOnce(':list');
     expect(result.success).toBe(true);
     expect(result.output).toContain('No intents defined');
@@ -486,6 +503,111 @@ describe('ISLREPL', () => {
 });
 
 // ============================================================================
+// Context & Eval Integration Tests
+// ============================================================================
+
+describe('Context & Eval', () => {
+  let repl: ISLREPL;
+
+  beforeEach(() => {
+    repl = new ISLREPL({ colors: false });
+  });
+
+  it('sets context via .context command', async () => {
+    const result = await repl.executeOnce('.context { "user": { "email": "test@x.com", "age": 25 } }');
+    expect(result.success).toBe(true);
+    expect(result.output).toContain('Context set');
+    expect(result.output).toContain('1 variable');
+  });
+
+  it('evaluates expression against context', async () => {
+    await repl.executeOnce('.context { "user": { "email": "test@x.com", "age": 25 } }');
+
+    const result = await repl.executeOnce('.eval user.email == "test@x.com"');
+    expect(result.success).toBe(true);
+    expect(result.output).toContain('true');
+  });
+
+  it('evaluates numeric comparison', async () => {
+    await repl.executeOnce('.context { "user": { "age": 25 } }');
+
+    const result = await repl.executeOnce('.eval user.age > 30');
+    expect(result.success).toBe(true);
+    expect(result.output).toContain('false');
+  });
+
+  it('returns error for old() without pre-state', async () => {
+    await repl.executeOnce('.context { "user": { "age": 25 } }');
+
+    const result = await repl.executeOnce('.eval old(user.age)');
+    expect(result.success).toBe(true);
+    expect(result.output).toContain('old() requires pre-state');
+  });
+
+  it('shows context when no args', async () => {
+    await repl.executeOnce('.context { "x": 1 }');
+
+    const result = await repl.executeOnce('.context');
+    expect(result.success).toBe(true);
+    expect(result.output).toContain('Context');
+  });
+
+  it('rejects invalid JSON', async () => {
+    const result = await repl.executeOnce('.context not-json');
+    expect(result.success).toBe(true);
+    expect(result.output).toContain('Invalid JSON');
+  });
+
+  it('clears context with .clear', async () => {
+    await repl.executeOnce('.context { "x": 1 }');
+    await repl.executeOnce('.clear');
+
+    const result = await repl.executeOnce('.context');
+    expect(result.success).toBe(true);
+    expect(result.output).toContain('No context set');
+  });
+});
+
+describe('Session Context Methods', () => {
+  let session: Session;
+
+  beforeEach(() => {
+    session = createSession();
+  });
+
+  it('sets evaluation context', () => {
+    const result = session.setEvalContext('{ "user": { "email": "a@b.com" } }');
+    expect(result.success).toBe(true);
+    expect(result.count).toBe(1);
+  });
+
+  it('resolves dot paths', () => {
+    session.setEvalContext('{ "user": { "email": "a@b.com", "age": 25 } }');
+
+    expect(session.resolveValue('user.email')).toEqual({ found: true, value: 'a@b.com' });
+    expect(session.resolveValue('user.age')).toEqual({ found: true, value: 25 });
+    expect(session.resolveValue('user.missing').found).toBe(false);
+  });
+
+  it('sets pre-context', () => {
+    const result = session.setPreContext('{ "user": { "age": 20 } }');
+    expect(result.success).toBe(true);
+    expect(session.getPreContext()).toEqual({ user: { age: 20 } });
+  });
+
+  it('resolves pre-state values', () => {
+    session.setPreContext('{ "user": { "age": 20 } }');
+    expect(session.resolvePreValue('user.age')).toEqual({ found: true, value: 20 });
+  });
+
+  it('rejects non-object context', () => {
+    const result = session.setEvalContext('"just a string"');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('must be a JSON object');
+  });
+});
+
+// ============================================================================
 // Constants Tests
 // ============================================================================
 
@@ -493,7 +615,10 @@ describe('Constants', () => {
   it('has commands defined', () => {
     expect(COMMANDS.length).toBeGreaterThan(0);
     expect(COMMANDS.some(c => c.text === '.help')).toBe(true);
-    expect(COMMANDS.some(c => c.text === ':check')).toBe(true);
+    expect(COMMANDS.some(c => c.text === '.check')).toBe(true);
+    expect(COMMANDS.some(c => c.text === '.parse')).toBe(true);
+    expect(COMMANDS.some(c => c.text === '.eval')).toBe(true);
+    expect(COMMANDS.some(c => c.text === '.context')).toBe(true);
   });
 
   it('has keywords defined', () => {
@@ -503,5 +628,13 @@ describe('Constants', () => {
     expect(KEYWORDS.some(k => k.text === 'and')).toBe(true);
     expect(KEYWORDS.some(k => k.text === 'or')).toBe(true);
     expect(KEYWORDS.some(k => k.text === 'intent')).toBe(true);
+    // ISL types
+    expect(KEYWORDS.some(k => k.text === 'String')).toBe(true);
+    expect(KEYWORDS.some(k => k.text === 'UUID')).toBe(true);
+    expect(KEYWORDS.some(k => k.text === 'Timestamp')).toBe(true);
+    // Structure keywords
+    expect(KEYWORDS.some(k => k.text === 'domain')).toBe(true);
+    expect(KEYWORDS.some(k => k.text === 'entity')).toBe(true);
+    expect(KEYWORDS.some(k => k.text === 'behavior')).toBe(true);
   });
 });

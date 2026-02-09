@@ -47,3 +47,6 @@ export {
 
 // History
 export { History, MemoryHistory } from './history';
+
+// CLI entry
+export { main } from './cli';

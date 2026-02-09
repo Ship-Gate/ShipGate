@@ -33,7 +33,7 @@ export interface ResolverConfig {
 
 const DEFAULT_CONFIG: ResolverConfig = {
   projectRoot: process.cwd(),
-  truthpackPath: '.vibecheck/truthpack',
+  truthpackPath: '.shipgate/truthpack',
   timeout: 5000,
 };
 

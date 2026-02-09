@@ -1,293 +1,169 @@
-# ISL Expression Evaluator
+# ISL Static Analyzer
 
-A deterministic expression evaluator for ISL (Intent Specification Language) postconditions and invariants, featuring tri-state logic (true/false/unknown) and rich diagnostics.
+A static analysis engine for ISL (Intent Specification Language) that proves or disproves conditions **without executing code**. Uses tri-state logic (true/false/unknown) with type-constraint propagation to determine postcondition/invariant satisfaction at compile time.
+
+## How It Works
+
+The static analyzer runs **before** the runtime evaluator:
+
+1. **Static analysis** (this package) evaluates each expression using type constraints alone
+2. Expressions proven `true` or `false` are resolved immediately (no execution needed)
+3. Only expressions marked `unknown` are passed to the runtime evaluator
+
+This two-phase approach minimizes runtime overhead: the gate only executes what it can't prove statically.
 
 ## Features
 
-- **Tri-State Logic**: Supports `true`, `false`, and `unknown` values for evaluating expressions against runtime traces or symbolic values
-- **Rich Diagnostics**: Provides source spans and detailed failure reasons
-- **Adapter Interface**: Pluggable adapters for domain primitives (`is_valid`, `length`, `exists`, `lookup`)
-- **Operators**: Full support for `==`, `!=`, `<`, `<=`, `>`, `>=`, `&&`, `||`, `!`, `implies`
-- **Quantifiers**: Optional support for `any()` and `all()` on arrays
-- **Performance**: Evaluates 1000 expressions in < 100ms
-- **Deterministic**: No network calls, pure functional evaluation
+- **Tri-State Logic**: `true` (provably satisfied), `false` (provably violated), `unknown` (needs runtime)
+- **Type-Constraint Propagation**: Uses ISL type constraints (min, max, min_length, enum, etc.) to prove conditions
+- **Range Analysis**: Proves numeric comparisons from type range constraints
+- **Tautology/Contradiction Detection**: Detects `x == x`, `x != x`, and similar patterns
+- **Type Mismatch Detection**: Catches incompatible comparisons like `number == string`
+- **Field Existence Checking**: Proves required fields exist on entities
+- **Logical Simplification**: Short-circuit evaluation for `and`/`or`/`implies`
+- **Quantifier Optimization**: Vacuous truth for empty collections
+- **Runtime Evaluator**: Full expression evaluator for runtime-dependent conditions (v1 API)
 
 ## Installation
 
 ```bash
-pnpm add @isl-lang/expression-evaluator
+pnpm add @isl-lang/static-analyzer
 ```
 
-## Usage
+## Quick Start
 
-### Basic Evaluation
+### Static Analysis (compile-time)
 
 ```typescript
-import { evaluate, createContext } from '@isl-lang/expression-evaluator';
+import {
+  analyzeStatically,
+  createTypeContext,
+  typeInfo,
+  fieldInfo,
+  entityInfo,
+} from '@isl-lang/static-analyzer';
 import { parseExpression } from '@isl-lang/parser';
 
-// Parse an expression (you'll need to use the parser)
-const expression = parseExpression('x > 5 && y < 10');
-
-// Create evaluation context
-const context = createContext({
-  variables: new Map([
-    ['x', 7],
-    ['y', 8],
+// Define type constraints from ISL declarations
+const ctx = createTypeContext({
+  types: new Map([
+    ['Email', typeInfo('string', { minLength: 1, format: 'email' })],
+    ['Age', typeInfo('integer', { min: 0, max: 150 })],
+  ]),
+  resultEntity: entityInfo('User', [
+    fieldInfo('email', typeInfo('string', { minLength: 1 }), true),
+    fieldInfo('age', typeInfo('integer', { min: 0, max: 150 }), true),
+    fieldInfo('nickname', typeInfo('string'), false),
   ]),
 });
 
-// Evaluate
-const result = evaluate(expression, context);
-console.log(result.value); // 'true' | 'false' | 'unknown'
-console.log(result.location); // Source location
-console.log(result.reason); // Why it succeeded/failed/unknown
+// Statically prove: result.email exists (required field)
+const expr1 = parseExpression('result.email');
+const result1 = analyzeStatically(expr1, ctx);
+// { verdict: 'true', reason: 'Field "email" is required...', confidence: 0.9 }
+
+// Statically disprove: type mismatch
+const expr2 = parseExpression('result.age == "hello"');
+const result2 = analyzeStatically(expr2, ctx);
+// { verdict: 'false', reason: 'Type mismatch: integer == string...', confidence: 1.0 }
+
+// Unknown: needs runtime
+const expr3 = parseExpression('result.age > 18');
+const result3 = analyzeStatically(expr3, ctx);
+// { verdict: 'unknown', reason: 'Cannot statically determine...', confidence: 0 }
 ```
 
-### Tri-State Logic
-
-The evaluator supports three states:
-
-- **`true`**: Expression definitely evaluates to true
-- **`false`**: Expression definitely evaluates to false  
-- **`unknown`**: Expression cannot be determined (e.g., missing variable, symbolic value)
+### Runtime Evaluation (for unknowns)
 
 ```typescript
-// Unknown propagates through operators
-const result1 = evaluate(parseExpression('x > 5'), createContext());
-// result1.value === 'unknown' (x is not in context)
+import { evaluateV1 as evaluate, createEvalContext } from '@isl-lang/static-analyzer';
 
-const result2 = evaluate(parseExpression('unknown && true'), createContext());
-// result2.value === 'unknown' (unknown && true = unknown)
-
-const result3 = evaluate(parseExpression('unknown && false'), createContext());
-// result3.value === 'false' (unknown && false = false)
-```
-
-### Custom Adapter
-
-Implement domain-specific primitives:
-
-```typescript
-import { createAdapter, createContext } from '@isl-lang/expression-evaluator';
-
-const adapter = createAdapter({
-  is_valid: (value) => {
-    if (typeof value === 'string') {
-      return value.length > 0 ? 'true' : 'false';
-    }
-    return value !== null && value !== undefined ? 'true' : 'false';
-  },
-  
-  length: (value) => {
-    if (typeof value === 'string') return value.length;
-    if (Array.isArray(value)) return value.length;
-    return 'unknown';
-  },
-  
-  exists: (entityName, criteria) => {
-    // Your domain logic here
-    if (entityName === 'User' && criteria?.id === '123') {
-      return 'true';
-    }
-    return 'false';
-  },
-  
-  lookup: (entityName, criteria) => {
-    // Your domain logic here
-    if (entityName === 'User' && criteria?.id === '123') {
-      return { id: '123', name: 'Alice' };
-    }
-    return 'unknown';
-  },
-  
-  getProperty: (object, property) => {
-    if (object && typeof object === 'object') {
-      return (object as Record<string, unknown>)[property] ?? 'unknown';
-    }
-    return 'unknown';
-  },
+const ctx = createEvalContext({
+  result: { age: 25, email: 'user@example.com' },
 });
 
-const context = createContext({ adapter });
+const result = evaluate(expr, ctx);
+// { kind: 'true', reason: '25 > 18' }
 ```
 
-### Quantifiers
-
-Evaluate quantifiers on arrays:
+## Static Analysis Result
 
 ```typescript
-// all() - all elements must satisfy predicate
-const allExpr = parseExpression('all item in items: item > 0');
-const context = createContext({
-  variables: new Map([['items', [1, 2, 3]]]),
-});
-const result = evaluate(allExpr, context);
-// result.value === 'true'
-
-// any() - at least one element must satisfy predicate
-const anyExpr = parseExpression('any item in items: item < 0');
-const result2 = evaluate(anyExpr, context);
-// result2.value === 'false'
+interface StaticAnalysisResult {
+  expression: string;           // Source expression text
+  verdict: 'true' | 'false' | 'unknown';
+  reason: string;               // Human-readable explanation
+  confidence: number;           // 0.0 - 1.0
+  category?: AnalysisCategory;  // What analysis produced this
+}
 ```
 
-### Property Access
+## Analysis Categories
 
-Access nested properties:
+| Category | Description | Example |
+|----------|-------------|---------|
+| `literal` | Direct literal evaluation | `5 > 3` → true |
+| `type-constraint` | Type constraint propagation | `Email.length > 0` → true |
+| `type-mismatch` | Incompatible type comparison | `number == string` → false |
+| `tautology` | Always-true pattern | `x == x` → true |
+| `contradiction` | Always-false pattern | `x != x` → false |
+| `field-existence` | Required field check | `user.email` (required) → true |
+| `range-analysis` | Numeric range comparison | `Age >= 0` → true |
+| `enum-analysis` | Enum membership check | `status == "invalid"` → false |
+| `logical-simplification` | Boolean logic simplification | `false and X` → false |
+| `runtime-dependent` | Needs runtime data | `exists(User, ...)` → unknown |
+
+## Type Context
+
+The `TypeContext` provides type information from ISL declarations:
 
 ```typescript
-const expr = parseExpression('user.name');
-const context = createContext({
-  variables: new Map([
-    ['user', { name: 'Alice', age: 30 }],
-  ]),
-});
-const result = evaluate(expr, context);
-// result.value === 'true'
+interface TypeContext {
+  types: Map<string, TypeConstraintInfo>;      // Type aliases
+  entities: Map<string, EntityInfo>;           // Entity declarations
+  bindings: Map<string, TypeConstraintInfo>;   // Variable types
+  resultType?: TypeConstraintInfo;             // Return type
+  resultEntity?: EntityInfo;                   // Return entity type
+  inputTypes?: Map<string, TypeConstraintInfo>; // Input param types
+}
 ```
-
-## Supported Expressions
-
-### Operators
-
-- **Comparison**: `==`, `!=`, `<`, `<=`, `>`, `>=`
-- **Logical**: `&&` (and), `||` (or), `!` (not), `implies`
-- **Arithmetic**: `+`, `-`, `*`, `/`, `%` (basic support)
-
-### Literals
-
-- **String**: `"hello"`
-- **Number**: `42`, `3.14`
-- **Boolean**: `true`, `false`
-- **Null**: `null`
-
-### Property Access
-
-- **Member**: `foo.bar.baz`
-- **Index**: `array[0]` (basic support)
-
-### Function Predicates
-
-- **`is_valid(value)`**: Check if value is valid
-- **`length(value)`**: Get length of string/array
-- **`exists(entityName, criteria?)`**: Check if entity exists
-- **`lookup(entityName, criteria?)`**: Lookup entity
-
-### Quantifiers (Optional v1)
-
-- **`all variable in collection: predicate`**: All elements satisfy predicate
-- **`any variable in collection: predicate`**: At least one element satisfies predicate
 
 ## API Reference
 
-### `evaluate(expression, context): EvaluationResult`
+### `analyzeStatically(expr, typeContext): StaticAnalysisResult`
 
-Evaluate an ISL expression.
+Analyze a single expression statically.
 
-**Parameters:**
-- `expression`: Parsed ISL expression AST
-- `context`: Evaluation context
+### `analyzeAll(exprs, typeContext): StaticAnalysisResult[]`
 
-**Returns:**
-```typescript
-interface EvaluationResult {
-  value: 'true' | 'false' | 'unknown';
-  location: SourceLocation;
-  reason?: string;
-  diagnostics?: Diagnostic[];
-  metrics?: {
-    evaluationTime: number;
-    subExpressionCount: number;
-  };
-}
-```
+Batch-analyze multiple expressions.
 
-### `createContext(options?): EvaluationContext`
+### `summarizeResults(results): Summary`
 
-Create an evaluation context.
+Get counts of provably-true, provably-false, and unknown results.
 
-**Options:**
-- `variables`: Map of variable names to values
-- `input`: Input values for behavior
-- `result`: Result value (for postconditions)
-- `oldState`: Old state snapshot (for `old()` expressions)
-- `adapter`: Custom adapter implementation
-- `strict`: Enable strict mode (unknown → false)
-- `maxDepth`: Maximum evaluation depth
+### `createTypeContext(partial?): TypeContext`
 
-### `createAdapter(overrides): ExpressionAdapter`
+Create a TypeContext (empty or from partial data).
 
-Create a custom adapter from partial implementation.
+### `typeInfo(baseType, constraints?): TypeConstraintInfo`
+
+Create type constraint info for a base type.
+
+### `fieldInfo(name, type, required?): FieldInfo`
+
+Create entity field info.
+
+### `entityInfo(name, fields): EntityInfo`
+
+Create entity info from field list.
 
 ## Performance
 
-The evaluator is optimized for performance:
+Static analysis is designed to be fast (no I/O, no execution):
 
-- **1000 simple expressions**: < 100ms
-- **1000 complex expressions**: < 100ms
-- **100 quantifiers (100 items each)**: < 100ms
-
-Run benchmarks:
-
-```bash
-pnpm bench
-```
-
-## Examples
-
-### Postcondition Evaluation
-
-```typescript
-import { evaluate, createContext } from '@isl-lang/expression-evaluator';
-
-// Postcondition: result.success == true
-const postcondition = parseExpression('result.success == true');
-
-const context = createContext({
-  result: { success: true, data: { id: '123' } },
-});
-
-const result = evaluate(postcondition, context);
-if (result.value === 'false') {
-  console.error(`Postcondition failed: ${result.reason}`);
-  console.error(`Location: ${result.location.file}:${result.location.line}`);
-}
-```
-
-### Invariant Evaluation
-
-```typescript
-// Invariant: user.age >= 0
-const invariant = parseExpression('user.age >= 0');
-
-const context = createContext({
-  variables: new Map([
-    ['user', { name: 'Alice', age: 30 }],
-  ]),
-});
-
-const result = evaluate(invariant, context);
-if (result.value === 'false') {
-  console.error(`Invariant violated: ${result.reason}`);
-}
-```
-
-## Error Handling
-
-The evaluator provides rich error information:
-
-```typescript
-import { EvaluationError } from '@isl-lang/expression-evaluator';
-
-try {
-  const result = evaluate(expression, context);
-} catch (error) {
-  if (error instanceof EvaluationError) {
-    console.error(error.format()); // Includes source location
-    console.error(error.diagnostics); // Detailed diagnostics
-  }
-}
-```
+- **1000 expressions**: < 10ms
+- **Complex type-constraint propagation**: < 1ms per expression
 
 ## License
 

@@ -1,5 +1,5 @@
 {
-  "name": "shipgate",
+  "name": "@isl-lang/islstudio",
   "version": "0.1.2",
   "description": "Shipgate - Stop AI from shipping fake features",
   "type": "module",

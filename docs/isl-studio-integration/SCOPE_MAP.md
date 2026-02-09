@@ -1,7 +1,7 @@
 # ISL Studio Integration - Scope Map
 
 **Generated:** 2026-02-01  
-**Source:** VibeCheck-Real (C:\Users\mevla\OneDrive\Desktop\VibeCheck-Real)  
+**Source:** ShipGate-Real (C:\Users\mevla\OneDrive\Desktop\ShipGate-Real)  
 **Target:** ISL Studio (c:\Users\mevla\OneDrive\Desktop\IntentOS)  
 **Author:** ISL Studio Integrator
 
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This document maps the VibeCheck codebase to identify modules for porting to ISL Studio. The filter criteria:
+This document maps the ShipGate codebase to identify modules for porting to ISL Studio. The filter criteria:
 - **Gate Decision**: Blocking/allowing changes (SHIP/NO_SHIP)
 - **Evidence Artifacts**: Producing reports/bundles for audit
 - **Firewall Governance**: Agent file write interception
@@ -155,7 +155,7 @@ This document maps the VibeCheck codebase to identify modules for porting to ISL
 | `packages/core/src/scanners/ultimate-scanner.ts` | Over-engineered - use policy packs instead |
 | `packages/core/src/scanners/advanced-scanner.ts` | Over-engineered - use policy packs instead |
 | `packages/core/src/scanners/code-quality-scanner.ts` | Over-engineered - use ISL verification |
-| `packages/core/src/vibecheck-mock-detector/*` | Can be implemented as policy pack later |
+| `packages/core/src/shipgate-mock-detector/*` | Can be implemented as policy pack later |
 
 **Rationale:** These duplicate functionality better served by policy packs and ISL verification.
 
@@ -261,7 +261,7 @@ This document maps the VibeCheck codebase to identify modules for porting to ISL
 | Source Path | Reason |
 |-------------|--------|
 | `packages/core/src/secrets/*` | Secrets scanning - implement as policy pack |
-| `packages/core/src/vibecheck-mock-detector/*` | Mock detection - implement as policy pack |
+| `packages/core/src/shipgate-mock-detector/*` | Mock detection - implement as policy pack |
 
 **Timeline:** Implement as policy packs in Phase 4+.
 
@@ -375,11 +375,11 @@ evidence/
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Dependency on @vibecheck/core types | Build breaks | Copy minimal types inline |
-| Policy pack rules too coupled to VibeCheck | Runtime errors | Abstract rule interface |
+| Dependency on @shipgate/core types | Build breaks | Copy minimal types inline |
+| Policy pack rules too coupled to ShipGate | Runtime errors | Abstract rule interface |
 | Evidence format incompatible with ISL | Reporting breaks | Define ISL evidence schema |
-| MCP tools expect VibeCheck server | Integration fails | Create ISL MCP adapter |
-| GitHub Action expects VibeCheck CLI | CI breaks | Create standalone action |
+| MCP tools expect ShipGate server | Integration fails | Create ISL MCP adapter |
+| GitHub Action expects ShipGate CLI | CI breaks | Create standalone action |
 
 ---
 

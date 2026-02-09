@@ -66,6 +66,15 @@ export class Session {
   /** Session configuration */
   private config: SessionConfig;
 
+  /** Evaluation context (set by .context command) */
+  private evalContext: Record<string, unknown> = {};
+
+  /** Pre-state context for old() expressions */
+  private preContext: Record<string, unknown> | null = null;
+
+  /** Loaded domain AST (from real parser) */
+  private domainAST: unknown = null;
+
   constructor(config: SessionConfig = {}) {
     this.config = {
       colors: true,
@@ -405,6 +414,110 @@ export class Session {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
+  // Evaluation Context Management
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Set evaluation context from JSON string
+   */
+  setEvalContext(json: string): { success: boolean; count: number; error?: string } {
+    try {
+      const parsed = JSON.parse(json);
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        return { success: false, count: 0, error: 'Context must be a JSON object' };
+      }
+      this.evalContext = parsed as Record<string, unknown>;
+      for (const [key, value] of Object.entries(this.evalContext)) {
+        this.variables.set(key, value);
+      }
+      return { success: true, count: Object.keys(parsed as object).length };
+    } catch (e) {
+      return { success: false, count: 0, error: e instanceof Error ? e.message : String(e) };
+    }
+  }
+
+  /**
+   * Set pre-state context for old() expressions
+   */
+  setPreContext(json: string): { success: boolean; error?: string } {
+    try {
+      const parsed = JSON.parse(json);
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        return { success: false, error: 'Pre-context must be a JSON object' };
+      }
+      this.preContext = parsed as Record<string, unknown>;
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : String(e) };
+    }
+  }
+
+  /**
+   * Get evaluation context
+   */
+  getEvalContext(): Record<string, unknown> {
+    return { ...this.evalContext };
+  }
+
+  /**
+   * Get pre-state context
+   */
+  getPreContext(): Record<string, unknown> | null {
+    return this.preContext ? { ...this.preContext } : null;
+  }
+
+  /**
+   * Resolve a dot-path against the evaluation context
+   */
+  resolveValue(dotPath: string): { found: boolean; value: unknown } {
+    const parts = dotPath.split('.');
+    let current: unknown = this.evalContext;
+
+    for (const part of parts) {
+      if (current === null || current === undefined || typeof current !== 'object') {
+        return { found: false, value: undefined };
+      }
+      current = (current as Record<string, unknown>)[part];
+    }
+
+    return { found: current !== undefined, value: current };
+  }
+
+  /**
+   * Resolve a dot-path against the pre-state context
+   */
+  resolvePreValue(dotPath: string): { found: boolean; value: unknown } {
+    if (!this.preContext) {
+      return { found: false, value: undefined };
+    }
+    const parts = dotPath.split('.');
+    let current: unknown = this.preContext;
+
+    for (const part of parts) {
+      if (current === null || current === undefined || typeof current !== 'object') {
+        return { found: false, value: undefined };
+      }
+      current = (current as Record<string, unknown>)[part];
+    }
+
+    return { found: current !== undefined, value: current };
+  }
+
+  /**
+   * Set domain AST (from real parser)
+   */
+  setDomainAST(ast: unknown): void {
+    this.domainAST = ast;
+  }
+
+  /**
+   * Get domain AST
+   */
+  getDomainAST(): unknown {
+    return this.domainAST;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
   // State Management
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -416,6 +529,9 @@ export class Session {
     this.variables.clear();
     this.lastResult = undefined;
     this.loadedFiles.clear();
+    this.evalContext = {};
+    this.preContext = null;
+    this.domainAST = null;
     // Keep history
   }
 

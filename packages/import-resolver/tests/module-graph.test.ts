@@ -289,13 +289,13 @@ describe('ModuleGraphBuilder', () => {
       const registry = getStdlibRegistry();
       
       const authExports = registry.getModuleExports('@isl/auth');
-      expect(authExports).toContain('User');
+      expect(authExports).toContain('OAuthCredential');
       expect(authExports).toContain('Session');
-      expect(authExports).toContain('Token');
+      expect(authExports).toContain('InitiateOAuth');
       
       const paymentExports = registry.getModuleExports('@isl/payments');
       expect(paymentExports).toContain('Payment');
-      expect(paymentExports).toContain('Invoice');
+      expect(paymentExports).toContain('CreatePayment');
     });
 
     it('should handle stdlib imports in module graph (without actual files)', async () => {
@@ -602,21 +602,23 @@ describe('StdlibRegistryManager', () => {
     const registry = getStdlibRegistry();
     const modules = registry.getAvailableModules();
     
+    // 6 canonical modules
+    expect(modules).toContain('@isl/core');
     expect(modules).toContain('@isl/auth');
+    expect(modules).toContain('@isl/http');
     expect(modules).toContain('@isl/payments');
-    expect(modules).toContain('@isl/uploads');
-    expect(modules).toContain('@isl/rate-limit');
-    expect(modules).toContain('@isl/audit');
+    expect(modules).toContain('@isl/storage');
+    expect(modules).toContain('@isl/security');
   });
 
   it('should check if symbol is exported', () => {
     const registry = getStdlibRegistry();
     
-    expect(registry.isExported('@isl/auth', 'User')).toBe(true);
+    expect(registry.isExported('@isl/auth', 'OAuthCredential')).toBe(true);
     expect(registry.isExported('@isl/auth', 'NonExistent')).toBe(false);
     expect(registry.isExported('@isl/payments', 'Payment')).toBe(true);
-    expect(registry.isExported('@isl/rate-limit', 'RateLimitConfig')).toBe(true);
-    expect(registry.isExported('@isl/audit', 'AuditEntry')).toBe(true);
+    expect(registry.isExported('@isl/security', 'CheckRateLimit')).toBe(true);
+    expect(registry.isExported('@isl/core', 'Email')).toBe(true);
   });
 
   it('should get module info', () => {
@@ -625,21 +627,21 @@ describe('StdlibRegistryManager', () => {
     
     expect(authModule).toBeDefined();
     expect(authModule!.version).toBe('1.0.0');
-    expect(authModule!.exports).toContain('User');
+    expect(authModule!.exports).toContain('OAuthCredential');
     expect(authModule!.files).toBeDefined();
   });
 
   it('should resolve stdlib-rate-limit alias', () => {
     const registry = getStdlibRegistry();
     
-    expect(registry.resolveAlias('stdlib-rate-limit')).toBe('@isl/rate-limit');
+    expect(registry.resolveAlias('stdlib-rate-limit')).toBe('@isl/security');
     expect(registry.isStdlibModule('stdlib-rate-limit')).toBe(true);
   });
 
   it('should resolve stdlib-audit alias', () => {
     const registry = getStdlibRegistry();
     
-    expect(registry.resolveAlias('stdlib-audit')).toBe('@isl/audit');
+    expect(registry.resolveAlias('stdlib-audit')).toBe('@isl/security');
     expect(registry.isStdlibModule('stdlib-audit')).toBe(true);
   });
 });

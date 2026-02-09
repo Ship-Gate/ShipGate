@@ -2,7 +2,7 @@
  * ISL Telemetry - Type Definitions
  * 
  * Provides type definitions for the opt-in local telemetry system.
- * All telemetry is stored locally in .vibecheck/telemetry/events.jsonl
+ * All telemetry is stored locally in .shipgate/telemetry/events.jsonl
  * No network calls are made.
  */
 
@@ -44,7 +44,7 @@ export interface TelemetryMetadata {
 export interface TelemetryConfig {
   /** Enable telemetry (default: false - opt-in) */
   enabled: boolean;
-  /** Output directory (default: .vibecheck/telemetry) */
+  /** Output directory (default: .shipgate/telemetry) */
   outputDir?: string;
   /** Output filename (default: events.jsonl) */
   filename?: string;

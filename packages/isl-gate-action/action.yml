@@ -1,50 +1,35 @@
-name: 'Shipgate ISL Verify'
-description: 'SHIP/NO_SHIP gate for AI-generated code. Blocks broken code from reaching production.'
-author: 'Shipgate'
+name: 'ShipGate ISL Verify'
+description: 'Verify AI-generated code against ISL behavioral specs'
+author: 'ShipGate'
 
 branding:
   icon: 'shield'
-  color: 'blue'
+  color: 'green'
 
 inputs:
-  spec:
-    description: 'Path to ISL specification file (optional; omit for firewall-only mode)'
-    required: false
-    default: ''
-  implementation:
-    description: 'Path to implementation file or directory'
+  path:
+    description: 'Path to verify (default: entire repo)'
     required: false
     default: '.'
-  threshold:
-    description: 'Minimum score to SHIP (0-100)'
+  mode:
+    description: 'Verification mode: auto, strict, specless'
     required: false
-    default: '70'
-  fail-on-no-ship:
-    description: 'Fail the workflow on NO_SHIP verdict'
+    default: 'auto'
+  fail-on:
+    description: 'Failure threshold: error, warning, unspecced'
     required: false
-    default: 'true'
-  comment-on-pr:
-    description: 'Post results as PR comment'
+    default: 'error'
+  config:
+    description: 'Path to .shipgate.yml (auto-detected if not set)'
     required: false
-    default: 'true'
-  upload-evidence:
-    description: 'Upload evidence bundle as artifact'
-    required: false
-    default: 'true'
-  dependency-audit:
-    description: 'Run dependency audit (critical vulns = NO_SHIP)'
-    required: false
-    default: 'false'
 
 outputs:
   verdict:
-    description: 'Gate verdict: SHIP or NO_SHIP'
+    description: 'SHIP, WARN, or NO_SHIP'
   score:
-    description: 'Verification score (0-100)'
-  sources:
-    description: 'Comma-separated verification sources (gate_spec, gate_firewall)'
-  evidence-path:
-    description: 'Path to evidence bundle'
+    description: 'Confidence score (0-1)'
+  report:
+    description: 'JSON report path'
 
 runs:
   using: 'node20'

@@ -40,11 +40,11 @@ export interface WatchConfig {
  * Default configuration values
  */
 export const DEFAULT_WATCH_CONFIG = {
-  markerFile: '.vibecheck/.gen-complete',
+  markerFile: '.shipgate/.gen-complete',
   debounceMs: 500,
   watchPatterns: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
   ignorePatterns: ['**/node_modules/**', '**/dist/**', '**/.git/**'],
-  evidencePath: '.vibecheck/evidence',
+  evidencePath: '.shipgate/evidence',
 } as const;
 
 /**

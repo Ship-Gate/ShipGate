@@ -380,9 +380,11 @@ export interface ChaosScenario extends ASTNode {
   then: Expression[];
   /** Granular injections (mirrors inject for isl-core compatibility) */
   injections?: ChaosInjection[];
-  /** Granular expectations (from then expressions) */
-  expectations?: ChaosExpectation[];
-  /** With-clause args (optional grammar) */
+  /** Parsed expect { } blocks merged with then-derived expectations */
+  expectations: ChaosExpectation[];
+  /** Scenario-level with-clause (e.g. retries, timeout) */
+  withClause?: ChaosWithClause;
+  /** @deprecated Use withClause instead */
   withClauses?: ChaosWithClause[];
 }
 
@@ -394,7 +396,10 @@ export interface ChaosInjection extends ASTNode {
 
 export interface ChaosExpectation extends ASTNode {
   kind: 'ChaosExpectation';
-  expression: Expression;
+  condition: Expression;
+  description?: StringLiteral;
+  /** @deprecated Use condition instead. Populated for backward compatibility. */
+  expression?: Expression;
 }
 
 export interface ChaosArgument extends ASTNode {
@@ -405,8 +410,7 @@ export interface ChaosArgument extends ASTNode {
 
 export interface ChaosWithClause extends ASTNode {
   kind: 'ChaosWithClause';
-  name: Identifier;
-  arguments: Expression[];
+  args: ChaosArgument[];
 }
 
 export interface Injection extends ASTNode {

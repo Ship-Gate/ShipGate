@@ -1,7 +1,7 @@
 /**
  * SpecStorageService
  * 
- * Manages persistence of ISL specifications to the .vibecheck/specs/ directory.
+ * Manages persistence of ISL specifications to the .shipgate/specs/ directory.
  * Handles saving, loading, and querying specs with fingerprint-based identification.
  */
 
@@ -44,7 +44,7 @@ export class SpecStorageService {
   private metadataCache: Map<string, SpecMetadata> = new Map();
 
   constructor(options: SpecStorageOptions) {
-    this.specsDir = path.join(options.workspaceRoot, '.vibecheck', 'specs');
+    this.specsDir = path.join(options.workspaceRoot, '.shipgate', 'specs');
     this.metadataFile = path.join(this.specsDir, '_metadata.json');
     this.ensureDirectoryExists();
     this.loadMetadataCache();

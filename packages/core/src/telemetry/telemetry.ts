@@ -2,7 +2,7 @@
  * ISL Telemetry - Main Interface
  * 
  * Provides opt-in local telemetry for ISL operations.
- * All data is stored locally in .vibecheck/telemetry/events.jsonl
+ * All data is stored locally in .shipgate/telemetry/events.jsonl
  * 
  * Features:
  * - Opt-in by default (disabled unless explicitly enabled)
@@ -59,7 +59,7 @@ export {
  */
 const DEFAULT_CONFIG: Required<TelemetryConfig> = {
   enabled: false,
-  outputDir: '.vibecheck/telemetry',
+  outputDir: '.shipgate/telemetry',
   filename: 'events.jsonl',
   redactSecrets: true,
   redactionPatterns: DEFAULT_REDACTION_PATTERNS,

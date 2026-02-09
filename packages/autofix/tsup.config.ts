@@ -10,5 +10,9 @@ export default defineConfig({
     'openai',
     '@anthropic-ai/sdk',
     '@isl-lang/ai-generator',
+    // Node built-ins used by CLI integration
+    'readline',
+    'fs/promises',
+    'path',
   ],
 });

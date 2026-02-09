@@ -18,7 +18,7 @@
     "dev": "tsup --watch",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "typecheck": "echo 'TODO: Fix Domain/DomainDeclaration mismatches' && exit 0",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
     "clean": "rm -rf dist"
   },
@@ -42,7 +42,10 @@
     "@isl-lang/evaluator": "workspace:*",
     "@isl-lang/import-resolver": "workspace:*",
     "@isl-lang/parser": "workspace:*",
-    "@isl-lang/static-analyzer": "workspace:*"
+    "@isl-lang/static-analyzer": "workspace:*",
+    "@isl-lang/typechecker": "workspace:*",
+    "@isl-lang/test-generator": "workspace:*",
+    "@isl-lang/gate": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

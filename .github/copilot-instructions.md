@@ -128,4 +128,4 @@ Required variables:
 
 ---
 
-*Context Enhanced by vibecheck AI*
+*Context Enhanced by shipgate AI*

@@ -37,6 +37,15 @@ export {
   createDefaultConfig,
 } from './pipeline.js';
 
+// 7-stage pipeline runner (recommended for gate integration)
+export {
+  runPipeline,
+  type PipelineRunConfig,
+  type PipelineRunResult,
+  type GateEvidence,
+  type StageOutcome,
+} from './run-pipeline.js';
+
 // New verifier (recommended for `isl verify`)
 export {
   runVerification,

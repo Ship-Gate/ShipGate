@@ -1,0 +1,11 @@
+{
+  "name": "@isl-lang/ci-docker",
+  "version": "1.0.0",
+  "description": "Docker image for Shipgate CI integrations",
+  "private": true,
+  "scripts": {
+    "build": "docker build -t ghcr.io/shipgate/shipgate:v1 .",
+    "build:latest": "docker build -t ghcr.io/shipgate/shipgate:latest .",
+    "build:version": "docker build -t ghcr.io/shipgate/shipgate:v1.0.0 ."
+  }
+}

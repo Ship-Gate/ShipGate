@@ -24,13 +24,20 @@ out/test/**
 # Build artifacts
 *.vsix
 
-# Documentation (optional - keep README)
-CHANGELOG.md
+# Development docs (keep README + CHANGELOG for marketplace)
 CONTRIBUTING.md
+README-isl.md
 docs/**
+
+# Old icon references (marketplace uses root icon.png)
+icons/isl-icon.png
+
+# Screenshots source (referenced via URLs in README)
+screenshots/**
 
 # Other
 .github/**
 .git/**
+.turbo/**
 **/.DS_Store
 **/Thumbs.db

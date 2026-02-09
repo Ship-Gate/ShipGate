@@ -29,20 +29,20 @@ import type {
 
 /**
  * Resolve and initialize workspace paths for pipeline operations.
- * Creates .vibecheck/reports and .vibecheck/specs directories if missing.
+ * Creates .shipgate/reports and .shipgate/specs directories if missing.
  */
 export async function initWorkspace(workspacePath?: string): Promise<WorkspaceConfig> {
   const root = resolve(workspacePath ?? process.cwd());
   
   const paths: OutputPaths = {
-    vibecheck: join(root, '.vibecheck'),
-    specs: join(root, '.vibecheck', 'specs'),
-    reports: join(root, '.vibecheck', 'reports'),
-    runtime: join(root, '.vibecheck', 'runtime'),
+    shipgate: join(root, '.shipgate'),
+    specs: join(root, '.shipgate', 'specs'),
+    reports: join(root, '.shipgate', 'reports'),
+    runtime: join(root, '.shipgate', 'runtime'),
   };
 
   // Create directories if missing
-  await mkdir(paths.vibecheck, { recursive: true });
+  await mkdir(paths.shipgate, { recursive: true });
   await mkdir(paths.specs, { recursive: true });
   await mkdir(paths.reports, { recursive: true });
   if (paths.runtime) {
@@ -190,13 +190,13 @@ export async function handleBuild(input: BuildInput): Promise<BuildResult> {
       const specPath = join(workspace.paths.specs, specFilename);
       await writeFile(specPath, islSource, 'utf-8');
       files.push({
-        path: `.vibecheck/specs/${specFilename}`,
+        path: `.shipgate/specs/${specFilename}`,
         type: 'spec',
         sizeBytes: Buffer.byteLength(islSource, 'utf-8'),
       });
 
       // Generate runtime code
-      const runtimeDir = workspace.paths.runtime ?? join(workspace.paths.vibecheck, 'runtime');
+      const runtimeDir = workspace.paths.runtime ?? join(workspace.paths.shipgate, 'runtime');
       try {
         const runtimeFiles = generateRuntime(domain, {
           mode: 'development',
@@ -209,7 +209,7 @@ export async function handleBuild(input: BuildInput): Promise<BuildResult> {
           await mkdir(dirname(filePath), { recursive: true });
           await writeFile(filePath, file.content, 'utf-8');
           files.push({
-            path: `.vibecheck/runtime/${file.path}`,
+            path: `.shipgate/runtime/${file.path}`,
             type: file.type === 'types' ? 'types' : 'runtime',
             sizeBytes: Buffer.byteLength(file.content, 'utf-8'),
           });
@@ -217,7 +217,7 @@ export async function handleBuild(input: BuildInput): Promise<BuildResult> {
       } catch (codegenError) {
         // Codegen errors are non-fatal, report them but continue
         files.push({
-          path: '.vibecheck/runtime/error.log',
+          path: '.shipgate/runtime/error.log',
           type: 'report',
           sizeBytes: 0,
         });
@@ -240,7 +240,7 @@ export async function handleBuild(input: BuildInput): Promise<BuildResult> {
       const reportPath = join(workspace.paths.reports, reportFilename);
       await writeFile(reportPath, JSON.stringify(report, null, 2), 'utf-8');
       files.push({
-        path: `.vibecheck/reports/${reportFilename}`,
+        path: `.shipgate/reports/${reportFilename}`,
         type: 'report',
         sizeBytes: Buffer.byteLength(JSON.stringify(report, null, 2), 'utf-8'),
       });
@@ -513,7 +513,7 @@ export async function handleVerify(input: VerifyInput): Promise<VerifyResult> {
     return {
       success: totalFailed === 0,
       report,
-      reportPath: `.vibecheck/reports/${reportFilename}`,
+      reportPath: `.shipgate/reports/${reportFilename}`,
     };
   } catch (error) {
     return {

@@ -1,7 +1,7 @@
 {
   "name": "@isl-lang/static-analyzer",
   "version": "0.1.0",
-  "description": "ISL static analyzer: tri-state logic (true/false/unknown) for postconditions and invariants without execution",
+  "description": "ISL static analyzer: tri-state logic (true/false/unknown) for postconditions and invariants without execution. Proves/disproves ISL conditions at compile time via type-constraint propagation.",
   "author": "ISL Team",
   "license": "MIT",
   "repository": {
@@ -9,18 +9,20 @@
     "url": "https://github.com/isl-lang/isl.git",
     "directory": "packages/isl-expression-evaluator"
   },
-  "homepage": "https://isl-lang.dev/docs/expression-evaluator",
+  "homepage": "https://isl-lang.dev/docs/static-analyzer",
   "bugs": {
     "url": "https://github.com/isl-lang/isl/issues"
   },
   "keywords": [
     "isl",
-    "evaluator",
+    "static-analysis",
     "expression",
     "postcondition",
     "invariant",
     "tri-state",
-    "verification"
+    "verification",
+    "type-constraint",
+    "proof"
   ],
   "engines": {
     "node": ">=18.0.0"

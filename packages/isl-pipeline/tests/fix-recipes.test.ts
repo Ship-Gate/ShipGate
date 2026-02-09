@@ -829,7 +829,7 @@ describe('No Weakening Guard', () => {
     
     expect(result.newCode).not.toContain('@ts-ignore');
     expect(result.newCode).not.toContain('eslint-disable');
-    expect(result.newCode).not.toContain('vibecheck-ignore');
+    expect(result.newCode).not.toContain('shipgate-ignore');
     expect(result.newCode).not.toContain('islstudio-ignore');
   });
 

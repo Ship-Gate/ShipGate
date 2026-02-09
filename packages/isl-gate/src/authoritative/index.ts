@@ -42,6 +42,40 @@ export {
   writeBundle,
 } from './evidence-bundle.js';
 
+// Verdict engine (SHIP / WARN / NO_SHIP)
+export {
+  SCORING_THRESHOLDS,
+  CRITICAL_FAILURES,
+  createGateEvidence,
+  computeScore,
+  findCriticalFailures,
+  hasCriticalFailure,
+  produceVerdict,
+} from './verdict-engine.js';
+
+export type {
+  ScoringThresholds,
+  CriticalFailureKind,
+  GateEvidenceSource,
+  GateEvidence,
+  VerdictDecision,
+  GateVerdict,
+} from './verdict-engine.js';
+
+// Specless check registry
+export {
+  registerSpeclessCheck,
+  unregisterSpeclessCheck,
+  getSpeclessChecks,
+  clearSpeclessChecks,
+  runSpeclessChecks,
+} from './specless-registry.js';
+
+export type {
+  GateContext,
+  SpeclessCheck,
+} from './specless-registry.js';
+
 // Types
 export type {
   AuthoritativeVerdict,

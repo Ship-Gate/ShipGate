@@ -65,8 +65,8 @@ export const WEAKENING_PATTERNS: WeakeningPattern[] = [
     category: 'suppression',
   },
   {
-    pattern: /\/\/\s*vibecheck-ignore/i,
-    description: 'Vibecheck ignore comment',
+    pattern: /\/\/\s*shipgate-ignore/i,
+    description: 'Shipgate ignore comment',
     category: 'suppression',
   },
   {

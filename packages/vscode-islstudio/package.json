@@ -1,7 +1,7 @@
 {
   "name": "vscode-islstudio",
   "displayName": "Shipgate",
-  "description": "Unified code gate. Truthpack validation (routes, env, imports) + 25 security rules (auth, pii, payments, rate-limit, intent). SHIP or NO_SHIP with evidence. Verified by VibeCheck.",
+  "description": "Unified code gate. Truthpack validation (routes, env, imports) + 25 security rules (auth, pii, payments, rate-limit, intent). SHIP or NO_SHIP with evidence. Verified by ShipGate.",
   "version": "1.0.0",
   "publisher": "shipgate",
   "license": "MIT",
@@ -24,7 +24,7 @@
   "keywords": [
     "security",
     "linter",
-    "vibecheck",
+    "shipgate",
     "auth",
     "pii",
     "gate",

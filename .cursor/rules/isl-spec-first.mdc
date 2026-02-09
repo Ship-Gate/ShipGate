@@ -11,7 +11,7 @@ When adding **new behaviors**, **new APIs**, or **new domain operations**, prefe
 ## Where to Put Specs
 
 - **Project specs**: `specs/**/*.isl` (referenced by `.islrc.json`).
-- **VibeCheck / session specs**: `.vibecheck/specs/*.isl` (often auto-generated or used by tooling).
+- **ShipGate / session specs**: `.shipgate/specs/*.isl` (often auto-generated or used by tooling).
 - **Examples and demos**: `examples/*.isl`, `demos/**/*.isl`, `corpus/**/*.isl`.
 - **Stdlib**: `stdlib/**/*.isl` (shared domains; use via `use stdlib-*` in your spec).
 
@@ -39,7 +39,7 @@ Then edit the created spec and run `isl check` and `isl gen ts` as above.
 
 - `specs/example.isl` – Full example (entities, behaviors, scenarios).
 - `examples/auth.isl`, `examples/payments.isl` – Auth and payments domains.
-- `.vibecheck/specs/*.isl` – Compact behavior-style specs (pre/post/errors).
+- `.shipgate/specs/*.isl` – Compact behavior-style specs (pre/post/errors).
 
 ---
 *Apply this rule when designing new features or changing contracts so that ISL remains the single source of truth.*

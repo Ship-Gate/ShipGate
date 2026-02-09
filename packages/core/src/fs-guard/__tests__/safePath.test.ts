@@ -39,7 +39,7 @@ describe('safeJoin', () => {
     });
 
     it('should accept paths starting with dot', () => {
-      const result = safeJoin(root, '.vibecheck/evidence.json');
+      const result = safeJoin(root, '.shipgate/evidence.json');
       expect(result.valid).toBe(true);
     });
   });
