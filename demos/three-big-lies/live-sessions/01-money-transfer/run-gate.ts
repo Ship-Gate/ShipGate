@@ -1,0 +1,71 @@
+#!/usr/bin/env npx tsx
+/**
+ * ISL Gate - runs before deploy.
+ * Verifies implementation against specs/transfer.isl
+ */
+import { readFile, readdir } from 'fs/promises';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const SRC = join(__dirname, 'src');
+
+function stripComments(code: string): string {
+  return code
+    .replace(/\/\/[^\n]*/g, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+}
+
+async function checkMoneyTransfer(): Promise<{ verdict: 'SHIP' | 'NO-SHIP'; message?: string }> {
+  const entries = await readdir(SRC, { withFileTypes: true });
+  let allCode = '';
+  for (const e of entries) {
+    if (e.isFile() && (e.name.endsWith('.ts') || e.name.endsWith('.js'))) {
+      allCode += await readFile(join(SRC, e.name), 'utf-8') + '\n';
+    }
+  }
+  const c = stripComments(allCode);
+  const hasBalanceDeduction = /\.balance\s*-=|\w+\.balance\s*-\s*=/i.test(c);
+  const hasBalanceCheck = /balance\s*>=|\.balance\s*>=|balance\s*<\s*amount|insufficient|sufficient/i.test(c);
+  if (hasBalanceDeduction && !hasBalanceCheck) {
+    return {
+      verdict: 'NO-SHIP',
+      message: 'Precondition violated: sender.balance >= amount',
+    };
+  }
+  return { verdict: 'SHIP' };
+}
+
+async function main() {
+  console.log(`
+🚦 ISL Gate
+   Spec: specs/transfer.isl
+   Impl: src/
+
+`);
+  const result = await checkMoneyTransfer();
+  if (result.verdict === 'NO-SHIP') {
+    console.log(`  ┌─────────────────────────────────────────────────────────────┐
+  │           ✗  NO-SHIP                                                │
+  └─────────────────────────────────────────────────────────────┘
+
+  ${result.message}
+
+  Trust Score: 0%
+  Confidence:  100%
+`);
+    process.exit(1);
+  }
+  console.log(`  ┌─────────────────────────────────────┐
+  │           ✓  SHIP                  │
+  └─────────────────────────────────────┘
+
+  Trust Score: 95%
+  Confidence:  100%
+`);
+  process.exit(0);
+}
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

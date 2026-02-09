@@ -1,0 +1,109 @@
+{
+  "name": "01-money-transfer",
+  "framework": null,
+  "language": "JavaScript",
+  "architecture": "Standard src/ layout",
+  "hasTypescript": false,
+  "hasPrisma": false,
+  "hasNextjs": false,
+  "hasReact": false,
+  "hasExpress": false,
+  "hasTailwind": false,
+  "directories": [
+    "src"
+  ],
+  "entryPoints": [],
+  "apiRoutes": [],
+  "components": [],
+  "models": [],
+  "patterns": {
+    "hooks": [],
+    "stateManagement": null,
+    "styling": [],
+    "testing": [],
+    "dataFetching": [],
+    "validation": null,
+    "authentication": null,
+    "codeExamples": {},
+    "antiPatterns": [
+      {
+        "type": "console-log",
+        "severity": "warning",
+        "message": "Console statements found in production code",
+        "suggestion": "Use a proper logger or remove before production"
+      }
+    ]
+  },
+  "conventions": {
+    "naming": {},
+    "imports": [],
+    "patterns": []
+  },
+  "envVars": {
+    "files": [],
+    "variables": []
+  },
+  "types": {
+    "interfaces": [
+      "Account"
+    ],
+    "types": [],
+    "enums": [],
+    "examples": {
+      "interface": {
+        "name": "Account",
+        "code": "export interface Account {\r\n  id: string;\r\n  owner: string;\r\n  balance: number;\r\n}",
+        "file": "src\\accounts.ts"
+      }
+    }
+  },
+  "imports": {
+    "externalPackages": [
+      "fs",
+      "path",
+      "url"
+    ],
+    "internalAliases": [],
+    "importPatterns": []
+  },
+  "stats": {
+    "totalFiles": 3,
+    "totalLines": 109,
+    "byExtension": {
+      ".json": 1,
+      ".ts": 2
+    },
+    "largestFiles": [
+      {
+        "path": "run-gate.ts",
+        "lines": 72
+      },
+      {
+        "path": "src\\accounts.ts",
+        "lines": 23
+      },
+      {
+        "path": "package.json",
+        "lines": 14
+      }
+    ]
+  },
+  "scripts": [
+    {
+      "name": "gate",
+      "command": "npx tsx run-gate.ts"
+    },
+    {
+      "name": "dev",
+      "command": "echo 'Add your dev server here'"
+    }
+  ],
+  "monorepo": {
+    "isMonorepo": false,
+    "type": null,
+    "workspaces": [],
+    "sharedPackages": [],
+    "rootConfig": null,
+    "tools": []
+  }
+}

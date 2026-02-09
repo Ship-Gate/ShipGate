@@ -1,12 +1,17 @@
 /**
  * Init Command
- * 
+ *
  * Initialize a new ISL project.
  * Usage: isl init <name>
+ *
+ * Modes:
+ *   - Template: isl init my-project --template minimal|full|api
+ *   - From code: isl init my-project --from-code ./src/auth.ts
+ *   - From prompt: isl init my-project --from-prompt "Build me a todo app"
  */
 
-import { writeFile, mkdir, access } from 'fs/promises';
-import { join, resolve } from 'path';
+import { writeFile, mkdir, access, readFile, readdir, stat } from 'fs/promises';
+import { join, resolve, extname } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import { output } from '../output.js';
@@ -15,6 +20,19 @@ import { createConfigTemplate, createJsonConfigTemplate } from '../config.js';
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
+
+const LANGUAGE_EXTS: Record<string, 'typescript' | 'javascript' | 'python' | 'go' | 'rust' | 'java'> = {
+  '.ts': 'typescript',
+  '.tsx': 'typescript',
+  '.js': 'javascript',
+  '.jsx': 'javascript',
+  '.mjs': 'javascript',
+  '.cjs': 'javascript',
+  '.py': 'python',
+  '.go': 'go',
+  '.rs': 'rust',
+  '.java': 'java',
+};
 
 export interface InitOptions {
   /** Project template to use */
@@ -27,6 +45,14 @@ export interface InitOptions {
   skipGit?: boolean;
   /** Include example files */
   examples?: boolean;
+  /** Generate spec from existing source code (path to file or directory) */
+  fromCode?: string;
+  /** Generate spec from natural language prompt */
+  fromPrompt?: string;
+  /** Enable AI for spec generation (requires ANTHROPIC_API_KEY for --from-code) */
+  ai?: boolean;
+  /** API key for AI providers (or use ANTHROPIC_API_KEY env) */
+  apiKey?: string;
 }
 
 export interface InitResult {
@@ -500,6 +526,150 @@ async function fileExists(path: string): Promise<boolean> {
   }
 }
 
+/**
+ * Read source code from file or directory
+ */
+async function readSourceCode(path: string): Promise<{ code: string; language: 'typescript' | 'javascript' | 'python' | 'go' | 'rust' | 'java' }> {
+  const resolved = resolve(path);
+  const stats = await stat(resolved);
+
+  if (stats.isFile()) {
+    const code = await readFile(resolved, 'utf-8');
+    const ext = extname(resolved).toLowerCase();
+    const language = LANGUAGE_EXTS[ext];
+    if (!language) {
+      throw new Error(
+        `Unsupported file extension: ${ext}. Use .ts, .js, .py, .go, .rs, or .java`
+      );
+    }
+    return { code, language };
+  }
+
+  if (stats.isDirectory()) {
+    const allCode: string[] = [];
+    let language: 'typescript' | 'javascript' | 'python' | 'go' | 'rust' | 'java' = 'typescript';
+
+    async function walk(dir: string): Promise<void> {
+      const entries = await readdir(dir, { withFileTypes: true });
+      const supported = entries
+        .filter((e) => e.isFile() && LANGUAGE_EXTS[extname(e.name).toLowerCase()])
+        .sort((a, b) => a.name.localeCompare(b.name));
+      for (const entry of supported) {
+        const filePath = join(dir, entry.name);
+        const code = await readFile(filePath, 'utf-8');
+        allCode.push(`// ${entry.name}\n${code}`);
+        const ext = extname(entry.name).toLowerCase();
+        const lang = LANGUAGE_EXTS[ext];
+        if (lang) language = lang;
+      }
+      for (const entry of entries) {
+        if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
+          await walk(join(dir, entry.name));
+        }
+      }
+    }
+
+    await walk(resolved);
+    if (allCode.length === 0) {
+      throw new Error(`No supported source files found in ${path}`);
+    }
+    return { code: allCode.join('\n\n'), language };
+  }
+
+  throw new Error(`Path is neither a file nor directory: ${path}`);
+}
+
+/**
+ * Generate ISL spec from source code using spec-assist
+ */
+async function generateFromCode(
+  path: string,
+  options: { apiKey?: string; ai?: boolean }
+): Promise<{ isl: string; errors: string[] }> {
+  try {
+    const { generateSpecFromCode } = await import('@isl-lang/spec-assist');
+    // Enable AI assist: use anthropic if --ai + apiKey, else stub (offline)
+    const apiKey = options.apiKey ?? process.env.ANTHROPIC_API_KEY;
+    process.env.ISL_AI_ENABLED = 'true';
+    process.env.ISL_AI_PROVIDER = options.ai && apiKey ? 'anthropic' : 'stub';
+    if (options.apiKey) {
+      process.env.ANTHROPIC_API_KEY = options.apiKey;
+    }
+
+    const { code, language } = await readSourceCode(path);
+    const result = await generateSpecFromCode(code, language, {
+      config:
+        options.ai && apiKey
+          ? { apiKey, provider: 'anthropic' }
+          : undefined,
+    });
+
+    if (result.success && result.isl) {
+      let isl = result.isl;
+      // Ensure we have a domain wrapper (stub/provider may return behavior-only)
+      if (!/^\s*(domain|import)\s/m.test(isl) && /^\s*behavior\s/m.test(isl)) {
+        isl = `domain GeneratedDomain {\n${isl}\n}\n`;
+      }
+      return { isl, errors: [] };
+    }
+
+    const diagnostics = result.diagnostics?.map((d) => d.message) ?? [];
+    return {
+      isl: '',
+      errors: diagnostics.length > 0 ? diagnostics : ['Spec generation failed. Enable AI with --ai and set ANTHROPIC_API_KEY.'],
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("Cannot find module '@isl-lang/spec-assist'")) {
+      return {
+        isl: '',
+        errors: [
+          'spec-assist package not found. Install with: pnpm add -D @isl-lang/spec-assist',
+          'For AI generation also set: ISL_AI_ENABLED=true ANTHROPIC_API_KEY=...',
+        ],
+      };
+    }
+    return { isl: '', errors: [msg] };
+  }
+}
+
+/**
+ * Generate ISL spec from natural language prompt using intent-translator
+ */
+async function generateFromPrompt(
+  prompt: string,
+  options: { apiKey?: string; ai?: boolean }
+): Promise<{ isl: string; errors: string[] }> {
+  try {
+    const { translate } = await import('@isl-lang/intent-translator');
+    const apiKey = options.apiKey ?? process.env.ANTHROPIC_API_KEY;
+    const result = await translate(prompt, {
+      apiKey: options.ai ? apiKey : undefined,
+      context: 'Generate a complete ISL domain with entities and behaviors.',
+    });
+
+    if (result.success && result.isl) {
+      return { isl: result.isl, errors: [] };
+    }
+
+    return {
+      isl: '',
+      errors: result.errors ?? ['Translation failed. Try with --ai and ANTHROPIC_API_KEY for better results.'],
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("Cannot find module '@isl-lang/intent-translator'")) {
+      return {
+        isl: '',
+        errors: [
+          'intent-translator package not found. Install with: pnpm add -D @isl-lang/intent-translator',
+        ],
+      };
+    }
+    return { isl: '', errors: [msg] };
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Init Function
 // ─────────────────────────────────────────────────────────────────────────────
@@ -543,23 +713,63 @@ export async function init(name: string, options: InitOptions = {}): Promise<Ini
     await mkdir(join(projectDir, 'src'), { recursive: true });
     await mkdir(join(projectDir, 'generated'), { recursive: true });
 
-    // Select ISL template
-    let islTemplate: string;
-    switch (options.template) {
-      case 'api':
-        islTemplate = API_ISL_TEMPLATE;
-        break;
-      case 'full':
-        islTemplate = FULL_ISL_TEMPLATE;
-        break;
-      case 'minimal':
-      default:
-        islTemplate = MINIMAL_ISL_TEMPLATE;
+    // Determine ISL content: from-code, from-prompt, or template
+    let islContent: string;
+
+    if (options.fromCode) {
+      spinner.text = 'Generating ISL spec from source code...';
+      const gen = await generateFromCode(options.fromCode, {
+        apiKey: options.apiKey,
+        ai: options.ai,
+      });
+      if (gen.errors.length > 0) {
+        spinner.fail('Spec generation failed');
+        return {
+          success: false,
+          projectPath: projectDir,
+          files: [],
+          errors: gen.errors,
+        };
+      }
+      islContent = gen.isl;
+      spinner.text = 'Creating project structure...';
+    } else if (options.fromPrompt) {
+      spinner.text = 'Generating ISL spec from prompt...';
+      const gen = await generateFromPrompt(options.fromPrompt, {
+        apiKey: options.apiKey,
+        ai: options.ai,
+      });
+      if (gen.errors.length > 0) {
+        spinner.fail('Spec generation failed');
+        return {
+          success: false,
+          projectPath: projectDir,
+          files: [],
+          errors: gen.errors,
+        };
+      }
+      islContent = gen.isl;
+      spinner.text = 'Creating project structure...';
+    } else {
+      // Template-based init
+      let islTemplate: string;
+      switch (options.template) {
+        case 'api':
+          islTemplate = API_ISL_TEMPLATE;
+          break;
+        case 'full':
+          islTemplate = FULL_ISL_TEMPLATE;
+          break;
+        case 'minimal':
+        default:
+          islTemplate = MINIMAL_ISL_TEMPLATE;
+      }
+      islContent = applyTemplate(islTemplate, templateVars);
     }
 
     // Create ISL file
     const islPath = join(projectDir, 'src', `${projectName}.isl`);
-    await writeFile(islPath, applyTemplate(islTemplate, templateVars));
+    await writeFile(islPath, islContent);
     files.push(islPath);
 
     // Create config file (JSON format for better tooling support)

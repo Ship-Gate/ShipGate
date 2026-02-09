@@ -1,0 +1,19 @@
+{
+  "name": "todo-app",
+  "version": "0.1.0",
+  "description": "ISL project - todo-app",
+  "type": "module",
+  "scripts": {
+    "check": "isl check",
+    "generate": "isl generate",
+    "generate:types": "isl generate --types",
+    "generate:tests": "isl generate --tests",
+    "generate:docs": "isl generate --docs",
+    "verify": "isl verify",
+    "build": "isl check && isl generate"
+  },
+  "devDependencies": {
+    "@isl-lang/cli": "workspace:*",
+    "typescript": "^5.3.3"
+  }
+}

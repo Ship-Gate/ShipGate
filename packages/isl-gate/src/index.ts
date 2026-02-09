@@ -7,6 +7,20 @@
  * 
  * @example
  * ```typescript
+ * // Authoritative Gate (RECOMMENDED)
+ * import { runAuthoritativeGate } from '@isl-lang/gate';
+ * 
+ * const result = await runAuthoritativeGate({
+ *   projectRoot: '/path/to/project',
+ *   spec: 'path/to/spec.isl',
+ *   implementation: 'src/',
+ * });
+ * 
+ * console.log(result.verdict);  // 'SHIP' or 'NO_SHIP'
+ * console.log(result.exitCode); // 0 or 1
+ * process.exit(result.exitCode);
+ * 
+ * // Legacy Gate
  * import { runGate, quickCheck } from '@isl-lang/gate';
  * 
  * const result = await runGate({
@@ -16,11 +30,48 @@
  * }, {
  *   projectRoot: '/path/to/project',
  * });
- * 
- * console.log(result.verdict); // 'SHIP' or 'NO_SHIP'
- * console.log(result.score);   // 0-100
  * ```
  */
+
+// ============================================================================
+// Authoritative Gate (RECOMMENDED)
+// ============================================================================
+
+export {
+  runAuthoritativeGate,
+  quickGateCheck,
+  wouldShip,
+  makeDecision,
+  aggregateSignals,
+  createSignal,
+  createBlockingSignal,
+  createFinding,
+  hashContent,
+  generateFingerprint,
+  EXIT_CODES,
+  DEFAULT_THRESHOLDS,
+  DEV_THRESHOLDS,
+} from './authoritative/index.js';
+
+export type {
+  AuthoritativeVerdict,
+  AuthoritativeGateInput,
+  AuthoritativeGateResult,
+  VerificationSignal,
+  SignalSource,
+  SignalFinding,
+  AggregatedSignals,
+  ThresholdConfig,
+  VerdictReason,
+  EvidenceBundle,
+  EvidenceArtifact,
+  VerdictSource,
+  CombinedVerdictResult,
+} from './authoritative/index.js';
+
+// ============================================================================
+// Legacy Gate (for backward compatibility)
+// ============================================================================
 
 // Main gate functions
 export { runGate, quickCheck, wouldPass, VERDICT_THRESHOLDS } from './gate.js';

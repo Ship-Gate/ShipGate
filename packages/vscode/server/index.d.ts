@@ -16,12 +16,30 @@ declare class ISLServer {
     private semanticTokensProvider;
     private codeActionProvider;
     private formattingProvider;
+    private scannerDiagnosticsProvider;
     private diagnosticTimers;
+    private lastScannerDiagnostics;
+    private scannerVersions;
     constructor();
     private setupHandlers;
     private scheduleValidation;
     private validateDocument;
+    /**
+     * Run Host + Reality-Gap scanners async and merge with parser diagnostics.
+     * Suppressions and safelists are applied inside the firewall.
+     */
+    private runScannerDiagnostics;
+    /**
+     * Deduplicate diagnostics by code + start position.
+     * Prefers entries with richer data (e.g. scanner entries with suggestions).
+     */
+    private deduplicateDiagnostics;
     private clearDiagnostics;
+    /**
+     * Return hover info for scanner diagnostics at the given position.
+     * Shows tier, source, and suggestion if available.
+     */
+    private getScannerHover;
     private mapCompletionKind;
     private mapSymbol;
     private mapSymbolKind;
@@ -429,4 +447,34 @@ declare class ISLSemanticTokensProvider {
     private isInString;
 }
 
-export { type DiagnosticsOptions, type DiagnosticsResult, type ExportedSymbol, ISLCodeActionProvider, ISLCompletionProvider, ISLDefinitionProvider, ISLDiagnosticsProvider, ISLDocumentManager, ISLFormattingProvider, ISLHoverProvider, ISLImportResolver, ISLSemanticLinter, ISLSemanticTokensProvider, ISLServer, ISLSymbolProvider, type ImportResolutionResult, LINT_RULES, type LintResult, type LintRule, type QuickfixData, type ResolvedImport, type ResolvedImportItem, type SemanticToken, type SemanticTokenModifier, type SemanticTokenType, TOKEN_MODIFIERS, TOKEN_TYPES };
+declare const SOURCE_HOST = "vibecheck-host";
+declare const SOURCE_REALITY_GAP = "vibecheck-reality-gap";
+interface ScannerDiagnosticsOptions {
+    projectRoot: string;
+    enabled: boolean;
+    /** Host scanner (truthpack/reality state) – ghost-route, ghost-env, etc. */
+    hostScanner: boolean;
+    /** Reality-Gap scanner (code vs truthpack) – same engine, exposed as separate source for filtering */
+    realityGapScanner: boolean;
+}
+declare class ScannerDiagnosticsProvider {
+    private options;
+    private firewallInstance;
+    constructor(options?: Partial<ScannerDiagnosticsOptions>);
+    configure(options: Partial<ScannerDiagnosticsOptions>): void;
+    /** Whether this document should be scanned (file type). */
+    isSupported(document: TextDocument): boolean;
+    /**
+     * Run Host + Reality-Gap scanners and return LSP diagnostics.
+     * Suppressions and safelists are applied inside the firewall.
+     */
+    provideDiagnostics(document: TextDocument): Promise<Diagnostic[]>;
+    /**
+     * Map firewall verdicts to LSP diagnostics.
+     * Severity, code, and message match CLI output.
+     */
+    private mapResultToDiagnostics;
+    private rangeForViolation;
+}
+
+export { type DiagnosticsOptions, type DiagnosticsResult, type ExportedSymbol, ISLCodeActionProvider, ISLCompletionProvider, ISLDefinitionProvider, ISLDiagnosticsProvider, ISLDocumentManager, ISLFormattingProvider, ISLHoverProvider, ISLImportResolver, ISLSemanticLinter, ISLSemanticTokensProvider, ISLServer, ISLSymbolProvider, type ImportResolutionResult, LINT_RULES, type LintResult, type LintRule, type QuickfixData, type ResolvedImport, type ResolvedImportItem, SOURCE_HOST, SOURCE_REALITY_GAP, type ScannerDiagnosticsOptions, ScannerDiagnosticsProvider, type SemanticToken, type SemanticTokenModifier, type SemanticTokenType, TOKEN_MODIFIERS, TOKEN_TYPES };

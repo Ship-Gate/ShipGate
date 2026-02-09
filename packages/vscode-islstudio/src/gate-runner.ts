@@ -40,14 +40,14 @@ export async function runGate(
   const cwd = workspaceFolder.uri.fsPath;
   const changedFlag = changedOnly ? '--changed-only' : '';
   
-  // Try to use local islstudio CLI first, fallback to npx
+  // Try to use local shipgate CLI first, fallback to npx
   let cmd: string;
   try {
-    // Check if islstudio is installed locally
-    await execAsync('which islstudio', { cwd });
-    cmd = `islstudio gate --ci --output json ${changedFlag}`;
+    // Check if shipgate is installed locally
+    await execAsync('which shipgate', { cwd });
+    cmd = `shipgate gate --ci --output json ${changedFlag}`;
   } catch {
-    cmd = `npx islstudio@latest gate --ci --output json ${changedFlag}`;
+    cmd = `npx shipgate@latest gate --ci --output json ${changedFlag}`;
   }
 
   if (outputChannel) {

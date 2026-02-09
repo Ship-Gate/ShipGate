@@ -395,6 +395,24 @@ describe('executeLLMAnalysis (executor)', () => {
     expect(budget.costUsed()).toBeGreaterThan(0);
   });
 
+  it('rejects response exceeding 1.5x token cap', async () => {
+    // Create a provider that returns a massively long response
+    const hugeResponse = 'x'.repeat(20000) + ' auth.ts:42';
+    const ctx: LLMAnalysisContext = {
+      confidence: 0.2,
+      codeSegments: SAMPLE_EVIDENCE,
+    };
+    // Set a very low token cap so the response easily exceeds 1.5x
+    const provider = createMockProvider(hugeResponse);
+
+    const result = await executeLLMAnalysis(ctx, provider, { maxTokensPerRequest: 10 });
+
+    expect(result.status).toBe('error');
+    if (result.status === 'error') {
+      expect(result.error).toContain('exceeded token cap');
+    }
+  });
+
   it('uses ambiguous analysis prompt when options.ambiguous is set', async () => {
     const ctx: LLMAnalysisContext = {
       confidence: 0.2,

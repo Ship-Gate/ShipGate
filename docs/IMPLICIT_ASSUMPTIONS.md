@@ -38,8 +38,8 @@ This document lists assumptions that the ISL verification pipeline, auto-verify,
 
 | ID | Assumption | Category | Impact | Enforced |
 |----|------------|----------|--------|----------|
-| D1 | Required packages (e.g. parser) resolve at runtime | dependency | high | No – module load fails naturally |
-| D2 | No stub or skipped steps when strict verification is required | environment | medium | Documented; pipeline warnings surfaced in report |
+| D1 | Required packages (e.g. parser) resolve at runtime | dependency | high | Yes – `assertRequiredPackages()` |
+| D2 | No stub or skipped steps when strict verification is required | environment | medium | Yes – `assertNoSkippedSteps()` |
 
 ---
 
@@ -54,4 +54,4 @@ This document lists assumptions that the ISL verification pipeline, auto-verify,
 ## See Also
 
 - **Runtime guarantees**: [RUNTIME_GUARANTEES.md](./RUNTIME_GUARANTEES.md) – what is guaranteed when enforcement is enabled.
-- **Enforcement API**: `@isl-lang/core` – `assertWorkspacePath`, `assertPipelineInput`, `assertValidAst`, `assertWritableOutDir`, `assertSerializableState`, `assertImplementationAccessible`.
+- **Enforcement API**: `@isl-lang/core` – `assertWorkspacePath`, `assertPipelineInput`, `assertValidAst`, `assertWritableOutDir`, `assertSerializableState`, `assertImplementationAccessible`, `assertRequiredPackages`, `assertNoSkippedSteps`.

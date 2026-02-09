@@ -101,10 +101,10 @@ export default function Pipeline() {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 text-gray-800" data-testid="pipeline-title">
+        <h1 className="text-3xl font-bold mb-2 text-white" data-testid="pipeline-title">
           Pipeline Demo
         </h1>
-        <p className="text-gray-500">
+        <p className="text-white/80">
           Watch intent transform into verified code step-by-step
         </p>
       </div>
@@ -120,14 +120,14 @@ export default function Pipeline() {
 
       {/* Input Section */}
       <div className="glass-card p-6 mb-6">
-        <label className="block text-sm font-medium text-gray-600 mb-2">
+        <label className="block text-sm font-medium text-white/90 mb-2">
           Describe what you want to build
         </label>
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="e.g., Create a counter that increments and decrements, but never goes negative"
-          className="w-full bg-gray-50 border border-gray-200 rounded-lg p-4 text-gray-800 placeholder-gray-400 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none resize-none"
+          className="w-full bg-white/10 border border-white/20 rounded-lg p-4 text-white placeholder-white/50 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none resize-none"
           rows={3}
           data-testid="intent-input"
           disabled={isRunning}
@@ -139,7 +139,7 @@ export default function Pipeline() {
             <button
               key={i}
               onClick={() => setInput(prompt)}
-              className="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 hover:text-gray-800 transition-colors border border-gray-200"
+              className="text-xs px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-full text-white/90 hover:text-white transition-colors border border-white/20"
               data-testid={`example-prompt-${i}`}
               disabled={isRunning}
             >
@@ -221,15 +221,15 @@ export default function Pipeline() {
               <TrustScore score={trustScore} size="lg" />
               
               <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-4 text-gray-800">Verification Results</h3>
+                <h3 className="text-lg font-semibold mb-4 text-white">Verification Results</h3>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {verifications.map((v) => (
                     <div
                       key={v.name}
-                      className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-200"
+                      className="flex items-center justify-between bg-white/10 rounded-lg px-4 py-3 border border-white/20"
                       data-testid={`verification-${v.name.toLowerCase().replace(/\s/g, '-')}`}
                     >
-                      <span className="text-sm text-gray-600">{v.name}</span>
+                      <span className="text-sm text-white/90">{v.name}</span>
                       <span className="text-sm font-medium text-green-600">
                         {v.count} verified
                       </span>

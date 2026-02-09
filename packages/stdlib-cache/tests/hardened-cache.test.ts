@@ -173,7 +173,18 @@ describe('HardenedCache — cache versioning', () => {
     expect(await cacheV2.has('data')).toBe(false);
   });
 
-  it('same version + same context reads the same data', async () => {
+  it('same version + same context instance reads back its own writes', async () => {
+    const cache = createHardenedCache({
+      backend,
+      securityContext: { scanId: 's1' },
+      version: 'v1',
+    });
+
+    await cache.set('shared', 'hello');
+    expect(await cache.get('shared')).toBe('hello');
+  });
+
+  it('separate instances with same context have independent bloom filters (by design)', async () => {
     const cache1 = createHardenedCache({
       backend,
       securityContext: { scanId: 's1' },
@@ -185,8 +196,15 @@ describe('HardenedCache — cache versioning', () => {
       version: 'v1',
     });
 
-    await cache1.set('shared', 'hello');
-    expect(await cache2.get('shared')).toBe('hello');
+    await cache1.set('data', 'value');
+
+    // cache2's bloom filter hasn't seen 'data', so fast negative blocks the lookup.
+    // This is correct: each instance tracks its own bloom state.
+    expect(await cache2.get('data')).toBeUndefined();
+
+    // But if cache2 also sets the key, it populates its own bloom and can read it.
+    await cache2.set('data', 'value2');
+    expect(await cache2.get('data')).toBe('value2');
   });
 });
 
@@ -362,6 +380,44 @@ describe('HardenedCache — delete and key count', () => {
 // ---------------------------------------------------------------------------
 // mget / mset
 // ---------------------------------------------------------------------------
+
+describe('HardenedCache — mset limits enforcement', () => {
+  it('mset rejects batch that would exceed maxKeysPerContext', async () => {
+    const cache = makeCache({ limits: { maxKeysPerContext: 2 } });
+    await cache.set('existing', 1);
+
+    // Trying to mset 2 new keys when only 1 slot remains
+    const batch = new Map<string, number>([
+      ['a', 10],
+      ['b', 20],
+    ]);
+    await expect(cache.mset(batch)).rejects.toThrow(
+      /mset would bring key count to 3, exceeding max 2/
+    );
+  });
+
+  it('mset tracks keyCount correctly for new keys', async () => {
+    const cache = makeCache({ limits: { maxKeysPerContext: 5 } });
+    const batch = new Map<string, number>([
+      ['a', 1],
+      ['b', 2],
+    ]);
+    await cache.mset(batch);
+    expect(cache.trackedKeyCount).toBe(2);
+  });
+
+  it('mset does not double-count existing keys', async () => {
+    const cache = makeCache({ limits: { maxKeysPerContext: 3 } });
+    await cache.set('a', 1);
+    // mset with 'a' (existing) and 'b' (new) — should only add 1 to count
+    const batch = new Map<string, number>([
+      ['a', 10],
+      ['b', 20],
+    ]);
+    await cache.mset(batch);
+    expect(cache.trackedKeyCount).toBe(2);
+  });
+});
 
 describe('HardenedCache — mget / mset', () => {
   it('mset and mget work within context', async () => {

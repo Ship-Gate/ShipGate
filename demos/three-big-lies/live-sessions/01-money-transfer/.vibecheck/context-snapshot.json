@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-02-08T12:08:50.909Z",
+  "hash": "1ae9b28fa20400ea2ea227b415bb9dd742fa3cf3554e179aead2688cc14c5d75",
+  "context": {
+    "structure": {
+      "directories": [],
+      "componentsCount": 0,
+      "apiRoutesCount": 0
+    },
+    "patterns": {
+      "hooks": [],
+      "stateManagement": null,
+      "validation": null
+    },
+    "monorepo": {
+      "isMonorepo": false,
+      "type": null,
+      "workspaces": [],
+      "sharedPackages": [],
+      "rootConfig": null,
+      "tools": []
+    }
+  }
+}

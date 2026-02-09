@@ -1,0 +1,14 @@
+{
+  "summary": {
+    "hasOpenAPI": false,
+    "openAPICount": 0,
+    "hasGraphQL": false,
+    "graphqlCount": 0,
+    "hasCustomRoutes": false,
+    "routeCount": 0
+  },
+  "openAPI": [],
+  "graphql": [],
+  "routes": [],
+  "recommendations": []
+}

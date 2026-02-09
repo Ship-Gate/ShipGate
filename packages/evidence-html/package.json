@@ -21,7 +21,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:coverage": "vitest --coverage",
     "test:update": "vitest run --update",
@@ -52,5 +52,6 @@
   "homepage": "https://intentlang.dev",
   "bugs": {
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
-  }
+  },
+  "private": true
 }

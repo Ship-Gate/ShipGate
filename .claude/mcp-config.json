@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "vibecheck": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@vibecheck/mcp-server"
+      ],
+      "env": {
+        "VIBECHECK_PROJECT_PATH": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS"
+      }
+    }
+  }
+}

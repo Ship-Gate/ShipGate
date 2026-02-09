@@ -1,0 +1,83 @@
+.space-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: #fff;
+  pointer-events: none;
+}
+
+/* Rocket shake */
+#rocket {
+  animation: rocket-shake 1s linear infinite;
+}
+
+@keyframes rocket-shake {
+  10% { transform: translate(2px, 3px); }
+  20% { transform: translate(-1px, 4px); }
+  30% { transform: translate(3px, 1px); }
+  40% { transform: translate(-2px, -2px); }
+  50% { transform: translate(1px, 3px); }
+  60% { transform: translate(4px, -1px); }
+  70% { transform: translate(-3px, 2px); }
+  80% { transform: translate(2px, -3px); }
+  90% { transform: translate(-1px, 1px); }
+  100% { transform: translate(0, 0); }
+}
+
+#rocket path,
+#rocket circle,
+#rocket polygon {
+  fill: currentColor;
+}
+
+.rocket-burst {
+  transform-origin: 363px 337px;
+  animation: burst 0.5s infinite;
+}
+
+@keyframes burst {
+  20% { transform: scale(0.8); }
+  40% { transform: scale(0.6); }
+  60% { transform: scale(1); }
+  80% { transform: scale(0.8); }
+  100% { transform: scale(1); }
+}
+
+/* Stars */
+#stars {
+  animation: stars-movement 240s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes stars-movement {
+  0% { transform: scale(1.5) rotate(0deg); }
+  100% { transform: scale(1.5) rotate(360deg); }
+}
+
+#stars circle {
+  fill: currentColor;
+  animation: star-glow 1s infinite forwards;
+}
+
+@keyframes star-glow {
+  6% { opacity: 1; }
+  12% { opacity: 0.5; }
+  18% { opacity: 0.9; }
+  24% { opacity: 0.4; }
+  30%, 100% { opacity: 1; }
+}
+
+/* Comets */
+#comets line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  animation: comet-fall 10s ease-out infinite;
+}
+
+@keyframes comet-fall {
+  5%, 100% {
+    stroke-dashoffset: -980;
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "timestamp": "2026-02-08T09:31:28.871Z",
+  "summary": {
+    "totalSpecs": 2,
+    "goodApproved": 0,
+    "badCaught": 2,
+    "totalKnownBugs": 6,
+    "proofValid": true
+  },
+  "results": [
+    {
+      "id": "money-transfer",
+      "name": "Money Transfer (demo-gate)",
+      "goodImpl": {
+        "verdict": "NO-SHIP",
+        "score": 0,
+        "passed": false
+      },
+      "badImpl": {
+        "verdict": "NO-SHIP",
+        "score": 0,
+        "caught": true
+      },
+      "knownBugs": [
+        "No check if sender has sufficient funds (negative balance possible)",
+        "No check if amount is positive (theft vector)",
+        "No check if sender != receiver (same-account transfer)"
+      ]
+    },
+    {
+      "id": "auth",
+      "name": "Authentication (verification-demo)",
+      "goodImpl": {
+        "verdict": "NO-SHIP",
+        "score": 0,
+        "passed": false
+      },
+      "badImpl": {
+        "verdict": "NO-SHIP",
+        "score": 0,
+        "caught": true
+      },
+      "knownBugs": [
+        "Console.log in production (PII risk)",
+        "Rate limit after body parsing (wrong order)",
+        "Missing audit on exit paths"
+      ]
+    }
+  ]
+}

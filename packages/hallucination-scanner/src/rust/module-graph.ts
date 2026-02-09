@@ -6,7 +6,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { parseUseStatements, externalCratesFromUses } from './use-parser.js';
-import type { RustModuleGraph, RustModuleNode, RustUse, SourceLocation } from './types.js';
+import type { RustModuleGraph, RustModuleNode } from './types.js';
 
 export interface ModuleGraphOptions {
   projectRoot: string;
@@ -45,7 +45,8 @@ export function parseModDeclarations(source: string): string[] {
   MOD_DECL.lastIndex = 0;
   let match: RegExpExecArray | null;
   while ((match = MOD_DECL.exec(source)) !== null) {
-    mods.push(match[1]);
+    const modName = match[1];
+    if (modName) mods.push(modName);
   }
   return mods;
 }
@@ -141,7 +142,10 @@ export async function buildRustModuleGraph(options: ModuleGraphOptions): Promise
     }
   }
   if (entries.length === 0 && filePaths.length > 0) {
-    entries.push(normalizePath(path.isAbsolute(filePaths[0]) ? filePaths[0] : path.join(projectRoot, filePaths[0])));
+    const firstFile = filePaths[0];
+    if (firstFile) {
+      entries.push(normalizePath(path.isAbsolute(firstFile) ? firstFile : path.join(projectRoot, firstFile)));
+    }
   }
 
   for (const filePath of filePaths) {

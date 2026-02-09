@@ -14,6 +14,13 @@
 import type { TraceEvent, Trace, TimingInfo } from '@isl-lang/trace-format';
 import { calculatePercentile, calculateLatencyStats, type LatencyStats } from './percentiles.js';
 import type { TimingSample } from './timing.js';
+import {
+  buildTemporalTrace,
+  evaluateAlways,
+  evaluateNever,
+  type StatePredicate,
+  type TemporalEvaluationResult,
+} from './trace-model.js';
 
 // ============================================================================
 // TYPES
@@ -483,6 +490,326 @@ function findEvent(events: TraceEvent[], kind: string): TraceEvent | undefined {
 }
 
 // ============================================================================
+// ALWAYS/NEVER VERIFICATION FROM TRACES
+// ============================================================================
+
+/**
+ * Result of always/never verification from traces
+ */
+export interface AlwaysNeverResult {
+  /** Whether the property holds */
+  success: boolean;
+  /** Verification verdict */
+  verdict: 'PROVEN' | 'NOT_PROVEN' | 'INCOMPLETE_PROOF' | 'UNKNOWN';
+  /** Number of snapshots checked */
+  snapshotsChecked: number;
+  /** Number of traces checked */
+  tracesChecked: number;
+  /** Index of first violation (if any) */
+  violationIndex?: number;
+  /** Timestamp of violation in ms */
+  violationTimeMs?: number;
+  /** The violating event (if any) */
+  violatingEvent?: TraceEvent;
+  /** Error message */
+  error?: string;
+  /** Description */
+  description: string;
+  /** Confidence score 0-100 */
+  confidence: number;
+}
+
+/**
+ * Verify an "always" temporal property from traces
+ * 
+ * Checks that a condition holds at all states across all traces.
+ * For event-based checks, verifies that checks of the given kind always pass.
+ * 
+ * @param traces - Traces to verify
+ * @param eventKind - Event kind to check (for check events, verifies they pass)
+ * @param clauseText - Description of the clause
+ * @param options - Verification options
+ * @returns Verification result
+ * 
+ * @example
+ * ```typescript
+ * // Verify that balance is always non-negative
+ * const result = verifyAlwaysFromTraces(
+ *   traces,
+ *   'balance_check',
+ *   'balance >= 0'
+ * );
+ * ```
+ */
+export function verifyAlwaysFromTraces(
+  traces: Trace[],
+  eventKind: string | undefined,
+  clauseText: string,
+  options: TraceTimingOptions = {}
+): AlwaysNeverResult {
+  const minSamples = options.minSamples ?? 1;
+  const description = options.description ?? clauseText;
+  
+  if (traces.length === 0) {
+    return {
+      success: false,
+      verdict: 'INCOMPLETE_PROOF',
+      snapshotsChecked: 0,
+      tracesChecked: 0,
+      description,
+      confidence: 0,
+      error: 'No traces available for verification',
+    };
+  }
+  
+  let totalSnapshots = 0;
+  let violationFound = false;
+  let violationInfo: {
+    index: number;
+    timeMs: number;
+    event?: TraceEvent;
+    traceIndex: number;
+  } | undefined;
+  
+  // Build temporal traces and evaluate
+  for (let traceIdx = 0; traceIdx < traces.length; traceIdx++) {
+    const trace = traces[traceIdx]!;
+    const temporalTrace = buildTemporalTrace(trace);
+    
+    // Create predicate based on eventKind
+    const predicate: StatePredicate = (state, event) => {
+      // If no eventKind specified, check that no errors occurred
+      if (!eventKind) {
+        // Check that we haven't seen a handler_error
+        const eventCounts = state._eventCounts as Record<string, number> | undefined;
+        return (eventCounts?.['handler_error'] ?? 0) === 0;
+      }
+      
+      // For check events, verify they pass
+      if (event?.kind === 'check' && event.inputs?.expression === eventKind) {
+        return Boolean(event.outputs?.passed);
+      }
+      
+      // For invariant events
+      if (event?.kind === 'invariant' && event.inputs?.expression === eventKind) {
+        return Boolean(event.outputs?.passed);
+      }
+      
+      // If the event is the specified kind, check if it indicates failure
+      if (event?.kind === eventKind) {
+        // handler_error is always a failure
+        if (eventKind === 'handler_error') {
+          return false;
+        }
+        // Check events have a passed field
+        if ('passed' in (event.outputs ?? {})) {
+          return Boolean(event.outputs?.passed);
+        }
+      }
+      
+      // Default: no violation at this state
+      return true;
+    };
+    
+    const result = evaluateAlways(temporalTrace, predicate, {
+      description,
+      minSnapshots: minSamples,
+    });
+    
+    totalSnapshots += result.snapshotsEvaluated;
+    
+    if (!result.satisfied && result.verdict === 'VIOLATED') {
+      violationFound = true;
+      violationInfo = {
+        index: result.violationIndex ?? 0,
+        timeMs: result.witnessTimeMs ?? 0,
+        event: result.witnessSnapshot?.causingEvent,
+        traceIndex: traceIdx,
+      };
+      break; // Fail fast on first violation
+    }
+  }
+  
+  if (totalSnapshots < minSamples) {
+    return {
+      success: false,
+      verdict: 'INCOMPLETE_PROOF',
+      snapshotsChecked: totalSnapshots,
+      tracesChecked: traces.length,
+      description,
+      confidence: Math.min(50, (totalSnapshots / minSamples) * 50),
+      error: `Insufficient samples: ${totalSnapshots} < ${minSamples} required`,
+    };
+  }
+  
+  if (violationFound && violationInfo) {
+    return {
+      success: false,
+      verdict: 'NOT_PROVEN',
+      snapshotsChecked: totalSnapshots,
+      tracesChecked: traces.length,
+      violationIndex: violationInfo.index,
+      violationTimeMs: violationInfo.timeMs,
+      violatingEvent: violationInfo.event,
+      description,
+      confidence: calculateAlwaysNeverConfidence(totalSnapshots),
+      error: `'${description}' violated at trace ${violationInfo.traceIndex}, snapshot ${violationInfo.index} (t=${violationInfo.timeMs}ms)`,
+    };
+  }
+  
+  return {
+    success: true,
+    verdict: 'PROVEN',
+    snapshotsChecked: totalSnapshots,
+    tracesChecked: traces.length,
+    description,
+    confidence: calculateAlwaysNeverConfidence(totalSnapshots),
+  };
+}
+
+/**
+ * Verify a "never" temporal property from traces
+ * 
+ * Checks that a condition never holds at any state across all traces.
+ * This is equivalent to "always not condition".
+ * 
+ * @param traces - Traces to verify
+ * @param eventKind - Event kind that should never occur
+ * @param clauseText - Description of the clause
+ * @param options - Verification options
+ * @returns Verification result
+ * 
+ * @example
+ * ```typescript
+ * // Verify that handler_error never occurs
+ * const result = verifyNeverFromTraces(
+ *   traces,
+ *   'handler_error',
+ *   'no errors'
+ * );
+ * ```
+ */
+export function verifyNeverFromTraces(
+  traces: Trace[],
+  eventKind: string | undefined,
+  clauseText: string,
+  options: TraceTimingOptions = {}
+): AlwaysNeverResult {
+  const minSamples = options.minSamples ?? 1;
+  const description = options.description ?? clauseText;
+  
+  if (traces.length === 0) {
+    return {
+      success: false,
+      verdict: 'INCOMPLETE_PROOF',
+      snapshotsChecked: 0,
+      tracesChecked: 0,
+      description,
+      confidence: 0,
+      error: 'No traces available for verification',
+    };
+  }
+  
+  if (!eventKind) {
+    return {
+      success: false,
+      verdict: 'UNKNOWN',
+      snapshotsChecked: 0,
+      tracesChecked: 0,
+      description,
+      confidence: 0,
+      error: 'Event kind is required for never verification',
+    };
+  }
+  
+  let totalSnapshots = 0;
+  let occurrenceFound = false;
+  let occurrenceInfo: {
+    index: number;
+    timeMs: number;
+    event?: TraceEvent;
+    traceIndex: number;
+  } | undefined;
+  
+  // Build temporal traces and evaluate
+  for (let traceIdx = 0; traceIdx < traces.length; traceIdx++) {
+    const trace = traces[traceIdx]!;
+    const temporalTrace = buildTemporalTrace(trace);
+    
+    // Create predicate that checks if the forbidden event occurred
+    const forbiddenPredicate: StatePredicate = (_state, event) => {
+      return event?.kind === eventKind;
+    };
+    
+    const result = evaluateNever(temporalTrace, forbiddenPredicate, {
+      description: `never ${eventKind}`,
+      minSnapshots: minSamples,
+    });
+    
+    totalSnapshots += result.snapshotsEvaluated;
+    
+    if (!result.satisfied && result.verdict === 'VIOLATED') {
+      occurrenceFound = true;
+      occurrenceInfo = {
+        index: result.violationIndex ?? 0,
+        timeMs: result.witnessTimeMs ?? 0,
+        event: result.witnessSnapshot?.causingEvent,
+        traceIndex: traceIdx,
+      };
+      break; // Fail fast on first occurrence
+    }
+  }
+  
+  if (totalSnapshots < minSamples) {
+    return {
+      success: false,
+      verdict: 'INCOMPLETE_PROOF',
+      snapshotsChecked: totalSnapshots,
+      tracesChecked: traces.length,
+      description,
+      confidence: Math.min(50, (totalSnapshots / minSamples) * 50),
+      error: `Insufficient samples: ${totalSnapshots} < ${minSamples} required`,
+    };
+  }
+  
+  if (occurrenceFound && occurrenceInfo) {
+    return {
+      success: false,
+      verdict: 'NOT_PROVEN',
+      snapshotsChecked: totalSnapshots,
+      tracesChecked: traces.length,
+      violationIndex: occurrenceInfo.index,
+      violationTimeMs: occurrenceInfo.timeMs,
+      violatingEvent: occurrenceInfo.event,
+      description,
+      confidence: calculateAlwaysNeverConfidence(totalSnapshots),
+      error: `'${description}' violated - '${eventKind}' occurred at trace ${occurrenceInfo.traceIndex}, snapshot ${occurrenceInfo.index} (t=${occurrenceInfo.timeMs}ms)`,
+    };
+  }
+  
+  return {
+    success: true,
+    verdict: 'PROVEN',
+    snapshotsChecked: totalSnapshots,
+    tracesChecked: traces.length,
+    description,
+    confidence: calculateAlwaysNeverConfidence(totalSnapshots),
+  };
+}
+
+/**
+ * Calculate confidence score for always/never verification
+ * Based on number of snapshots checked, with diminishing returns
+ */
+function calculateAlwaysNeverConfidence(snapshotsChecked: number): number {
+  if (snapshotsChecked === 0) return 0;
+  // Logarithmic scaling: more samples = higher confidence, but diminishing returns
+  // 1 sample = ~50%, 10 samples = ~77%, 100 samples = ~90%, 1000 samples = ~95%
+  const base = Math.log10(snapshotsChecked + 1) / Math.log10(1001);
+  return Math.round(50 + base * 50);
+}
+
+// ============================================================================
 // TEMPORAL CLAUSE VERIFICATION
 // ============================================================================
 
@@ -586,17 +913,60 @@ export function verifyTemporalClauses(
         break;
       }
       
-      case 'always':
-      case 'never':
+      case 'always': {
+        const alwaysResult = verifyAlwaysFromTraces(
+          traces,
+          clause.eventKind,
+          clause.text,
+          options
+        );
+        
+        result = {
+          clauseId: clause.id,
+          type: clause.type,
+          clauseText: clause.text,
+          verdict: alwaysResult.verdict,
+          success: alwaysResult.success,
+          timing: {
+            thresholdMs: clause.thresholdMs,
+            sampleCount: alwaysResult.snapshotsChecked,
+          },
+          error: alwaysResult.error,
+        };
+        break;
+      }
+      
+      case 'never': {
+        const neverResult = verifyNeverFromTraces(
+          traces,
+          clause.eventKind,
+          clause.text,
+          options
+        );
+        
+        result = {
+          clauseId: clause.id,
+          type: clause.type,
+          clauseText: clause.text,
+          verdict: neverResult.verdict,
+          success: neverResult.success,
+          timing: {
+            thresholdMs: clause.thresholdMs,
+            sampleCount: neverResult.snapshotsChecked,
+          },
+          error: neverResult.error,
+        };
+        break;
+      }
+      
       default:
-        // These require different verification logic
         result = {
           clauseId: clause.id,
           type: clause.type,
           clauseText: clause.text,
           verdict: 'UNKNOWN',
           success: false,
-          error: `Verification not implemented for '${clause.type}'`,
+          error: `Unknown clause type: '${clause.type}'`,
         };
     }
     

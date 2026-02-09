@@ -1,0 +1,4170 @@
+{
+  "name": "IntentOS",
+  "framework": null,
+  "language": "JavaScript",
+  "architecture": "Flat structure",
+  "hasTypescript": false,
+  "hasPrisma": false,
+  "hasNextjs": false,
+  "hasReact": false,
+  "hasExpress": false,
+  "hasTailwind": false,
+  "directories": [],
+  "entryPoints": [],
+  "apiRoutes": [
+    "/admin",
+    "/users",
+    "/index",
+    "/generator",
+    "/analytics",
+    "/domains",
+    "/verifications",
+    "/intents",
+    "/search",
+    "/trust",
+    "/cli.d",
+    "/cli",
+    "/documents.d",
+    "/documents",
+    "/features/completion.d",
+    "/features/completion",
+    "/features/definition.d",
+    "/features/definition",
+    "/features/diagnostics.d",
+    "/features/diagnostics",
+    "/features/formatting.d",
+    "/features/formatting",
+    "/features/hover.d",
+    "/features/hover",
+    "/features/semantic-tokens.d",
+    "/features/semantic-tokens",
+    "/features/symbols.d",
+    "/features/symbols",
+    "/index.d",
+    "/server.d",
+    "/server",
+    "/types.d",
+    "/types"
+  ],
+  "components": [],
+  "models": [],
+  "patterns": {
+    "hooks": [
+      "useDemoContext"
+    ],
+    "stateManagement": "Zustand",
+    "styling": [
+      "Emotion"
+    ],
+    "testing": [
+      "Vitest",
+      "Jest",
+      "React Testing Library",
+      "Playwright"
+    ],
+    "dataFetching": [],
+    "validation": "Zod",
+    "authentication": "Clerk",
+    "codeExamples": {
+      "hooks": {
+        "name": "useDemoContext",
+        "code": "export function useDemoContext() {\r\n  const context = useContext(DemoContext);\r\n  if (context === undefined) {\r\n    throw new Error('useDemoContext must be used within a DemoProvider');\r\n  }\r\n  return context;\r\n}",
+        "file": "demos\\playwright-showcase\\src\\context\\DemoContext.tsx"
+      }
+    },
+    "antiPatterns": [
+      {
+        "type": "console-log",
+        "severity": "warning",
+        "message": "Console statements found in production code",
+        "suggestion": "Use a proper logger or remove before production"
+      },
+      {
+        "type": "todo-comments",
+        "severity": "info",
+        "message": "TODO/FIXME comments found",
+        "suggestion": "Address these items before shipping"
+      },
+      {
+        "type": "hardcoded-secret",
+        "severity": "error",
+        "message": "Potential hardcoded secrets detected",
+        "suggestion": "Use environment variables for sensitive data"
+      },
+      {
+        "type": "any-type",
+        "severity": "warning",
+        "message": "Usage of `any` type detected",
+        "suggestion": "Use proper TypeScript types or `unknown`"
+      },
+      {
+        "type": "mock-data",
+        "severity": "warning",
+        "message": "Mock data or fake APIs detected",
+        "suggestion": "Replace with real API endpoints before production"
+      }
+    ]
+  },
+  "conventions": {
+    "naming": {},
+    "imports": [],
+    "patterns": []
+  },
+  "envVars": {
+    "files": [],
+    "variables": [
+      "CI",
+      "ISL_AI_ENABLED",
+      "ISL_AI_PROVIDER",
+      "PORT",
+      "STRIPE_CANCEL_URL",
+      "STRIPE_PORTAL_RETURN_URL",
+      "STRIPE_SECRET_KEY",
+      "STRIPE_SUCCESS_URL",
+      "STRIPE_TEAM_PRICE_ID",
+      "STRIPE_WEBHOOK_SECRET",
+      "VITE_CLERK_PUBLISHABLE_KEY"
+    ]
+  },
+  "types": {
+    "interfaces": [
+      "SampleConfig",
+      "BenchConfig",
+      "PromptContext",
+      "StepResult",
+      "SampleResult",
+      "EvidenceReport",
+      "VerificationEngine",
+      "MutationTarget",
+      "MutationDefinition",
+      "MutatorContext",
+      "MutationResult",
+      "Mutator",
+      "ClauseResult",
+      "VerificationSnapshot",
+      "MutationTestResult",
+      "FixtureConfig",
+      "FixtureSuite",
+      "HarnessConfig",
+      "MutationReport",
+      "FixtureReport",
+      "User",
+      "Session",
+      "LoginHandler",
+      "LogoutHandler",
+      "UserRepository",
+      "SessionRepository",
+      "LoginInput",
+      "LoginBehavior",
+      "LogoutInput",
+      "LogoutBehavior",
+      "OAuthLoginInput",
+      "OAuthLoginSuccess",
+      "RefreshTokenInput",
+      "RefreshTokenSuccess",
+      "LogoutSuccess",
+      "ValidateSessionInput",
+      "ValidateSessionSuccess",
+      "CreatePaymentInput",
+      "CreateRefundInput",
+      "CreateSubscriptionInput",
+      "CancelSubscriptionInput",
+      "GetPaymentHistoryInput",
+      "PaymentHistoryResult",
+      "InitiateUploadInput",
+      "InitiateUploadSuccess",
+      "CompleteUploadInput",
+      "ProcessFileInput",
+      "GetFileInput",
+      "GetFileSuccess",
+      "DeleteFileInput",
+      "DeleteFileSuccess",
+      "ListFilesInput",
+      "ListFilesSuccess",
+      "AuditEvent",
+      "Customer",
+      "Payment",
+      "Refund",
+      "Subscription",
+      "FileRecord",
+      "UploadSession",
+      "ApiSuccess",
+      "ApiError",
+      "AuthenticatedRequest",
+      "ContentCardStat",
+      "PipelineStep",
+      "Step"
+    ],
+    "types": [
+      "StepStatus",
+      "MutationType",
+      "VerifyVerdict",
+      "MutationStatus",
+      "LoginFn",
+      "LogoutFn",
+      "LoginResult",
+      "LoginFunction",
+      "LogoutResult",
+      "LogoutFunction",
+      "UserId",
+      "SessionId",
+      "PaymentId",
+      "CustomerId",
+      "SubscriptionId",
+      "FileId"
+    ],
+    "enums": [
+      "OAuthProvider",
+      "UserStatus",
+      "SessionStatus",
+      "PaymentStatus",
+      "PaymentMethod",
+      "SubscriptionStatus",
+      "RefundReason",
+      "FileStatus",
+      "FileCategory",
+      "ScanResult"
+    ],
+    "examples": {
+      "interface": {
+        "name": "SampleResult",
+        "code": "export interface SampleResult {\r\n  /** Sample ID */\r\n  sampleId: string;\r\n  /** Sample name */\r\n  sampleName: string;\r\n  /** Overall status */\r\n  status: StepStatus;\r\n  /** Individual step results */\r\n  steps: {\r\n    translate: StepResult;\r\n    generate: StepResult;\r\n    verify: StepResult;\r\n  }",
+        "file": "bench\\isl-evidence\\report.ts"
+      }
+    }
+  },
+  "imports": {
+    "externalPackages": [
+      "node:fs",
+      "node:path",
+      "node:child_process",
+      "node:util",
+      "@isl-lang",
+      "node:url",
+      "fs",
+      "path",
+      "perf_hooks",
+      "child_process",
+      "crypto",
+      "picocolors",
+      "next",
+      "vitest",
+      "url",
+      "express",
+      "@playwright",
+      "cors",
+      "react-router-dom",
+      "framer-motion",
+      "react",
+      "react-dom",
+      "vite",
+      "@vitejs",
+      "bcrypt"
+    ],
+    "internalAliases": [
+      "@"
+    ],
+    "importPatterns": []
+  },
+  "stats": {
+    "totalFiles": 5093,
+    "totalLines": 1812600,
+    "byExtension": {
+      ".json": 518,
+      ".ts": 3434,
+      ".js": 991,
+      ".css": 20,
+      ".tsx": 130
+    },
+    "largestFiles": [
+      {
+        "path": "packages\\autofix\\dist\\index.js",
+        "lines": 215473
+      },
+      {
+        "path": "packages\\github-action\\dist\\index.js",
+        "lines": 134340
+      },
+      {
+        "path": "packages\\health-check\\dist\\index.js",
+        "lines": 26538
+      },
+      {
+        "path": "packages\\health-check\\dist\\checks\\index.js",
+        "lines": 25402
+      },
+      {
+        "path": "packages\\cli\\dist\\index.js",
+        "lines": 18398
+      }
+    ]
+  },
+  "scripts": [
+    {
+      "name": "build",
+      "command": "turbo build"
+    },
+    {
+      "name": "build:production",
+      "command": "npx tsx scripts/run-production.ts build"
+    },
+    {
+      "name": "test",
+      "command": "turbo test"
+    },
+    {
+      "name": "test:production",
+      "command": "npx tsx scripts/run-production.ts test"
+    },
+    {
+      "name": "test:coverage",
+      "command": "turbo test:coverage"
+    },
+    {
+      "name": "test:ci",
+      "command": "turbo test -- --reporter=verbose"
+    },
+    {
+      "name": "lint",
+      "command": "turbo lint"
+    },
+    {
+      "name": "lint:production",
+      "command": "npx tsx scripts/run-production.ts lint"
+    },
+    {
+      "name": "clean",
+      "command": "turbo clean"
+    },
+    {
+      "name": "typecheck",
+      "command": "turbo typecheck"
+    },
+    {
+      "name": "typecheck:production",
+      "command": "npx tsx scripts/run-production.ts typecheck"
+    },
+    {
+      "name": "dev",
+      "command": "turbo dev"
+    },
+    {
+      "name": "coverage:report",
+      "command": "vitest run --coverage --workspace"
+    },
+    {
+      "name": "benchmark",
+      "command": "node scripts/benchmark.js"
+    },
+    {
+      "name": "benchmark:phase3",
+      "command": "npx tsx bench/phase3-benchmarks.ts"
+    },
+    {
+      "name": "test:integration",
+      "command": "npx vitest run --project e2e tests/e2e/phase3-veri..."
+    },
+    {
+      "name": "test:phase3",
+      "command": "npx vitest run --project e2e tests/e2e/phase3-veri..."
+    },
+    {
+      "name": "changeset",
+      "command": "changeset"
+    },
+    {
+      "name": "version-packages",
+      "command": "changeset version"
+    },
+    {
+      "name": "release",
+      "command": "pnpm build:production && pnpm test:production && c..."
+    },
+    {
+      "name": "prepublish-check",
+      "command": "npx tsx scripts/publish.ts --check"
+    },
+    {
+      "name": "publish-packages",
+      "command": "npx tsx scripts/publish.ts"
+    },
+    {
+      "name": "demo:ui",
+      "command": "pnpm --filter playwright-showcase dev"
+    },
+    {
+      "name": "demo:test",
+      "command": "pnpm --filter playwright-showcase test"
+    },
+    {
+      "name": "demo:test:ui",
+      "command": "pnpm --filter playwright-showcase test:ui"
+    },
+    {
+      "name": "demo:record",
+      "command": "pnpm --filter playwright-showcase test:record"
+    },
+    {
+      "name": "demo:login",
+      "command": "pnpm --filter @isl-demos/e2e-login demo"
+    },
+    {
+      "name": "demo:login:failure",
+      "command": "pnpm --filter @isl-demos/e2e-login demo:failure"
+    },
+    {
+      "name": "demo:login:record",
+      "command": "pnpm --filter @isl-demos/e2e-login demo:record"
+    },
+    {
+      "name": "demo:safe-ai",
+      "command": "pnpm exec tsx demos/safe-ai-demo/run-demo.ts"
+    },
+    {
+      "name": "demo:three-lies",
+      "command": "pnpm exec tsx demos/three-big-lies/run-demo.ts"
+    },
+    {
+      "name": "demo:three-lies:ui",
+      "command": "pnpm --filter playwright-showcase dev"
+    },
+    {
+      "name": "demo:three-lies:record",
+      "command": "pnpm --filter playwright-showcase test:three-lies:..."
+    },
+    {
+      "name": "proof:benchmark",
+      "command": "pnpm exec tsx proof/run-proof-benchmark.ts"
+    },
+    {
+      "name": "demo:safe-ai:from-code",
+      "command": "pnpm exec tsx demos/safe-ai-demo/run-demo-from-cod..."
+    },
+    {
+      "name": "verify-promise",
+      "command": "npx tsx scripts/verify-promise.ts"
+    },
+    {
+      "name": "test:critical",
+      "command": "turbo test --filter=@isl-lang/evaluator --filter=@..."
+    },
+    {
+      "name": "test:evaluator",
+      "command": "pnpm --filter @isl-lang/evaluator test && pnpm --f..."
+    },
+    {
+      "name": "test:import-resolver",
+      "command": "pnpm --filter @isl-lang/import-resolver test"
+    },
+    {
+      "name": "test:semantic",
+      "command": "pnpm --filter @isl-lang/isl-pipeline test"
+    },
+    {
+      "name": "test:proof",
+      "command": "pnpm --filter @isl-lang/isl-proof test"
+    },
+    {
+      "name": "test:performance",
+      "command": "pnpm --filter @isl-lang/isl-pipeline test -- --tes..."
+    },
+    {
+      "name": "list:experimental",
+      "command": "npx tsx scripts/mark-experimental-private.ts --dry..."
+    },
+    {
+      "name": "mvp:green",
+      "command": "pwsh scripts/mvp-green.ps1"
+    },
+    {
+      "name": "mvp:green:unix",
+      "command": "bash scripts/mvp-green.sh"
+    },
+    {
+      "name": "typecheck:experimental",
+      "command": "echo 'Checking experimental packages...' && pnpm -..."
+    },
+    {
+      "name": "isl:check",
+      "command": "pnpm --filter @isl-lang/cli exec isl check specs/"
+    },
+    {
+      "name": "isl:gen",
+      "command": "pnpm --filter @isl-lang/cli exec isl gen ts specs/"
+    },
+    {
+      "name": "isl:verify",
+      "command": "pnpm --filter @isl-lang/cli exec isl verify specs/..."
+    },
+    {
+      "name": "isl:gate",
+      "command": "pnpm --filter @isl-lang/cli exec isl gate specs/ex..."
+    },
+    {
+      "name": "gate:external",
+      "command": "node packages/cli/dist/index.js gate"
+    }
+  ],
+  "monorepo": {
+    "isMonorepo": true,
+    "type": "pnpm",
+    "workspaces": [
+      {
+        "name": "@isl-lang/agent-os",
+        "path": "packages\\agent-os",
+        "description": "Agent orchestration system for IntentOS - triage, plan, execute, verify",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@isl-lang/parser",
+          "@isl-lang/intent-translator",
+          "@isl-lang/isl-compiler",
+          "@isl-lang/isl-verify",
+          "@isl-lang/codegen-types"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/ai-copilot",
+        "path": "packages\\ai-copilot",
+        "description": "AI-powered ISL development assistant with natural language to ISL conversion",
+        "dependencies": [
+          "@anthropic-ai/sdk",
+          "openai",
+          "tiktoken",
+          "zod"
+        ],
+        "devDependencies": [
+          "typescript",
+          "tsup",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/ai-generator",
+        "path": "packages\\ai-generator",
+        "description": "Generate implementations from ISL using Claude/GPT APIs",
+        "dependencies": [
+          "@anthropic-ai/sdk",
+          "openai",
+          "typescript"
+        ],
+        "devDependencies": [
+          "@isl-lang/isl-core",
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/api-gateway",
+        "path": "packages\\api-gateway",
+        "description": "ISL-aware API Gateway for runtime contract enforcement",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "tsup",
+          "typescript",
+          "vitest",
+          "@types/node"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/api-generator",
+        "path": "packages\\api-generator",
+        "description": "Generate REST and GraphQL APIs from ISL specifications",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@isl-lang/codegen-types"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/api-versioning",
+        "path": "packages\\api-versioning",
+        "description": "API versioning system that integrates with ISL domain versions",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/audit-viewer",
+        "path": "packages\\audit-viewer",
+        "description": "Web UI for viewing ISL audit logs and compliance trails",
+        "dependencies": [
+          "@radix-ui/react-dialog",
+          "@radix-ui/react-dropdown-menu",
+          "@radix-ui/react-popover",
+          "@radix-ui/react-select",
+          "@radix-ui/react-slot",
+          "@radix-ui/react-tabs",
+          "class-variance-authority",
+          "clsx",
+          "date-fns",
+          "lucide-react",
+          "next",
+          "react",
+          "react-dom",
+          "tailwind-merge"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@types/react",
+          "@types/react-dom",
+          "autoprefixer",
+          "postcss",
+          "tailwindcss",
+          "typescript"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/autofix",
+        "path": "packages\\autofix",
+        "description": "Automatically fix implementation bugs based on verification failures",
+        "dependencies": [
+          "diff"
+        ],
+        "devDependencies": [
+          "@isl-lang/isl-core",
+          "@isl-lang/ai-generator",
+          "@types/diff",
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/build-runner",
+        "path": "packages\\build-runner",
+        "description": "ISL build runner - end-to-end compilation pipeline with deterministic output",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/typechecker",
+          "@isl-lang/isl-compiler",
+          "@isl-lang/codegen-tests",
+          "@isl-lang/verifier-runtime",
+          "@isl-lang/verifier-temporal"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/circuit-breaker",
+        "path": "packages\\circuit-breaker",
+        "description": "Resilience patterns and circuit breaker for ISL behaviors",
+        "dependencies": [],
+        "devDependencies": [
+          "typescript",
+          "tsup",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/claims-verifier",
+        "path": "packages\\claims-verifier",
+        "description": "Claims Verification Agent - Prevents generated copy from inventing numbers or claims",
+        "dependencies": [
+          "glob"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/cli",
+        "path": "packages\\cli",
+        "description": "Command-line interface for ISL (Intent Specification Language)",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/typechecker",
+          "@isl-lang/evaluator",
+          "@isl-lang/repl",
+          "@isl-lang/isl-verify",
+          "@isl-lang/gate",
+          "@isl-lang/isl-core",
+          "@isl-lang/build-runner",
+          "@isl-lang/pipeline",
+          "@isl-lang/proof",
+          "@isl-lang/import-resolver",
+          "@isl-lang/semantic-analysis",
+          "@isl-lang/policy-packs",
+          "chalk",
+          "chokidar",
+          "commander",
+          "ora",
+          "yaml",
+          "glob"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/cli-ux",
+        "path": "packages\\cli-ux",
+        "description": "CLI UX components for ISL verification output - pretty rendering and JSON mode",
+        "dependencies": [
+          "chalk",
+          "zod"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen",
+        "path": "packages\\codegen",
+        "description": "ISL code generators - umbrella package for all code generation targets",
+        "dependencies": [
+          "@isl-lang/codegen-python",
+          "@isl-lang/codegen-openapi",
+          "@isl-lang/codegen-graphql",
+          "@isl-lang/codegen-types",
+          "@isl-lang/codegen-rust",
+          "@isl-lang/codegen-go",
+          "@isl-lang/codegen-validators",
+          "@isl-lang/codegen-tests",
+          "@isl-lang/codegen-mocks",
+          "@isl-lang/codegen-docs"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-client",
+        "path": "packages\\codegen-client",
+        "description": "Generate type-safe API clients from ISL specifications",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-core",
+        "path": "packages\\codegen-core",
+        "description": "Core utilities for deterministic ISL code generation",
+        "dependencies": [
+          "prettier"
+        ],
+        "devDependencies": [
+          "tsup",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-csharp",
+        "path": "packages\\codegen-csharp",
+        "description": "C#/.NET code generation from ISL specifications",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/typechecker"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-db",
+        "path": "packages\\codegen-db",
+        "description": "Generate database adapters (Prisma, Drizzle, TypeORM) from ISL entities",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-docs",
+        "path": "packages\\codegen-docs",
+        "description": "Generate beautiful documentation from ISL specifications",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-edge",
+        "path": "packages\\codegen-edge",
+        "description": "Edge computing code generation from ISL for Cloudflare Workers, Deno Deploy, and Vercel Edge",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-go",
+        "path": "packages\\codegen-go",
+        "description": "Generate idiomatic Go code from ISL specifications",
+        "dependencies": [
+          "@isl-lang/parser"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-graphql",
+        "path": "packages\\codegen-graphql",
+        "description": "GraphQL schema and resolver generator for ISL",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/typechecker"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-grpc",
+        "path": "packages\\codegen-grpc",
+        "description": "ISL to Protobuf/gRPC code generator - generates .proto files, buf configuration, and client/server stubs",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest",
+          "@vitest/coverage-v8",
+          "eslint",
+          "@typescript-eslint/eslint-plugin",
+          "@typescript-eslint/parser"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/codegen-jvm",
+        "path": "packages\\codegen-jvm",
+        "description": "ISL JVM Code Generator - Generate idiomatic Java and Kotlin code from ISL specifications",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-kubernetes",
+        "path": "packages\\codegen-kubernetes",
+        "description": "Generate Kubernetes manifests and Helm charts from ISL specifications",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest",
+          "yaml"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/codegen-loadtest",
+        "path": "packages\\codegen-loadtest",
+        "description": "Generate load tests (k6, Artillery, Gatling) from ISL temporal specs",
+        "dependencies": [],
+        "devDependencies": [
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-migrations",
+        "path": "packages\\codegen-migrations",
+        "description": "Generate database migrations from ISL entities",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-mocks",
+        "path": "packages\\codegen-mocks",
+        "description": "Generate mock API servers from ISL specifications",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-openapi",
+        "path": "packages\\codegen-openapi",
+        "description": "Generate OpenAPI 3.1 specifications from ISL domains",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/typechecker",
+          "yaml"
+        ],
+        "devDependencies": [
+          "@apidevtools/swagger-parser",
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-pipelines",
+        "path": "packages\\codegen-pipelines",
+        "description": "Generate CI/CD pipeline configs from ISL domains",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "yaml"
+        ],
+        "devDependencies": [
+          "tsup",
+          "typescript",
+          "vitest",
+          "rimraf",
+          "@types/node"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-property-tests",
+        "path": "packages\\codegen-property-tests",
+        "description": "Generate property-based tests using fast-check from ISL specifications",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "fast-check"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-python",
+        "path": "packages\\codegen-python",
+        "description": "Python code generator for ISL - generates Pydantic models and FastAPI endpoints",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/typechecker"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-python-advanced",
+        "path": "packages\\codegen-python-advanced",
+        "description": "Advanced Python code generation with FastAPI, Django, and SQLAlchemy support",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/typechecker"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-runtime",
+        "path": "packages\\codegen-runtime",
+        "description": "Generate self-verifying code with runtime pre/post condition checks from ISL specifications",
+        "dependencies": [
+          "@isl-lang/parser"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-rust",
+        "path": "packages\\codegen-rust",
+        "description": "Generate idiomatic Rust code from ISL specifications",
+        "dependencies": [],
+        "devDependencies": [
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-sdk",
+        "path": "packages\\codegen-sdk",
+        "description": "Generate TypeScript, Python, and Go client SDKs from ISL specifications",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-terraform",
+        "path": "packages\\codegen-terraform",
+        "description": "Generate Terraform/OpenTofu infrastructure from ISL domain specifications",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@isl-lang/parser"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-tests",
+        "path": "packages\\codegen-tests",
+        "description": "Generate executable Jest/Vitest tests from ISL behaviors and scenarios",
+        "dependencies": [
+          "@isl-lang/parser"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-types",
+        "path": "packages\\codegen-types",
+        "description": "TypeScript/Python type and validator generator from ISL",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-ui",
+        "path": "packages\\codegen-ui",
+        "description": "UI code generation from ISL blueprints - Next.js landing pages with safety constraints",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-validators",
+        "path": "packages\\codegen-validators",
+        "description": "Generate runtime validators from ISL specifications",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "typescript",
+          "vitest",
+          "zod",
+          "yup"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/codegen-wasm",
+        "path": "packages\\codegen-wasm",
+        "description": "WebAssembly code generator for ISL - compile intents to portable WASM modules",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "binaryen",
+          "wabt"
+        ],
+        "devDependencies": [
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/comparator",
+        "path": "packages\\comparator",
+        "description": "Compare multiple implementations of the same ISL behavior",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@isl-lang/isl-verify"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/compliance",
+        "path": "packages\\compliance",
+        "description": "Generate compliance reports (SOC2, PCI-DSS, HIPAA, GDPR) from ISL specifications",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@isl-lang/isl-verify"
+        ],
+        "devDependencies": [
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/contract-testing",
+        "path": "packages\\contract-testing",
+        "description": "Contract testing framework for ISL specifications",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@isl-lang/isl-runtime",
+          "ajv",
+          "express",
+          "fast-check"
+        ],
+        "devDependencies": [
+          "@types/express",
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/contracts",
+        "path": "packages\\contracts",
+        "description": "ISL Smart Contract specifications for blockchain and decentralized applications",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "typescript",
+          "tsup",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/core",
+        "path": "packages\\core",
+        "description": "ISL Core - translator and corpus testing utilities",
+        "dependencies": [
+          "@isl-lang/parser",
+          "zod"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/coverage",
+        "path": "packages\\coverage",
+        "description": "Coverage reporting for ISL verification",
+        "dependencies": [],
+        "devDependencies": [
+          "@isl-lang/isl-core",
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/dashboard-api",
+        "path": "packages\\dashboard-api",
+        "description": "REST API backend for the verification dashboard",
+        "dependencies": [
+          "@prisma/client",
+          "cors",
+          "express",
+          "helmet",
+          "zod"
+        ],
+        "devDependencies": [
+          "@types/cors",
+          "@types/express",
+          "@types/node",
+          "@types/supertest",
+          "prisma",
+          "supertest",
+          "tsx",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/dashboard-web",
+        "path": "packages\\dashboard-web",
+        "description": "",
+        "dependencies": [
+          "@radix-ui/react-avatar",
+          "@radix-ui/react-dialog",
+          "@radix-ui/react-dropdown-menu",
+          "@radix-ui/react-progress",
+          "@radix-ui/react-select",
+          "@radix-ui/react-slot",
+          "@radix-ui/react-tabs",
+          "@radix-ui/react-tooltip",
+          "class-variance-authority",
+          "clsx",
+          "date-fns",
+          "lucide-react",
+          "next",
+          "react",
+          "react-dom",
+          "recharts",
+          "tailwind-merge",
+          "tailwindcss-animate"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@types/react",
+          "@types/react-dom",
+          "autoprefixer",
+          "eslint",
+          "eslint-config-next",
+          "postcss",
+          "tailwindcss",
+          "typescript"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/datadog",
+        "path": "packages\\datadog",
+        "description": "Datadog integration for ISL verification monitoring",
+        "dependencies": [
+          "dd-trace",
+          "hot-shots"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/db-generator",
+        "path": "packages\\db-generator",
+        "description": "Generate database schemas and migrations from ISL entities",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/dependency-analyzer",
+        "path": "packages\\dependency-analyzer",
+        "description": "Analyze dependencies between ISL domains",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "tsup",
+          "typescript",
+          "vitest",
+          "rimraf",
+          "@types/node"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/diff-viewer",
+        "path": "packages\\diff-viewer",
+        "description": "Visual diff viewer for ISL specification changes",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@monaco-editor/react",
+          "diff",
+          "lucide-react",
+          "monaco-editor",
+          "next",
+          "react",
+          "react-dom"
+        ],
+        "devDependencies": [
+          "@types/diff",
+          "@types/node",
+          "@types/react",
+          "@types/react-dom",
+          "autoprefixer",
+          "postcss",
+          "tailwindcss",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/distributed",
+        "path": "packages\\distributed",
+        "description": "Distributed systems primitives for ISL - consensus, coordination, and distributed execution",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/distributed-tracing",
+        "path": "packages\\distributed-tracing",
+        "description": "OpenTelemetry-based distributed tracing for ISL behaviors",
+        "dependencies": [
+          "@opentelemetry/api",
+          "@opentelemetry/resources",
+          "@opentelemetry/sdk-trace-base",
+          "@opentelemetry/sdk-trace-node",
+          "@opentelemetry/semantic-conventions",
+          "@opentelemetry/exporter-trace-otlp-http",
+          "@opentelemetry/exporter-jaeger"
+        ],
+        "devDependencies": [
+          "typescript",
+          "tsup",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/docs",
+        "path": "packages\\docs",
+        "description": "",
+        "dependencies": [
+          "@mdx-js/loader",
+          "@mdx-js/react",
+          "@next/mdx",
+          "@radix-ui/react-slot",
+          "@types/mdx",
+          "class-variance-authority",
+          "clsx",
+          "gray-matter",
+          "lucide-react",
+          "next",
+          "next-themes",
+          "react",
+          "react-dom",
+          "rehype-autolink-headings",
+          "rehype-pretty-code",
+          "rehype-slug",
+          "remark-gfm",
+          "shiki"
+        ],
+        "devDependencies": [
+          "@tailwindcss/typography",
+          "@types/node",
+          "@types/react",
+          "@types/react-dom",
+          "autoprefixer",
+          "eslint",
+          "eslint-config-next",
+          "postcss",
+          "tailwindcss",
+          "tailwindcss-animate",
+          "typescript"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/docs-advanced",
+        "path": "packages\\docs-advanced",
+        "description": "Advanced documentation generation with interactive examples for ISL",
+        "dependencies": [
+          "@isl-lang/parser",
+          "gray-matter",
+          "handlebars",
+          "highlight.js",
+          "mermaid",
+          "marked",
+          "prettier"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@types/react",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/edge-runtime",
+        "path": "packages\\edge-runtime",
+        "description": "ISL runtime for edge computing platforms (Cloudflare Workers, Deno Deploy, Vercel Edge)",
+        "dependencies": [
+          "@isl-lang/verifier-runtime"
+        ],
+        "devDependencies": [
+          "@cloudflare/workers-types",
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/effect-handlers",
+        "path": "packages\\effect-handlers",
+        "description": "ISL Algebraic Effects and Handlers - First-class effect system for controlled side effects",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/effect-system",
+        "path": "packages\\effect-system",
+        "description": "Algebraic effect system for ISL - track and manage side effects",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/effects",
+        "path": "packages\\effects",
+        "description": "Effect system for ISL - track side effects, async operations, and resource management",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/error-catalog",
+        "path": "packages\\error-catalog",
+        "description": "Error catalog generator from ISL error definitions",
+        "dependencies": [
+          "@isl-lang/parser",
+          "commander",
+          "handlebars",
+          "chalk",
+          "glob",
+          "yaml",
+          "marked",
+          "highlight.js"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest",
+          "@vitest/coverage-v8"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/errors",
+        "path": "packages\\errors",
+        "description": "Unified error infrastructure for the ISL toolchain - best-in-class error messages",
+        "dependencies": [
+          "chalk"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/evaluator",
+        "path": "packages\\evaluator",
+        "description": "Expression evaluator for ISL - runtime evaluation and verification of contracts",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/typechecker"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/event-sourcing",
+        "path": "packages\\event-sourcing",
+        "description": "Generate event sourcing infrastructure from ISL specifications",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "uuid"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@types/uuid",
+          "vitest",
+          "typescript"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/evidence-schema",
+        "path": "packages\\evidence",
+        "description": "Evidence schema with zod validation and stable canonical serialization for ISL verification reports",
+        "dependencies": [
+          "zod"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/evidence-html",
+        "path": "packages\\evidence-html",
+        "description": "HTML renderer for ISL verification evidence reports - readable, embeddable reports",
+        "dependencies": [
+          "@isl-lang/evidence-schema"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/expression-compiler",
+        "path": "packages\\expression-compiler",
+        "description": "ISL Expression Compiler - Parse, normalize, and evaluate ISL expressions",
+        "dependencies": [
+          "@isl-lang/parser"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/feature-flags",
+        "path": "packages\\feature-flags",
+        "description": "ISL-aware feature flag system with behavioral targeting",
+        "dependencies": [
+          "murmurhash",
+          "zod"
+        ],
+        "devDependencies": [
+          "typescript",
+          "tsup",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/formal-verification",
+        "path": "packages\\formal-verification",
+        "description": "Formal verification and theorem proving for ISL specifications",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@isl-lang/isl-smt",
+          "@isl-lang/prover"
+        ],
+        "devDependencies": [
+          "tsup",
+          "typescript",
+          "vitest",
+          "@types/node"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/fuzzer",
+        "path": "packages\\fuzzer",
+        "description": "Intelligent fuzzing engine that finds edge cases and crashes",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/generator-sdk",
+        "path": "packages\\generator-sdk",
+        "description": "SDK for building custom ISL code generators",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "handlebars",
+          "chalk",
+          "commander",
+          "inquirer",
+          "glob",
+          "fs-extra"
+        ],
+        "devDependencies": [
+          "@types/fs-extra",
+          "@types/node",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/github-action",
+        "path": "packages\\github-action",
+        "description": "GitHub Action for ISL verification in CI/CD",
+        "dependencies": [
+          "@actions/artifact",
+          "@actions/cache",
+          "@actions/core",
+          "@actions/exec",
+          "@actions/github",
+          "@actions/glob",
+          "@actions/io",
+          "@isl-lang/isl-cli",
+          "@isl-lang/isl-verify"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@vercel/ncc",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/gate-action",
+        "path": "packages\\github-action-gate",
+        "description": "ISL Studio Gate - GitHub Action to block unsafe PRs",
+        "dependencies": [],
+        "devDependencies": [],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/github-app",
+        "path": "packages\\github-app",
+        "description": "GitHub App for org-wide ISL policy enforcement",
+        "dependencies": [
+          "@octokit/app",
+          "@octokit/auth-app",
+          "@octokit/rest",
+          "@isl-lang/policy-packs",
+          "@isl-lang/pipeline",
+          "@isl-lang/proof",
+          "express",
+          "zod"
+        ],
+        "devDependencies": [
+          "@types/express",
+          "@types/node",
+          "tsup",
+          "tsx",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/grafana",
+        "path": "packages\\grafana",
+        "description": "Generate Grafana dashboards from ISL domains",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/graphql-codegen",
+        "path": "packages\\graphql-codegen",
+        "description": "GraphQL schema and resolver generation from ISL specifications",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/typechecker"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/hallucination-scanner",
+        "path": "packages\\hallucination-scanner",
+        "description": "Static hallucination scanner: Rust resolver, Cargo-aware dependency checks, trust scoring",
+        "dependencies": [
+          "tree-sitter",
+          "tree-sitter-go"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/health-check",
+        "path": "packages\\health-check",
+        "description": "Generate health check endpoints from ISL dependencies",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/express",
+          "@types/node",
+          "express",
+          "ioredis",
+          "pg",
+          "amqplib",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/import-resolver",
+        "path": "packages\\import-resolver",
+        "description": "ISL import resolution - resolves local module imports, detects cycles, and bundles multi-file specs",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/isl-stdlib"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/inference",
+        "path": "packages\\inference",
+        "description": "Infer ISL specifications from existing code",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "typescript"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/intent-translator",
+        "path": "packages\\intent-translator",
+        "description": "Translates natural language to ISL (Intent Specification Language)",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@isl-lang/parser"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/interpreter",
+        "path": "packages\\interpreter",
+        "description": "ISL Runtime Interpreter - Execute ISL specs against live code/data for verification",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/typechecker",
+          "@isl-lang/runtime-interpreter"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/adapters",
+        "path": "packages\\isl-adapters",
+        "description": "ISL Adapters - GitHub Actions, MCP tools, CLI, and domain integrations",
+        "dependencies": [
+          "@isl-lang/gate",
+          "@isl-lang/evidence",
+          "@isl-lang/firewall",
+          "@isl-lang/verified-build"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/isl-ai",
+        "path": "packages\\isl-ai",
+        "description": "AI-powered ISL specification assistance - code completion, generation, and analysis",
+        "dependencies": [
+          "@anthropic-ai/sdk",
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/isl-cli",
+        "path": "packages\\isl-cli",
+        "description": "ISL command-line interface",
+        "dependencies": [
+          "@isl-lang/cli-ux",
+          "@isl-lang/errors",
+          "@isl-lang/isl-ai",
+          "@isl-lang/isl-compiler",
+          "@isl-lang/isl-core",
+          "@isl-lang/isl-verify",
+          "@isl-lang/proof",
+          "@isl-lang/trace-viewer",
+          "chalk",
+          "commander",
+          "ora"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/isl-compiler",
+        "path": "packages\\isl-compiler",
+        "description": "ISL compilation targets - TypeScript types, tests, scaffolds",
+        "dependencies": [
+          "@isl-lang/parser"
+        ],
+        "devDependencies": [
+          "tsup",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/isl-core",
+        "path": "packages\\isl-core",
+        "description": "ISL Core - Parser, Type Checker, Formatter, Linter, and Verification for the Intent Specification Language",
+        "dependencies": [
+          "@isl-lang/parser"
+        ],
+        "devDependencies": [
+          "picocolors",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/evidence",
+        "path": "packages\\isl-evidence",
+        "description": "ISL Evidence - Evidence bundle generation and reporting for gate decisions",
+        "dependencies": [
+          "@isl-lang/gate"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/static-analyzer",
+        "path": "packages\\isl-expression-evaluator",
+        "description": "ISL static analyzer: tri-state logic (true/false/unknown) for postconditions and invariants without execution",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/trace-format"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "tsx",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/isl-federation",
+        "path": "packages\\isl-federation",
+        "description": "Federated ISL specification management for microservices architectures",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/firewall",
+        "path": "packages\\isl-firewall",
+        "description": "ISL Firewall - Agent file write governance with VibeCheck + ISL Studio integration",
+        "dependencies": [
+          "@isl-lang/gate",
+          "glob",
+          "tree-sitter",
+          "tree-sitter-go"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "0.2.0"
+      },
+      {
+        "name": "@isl-lang/gate",
+        "path": "packages\\isl-gate",
+        "description": "ISL Gate - SHIP/NO_SHIP decision engine for code quality verification",
+        "dependencies": [
+          "zod",
+          "@isl-lang/parser",
+          "@isl-lang/typechecker",
+          "@isl-lang/isl-verify"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/gate-action",
+        "path": "packages\\isl-gate-action",
+        "description": "Shipgate GitHub Action - SHIP/NO_SHIP gate for AI-generated code",
+        "dependencies": [
+          "@actions/core",
+          "@actions/github",
+          "@actions/artifact",
+          "@isl-lang/verified-build"
+        ],
+        "devDependencies": [
+          "@vercel/ncc",
+          "@types/node",
+          "typescript"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/generator",
+        "path": "packages\\isl-generator",
+        "description": "ISL → Code Generator (diffs only, never blind writes)",
+        "dependencies": [
+          "@isl-lang/translator"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/healer",
+        "path": "packages\\isl-healer",
+        "description": "ISL Self-Healing Pipeline - Safe, idempotent code patching with proof bundles",
+        "dependencies": [
+          "diff"
+        ],
+        "devDependencies": [
+          "@types/diff",
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/isl-lsp",
+        "path": "packages\\isl-lsp",
+        "description": "Language Server Protocol implementation for ISL",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "vscode-languageserver",
+          "vscode-languageserver-textdocument",
+          "vscode-uri"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/pbt",
+        "path": "packages\\isl-pbt",
+        "description": "Property-Based Testing for ISL - Generate random inputs satisfying preconditions and verify postconditions",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/verifier-runtime"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/pipeline",
+        "path": "packages\\isl-pipeline",
+        "description": "ISL Pipeline: NL → ISL → Code → Gate → Proof",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@isl-lang/translator",
+          "@isl-lang/generator",
+          "@isl-lang/proof",
+          "picocolors"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "tsx",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/policy-packs",
+        "path": "packages\\isl-policy-packs",
+        "description": "ISL Policy Packs - Pre-built policy rules for common security patterns",
+        "dependencies": [
+          "@isl-lang/firewall"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/proof",
+        "path": "packages\\isl-proof",
+        "description": "ISL Proof Bundle - verifiable proof that spec is satisfied",
+        "dependencies": [
+          "@isl-lang/translator",
+          "@isl-lang/generator",
+          "@isl-lang/isl-core",
+          "@isl-lang/evaluator"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/isl-runtime",
+        "path": "packages\\isl-runtime",
+        "description": "Runtime for executing ISL behaviors with contract enforcement",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/semantic-analysis",
+        "path": "packages\\isl-semantic-analysis",
+        "description": "Semantic analysis passes for ISL specifications",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@isl-lang/parser",
+          "@isl-lang/errors"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/isl-smt",
+        "path": "packages\\isl-smt",
+        "description": "SMT solver integration for ISL - satisfiability checking for preconditions, postconditions, and refinement types",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@isl-lang/prover"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/isl-stdlib",
+        "path": "packages\\isl-stdlib",
+        "description": "ISL Standard Library Registry - Central index and resolver for all stdlib modules",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "tsx",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/test-runtime",
+        "path": "packages\\isl-test-runtime",
+        "description": "Runtime utilities for generating and running executable tests with verification traces",
+        "dependencies": [
+          "@isl-lang/trace-format",
+          "@isl-lang/trace-viewer"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/trace-format",
+        "path": "packages\\isl-trace-format",
+        "description": "Stable trace event schema for ISL generated tests, healer iterations, verification engine, and proof bundles",
+        "dependencies": [
+          "@isl-lang/pipeline"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "ajv",
+          "ajv-formats",
+          "tsup",
+          "tsx",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/translator",
+        "path": "packages\\isl-translator",
+        "description": "NL → ISL translator with pattern matching",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/isl-verify",
+        "path": "packages\\isl-verify",
+        "description": "ISL verification engine with trust score calculation",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/evaluator",
+          "@isl-lang/codegen-tests"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/verify-pipeline",
+        "path": "packages\\isl-verify-pipeline",
+        "description": "Verification orchestrator pipeline for ISL - runs tests, captures traces, evaluates postconditions/invariants, and produces proof bundles",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@isl-lang/proof",
+          "@isl-lang/trace-format",
+          "@isl-lang/verifier-runtime",
+          "@isl-lang/evaluator",
+          "@isl-lang/import-resolver",
+          "@isl-lang/parser",
+          "@isl-lang/static-analyzer"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "shipgate",
+        "path": "packages\\islstudio",
+        "description": "Shipgate - Stop AI from shipping fake features",
+        "dependencies": [
+          "@isl-lang/policy-packs",
+          "@isl-lang/firewall",
+          "@isl-lang/evidence",
+          "@isl-lang/proof"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.2"
+      },
+      {
+        "name": "@isl-lang/java-resolver",
+        "path": "packages\\java-resolver",
+        "description": "Java import resolver for hallucination detection - parses imports, resolves Maven/Gradle deps, detects fake packages",
+        "dependencies": [
+          "fast-xml-parser",
+          "java-parser"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/language-server",
+        "path": "packages\\language-server",
+        "description": "Language Server Protocol implementation for ISL",
+        "dependencies": [
+          "vscode-languageserver",
+          "vscode-languageserver-textdocument",
+          "vscode-uri",
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/lsp",
+        "path": "packages\\lsp",
+        "description": "Language Server Protocol implementation for ISL",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "vscode-languageserver",
+          "vscode-languageserver-textdocument",
+          "vscode-uri"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/lsp-core",
+        "path": "packages\\lsp-core",
+        "description": "Core language intelligence for ISL LSP - shared analysis and diagnostics",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/typechecker"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/lsp-server",
+        "path": "packages\\lsp-server",
+        "description": "Language Server Protocol implementation for ISL",
+        "dependencies": [
+          "@isl-lang/firewall",
+          "@isl-lang/lsp-core",
+          "@isl-lang/parser",
+          "@isl-lang/typechecker",
+          "vscode-languageserver",
+          "vscode-languageserver-textdocument",
+          "vscode-uri"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/marketplace-api",
+        "path": "packages\\marketplace-api",
+        "description": "Intent Marketplace API - share and discover verified intents",
+        "dependencies": [
+          "@prisma/client",
+          "cors",
+          "express",
+          "helmet",
+          "zod",
+          "semver"
+        ],
+        "devDependencies": [
+          "@types/cors",
+          "@types/express",
+          "@types/node",
+          "@types/semver",
+          "@types/supertest",
+          "prisma",
+          "supertest",
+          "tsx",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/marketplace-web",
+        "path": "packages\\marketplace-web",
+        "description": "",
+        "dependencies": [
+          "@radix-ui/react-dialog",
+          "@radix-ui/react-dropdown-menu",
+          "@radix-ui/react-select",
+          "@radix-ui/react-slot",
+          "@radix-ui/react-tabs",
+          "@radix-ui/react-tooltip",
+          "class-variance-authority",
+          "clsx",
+          "lucide-react",
+          "next",
+          "react",
+          "react-dom",
+          "tailwind-merge",
+          "tailwindcss-animate"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@types/react",
+          "@types/react-dom",
+          "autoprefixer",
+          "postcss",
+          "tailwindcss",
+          "typescript"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/mcp-server",
+        "path": "packages\\mcp-server",
+        "description": "MCP (Model Context Protocol) server exposing ISL tools for AI assistants",
+        "dependencies": [
+          "@modelcontextprotocol/sdk",
+          "@isl-lang/parser",
+          "@isl-lang/typechecker",
+          "@isl-lang/codegen-runtime",
+          "@isl-lang/isl-verify"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "tsx",
+          "typescript"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/migration-tools",
+        "path": "packages\\migration-tools",
+        "description": "Convert existing API specs to ISL format",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "tsup",
+          "typescript",
+          "vitest",
+          "@types/node"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/migrations",
+        "path": "packages\\migrations",
+        "description": "Generate database migrations from ISL entity changes with safety checks and rollback support",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/mock-server",
+        "path": "packages\\mock-server",
+        "description": "Generate mock servers from ISL specifications for testing",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@faker-js/faker",
+          "express",
+          "cors",
+          "uuid"
+        ],
+        "devDependencies": [
+          "@types/express",
+          "@types/cors",
+          "@types/node",
+          "@types/uuid",
+          "vitest",
+          "typescript"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/multi-tenant",
+        "path": "packages\\multi-tenant",
+        "description": "Multi-tenancy support module for ISL domains",
+        "dependencies": [
+          "async-local-storage"
+        ],
+        "devDependencies": [
+          "@isl-lang/isl-core",
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/mutation-testing",
+        "path": "packages\\mutation-testing",
+        "description": "Mutation testing for ISL specifications",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/opentelemetry",
+        "path": "packages\\opentelemetry",
+        "description": "OpenTelemetry integration for ISL verification tracing",
+        "dependencies": [
+          "@opentelemetry/api",
+          "@opentelemetry/sdk-trace-node",
+          "@opentelemetry/sdk-trace-base",
+          "@opentelemetry/sdk-metrics",
+          "@opentelemetry/resources",
+          "@opentelemetry/semantic-conventions",
+          "@opentelemetry/exporter-jaeger",
+          "@opentelemetry/exporter-zipkin",
+          "@opentelemetry/exporter-trace-otlp-http",
+          "@opentelemetry/exporter-trace-otlp-grpc",
+          "@opentelemetry/exporter-metrics-otlp-http",
+          "@opentelemetry/context-async-hooks",
+          "@opentelemetry/propagator-b3",
+          "@opentelemetry/propagator-jaeger"
+        ],
+        "devDependencies": [
+          "@types/express",
+          "@types/node",
+          "express",
+          "fastify",
+          "@grpc/grpc-js",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/parser",
+        "path": "packages\\parser",
+        "description": "ISL (Intent Specification Language) recursive descent parser - transforms ISL source into AST",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "peggy",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/patch-engine",
+        "path": "packages\\patch-engine",
+        "description": "Safe patch application engine with idempotency guarantees",
+        "dependencies": [
+          "diff"
+        ],
+        "devDependencies": [
+          "@types/diff",
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/playground",
+        "path": "packages\\playground",
+        "description": "",
+        "dependencies": [
+          "@monaco-editor/react",
+          "@radix-ui/react-dialog",
+          "@radix-ui/react-dropdown-menu",
+          "@radix-ui/react-select",
+          "@radix-ui/react-tabs",
+          "@radix-ui/react-tooltip",
+          "class-variance-authority",
+          "clsx",
+          "lz-string",
+          "lucide-react",
+          "monaco-editor",
+          "next",
+          "react",
+          "react-dom",
+          "tailwind-merge",
+          "tailwindcss-animate"
+        ],
+        "devDependencies": [
+          "@types/lz-string",
+          "@types/node",
+          "@types/react",
+          "@types/react-dom",
+          "autoprefixer",
+          "eslint",
+          "eslint-config-next",
+          "postcss",
+          "tailwindcss",
+          "typescript"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/policy-engine",
+        "path": "packages\\policy-engine",
+        "description": "Policy enforcement engine for ISL specifications",
+        "dependencies": [
+          "zod"
+        ],
+        "devDependencies": [
+          "typescript",
+          "tsup",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/postconditions",
+        "path": "packages\\postconditions",
+        "description": "Postcondition evaluation engine with evidence-based PASS/PARTIAL/FAIL semantics",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/private-registry",
+        "path": "packages\\private-registry",
+        "description": "Detect private npm/PyPI/Maven registries and classify dependency verdicts to avoid false positives",
+        "dependencies": [],
+        "devDependencies": [
+          "tsup",
+          "typescript",
+          "vitest",
+          "rimraf",
+          "@types/node"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/prometheus",
+        "path": "packages\\prometheus",
+        "description": "Prometheus metrics exporter for ISL verification",
+        "dependencies": [
+          "prom-client"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/prover",
+        "path": "packages\\prover",
+        "description": "Formal verification for ISL - SMT-based proving, property verification, and counterexample generation",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/registry-client",
+        "path": "packages\\registry-client",
+        "description": "ISL Package Registry client",
+        "dependencies": [
+          "semver"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@types/semver",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/repl",
+        "path": "packages\\repl",
+        "description": "Interactive REPL for exploring ISL specifications",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/typechecker",
+          "@isl-lang/evaluator"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/runtime",
+        "path": "packages\\runtime",
+        "description": "ISL Runtime execution engine",
+        "dependencies": [
+          "async-mutex",
+          "eventemitter3"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/runtime-interpreter",
+        "path": "packages\\runtime-interpreter",
+        "description": "ISL Universal Runtime Interpreter - Direct ISL execution engine with contracts and temporal checking",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/runtime-sdk",
+        "path": "packages\\runtime-sdk",
+        "description": "SDK for embedding ISL verification in production code",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "tsup",
+          "typescript",
+          "vitest",
+          "rimraf",
+          "@types/node",
+          "@types/express"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/runtime-universal",
+        "path": "packages\\runtime-universal",
+        "description": "Universal runtime engine for ISL - execute intent specifications across any environment",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "quickjs-emscripten"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/runtime-verify",
+        "path": "packages\\runtime-verify",
+        "description": "Runtime verification helpers for generated code - pre/post/invariant enforcement",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/schema-evolution",
+        "path": "packages\\schema-evolution",
+        "description": "Safe schema evolution and migration tools for ISL specifications",
+        "dependencies": [
+          "diff",
+          "semver",
+          "zod"
+        ],
+        "devDependencies": [
+          "@types/diff",
+          "@types/semver",
+          "typescript",
+          "tsup",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/sdk-react-native",
+        "path": "packages\\sdk-react-native",
+        "description": "React Native SDK for ISL-verified APIs with hooks, offline support, and TypeScript",
+        "dependencies": [
+          "@react-native-async-storage/async-storage",
+          "expo-secure-store",
+          "zod"
+        ],
+        "devDependencies": [
+          "@testing-library/react-native",
+          "@types/react",
+          "@types/react-native",
+          "react",
+          "react-native",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/sdk-typescript",
+        "path": "packages\\sdk-typescript",
+        "description": "TypeScript SDK for ISL-verified APIs - Browser and Node.js",
+        "dependencies": [
+          "zod"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@types/react",
+          "@typescript-eslint/eslint-plugin",
+          "@typescript-eslint/parser",
+          "eslint",
+          "msw",
+          "react",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/sdk-web",
+        "path": "packages\\sdk-web",
+        "description": "Browser SDK for ISL-verified APIs with type-safe client generation",
+        "dependencies": [
+          "zod"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@types/react",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/security-policies",
+        "path": "packages\\security-policies",
+        "description": "Security policy pack and lint rules for ISL specifications - enforces safe defaults",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/security-scanner",
+        "path": "packages\\security-scanner",
+        "description": "Security vulnerability scanner for ISL specs and implementations",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/semantics",
+        "path": "packages\\semantics",
+        "description": "Versioned semantics for ISL operators and clauses",
+        "dependencies": [],
+        "devDependencies": [
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/sentry",
+        "path": "packages\\sentry",
+        "description": "Sentry integration for ISL error tracking and performance monitoring",
+        "dependencies": [
+          "@sentry/node",
+          "@sentry/profiling-node",
+          "@sentry/types"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "tsup",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/simulator",
+        "path": "packages\\simulator",
+        "description": "ISL Domain Simulator - Simulate and explore ISL domains for testing",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@isl-lang/parser"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@types/react",
+          "react",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/slack-bot",
+        "path": "packages\\slack-bot",
+        "description": "Slack bot for ISL verification notifications and commands",
+        "dependencies": [
+          "@slack/bolt",
+          "@slack/web-api",
+          "@isl-lang/isl-verify",
+          "@isl-lang/isl-cli"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsx",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/snapshot-testing",
+        "path": "packages\\snapshot-testing",
+        "description": "Snapshot testing for ISL specifications and generated outputs",
+        "dependencies": [
+          "diff",
+          "fast-deep-equal",
+          "pretty-format"
+        ],
+        "devDependencies": [
+          "@types/diff",
+          "@types/jest",
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/spec-assist",
+        "path": "packages\\spec-assist",
+        "description": "AI-assisted ISL spec generation from existing code - with strict validation",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/semantic-analysis",
+          "@isl-lang/verifier"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/spec-federation",
+        "path": "packages\\spec-federation",
+        "description": "Federated ISL specifications for cross-team and cross-service composition",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/typechecker"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/spec-reviewer",
+        "path": "packages\\spec-reviewer",
+        "description": "AI-powered ISL spec reviewer - provides suggestions and catches issues",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/state-machine",
+        "path": "packages\\state-machine",
+        "description": "Generate state machines and workflows from ISL lifecycle specifications",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "xstate"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "vitest",
+          "typescript"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-actors",
+        "path": "packages\\stdlib-actors",
+        "description": "Actor model for ISL - distributed systems, message passing, and supervision",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-ai",
+        "path": "packages\\stdlib-ai",
+        "description": "AI/ML integration - LLMs, embeddings, and model inference",
+        "dependencies": [
+          "@isl-lang/stdlib-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-analytics",
+        "path": "packages\\stdlib-analytics",
+        "description": "Analytics event tracking standard library for ISL",
+        "dependencies": [
+          "uuid"
+        ],
+        "devDependencies": [
+          "@types/express",
+          "@types/node",
+          "@types/uuid",
+          "express",
+          "next",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-api",
+        "path": "packages\\stdlib-api",
+        "description": "API definition standard library - REST, GraphQL, and RPC patterns",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-audit",
+        "path": "packages\\stdlib-audit",
+        "description": "ISL Standard Library - Audit Logging for Compliance",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-auth",
+        "path": "packages\\stdlib-auth",
+        "description": "Authentication and authorization standard library for ISL",
+        "dependencies": [
+          "jose",
+          "otplib",
+          "bcryptjs",
+          "uuid"
+        ],
+        "devDependencies": [
+          "@types/bcryptjs",
+          "@types/node",
+          "@types/uuid",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-billing",
+        "path": "packages\\stdlib-billing",
+        "description": "Billing and subscription management standard library for ISL",
+        "dependencies": [
+          "stripe"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-cache",
+        "path": "packages\\stdlib-cache",
+        "description": "ISL standard library for caching with multiple backend support",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-core",
+        "path": "packages\\stdlib-core",
+        "description": "ISL Standard Library - Core types and validations for Intent Specification Language",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-database",
+        "path": "packages\\stdlib-database",
+        "description": "Database operations standard library for ISL",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-distributed",
+        "path": "packages\\stdlib-distributed",
+        "description": "ISL Standard Library - Distributed Computing Primitives (Actors, Consensus, CRDTs, Sagas, Service Mesh)",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-email",
+        "path": "packages\\stdlib-email",
+        "description": "ISL standard library for email templating, validation, and delivery",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-events",
+        "path": "packages\\stdlib-events",
+        "description": "Event sourcing, CQRS, and event-driven architecture patterns",
+        "dependencies": [
+          "@isl-lang/stdlib-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-files",
+        "path": "packages\\stdlib-files",
+        "description": "File storage standard library for ISL - upload, download, manage files",
+        "dependencies": [
+          "@aws-sdk/client-s3",
+          "@aws-sdk/s3-request-presigner"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-http",
+        "path": "packages\\stdlib-http",
+        "description": "HTTP/REST standard library for ISL",
+        "dependencies": [
+          "zod"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-idempotency",
+        "path": "packages\\stdlib-idempotency",
+        "description": "ISL Standard Library - Idempotency Key Management",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-messaging",
+        "path": "packages\\stdlib-messaging",
+        "description": "ISL Standard Library - Messaging (queues, events, pub/sub)",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-ml",
+        "path": "packages\\stdlib-ml",
+        "description": "Machine Learning contracts for ISL - model specifications, training pipelines, and inference contracts",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-notifications",
+        "path": "packages\\stdlib-notifications",
+        "description": "ISL Standard Library - Notifications (email, SMS, push)",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-observability",
+        "path": "packages\\stdlib-observability",
+        "description": "Logging, metrics, tracing, and alerting",
+        "dependencies": [
+          "@isl-lang/stdlib-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-payments",
+        "path": "packages\\stdlib-payments",
+        "description": "ISL Payments Standard Library - PCI-compliant payment processing behaviors",
+        "dependencies": [
+          "crypto"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest",
+          "@vitest/coverage-v8",
+          "eslint",
+          "@typescript-eslint/eslint-plugin",
+          "@typescript-eslint/parser"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-queue",
+        "path": "packages\\stdlib-queue",
+        "description": "Message queues, job processing, and background tasks",
+        "dependencies": [
+          "@isl-lang/stdlib-core"
+        ],
+        "devDependencies": [],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-rate-limit",
+        "path": "packages\\stdlib-rate-limit",
+        "description": "ISL Standard Library - Rate Limiting and Throttling",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-realtime",
+        "path": "packages\\stdlib-realtime",
+        "description": "Real-time communication - WebSockets, SSE, and pub/sub",
+        "dependencies": [
+          "@isl-lang/stdlib-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-runtime",
+        "path": "packages\\stdlib-runtime",
+        "description": "ISL Standard Library Runtime Implementations - 10 Core Modules for 1.0",
+        "dependencies": [],
+        "devDependencies": [
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-saas",
+        "path": "packages\\stdlib-saas",
+        "description": "ISL Standard Library for SaaS applications - complete starter with auth, billing, dashboard",
+        "dependencies": [
+          "@isl-lang/stdlib-auth",
+          "@isl-lang/stdlib-payments"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-scheduling",
+        "path": "packages\\stdlib-scheduling",
+        "description": "ISL Standard Library - Job Scheduling (cron, delayed jobs, workflows)",
+        "dependencies": [
+          "cron-parser",
+          "uuid"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@types/uuid",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-search",
+        "path": "packages\\stdlib-search",
+        "description": "Full-text search, filtering, and query DSL",
+        "dependencies": [
+          "@isl-lang/stdlib-core"
+        ],
+        "devDependencies": [],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-time",
+        "path": "packages\\stdlib-time",
+        "description": "Time contracts for ISL - real-time constraints, deadlines, scheduling, and temporal logic",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/stdlib-workflow",
+        "path": "packages\\stdlib-workflow",
+        "description": "Workflow engine standard library for IntentOS - state machines, sagas, and compensation",
+        "dependencies": [
+          "@isl-lang/stdlib-core",
+          "uuid"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@types/uuid",
+          "typescript",
+          "vitest",
+          "@vitest/coverage-v8"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/streaming",
+        "path": "packages\\streaming",
+        "description": "ISL Stream Processing for reactive data flows and event processing",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "typescript",
+          "tsup",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/test-generator",
+        "path": "packages\\test-generator",
+        "description": "Generate executable tests with domain-specific assertions from ISL specifications",
+        "dependencies": [
+          "@isl-lang/parser"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/test-runtime-legacy",
+        "path": "packages\\test-runtime",
+        "description": "Runtime bindings for ISL generated tests - provides entity proxies and state management",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/trace-viewer",
+        "path": "packages\\trace-viewer",
+        "description": "Visual debugger for viewing verification traces and proof bundles",
+        "dependencies": [
+          "next",
+          "react",
+          "react-dom",
+          "clsx",
+          "zustand"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@types/react",
+          "@types/react-dom",
+          "autoprefixer",
+          "postcss",
+          "tailwindcss",
+          "typescript"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/trust-score",
+        "path": "packages\\trust-score",
+        "description": "Trust score computation from verification evidence - drives SHIP/NO-SHIP decisions",
+        "dependencies": [
+          "@isl-lang/evidence"
+        ],
+        "devDependencies": [
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/typechecker",
+        "path": "packages\\typechecker",
+        "description": "Semantic analyzer for ISL - validates AST, resolves types, builds symbol table",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/errors"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/verified-build",
+        "path": "packages\\verified-build",
+        "description": "ISL Verified Build - Single-package SDK for code verification",
+        "dependencies": [
+          "@isl-lang/gate",
+          "@isl-lang/evidence",
+          "@isl-lang/firewall",
+          "@isl-lang/policy-packs"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "tsup",
+          "typescript",
+          "vitest",
+          "rimraf"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/verifier",
+        "path": "packages\\verifier",
+        "description": "Evidence-first, deterministic verification engine for ISL specifications",
+        "dependencies": [
+          "@isl-lang/parser"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/verifier-chaos",
+        "path": "packages\\verifier-chaos",
+        "description": "Chaos engineering verifier - inject failures, execute scenarios, and produce proof bundles",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.2.0"
+      },
+      {
+        "name": "@isl-lang/verifier-formal",
+        "path": "packages\\verifier-formal",
+        "description": "Formal verification for ISL using SMT-LIB and Z3",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/verifier-runtime",
+        "path": "packages\\verifier-runtime",
+        "description": "Runtime verification engine for ISL implementations",
+        "dependencies": [
+          "@isl-lang/parser"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/verifier-security",
+        "path": "packages\\verifier-security",
+        "description": "Security verifier - verify cryptographic invariants like session token entropy",
+        "dependencies": [
+          "@isl-lang/isl-core"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/verifier-temporal",
+        "path": "packages\\verifier-temporal",
+        "description": "Temporal property verification for ISL - eventually, within, always",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "@isl-lang/trace-format"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "rimraf",
+          "tsup",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/versioner",
+        "path": "packages\\versioner",
+        "description": "Semantic versioning automation for ISL specifications",
+        "dependencies": [
+          "@isl-lang/isl-core",
+          "semver",
+          "simple-git"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@types/semver",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-lang/visual-editor",
+        "path": "packages\\visual-editor",
+        "description": "Visual/graphical editor for ISL specifications",
+        "dependencies": [
+          "next",
+          "react",
+          "react-dom",
+          "reactflow",
+          "@reactflow/node-resizer",
+          "zustand",
+          "lucide-react",
+          "clsx",
+          "tailwind-merge"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@types/react",
+          "@types/react-dom",
+          "autoprefixer",
+          "postcss",
+          "tailwindcss",
+          "typescript"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "isl-lang",
+        "path": "packages\\vscode",
+        "description": "Language support for Intent Specification Language (.isl) files - syntax highlighting, LSP, code generation, and more",
+        "dependencies": [
+          "@isl-lang/lsp-server",
+          "vscode-languageclient"
+        ],
+        "devDependencies": [
+          "@types/node",
+          "@types/vscode",
+          "@vscode/vsce",
+          "esbuild",
+          "rimraf",
+          "typescript"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "vscode-islstudio",
+        "path": "packages\\vscode-islstudio",
+        "description": "Unified code gate. Truthpack validation (routes, env, imports) + 25 security rules (auth, pii, payments, rate-limit, intent). SHIP or NO_SHIP with evidence. Verified by VibeCheck.",
+        "dependencies": [],
+        "devDependencies": [
+          "@types/vscode",
+          "tsup",
+          "typescript"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/e2e-tests",
+        "path": "tests\\e2e",
+        "description": "",
+        "dependencies": [
+          "@isl-lang/parser",
+          "@isl-lang/isl-verify",
+          "@isl-lang/codegen-tests",
+          "next"
+        ],
+        "devDependencies": [
+          "vitest"
+        ],
+        "version": "0.0.0"
+      },
+      {
+        "name": "chaos-checkout-demo",
+        "path": "demos\\chaos-checkout-demo",
+        "description": "Chaos engineering demo for checkout with idempotency",
+        "dependencies": [],
+        "devDependencies": [
+          "tsx",
+          "typescript"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-demos/e2e-login",
+        "path": "demos\\e2e-login-demo",
+        "description": "End-to-end demo: NL → ISL → Code → Gate → Heal → Test → Proof",
+        "dependencies": [
+          "@isl-lang/translator",
+          "@isl-lang/generator",
+          "@isl-lang/pipeline",
+          "@isl-lang/healer",
+          "@isl-lang/proof",
+          "zod",
+          "picocolors"
+        ],
+        "devDependencies": [
+          "tsx",
+          "typescript",
+          "vitest"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "evaluator-demo",
+        "path": "demos\\evaluator-demo",
+        "description": "Demo showing ISL Expression Evaluator capabilities",
+        "dependencies": [
+          "@isl-lang/expression-evaluator",
+          "@isl-lang/parser"
+        ],
+        "devDependencies": [
+          "tsx"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "@isl-lang/flagship-demo",
+        "path": "demos\\flagship-auth-payments",
+        "description": "Flagship ISL demo: OAuth, Payments, and Uploads with end-to-end verification",
+        "dependencies": [
+          "express",
+          "uuid"
+        ],
+        "devDependencies": [
+          "@isl-lang/cli",
+          "@isl-lang/parser",
+          "@isl-lang/isl-verify",
+          "@isl-lang/build-runner",
+          "@isl-lang/codegen-tests",
+          "@isl-lang/evidence-schema",
+          "@isl-lang/evidence-html",
+          "@types/express",
+          "@types/node",
+          "@types/uuid",
+          "typescript"
+        ],
+        "version": "0.0.1"
+      },
+      {
+        "name": "isl-demo",
+        "path": "demos\\isl-demo",
+        "description": "ISL Studio Demo - SHIP/NO_SHIP in action",
+        "dependencies": [
+          "express"
+        ],
+        "devDependencies": [
+          "@isl-lang/cli",
+          "@types/express",
+          "typescript"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "islstudio-hello-gate",
+        "path": "demos\\islstudio-hello-gate",
+        "description": "Demo repo: See a PR get blocked in 5 minutes",
+        "dependencies": [],
+        "devDependencies": [],
+        "version": "1.0.0"
+      },
+      {
+        "name": "playwright-showcase",
+        "path": "demos\\playwright-showcase",
+        "description": "",
+        "dependencies": [
+          "@clerk/clerk-react",
+          "cors",
+          "express",
+          "framer-motion",
+          "lucide-react",
+          "react",
+          "react-dom",
+          "react-router-dom",
+          "react-syntax-highlighter",
+          "simple-icons",
+          "stripe",
+          "three"
+        ],
+        "devDependencies": [
+          "@playwright/test",
+          "@types/cors",
+          "@types/express",
+          "@types/react",
+          "@types/react-dom",
+          "@types/react-syntax-highlighter",
+          "@vitejs/plugin-react",
+          "autoprefixer",
+          "concurrently",
+          "postcss",
+          "tailwindcss",
+          "tsx",
+          "typescript",
+          "vite"
+        ],
+        "version": "1.0.0"
+      },
+      {
+        "name": "safe-ai-demo",
+        "path": "demos\\safe-ai-demo",
+        "description": "90-second demo: prompt → spec → verify → gate",
+        "dependencies": [],
+        "devDependencies": [
+          "tsx"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@isl-demos/spec-assist",
+        "path": "demos\\spec-assist-demo",
+        "description": "Demo of AI-assisted ISL spec generation",
+        "dependencies": [
+          "@isl-lang/spec-assist"
+        ],
+        "devDependencies": [
+          "tsx",
+          "typescript"
+        ],
+        "version": "0.1.0"
+      },
+      {
+        "name": "@demos/verification-demo",
+        "path": "demos\\verification-demo",
+        "description": "Demo showing ISL verification: evaluator, stdlib imports, semantic analysis, and PROVEN output",
+        "dependencies": [
+          "bcrypt"
+        ],
+        "devDependencies": [
+          "@types/bcrypt",
+          "@types/node",
+          "typescript",
+          "vitest"
+        ],
+        "version": "1.0.0"
+      }
+    ],
+    "sharedPackages": [
+      {
+        "name": "typescript",
+        "usedIn": 207
+      },
+      {
+        "name": "vitest",
+        "usedIn": 189
+      },
+      {
+        "name": "@types/node",
+        "usedIn": 178
+      },
+      {
+        "name": "tsup",
+        "usedIn": 109
+      },
+      {
+        "name": "rimraf",
+        "usedIn": 77
+      },
+      {
+        "name": "@isl-lang/isl-core",
+        "usedIn": 69
+      },
+      {
+        "name": "@isl-lang/parser",
+        "usedIn": 43
+      },
+      {
+        "name": "zod",
+        "usedIn": 17
+      },
+      {
+        "name": "@isl-lang/typechecker",
+        "usedIn": 16
+      },
+      {
+        "name": "tsx",
+        "usedIn": 15
+      },
+      {
+        "name": "@types/react",
+        "usedIn": 14
+      },
+      {
+        "name": "react",
+        "usedIn": 12
+      },
+      {
+        "name": "@types/express",
+        "usedIn": 12
+      },
+      {
+        "name": "@isl-lang/isl-verify",
+        "usedIn": 11
+      },
+      {
+        "name": "express",
+        "usedIn": 11
+      },
+      {
+        "name": "next",
+        "usedIn": 10
+      },
+      {
+        "name": "react-dom",
+        "usedIn": 9
+      },
+      {
+        "name": "@types/react-dom",
+        "usedIn": 9
+      },
+      {
+        "name": "autoprefixer",
+        "usedIn": 9
+      },
+      {
+        "name": "postcss",
+        "usedIn": 9
+      }
+    ],
+    "rootConfig": "turbo.json",
+    "tools": [
+      "Turborepo"
+    ]
+  }
+}

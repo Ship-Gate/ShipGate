@@ -1,5 +1,5 @@
 {
-  "name": "@isl-lang/gate-action",
+  "name": "@isl-lang/github-action-gate",
   "version": "0.1.0",
   "description": "ISL Studio Gate - GitHub Action to block unsafe PRs",
   "private": true,

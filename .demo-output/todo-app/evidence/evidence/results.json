@@ -1,0 +1,21 @@
+{
+  "decision": "NO-SHIP",
+  "trustScore": 80,
+  "confidence": 0,
+  "clauses": [
+    {
+      "id": "scenarios-dosomething:-behavior-execution",
+      "type": "scenarios",
+      "description": "DoSomething: behavior execution",
+      "status": "skipped",
+      "error": "Synthetic test - behavior verification pending"
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 1
+  },
+  "blockers": []
+}

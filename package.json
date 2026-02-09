@@ -1,7 +1,7 @@
 {
   "name": "isl-lang-monorepo",
   "version": "0.1.0",
-  "description": "Intent Specification Language - The programming language for the AI era",
+  "description": "Shipgate - Stop AI from shipping fake features. Powered by ISL (Intent Specification Language).",
   "private": true,
   "type": "module",
   "scripts": {
@@ -34,6 +34,12 @@
     "demo:login": "pnpm --filter @isl-demos/e2e-login demo",
     "demo:login:failure": "pnpm --filter @isl-demos/e2e-login demo:failure",
     "demo:login:record": "pnpm --filter @isl-demos/e2e-login demo:record",
+    "demo:safe-ai": "pnpm exec tsx demos/safe-ai-demo/run-demo.ts",
+    "demo:three-lies": "pnpm exec tsx demos/three-big-lies/run-demo.ts",
+    "demo:three-lies:ui": "pnpm --filter playwright-showcase dev",
+    "demo:three-lies:record": "pnpm --filter playwright-showcase test:three-lies:record",
+    "proof:benchmark": "pnpm exec tsx proof/run-proof-benchmark.ts",
+    "demo:safe-ai:from-code": "pnpm exec tsx demos/safe-ai-demo/run-demo-from-code.ts",
     "verify-promise": "npx tsx scripts/verify-promise.ts",
     "test:critical": "turbo test --filter=@isl-lang/evaluator --filter=@isl-lang/verifier-runtime --filter=@isl-lang/import-resolver --filter=@isl-lang/isl-pipeline --filter=@isl-lang/isl-proof",
     "test:evaluator": "pnpm --filter @isl-lang/evaluator test && pnpm --filter @isl-lang/verifier-runtime test",
@@ -44,7 +50,12 @@
     "list:experimental": "npx tsx scripts/mark-experimental-private.ts --dry-run",
     "mvp:green": "pwsh scripts/mvp-green.ps1",
     "mvp:green:unix": "bash scripts/mvp-green.sh",
-    "typecheck:experimental": "echo 'Checking experimental packages...' && pnpm --filter @isl-lang/semantic-analysis exec tsc --noEmit || true && pnpm --filter @isl-lang/pbt exec tsc --noEmit || true && pnpm --filter @isl-lang/isl-cli exec tsc --noEmit || true && echo 'Experimental check complete (failures expected)'"
+    "typecheck:experimental": "echo 'Checking experimental packages...' && pnpm --filter @isl-lang/semantic-analysis exec tsc --noEmit || true && pnpm --filter @isl-lang/pbt exec tsc --noEmit || true && pnpm --filter @isl-lang/isl-cli exec tsc --noEmit || true && echo 'Experimental check complete (failures expected)'",
+    "isl:check": "pnpm --filter @isl-lang/cli exec isl check specs/",
+    "isl:gen": "pnpm --filter @isl-lang/cli exec isl gen ts specs/",
+    "isl:verify": "pnpm --filter @isl-lang/cli exec isl verify specs/example.isl --impl .",
+    "isl:gate": "pnpm --filter @isl-lang/cli exec isl gate specs/example.isl --impl . --threshold 95 --format json",
+    "gate:external": "node packages/cli/dist/index.js gate"
   },
   "keywords": [
     "isl",

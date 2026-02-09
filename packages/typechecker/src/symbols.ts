@@ -51,6 +51,47 @@ export class SymbolTableBuilder implements SymbolTable {
       this.rootScope.symbols.set(typeName, symbol);
       this.allSymbols.push(symbol);
     }
+
+    // Add built-in stdlib functions
+    const stdlibFunctions: Array<{ name: string; returns: ResolvedType }> = [
+      { name: 'now', returns: { kind: 'primitive', name: 'Timestamp', constraints: [] } },
+      { name: 'uuid', returns: { kind: 'primitive', name: 'UUID', constraints: [] } },
+      { name: 'today', returns: { kind: 'primitive', name: 'Timestamp', constraints: [] } },
+      { name: 'hash', returns: { kind: 'primitive', name: 'String', constraints: [] } },
+      { name: 'random', returns: { kind: 'primitive', name: 'Decimal', constraints: [] } },
+    ];
+
+    for (const func of stdlibFunctions) {
+      const symbol: Symbol = {
+        name: func.name,
+        kind: 'variable', // Use 'variable' for stdlib functions (callable variables)
+        type: { kind: 'function', params: [], returns: func.returns },
+        location: builtinLocation,
+        modifiers: [],
+      };
+      this.rootScope.symbols.set(func.name, symbol);
+      this.allSymbols.push(symbol);
+    }
+
+    // Add built-in enum values (common status enums)
+    const statusEnum: ResolvedType = {
+      kind: 'enum',
+      name: 'Status',
+      variants: ['ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED', 'DELETED'],
+    };
+    
+    // Register each enum variant
+    for (const variant of (statusEnum as { variants: string[] }).variants) {
+      const symbol: Symbol = {
+        name: variant,
+        kind: 'enum_variant',
+        type: statusEnum,
+        location: builtinLocation,
+        modifiers: [],
+      };
+      this.rootScope.symbols.set(variant, symbol);
+      this.allSymbols.push(symbol);
+    }
   }
 
   /**

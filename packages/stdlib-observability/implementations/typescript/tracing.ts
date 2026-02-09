@@ -523,9 +523,8 @@ export class Tracer {
   ): Promise<T> {
     const result = this.startSpan({ name, ...options });
     if (!result.success) {
-      throw result.error;
+      throw (result as { success: false; error: Error }).error;
     }
-
     const { span, context } = result.value;
 
     try {

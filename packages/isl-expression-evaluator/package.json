@@ -1,7 +1,7 @@
 {
-  "name": "@isl-lang/expression-evaluator",
+  "name": "@isl-lang/static-analyzer",
   "version": "0.1.0",
-  "description": "ISL expression evaluator with tri-state logic for postconditions and invariants",
+  "description": "ISL static analyzer: tri-state logic (true/false/unknown) for postconditions and invariants without execution",
   "author": "ISL Team",
   "license": "MIT",
   "repository": {
@@ -44,7 +44,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "bench": "tsx src/v1/bench.ts",

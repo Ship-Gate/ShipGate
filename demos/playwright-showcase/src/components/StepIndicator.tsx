@@ -33,7 +33,7 @@ export default function StepIndicator({
                   ? 'bg-cyan-50 border border-cyan-300'
                   : isCompleted
                   ? 'bg-green-50 border border-green-300'
-                  : 'bg-gray-50 border border-gray-200'
+                  : 'bg-white/10 border border-white/20'
               }`}
               initial={false}
               animate={{
@@ -48,7 +48,7 @@ export default function StepIndicator({
                     ? 'bg-green-500 text-white'
                     : isCurrent
                     ? 'bg-cyan-500 text-white'
-                    : 'bg-gray-200 text-gray-500'
+                    : 'bg-white/20 text-white/70'
                 }`}
               >
                 {isCompleted ? (
@@ -62,7 +62,7 @@ export default function StepIndicator({
               <div>
                 <span
                   className={`text-sm font-medium ${
-                    isPending ? 'text-gray-400' : 'text-gray-700'
+                    isPending ? 'text-white/60' : 'text-white'
                   }`}
                 >
                   {step.label}
@@ -72,7 +72,7 @@ export default function StepIndicator({
             {index < steps.length - 1 && (
               <div
                 className={`w-8 h-0.5 mx-1 ${
-                  isCompleted ? 'bg-green-500' : 'bg-gray-200'
+                  isCompleted ? 'bg-green-500' : 'bg-white/30'
                 }`}
               />
             )}

@@ -99,6 +99,99 @@ export type { ChaosStepInput, ChaosStepResult } from './pipeline.js';
 // ── CLI ──────────────────────────────────────────────────────────────
 export { main as runCli } from './cli.js';
 
+// ── Chaos Events ─────────────────────────────────────────────────────
+export {
+  ChaosEventRegistry,
+  createChaosEvent,
+  createTimeoutEvent,
+  createRetryEvent,
+  createPartialFailureEvent,
+  bindSpecClause,
+  mapEventToSpec,
+  getEventRegistry,
+  serializeChaosEvent,
+  deserializeChaosEvent,
+  TIMEOUT_EVENTS,
+  RETRY_EVENTS,
+  PARTIAL_FAILURE_EVENTS,
+} from './chaos-events.js';
+export type {
+  ChaosEventCategory,
+  ChaosEventSeverity,
+  ChaosEventDef,
+  ChaosEventParameter,
+  ChaosEvent,
+  ChaosEventOutcome,
+  InvariantViolation,
+  SpecClauseRef,
+  SerializedChaosEvent,
+} from './chaos-events.js';
+
+// ── Deterministic Replay ─────────────────────────────────────────────
+export {
+  SeededRNG,
+  ReplayRecorder,
+  ReplayPlayer,
+  InMemoryReplayStorage,
+  createReplayRecorder,
+  createReplayPlayer,
+  parseReplaySession,
+  generateReplaySeed,
+  seedFromString,
+  scenarioResultToReplay,
+  buildReplaySessionFromResults,
+} from './replay.js';
+export type {
+  ReplaySession,
+  ReplayScenarioResult,
+  ReplayOptions,
+  ReplayResult,
+  ReplayDifference,
+  ReplayStorage,
+} from './replay.js';
+
+// ── Invariant Violations ─────────────────────────────────────────────
+export {
+  ViolationRecorder,
+  InvariantRegistry,
+  createViolationRecorder,
+  createInvariantRegistry,
+  createCustomInvariant,
+  serializeViolation,
+  serializeViolations,
+  STATE_CONSISTENCY_INVARIANTS,
+  DATA_INTEGRITY_INVARIANTS,
+  IDEMPOTENCY_INVARIANTS,
+  TIMING_INVARIANTS,
+  ATOMICITY_INVARIANTS,
+} from './violations.js';
+export type {
+  InvariantCategory,
+  InvariantSeverity,
+  InvariantDef,
+  InvariantContext,
+  InvariantCheckResult,
+  ViolationRecord,
+  ViolationReport,
+  ViolationSummary,
+  SerializedViolationRecord,
+} from './violations.js';
+
+// ── Resilience Verifier ──────────────────────────────────────────────
+export {
+  ResilienceVerifier,
+  createResilienceVerifier,
+  verifyResilience,
+  replayResilience,
+  createSpecClauseMapping,
+  buildSpecClauseMappings,
+} from './resilience-verifier.js';
+export type {
+  ResilienceConfig,
+  ResilienceResult,
+  ResilienceVerifyInput,
+} from './resilience-verifier.js';
+
 // ── Injectors ────────────────────────────────────────────────────────
 
 // Network

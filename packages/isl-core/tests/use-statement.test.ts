@@ -12,6 +12,7 @@ describe('UseStatement Parsing', () => {
     it('should parse simple use statement', () => {
       const source = `
 domain Test {
+  version "1.0.0"
   use stdlib-auth
 }
 `;
@@ -29,6 +30,7 @@ domain Test {
     it('should parse use statement with alias', () => {
       const source = `
 domain Test {
+  version "1.0.0"
   use stdlib-auth as auth
 }
 `;
@@ -46,6 +48,7 @@ domain Test {
     it('should parse use statement with version', () => {
       const source = `
 domain Test {
+  version "1.0.0"
   use stdlib-auth@"1.0.0"
 }
 `;
@@ -63,6 +66,7 @@ domain Test {
     it('should parse use statement with version and alias', () => {
       const source = `
 domain Test {
+  version "1.0.0"
   use stdlib-auth@"1.0.0" as auth
 }
 `;
@@ -80,6 +84,7 @@ domain Test {
     it('should parse use statement with string path', () => {
       const source = `
 domain Test {
+  version "1.0.0"
   use "./local/module"
 }
 `;
@@ -101,6 +106,7 @@ domain Test {
     it('should parse multiple use statements', () => {
       const source = `
 domain Test {
+  version "1.0.0"
   use stdlib-auth
   use stdlib-payments
   use stdlib-uploads
@@ -126,6 +132,7 @@ domain Test {
     it('should parse use statements alongside entities', () => {
       const source = `
 domain Test {
+  version "1.0.0"
   use stdlib-auth
 
   entity User {
@@ -146,6 +153,7 @@ domain Test {
     it('should parse use statements alongside behaviors', () => {
       const source = `
 domain Test {
+  version "1.0.0"
   use stdlib-auth as auth
 
   behavior Login {
@@ -171,6 +179,7 @@ domain Test {
     it('should parse use statements with imports block', () => {
       const source = `
 domain Test {
+  version "1.0.0"
   use stdlib-auth
 
   imports {
@@ -195,6 +204,7 @@ domain Test {
     it('should parse hyphenated module names', () => {
       const source = `
 domain Test {
+  version "1.0.0"
   use my-custom-module
 }
 `;
@@ -210,6 +220,7 @@ domain Test {
     it('should parse module names with numbers', () => {
       const source = `
 domain Test {
+  version "1.0.0"
   use stdlib-v2
 }
 `;

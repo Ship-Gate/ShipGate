@@ -35,7 +35,7 @@ function getLineColumn(content: string, index: number): { line: number; column: 
  * Extract root (first segment) from a use path and classify it
  */
 function classifyPath(path: string): { root: string; isStd: boolean; isCrate: boolean; isRelative: boolean } {
-  const first = path.split('::')[0];
+  const first = path.split('::')[0] ?? path;
   const isStd = first === 'std';
   const isCrate = first === 'crate';
   const isRelative = first === 'super' || first === 'self';
@@ -48,11 +48,11 @@ function classifyPath(path: string): { root: string; isStd: boolean; isCrate: bo
  */
 function expandBraces(fullPath: string): string[] {
   const braceMatch = fullPath.match(/^(.+)::\{([^}]+)\}$/);
-  if (!braceMatch) return [fullPath];
+  if (!braceMatch || !braceMatch[1] || !braceMatch[2]) return [fullPath];
 
   const prefix = braceMatch[1];
   const items = braceMatch[2].split(',').map((s) => s.trim()).filter(Boolean);
-  return items.map((item) => {
+  return items.map((item): string => {
     if (item === 'self') return prefix;
     return `${prefix}::${item}`;
   });
@@ -69,7 +69,9 @@ export function parseUseStatements(source: string, filePath: string): RustUse[] 
   USE_STMT.lastIndex = 0;
 
   while ((match = USE_STMT.exec(source)) !== null) {
-    const fullPath = match[1].trim();
+    const matchedPath = match[1];
+    if (!matchedPath) continue;
+    const fullPath = matchedPath.trim();
     const expanded = expandBraces(fullPath);
 
     const start = getLineColumn(source, match.index);
@@ -112,12 +114,13 @@ export function parseExternCrates(source: string, filePath: string): { name: str
 
   while ((match = EXTERN_CRATE.exec(source)) !== null) {
     const name = match[1];
+    if (!name) continue;
     const alias = match[2];
     const start = getLineColumn(source, match.index);
     const end = getLineColumn(source, match.index + match[0].length);
     results.push({
       name,
-      alias,
+      ...(alias !== undefined && { alias }),
       location: { file: filePath, line: start.line, column: start.column, endLine: end.line, endColumn: end.column },
     });
   }

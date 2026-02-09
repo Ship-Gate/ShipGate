@@ -46,29 +46,108 @@ function logWarning(message: string): void {
 }
 
 // Package publish order (respecting dependencies)
-// Only includes core packages that are ready for publishing
+// Matches docs/PUBLISH_PUBLIC_VS_PRIVATE.md public list
 const PUBLISH_ORDER = [
-  // Core packages (no internal deps)
+  // Base
   '@isl-lang/parser',
   '@isl-lang/errors',
-
-  // Second tier (depends on parser)
   '@isl-lang/typechecker',
-
-  // Third tier (depends on typechecker)
   '@isl-lang/evaluator',
-
-  // LSP packages
+  // Core / toolchain
+  '@isl-lang/isl-core',
+  '@isl-lang/core',
+  '@isl-lang/import-resolver',
+  '@isl-lang/semantics',
+  // Verification
+  '@isl-lang/verifier-runtime',
+  '@isl-lang/verifier',
+  '@isl-lang/verifier-temporal',
+  '@isl-lang/verifier-security',
+  '@isl-lang/verifier-formal',
+  '@isl-lang/verifier-chaos',
+  '@isl-lang/trust-score',
+  '@isl-lang/prover',
+  '@isl-lang/verified-build',
+  // Pipeline / proof / verify
+  '@isl-lang/pipeline',
+  '@isl-lang/proof',
+  '@isl-lang/isl-verify',
+  '@isl-lang/verify-pipeline',
+  // Runtimes
+  '@isl-lang/runtime-universal',
+  '@isl-lang/runtime-verify',
+  '@isl-lang/runtime-sdk',
+  '@isl-lang/isl-runtime',
+  '@isl-lang/test-runtime',
+  '@isl-lang/test-runtime-legacy',
+  // Gate
+  '@isl-lang/gate',
+  // Stdlib
+  '@isl-lang/isl-stdlib',
+  '@isl-lang/stdlib-core',
+  '@isl-lang/stdlib-http',
+  '@isl-lang/stdlib-database',
+  '@isl-lang/stdlib-auth',
+  '@isl-lang/stdlib-cache',
+  '@isl-lang/stdlib-events',
+  '@isl-lang/stdlib-queue',
+  '@isl-lang/stdlib-observability',
+  '@isl-lang/stdlib-api',
+  '@isl-lang/stdlib-runtime',
+  '@isl-lang/stdlib-billing',
+  '@isl-lang/stdlib-payments',
+  '@isl-lang/stdlib-workflow',
+  '@isl-lang/stdlib-scheduling',
+  '@isl-lang/stdlib-saas',
+  '@isl-lang/stdlib-realtime',
+  '@isl-lang/stdlib-notifications',
+  '@isl-lang/stdlib-messaging',
+  '@isl-lang/stdlib-files',
+  '@isl-lang/stdlib-email',
+  '@isl-lang/stdlib-actors',
+  '@isl-lang/stdlib-rate-limit',
+  '@isl-lang/stdlib-idempotency',
+  '@isl-lang/stdlib-distributed',
+  '@isl-lang/stdlib-audit',
+  '@isl-lang/stdlib-analytics',
+  // SDKs
+  '@isl-lang/sdk-typescript',
+  '@isl-lang/sdk-web',
+  '@isl-lang/sdk-react-native',
+  // Testing / simulation
+  '@isl-lang/test-generator',
+  '@isl-lang/snapshot-testing',
+  '@isl-lang/simulator',
+  // Evidence
+  '@isl-lang/evidence-schema',
+  // Optional
+  '@isl-lang/language-server',
+  '@isl-lang/expression-evaluator',
+  '@isl-lang/trace-format',
+  '@isl-lang/codegen',
+  '@isl-lang/codegen-core',
+  '@isl-lang/codegen-types',
+  // LSP / REPL
   '@isl-lang/lsp-core',
   '@isl-lang/lsp-server',
-
-  // REPL (CLI excluded due to missing dependencies)
   '@isl-lang/repl',
 ];
 
-// Map package names to directory names
+// Package name -> folder name (when different from @isl-lang/ scope suffix)
+const PACKAGE_NAME_TO_DIR: Record<string, string> = {
+  '@isl-lang/pipeline': 'isl-pipeline',
+  '@isl-lang/proof': 'isl-proof',
+  '@isl-lang/verify-pipeline': 'isl-verify-pipeline',
+  '@isl-lang/test-runtime': 'isl-test-runtime',
+  '@isl-lang/test-runtime-legacy': 'test-runtime',
+  '@isl-lang/gate': 'isl-gate',
+  '@isl-lang/evidence-schema': 'evidence',
+  '@isl-lang/static-analyzer': 'isl-expression-evaluator',
+  '@isl-lang/trace-format': 'isl-trace-format',
+};
+
 function getPackageDir(packageName: string): string {
-  return packageName.replace('@isl-lang/', '');
+  return PACKAGE_NAME_TO_DIR[packageName] ?? packageName.replace('@isl-lang/', '');
 }
 
 interface PackageJson {
@@ -114,16 +193,7 @@ function verifyBuilds(): boolean {
   logStep(2, 5, 'Verifying target packages build...');
 
   // Build packages and their dependencies using turbo's ... syntax
-  // This will build all dependencies automatically
-  const targetPackages = [
-    '@isl-lang/parser',
-    '@isl-lang/errors',
-    '@isl-lang/typechecker',
-    '@isl-lang/evaluator',
-    '@isl-lang/lsp-core',
-    '@isl-lang/lsp-server',
-    '@isl-lang/repl',
-  ];
+  const targetPackages = PUBLISH_ORDER;
 
   try {
     const filterArgs = targetPackages.map((pkg) => `--filter=${pkg}...`).join(' ');

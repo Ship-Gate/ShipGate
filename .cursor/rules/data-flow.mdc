@@ -1,0 +1,35 @@
+---
+description: Data fetching and API interaction patterns
+globs: ["**/api/**", "**/lib/**", "**/services/**", "**/hooks/**"]
+alwaysApply: false
+---
+
+# Data Flow Guidelines
+
+
+
+
+
+## API Routes
+
+- /admin
+- /users
+- /index
+- /generator
+- /analytics
+- /domains
+- /verifications
+- /intents
+- /search
+- /trust
+- /cli.d
+- /cli
+- /documents.d
+- /documents
+- /features/completion.d
+
+Rules:
+- Validate all input with Zod
+- Return consistent response shapes
+- Use proper HTTP status codes
+

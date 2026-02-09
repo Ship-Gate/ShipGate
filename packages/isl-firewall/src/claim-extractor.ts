@@ -8,6 +8,7 @@
 
 import * as crypto from 'crypto';
 import type { Claim, ClaimType } from './types.js';
+import { parseGoImports, isGoFile } from './go/parser.js';
 
 /**
  * Claim extraction result with statistics
@@ -31,12 +32,20 @@ export class ClaimExtractor {
   async extract(content: string, filePath = 'unknown'): Promise<Claim[]> {
     const claims: Claim[] = [];
 
-    claims.push(...this.extractImports(content, filePath));
+    if (isGoFile(filePath)) {
+      claims.push(...this.extractGoImports(content, filePath));
+    } else {
+      claims.push(...this.extractImports(content, filePath));
+    }
     claims.push(...this.extractFunctionCalls(content, filePath));
     claims.push(...this.extractApiEndpoints(content, filePath));
     claims.push(...this.extractEnvVariables(content, filePath));
     claims.push(...this.extractFileReferences(content, filePath));
-    claims.push(...this.extractPackageDependencies(content, filePath));
+    if (isGoFile(filePath)) {
+      claims.push(...this.extractGoPackageDependencies(content, filePath));
+    } else {
+      claims.push(...this.extractPackageDependencies(content, filePath));
+    }
 
     return claims;
   }
@@ -145,6 +154,48 @@ export class ClaimExtractor {
     let match;
     while ((match = importRegex.exec(content)) !== null) {
       claims.push(this.createClaim('package_dependency', match[1], match.index, content, filePath));
+    }
+
+    return claims;
+  }
+
+  private extractGoImports(content: string, filePath: string): Claim[] {
+    const claims: Claim[] = [];
+    const result = parseGoImports(content);
+    if (!result.success) return claims;
+
+    for (const spec of result.imports) {
+      claims.push({
+        id: this.generateClaimId('import', filePath, spec.line, spec.column, spec.path),
+        type: 'import',
+        value: spec.path,
+        location: { line: spec.line, column: spec.column, length: spec.path.length },
+        confidence: 0.95,
+        context: content.slice(Math.max(0, spec.startIndex - 30), spec.endIndex + 30),
+      });
+    }
+
+    return claims;
+  }
+
+  private extractGoPackageDependencies(content: string, filePath: string): Claim[] {
+    const claims: Claim[] = [];
+    const result = parseGoImports(content);
+    if (!result.success) return claims;
+
+    for (const spec of result.imports) {
+      // External packages (contain a dot in the first path segment, e.g. github.com/...)
+      const firstSegment = spec.path.split('/')[0] ?? '';
+      if (firstSegment.includes('.')) {
+        claims.push({
+          id: this.generateClaimId('package_dependency', filePath, spec.line, spec.column, spec.path),
+          type: 'package_dependency',
+          value: spec.path,
+          location: { line: spec.line, column: spec.column, length: spec.path.length },
+          confidence: 0.95,
+          context: content.slice(Math.max(0, spec.startIndex - 30), spec.endIndex + 30),
+        });
+      }
     }
 
     return claims;

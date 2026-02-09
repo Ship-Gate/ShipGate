@@ -1,0 +1,117 @@
+{
+  "projectMemory": {
+    "path": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS",
+    "name": "IntentOS",
+    "framework": null,
+    "language": "JavaScript",
+    "lastAnalyzed": "2026-02-09T04:16:41.600Z",
+    "patterns": {
+      "hooks": [
+        "useDemoContext"
+      ],
+      "stateManagement": "Zustand",
+      "styling": [
+        "Emotion"
+      ],
+      "testing": [
+        "Vitest",
+        "Jest",
+        "React Testing Library",
+        "Playwright"
+      ],
+      "dataFetching": [],
+      "validation": "Zod",
+      "authentication": "Clerk",
+      "codeExamples": {
+        "hooks": {
+          "name": "useDemoContext",
+          "code": "export function useDemoContext() {\r\n  const context = useContext(DemoContext);\r\n  if (context === undefined) {\r\n    throw new Error('useDemoContext must be used within a DemoProvider');\r\n  }\r\n  return context;\r\n}",
+          "file": "demos\\playwright-showcase\\src\\context\\DemoContext.tsx"
+        }
+      },
+      "antiPatterns": [
+        {
+          "type": "console-log",
+          "severity": "warning",
+          "message": "Console statements found in production code",
+          "suggestion": "Use a proper logger or remove before production"
+        },
+        {
+          "type": "todo-comments",
+          "severity": "info",
+          "message": "TODO/FIXME comments found",
+          "suggestion": "Address these items before shipping"
+        },
+        {
+          "type": "hardcoded-secret",
+          "severity": "error",
+          "message": "Potential hardcoded secrets detected",
+          "suggestion": "Use environment variables for sensitive data"
+        },
+        {
+          "type": "any-type",
+          "severity": "warning",
+          "message": "Usage of `any` type detected",
+          "suggestion": "Use proper TypeScript types or `unknown`"
+        },
+        {
+          "type": "mock-data",
+          "severity": "warning",
+          "message": "Mock data or fake APIs detected",
+          "suggestion": "Replace with real API endpoints before production"
+        }
+      ]
+    },
+    "stats": {
+      "totalFiles": 5093,
+      "totalLines": 1812600,
+      "byExtension": {
+        ".json": 518,
+        ".ts": 3434,
+        ".js": 991,
+        ".css": 20,
+        ".tsx": 130
+      },
+      "largestFiles": [
+        {
+          "path": "packages\\autofix\\dist\\index.js",
+          "lines": 215473
+        },
+        {
+          "path": "packages\\github-action\\dist\\index.js",
+          "lines": 134340
+        },
+        {
+          "path": "packages\\health-check\\dist\\index.js",
+          "lines": 26538
+        },
+        {
+          "path": "packages\\health-check\\dist\\checks\\index.js",
+          "lines": 25402
+        },
+        {
+          "path": "packages\\cli\\dist\\index.js",
+          "lines": 18398
+        }
+      ]
+    }
+  },
+  "globalPatterns": {
+    "stateManagement": {
+      "React Context": 7,
+      "Zustand": 86
+    },
+    "frameworks": {
+      "Next.js": 3,
+      "Vite + React": 17,
+      "React": 54,
+      "Express": 41,
+      "Fastify": 3
+    },
+    "validation": {
+      "Zod": 70
+    }
+  },
+  "recommendations": [],
+  "lastUpdated": "2026-02-09T04:16:41.601Z"
+}

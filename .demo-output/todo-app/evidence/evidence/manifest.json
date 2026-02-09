@@ -1,0 +1,11 @@
+{
+  "fingerprint": "0e7d6b783a4a242a",
+  "islVersion": "0.1.0",
+  "specHash": "d38d31dc5a73333212cb7e00460ae178a8a136b2e7a8c16da4b870957fcf5814",
+  "implHash": "9731e071726e9801f230ae092d84062c1e0c1349ea21f222d6348791e6769b3d",
+  "timestamp": "2026-02-08T09:17:59.617Z",
+  "inputs": {
+    "spec": "d38d31dc5a73333212cb7e00460ae178a8a136b2e7a8c16da4b870957fcf5814",
+    "implementation": "9731e071726e9801f230ae092d84062c1e0c1349ea21f222d6348791e6769b3d"
+  }
+}

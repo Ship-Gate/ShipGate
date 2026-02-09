@@ -1,27 +1,38 @@
 ---
-description: Project architecture guidelines for nextjs-app-router
+description: Project architecture and structure guidelines
+globs: ["**/*.{ts,tsx,js,jsx}"]
 alwaysApply: true
-priority: 90
 ---
 
 # Architecture Guidelines
 
-## Project Type: feature-based
-## Framework: nextjs-app-router
-## Language: typescript
+## Project Type: Flat structure
 
-### Directory Structure
-- Organize code by feature/domain
-- Each feature should be self-contained
-- Shared code goes in `shared/` or `common/`
 
-### Import Conventions
-- Use @/ for src directory imports
 
-### File Naming
-- Use kebab-case for file names
-- Use .test.ts suffix for test files
+### Monorepo Structure (pnpm)
 
----
-<!-- guardrail:auto-generated -->
-*Verified by Guardrail ✓*
+Workspaces:
+- `packages\agent-os` - @isl-lang/agent-os
+- `packages\ai-copilot` - @isl-lang/ai-copilot
+- `packages\ai-generator` - @isl-lang/ai-generator
+- `packages\api-gateway` - @isl-lang/api-gateway
+- `packages\api-generator` - @isl-lang/api-generator
+- `packages\api-versioning` - @isl-lang/api-versioning
+- `packages\audit-viewer` - @isl-lang/audit-viewer
+- `packages\autofix` - @isl-lang/autofix
+
+Shared Packages:
+- typescript (used in 207 workspaces)
+- vitest (used in 189 workspaces)
+- @types/node (used in 178 workspaces)
+- tsup (used in 109 workspaces)
+- rimraf (used in 77 workspaces)
+
+
+### Directory Purpose
+
+
+### Import Aliases
+- Use `@/` for src directory imports
+- Never use relative imports deeper than `../`

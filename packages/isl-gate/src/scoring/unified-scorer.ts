@@ -107,6 +107,22 @@ export function getCriticalBlockerReasons(blockers: CriticalBlockers): string[] 
     reasons.push(`${blockers.fakeAuthFindings} fake auth pattern(s) detected`);
   }
   
+  // ─────────────────────────────────────────────────────────────────────────
+  // PBT Blockers - Property-Based Testing failures ALWAYS block SHIP
+  // ─────────────────────────────────────────────────────────────────────────
+  
+  if (blockers.pbtInvariantViolations && blockers.pbtInvariantViolations > 0) {
+    reasons.push(`CRITICAL: ${blockers.pbtInvariantViolations} PBT invariant violation(s) - invariants must never be violated`);
+  }
+  
+  if (blockers.pbtPostconditionViolations && blockers.pbtPostconditionViolations > 0) {
+    reasons.push(`${blockers.pbtPostconditionViolations} PBT postcondition violation(s) found`);
+  }
+  
+  if (blockers.pbtFailedBehaviors && blockers.pbtFailedBehaviors > 0) {
+    reasons.push(`${blockers.pbtFailedBehaviors} behavior(s) failed property-based testing`);
+  }
+  
   if (blockers.customBlockers) {
     reasons.push(...blockers.customBlockers);
   }

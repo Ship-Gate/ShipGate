@@ -60,12 +60,15 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:pack": "pnpm build && pnpm pack && node --experimental-vm-modules tests/pack-smoke.test.mjs",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist *.tgz",
     "prepublishOnly": "pnpm build && pnpm test"
+  },
+  "dependencies": {
+    "@isl-lang/parser": "workspace:*"
   },
   "devDependencies": {
     "picocolors": "^1.1.1",

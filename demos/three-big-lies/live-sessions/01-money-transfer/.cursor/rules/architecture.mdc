@@ -1,0 +1,20 @@
+---
+description: Project architecture and structure guidelines
+globs: ["**/*.{ts,tsx,js,jsx}"]
+alwaysApply: true
+---
+
+# Architecture Guidelines
+
+## Project Type: Standard src/ layout
+
+
+
+
+
+### Directory Purpose
+- `src/` - Source code root
+
+### Import Aliases
+- Use `@/` for src directory imports
+- Never use relative imports deeper than `../`

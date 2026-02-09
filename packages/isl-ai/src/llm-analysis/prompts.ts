@@ -34,11 +34,13 @@ export function buildAnalysisPrompt(params: {
 }): string {
   const evidenceBlock = formatEvidenceForPrompt(params.evidence);
   const question = params.question ?? 'What is the likely root cause and where in the code?';
+  const evidenceSection = evidenceBlock
+    ? `## Allowed code evidence (cite only these)\n${evidenceBlock}`
+    : '## Note\nNo code evidence provided. State only what can be inferred from the failure summary.';
   return `## Failure summary
 ${params.failureSummary}
 
-## Allowed code evidence (cite only these)
-${evidenceBlock}
+${evidenceSection}
 
 ## Task
 ${question}
@@ -55,11 +57,13 @@ export function buildAmbiguousAnalysisPrompt(params: {
   instruction: string;
 }): string {
   const evidenceBlock = formatEvidenceForPrompt(params.evidence);
+  const evidenceSection = evidenceBlock
+    ? `## Allowed code evidence (cite only these)\n${evidenceBlock}`
+    : '## Note\nNo code evidence provided. State only what can be inferred from the context.';
   return `## Context
 ${params.context}
 
-## Allowed code evidence (cite only these)
-${evidenceBlock}
+${evidenceSection}
 
 ## Instruction
 ${params.instruction}

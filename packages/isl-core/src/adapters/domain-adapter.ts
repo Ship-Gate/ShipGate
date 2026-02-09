@@ -1,15 +1,13 @@
 /**
  * Domain Adapter
- * 
- * Converts between @isl-lang/isl-core's DomainDeclaration and @isl-lang/parser's Domain.
- * 
- * This adapter bridges the two AST type systems:
- * - isl-core: Uses DomainDeclaration, BaseNode, span
- * - parser: Uses Domain, ASTNode, location
- * 
+ *
+ * Converts @isl-lang/parser's Domain to isl-core's DomainDeclaration.
+ * Canonical parse path: parse() from @isl-lang/parser then this adapter.
+ *
  * @see ADR-001-ast-type-unification.md
  */
 
+import type { Domain } from '@isl-lang/parser';
 import type {
   DomainDeclaration,
   EntityDeclaration,
@@ -40,9 +38,7 @@ import type {
 import type { SourceSpan } from '../lexer/tokens.js';
 
 // ============================================================================
-// Parser AST Types (from @isl-lang/parser)
-// These are defined inline to avoid circular dependencies during migration.
-// After migration, import from @isl-lang/parser.
+// Parser-compatible types (for adapter internals and re-export)
 // ============================================================================
 
 export interface SourceLocation {
@@ -58,21 +54,8 @@ export interface ParserASTNode {
   location: SourceLocation;
 }
 
-export interface ParserDomain extends ParserASTNode {
-  kind: 'Domain';
-  name: ParserIdentifier;
-  version: ParserStringLiteral;
-  owner?: ParserStringLiteral;
-  imports: ParserImport[];
-  types: ParserTypeDeclaration[];
-  entities: ParserEntity[];
-  behaviors: ParserBehavior[];
-  invariants: ParserInvariantBlock[];
-  policies: ParserPolicy[];
-  views: ParserView[];
-  scenarios: ParserScenarioBlock[];
-  chaos: ParserChaosBlock[];
-}
+/** @deprecated Use Domain from @isl-lang/parser */
+export type ParserDomain = Domain;
 
 export interface ParserIdentifier extends ParserASTNode {
   kind: 'Identifier';
@@ -170,7 +153,7 @@ export interface ParserPostconditionBlock extends ParserASTNode {
 
 export interface ParserTemporalSpec extends ParserASTNode {
   kind: 'TemporalSpec';
-  operator: 'eventually' | 'always' | 'within' | 'never';
+  operator: 'eventually' | 'always' | 'within' | 'never' | 'immediately' | 'response';
   predicate: unknown;
   duration?: unknown;
   percentile?: number;
@@ -530,7 +513,7 @@ export function domainDeclarationToDomain(decl: DomainDeclaration): ParserDomain
     scenarios: [], // Not in isl-core AST
     chaos: [], // Not in isl-core AST
     location: spanToLocation(decl.span),
-  };
+  } as Domain;
 }
 
 /**
@@ -578,27 +561,38 @@ export function validateForConversion(decl: DomainDeclaration): ValidationResult
 // ============================================================================
 
 /**
- * Convert ParserDomain to DomainDeclaration (isl-core)
- * 
- * This is useful for round-trip operations or when consuming
- * parser output in isl-core consumers.
+ * Convert parser's Domain to isl-core DomainDeclaration.
+ * Canonical parse path: @isl-lang/parser parse() then this adapter.
  */
-export function domainToDomainDeclaration(domain: ParserDomain): DomainDeclaration {
+export function domainToDomainDeclaration(domain: Domain): DomainDeclaration {
   const span = locationToSpan(domain.location);
 
-  // Reverse adapt imports to uses
-  const uses: UseStatement[] = domain.imports.map((imp): UseStatement => ({
+  // Parser use statements (canonical)
+  const usesFromParser = (domain.uses ?? []).map((u): UseStatement => ({
     kind: 'UseStatement',
-    module: {
+    module: u.module.kind === 'Identifier'
+      ? { kind: 'Identifier', name: u.module.name, span: locationToSpan(u.module.location) }
+      : { kind: 'StringLiteral', value: u.module.value, span: locationToSpan(u.module.location) },
+    alias: u.alias ? { kind: 'Identifier', name: u.alias.name, span: locationToSpan(u.alias.location) } : undefined,
+    version: u.version ? { kind: 'StringLiteral', value: u.version.value, span: locationToSpan(u.version.location) } : undefined,
+    span: locationToSpan(u.location),
+  }));
+
+  // uses = only explicit "use" statements; imports block is separate (imports array)
+  const uses = usesFromParser;
+
+  const imports = domain.imports.map((imp): ImportDeclaration => ({
+    kind: 'ImportDeclaration',
+    names: imp.items.map((i) => ({
+      kind: 'Identifier',
+      name: i.name.name,
+      span: locationToSpan(i.name.location),
+    })),
+    from: {
       kind: 'StringLiteral',
       value: imp.from.value,
       span: locationToSpan(imp.from.location),
     },
-    alias: imp.items[0]?.alias ? {
-      kind: 'Identifier',
-      name: imp.items[0].alias.name,
-      span: locationToSpan(imp.items[0].alias.location),
-    } : undefined,
     span: locationToSpan(imp.location),
   }));
 
@@ -616,7 +610,7 @@ export function domainToDomainDeclaration(domain: ParserDomain): DomainDeclarati
       span: locationToSpan(domain.version.location),
     },
     uses,
-    imports: [],
+    imports,
     entities: domain.entities.map((entity): EntityDeclaration => ({
       kind: 'EntityDeclaration',
       name: {
@@ -631,13 +625,13 @@ export function domainToDomainDeclaration(domain: ParserDomain): DomainDeclarati
           name: field.name.name,
           span: locationToSpan(field.name.location),
         },
-        type: field.type as TypeExpression,
+        type: field.type as unknown as TypeExpression,
         optional: field.optional,
         annotations: [],
         constraints: [],
         span: locationToSpan(field.location),
       })),
-      invariants: entity.invariants as InvariantStatement[],
+      invariants: entity.invariants as unknown as InvariantStatement[],
       span: locationToSpan(entity.location),
     })),
     types: domain.types.filter(t => (t.definition as { kind?: string }).kind !== 'EnumType').map((t): TypeDeclaration => ({
@@ -647,7 +641,7 @@ export function domainToDomainDeclaration(domain: ParserDomain): DomainDeclarati
         name: t.name.name,
         span: locationToSpan(t.name.location),
       },
-      baseType: t.definition as TypeExpression,
+      baseType: t.definition as unknown as TypeExpression,
       constraints: [],
       span: locationToSpan(t.location),
     })),
@@ -700,7 +694,7 @@ export function domainToDomainDeclaration(domain: ParserDomain): DomainDeclarati
             name: f.name.name,
             span: locationToSpan(f.name.location),
           },
-          type: f.type as TypeExpression,
+          type: f.type as unknown as TypeExpression,
           optional: f.optional,
           annotations: [],
           constraints: [],
@@ -710,7 +704,7 @@ export function domainToDomainDeclaration(domain: ParserDomain): DomainDeclarati
       },
       output: {
         kind: 'OutputBlock',
-        success: b.output.success as TypeExpression,
+        success: b.output.success as unknown as TypeExpression,
         errors: b.output.errors.map((e): ErrorDeclaration => ({
           kind: 'ErrorDeclaration',
           name: {
@@ -735,7 +729,7 @@ export function domainToDomainDeclaration(domain: ParserDomain): DomainDeclarati
           implies: false,
           statements: b.preconditions.map(p => ({
             kind: 'ConditionStatement' as const,
-            expression: p as Expression,
+            expression: p as unknown as Expression,
             span,
           })),
           span,
@@ -750,7 +744,7 @@ export function domainToDomainDeclaration(domain: ParserDomain): DomainDeclarati
           implies: false,
           statements: pc.predicates.map(p => ({
             kind: 'ConditionStatement' as const,
-            expression: p as Expression,
+            expression: p as unknown as Expression,
             span,
           })),
           span: locationToSpan(pc.location),
@@ -780,7 +774,7 @@ export function domainToDomainDeclaration(domain: ParserDomain): DomainDeclarati
         scope: mappedScope,
         invariants: inv.predicates.map(p => ({
           kind: 'InvariantStatement' as const,
-          expression: p as Expression,
+          expression: p as unknown as Expression,
           span,
         })),
         span: locationToSpan(inv.location),

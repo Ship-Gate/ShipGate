@@ -1,10 +1,11 @@
-import { createConnection, ProposedFeatures, TextDocuments, CodeActionKind as CodeActionKind$1, TextDocumentSyncKind, SemanticTokensBuilder, CompletionItemKind, SymbolKind } from 'vscode-languageserver/node';
+import { createConnection, ProposedFeatures, TextDocuments, CodeActionKind as CodeActionKind$1, TextDocumentSyncKind, TextEdit as TextEdit$1, SemanticTokensBuilder, CompletionItemKind, SymbolKind } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { DiagnosticSeverity, IncrementalParser, SymbolIndex } from '@isl-lang/lsp-core';
 export { DiagnosticSeverity } from '@isl-lang/lsp-core';
 import { DiagnosticSeverity as DiagnosticSeverity$1, CodeActionKind, TextEdit } from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import * as path from 'path';
+import { createIntegratedFirewall } from '@isl-lang/firewall';
 
 // src/server.ts
 var ISLDocumentManager = class {
@@ -3360,6 +3361,141 @@ var ISLFormattingProvider = class {
     return indent + content;
   }
 };
+var SUPPORTED_EXTENSIONS = /* @__PURE__ */ new Set([".ts", ".tsx", ".js", ".jsx"]);
+var SOURCE_HOST = "vibecheck-host";
+var SOURCE_REALITY_GAP = "vibecheck-reality-gap";
+function tierToLSPSeverity(tier) {
+  switch (tier) {
+    case "hard_block":
+      return DiagnosticSeverity$1.Error;
+    case "soft_block":
+      return DiagnosticSeverity$1.Warning;
+    case "warn":
+      return DiagnosticSeverity$1.Information;
+    default:
+      return DiagnosticSeverity$1.Warning;
+  }
+}
+function severityToLSP(severity) {
+  switch (severity) {
+    case "critical":
+    case "high":
+      return DiagnosticSeverity$1.Error;
+    case "medium":
+      return DiagnosticSeverity$1.Warning;
+    case "low":
+      return DiagnosticSeverity$1.Information;
+    default:
+      return DiagnosticSeverity$1.Warning;
+  }
+}
+function claimLocationToRange(claim) {
+  const { line, column, length } = claim.location;
+  return {
+    start: { line: line - 1, character: Math.max(0, column - 1) },
+    end: { line: line - 1, character: Math.max(0, column - 1 + length) }
+  };
+}
+function lineOnlyRange(document, claimId) {
+  const match = /^line-(\d+)$/.exec(claimId);
+  const line = match ? parseInt(match[1], 10) : 1;
+  const lineIndex = Math.max(0, line - 1);
+  const text = document.getText().split("\n")[lineIndex];
+  const endChar = text !== void 0 ? text.length : 0;
+  return {
+    start: { line: lineIndex, character: 0 },
+    end: { line: lineIndex, character: endChar }
+  };
+}
+var DEFAULT_OPTIONS = {
+  projectRoot: process.cwd(),
+  enabled: true,
+  hostScanner: true,
+  realityGapScanner: true
+};
+var ScannerDiagnosticsProvider = class {
+  options;
+  firewallInstance;
+  constructor(options = {}) {
+    this.options = { ...DEFAULT_OPTIONS, ...options };
+    this.firewallInstance = createIntegratedFirewall({
+      projectRoot: this.options.projectRoot,
+      mode: "observe"
+    });
+  }
+  configure(options) {
+    this.options = { ...this.options, ...options };
+    this.firewallInstance = createIntegratedFirewall({
+      projectRoot: this.options.projectRoot,
+      mode: "observe"
+    });
+  }
+  /** Whether this document should be scanned (file type). */
+  isSupported(document) {
+    const path2 = uriToFilePath(document.uri);
+    const ext = path2.includes(".") ? path2.slice(path2.lastIndexOf(".")) : "";
+    return SUPPORTED_EXTENSIONS.has(ext.toLowerCase());
+  }
+  /**
+   * Run Host + Reality-Gap scanners and return LSP diagnostics.
+   * Suppressions and safelists are applied inside the firewall.
+   */
+  async provideDiagnostics(document) {
+    if (!this.options.enabled || !this.isSupported(document)) {
+      return [];
+    }
+    const filePath = uriToFilePath(document.uri);
+    this.options.projectRoot || filePath.split(/[/\\]/).slice(0, -1).join("/");
+    this.firewallInstance.setMode("observe");
+    const result = await this.firewallInstance.evaluate({
+      filePath,
+      content: document.getText()
+    });
+    return this.mapResultToDiagnostics(document, result);
+  }
+  /**
+   * Map firewall verdicts to LSP diagnostics.
+   * Severity, code, and message match CLI output.
+   */
+  mapResultToDiagnostics(document, result) {
+    const diagnostics = [];
+    const claimById = new Map(result.claims.map((c) => [c.id, c]));
+    for (const v of result.violations) {
+      const range = this.rangeForViolation(document, v, claimById);
+      const severity = v.severity ? severityToLSP(v.severity) : tierToLSPSeverity(v.tier);
+      const source = isHostViolation(v.policyId) ? SOURCE_HOST : SOURCE_REALITY_GAP;
+      diagnostics.push({
+        range,
+        message: v.message,
+        severity,
+        code: v.policyId,
+        source,
+        data: {
+          suggestion: v.suggestion,
+          tier: v.tier,
+          quickFixes: v.quickFixes
+        }
+      });
+    }
+    return diagnostics;
+  }
+  rangeForViolation(document, v, claimById) {
+    const claim = claimById.get(v.claimId);
+    if (claim?.location) {
+      return claimLocationToRange(claim);
+    }
+    return lineOnlyRange(document, v.claimId);
+  }
+};
+function isHostViolation(policyId) {
+  return policyId === "ghost-route" || policyId === "ghost-env" || policyId === "ghost-import" || policyId === "ghost-file";
+}
+function uriToFilePath(uri) {
+  if (uri.startsWith("file://")) {
+    return uri.slice(7).replace(/%2f/gi, "/").replace(/%5c/gi, "\\");
+  }
+  return uri;
+}
 var ISLServer = class {
   connection;
   documents;
@@ -3372,7 +3508,10 @@ var ISLServer = class {
   semanticTokensProvider;
   codeActionProvider;
   formattingProvider;
+  scannerDiagnosticsProvider;
   diagnosticTimers = /* @__PURE__ */ new Map();
+  lastScannerDiagnostics = /* @__PURE__ */ new Map();
+  scannerVersions = /* @__PURE__ */ new Map();
   constructor() {
     this.connection = createConnection(ProposedFeatures.all);
     this.documents = new TextDocuments(TextDocument);
@@ -3385,6 +3524,7 @@ var ISLServer = class {
     this.semanticTokensProvider = new ISLSemanticTokensProvider(this.documentManager);
     this.codeActionProvider = new ISLCodeActionProvider(this.documentManager);
     this.formattingProvider = new ISLFormattingProvider();
+    this.scannerDiagnosticsProvider = new ScannerDiagnosticsProvider();
     this.setupHandlers();
   }
   setupHandlers() {
@@ -3462,6 +3602,8 @@ var ISLServer = class {
     this.connection.onHover((params) => {
       const document = this.documents.get(params.textDocument.uri);
       if (!document) return null;
+      const scannerHover = this.getScannerHover(params.textDocument.uri, params.position);
+      if (scannerHover) return scannerHover;
       const hover = this.hoverProvider.provideHover(document, params.position);
       if (!hover) return null;
       return {
@@ -3486,7 +3628,44 @@ var ISLServer = class {
     this.connection.onCodeAction((params) => {
       const document = this.documents.get(params.textDocument.uri);
       if (!document) return [];
-      return this.codeActionProvider.provideCodeActions(document, params.range, params.context);
+      const actions = this.codeActionProvider.provideCodeActions(document, params.range, params.context);
+      for (const diag of params.context.diagnostics) {
+        if (diag.source !== SOURCE_HOST && diag.source !== SOURCE_REALITY_GAP) continue;
+        const data = diag.data;
+        const suppressComment = diag.source === SOURCE_HOST ? `// vibecheck-ignore` : `// islstudio-ignore ${diag.code}`;
+        actions.push({
+          title: `Suppress ${diag.code} for this line`,
+          kind: CodeActionKind$1.QuickFix,
+          diagnostics: [diag],
+          edit: {
+            changes: {
+              [document.uri]: [
+                TextEdit$1.insert(
+                  { line: diag.range.start.line, character: 0 },
+                  suppressComment + "\n"
+                )
+              ]
+            }
+          }
+        });
+        if (data?.quickFixes) {
+          for (const fix of data.quickFixes) {
+            actions.push({
+              title: fix.title,
+              kind: CodeActionKind$1.QuickFix,
+              diagnostics: [diag],
+              edit: {
+                changes: {
+                  [document.uri]: [
+                    TextEdit$1.replace(diag.range, fix.edit)
+                  ]
+                }
+              }
+            });
+          }
+        }
+      }
+      return actions;
     });
     this.connection.onDocumentFormatting((params) => {
       const document = this.documents.get(params.textDocument.uri);
@@ -3538,27 +3717,114 @@ var ISLServer = class {
   }
   validateDocument(document) {
     this.documentManager.updateDocument(document, true);
-    const diagnostics = this.documentManager.getDiagnostics(document.uri);
+    const islDiagnostics = this.documentManager.getDiagnostics(document.uri);
+    const parserDiagnostics = islDiagnostics.map((d) => ({
+      range: ISLDocumentManager.toRange(d.location),
+      message: d.message,
+      severity: d.severity,
+      code: d.code,
+      source: d.source,
+      relatedInformation: d.relatedInfo?.map((r) => ({
+        location: {
+          uri: document.uri,
+          range: ISLDocumentManager.toRange(r.location)
+        },
+        message: r.message
+      }))
+    }));
     this.connection.sendDiagnostics({
       uri: document.uri,
-      diagnostics: diagnostics.map((d) => ({
-        range: ISLDocumentManager.toRange(d.location),
-        message: d.message,
-        severity: d.severity,
-        code: d.code,
-        source: d.source,
-        relatedInformation: d.relatedInfo?.map((r) => ({
-          location: {
-            uri: document.uri,
-            range: ISLDocumentManager.toRange(r.location)
-          },
-          message: r.message
-        }))
-      }))
+      diagnostics: parserDiagnostics
     });
+    this.runScannerDiagnostics(document, parserDiagnostics);
+  }
+  /**
+   * Run Host + Reality-Gap scanners async and merge with parser diagnostics.
+   * Suppressions and safelists are applied inside the firewall.
+   */
+  async runScannerDiagnostics(document, parserDiagnostics) {
+    try {
+      if (!this.scannerDiagnosticsProvider.isSupported(document)) {
+        this.lastScannerDiagnostics.delete(document.uri);
+        return;
+      }
+      const versionAtStart = document.version;
+      this.scannerVersions.set(document.uri, versionAtStart);
+      const scannerDiags = await this.scannerDiagnosticsProvider.provideDiagnostics(document);
+      if ((this.scannerVersions.get(document.uri) ?? 0) > versionAtStart) {
+        return;
+      }
+      this.lastScannerDiagnostics.set(document.uri, scannerDiags);
+      const merged = this.deduplicateDiagnostics([...parserDiagnostics, ...scannerDiags]);
+      this.connection.sendDiagnostics({
+        uri: document.uri,
+        diagnostics: merged
+      });
+    } catch (err) {
+      console.error("[scanner-diagnostics] Error:", err);
+    }
+  }
+  /**
+   * Deduplicate diagnostics by code + start position.
+   * Prefers entries with richer data (e.g. scanner entries with suggestions).
+   */
+  deduplicateDiagnostics(diagnostics) {
+    const byKey = /* @__PURE__ */ new Map();
+    for (const d of diagnostics) {
+      const key = `${d.code}:${d.range.start.line}:${d.range.start.character}`;
+      const existing = byKey.get(key);
+      if (!existing) {
+        byKey.set(key, d);
+      } else if (d.data && !existing.data) {
+        byKey.set(key, d);
+      }
+    }
+    return Array.from(byKey.values());
   }
   clearDiagnostics(uri) {
+    this.lastScannerDiagnostics.delete(uri);
+    this.scannerVersions.delete(uri);
     this.connection.sendDiagnostics({ uri, diagnostics: [] });
+  }
+  /**
+   * Return hover info for scanner diagnostics at the given position.
+   * Shows tier, source, and suggestion if available.
+   */
+  getScannerHover(uri, position) {
+    const scannerDiags = this.lastScannerDiagnostics.get(uri);
+    if (!scannerDiags || scannerDiags.length === 0) return null;
+    const matching = scannerDiags.filter((d) => {
+      const r = d.range;
+      if (position.line < r.start.line || position.line > r.end.line) return false;
+      if (position.line === r.start.line && position.character < r.start.character) return false;
+      if (position.line === r.end.line && position.character > r.end.character) return false;
+      return true;
+    });
+    if (matching.length === 0) return null;
+    const parts = [];
+    for (const d of matching) {
+      const data = d.data;
+      const tierLabel = data?.tier === "hard_block" ? "\u{1F534} Hard Block" : data?.tier === "soft_block" ? "\u{1F7E1} Soft Block" : "\u{1F535} Warning";
+      const sourceLabel = d.source === SOURCE_HOST ? "Host Scanner" : "Reality-Gap Scanner";
+      let md = `**${sourceLabel}** \u2014 ${tierLabel}
+
+`;
+      md += `**\`${d.code}\`**: ${d.message}
+`;
+      if (data?.suggestion) {
+        md += `
+\u{1F4A1} **Suggestion:** ${data.suggestion}
+`;
+      }
+      parts.push(md);
+    }
+    return {
+      contents: {
+        kind: "markdown",
+        value: parts.join("\n---\n")
+      },
+      range: matching[0].range
+    };
   }
   mapCompletionKind(kind) {
     switch (kind) {
@@ -3649,6 +3915,6 @@ var ISLServer = class {
   }
 };
 
-export { ISLCodeActionProvider, ISLCompletionProvider, ISLDefinitionProvider, ISLDiagnosticsProvider, ISLDocumentManager, ISLFormattingProvider, ISLHoverProvider, ISLImportResolver, ISLSemanticLinter, ISLSemanticTokensProvider, ISLServer, ISLSymbolProvider, LINT_RULES, TOKEN_MODIFIERS, TOKEN_TYPES };
+export { ISLCodeActionProvider, ISLCompletionProvider, ISLDefinitionProvider, ISLDiagnosticsProvider, ISLDocumentManager, ISLFormattingProvider, ISLHoverProvider, ISLImportResolver, ISLSemanticLinter, ISLSemanticTokensProvider, ISLServer, ISLSymbolProvider, LINT_RULES, SOURCE_HOST, SOURCE_REALITY_GAP, ScannerDiagnosticsProvider, TOKEN_MODIFIERS, TOKEN_TYPES };
 //# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map

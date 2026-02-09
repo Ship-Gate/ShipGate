@@ -473,7 +473,12 @@ export default defineConfig({
       }
 
       // Run tests based on language
-      const result = await this.executeTestsForLanguage(workDir, language);
+      let result = await this.executeTestsForLanguage(workDir, language);
+      
+      // BUG-005 FIX: If no tests were executed, generate synthetic tests from postconditions
+      if (result.details.length === 0) {
+        result = this.generateSyntheticTests(domain);
+      }
       
       // Categorize test results for trust scoring
       result.categories = this.categorizeResults(result.details);
@@ -560,6 +565,83 @@ export default defineConfig({
   }
 
   /**
+   * BUG-005 FIX: Generate synthetic tests from domain postconditions and invariants
+   * This is used as a fallback when vitest subprocess fails or returns 0 tests
+   */
+  private generateSyntheticTests(domain: Domain): TestResult {
+    const details: TestDetail[] = [];
+    const startTime = Date.now();
+
+    for (const behavior of domain.behaviors) {
+      const behaviorName = behavior.name.name;
+
+      // Generate tests for postconditions
+      if (behavior.postconditions && Array.isArray(behavior.postconditions)) {
+        for (let i = 0; i < behavior.postconditions.length; i++) {
+          const post = behavior.postconditions[i];
+          const postText = typeof post === 'string' ? post : 
+                          (post as { expression?: string })?.expression ?? `postcondition_${i}`;
+          details.push({
+            name: `${behaviorName}: postcondition - ${postText}`,
+            status: 'skipped',
+            duration: 0,
+            category: 'postcondition',
+            impact: 'high',
+            error: 'Synthetic test - implementation verification pending',
+          });
+        }
+      }
+
+      // Generate tests for invariants
+      if (behavior.invariants && Array.isArray(behavior.invariants)) {
+        for (let i = 0; i < behavior.invariants.length; i++) {
+          const inv = behavior.invariants[i];
+          const invText = typeof inv === 'string' ? inv :
+                         (inv as { expression?: string })?.expression ?? `invariant_${i}`;
+          details.push({
+            name: `${behaviorName}: invariant - ${invText}`,
+            status: 'skipped',
+            duration: 0,
+            category: 'invariant',
+            impact: 'high',
+            error: 'Synthetic test - implementation verification pending',
+          });
+        }
+      }
+
+      // Generate a basic behavior test
+      details.push({
+        name: `${behaviorName}: behavior execution`,
+        status: 'skipped',
+        duration: 0,
+        category: 'scenario',
+        impact: 'medium',
+        error: 'Synthetic test - behavior verification pending',
+      });
+    }
+
+    // If no behaviors found, add a domain-level test
+    if (details.length === 0) {
+      details.push({
+        name: `${domain.name.name}: domain validation`,
+        status: 'skipped',
+        duration: 0,
+        category: 'scenario',
+        impact: 'low',
+        error: 'No behaviors defined in domain',
+      });
+    }
+
+    return {
+      passed: 0,
+      failed: 0,
+      skipped: details.length,
+      duration: Date.now() - startTime,
+      details,
+    };
+  }
+
+  /**
    * Execute tests based on implementation language
    */
   private async executeTestsForLanguage(
@@ -589,7 +671,7 @@ export default defineConfig({
 
       const proc = spawn('pytest', ['--tb=short', '-q', '--json-report', '--json-report-file=results.json'], {
         cwd: workDir,
-        shell: true,
+        shell: false,
         timeout: this.options.timeout,
       });
 
@@ -677,7 +759,7 @@ export default defineConfig({
 
       const proc = spawn('go', ['test', '-json', './...'], {
         cwd: workDir,
-        shell: true,
+        shell: false,
         timeout: this.options.timeout,
       });
 
@@ -783,7 +865,7 @@ export default defineConfig({
 
       const proc = spawn('npx', ['vitest', 'run', '--reporter=json'], {
         cwd: workDir,
-        shell: true,
+        shell: false,
         timeout: this.options.timeout,
       });
 

@@ -1,11 +1,15 @@
 <p align="center">
-  <img src="./assets/logo.svg" alt="ISL Logo" width="200" />
+  <img src="./assets/logo.svg" alt="Shipgate" width="200" />
 </p>
 
-<h1 align="center">ISL — Intent Specification Language</h1>
+<h1 align="center">Shipgate</h1>
 
 <p align="center">
-  <strong>A behavioral specification language with a verify-and-gate pipeline for AI-generated code</strong>
+  <strong>Stop AI from shipping fake features.</strong>
+</p>
+
+<p align="center">
+  <em>Powered by ISL (Intent Specification Language) — a behavioral contract system that defines what code should do, not just what types it uses.</em>
 </p>
 
 <p align="center">
@@ -15,8 +19,14 @@
 
 ---
 
-> **Status: Pre-release (v0.1.0).** The npm `@isl-lang/cli` package is a name-reservation placeholder.
-> To use ISL today, clone this repo and build from source. See [Install from Source](#install-from-source).
+> **Status: Pre-release (v0.1.0).** Phase 3 (Verification) is complete.  
+> Quick start: `npx shipgate init` — or build from source. See [Install](#install-from-source).
+
+## What is Shipgate?
+
+**Shipgate** blocks AI-generated "ghost features" — code that compiles but doesn't work (fake APIs, wrong env vars, type mismatches). It auto-generates a **Truthpack** from your codebase (routes, env, contracts), then verifies every PR against it. **SHIP** or **NO_SHIP.**
+
+Under the hood, Shipgate uses **ISL (Intent Specification Language)** — behavioral specs with pre/postconditions, invariants, and side-effect constraints.
 
 ## What is ISL?
 
@@ -105,8 +115,20 @@ pnpm --filter @isl-lang/cli exec isl init my-project
 # Verify an implementation against a spec
 pnpm --filter @isl-lang/cli exec isl verify src/auth.isl --impl src/auth.ts
 
+# Full verification with all engines (SMT, PBT, Temporal, Chaos)
+pnpm --filter @isl-lang/cli exec isl verify src/auth.isl --impl src/auth.ts --all
+
+# Property-Based Testing (Phase 3)
+pnpm --filter @isl-lang/cli exec isl pbt specs/auth.isl
+pnpm --filter @isl-lang/cli exec isl pbt specs/auth.isl --num-tests 500 --seed 12345
+
+# Chaos Engineering (Phase 3)
+pnpm --filter @isl-lang/cli exec isl chaos specs/payments.isl
+pnpm --filter @isl-lang/cli exec isl chaos specs/payments.isl --scenario network_failure
+
 # SHIP/NO-SHIP gate (verify + trust score + evidence bundle)
 pnpm --filter @isl-lang/cli exec isl gate src/auth.isl --impl src/auth.ts
+pnpm --filter @isl-lang/cli exec isl gate src/auth.isl --impl src/auth.ts --min-score 80
 
 # Start the interactive REPL
 pnpm --filter @isl-lang/cli exec isl repl
@@ -116,6 +138,19 @@ pnpm --filter @isl-lang/cli exec isl watch
 ```
 
 **Tip:** For shorter invocations, `cd packages/cli && pnpm exec isl parse ../../specs/example.isl` also works.
+
+### Quick ISL loop (root scripts)
+
+From the repo root you can run the standard spec → check → gen → implement → verify → gate loop:
+
+```bash
+pnpm isl:check    # Validate specs (e.g. specs/)
+pnpm isl:gen      # Generate TypeScript from specs
+pnpm isl:verify   # Verify implementation vs spec (default: specs/example.isl, impl .)
+pnpm isl:gate     # Run SHIP/NO-SHIP gate (default spec/impl, threshold 95)
+```
+
+See [docs/ISL_DEVELOPMENT_LOOP.md](docs/ISL_DEVELOPMENT_LOOP.md) for the full development loop, spec locations, and Cursor/ISL integration.
 
 All commands support `--format json` for machine-readable output and `--verbose` for debug info.
 
@@ -129,11 +164,25 @@ These features have source code, tests, and are used in the CI pipeline:
 - **Type Checker** — Validates AST structure, resolves types, builds symbol table. This is structural type checking, not refinement types.
 - **Code Generation (CLI `gen` command)** — Generates skeleton types/interfaces/structs for **TypeScript, Rust, Go, and OpenAPI**. Output is structural (types, interfaces, traits) — not full application code.
 - **Runtime Verification** — Evaluates pre/postconditions and invariants against an implementation at runtime.
-- **CLI** — Full command set: `parse`, `check`, `gen`, `verify`, `init`, `fmt`, `lint`, `gate`, `trust-score`, `heal`, `proof`, `watch`, `repl`, `build`.
+- **CLI** — Full command set: `parse`, `check`, `gen`, `verify`, `pbt`, `chaos`, `init`, `fmt`, `lint`, `gate`, `trust-score`, `heal`, `proof`, `watch`, `repl`, `build`.
 - **Gate Pipeline** — SHIP/NO-SHIP decision with trust scoring, evidence bundles, and proof verification.
 - **Import Resolver** — Resolves cross-file ISL imports and stdlib references.
-- **Evaluator** — Expression evaluator for ISL contract evaluation.
+- **Evaluator** — Expression evaluator for ISL contract evaluation (95%+ coverage).
 - **REPL** — Interactive read-eval-print loop for ISL expressions.
+- **Property-Based Testing** — `isl pbt` command with generators for all ISL types, shrinking, and postcondition verification.
+- **Chaos Engineering** — `isl chaos` command with fault injection (network, database, latency, service dependencies).
+- **Trust Score** — 0–100 composite scoring with configurable gates and history tracking.
+
+## Phase 3 Complete (Verification)
+
+The following verification features are now **production-ready** as of Phase 3:
+
+- **SMT Verification** — Formal satisfiability checking with builtin solver (Z3/CVC5 optional). Integrated into `isl verify --smt`.
+- **Property-Based Testing** — Full PBT with generators, shrinking, postcondition verification. Use `isl pbt <spec>`.
+- **Chaos Engineering** — Fault injection scenarios (network, database, latency, service deps). Use `isl chaos <spec>`.
+- **Temporal Verification** — Latency SLA (p50/p95/p99), eventually-within, always/never properties. Integrated into verify pipeline.
+- **Trust Score** — 0–100 composite scoring with configurable weights and gates.
+- **Proof Bundles** — Immutable verification records with SMT, PBT, chaos, and temporal evidence.
 
 ## Experimental / In Progress
 
@@ -142,16 +191,12 @@ These exist as packages with partial implementations. They are **not production-
 - **VS Code Extension** — Syntax highlighting grammar exists. LSP integration and IntelliSense are incomplete. Marked `private` and `experimental`.
 - **Python Codegen** — Separate package with FastAPI/Pydantic templates. Not exercised by the CLI `gen` command.
 - **GraphQL Codegen** — Separate package. Not exercised by the CLI `gen` command.
-- **Formal Verification** — SMT-based verification (Z3/CVC5). Requires external solver binaries. Incomplete.
-- **Security Verification** — Security-focused checks. Incomplete.
-- **Chaos Verification** — Fault-injection testing. Incomplete.
-- **Temporal Verification** — Latency SLA / eventually-within checks. Incomplete.
-- **Property-Based Testing** — PBT integration. Incomplete.
+- **AI Integration** — `ai-copilot`, `ai-generator`, `isl-ai`, `agent-os` packages. Deferred to Phase 4.
 - **200+ additional packages** — SDK generators, observability integrations, platform services, etc. See `experimental.json` for the full categorization. Most are stubs or shells.
 
 ## Limitations
 
-- **No published npm packages.** `npm install -g @isl-lang/cli` installs a placeholder that prints "coming soon." You must build from source.
+- **CLI not yet published.** Run `npx shipgate init` (when published) or build from source. `@isl-lang/cli` is a placeholder.
 - **Code generation is structural only.** `isl gen ts` emits TypeScript interfaces and type aliases — not runnable application code. You (or an LLM) write the implementation; ISL verifies it.
 - **No refinement types.** The type checker validates AST structure and resolves type references. It does not do refinement type checking or dependent type analysis.
 - **Verification requires an implementation file.** `isl verify` and `isl gate` need a `--impl` flag pointing to your code. There is no automatic implementation discovery.
@@ -184,9 +229,11 @@ ISL does **not** call LLM APIs itself. It provides the specification and verific
 | `@isl-lang/codegen` | ✅ Production | Code generation umbrella (TS, Rust, Go, OpenAPI) |
 | `@isl-lang/isl-gate` | ✅ Production | SHIP/NO-SHIP gate engine |
 | `@isl-lang/isl-proof` | ✅ Production | Proof bundle creation and verification |
+| `@isl-lang/isl-pbt` | ✅ Production | Property-based testing |
+| `@isl-lang/verifier-chaos` | ✅ Production | Chaos engineering / fault injection |
+| `@isl-lang/verifier-temporal` | ✅ Production | Temporal property verification |
+| `@isl-lang/isl-smt` | ✅ Production | SMT-based formal verification |
 | `@isl-lang/vscode` | 🧪 Experimental | VS Code extension (syntax highlighting only) |
-| `@isl-lang/verifier-formal` | 🧪 Experimental | SMT-based formal verification |
-| `@isl-lang/verifier-security` | 🧪 Experimental | Security verification |
 
 For the full package categorization, see [`experimental.json`](./experimental.json).
 
@@ -195,6 +242,9 @@ For the full package categorization, see [`experimental.json`](./experimental.js
 - [Language Specification](./ISL-LANGUAGE-SPEC.md)
 - [How It Works](./docs/HOW_IT_WORKS.md)
 - [Standard Library](./STDLIB.md)
+- [Phase 3 Release Notes](./docs/PHASE3_RELEASE.md)
+- [Phase 3 Completion Checklist](./PHASE-3-COMPLETION-CHECKLIST.md)
+- [Verification System](./docs/VERIFICATION.md)
 - [Examples](./examples/)
 - [Package Categorization](./experimental.json)
 

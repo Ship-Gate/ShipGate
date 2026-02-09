@@ -243,6 +243,17 @@ export interface CriticalBlockers {
   fakeAuthFindings?: number;
   /** Custom blocker reasons */
   customBlockers?: string[];
+  
+  // ─────────────────────────────────────────────────────────────────────────
+  // PBT Blockers (v1.1.0) - Property-Based Testing failures block SHIP
+  // ─────────────────────────────────────────────────────────────────────────
+  
+  /** PBT postcondition violations */
+  pbtPostconditionViolations?: number;
+  /** PBT invariant violations (always critical) */
+  pbtInvariantViolations?: number;
+  /** PBT behaviors with failures */
+  pbtFailedBehaviors?: number;
 }
 
 // ============================================================================

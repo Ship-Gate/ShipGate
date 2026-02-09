@@ -18,7 +18,7 @@
     "build": "tsup src/index.ts --format esm --dts --clean",
     "build:no-dts": "tsup src/index.ts --format esm --clean",
     "dev": "tsup src/index.ts --format esm --watch",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist"

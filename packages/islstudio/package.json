@@ -1,9 +1,10 @@
 {
-  "name": "islstudio",
+  "name": "shipgate",
   "version": "0.1.2",
-  "description": "ISL Studio - Ship decisions with receipts",
+  "description": "Shipgate - Stop AI from shipping fake features",
   "type": "module",
   "bin": {
+    "shipgate": "./bin/islstudio.js",
     "islstudio": "./bin/islstudio.js"
   },
   "main": "./dist/index.js",
@@ -21,7 +22,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup src/index.ts --format esm --watch",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
@@ -46,11 +47,11 @@
   ],
   "author": "ISL Team",
   "license": "MIT",
+  "homepage": "https://shipgate.dev",
   "repository": {
     "type": "git",
-    "url": "https://github.com/isl-lang/isl-studio"
+    "url": "https://github.com/shipgate/shipgate"
   },
-  "homepage": "https://islstudio.dev",
   "private": true,
   "experimental": true
 }

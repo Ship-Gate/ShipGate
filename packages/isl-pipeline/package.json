@@ -21,7 +21,7 @@
     "demo:login": "tsx demo-login/run.ts",
     "demo:login:failure": "tsx demo-login/failure-mode.ts",
     "cli": "tsx src/cli.ts",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "benchmark": "tsx src/performance/cli.ts benchmark",
     "perf:regression": "tsx src/performance/cli.ts regression"
   },

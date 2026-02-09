@@ -20,19 +20,31 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-    {
-      name: 'walkthrough',
-      use: {
-        ...devices['Desktop Chrome'],
-        video: {
-          mode: 'on',
-          size: { width: 1920, height: 1080 },
+{
+        name: 'walkthrough',
+        use: {
+          ...devices['Desktop Chrome'],
+          video: {
+            mode: 'on',
+            size: { width: 1920, height: 1080 },
+          },
+          viewport: { width: 1920, height: 1080 },
         },
-        viewport: { width: 1920, height: 1080 },
+        testMatch: /walkthrough\.spec\.ts/,
       },
-      testMatch: /walkthrough\.spec\.ts/,
-    },
-  ],
+      {
+        name: 'three-big-lies',
+        use: {
+          ...devices['Desktop Chrome'],
+          video: {
+            mode: 'on',
+            size: { width: 1920, height: 1080 },
+          },
+          viewport: { width: 1920, height: 1080 },
+        },
+        testMatch: /three-big-lies\.spec\.ts/,
+      },
+    ],
 
   webServer: {
     command: 'npm run dev',

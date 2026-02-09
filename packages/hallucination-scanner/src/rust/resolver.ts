@@ -85,13 +85,15 @@ export async function resolveRust(options: RustResolverOptions): Promise<RustDep
     const node = graph.nodes.get(modulePath);
     if (node && node.uses.length > 0) {
       const firstUse = node.uses[0];
-      findings.push({
-        kind: 'unreachable_import',
-        message: `Module is not reachable from crate entry points (main.rs/lib.rs)`,
-        path: modulePath,
-        location: firstUse.location,
-        suggestion: 'Ensure this module is included via mod declarations from lib.rs or main.rs',
-      });
+      if (firstUse) {
+        findings.push({
+          kind: 'unreachable_import',
+          message: `Module is not reachable from crate entry points (main.rs/lib.rs)`,
+          path: modulePath,
+          location: firstUse.location,
+          suggestion: 'Ensure this module is included via mod declarations from lib.rs or main.rs',
+        });
+      }
     }
   }
 
@@ -147,7 +149,7 @@ function findFirstUseLocation(graph: RustModuleGraph, crateName: string): Source
 /**
  * Compute 0-100 trust score from findings (100 = no issues)
  */
-function computeTrustScoreFromFindings(findings: RustFinding[], graph: RustModuleGraph): number {
+function computeTrustScoreFromFindings(findings: RustFinding[], _graph: RustModuleGraph): number {
   if (findings.length === 0) {
     return 100;
   }

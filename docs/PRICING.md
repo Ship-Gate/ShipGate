@@ -1,4 +1,4 @@
-# ISL Studio Pricing
+# Shipgate Pricing
 
 **Free for everyone. Pay for governance.**
 
@@ -11,7 +11,7 @@ Everything you need to ship safely.
 **Included:**
 - ✅ 25 built-in rules (auth, pii, payments, rate-limit, intent)
 - ✅ GitHub/GitLab/Bitbucket/Azure DevOps integration
-- ✅ CLI (`npx islstudio gate`)
+- ✅ CLI (`npx shipgate gate`)
 - ✅ VS Code extension
 - ✅ Evidence bundles + HTML reports
 - ✅ Baseline + inline suppressions
@@ -92,7 +92,7 @@ Everything in Team, plus org-wide control.
 
 ### Why is Free so generous?
 
-We want ISL Studio on every repo. Usage = proof. Proof = enterprise customers.
+We want Shipgate on every repo. Usage = proof. Proof = enterprise customers.
 
 ### Can I use Free forever?
 
@@ -100,7 +100,7 @@ Yes. The core gate is MIT licensed and always will be.
 
 ### What counts as a "user"?
 
-Anyone who commits to a repo with ISL Studio enabled. Bots don't count.
+Anyone who commits to a repo with Shipgate enabled. Bots don't count.
 
 ### Do I need Team for compliance?
 
@@ -117,9 +117,9 @@ Enterprise: Optional cloud or on-prem.
 
 ### How do I upgrade?
 
-Email team@islstudio.dev or use the CLI:
+Email team@shipgate.dev or use the CLI:
 ```bash
-npx islstudio upgrade
+npx shipgate upgrade
 ```
 
 ---
@@ -144,6 +144,6 @@ npx islstudio upgrade
 
 ## Contact
 
-**Sales:** team@islstudio.dev
-**Support:** support@islstudio.dev
-**Twitter:** @islstudio
+**Sales:** team@shipgate.dev
+**Support:** support@shipgate.dev
+**Twitter:** @shipgate

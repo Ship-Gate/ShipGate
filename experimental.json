@@ -21,7 +21,7 @@
       "@isl-lang/pipeline",
       "@isl-lang/isl-compiler",
       "@isl-lang/import-resolver",
-      "@isl-lang/isl-expression-evaluator",
+      "@isl-lang/static-analyzer",
       "@isl-lang/isl-semantic-analysis"
     ],
     "verification": [

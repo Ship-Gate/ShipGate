@@ -1,0 +1,24 @@
+{
+  "runId": "2026-02-09T03-26-2510b24a",
+  "command": "ship",
+  "args": [
+    "--json"
+  ],
+  "timestamp": "2026-02-09T03:26:04.406Z",
+  "duration": 41281,
+  "project": {
+    "path": "c:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS",
+    "git": "4c6cc85cac47d9ccac148e8a042b10c66dbc9872",
+    "branch": null
+  },
+  "environment": {
+    "nodeVersion": "v24.12.0",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "execution": {
+    "exitCode": 2,
+    "endTime": "2026-02-09T03:26:45.687Z"
+  },
+  "outputs": []
+}

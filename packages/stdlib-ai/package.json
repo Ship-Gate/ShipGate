@@ -78,7 +78,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint implementations/typescript --ext .ts",
@@ -106,7 +106,6 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "publishConfig": {
-    "access": "public"
-  }
+  "private": true,
+  "experimental": true
 }

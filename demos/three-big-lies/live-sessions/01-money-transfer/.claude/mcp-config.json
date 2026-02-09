@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "vibecheck": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@vibecheck/mcp-server"
+      ],
+      "env": {
+        "VIBECHECK_PROJECT_PATH": "c:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\demos\\three-big-lies\\live-sessions\\01-money-transfer"
+      }
+    }
+  }
+}

@@ -4,14 +4,24 @@
 
 @layer base {
   body {
-    @apply text-gray-800 antialiased;
+    @apply text-white antialiased;
     background: transparent;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl shadow-sm;
+    @apply bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl shadow-sm text-white;
   }
   
   .btn-primary {
@@ -19,11 +29,11 @@
   }
   
   .btn-secondary {
-    @apply px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-colors border border-gray-200 shadow-sm;
+    @apply px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors border border-white/30 shadow-sm;
   }
 
   .code-block {
-    @apply bg-gray-50 rounded-lg p-4 font-mono text-sm overflow-x-auto border border-gray-200 text-gray-800;
+    @apply bg-white/10 rounded-lg p-4 font-mono text-sm overflow-x-auto border border-white/20 text-white;
   }
 }
 
@@ -60,3 +70,322 @@
   content: '';
   @apply absolute -inset-1 bg-intent-500/20 rounded-lg animate-pulse;
 }
+
+/* --------------- Stroke / color keyframes --------------- */
+@keyframes stroke {
+  from { stroke-dashoffset: 5414.29; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes colorFade {
+  to { background-color: rgb(178, 203, 235); }
+}
+
+@keyframes revealText {
+  from { clip-path: polygon(0 0, 0% 0, 0% 100%, 0 100%); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; scale: 0.2; }
+}
+
+/* --------------- Section heading: readable text + stroke + glow --------------- */
+.section-heading {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  font-size: clamp(44px, 4vw, 70px);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  margin: 0;
+  padding-top: 72px;
+  position: relative;
+  width: min(60%, 720px);
+  text-align: right;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: white;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+  text-shadow:
+    0 0 20px rgba(59, 130, 246, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.section-heading::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -10px;
+  width: 62%;
+  height: 10px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 70% 50%, rgba(59, 130, 246, 0.25), transparent);
+  filter: blur(2px);
+  opacity: 1;
+}
+
+/* --------------- Premium cards (How it works boxes) --------------- */
+.premium-card {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255,255,255,0.15) inset;
+  backdrop-filter: blur(8px);
+  color: white;
+  padding: clamp(2rem, 3.5vw, 4rem);
+  opacity: 1;
+  scale: 1;
+}
+
+.premium-card h3 {
+  font-size: clamp(28px, 2.4vw, 46px);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  margin: 0 0 18px;
+  color: white;
+}
+
+.premium-card p {
+  font-size: 18px;
+  line-height: 1.5;
+  margin: 0 0 2em;
+  color: rgba(255, 255, 255, 0.95);
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+.section-card__btn {
+  background: linear-gradient(135deg, rgb(32, 91, 173), rgb(75, 140, 255));
+  border-radius: 999px;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  line-height: 44px;
+  height: 44px;
+  padding: 0 26px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+  width: fit-content;
+  box-shadow: 0 18px 50px rgba(32, 91, 173, 0.35);
+}
+
+.section-card__btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+@media (max-width: 980px) {
+  .section-heading {
+    width: 100%;
+    text-align: left;
+    padding-inline: 18px;
+  }
+}
+
+/* Problem section: center heading and content */
+#problem .section-heading,
+.problem-content .section-heading {
+  width: 100%;
+  max-width: 720px;
+  text-align: center;
+  padding-top: 0;
+}
+#problem .section-heading::after,
+.problem-content .section-heading::after {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: 40%;
+}
+
+/* Hero 3D parallax */
+.hero-wrapper--parallax {
+  perspective: 1400px;
+  overflow: hidden;
+}
+.hero-content--3d {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* --------------- Hero: animated stripes + scaling title + switch bg --------------- */
+@property --blink-opacity {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
+@keyframes blink-animation {
+  0%,
+  100% {
+    opacity: var(--blink-opacity, 1);
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes smoothBg {
+  from {
+    background-position: 50% 50%, 50% 50%;
+  }
+  to {
+    background-position: 350% 50%, 350% 50%;
+  }
+}
+
+.hero-wrapper {
+  --stripe-color: #fff;
+  width: 100%;
+  position: relative;
+  min-height: 100vh;
+}
+
+.hero-wrapper:has(#hero-switch:checked) {
+  --stripe-color: #000;
+}
+
+.hero-wrapper .hero {
+  width: 100%;
+  min-height: 100vh;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  place-content: center;
+  place-items: center;
+  --stripes: repeating-linear-gradient(
+    100deg,
+    var(--stripe-color) 0%,
+    var(--stripe-color) 7%,
+    transparent 10%,
+    transparent 12%,
+    var(--stripe-color) 16%
+  );
+  --rainbow: repeating-linear-gradient(
+    100deg,
+    #60a5fa 10%,
+    #e879f9 15%,
+    #60a5fa 20%,
+    #5eead4 25%,
+    #60a5fa 30%
+  );
+  background-image: var(--stripes), var(--rainbow);
+  background-size: 300%, 200%;
+  background-position: 50% 50%, 50% 50%;
+  filter: blur(10px) invert(100%) opacity(0.45) saturate(0.85);
+  mask-image: radial-gradient(ellipse 120% 80% at 80% 10%, black 15%, transparent 55%);
+}
+
+.hero-wrapper .hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--stripes), var(--rainbow);
+  background-size: 200%, 100%;
+  animation: smoothBg 60s linear infinite;
+  background-attachment: fixed;
+  mix-blend-mode: difference;
+  opacity: 0.6;
+}
+
+.hero-wrapper:has(#hero-switch:checked) .hero,
+.hero-wrapper:has(#hero-switch:checked) .hero::after {
+  filter: blur(14px) opacity(35%) saturate(0.8);
+}
+
+.hero-marquee {
+  position: absolute;
+  bottom: 12vh;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 5;
+}
+
+.hero-wrapper .hero-content {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  place-content: center;
+  place-items: center;
+  flex-flow: column;
+  gap: 4.5%;
+  text-align: center;
+  transform: translateY(-12vh);
+  color: white;
+}
+
+.hero-title-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05em;
+  line-height: 0.95;
+  padding: 0;
+  margin: 1px 0;
+}
+
+.hero-wrapper .h1--scalingSize {
+  font-size: clamp(2.5rem, 8vw + 2rem, 7rem);
+  position: relative;
+  font-weight: 700;
+  color: white;
+  padding: 0;
+}
+
+.hero-wrapper .h1--scalingSize::before {
+  display: none;
+}
+
+.hero-wrapper #hero-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  opacity: 0;
+}
+
+.hero-wrapper [for="hero-switch"] {
+  cursor: pointer;
+  transition: 0.15s linear(0 0%, 0.16 16.85%, 0.32 31.73%, 1 100%);
+  will-change: transform, font-weight;
+  padding: 0.5rem;
+}
+
+.hero-wrapper [for="hero-switch"]:where(:hover, :active, :focus-within) {
+  transition: 0.3s ease;
+  animation: animSwitch 0.2s alternate;
+}
+
+.hero-wrapper [for="hero-switch"]:where(:hover, :active, :focus-within) .hero-icon {
+  animation-play-state: paused;
+}
+
+@keyframes animSwitch {
+  50% {
+    transform: scale(1.2);
+    font-weight: 900;
+  }
+}
+
+.hero-wrapper .hero-icon {
+  width: 1lh;
+  height: 1lh;
+  aspect-ratio: 1/1;
+  padding: 0.25em 0.35rem;
+  border-radius: calc(1px / 0);
+  border: 1px dashed currentColor;
+  --blink-opacity: 1;
+  animation: blink-animation 2s ease-in-out infinite running;
+  display: inline-block;
+}
+

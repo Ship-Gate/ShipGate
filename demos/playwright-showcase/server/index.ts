@@ -5,6 +5,9 @@ const app = express();
 const PORT = 3456;
 
 app.use(cors());
+
+// Stripe webhook needs raw body for signature verification
+app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }));
 app.use(express.json());
 
 // Demo data - simulates ISL pipeline processing
@@ -362,17 +365,17 @@ app.post('/api/live/register', (req, res) => {
 
 app.post('/api/live/charge', (req, res) => {
   const { amount, card } = req.body;
-  
+
   const checks = [
     { name: 'amount > 0', passed: amount > 0, required: true },
     { name: 'card.isValid()', passed: card?.number?.length === 16, required: true },
   ];
-  
+
   const securityChecks = [
     { name: 'Sensitive data masked', passed: true },
     { name: 'Audit log created', passed: true },
   ];
-  
+
   setTimeout(() => {
     res.json({
       success: true,
@@ -390,6 +393,118 @@ app.post('/api/live/charge', (req, res) => {
   }, 400);
 });
 
-app.listen(PORT, () => {
-  console.log(`ISL Studio Demo API running at http://localhost:${PORT}`);
+// Subscription checkout: create Stripe Checkout session for Team plan
+// Requires STRIPE_SECRET_KEY and STRIPE_TEAM_PRICE_ID in env; otherwise returns 503 with message
+app.post('/api/create-checkout-session', async (req, res) => {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  const priceId = process.env.STRIPE_TEAM_PRICE_ID;
+  const successUrl = process.env.STRIPE_SUCCESS_URL ?? `${req.protocol}://${req.get('host')?.replace(String(PORT), '5173') ?? ''}/dashboard?session_id={CHECKOUT_SESSION_ID}`;
+  const cancelUrl = process.env.STRIPE_CANCEL_URL ?? `${req.protocol}://${req.get('host')?.replace(String(PORT), '5173') ?? ''}/pricing`;
+
+  if (!stripeSecretKey || !priceId) {
+    res.status(503).json({
+      message: 'Billing is not configured. Set STRIPE_SECRET_KEY and STRIPE_TEAM_PRICE_ID to enable checkout.',
+    });
+    return;
+  }
+
+  try {
+    const stripe = await import('stripe');
+    const stripeClient = new stripe.default(stripeSecretKey);
+    const session = await stripeClient.checkout.sessions.create({
+      mode: 'subscription',
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      allow_promotion_codes: true,
+      subscription_data: { trial_period_days: 14 },
+    });
+    res.json({ url: session.url ?? '' });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Checkout failed';
+    res.status(500).json({ message });
+  }
+});
+
+// Billing portal: create Stripe Customer Portal session for managing subscription
+// Requires STRIPE_SECRET_KEY and STRIPE_PORTAL_RETURN_URL (optional) in env
+app.post('/api/create-portal-session', async (req, res) => {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  const customerId = (req.body as { customerId?: string }).customerId;
+  const returnUrl = process.env.STRIPE_PORTAL_RETURN_URL ?? `${req.protocol}://${req.get('host')?.replace(String(PORT), '5173') ?? ''}/dashboard`;
+
+  if (!stripeSecretKey) {
+    res.status(503).json({
+      message: 'Billing is not configured. Set STRIPE_SECRET_KEY to enable portal.',
+    });
+    return;
+  }
+  if (!customerId || typeof customerId !== 'string') {
+    res.status(400).json({ message: 'customerId is required.' });
+    return;
+  }
+
+  try {
+    const stripe = await import('stripe');
+    const stripeClient = new stripe.default(stripeSecretKey);
+    const session = await stripeClient.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: returnUrl,
+    });
+    res.json({ url: session.url ?? '' });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Portal failed';
+    res.status(500).json({ message });
+  }
+});
+
+// Stripe webhook: subscription lifecycle (checkout completed, subscription updated/deleted)
+// Set STRIPE_WEBHOOK_SECRET in env (from Stripe Dashboard → Webhooks → signing secret)
+app.post('/api/webhooks/stripe', async (req: express.Request, res: express.Response) => {
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  const sig = req.headers['stripe-signature'];
+  const rawBody = req.body as Buffer | undefined;
+
+  if (!secret || !sig || !rawBody || !Buffer.isBuffer(rawBody)) {
+    res.status(400).send('Webhook secret or body missing');
+    return;
+  }
+
+  let event: import('stripe').Stripe.Event;
+  try {
+    const stripe = await import('stripe');
+    const stripeClient = new stripe.default(process.env.STRIPE_SECRET_KEY!);
+    event = stripeClient.webhooks.constructEvent(rawBody, sig, secret);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Webhook error';
+    res.status(400).send(message);
+    return;
+  }
+
+  switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object as import('stripe').Stripe.Checkout.Session;
+      const customerId = session.customer as string | null;
+      const subscriptionId = session.subscription as string | null;
+      if (customerId && subscriptionId) {
+        // TODO: persist customerId + subscriptionId to your DB or Clerk org/user metadata
+        // e.g. await clerkClient.organizations.updateOrganization(orgId, { publicMetadata: { stripeCustomerId: customerId, stripeSubscriptionId: subscriptionId, plan: 'team' } });
+      }
+      break;
+    }
+    case 'customer.subscription.updated':
+    case 'customer.subscription.deleted': {
+      const sub = event.data.object as import('stripe').Stripe.Subscription;
+      const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id;
+      const plan = sub.status === 'active' ? 'team' : 'free';
+      if (customerId) {
+        // TODO: update your DB or Clerk metadata with plan and optionally subscriptionId
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  res.sendStatus(200);
 });

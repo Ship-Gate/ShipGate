@@ -11,7 +11,8 @@ export default defineConfig({
     'src/service-mesh.ts',
   ],
   format: ['esm', 'cjs'],
-  dts: true,
+  dts: false,
+  // Declarations emitted via tsc --emitDeclarationOnly in build script (avoids tsup pulling workspace .d.ts as root files)
   clean: true,
   sourcemap: true,
   splitting: false,

@@ -7,4 +7,6 @@ export { default as TypeWriter } from './TypeWriter';
 export { default as FrostedNav } from './FrostedNav';
 export { default as GlowCard } from './GlowCard';
 export { default as AnimatedBackground } from './AnimatedBackground';
+export { default as ContentCard } from './ContentCard';
 export type { Step } from './StepIndicator';
+export type { ContentCardStat } from './ContentCard';

@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "timestamp": "2026-02-07T12:52:16.539Z",
+    "specFile": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\examples\\auth.isl",
+    "implFile": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\examples\\auth-impl.ts",
+    "duration": 1167,
+    "version": "1.0.0"
+  },
+  "evidenceScore": {
+    "overall": 100,
+    "confidence": 0,
+    "recommendation": "Production Ready - High confidence in implementation",
+    "summary": {
+      "passed": 0,
+      "failed": 0,
+      "total": 0,
+      "passRate": 0
+    }
+  },
+  "breakdown": {
+    "postconditions": {
+      "score": 100,
+      "weight": 40,
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    },
+    "invariants": {
+      "score": 100,
+      "weight": 30,
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    },
+    "scenarios": {
+      "score": 100,
+      "weight": 20,
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    },
+    "temporal": {
+      "score": 100,
+      "weight": 10,
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    }
+  },
+  "testResults": {
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "duration": 1124,
+    "details": []
+  },
+  "failures": []
+}

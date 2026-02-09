@@ -1,0 +1,11 @@
+verdict=BLOCK
+exit_code=2
+score=0
+can_ship=false
+blockers=26
+warnings=324
+commit=4c6cc85cac47
+branch=main
+fingerprint=52f2c633d0bc9abf0377e2a036e2d51a
+signature=eababb5f72c5abb44fa3d0549a013258
+dirty=true

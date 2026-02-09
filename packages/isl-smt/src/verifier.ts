@@ -146,12 +146,16 @@ export class SMTVerifier {
     const conditions: SMTExpr[] = [];
     const errors: string[] = [];
     
-    for (const condition of preconditions.conditions) {
-      for (const stmt of condition.statements) {
+    // Normalize preconditions structure - handle both ConditionBlock and array formats
+    const conditionsList = this.normalizeConditions(preconditions);
+    
+    for (const condition of conditionsList) {
+      const statements = Array.isArray(condition.statements) ? condition.statements : [];
+      for (const stmt of statements) {
         const encoded = encodeCondition(stmt, ctx);
         if (encoded.success) {
           conditions.push(encoded.expr);
-        } else {
+        } else if ('error' in encoded) {
           errors.push(encoded.error);
         }
       }
@@ -202,6 +206,50 @@ export class SMTVerifier {
   }
   
   /**
+   * Normalize condition structures - handles both ConditionBlock and array formats
+   * This fixes the "preconditions.conditions is not iterable" error
+   */
+  private normalizeConditions(block: ConditionBlock | unknown): Array<{ guard?: unknown; statements: ConditionStatement[] }> {
+    // Handle null/undefined
+    if (!block) {
+      return [];
+    }
+    
+    // If it's already a ConditionBlock with conditions array
+    if (typeof block === 'object' && 'conditions' in block && Array.isArray((block as ConditionBlock).conditions)) {
+      return (block as ConditionBlock).conditions as Array<{ guard?: unknown; statements: ConditionStatement[] }>;
+    }
+    
+    // If block is an array directly (some parsers output this way)
+    if (Array.isArray(block)) {
+      // Check if it's an array of Condition objects
+      if (block.length > 0 && typeof block[0] === 'object' && 'statements' in block[0]) {
+        return block as Array<{ guard?: unknown; statements: ConditionStatement[] }>;
+      }
+      // If it's an array of ConditionStatement objects, wrap them
+      return [{ statements: block as ConditionStatement[] }];
+    }
+    
+    // If block has a 'statement' or 'expression' property (single condition)
+    if (typeof block === 'object' && ('statement' in block || 'expression' in block)) {
+      return [{ statements: [block as ConditionStatement] }];
+    }
+    
+    // Fallback: return empty
+    return [];
+  }
+  
+  /**
+   * Check if a guard represents a success condition
+   */
+  private isSuccessGuard(guard: unknown): boolean {
+    if (!guard) return true; // No guard means success path
+    if (guard === 'success') return true;
+    if (typeof guard === 'object' && 'name' in guard && (guard as { name: string }).name === 'success') return true;
+    return false;
+  }
+
+  /**
    * Check if postconditions follow from preconditions
    */
   private async checkPostconditionImplication(
@@ -213,16 +261,18 @@ export class SMTVerifier {
     const start = Date.now();
     const name = `${behaviorName}/postcondition_implication`;
     
-    // Encode preconditions
+    // Encode preconditions using normalized structure
     const preConditions: SMTExpr[] = [];
     const errors: string[] = [];
     
-    for (const condition of preconditions.conditions) {
-      for (const stmt of condition.statements) {
+    const preConditionsList = this.normalizeConditions(preconditions);
+    for (const condition of preConditionsList) {
+      const statements = Array.isArray(condition.statements) ? condition.statements : [];
+      for (const stmt of statements) {
         const encoded = encodeCondition(stmt, ctx);
         if (encoded.success) {
           preConditions.push(encoded.expr);
-        } else {
+        } else if ('error' in encoded) {
           errors.push(encoded.error);
         }
       }
@@ -231,17 +281,19 @@ export class SMTVerifier {
     // Encode postconditions (only success conditions without guards)
     const postConditions: SMTExpr[] = [];
     
-    for (const condition of postconditions.conditions) {
+    const postConditionsList = this.normalizeConditions(postconditions);
+    for (const condition of postConditionsList) {
       // Skip error guards for now - only verify success postconditions
       if (condition.guard && condition.guard !== 'success') {
         continue;
       }
       
-      for (const stmt of condition.statements) {
+      const statements = Array.isArray(condition.statements) ? condition.statements : [];
+      for (const stmt of statements) {
         const encoded = encodeCondition(stmt, ctx);
         if (encoded.success) {
           postConditions.push(encoded.expr);
-        } else {
+        } else if ('error' in encoded) {
           errors.push(encoded.error);
         }
       }
@@ -321,7 +373,7 @@ export class SMTVerifier {
       const encoded = encodeTypeConstraint(constraint, 'x', ctx);
       if (encoded.success) {
         constraintExprs.push(encoded.expr);
-      } else {
+      } else if ('error' in encoded) {
         errors.push(encoded.error);
       }
     }

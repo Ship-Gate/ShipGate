@@ -29,6 +29,7 @@ export interface Domain extends ASTNode {
   name: Identifier;
   version: StringLiteral;
   owner?: StringLiteral;
+  uses: UseStatement[];
   imports: Import[];
   types: TypeDeclaration[];
   entities: Entity[];
@@ -38,6 +39,14 @@ export interface Domain extends ASTNode {
   views: View[];
   scenarios: ScenarioBlock[];
   chaos: ChaosBlock[];
+}
+
+/** use stdlib-auth [@ "1.0.0"] [as alias]; module is identifier or string path */
+export interface UseStatement extends ASTNode {
+  kind: 'UseStatement';
+  module: Identifier | StringLiteral;
+  version?: StringLiteral;
+  alias?: Identifier;
 }
 
 export interface Import extends ASTNode {
@@ -369,6 +378,35 @@ export interface ChaosScenario extends ASTNode {
   inject: Injection[];
   when: Statement[];
   then: Expression[];
+  /** Granular injections (mirrors inject for isl-core compatibility) */
+  injections?: ChaosInjection[];
+  /** Granular expectations (from then expressions) */
+  expectations?: ChaosExpectation[];
+  /** With-clause args (optional grammar) */
+  withClauses?: ChaosWithClause[];
+}
+
+export interface ChaosInjection extends ASTNode {
+  kind: 'ChaosInjection';
+  type: Identifier;
+  arguments: ChaosArgument[];
+}
+
+export interface ChaosExpectation extends ASTNode {
+  kind: 'ChaosExpectation';
+  expression: Expression;
+}
+
+export interface ChaosArgument extends ASTNode {
+  kind: 'ChaosArgument';
+  name: Identifier;
+  value: Expression;
+}
+
+export interface ChaosWithClause extends ASTNode {
+  kind: 'ChaosWithClause';
+  name: Identifier;
+  arguments: Expression[];
 }
 
 export interface Injection extends ASTNode {

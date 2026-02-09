@@ -13,7 +13,7 @@ import {
   isConstant,
   type EvalResult,
   type BlameSpan,
-} from '@isl-lang/expression-evaluator';
+} from '@isl-lang/static-analyzer';
 import type { Expression } from '@isl-lang/parser';
 
 // ============================================================================

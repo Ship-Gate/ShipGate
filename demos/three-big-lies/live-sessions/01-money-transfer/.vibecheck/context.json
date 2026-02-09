@@ -1,0 +1,213 @@
+{
+  "version": "3.0.0",
+  "generatedAt": "2026-02-08T12:08:50.800Z",
+  "generator": "vibecheck-context",
+  "evidenceSchema": {
+    "version": "1.0.0",
+    "required": [
+      "file",
+      "line",
+      "snippet",
+      "confidence"
+    ],
+    "maxSnippet": 200,
+    "confidenceThresholds": {
+      "strict": 0.8,
+      "balanced": 0.6,
+      "permissive": 0.4
+    },
+    "claimTypes": [
+      "route",
+      "schema_table",
+      "schema_column",
+      "export",
+      "default_export",
+      "middleware",
+      "env_var",
+      "auth_guard",
+      "billing_gate",
+      "hypothesis"
+    ]
+  },
+  "truthContract": {
+    "version": "1.0.0",
+    "claimsRequireEvidence": true,
+    "confidenceThresholds": {
+      "strict": 0.8,
+      "balanced": 0.6,
+      "permissive": 0.4
+    },
+    "policies": {
+      "strict": {
+        "minConfidence": 0.8,
+        "allowUnknown": false,
+        "requireValidation": true,
+        "blockOnDrift": true
+      },
+      "balanced": {
+        "minConfidence": 0.6,
+        "allowUnknown": false,
+        "requireValidation": true,
+        "blockOnDrift": false
+      },
+      "permissive": {
+        "minConfidence": 0.4,
+        "allowUnknown": true,
+        "requireValidation": false,
+        "blockOnDrift": false
+      }
+    },
+    "invariants": [
+      "No paid feature without server-side enforcement",
+      "No success UI without confirmed success",
+      "No route reference without matching route map entry",
+      "No silent catch in auth/billing flows",
+      "No hardcoded secrets in production code"
+    ]
+  },
+  "project": {
+    "name": "01-money-transfer",
+    "path": "c:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\demos\\three-big-lies\\live-sessions\\01-money-transfer",
+    "framework": null,
+    "language": "JavaScript",
+    "architecture": "Standard src/ layout"
+  },
+  "techStack": {
+    "nextjs": false,
+    "react": false,
+    "typescript": false,
+    "prisma": false,
+    "tailwind": false,
+    "stateManagement": null,
+    "validation": null,
+    "authentication": null,
+    "dataFetching": [],
+    "testing": [],
+    "styling": []
+  },
+  "structure": {
+    "directories": [
+      "src"
+    ],
+    "components": [],
+    "apiRoutes": [],
+    "models": []
+  },
+  "patterns": {
+    "hooks": [],
+    "stateManagement": null,
+    "validation": null,
+    "authentication": null,
+    "dataFetching": [],
+    "styling": [],
+    "testing": [],
+    "codeExamples": {}
+  },
+  "antiPatterns": [
+    {
+      "type": "console-log",
+      "severity": "warning",
+      "message": "Console statements found in production code",
+      "suggestion": "Use a proper logger or remove before production"
+    }
+  ],
+  "types": {
+    "interfaces": [
+      "Account"
+    ],
+    "types": [],
+    "enums": []
+  },
+  "environment": {
+    "files": [],
+    "variables": []
+  },
+  "scripts": [
+    {
+      "name": "gate",
+      "command": "npx tsx run-gate.ts"
+    },
+    {
+      "name": "dev",
+      "command": "echo 'Add your dev server here'"
+    }
+  ],
+  "conventions": {
+    "naming": {},
+    "imports": []
+  },
+  "monorepo": null,
+  "stats": {
+    "totalFiles": 3,
+    "totalLines": 109,
+    "byExtension": {
+      ".json": 1,
+      ".ts": 2
+    },
+    "largestFiles": [
+      {
+        "path": "run-gate.ts",
+        "lines": 72
+      },
+      {
+        "path": "src\\accounts.ts",
+        "lines": 23
+      },
+      {
+        "path": "package.json",
+        "lines": 14
+      }
+    ]
+  },
+  "contextValidation": null,
+  "contextDrift": null,
+  "contextSummary": null,
+  "rules": {
+    "critical": [
+      "Never hardcode secrets - use environment variables",
+      "No mock data in production code",
+      "No 'any' types - use proper TypeScript types",
+      "Follow existing patterns in the codebase",
+      "Use existing components before creating new ones",
+      "API routes must validate all input"
+    ],
+    "style": [
+      "File naming: PascalCase for components",
+      "Use path aliases (@/) for imports"
+    ]
+  },
+  "mcp": {
+    "resources": [
+      {
+        "uri": "file://c:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\demos\\three-big-lies\\live-sessions\\01-money-transfer/.vibecheck/context.json",
+        "name": "Project Context",
+        "description": "Full project analysis and context",
+        "mimeType": "application/json"
+      },
+      {
+        "uri": "file://c:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\demos\\three-big-lies\\live-sessions\\01-money-transfer/.vibecheck/project-map.json",
+        "name": "Project Map",
+        "description": "Complete project structure map",
+        "mimeType": "application/json"
+      },
+      {
+        "uri": "file://c:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\demos\\three-big-lies\\live-sessions\\01-money-transfer/.vibecheck/memory.json",
+        "name": "AI Memory",
+        "description": "AI learning memory for this project",
+        "mimeType": "application/json"
+      }
+    ],
+    "tools": [
+      {
+        "name": "vibecheck.context",
+        "description": "Regenerate project context"
+      },
+      {
+        "name": "vibecheck.analyze",
+        "description": "Analyze specific file or directory"
+      }
+    ]
+  },
+  "_attribution": "🧠 Context enhanced by vibecheck",
+  "_attributionNote": "Include this attribution when referencing vibecheck context in responses"
+}

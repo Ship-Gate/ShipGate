@@ -28,7 +28,10 @@ const STUB_RESPONSES: StubResponse[] = [
   // Auth/User patterns
   {
     pattern: /createUser|register|signup|authentication/i,
-    isl: `behavior CreateUser {
+    isl: `domain Auth {
+  version: "1.0.0"
+
+  behavior CreateUser {
   input {
     email: String
     password: String
@@ -36,154 +39,163 @@ const STUB_RESPONSES: StubResponse[] = [
   }
   
   output {
-    user: User
-    token: AuthToken
-  }
-  
-  errors {
-    EMAIL_EXISTS: "Email already registered"
-    INVALID_EMAIL: "Invalid email format"
-    WEAK_PASSWORD: "Password does not meet requirements"
+    success: User
+    errors {
+      EMAIL_EXISTS { when: "Email already registered" }
+      INVALID_EMAIL { when: "Invalid email format" }
+      WEAK_PASSWORD { when: "Password does not meet requirements" }
+    }
   }
   
   preconditions {
-    require input.email.isValidEmail()
-    require input.password.length >= 8
-    require !exists(User where email == input.email)
+    - input.email.length > 0
+    - input.password.length >= 8
   }
   
   postconditions {
-    ensure result.user.email == input.email
-    ensure result.user.status == "pending"
-    ensure result.token.userId == result.user.id
-    ensure verificationEmailSent(result.user.email)
+    success implies {
+      - result.email == input.email
+    }
+  }
   }
 }`,
   },
   // Login patterns
   {
     pattern: /login|authenticate|signin/i,
-    isl: `behavior Login {
+    isl: `domain Auth {
+  version: "1.0.0"
+
+  behavior Login {
   input {
     email: String
     password: String
   }
   
   output {
-    user: User
-    accessToken: AuthToken
-    refreshToken: AuthToken
-  }
-  
-  errors {
-    INVALID_CREDENTIALS: "Invalid email or password"
-    ACCOUNT_SUSPENDED: "Account is suspended"
-    ACCOUNT_NOT_VERIFIED: "Email not verified"
+    success: Session
+    errors {
+      INVALID_CREDENTIALS { when: "Invalid email or password" }
+      ACCOUNT_SUSPENDED { when: "Account is suspended" }
+      ACCOUNT_NOT_VERIFIED { when: "Email not verified" }
+    }
   }
   
   preconditions {
-    require input.email.length > 0
-    require input.password.length > 0
+    - input.email.length > 0
+    - input.password.length > 0
   }
   
   postconditions {
-    ensure result.user.email == input.email
-    ensure result.user.status == "active"
-    ensure result.accessToken.type == "access"
-    ensure result.refreshToken.type == "refresh"
-    ensure result.accessToken.expiresAt > now()
+    success implies {
+      - result.user_id != null
+    }
+  }
   }
 }`,
   },
   // CRUD patterns
   {
     pattern: /create|insert|add/i,
-    isl: `behavior Create {
+    isl: `domain Crud {
+  version: "1.0.0"
+
+  behavior Create {
   input {
     data: CreateInput
   }
   
   output {
-    item: Item
-  }
-  
-  errors {
-    VALIDATION_ERROR: "Invalid input data"
-    DUPLICATE: "Item already exists"
+    success: Item
+    errors {
+      VALIDATION_ERROR { when: "Invalid input data" }
+      DUPLICATE { when: "Item already exists" }
+    }
   }
   
   preconditions {
-    require input.data != null
-    require input.data.name.length > 0
+    - input.data != null
   }
   
   postconditions {
-    ensure result.item.id != null
-    ensure result.item.createdAt == now()
+    success implies {
+      - result.id != null
+    }
+  }
   }
 }`,
   },
   // Update patterns
   {
     pattern: /update|edit|modify|patch/i,
-    isl: `behavior Update {
+    isl: `domain Crud {
+  version: "1.0.0"
+
+  behavior Update {
   input {
     id: ID
     data: UpdateInput
   }
   
   output {
-    item: Item
-  }
-  
-  errors {
-    NOT_FOUND: "Item not found"
-    VALIDATION_ERROR: "Invalid input data"
-    CONFLICT: "Concurrent modification detected"
+    success: Item
+    errors {
+      NOT_FOUND { when: "Item not found" }
+      VALIDATION_ERROR { when: "Invalid input data" }
+      CONFLICT { when: "Concurrent modification detected" }
+    }
   }
   
   preconditions {
-    require input.id != null
-    require exists(Item where id == input.id)
+    - input.id != null
   }
   
   postconditions {
-    ensure result.item.id == input.id
-    ensure result.item.updatedAt >= old(result.item.updatedAt)
+    success implies {
+      - result.id == input.id
+    }
+  }
   }
 }`,
   },
   // Delete patterns
   {
     pattern: /delete|remove|destroy/i,
-    isl: `behavior Delete {
+    isl: `domain Crud {
+  version: "1.0.0"
+
+  behavior Delete {
   input {
     id: ID
   }
   
   output {
     success: Boolean
-  }
-  
-  errors {
-    NOT_FOUND: "Item not found"
-    CANNOT_DELETE: "Item cannot be deleted"
+    errors {
+      NOT_FOUND { when: "Item not found" }
+      CANNOT_DELETE { when: "Item cannot be deleted" }
+    }
   }
   
   preconditions {
-    require input.id != null
-    require exists(Item where id == input.id)
+    - input.id != null
   }
   
   postconditions {
-    ensure result.success implies !exists(Item where id == input.id)
+    success implies {
+      - result == true
+    }
+  }
   }
 }`,
   },
   // Payment patterns
   {
     pattern: /payment|charge|pay|transaction/i,
-    isl: `behavior ProcessPayment {
+    isl: `domain Payments {
+  version: "1.0.0"
+
+  behavior ProcessPayment {
   input {
     amount: Money
     paymentMethodId: ID
@@ -191,25 +203,24 @@ const STUB_RESPONSES: StubResponse[] = [
   }
   
   output {
-    transaction: Transaction
-  }
-  
-  errors {
-    INSUFFICIENT_FUNDS: "Insufficient funds"
-    INVALID_PAYMENT_METHOD: "Payment method not valid"
-    DUPLICATE_TRANSACTION: "Duplicate transaction"
+    success: Transaction
+    errors {
+      INSUFFICIENT_FUNDS { when: "Insufficient funds" }
+      INVALID_PAYMENT_METHOD { when: "Payment method not valid" }
+      DUPLICATE_TRANSACTION { when: "Duplicate transaction" }
+    }
   }
   
   preconditions {
-    require input.amount.value > 0
-    require input.idempotencyKey.length > 0
-    require exists(PaymentMethod where id == input.paymentMethodId)
+    - input.amount != null
+    - input.idempotencyKey.length > 0
   }
   
   postconditions {
-    ensure result.transaction.amount == input.amount
-    ensure result.transaction.status in ["pending", "completed"]
-    ensure result.transaction.idempotencyKey == input.idempotencyKey
+    success implies {
+      - result.id != null
+    }
+  }
   }
 }`,
   },
@@ -217,6 +228,8 @@ const STUB_RESPONSES: StubResponse[] = [
   {
     pattern: /.*/,
     isl: `domain GeneratedDomain {
+  version: "1.0.0"
+
   entity Item {
     id: ID
     name: String
@@ -232,18 +245,20 @@ const STUB_RESPONSES: StubResponse[] = [
     }
     
     output {
-      item: Item
-      success: Boolean
+      success: Item
+      errors {
+        NOT_FOUND { when: "Item not found" }
+      }
     }
     
     preconditions {
-      require input.itemId != null
-      require input.action.length > 0
+      - input.itemId != null
     }
     
     postconditions {
-      ensure result.item.id == input.itemId
-      ensure result.success == true
+      success implies {
+        - result.id == input.itemId
+      }
     }
   }
 }`,

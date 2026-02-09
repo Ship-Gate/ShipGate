@@ -1,0 +1,76 @@
+{
+  "projectMemory": {
+    "path": "c:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\demos\\three-big-lies\\live-sessions\\01-money-transfer",
+    "name": "01-money-transfer",
+    "framework": null,
+    "language": "JavaScript",
+    "lastAnalyzed": "2026-02-08T12:08:50.802Z",
+    "patterns": {
+      "hooks": [],
+      "stateManagement": null,
+      "styling": [],
+      "testing": [],
+      "dataFetching": [],
+      "validation": null,
+      "authentication": null,
+      "codeExamples": {},
+      "antiPatterns": [
+        {
+          "type": "console-log",
+          "severity": "warning",
+          "message": "Console statements found in production code",
+          "suggestion": "Use a proper logger or remove before production"
+        }
+      ]
+    },
+    "stats": {
+      "totalFiles": 3,
+      "totalLines": 109,
+      "byExtension": {
+        ".json": 1,
+        ".ts": 2
+      },
+      "largestFiles": [
+        {
+          "path": "run-gate.ts",
+          "lines": 72
+        },
+        {
+          "path": "src\\accounts.ts",
+          "lines": 23
+        },
+        {
+          "path": "package.json",
+          "lines": 14
+        }
+      ]
+    }
+  },
+  "globalPatterns": {
+    "stateManagement": {
+      "React Context": 7,
+      "Zustand": 84
+    },
+    "frameworks": {
+      "Next.js": 3,
+      "Vite + React": 17,
+      "React": 54,
+      "Express": 41,
+      "Fastify": 3
+    },
+    "validation": {
+      "Zod": 68
+    }
+  },
+  "recommendations": [
+    {
+      "type": "state_management",
+      "message": "Consider using Zustand for state management (used in 84 of your projects)"
+    },
+    {
+      "type": "validation",
+      "message": "Consider using Zod for validation (used in 68 of your projects)"
+    }
+  ],
+  "lastUpdated": "2026-02-08T12:08:50.803Z"
+}

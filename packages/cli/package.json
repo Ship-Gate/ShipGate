@@ -47,7 +47,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .ts",
@@ -80,7 +80,8 @@
     "@isl-lang/isl-smt": "workspace:*",
     "@isl-lang/pbt": "workspace:*",
     "@isl-lang/verifier-temporal": "workspace:*",
-    "@isl-lang/spec-assist": "workspace:*"
+    "@isl-lang/spec-assist": "workspace:*",
+    "@isl-lang/intent-translator": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.1.0",
@@ -88,5 +89,6 @@
     "tsup": "^8.0.1",
     "typescript": "^5.3.3",
     "vitest": "^1.2.0"
-  }
+  },
+  "private": true
 }

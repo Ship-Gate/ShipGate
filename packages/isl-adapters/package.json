@@ -34,7 +34,7 @@
   "scripts": {
     "build": "tsup src/index.ts src/github/index.ts src/mcp/index.ts src/cli/index.ts src/auth/index.ts --format esm --dts --clean --external @isl-lang/verified-build --external @isl-lang/gate --external @isl-lang/evidence --external @isl-lang/firewall",
     "dev": "tsup src/index.ts --format esm --dts --watch",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist"

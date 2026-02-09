@@ -1,0 +1,168 @@
+# ISL Authoritative Gate Workflow
+#
+# DEFINITIVE SHIP/NO_SHIP gate - verdicts are FINAL.
+#
+# Exit codes: 0 = SHIP, 1 = NO_SHIP
+
+name: ISL Authoritative Gate
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'src/**'
+      - 'specs/**'
+      - '*.isl'
+      - 'packages/**'
+
+  workflow_dispatch:
+    inputs:
+      spec:
+        description: 'Path to ISL spec file'
+        required: true
+        default: 'specs/main.isl'
+      implementation:
+        description: 'Path to implementation'
+        required: true
+        default: 'src/'
+
+jobs:
+  gate:
+    name: SHIP/NO_SHIP Decision
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      pull-requests: write
+      security-events: write
+    
+    outputs:
+      verdict: ${{ steps.gate.outputs.verdict }}
+      score: ${{ steps.gate.outputs.score }}
+      fingerprint: ${{ steps.gate.outputs.fingerprint }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Gate Package
+        run: pnpm --filter @isl-lang/gate build
+
+      - name: Run Authoritative Gate
+        id: gate
+        run: |
+          SPEC="${{ github.event.inputs.spec || 'specs/main.isl' }}"
+          IMPL="${{ github.event.inputs.implementation || 'src/' }}"
+          
+          # Find spec if not found
+          if [ ! -f "$SPEC" ]; then
+            SPEC=$(find . -name "*.isl" -type f -not -path "./node_modules/*" | head -1)
+            if [ -z "$SPEC" ]; then
+              echo "verdict=NO_SHIP" >> $GITHUB_OUTPUT
+              echo "score=0" >> $GITHUB_OUTPUT
+              echo "fingerprint=no-spec" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          fi
+          
+          # Run gate and capture output
+          pnpm --filter @isl-lang/gate exec -- node -e "
+            const { runAuthoritativeGate } = require('./dist/index.js');
+            (async () => {
+              const result = await runAuthoritativeGate({
+                projectRoot: process.cwd(),
+                spec: '$SPEC',
+                implementation: '$IMPL',
+                writeBundle: true,
+                evidencePath: './evidence',
+                git: { sha: '${{ github.sha }}', branch: '${{ github.ref_name }}' },
+                ci: { runId: '${{ github.run_id }}' },
+              });
+              
+              const fs = require('fs');
+              fs.appendFileSync(process.env.GITHUB_OUTPUT, 'verdict=' + result.verdict + '\n');
+              fs.appendFileSync(process.env.GITHUB_OUTPUT, 'score=' + result.score + '\n');
+              fs.appendFileSync(process.env.GITHUB_OUTPUT, 'fingerprint=' + result.evidence.fingerprint + '\n');
+              
+              console.log(result.verdict === 'SHIP' ? '✅ SHIP' : '❌ NO_SHIP');
+              console.log('Score: ' + result.score + '/100');
+              console.log('Summary: ' + result.summary);
+              
+              process.exit(result.exitCode);
+            })();
+          "
+
+      - name: Upload Evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: isl-evidence-${{ github.sha }}
+          path: evidence/
+          retention-days: 90
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always() && hashFiles('evidence/results.sarif') != ''
+        with:
+          sarif_file: evidence/results.sarif
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const verdict = '${{ steps.gate.outputs.verdict }}';
+            const score = '${{ steps.gate.outputs.score }}';
+            const fingerprint = '${{ steps.gate.outputs.fingerprint }}';
+            const emoji = verdict === 'SHIP' ? '✅' : '❌';
+            
+            const body = `## ${emoji} ISL Gate: ${verdict}
+            | Metric | Value |
+            |--------|-------|
+            | Score | ${score}/100 |
+            | Fingerprint | \`${fingerprint}\` |
+            
+            ${verdict === 'SHIP' ? '**Safe to merge.**' : '**Fix issues before merging.**'}`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.user.type === 'Bot' && c.body.includes('ISL Gate:'));
+            
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Enforce Gate
+        if: steps.gate.outputs.verdict == 'NO_SHIP'
+        run: |
+          echo "❌ NO_SHIP - Fix issues and push again"
+          exit 1

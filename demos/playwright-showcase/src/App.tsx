@@ -1,12 +1,16 @@
-import { Routes, Route, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import FrostedNav from './components/FrostedNav';
-import AnimatedBackground from './components/AnimatedBackground';
+import { Routes, Route } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
+import StarBackground from './components/StarBackground';
+import MagicalNavbar from './components/MagicalNavbar';
 import Landing from './pages/Landing';
 import Pipeline from './pages/Pipeline';
 import LiveAPI from './pages/LiveAPI';
 import Comparison from './pages/Comparison';
 import Walkthrough from './pages/Walkthrough';
+import Pricing from './pages/Pricing';
+import Dashboard from './pages/Dashboard';
+import SignIn from './pages/SignIn';
+import SignUp from './pages/SignUp';
 import { DemoProvider, useDemoContext } from './context/DemoContext';
 
 function AppContent() {
@@ -14,54 +18,26 @@ function AppContent() {
 
   return (
     <div className="min-h-screen">
-      {/* Animated Particle Background */}
-      <AnimatedBackground />
+      {/* Star warp background (Lenis + gradient + twinkling stars) */}
+      <StarBackground />
 
-      {/* Logo - Top Left */}
+      {/* Ultra Magical Navbar (glass, spotlight, scroll skew, pill indicator) */}
       <AnimatePresence>
-        {!isDemoPlaying && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Link 
-              to="/" 
-              className="fixed top-4 left-6 z-50 flex items-center group"
-            >
-              <img 
-                src="/logo.png" 
-                alt="ISL Studio" 
-                className="h-12 w-auto object-contain drop-shadow-lg group-hover:drop-shadow-[0_0_20px_rgba(14,165,233,0.6)] transition-all duration-300 scale-[1.8] origin-left my-3.5"
-              />
-            </Link>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Frosted Glass Navigation */}
-      <AnimatePresence>
-        {!isDemoPlaying && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <FrostedNav />
-          </motion.div>
-        )}
+        {!isDemoPlaying && <MagicalNavbar />}
       </AnimatePresence>
 
       {/* Main Content */}
-      <main className={`${isDemoPlaying ? 'pt-0' : 'pt-24'} relative z-10 transition-all duration-300`}>
+      <main className="pt-0 relative z-10 transition-all duration-300">
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/pipeline" element={<Pipeline />} />
           <Route path="/live-api" element={<LiveAPI />} />
           <Route path="/comparison" element={<Comparison />} />
           <Route path="/walkthrough" element={<Walkthrough />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/sign-in" element={<SignIn />} />
+          <Route path="/sign-up" element={<SignUp />} />
         </Routes>
       </main>
     </div>

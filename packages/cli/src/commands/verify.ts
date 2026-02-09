@@ -275,10 +275,19 @@ async function resolveSpec(specPath?: string): Promise<string[]> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Calculate evidence score from trust score
+ * Calculate evidence score from trust score and additional verification results
  * Evidence score represents how much empirical evidence supports the implementation
+ * 
+ * BUG-001 FIX: Now incorporates PBT/SMT/temporal results into the score calculation
  */
-function calculateEvidenceScore(trustScore: TrustScore): EvidenceScore {
+function calculateEvidenceScore(
+  trustScore: TrustScore,
+  additionalResults?: {
+    smtResult?: SMTVerifyResult;
+    pbtResult?: PBTVerifyResultType;
+    temporalResult?: TemporalVerifyResult;
+  }
+): EvidenceScore {
   const { breakdown } = trustScore;
   
   // Weight definitions (should match TrustCalculator)
@@ -289,41 +298,109 @@ function calculateEvidenceScore(trustScore: TrustScore): EvidenceScore {
     temporal: 10,
   };
 
+  // Start with base breakdown from trust score
+  let postconditionsPassed = breakdown.postconditions.passed;
+  let postconditionsFailed = breakdown.postconditions.failed;
+  let invariantsPassed = breakdown.invariants.passed;
+  let invariantsFailed = breakdown.invariants.failed;
+  let scenariosPassed = breakdown.scenarios.passed;
+  let scenariosFailed = breakdown.scenarios.failed;
+  let temporalPassed = breakdown.temporal.passed;
+  let temporalFailed = breakdown.temporal.failed;
+
+  // Incorporate PBT results into postconditions and invariants
+  if (additionalResults?.pbtResult) {
+    const pbt = additionalResults.pbtResult;
+    for (const behavior of pbt.behaviors) {
+      for (const violation of behavior.violations) {
+        if (violation.type === 'postcondition') {
+          postconditionsFailed++;
+        } else if (violation.type === 'invariant') {
+          invariantsFailed++;
+        } else {
+          scenariosFailed++;
+        }
+      }
+      // Count passed tests
+      if (behavior.success) {
+        postconditionsPassed++;
+      }
+    }
+  }
+
+  // Incorporate SMT results into postconditions
+  if (additionalResults?.smtResult) {
+    const smt = additionalResults.smtResult;
+    postconditionsPassed += smt.summary.sat;
+    postconditionsFailed += smt.summary.unsat + smt.summary.error;
+  }
+
+  // Incorporate temporal results
+  if (additionalResults?.temporalResult) {
+    const temporal = additionalResults.temporalResult;
+    temporalPassed += temporal.summary.proven;
+    temporalFailed += temporal.summary.notProven;
+  }
+
+  // Calculate totals for each category
+  const postconditionsTotal = postconditionsPassed + postconditionsFailed;
+  const invariantsTotal = invariantsPassed + invariantsFailed;
+  const scenariosTotal = scenariosPassed + scenariosFailed;
+  const temporalTotal = temporalPassed + temporalFailed;
+
+  // Calculate category scores (handle zero division)
+  const calcScore = (passed: number, total: number) => 
+    total > 0 ? Math.round((passed / total) * 100) : 100;
+
   const categories = {
     postconditions: {
-      ...breakdown.postconditions,
+      score: calcScore(postconditionsPassed, postconditionsTotal),
+      passed: postconditionsPassed,
+      failed: postconditionsFailed,
+      total: postconditionsTotal,
       weight: weights.postconditions,
     },
     invariants: {
-      ...breakdown.invariants,
+      score: calcScore(invariantsPassed, invariantsTotal),
+      passed: invariantsPassed,
+      failed: invariantsFailed,
+      total: invariantsTotal,
       weight: weights.invariants,
     },
     scenarios: {
-      ...breakdown.scenarios,
+      score: calcScore(scenariosPassed, scenariosTotal),
+      passed: scenariosPassed,
+      failed: scenariosFailed,
+      total: scenariosTotal,
       weight: weights.scenarios,
     },
     temporal: {
-      ...breakdown.temporal,
+      score: calcScore(temporalPassed, temporalTotal),
+      passed: temporalPassed,
+      failed: temporalFailed,
+      total: temporalTotal,
       weight: weights.temporal,
     },
   };
 
   // Count totals
-  const passedChecks = 
-    breakdown.postconditions.passed +
-    breakdown.invariants.passed +
-    breakdown.scenarios.passed +
-    breakdown.temporal.passed;
-  
-  const failedChecks =
-    breakdown.postconditions.failed +
-    breakdown.invariants.failed +
-    breakdown.scenarios.failed +
-    breakdown.temporal.failed;
-
+  const passedChecks = postconditionsPassed + invariantsPassed + scenariosPassed + temporalPassed;
+  const failedChecks = postconditionsFailed + invariantsFailed + scenariosFailed + temporalFailed;
   const totalChecks = passedChecks + failedChecks;
 
-  // Map recommendation to human-readable string
+  // Calculate weighted overall score
+  const totalWeight = weights.postconditions + weights.invariants + weights.scenarios + weights.temporal;
+  const overallScore = Math.round(
+    (categories.postconditions.score * weights.postconditions +
+     categories.invariants.score * weights.invariants +
+     categories.scenarios.score * weights.scenarios +
+     categories.temporal.score * weights.temporal) / totalWeight
+  );
+
+  // Calculate confidence based on evidence count
+  const confidence = totalChecks > 0 ? Math.min(Math.round((totalChecks / 10) * 100), 100) : 0;
+
+  // Map recommendation to human-readable string based on recalculated score
   const recommendationMap: Record<string, string> = {
     production_ready: 'Production Ready - High confidence in implementation',
     staging_recommended: 'Staging Recommended - Good coverage, minor gaps',
@@ -332,11 +409,25 @@ function calculateEvidenceScore(trustScore: TrustScore): EvidenceScore {
     critical_issues: 'Critical Issues - Failing critical checks',
   };
 
+  // Determine recommendation based on recalculated score
+  let recommendation: string;
+  if (failedChecks > 0 && overallScore < 70) {
+    recommendation = recommendationMap.critical_issues;
+  } else if (overallScore >= 95) {
+    recommendation = recommendationMap.production_ready;
+  } else if (overallScore >= 85) {
+    recommendation = recommendationMap.staging_recommended;
+  } else if (overallScore >= 70) {
+    recommendation = recommendationMap.shadow_mode;
+  } else {
+    recommendation = recommendationMap.not_ready;
+  }
+
   return {
-    overall: trustScore.overall,
-    confidence: trustScore.confidence,
+    overall: overallScore,
+    confidence,
     categories,
-    recommendation: recommendationMap[trustScore.recommendation] ?? trustScore.recommendation,
+    recommendation,
     passedChecks,
     failedChecks,
     totalChecks,
@@ -349,11 +440,68 @@ function calculateEvidenceScore(trustScore: TrustScore): EvidenceScore {
 
 /**
  * Generate evidence report content
+ * BUG-003 FIX: Now includes SMT/PBT/temporal results in the evidence bundle
  */
 function generateEvidenceReport(result: VerifyResult): string {
   const timestamp = new Date().toISOString();
   const evidence = result.evidenceScore!;
   const verification = result.verification!;
+
+  // Collect all failures from various sources
+  const allFailures: Array<{ category: string; name: string; impact: string; error: string }> = [];
+  
+  // Add failures from trust score details
+  for (const d of verification.trustScore.details.filter(d => d.status === 'failed')) {
+    allFailures.push({
+      category: d.category,
+      name: d.name,
+      impact: d.impact,
+      error: d.message ?? 'Unknown error',
+    });
+  }
+
+  // Add PBT failures
+  if (result.pbtResult) {
+    for (const behavior of result.pbtResult.behaviors) {
+      for (const violation of behavior.violations) {
+        allFailures.push({
+          category: violation.type === 'postcondition' ? 'postconditions' : 
+                   violation.type === 'invariant' ? 'invariants' : 'scenarios',
+          name: `PBT: ${behavior.behaviorName} - ${violation.property}`,
+          impact: 'high',
+          error: violation.error,
+        });
+      }
+    }
+  }
+
+  // Add SMT failures
+  if (result.smtResult) {
+    for (const check of result.smtResult.checks) {
+      if (check.status === 'unsat' || check.status === 'error') {
+        allFailures.push({
+          category: 'postconditions',
+          name: `SMT: ${check.name}`,
+          impact: 'critical',
+          error: check.message ?? `SMT check ${check.status}`,
+        });
+      }
+    }
+  }
+
+  // Add temporal failures
+  if (result.temporalResult) {
+    for (const clause of result.temporalResult.clauses) {
+      if (!clause.success) {
+        allFailures.push({
+          category: 'temporal',
+          name: `Temporal: ${clause.clauseText}`,
+          impact: 'medium',
+          error: clause.error ?? `Temporal clause not proven: ${clause.verdict}`,
+        });
+      }
+    }
+  }
 
   return JSON.stringify({
     metadata: {
@@ -419,14 +567,51 @@ function generateEvidenceReport(result: VerifyResult): string {
         message: d.message ?? null,
       })),
     },
-    failures: verification.trustScore.details
-      .filter(d => d.status === 'failed')
-      .map(d => ({
-        category: d.category,
-        name: d.name,
-        impact: d.impact,
-        error: d.message ?? 'Unknown error',
+    // BUG-003 FIX: Include SMT results in evidence bundle
+    smtResults: result.smtResult ? {
+      success: result.smtResult.success,
+      summary: result.smtResult.summary,
+      checks: result.smtResult.checks.map(c => ({
+        kind: c.kind,
+        name: c.name,
+        status: c.status,
+        message: c.message ?? null,
+        duration: c.duration,
       })),
+      duration: result.smtResult.duration,
+    } : null,
+    // BUG-003 FIX: Include PBT results in evidence bundle
+    pbtResults: result.pbtResult ? {
+      success: result.pbtResult.success,
+      summary: result.pbtResult.summary,
+      behaviors: result.pbtResult.behaviors.map(b => ({
+        behaviorName: b.behaviorName,
+        success: b.success,
+        testsRun: b.testsRun,
+        testsPassed: b.testsPassed,
+        violations: b.violations,
+        error: b.error ?? null,
+      })),
+      config: result.pbtResult.config,
+      duration: result.pbtResult.duration,
+    } : null,
+    // BUG-003 FIX: Include temporal results in evidence bundle
+    temporalResults: result.temporalResult ? {
+      success: result.temporalResult.success,
+      summary: result.temporalResult.summary,
+      clauses: result.temporalResult.clauses.map(c => ({
+        clauseId: c.clauseId,
+        type: c.type,
+        clauseText: c.clauseText,
+        verdict: c.verdict,
+        success: c.success,
+        timing: c.timing,
+        error: c.error ?? null,
+      })),
+      duration: result.temporalResult.duration,
+    } : null,
+    // BUG-003 FIX: Consolidated failures from all sources
+    failures: allFailures,
   }, null, 2);
 }
 
@@ -670,23 +855,65 @@ async function runTemporalVerification(
           type = 'never';
         }
 
-        // Note: Actual trace-based verification would happen here if traces were available
-        // For now, we report INCOMPLETE_PROOF when no traces are collected
-        const result: TemporalClauseResult = {
-          clauseId,
-          type,
-          clauseText,
-          verdict: 'INCOMPLETE_PROOF',
-          success: false,
-          timing: {
-            thresholdMs: thresholdMs ?? 0,
-            percentile,
-            sampleCount: 0,
-          },
-          error: 'No timing data collected. Run tests to collect trace data for temporal verification.',
-        };
+        // Run actual temporal verification using the verifier
+        try {
+          // Use the verifier's verify function for each behavior
+          const verifyResult = await temporal.verify(
+            '', // implementation path - not used for spec-only verification
+            domain as unknown as Parameters<typeof temporal.verify>[1],
+            behaviorName,
+            { timeout: 5000, sampleCount: options.minSamples ?? 10 }
+          );
 
-        clauses.push(result);
+          // Map verifier results to our clause format
+          if (verifyResult.temporalResults && verifyResult.temporalResults.length > 0) {
+            for (const tempResult of verifyResult.temporalResults) {
+              clauses.push({
+                clauseId: `${behaviorName}:${tempResult.type}`,
+                type: tempResult.type as 'within' | 'eventually_within' | 'always' | 'never',
+                clauseText: tempResult.description || clauseText,
+                verdict: tempResult.success ? 'PROVEN' : 'NOT_PROVEN',
+                success: tempResult.success,
+                timing: {
+                  thresholdMs: thresholdMs ?? 0,
+                  percentile,
+                  actualMs: tempResult.duration,
+                  sampleCount: options.minSamples ?? 10,
+                },
+              });
+            }
+          } else {
+            // No temporal results from verifier - create synthetic check
+            clauses.push({
+              clauseId,
+              type,
+              clauseText,
+              verdict: verifyResult.verdict === 'verified' ? 'PROVEN' : 
+                       verifyResult.verdict === 'unsafe' ? 'NOT_PROVEN' : 'INCOMPLETE_PROOF',
+              success: verifyResult.success,
+              timing: {
+                thresholdMs: thresholdMs ?? 0,
+                percentile,
+                sampleCount: options.minSamples ?? 10,
+              },
+            });
+          }
+        } catch (verifyError) {
+          // Fallback to synthetic result if verification fails
+          clauses.push({
+            clauseId,
+            type,
+            clauseText,
+            verdict: 'INCOMPLETE_PROOF',
+            success: false,
+            timing: {
+              thresholdMs: thresholdMs ?? 0,
+              percentile,
+              sampleCount: 0,
+            },
+            error: verifyError instanceof Error ? verifyError.message : 'Temporal verification failed',
+          });
+        }
       }
     }
 
@@ -1044,8 +1271,12 @@ export async function verify(specFile: string, options: VerifyOptions): Promise<
       passed = false;
     }
 
-    // Calculate evidence score
-    const evidenceScore = calculateEvidenceScore(verification.trustScore);
+    // Calculate evidence score with all verification results (BUG-001 FIX)
+    const evidenceScore = calculateEvidenceScore(verification.trustScore, {
+      smtResult,
+      pbtResult,
+      temporalResult,
+    });
 
     if (passed) {
       spinner.succeed(`Verification passed (${duration}ms)`);
@@ -1104,10 +1335,51 @@ export async function verify(specFile: string, options: VerifyOptions): Promise<
 export async function verifyWithDiscovery(options: VerifyOptions): Promise<VerifyResult[]> {
   const specs = await resolveSpec(options.spec);
 
+  // Phase 2: Specless verification when no .isl files but --impl provided
+  if (specs.length === 0 && options.impl) {
+    try {
+      const { runAuthoritativeGate } = await import('@isl-lang/gate');
+      const implPath = resolve(options.impl);
+      const projectRoot = dirname(existsSync(implPath) ? implPath : process.cwd());
+      const gateResult = await runAuthoritativeGate({
+        projectRoot,
+        spec: '',
+        implementation: existsSync(implPath) ? implPath : options.impl,
+        specOptional: true,
+        dependencyAudit: true,
+        writeBundle: false,
+      });
+      const success = gateResult.verdict === 'SHIP';
+      return [{
+        success,
+        specFile: '',
+        implFile: options.impl ?? '',
+        errors: success ? [] : gateResult.reasons.map(r => r.message),
+        duration: gateResult.durationMs ?? 0,
+        evidenceScore: {
+          overall: gateResult.score,
+          confidence: gateResult.confidence,
+          totalChecks: gateResult.aggregation.tests.total + gateResult.aggregation.findings.total,
+          passedChecks: gateResult.aggregation.tests.passed,
+          failedChecks: gateResult.aggregation.tests.failed + gateResult.aggregation.findings.critical + gateResult.aggregation.findings.high,
+          recommendation: success ? 'Production Ready' : 'Critical Issues',
+        },
+      }];
+    } catch (err) {
+      return [{
+        success: false,
+        specFile: '',
+        implFile: options.impl ?? '',
+        errors: [err instanceof Error ? err.message : String(err)],
+        duration: 0,
+      }];
+    }
+  }
+
   if (specs.length === 0) {
     console.error(chalk.red('No ISL spec files found'));
     console.log(chalk.gray('Searched in: .vibecheck/specs/*.isl, specs/*.isl, *.isl'));
-    console.log(chalk.gray('Use --spec <path> to specify a spec file'));
+    console.log(chalk.gray('Use --spec <path> to specify a spec file, or --impl <path> for specless verification'));
     return [{
       success: false,
       specFile: '',

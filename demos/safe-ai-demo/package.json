@@ -1,0 +1,13 @@
+{
+  "name": "safe-ai-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "90-second demo: prompt → spec → verify → gate",
+  "scripts": {
+    "demo": "tsx run-demo.ts",
+    "demo:from-code": "tsx run-demo-from-code.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0"
+  }
+}

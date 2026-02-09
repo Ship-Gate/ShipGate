@@ -16,14 +16,14 @@ import type {
 
 export interface GoResolverOptions {
   projectRoot: string;
-  /** Optional entry files; otherwise discovers **/*.go */
-  entries?: string[];
+  /** Optional entry files; otherwise discovers all .go files */
+  entries?: string[] | undefined;
   /** Custom file reader (for testing) */
-  readFile?: (filePath: string) => Promise<string>;
+  readFile?: ((filePath: string) => Promise<string>) | undefined;
   /** Custom file existence check (for testing) */
-  fileExists?: (filePath: string) => Promise<boolean>;
+  fileExists?: ((filePath: string) => Promise<boolean>) | undefined;
   /** Custom go.mod content provider (for testing) */
-  goModContent?: string;
+  goModContent?: string | undefined;
 }
 
 // ---- go.mod parsing (inline, no circular dep on firewall) ----
@@ -316,7 +316,6 @@ function classifyImport(
 
 async function discoverGoFiles(
   projectRoot: string,
-  fileExists?: (p: string) => Promise<boolean>
 ): Promise<string[]> {
   const results: string[] = [];
 
@@ -376,7 +375,7 @@ export async function resolveGo(options: GoResolverOptions): Promise<GoDependenc
   }
 
   // 2. Discover and parse Go files
-  const files = options.entries ?? await discoverGoFiles(projectRoot, fileExistsFn);
+  const files = options.entries ?? await discoverGoFiles(projectRoot);
   const allImports: GoImport[] = [];
   const findings: GoFinding[] = [];
   const seenExternalModules = new Set<string>();

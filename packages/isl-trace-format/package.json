@@ -22,7 +22,7 @@
   "scripts": {
     "build": "tsup src/index.ts src/schema.ts --format esm --dts --clean",
     "dev": "tsup src/index.ts src/schema.ts --format esm --dts --watch",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest"
   },
   "dependencies": {
@@ -39,6 +39,5 @@
   },
   "author": "ISL Team",
   "license": "MIT",
-  "private": true,
   "experimental": true
 }

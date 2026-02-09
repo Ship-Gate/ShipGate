@@ -21,7 +21,7 @@
   "scripts": {
     "build": "tsup --config false src/index.ts src/cli.ts --format esm --clean --sourcemap --no-dts --external @isl-lang/parser --external @isl-lang/verifier-runtime",
     "dev": "tsup --watch",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist"

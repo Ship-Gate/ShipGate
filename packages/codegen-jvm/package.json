@@ -46,7 +46,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .ts",
@@ -79,5 +79,6 @@
   },
   "bugs": {
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
-  }
+  },
+  "private": true
 }

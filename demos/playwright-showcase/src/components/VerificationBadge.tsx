@@ -30,9 +30,9 @@ const statusConfig = {
   },
   pending: {
     icon: AlertCircle,
-    color: 'text-gray-400',
-    bg: 'bg-gray-500/10',
-    border: 'border-gray-500/30',
+    color: 'text-white/70',
+    bg: 'bg-white/10',
+    border: 'border-white/20',
   },
 };
 
@@ -55,7 +55,7 @@ export default function VerificationBadge({
       <div>
         <span className={`text-sm font-medium ${config.color}`}>{label}</span>
         {details && (
-          <p className="text-xs text-gray-500 mt-0.5">{details}</p>
+          <p className="text-xs text-white/70 mt-0.5">{details}</p>
         )}
       </div>
     </motion.div>

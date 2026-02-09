@@ -50,7 +50,7 @@ const ISL_KEYWORDS = [
   'domain', 'entity', 'behavior', 'type', 'enum', 'view', 'policy',
   'invariants', 'scenarios', 'chaos', 'input', 'output', 'success', 'errors',
   'preconditions', 'postconditions', 'temporal', 'security', 'version', 'owner',
-  'imports', 'from', 'lifecycle', 'actors', 'description', 'when', 'retriable',
+  'use', 'imports', 'from', 'lifecycle', 'actors', 'description', 'when', 'retriable',
   'retry_after', 'eventually', 'always', 'within', 'never', 'immediately',
   'requires', 'rate_limit', 'compliance', 'given', 'then', 'inject',
 ];

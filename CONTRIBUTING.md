@@ -42,17 +42,18 @@ Thank you for your interest in contributing to ISL (Intent Specification Languag
 
 ### Making Changes
 
-1. Make your changes in the appropriate package(s)
-2. Write or update tests as needed
-3. Ensure all tests pass:
+1. **If adding or changing behaviors/APIs:** Prefer an ISL spec-first workflow: create or update a spec in `specs/**/*.isl` (or `examples/*.isl`), run `pnpm isl:check` and `pnpm isl:gen`, then implement and run `pnpm isl:verify` / `pnpm isl:gate`. See [docs/ISL_DEVELOPMENT_LOOP.md](docs/ISL_DEVELOPMENT_LOOP.md).
+2. Make your changes in the appropriate package(s)
+3. Write or update tests as needed
+4. Ensure all tests pass:
    ```bash
    pnpm test
    ```
-4. Run type checking:
+5. Run type checking:
    ```bash
    pnpm typecheck
    ```
-5. Run linting:
+6. Run linting:
    ```bash
    pnpm lint
    ```

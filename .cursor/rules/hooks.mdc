@@ -1,0 +1,32 @@
+---
+description: Custom hooks patterns and usage
+globs: ["**/hooks/**/*.{ts,tsx}", "**/use*.{ts,tsx}"]
+alwaysApply: false
+---
+
+# Custom Hooks
+
+## Available Hooks (1)
+
+- `useDemoContext`
+
+## Before Creating a New Hook
+
+1. **Check the list above first**
+2. Name it `use[Feature]`
+3. Place in `hooks/` or `lib/hooks/`
+4. Return a consistent shape
+
+## Example
+
+```typescript
+// demos\playwright-showcase\src\context\DemoContext.tsx
+export function useDemoContext() {
+  const context = useContext(DemoContext);
+  if (context === undefined) {
+    throw new Error('useDemoContext must be used within a DemoProvider');
+  }
+  return context;
+}
+```
+

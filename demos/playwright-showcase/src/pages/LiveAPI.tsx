@@ -87,10 +87,10 @@ export default function LiveAPI() {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 text-gray-800" data-testid="live-api-title">
+        <h1 className="text-3xl font-bold mb-2 text-white" data-testid="live-api-title">
           Live API Verification
         </h1>
-        <p className="text-gray-500">
+        <p className="text-white/80">
           See contract verification in action on real API calls
         </p>
       </div>
@@ -100,7 +100,7 @@ export default function LiveAPI() {
         <div className="lg:col-span-2 space-y-6">
           {/* Endpoint Selection */}
           <div className="glass-card p-4">
-            <label className="block text-sm font-medium text-gray-600 mb-3">
+            <label className="block text-sm font-medium text-white/90 mb-3">
               Select Endpoint
             </label>
             <div className="flex gap-3">
@@ -110,18 +110,18 @@ export default function LiveAPI() {
                   onClick={() => handleEndpointChange(endpoint)}
                   className={`flex-1 p-4 rounded-lg border transition-all ${
                     selectedEndpoint.id === endpoint.id
-                      ? 'bg-cyan-50 border-cyan-300 text-cyan-700'
-                      : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300'
+                      ? 'bg-cyan-500/30 border-cyan-400 text-white'
+                      : 'bg-white/10 border-white/20 text-white/90 hover:border-white/30'
                   }`}
                   data-testid={`endpoint-${endpoint.id}`}
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-mono bg-gray-200 text-gray-700 px-2 py-0.5 rounded">
+                    <span className="text-xs font-mono bg-white/20 text-white px-2 py-0.5 rounded">
                       {endpoint.method}
                     </span>
-                    <span className="font-medium">{endpoint.path}</span>
+                    <span className="font-medium text-white">{endpoint.path}</span>
                   </div>
-                  <p className="text-xs text-gray-500">{endpoint.description}</p>
+                  <p className="text-xs text-white/70">{endpoint.description}</p>
                 </button>
               ))}
             </div>
@@ -131,7 +131,7 @@ export default function LiveAPI() {
           <div className="glass-card p-4">
             <div className="flex items-center gap-2 mb-3">
               <Shield size={16} className="text-cyan-500" />
-              <span className="text-sm font-medium text-gray-600">
+              <span className="text-sm font-medium text-white/90">
                 ISL Contract
               </span>
             </div>
@@ -144,13 +144,13 @@ export default function LiveAPI() {
 
           {/* Request Body */}
           <div className="glass-card p-4">
-            <label className="block text-sm font-medium text-gray-600 mb-3">
+            <label className="block text-sm font-medium text-white/90 mb-3">
               Request Body
             </label>
             <textarea
               value={requestBody}
               onChange={(e) => setRequestBody(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg p-4 font-mono text-sm text-gray-800 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none resize-none"
+              className="w-full bg-white/10 border border-white/20 rounded-lg p-4 font-mono text-sm text-white placeholder-white/50 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none resize-none"
               rows={6}
               data-testid="request-body"
             />
@@ -193,7 +193,7 @@ export default function LiveAPI() {
                       }`}>
                         {response.success ? 'Request Verified' : 'Verification Failed'}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-white/70">
                         Contract enforcement active
                       </p>
                     </div>
@@ -202,7 +202,7 @@ export default function LiveAPI() {
 
                 {/* Preconditions */}
                 <div className="glass-card p-4">
-                  <h4 className="text-sm font-medium text-gray-600 mb-3 flex items-center gap-2">
+                  <h4 className="text-sm font-medium text-white/90 mb-3 flex items-center gap-2">
                     <span>Precondition Checks</span>
                   </h4>
                   <div className="space-y-2">
@@ -217,7 +217,7 @@ export default function LiveAPI() {
                         ) : (
                           <XCircle size={16} className="text-red-500" />
                         )}
-                        <code className="text-sm text-gray-700">{check.name}</code>
+                        <code className="text-sm text-white/90">{check.name}</code>
                       </div>
                     ))}
                   </div>
@@ -226,7 +226,7 @@ export default function LiveAPI() {
                 {/* Postconditions */}
                 {response.verification.postconditions.length > 0 && (
                   <div className="glass-card p-4">
-                    <h4 className="text-sm font-medium text-gray-600 mb-3">
+                    <h4 className="text-sm font-medium text-white/90 mb-3">
                       Postcondition Checks
                     </h4>
                     <div className="space-y-2">
@@ -237,7 +237,7 @@ export default function LiveAPI() {
                           data-testid={`postcondition-${i}`}
                         >
                           <CheckCircle size={16} className="text-green-500" />
-                          <code className="text-sm text-gray-700">{check.name}</code>
+                          <code className="text-sm text-white/90">{check.name}</code>
                         </div>
                       ))}
                     </div>
@@ -259,7 +259,7 @@ export default function LiveAPI() {
                           data-testid={`security-${i}`}
                         >
                           <CheckCircle size={16} className="text-green-500" />
-                          <span className="text-sm text-gray-700">{check.name}</span>
+                          <span className="text-sm text-white/90">{check.name}</span>
                         </div>
                       ))}
                     </div>
@@ -275,7 +275,7 @@ export default function LiveAPI() {
           </AnimatePresence>
 
           {!response && (
-            <div className="glass-card p-8 text-center text-gray-400">
+            <div className="glass-card p-8 text-center text-white/70">
               <Shield size={48} className="mx-auto mb-4 opacity-40" />
               <p>Send a request to see verification results</p>
             </div>

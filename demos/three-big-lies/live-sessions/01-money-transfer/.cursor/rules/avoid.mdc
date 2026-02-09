@@ -1,0 +1,17 @@
+---
+description: Patterns to avoid
+globs: ["**/*.{ts,tsx,js,jsx}"]
+alwaysApply: true
+---
+
+# ⚠️ Patterns to Avoid
+
+## 🟡 Console statements found in production code
+**Fix:** Use a proper logger or remove before production
+
+
+## General
+- ❌ No `any` type
+- ❌ No hardcoded secrets
+- ❌ No console.log in production
+- ❌ No mock data in production

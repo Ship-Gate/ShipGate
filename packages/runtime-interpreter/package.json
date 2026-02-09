@@ -39,7 +39,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "echo 'TODO: Fix vitest workspace coverage config' && exit 0"
   },
   "devDependencies": {

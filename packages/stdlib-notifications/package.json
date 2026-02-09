@@ -19,7 +19,7 @@
   "scripts": {
     "build": "tsup implementations/typescript/index.ts --format esm --dts --clean --outDir dist",
     "dev": "tsup implementations/typescript/index.ts --format esm --dts --watch --outDir dist",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist"

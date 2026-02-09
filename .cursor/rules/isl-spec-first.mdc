@@ -1,0 +1,45 @@
+# ISL Spec-First Rule
+
+When adding **new behaviors**, **new APIs**, or **new domain operations**, prefer defining them in ISL first, then implementing. This keeps the codebase aligned with a single source of truth and enables verification and codegen.
+
+## When to Create or Update an ISL Spec
+
+- You are adding a new API endpoint or handler that encodes business rules.
+- You are adding a new “operation” (e.g. create user, transfer funds, authenticate).
+- You are changing the contract of an existing behavior (inputs, outputs, errors, or pre/postconditions).
+
+## Where to Put Specs
+
+- **Project specs**: `specs/**/*.isl` (referenced by `.islrc.json`).
+- **VibeCheck / session specs**: `.vibecheck/specs/*.isl` (often auto-generated or used by tooling).
+- **Examples and demos**: `examples/*.isl`, `demos/**/*.isl`, `corpus/**/*.isl`.
+- **Stdlib**: `stdlib/**/*.isl` (shared domains; use via `use stdlib-*` in your spec).
+
+## Spec-First Workflow
+
+1. **Create or edit the `.isl` file**
+   - Define or update the `domain`, `entity`, and `behavior` blocks.
+   - Use existing patterns from `specs/example.isl`, `examples/auth.isl`, or `stdlib/` for style.
+2. **Validate**: Run `pnpm isl:check` (or `isl check <file>`).
+3. **Generate** (if applicable): Run `pnpm isl:gen` or `isl gen ts <file>` so types/wrappers are available.
+4. **Implement** – Write code against the generated types and respect pre/postconditions and errors.
+5. **Verify**: Run `pnpm isl:verify` (or `isl verify <spec> --impl <path>`).
+
+## Init a New Spec (No Existing File)
+
+From repo root:
+
+```bash
+pnpm exec isl init
+```
+
+Then edit the created spec and run `isl check` and `isl gen ts` as above.
+
+## Existing Specs to Reference
+
+- `specs/example.isl` – Full example (entities, behaviors, scenarios).
+- `examples/auth.isl`, `examples/payments.isl` – Auth and payments domains.
+- `.vibecheck/specs/*.isl` – Compact behavior-style specs (pre/post/errors).
+
+---
+*Apply this rule when designing new features or changing contracts so that ISL remains the single source of truth.*

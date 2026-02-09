@@ -1,0 +1,49 @@
+{
+  "version": "2.0.0",
+  "runId": "kickoff-0cff4ad4",
+  "timestamp": "2026-02-08T12:08:51.590Z",
+  "duration": {
+    "ms": 1017,
+    "formatted": "1.0s"
+  },
+  "project": {
+    "name": "01-money-transfer",
+    "intent": "unknown",
+    "confidence": "low"
+  },
+  "status": "warnings",
+  "steps": {
+    "link": {
+      "success": true,
+      "duration": 50,
+      "alreadyLinked": false
+    },
+    "forge": {
+      "success": true,
+      "duration": 286,
+      "tier": "standard",
+      "rulesCount": 4
+    },
+    "audit": {
+      "success": true,
+      "duration": 32,
+      "findings": 0,
+      "blockers": 0,
+      "warnings": 0
+    },
+    "ship": {
+      "success": true,
+      "duration": 647,
+      "verdict": "WARN",
+      "score": 70
+    }
+  },
+  "summary": {
+    "verdict": "WARN",
+    "score": 70,
+    "findings": 0,
+    "blockers": 0,
+    "warnings": 0,
+    "rulesGenerated": 4
+  }
+}

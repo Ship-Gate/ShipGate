@@ -30,7 +30,7 @@ export async function assertWorkspacePath(workspacePath: string): Promise<void> 
     );
   }
   const resolved = path.resolve(workspacePath);
-  let stat: fs.Stats;
+  let stat: Awaited<ReturnType<typeof fs.stat>>;
   try {
     stat = await fs.stat(resolved);
   } catch (err) {

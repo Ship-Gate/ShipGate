@@ -1,0 +1,6 @@
+# VibeCheck generated outputs (safe to ignore)
+results/
+runs/
+checkpoints/
+*.log
+.write-test

@@ -51,10 +51,10 @@ export default function Comparison() {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 text-gray-800" data-testid="comparison-title">
+        <h1 className="text-3xl font-bold mb-2 text-white" data-testid="comparison-title">
           Security Comparison
         </h1>
-        <p className="text-gray-500">
+        <p className="text-white/80">
           Regular AI vs ISL Studio - see the security difference
         </p>
       </div>
@@ -67,8 +67,8 @@ export default function Comparison() {
             onClick={() => setSelectedDomain(domain.id)}
             className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition-all ${
               selectedDomain === domain.id
-                ? 'bg-cyan-50 border-cyan-300 text-cyan-700'
-                : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300'
+                ? 'bg-cyan-500/30 border-cyan-400 text-white'
+                : 'bg-white/10 border-white/20 text-white/90 hover:border-white/30'
             }`}
             data-testid={`domain-${domain.id}`}
           >
@@ -79,7 +79,7 @@ export default function Comparison() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12 text-gray-400">Loading comparison...</div>
+        <div className="text-center py-12 text-white/70">Loading comparison...</div>
       ) : data ? (
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Regular AI */}
@@ -99,8 +99,8 @@ export default function Comparison() {
               </div>
             </div>
             
-            <div className="p-4 bg-gray-50">
-              <pre className="text-sm font-mono overflow-x-auto">
+            <div className="p-4 bg-white/5">
+              <pre className="text-sm font-mono overflow-x-auto text-white/90">
                 {data.regularAI.code.split('\n').map((line, i) => {
                   const issue = data.regularAI.issues.find((iss) => iss.line === i + 1);
                   return (
@@ -109,15 +109,15 @@ export default function Comparison() {
                       className={`flex ${
                         issue
                           ? issue.severity === 'critical'
-                            ? 'bg-red-100'
-                            : 'bg-amber-100'
+                            ? 'bg-red-500/20'
+                            : 'bg-amber-500/20'
                           : ''
                       }`}
                     >
-                      <span className="w-8 text-gray-400 text-right pr-3 select-none">
+                      <span className="w-8 text-white/50 text-right pr-3 select-none">
                         {i + 1}
                       </span>
-                      <span className={issue ? 'text-red-700' : 'text-gray-700'}>
+                      <span className={issue ? 'text-red-300' : 'text-white/90'}>
                         {line}
                       </span>
                     </div>
@@ -127,7 +127,7 @@ export default function Comparison() {
             </div>
 
             {/* Issues List */}
-            <div className="border-t border-gray-200 p-4">
+            <div className="border-t border-white/20 p-4">
               <h4 className="text-sm font-medium text-red-600 mb-3 flex items-center gap-2">
                 <AlertTriangle size={14} />
                 {data.regularAI.issues.length} Security Issues Found
@@ -168,21 +168,21 @@ export default function Comparison() {
               </div>
             </div>
             
-            <div className="p-4 bg-gray-50">
-              <pre className="text-sm font-mono overflow-x-auto">
+            <div className="p-4 bg-white/5">
+              <pre className="text-sm font-mono overflow-x-auto text-white/90">
                 {data.intentOS.code.split('\n').map((line, i) => (
                   <div key={i} className="flex">
-                    <span className="w-8 text-gray-400 text-right pr-3 select-none">
+                    <span className="w-8 text-white/50 text-right pr-3 select-none">
                       {i + 1}
                     </span>
-                    <span className="text-gray-700">{line}</span>
+                    <span className="text-white/90">{line}</span>
                   </div>
                 ))}
               </pre>
             </div>
 
             {/* Security Features */}
-            <div className="border-t border-gray-200 p-4">
+            <div className="border-t border-white/20 p-4">
               <h4 className="text-sm font-medium text-green-600 mb-3 flex items-center gap-2">
                 <CheckCircle size={14} />
                 Security Features Enforced
@@ -225,19 +225,19 @@ export default function Comparison() {
             <p className="text-4xl font-bold text-red-500" data-testid="issues-found">
               {data.regularAI.issues.length}
             </p>
-            <p className="text-gray-500 mt-1">Security Issues in Regular AI</p>
+            <p className="text-white/80 mt-1">Security Issues in Regular AI</p>
           </div>
           <div className="glass-card p-6 text-center">
             <p className="text-4xl font-bold text-green-500" data-testid="issues-fixed">
               {data.regularAI.issues.length}
             </p>
-            <p className="text-gray-500 mt-1">Issues Fixed by ISL Studio</p>
+            <p className="text-white/80 mt-1">Issues Fixed by ISL Studio</p>
           </div>
           <div className="glass-card p-6 text-center">
             <p className="text-4xl font-bold text-cyan-500" data-testid="score-improvement">
               +{data.intentOS.trustScore - data.regularAI.trustScore}%
             </p>
-            <p className="text-gray-500 mt-1">Trust Score Improvement</p>
+            <p className="text-white/80 mt-1">Trust Score Improvement</p>
           </div>
         </motion.div>
       )}

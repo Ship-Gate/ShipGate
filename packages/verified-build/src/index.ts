@@ -27,13 +27,28 @@
  * @module @isl-lang/verified-build
  */
 
-import { runGate, quickCheck, type GateResult, type Finding } from '@isl-lang/gate';
+import {
+  runGate,
+  quickCheck,
+  runAuthoritativeGate,
+  EXIT_CODES,
+  type GateResult,
+  type Finding,
+  type AuthoritativeGateResult,
+  type AuthoritativeVerdict,
+  type VerdictReason,
+  type CombinedVerdictResult,
+  type VerdictSource,
+} from '@isl-lang/gate';
 import { 
   writeEvidenceBundle, 
   verifyEvidenceBundle,
   type EvidenceSignature,
 } from '@isl-lang/evidence';
 import { createAgentFirewall, type FirewallResult } from '@isl-lang/firewall';
+import { readFile, mkdir, writeFile } from 'fs/promises';
+import { existsSync } from 'fs';
+import { resolve, join } from 'path';
 import { 
   createRegistry,
   loadBuiltinPacks, 
@@ -342,9 +357,195 @@ function generateSummary(
 }
 
 // ============================================================================
+// Unified gate (spec + firewall) - single entry point for "all AI code"
+// ============================================================================
+
+/**
+ * Input for the unified gate (runs spec gate when spec exists + firewall on files).
+ */
+export interface UnifiedGateInput {
+  /** Project root directory */
+  projectRoot: string;
+  /** ISL spec path or source (optional; when omitted, only firewall runs) */
+  spec?: string;
+  /** Implementation path (directory or file) for spec gate when spec is provided */
+  implementation: string;
+  /** File paths to run firewall on (default: discovered from implementation or all changed) */
+  filesToCheck?: string[];
+  /** Git info for evidence */
+  git?: { sha?: string; branch?: string };
+  /** CI info for evidence */
+  ci?: { runId?: string; provider?: string };
+  /** Write evidence bundle (default: true when spec run) */
+  writeBundle?: boolean;
+  /** Evidence output path */
+  evidencePath?: string;
+  /** When true, run dependency audit in spec gate (pnpm audit); critical vulns = NO_SHIP */
+  dependencyAudit?: boolean;
+}
+
+/**
+ * Run the unified gate: spec gate (when spec exists) + firewall on files.
+ * Returns a single SHIP/NO_SHIP; NO_SHIP if either path fails.
+ * Use this in CI to ensure all AI code is checked.
+ */
+export async function runUnifiedGate(input: UnifiedGateInput): Promise<CombinedVerdictResult> {
+  const sources: VerdictSource[] = [];
+  const reasons: VerdictReason[] = [];
+  let score = 100;
+  let specResult: AuthoritativeGateResult | undefined;
+  let firewallResult: { verdict: AuthoritativeVerdict; score: number; reasons: VerdictReason[]; filesChecked: number } | undefined;
+
+  const hasValidSpec = input.spec && (
+    input.spec.includes('domain ') && input.spec.includes('version ')
+  ) || (typeof input.spec === 'string' && existsSync(input.spec));
+
+  // 1. Run authoritative (spec) gate when spec exists
+  if (hasValidSpec && input.spec) {
+    try {
+      specResult = await runAuthoritativeGate({
+        projectRoot: input.projectRoot,
+        spec: input.spec,
+        implementation: input.implementation,
+        writeBundle: input.writeBundle ?? true,
+        evidencePath: input.evidencePath ?? './evidence',
+        git: input.git,
+        ci: input.ci,
+        dependencyAudit: input.dependencyAudit,
+      });
+      sources.push('gate_spec');
+      reasons.push(...specResult.reasons);
+      if (specResult.verdict === 'NO_SHIP') {
+        score = Math.min(score, specResult.score);
+      } else {
+        score = Math.min(score, specResult.score);
+      }
+    } catch (err) {
+      sources.push('gate_spec');
+      reasons.push({
+        code: 'SPEC_GATE_ERROR',
+        message: err instanceof Error ? err.message : 'Spec gate failed',
+        severity: 'critical',
+        source: 'verifier',
+        blocking: true,
+      });
+      score = 0;
+    }
+  }
+
+  // 2. Resolve files to check (firewall)
+  let filesToCheck = input.filesToCheck;
+  if (!filesToCheck?.length) {
+    const implFull = resolve(input.projectRoot, input.implementation);
+    if (existsSync(implFull)) {
+      const { stat } = await import('fs/promises');
+      const { readdir } = await import('fs/promises');
+      const s = await stat(implFull);
+      if (s.isFile() && /\.(ts|js|tsx|jsx)$/.test(implFull)) {
+        filesToCheck = [implFull];
+      } else if (s.isDirectory()) {
+        const entries = await readdir(implFull, { recursive: true });
+        const extRe = /\.(ts|js|tsx|jsx)$/;
+        filesToCheck = (Array.isArray(entries) ? entries : [])
+          .filter((p: string) => typeof p === 'string' && extRe.test(p))
+          .map((p: string) => resolve(implFull, p))
+          .filter((p: string) => !p.includes('node_modules') && !p.includes('dist'))
+          .slice(0, 500);
+      }
+    }
+  }
+
+  // 3. Run firewall (verified-build) on those files
+  if (filesToCheck.length > 0) {
+    const fileContents = await Promise.all(
+      filesToCheck.map(async (p) => {
+        try {
+          const absPath = p.startsWith('/') || /^[A-Za-z]:/.test(p) ? p : resolve(input.projectRoot, p);
+          const content = await readFile(absPath, 'utf-8');
+          const relPath = absPath.replace(input.projectRoot, '').replace(/^[/\\]/, '');
+          return { path: relPath, content };
+        } catch {
+          return null;
+        }
+      })
+    );
+    const toVerify = fileContents.filter((f): f is { path: string; content: string } => f !== null);
+    if (toVerify.length > 0) {
+      const buildResult = await verifyBuild({
+        files: toVerify.map((f) => ({ path: f.path, content: f.content })),
+        projectRoot: input.projectRoot,
+        writeEvidence: false,
+        firewallMode: 'enforce',
+      });
+      const fwReasons: VerdictReason[] = buildResult.reasons.map((r) => ({
+        code: r.code,
+        message: r.message,
+        severity: (r.severity === 'low' ? 'medium' : r.severity) as VerdictReason['severity'],
+        source: 'gate_firewall' as const,
+        blocking: r.severity === 'critical' || r.severity === 'high',
+      }));
+      firewallResult = {
+        verdict: buildResult.verdict as AuthoritativeVerdict,
+        score: buildResult.score,
+        reasons: fwReasons,
+        filesChecked: toVerify.length,
+      };
+      sources.push('gate_firewall');
+      reasons.push(...fwReasons);
+      score = Math.min(score, buildResult.score);
+    }
+  }
+
+  const verdict: AuthoritativeVerdict =
+    specResult?.verdict === 'NO_SHIP' || firewallResult?.verdict === 'NO_SHIP' ? 'NO_SHIP' : 'SHIP';
+  const finalScore = sources.length === 0 ? 100 : score;
+
+  const evidencePathOut = specResult ? (input.evidencePath ?? './evidence') : undefined;
+  const result: CombinedVerdictResult = {
+    verdict,
+    exitCode: verdict === 'SHIP' ? EXIT_CODES.SHIP : EXIT_CODES.NO_SHIP,
+    sources,
+    score: finalScore,
+    reasons,
+    evidencePath: evidencePathOut,
+    specResult,
+    firewallResult,
+  };
+
+  // Persist single combined evidence bundle for audits (one place to look)
+  if (input.writeBundle !== false && (specResult || firewallResult)) {
+    const evidenceDir = resolve(input.projectRoot, input.evidencePath ?? './evidence');
+    try {
+      await mkdir(evidenceDir, { recursive: true });
+      const manifestPath = join(evidenceDir, 'unified-manifest.json');
+      const manifest = {
+        schemaVersion: '1.0',
+        verdict: result.verdict,
+        exitCode: result.exitCode,
+        sources: result.sources,
+        score: result.score,
+        reasons: result.reasons.map((r) => ({ code: r.code, message: r.message, severity: r.severity, blocking: r.blocking })),
+        evidencePath: evidencePathOut,
+        specFingerprint: specResult?.evidence?.fingerprint,
+        firewallFilesChecked: firewallResult?.filesChecked,
+        timestamp: new Date().toISOString(),
+        git: input.git,
+        ci: input.ci,
+      };
+      await writeFile(manifestPath, JSON.stringify(manifest, null, 2), 'utf-8');
+    } catch {
+      // Non-fatal: do not fail the gate if evidence write fails
+    }
+  }
+
+  return result;
+}
+
+// ============================================================================
 // Exports
 // ============================================================================
 
 export type { GateResult, Finding } from '@isl-lang/gate';
+export type { CombinedVerdictResult, VerdictSource, VerdictReason } from '@isl-lang/gate';
 export type { FirewallResult } from '@isl-lang/firewall';
 export type { PolicyPack, RuleViolation } from '@isl-lang/policy-packs';

@@ -1,0 +1,20 @@
+---
+description: Type definitions and interfaces
+globs: ["**/*.d.ts", "**/types/**", "**/*.types.ts"]
+alwaysApply: false
+---
+
+# Type Definitions
+
+## Interfaces (1)
+- `Account`
+
+## Types (0)
+None
+
+
+
+## Conventions
+- Interfaces for object shapes
+- Type aliases for unions
+- No `any` - use `unknown`

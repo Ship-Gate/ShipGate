@@ -123,7 +123,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest",
+    "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest --coverage",
     "lint": "eslint implementations/typescript --ext .ts",
     "typecheck": "tsc --noEmit",

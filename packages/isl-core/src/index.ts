@@ -1,20 +1,12 @@
 /**
  * ISL Core
- * 
+ *
  * The "thin waist" API for the Intent Specification Language.
- * 
- * This package provides the essential compiler flow:
- * - parse: Parse ISL source into AST
- * - check: Type check and semantic analysis
- * - fmt: Format AST back to source
- * - lint: Style and best-practice checks
- * - imports: Import resolution
- * - verification: Verify implementations against specs
- * - testgen: Generate tests from specs
+ * Parse path: delegates to @isl-lang/parser and adapts to DomainDeclaration.
  */
 
 // ============================================================================
-// Core Parser APIs
+// Lexer (tokens + tokenize for lexISL)
 // ============================================================================
 
 export * from './lexer/index.js';
@@ -22,102 +14,79 @@ export * from './ast/index.js';
 export * from './parser/index.js';
 
 // ============================================================================
-// Type Checker APIs
+// Type Checker, Formatter, Linter, Imports, Modules, Verification, Testgen
 // ============================================================================
 
 export * from './check/index.js';
-
-// ============================================================================
-// Formatter APIs
-// ============================================================================
-
 export * from './fmt/index.js';
-
-// ============================================================================
-// Linter APIs
-// ============================================================================
-
 export * from './lint/index.js';
-
-// ============================================================================
-// Import Resolution APIs (Legacy)
-// ============================================================================
-
 export * from './imports/index.js';
-
-// ============================================================================
-// Module Resolution System
-// ============================================================================
-
 export * as modules from './modules/index.js';
-
-// ============================================================================
-// Verification APIs
-// ============================================================================
-
 export * as verification from './isl-agent/verification/index.js';
-
-// ============================================================================
-// Test Generation APIs (Experimental)
-// ============================================================================
-
 export * as testgen from './testgen/index.js';
-
-// ============================================================================
-// Adapters (AST Type Conversion)
-// ============================================================================
-
 export * as adapters from './adapters/index.js';
 
 // ============================================================================
-// High-Level Convenience APIs
+// High-Level Convenience APIs (parseISL delegates to parser + adapter)
 // ============================================================================
 
-import { tokenize, type LexerError, type Token } from './lexer/index.js';
-import { parse as parseTokens, type ParseError } from './parser/index.js';
+import { parse } from '@isl-lang/parser';
+import { domainToDomainDeclaration, locationToSpan } from './adapters/index.js';
 import { check as typeCheck, type CheckResult, type CheckOptions } from './check/index.js';
 import { format as formatAST, type FormatOptions } from './fmt/index.js';
 import { lint as lintAST, type LintResult, type LintOptions } from './lint/index.js';
 import type { DomainDeclaration } from './ast/index.js';
+import type { ParseError } from './parse-error.js';
+import type { Diagnostic } from '@isl-lang/parser';
+
+export type { ParseError } from './parse-error.js';
 
 // ============================================================================
-// Lexer Result
+// Lexer Result (unchanged)
 // ============================================================================
+
+import { tokenize, type LexerError, type Token } from './lexer/index.js';
 
 export interface LexResult {
   tokens: Token[];
   errors: LexerError[];
 }
 
-/**
- * Lex ISL source code into tokens
- */
 export function lexISL(source: string, filename?: string): LexResult {
   return tokenize(source, filename);
 }
 
 // ============================================================================
-// Parse Result
+// Parse Result & parseISL (delegates to @isl-lang/parser + adapter)
 // ============================================================================
 
 export interface ParseResult {
   ast: DomainDeclaration | null;
-  errors: Array<LexerError | ParseError>;
+  errors: ParseError[];
+}
+
+function toParseError(d: Diagnostic): ParseError {
+  return {
+    message: d.message,
+    span: locationToSpan(d.location),
+  };
 }
 
 /**
- * Parse ISL source code into an AST
+ * Parse ISL source into DomainDeclaration (canonical path: @isl-lang/parser + adapter).
  */
 export function parseISL(source: string, filename?: string): ParseResult {
-  const { tokens, errors: lexerErrors } = tokenize(source, filename);
-  
-  if (lexerErrors.length > 0) {
-    return { ast: null, errors: lexerErrors };
+  const result = parse(source, filename);
+  if (!result.success || !result.domain) {
+    return {
+      ast: null,
+      errors: result.errors.map(toParseError),
+    };
   }
-  
-  const { ast, errors: parseErrors } = parseTokens(tokens);
-  
-  return { ast, errors: parseErrors };
+  return {
+    ast: domainToDomainDeclaration(result.domain),
+    errors: [],
+  };
 }
 
 // ============================================================================
@@ -125,21 +94,13 @@ export function parseISL(source: string, filename?: string): ParseResult {
 // ============================================================================
 
 export interface CompileResult {
-  /** Parse result */
   parse: ParseResult;
-  /** Check result (if parse succeeded) */
   check?: CheckResult;
-  /** Lint result (if parse succeeded) */
   lint?: LintResult;
-  /** Formatted source (if parse succeeded) */
   formatted?: string;
-  /** Overall success */
   success: boolean;
 }
 
-/**
- * Run the full ISL compilation pipeline
- */
 export function compile(
   source: string,
   options?: {
@@ -150,18 +111,14 @@ export function compile(
   }
 ): CompileResult {
   const parseResult = parseISL(source, options?.filename);
-  
+
   if (!parseResult.ast) {
-    return {
-      parse: parseResult,
-      success: false,
-    };
+    return { parse: parseResult, success: false };
   }
 
   const checkResult = typeCheck(parseResult.ast, options?.check);
   const lintResult = lintAST(parseResult.ast, options?.lint);
   const formatted = formatAST(parseResult.ast, options?.format);
-
   const hasErrors = !checkResult.valid || lintResult.errorCount > 0;
 
   return {
@@ -174,11 +131,8 @@ export function compile(
 }
 
 // ============================================================================
-// Version Information
+// Version
 // ============================================================================
 
-/** Package version */
 export const VERSION = '0.1.0';
-
-/** API version for compatibility checks */
 export const API_VERSION = 1;

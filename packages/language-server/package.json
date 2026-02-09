@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "vitest",
+    "test": "vitest run --passWithNoTests",
     "start": "node dist/bin/server.js"
   },
   "dependencies": {

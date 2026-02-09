@@ -189,3 +189,78 @@ export type {
   PBTVerifyResult,
   PBTTrace,
 } from './cli-integration.js';
+
+// ============================================================================
+// PRODUCTION VERIFICATION (v1.1.0)
+// ============================================================================
+
+// Canonical Generators - Entity, Behavior, and Edge Case generators
+export {
+  // Entity generators
+  userEntity,
+  sessionEntity,
+  accountEntity,
+  transactionEntity,
+  // Behavior input generators
+  loginBehaviorInput,
+  invalidLoginInput as invalidLoginInputCanonical, // Renamed to avoid conflict with login-generator
+  registerBehaviorInput,
+  transferBehaviorInput,
+  // Edge case generators
+  edgeCaseString,
+  edgeCaseNumber,
+  edgeCaseEmail,
+  edgeCaseMoney,
+  edgeCaseArray,
+  edgeCaseInputs,
+  DEFAULT_EDGE_CASE_CONFIG,
+} from './canonical-generators.js';
+
+export type {
+  UserEntity,
+  SessionEntity,
+  AccountEntity,
+  TransactionEntity,
+  LoginInput as CanonicalLoginInput, // Renamed to avoid conflict
+  RegisterInput,
+  TransferInput,
+  EdgeCaseConfig,
+} from './canonical-generators.js';
+
+// Counterexample - Minimal, Reproducible Failing Inputs
+export {
+  buildCounterexample,
+  shrinkWithConstraints,
+  serializeCounterexample,
+  parseCounterexample,
+  formatCounterexample,
+  CounterexampleRegistry,
+  counterexampleRegistry,
+} from './counterexample.js';
+
+export type {
+  Counterexample,
+  PropertyInfo,
+  ShrinkStats,
+  ShrinkStrategy,
+  ShrinkConfig,
+} from './counterexample.js';
+
+// Verification Integration - Wire PBT into verify and gate
+export {
+  createPBTGateInput,
+  createPBTGateInputBatch,
+  calculatePBTTrustContribution,
+  shouldBlockShip,
+  getBlockReasons,
+  generatePBTJsonReport,
+  formatPBTConsoleOutput,
+} from './verification-integration.js';
+
+export type {
+  PBTFinding,
+  PBTBlockers,
+  PBTGateInput,
+  PBTMetrics,
+  PBTTrustContribution,
+} from './verification-integration.js';

@@ -254,6 +254,10 @@ async function runLocalGate(
     }));
 
   // Make decision
+  // POLICY FIX: Block SHIP when confidence is too low (< 20%) to prevent
+  // shipping with insufficient evidence, even if trust score is high
+  const MIN_CONFIDENCE_FOR_SHIP = 20;
+  
   let decision: 'SHIP' | 'NO-SHIP';
   let summary: string;
 
@@ -263,9 +267,17 @@ async function runLocalGate(
   } else if (trustScore < threshold) {
     decision = 'NO-SHIP';
     summary = `NO-SHIP: Trust score ${trustScore}% below threshold ${threshold}%`;
+  } else if (confidence < MIN_CONFIDENCE_FOR_SHIP) {
+    // New policy: require minimum confidence to SHIP
+    decision = 'NO-SHIP';
+    summary = `NO-SHIP: Confidence ${confidence}% below minimum ${MIN_CONFIDENCE_FOR_SHIP}%. Need more evidence (${total} tests run, need at least 2).`;
+  } else if (total === 0) {
+    // New policy: cannot SHIP with zero tests
+    decision = 'NO-SHIP';
+    summary = `NO-SHIP: No tests executed. Cannot verify implementation without evidence.`;
   } else {
     decision = 'SHIP';
-    summary = `SHIP: All ${passed} verifications passed. Trust score: ${trustScore}%`;
+    summary = `SHIP: All ${passed} verifications passed. Trust score: ${trustScore}%, Confidence: ${confidence}%`;
   }
 
   // Generate fingerprint
@@ -344,10 +356,13 @@ export function printGateResult(result: GateResult, options: { format?: string; 
   }
 
   if (ci) {
-    // Minimal output for CI
-    console.log(result.decision);
+    // CI mode: JSON to stdout, one-line summary to stderr
+    console.log(JSON.stringify(result, null, 2));
+    const blockerCount = result.results?.blockers?.length ?? 0;
     if (result.decision === 'SHIP') {
-      console.log('Verified by VibeCheck ✓');
+      process.stderr.write(`Shipgate: SHIP (score: ${result.trustScore}/100)\n`);
+    } else {
+      process.stderr.write(`Shipgate: NO_SHIP (score: ${result.trustScore}/100, ${blockerCount} blockers)\n`);
     }
     return;
   }
@@ -414,7 +429,7 @@ export function printGateResult(result: GateResult, options: { format?: string; 
   if (result.decision === 'SHIP') {
     console.log('');
     console.log(chalk.bold.green('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'));
-    console.log(chalk.bold.green('  Verified by VibeCheck ✓'));
+    console.log(chalk.bold.green('  Verified by Shipgate ✓'));
     console.log(chalk.bold.green('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'));
   }
 

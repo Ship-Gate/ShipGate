@@ -1,14 +1,14 @@
-# ISL Studio - Outreach Templates
+# Shipgate - Outreach Templates
 
 ## GitHub Issue Template (for open-source repos)
 
-**Title:** Add ISL Studio Gate - Block auth/PII issues before merge
+**Title:** Add Shipgate gate - Block auth/PII issues before merge
 
 **Body:**
 
 Hi 👋
 
-I'd like to suggest adding [ISL Studio](https://github.com/ISL-Studio/ISL-Studio-) to this repo's CI. It's a free, zero-config gate that blocks common security issues before merge:
+I'd like to suggest adding [Shipgate](https://github.com/shipgate/shipgate) to this repo's CI. It's a free, zero-config gate that blocks common security issues before merge:
 
 - Auth bypass patterns
 - Hardcoded credentials
@@ -19,15 +19,15 @@ I'd like to suggest adding [ISL Studio](https://github.com/ISL-Studio/ISL-Studio
 **Setup (2 minutes):**
 
 ```bash
-npx islstudio init
-git add .islstudio .github/workflows/isl-gate.yml
-git commit -m "Add ISL Studio gate"
+npx shipgate init
+git add .shipgate .github/workflows/shipgate.yml
+git commit -m "Add Shipgate gate"
 ```
 
 Or just add the GitHub Action:
 
 ```yaml
-- uses: ISL-Studio/islstudio-gate-action@v1
+- uses: shipgate/gate-action@v1
 ```
 
 **Why it's different:**
@@ -45,7 +45,7 @@ Happy to open a PR if you're interested!
 
 Hey! Built a free tool that blocks auth/PII issues in PRs before merge. 
 
-Zero config: `npx islstudio init`
+Zero config: `npx shipgate init`
 
 25 rules for auth bypass, hardcoded creds, PII logging, missing rate limits.
 
@@ -57,14 +57,14 @@ Would love feedback from [project name] - mind if I open a quick PR?
 
 **For dev communities:**
 
-Just shipped ISL Studio - a free gate that blocks auth/PII issues before merge.
+Just shipped Shipgate - a free gate that blocks auth/PII issues before merge.
 
 Quick demo: https://github.com/ISL-Studio/islstudio-hello-gate
 
 - PR #1: NO_SHIP (auth bypass, PII in logs)
 - PR #2: SHIP (fixed, 95/100)
 
-Setup: `npx islstudio init`
+Setup: `npx shipgate init`
 
 25 rules, zero config, baseline for legacy code.
 
@@ -76,7 +76,7 @@ Setup: `npx islstudio init`
 
 Hi [name],
 
-I built ISL Studio - a free security gate that runs on PRs. It catches common issues:
+I built Shipgate - a free security gate that runs on PRs. It catches common issues:
 
 - Auth bypass patterns
 - Hardcoded credentials  
@@ -85,7 +85,7 @@ I built ISL Studio - a free security gate that runs on PRs. It catches common is
 
 **2-minute setup:**
 ```bash
-npx islstudio init
+npx shipgate init
 ```
 
 **What makes it different:**
@@ -145,7 +145,7 @@ Best,
 
 ## Follow-up Template (if no response after 1 week)
 
-Hey [name], just following up on the ISL Studio suggestion. Happy to:
+Hey [name], just following up on the Shipgate suggestion. Happy to:
 
 1. Open a draft PR for you to review
 2. Jump on a quick call to demo it
@@ -157,9 +157,9 @@ No pressure either way - just want to make sure it didn't get lost!
 
 ## Success Story Template (after adoption)
 
-🎉 [Project] now uses ISL Studio!
+🎉 [Project] now uses Shipgate!
 
 Before: Auth bypass patterns could slip through
 After: Every PR gets checked, evidence for every decision
 
-Setup took 2 minutes. Try it: `npx islstudio init`
+Setup took 2 minutes. Try it: `npx shipgate init`

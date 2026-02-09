@@ -26,6 +26,7 @@ import {
   CodeActionKind,
   DocumentFormattingParams,
   TextEdit,
+  Diagnostic,
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -55,7 +56,8 @@ export class ISLServer {
   private formattingProvider: ISLFormattingProvider;
   private scannerDiagnosticsProvider: ScannerDiagnosticsProvider;
   private diagnosticTimers = new Map<string, NodeJS.Timeout>();
-  private lastScannerDiagnostics = new Map<string, import('vscode-languageserver/node').Diagnostic[]>();
+  private lastScannerDiagnostics = new Map<string, Diagnostic[]>();
+  private scannerVersions = new Map<string, number>();
 
   constructor() {
     this.connection = createConnection(ProposedFeatures.all);
@@ -362,7 +364,7 @@ export class ISLServer {
    */
   private async runScannerDiagnostics(
     document: TextDocument,
-    parserDiagnostics: import('vscode-languageserver/node').Diagnostic[]
+    parserDiagnostics: Diagnostic[]
   ): Promise<void> {
     try {
       if (!this.scannerDiagnosticsProvider.isSupported(document)) {
@@ -371,7 +373,17 @@ export class ISLServer {
         return;
       }
 
+      // Capture version before async work to detect stale results
+      const versionAtStart = document.version;
+      this.scannerVersions.set(document.uri, versionAtStart);
+
       const scannerDiags = await this.scannerDiagnosticsProvider.provideDiagnostics(document);
+
+      // Discard results if a newer validation has started since
+      if ((this.scannerVersions.get(document.uri) ?? 0) > versionAtStart) {
+        return;
+      }
+
       this.lastScannerDiagnostics.set(document.uri, scannerDiags);
 
       // Merge parser + scanner, deduplicate by code:line:char
@@ -392,10 +404,8 @@ export class ISLServer {
    * Deduplicate diagnostics by code + start position.
    * Prefers entries with richer data (e.g. scanner entries with suggestions).
    */
-  private deduplicateDiagnostics(
-    diagnostics: import('vscode-languageserver/node').Diagnostic[]
-  ): import('vscode-languageserver/node').Diagnostic[] {
-    const byKey = new Map<string, import('vscode-languageserver/node').Diagnostic>();
+  private deduplicateDiagnostics(diagnostics: Diagnostic[]): Diagnostic[] {
+    const byKey = new Map<string, Diagnostic>();
     for (const d of diagnostics) {
       const key = `${d.code}:${d.range.start.line}:${d.range.start.character}`;
       const existing = byKey.get(key);
@@ -410,6 +420,7 @@ export class ISLServer {
 
   private clearDiagnostics(uri: string): void {
     this.lastScannerDiagnostics.delete(uri);
+    this.scannerVersions.delete(uri);
     this.connection.sendDiagnostics({ uri, diagnostics: [] });
   }
 

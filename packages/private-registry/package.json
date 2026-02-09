@@ -11,11 +11,13 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "dev": "tsup src/index.ts --format esm --dts --watch",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist"
@@ -29,5 +31,6 @@
     "@types/node": "^20.11.0"
   },
   "author": "IntentOS Team",
-  "license": "MIT"
+  "license": "MIT",
+  "private": true
 }

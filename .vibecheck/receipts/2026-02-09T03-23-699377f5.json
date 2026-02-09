@@ -1,0 +1,16 @@
+{
+  "runId": "2026-02-09T03-23-699377f5",
+  "command": "ship",
+  "tier": "free",
+  "timestamp": "2026-02-09T03:24:43.006Z",
+  "manifestHash": "06ec4dc0645f6b24d5382a94c321e887e111ede41a8ea339ca15e1215782ec07",
+  "verification": {
+    "algorithm": "SHA-256",
+    "signature": "TODO: Implement server-side signing"
+  },
+  "billing": {
+    "tier": "free",
+    "charged": false,
+    "usage": {}
+  }
+}

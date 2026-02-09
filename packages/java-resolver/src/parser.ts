@@ -5,7 +5,6 @@
  */
 
 import { parse, BaseJavaCstVisitorWithDefaults } from 'java-parser';
-import type { CstNode, IToken } from 'chevrotain';
 import type { JavaImport } from './types.js';
 
 /** Visitor that extracts import declarations from Java CST */
@@ -60,7 +59,7 @@ class ImportExtractorVisitor extends BaseJavaCstVisitorWithDefaults {
   private collectQualifiedName(node: { children: Record<string, unknown> } | undefined): string[] {
     if (!node?.children) return [];
 
-    const identifiers = node.children.Identifier as IToken[] | undefined;
+    const identifiers = node.children.Identifier as Array<{ image: string }> | undefined;
     if (identifiers?.length) {
       return identifiers.map((t) => t.image);
     }
@@ -83,8 +82,8 @@ class ImportExtractorVisitor extends BaseJavaCstVisitorWithDefaults {
       : { line: 1, column: 0 };
   }
 
-  private collectAllTokens(ctx: Record<string, unknown>): IToken[] {
-    const tokens: IToken[] = [];
+  private collectAllTokens(ctx: Record<string, unknown>): Array<{ image: string; startLine?: number; startColumn?: number }> {
+    const tokens: Array<{ image: string; startLine?: number; startColumn?: number }> = [];
     const visit = (obj: unknown): void => {
       if (!obj) return;
       if (Array.isArray(obj)) {
@@ -94,7 +93,7 @@ class ImportExtractorVisitor extends BaseJavaCstVisitorWithDefaults {
       if (typeof obj === 'object') {
         const o = obj as Record<string, unknown>;
         if ('image' in o && 'startOffset' in o) {
-          tokens.push(o as unknown as IToken);
+          tokens.push(o as { image: string; startLine?: number; startColumn?: number });
           return;
         }
         Object.values(o).forEach(visit);
@@ -110,11 +109,11 @@ class ImportExtractorVisitor extends BaseJavaCstVisitorWithDefaults {
  */
 export function parseJavaImports(source: string, filePath = 'unknown'): JavaImport[] {
   try {
-    const cst = parse(source, { skipComments: false });
+    const cst = parse(source);
     if (!cst || !cst.children) return [];
 
     const visitor = new ImportExtractorVisitor();
-    visitor.visit(cst as CstNode);
+    visitor.visit(cst);
 
     return visitor.imports;
   } catch {

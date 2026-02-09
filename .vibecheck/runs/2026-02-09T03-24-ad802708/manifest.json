@@ -1,0 +1,28 @@
+{
+  "runId": "2026-02-09T03-24-ad802708",
+  "command": "reality",
+  "args": [
+    "--browser",
+    "chromium",
+    "--headless",
+    "--url",
+    "http://localhost:3000"
+  ],
+  "timestamp": "2026-02-09T03:24:34.206Z",
+  "duration": 1712,
+  "project": {
+    "path": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS",
+    "git": "4c6cc85cac47d9ccac148e8a042b10c66dbc9872",
+    "branch": null
+  },
+  "environment": {
+    "nodeVersion": "v24.12.0",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "execution": {
+    "exitCode": 10,
+    "endTime": "2026-02-09T03:24:35.918Z"
+  },
+  "outputs": []
+}

@@ -98,6 +98,12 @@ function resolveBloomFpr(fpr: number | undefined): number {
  * - Cache versioning
  * - Per-context Bloom filter for fast negative lookups
  * - Key length and value size enforcement
+ *
+ * **Important:** The Bloom filter is per-instance and in-memory. If you create
+ * two HardenedCache instances with the same backend + context + version, they
+ * will NOT share Bloom state. Instance B cannot read keys set by instance A
+ * unless B has also added those keys to its own Bloom filter (e.g. via `set`).
+ * For shared-state scenarios, use a single long-lived instance per context.
  */
 export class HardenedCache {
   private readonly backend: CacheBackend;
@@ -273,14 +279,42 @@ export class HardenedCache {
    * Set multiple values (in this context).
    */
   async mset<T = unknown>(entries: Map<string, T>, options?: SetOptions): Promise<boolean> {
-    const scoped = new Map<string, T>();
+    // Pre-validate all entries before writing any
+    const newKeys: string[] = [];
     for (const [key, value] of entries) {
       this.validateKey(key);
       this.validateValueSize(value);
-      scoped.set(this.scopedKey(key), value);
-      this.bloom.add(key);
+      const existed = await this.backend.has(this.scopedKey(key));
+      if (!existed) {
+        newKeys.push(key);
+      }
     }
-    return this.backend.mset(scoped, options);
+
+    // Check that adding the new keys won't exceed the per-context limit
+    if (
+      this.limits.maxKeysPerContext > 0 &&
+      this.keyCount + newKeys.length > this.limits.maxKeysPerContext
+    ) {
+      throw new Error(
+        `HardenedCache: mset would bring key count to ${this.keyCount + newKeys.length}, exceeding max ${this.limits.maxKeysPerContext} for this context`
+      );
+    }
+
+    const scoped = new Map<string, T>();
+    for (const [key, value] of entries) {
+      scoped.set(this.scopedKey(key), value);
+    }
+
+    const result = await this.backend.mset(scoped, options);
+
+    if (result) {
+      for (const [key] of entries) {
+        this.bloom.add(key);
+      }
+      this.keyCount += newKeys.length;
+    }
+
+    return result;
   }
 
   /**

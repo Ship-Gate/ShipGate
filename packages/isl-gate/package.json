@@ -29,13 +29,16 @@
   "scripts": {
     "build": "tsup src/index.ts src/scoring/index.ts src/trust-score/index.ts src/types/index.ts --format esm --dts --clean",
     "dev": "tsup src/index.ts --format esm --dts --watch",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "@isl-lang/parser": "workspace:*",
+    "@isl-lang/typechecker": "workspace:*",
+    "@isl-lang/isl-verify": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

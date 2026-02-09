@@ -196,6 +196,17 @@ export function validateBundle(
     } else {
       // Check for deprecations
       checkDeprecations(exactVersion, packSpec, deprecations);
+      
+      // Check if a newer version is available (even if exact version exists)
+      const newerVersion = findNewerCompatibleVersion(
+        packSpec.version,
+        packVersions.map(p => p.version).filter(v => compareVersions(v, packSpec.version) > 0)
+      );
+      if (newerVersion) {
+        warnings.push(
+          `Pack "${packSpec.packId}" has newer version ${newerVersion} available (using ${packSpec.version})`
+        );
+      }
     }
 
     // Validate rule overrides
@@ -336,11 +347,14 @@ export function checkBundleCompatibility(
     }
 
     const exactVersion = packVersions.find(p => p.version === packSpec.version);
+    const sortedVersions = [...packVersions].sort((a, b) => 
+      compareVersions(b.version, a.version)
+    );
+    const latest = sortedVersions[0];
+    
     if (!exactVersion) {
-      const latest = packVersions.sort((a, b) => 
-        compareVersions(b.version, a.version)
-      )[0];
-      
+      missingPacks.push(packSpec.packId);
+      // Also report as outdated with available version info
       outdatedVersions.push({
         packId: packSpec.packId,
         requested: packSpec.version,
@@ -348,11 +362,21 @@ export function checkBundleCompatibility(
       });
     } else {
       checkDeprecations(exactVersion, packSpec, deprecations);
+      
+      // Check if a newer version is available (even if exact version exists)
+      // This is informational - doesn't affect compatibility
+      if (compareVersions(latest.version, packSpec.version) > 0) {
+        outdatedVersions.push({
+          packId: packSpec.packId,
+          requested: packSpec.version,
+          available: latest.version,
+        });
+      }
     }
   }
 
   return {
-    compatible: missingPacks.length === 0 && outdatedVersions.length === 0,
+    compatible: missingPacks.length === 0,
     missingPacks,
     outdatedVersions,
     deprecations,

@@ -279,4 +279,21 @@ export default defineWorkspace([
       },
     },
   },
+  // Hallucination Scanner package (Rust resolver)
+  {
+    test: {
+      name: 'hallucination-scanner',
+      root: './packages/hallucination-scanner',
+      globals: true,
+      environment: 'node',
+      include: ['tests/**/*.test.ts'],
+      testTimeout: 30000,
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        include: ['src/**/*.ts'],
+        exclude: ['src/**/*.d.ts'],
+      },
+    },
+  },
 ]);

@@ -1,9 +1,9 @@
 {
   "metadata": {
-    "timestamp": "2026-02-07T11:55:47.503Z",
+    "timestamp": "2026-02-07T12:52:04.777Z",
     "specFile": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\examples\\auth.isl",
     "implFile": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\examples\\auth-impl.ts",
-    "duration": 4166,
+    "duration": 1123,
     "version": "1.0.0"
   },
   "evidenceScore": {
@@ -51,7 +51,7 @@
     "passed": 0,
     "failed": 0,
     "skipped": 0,
-    "duration": 3569,
+    "duration": 1093,
     "details": []
   },
   "failures": []

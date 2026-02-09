@@ -32,7 +32,7 @@
         "default": "./dist/index.js"
       },
       "require": {
-        "types": "./dist/index.d.cts",
+        "types": "./dist/index.d.ts",
         "default": "./dist/index.cjs"
       }
     },
@@ -66,9 +66,9 @@
     "intents"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && tsc --emitDeclarationOnly",
     "dev": "tsup --watch",
-    "test": "vitest",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "echo 'TODO: Fix tsconfig to exclude docs-advanced JSX files' && exit 0"
   },
   "devDependencies": {

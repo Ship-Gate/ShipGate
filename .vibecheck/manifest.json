@@ -1,0 +1,10 @@
+{
+  "hash": "sha256:f722cc1e141bb4cd",
+  "computed": "2026-02-09T03:26:05.793Z",
+  "inputs": {
+    "packageJson": "sha256:55314a6253f6",
+    "lockfile": "sha256:8fd6909a2000",
+    "lockfileName": "pnpm-lock.yaml",
+    "detection": "sha256:894fcb8c6c85"
+  }
+}

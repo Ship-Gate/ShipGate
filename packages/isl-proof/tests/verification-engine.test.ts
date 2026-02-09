@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { parseISL } from '@isl-lang/isl-core/parser';
+import { parseISL } from '@isl-lang/isl-core';
 import { VerificationEngine, verifyDomain, type TraceEvent } from '../src/verification-engine.js';
 
 // ============================================================================

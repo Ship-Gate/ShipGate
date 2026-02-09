@@ -1,0 +1,32 @@
+{
+  "$schema": "proof-corpus",
+  "description": "Known-good and known-bad implementations for ISL proof benchmark. Primary proof: bad code → NO-SHIP. Good code → SHIP requires spec/impl compatibility with current parser.",
+  "specs": [
+    {
+      "id": "money-transfer",
+      "name": "Money Transfer (demo-gate)",
+      "specPath": "demo-gate/spec.isl",
+      "goodImpl": "demo-gate/fixed.ts",
+      "badImpl": "demo-gate/broken.ts",
+      "knownBugs": [
+        "No check if sender has sufficient funds (negative balance possible)",
+        "No check if amount is positive (theft vector)",
+        "No check if sender != receiver (same-account transfer)"
+      ],
+      "note": "Spec may use dialect not fully supported by current parser"
+    },
+    {
+      "id": "auth",
+      "name": "Authentication (verification-demo)",
+      "specPath": "demos/verification-demo/spec/valid-auth.isl",
+      "goodImpl": "demos/verification-demo/src/auth.ts",
+      "badImpl": "demos/verification-demo/src/invalid-impl.ts",
+      "knownBugs": [
+        "Console.log in production (PII risk)",
+        "Rate limit after body parsing (wrong order)",
+        "Missing audit on exit paths"
+      ],
+      "note": "Spec uses stdlib import; run gate from demos/verification-demo for full context"
+    }
+  ]
+}

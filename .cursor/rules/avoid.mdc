@@ -1,0 +1,29 @@
+---
+description: Patterns to avoid
+globs: ["**/*.{ts,tsx,js,jsx}"]
+alwaysApply: true
+---
+
+# ⚠️ Patterns to Avoid
+
+## 🟡 Console statements found in production code
+**Fix:** Use a proper logger or remove before production
+
+## 🟡 TODO/FIXME comments found
+**Fix:** Address these items before shipping
+
+## 🔴 Potential hardcoded secrets detected
+**Fix:** Use environment variables for sensitive data
+
+## 🟡 Usage of `any` type detected
+**Fix:** Use proper TypeScript types or `unknown`
+
+## 🟡 Mock data or fake APIs detected
+**Fix:** Replace with real API endpoints before production
+
+
+## General
+- ❌ No `any` type
+- ❌ No hardcoded secrets
+- ❌ No console.log in production
+- ❌ No mock data in production

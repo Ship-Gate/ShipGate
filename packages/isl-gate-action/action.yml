@@ -1,0 +1,51 @@
+name: 'Shipgate ISL Verify'
+description: 'SHIP/NO_SHIP gate for AI-generated code. Blocks broken code from reaching production.'
+author: 'Shipgate'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  spec:
+    description: 'Path to ISL specification file (optional; omit for firewall-only mode)'
+    required: false
+    default: ''
+  implementation:
+    description: 'Path to implementation file or directory'
+    required: false
+    default: '.'
+  threshold:
+    description: 'Minimum score to SHIP (0-100)'
+    required: false
+    default: '70'
+  fail-on-no-ship:
+    description: 'Fail the workflow on NO_SHIP verdict'
+    required: false
+    default: 'true'
+  comment-on-pr:
+    description: 'Post results as PR comment'
+    required: false
+    default: 'true'
+  upload-evidence:
+    description: 'Upload evidence bundle as artifact'
+    required: false
+    default: 'true'
+  dependency-audit:
+    description: 'Run dependency audit (critical vulns = NO_SHIP)'
+    required: false
+    default: 'false'
+
+outputs:
+  verdict:
+    description: 'Gate verdict: SHIP or NO_SHIP'
+  score:
+    description: 'Verification score (0-100)'
+  sources:
+    description: 'Comma-separated verification sources (gate_spec, gate_firewall)'
+  evidence-path:
+    description: 'Path to evidence bundle'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

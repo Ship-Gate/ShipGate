@@ -44,7 +44,7 @@ export default function TrustScore({
             stroke="currentColor"
             strokeWidth={stroke}
             fill="none"
-            className="text-gray-200"
+            className="text-white/30"
           />
           {/* Score circle */}
           <motion.circle
@@ -75,7 +75,7 @@ export default function TrustScore({
         </div>
       </div>
       {showLabel && (
-        <span className="text-sm text-gray-500">Trust Score</span>
+        <span className="text-sm text-white/70">Trust Score</span>
       )}
     </div>
   );

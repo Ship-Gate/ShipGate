@@ -12,6 +12,9 @@ export * from './errors.js';
 export { Parser, ParseResult } from './parser.js';
 export { Lexer, tokenize } from './lexer.js';
 
+// Peggy-based parser (dual-mode transition)
+export { parsePeggy, type PeggyParseResult } from './grammar/index.js';
+
 // ============================================================================
 // PARSER API (matches contracts/api.ts)
 // ============================================================================
@@ -25,7 +28,8 @@ export interface ParserAPI {
 }
 
 /**
- * Parse ISL source code into an AST
+ * Parse ISL source code into an AST (hand-written recursive descent parser).
+ * This is the current default parser.
  * @param source - ISL source code
  * @param filename - Optional filename for error reporting
  * @returns ParseResult with success status, domain AST, errors, and tokens
@@ -33,6 +37,12 @@ export interface ParserAPI {
 export function parse(source: string, filename?: string): ParseResult {
   return parseSource(source, filename);
 }
+
+/**
+ * Legacy parser alias — calls the hand-written recursive descent parser.
+ * Use this explicitly when you need guaranteed compatibility with the original parser.
+ */
+export const parseLegacy = parse;
 
 /**
  * Parse an ISL file from disk

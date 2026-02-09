@@ -24,7 +24,7 @@ export type TokenType =
 // Specific token kinds for precise parsing
 export type TokenKind =
   // Keywords
-  | 'DOMAIN' | 'VERSION' | 'OWNER' | 'IMPORTS' | 'FROM' | 'AS'
+  | 'DOMAIN' | 'VERSION' | 'OWNER' | 'USE' | 'IMPORTS' | 'FROM' | 'AS'
   | 'TYPE' | 'ENUM' | 'ENTITY' | 'BEHAVIOR' | 'VIEW' | 'POLICY'
   | 'INVARIANTS' | 'SCENARIOS' | 'CHAOS' | 'COMPOSITION'
   | 'INPUT' | 'OUTPUT' | 'SUCCESS' | 'ERRORS' | 'WHEN' | 'RETRIABLE' | 'RETRY_AFTER' | 'RETURNS'
@@ -77,6 +77,7 @@ export const KEYWORDS: Map<string, TokenKind> = new Map([
   ['domain', 'DOMAIN'],
   ['version', 'VERSION'],
   ['owner', 'OWNER'],
+  ['use', 'USE'],
   ['imports', 'IMPORTS'],
   ['from', 'FROM'],
   ['as', 'AS'],

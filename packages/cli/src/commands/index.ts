@@ -42,3 +42,6 @@ export { createPolicyBundle, printCreateBundleResult, getCreateBundleExitCode, v
 
 export { watch, type WatchOptions, type WatchResult } from './watch.js';
 
+export { pbt, printPBTResult, getPBTExitCode, type PBTOptions, type PBTResult, type PBTVerifyResult } from './pbt.js';
+
+export { chaos, printChaosResult, getChaosExitCode, type ChaosOptions, type ChaosResult, type ChaosVerifyResult } from './chaos.js';

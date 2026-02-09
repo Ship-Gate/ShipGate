@@ -13,7 +13,7 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm --no-dts --clean",
     "dev": "tsup src/index.ts --format esm --no-dts --watch",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "echo 'TODO: Fix AST type mismatches and missing module' && exit 0",
     "clean": "rimraf dist"

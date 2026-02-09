@@ -91,6 +91,7 @@ export class Parser {
       kind: 'Domain',
       name,
       version: { kind: 'StringLiteral', value: '', location: name.location },
+      uses: [],
       imports: [],
       types: [],
       entities: [],
@@ -155,6 +156,9 @@ export class Parser {
       case 'OWNER':
         domain.owner = this.parseOwnerField();
         break;
+      case 'USE':
+        domain.uses.push(this.parseUseStatement());
+        break;
       case 'IMPORTS':
         domain.imports.push(...this.parseImports());
         break;
@@ -205,6 +209,44 @@ export class Parser {
   }
 
   // ============================================================================
+  // USE STATEMENTS
+  // ============================================================================
+
+  private parseUseStatement(): AST.UseStatement {
+    const start = this.advance(); // consume 'use'
+    let module: AST.Identifier | AST.StringLiteral;
+    if (this.check('STRING_LITERAL')) {
+      module = this.parseStringLiteral();
+    } else {
+      const first = this.parseIdentifier();
+      let name = first.name;
+      let endLoc = first.location;
+      while (this.match('MINUS') && this.check('IDENTIFIER')) {
+        const next = this.parseIdentifier();
+        name += '-' + next.name;
+        endLoc = next.location;
+      }
+      module = { kind: 'Identifier', name, location: AST.mergeLocations(first.location, endLoc) };
+    }
+    let version: AST.StringLiteral | undefined;
+    if (this.match('AT')) {
+      version = this.parseStringLiteral();
+    }
+    let alias: AST.Identifier | undefined;
+    if (this.match('AS')) {
+      alias = this.parseIdentifier();
+    }
+    const end = alias ?? version ?? module;
+    return {
+      kind: 'UseStatement',
+      module,
+      version,
+      alias,
+      location: AST.mergeLocations(start.location, end.location),
+    };
+  }
+
+  // ============================================================================
   // IMPORTS
   // ============================================================================
 
@@ -225,14 +267,20 @@ export class Parser {
     const start = this.currentToken();
     const items: AST.ImportItem[] = [];
 
-    // Parse import items
-    const item = this.parseImportItem();
-    items.push(item);
-
-    while (this.match('COMMA')) {
-      // Check if this was a trailing comma (next token is 'from')
-      if (this.check('FROM')) break;
-      items.push(this.parseImportItem());
+    const hasBraces = this.match('LBRACE');
+    if (hasBraces) {
+      while (!this.check('RBRACE') && !this.isAtEnd()) {
+        items.push(this.parseImportItem());
+        this.match('COMMA');
+      }
+      this.expect('RBRACE', "Expected '}'");
+    } else {
+      const item = this.parseImportItem();
+      items.push(item);
+      while (this.match('COMMA')) {
+        if (this.check('FROM')) break;
+        items.push(this.parseImportItem());
+      }
     }
 
     this.expect('FROM', "Expected 'from'");
@@ -1746,12 +1794,37 @@ export class Parser {
 
     const end = this.expect('RBRACE', "Expected '}'");
 
+    // Populate granular nodes for isl-core compatibility
+    const injections: AST.ChaosInjection[] = inject.map((inj): AST.ChaosInjection => ({
+      kind: 'ChaosInjection',
+      type: {
+        kind: 'Identifier',
+        name: typeof inj.type === 'string' ? inj.type : 'database_failure',
+        location: inj.location,
+      },
+      arguments: inj.parameters.map((p): AST.ChaosArgument => ({
+        kind: 'ChaosArgument',
+        name: p.name,
+        value: p.value,
+        location: p.location,
+      })),
+      location: inj.location,
+    }));
+    const expectations: AST.ChaosExpectation[] = then.map((expr): AST.ChaosExpectation => ({
+      kind: 'ChaosExpectation',
+      expression: expr,
+      location: expr.location,
+    }));
+
     return {
       kind: 'ChaosScenario',
       name,
       inject,
       when,
       then,
+      injections,
+      expectations,
+      withClauses: [],
       location: AST.mergeLocations(name.location, end.location),
     };
   }

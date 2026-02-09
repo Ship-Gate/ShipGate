@@ -1,18 +1,18 @@
 {
   "name": "vscode-islstudio",
-  "displayName": "VibeCheck + ISL Studio",
+  "displayName": "Shipgate",
   "description": "Unified code gate. Truthpack validation (routes, env, imports) + 25 security rules (auth, pii, payments, rate-limit, intent). SHIP or NO_SHIP with evidence. Verified by VibeCheck.",
   "version": "1.0.0",
-  "publisher": "ISL",
+  "publisher": "shipgate",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ISL-Studio/ISL-Studio-"
+    "url": "https://github.com/shipgate/shipgate"
   },
   "bugs": {
-    "url": "https://github.com/ISL-Studio/ISL-Studio-/issues"
+    "url": "https://github.com/shipgate/shipgate/issues"
   },
-  "homepage": "https://islstudio.dev",
+  "homepage": "https://shipgate.dev",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -42,8 +42,8 @@
   },
   "badges": [
     {
-      "url": "https://img.shields.io/npm/v/islstudio.svg",
-      "href": "https://www.npmjs.com/package/islstudio",
+      "url": "https://img.shields.io/npm/v/shipgate.svg",
+      "href": "https://www.npmjs.com/package/shipgate",
       "description": "npm version"
     }
   ],

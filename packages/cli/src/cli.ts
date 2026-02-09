@@ -38,6 +38,8 @@ import {
   createPolicyBundle, printCreateBundleResult, getCreateBundleExitCode,
   verifyPolicyBundle, printVerifyBundleResult, getVerifyBundleExitCode,
   watch,
+  pbt, printPBTResult, getPBTExitCode,
+  chaos, printChaosResult, getChaosExitCode,
 } from './commands/index.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -58,61 +60,10 @@ const COMMANDS = [
   'heal', // Auto-fix violations
   'proof', // Proof verification
   'watch', // Watch mode
-  'vibecheck', // integration command
+  'pbt', // Property-based testing
+  'chaos', // Chaos testing
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Optional Features (defensive loading)
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface VibecheckModule {
-  runVibecheck(options: {
-    spec?: string;
-    impl?: string;
-    mode?: string;
-    verbose?: boolean;
-  }): Promise<{
-    success: boolean;
-    score?: number;
-    report?: unknown;
-    error?: string;
-  }>;
-}
-
-let vibecheckModule: VibecheckModule | undefined;
-let vibecheckAvailable = false;
-
-/**
- * Try to load the vibecheck module
- */
-async function loadVibecheck(): Promise<boolean> {
-  if (vibecheckAvailable) return true;
-  
-  try {
-    const module = await import('@isl-lang/vibecheck');
-    if (module.runVibecheck) {
-      vibecheckModule = module;
-      vibecheckAvailable = true;
-      return true;
-    }
-  } catch {
-    // Not installed - this is fine
-  }
-  
-  // Try alternative paths
-  try {
-    const module = await import('vibecheck');
-    if (module.runVibecheck) {
-      vibecheckModule = module;
-      vibecheckAvailable = true;
-      return true;
-    }
-  } catch {
-    // Not installed - this is fine
-  }
-  
-  return false;
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CLI Setup
@@ -122,8 +73,8 @@ const program = new Command();
 
 program
   .name('isl')
-  .description(chalk.bold('Intent Specification Language CLI') + '\n' + 
-    chalk.gray('The programming language for the AI era'))
+  .description(chalk.bold('Shipgate CLI') + '\n' + 
+    chalk.gray('Define what your code should do. We enforce it.'))
   .version(VERSION, '-V, --version', 'Show version number')
   .option('-v, --verbose', 'Enable verbose output')
   .option('-q, --quiet', 'Suppress non-error output')
@@ -304,6 +255,7 @@ program
   .option('--chaos', 'Enable chaos verification (fault injection)')
   .option('--all', 'Enable all verification modes (SMT + PBT + Temporal + Chaos)')
   .option('-r, --report <path>', 'Write evidence report to file')
+  .option('--ci', 'CI mode: JSON to stdout, one-line summary to stderr, exit code 1 on failure')
   .action(async (spec: string, options) => {
     const opts = program.opts();
     
@@ -341,14 +293,17 @@ program
     // --all enables everything
     const enableAll = options.all;
 
+    const isCiMode = options.ci || isCI();
+
     const result = await verify(spec, {
       impl: options.impl,
       timeout: parseInt(options.timeout),
       minScore: parseInt(options.minScore),
       detailed: options.detailed,
       report: options.report,
-      format: opts.format === 'json' ? 'json' : 'text',
+      format: isCiMode ? 'json' : (opts.format === 'json' ? 'json' : 'text'),
       verbose: opts.verbose,
+      json: isCiMode,
       smt: enableAll || options.smt,
       smtTimeout: options.smtTimeout ? parseInt(options.smtTimeout) : undefined,
       pbt: enableAll || options.pbt,
@@ -358,13 +313,119 @@ program
       temporal: enableAll || options.temporal,
       temporalMinSamples: options.temporalMinSamples ? parseInt(options.temporalMinSamples) : undefined,
     });
+
+    if (isCiMode) {
+      // CI mode: JSON to stdout, one-line summary to stderr
+      printVerifyResult(result, { json: true });
+      const score = result.evidenceScore?.overall ?? result.trustScore ?? 0;
+      const failCount = result.evidenceScore?.failedChecks ?? 0;
+      if (result.success) {
+        process.stderr.write(`Shipgate: SHIP (score: ${score}/100)\n`);
+      } else {
+        process.stderr.write(`Shipgate: NO_SHIP (score: ${score}/100, ${failCount} failures)\n`);
+      }
+    } else {
+      printVerifyResult(result, {
+        detailed: options.detailed,
+        format: opts.format === 'json' ? 'json' : 'text',
+      });
+    }
     
-    printVerifyResult(result, {
+    process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PBT Command (Property-Based Testing)
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('pbt <spec>')
+  .description('Run property-based testing pipeline against an ISL specification')
+  .option('-i, --impl <file>', 'Implementation file to verify')
+  .option('-t, --timeout <ms>', 'Test timeout in milliseconds', '30000')
+  .option('--tests <num>', 'Number of PBT test iterations', '100')
+  .option('--seed <seed>', 'PBT random seed for reproducibility')
+  .option('--max-shrinks <num>', 'Maximum PBT shrinking iterations', '100')
+  .option('-d, --detailed', 'Show detailed breakdown')
+  .option('--smt', 'Enable SMT verification for preconditions/postconditions')
+  .option('--smt-timeout <ms>', 'SMT solver timeout in milliseconds', '5000')
+  .option('--temporal', 'Enable temporal verification')
+  .option('--temporal-min-samples <num>', 'Minimum samples for temporal verification', '10')
+  .action(async (spec: string, options) => {
+    const opts = program.opts();
+    
+    if (!options.impl) {
+      console.error(chalk.red('Error: --impl is required'));
+      process.exit(ExitCode.USAGE_ERROR);
+      return;
+    }
+
+    const result = await pbt(spec, {
+      impl: options.impl,
+      timeout: parseInt(options.timeout),
+      tests: options.tests ? parseInt(options.tests) : undefined,
+      seed: options.seed ? parseInt(options.seed) : undefined,
+      maxShrinks: options.maxShrinks ? parseInt(options.maxShrinks) : undefined,
+      verbose: opts.verbose,
+      format: opts.format === 'json' ? 'json' : 'text',
+      smt: options.smt,
+      smtTimeout: options.smtTimeout ? parseInt(options.smtTimeout) : undefined,
+      temporal: options.temporal,
+      temporalMinSamples: options.temporalMinSamples ? parseInt(options.temporalMinSamples) : undefined,
+    });
+    
+    printPBTResult(result, {
       detailed: options.detailed,
       format: opts.format === 'json' ? 'json' : 'text',
     });
     
-    process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
+    process.exit(getPBTExitCode(result));
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Chaos Command (Chaos Testing)
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('chaos <spec>')
+  .description('Run chaos testing pipeline against an ISL specification (fault injection)')
+  .option('-i, --impl <file>', 'Implementation file to verify')
+  .option('-t, --timeout <ms>', 'Test timeout in milliseconds', '30000')
+  .option('--seed <seed>', 'Random seed for reproducibility')
+  .option('--continue-on-failure', 'Continue running scenarios after failure')
+  .option('-d, --detailed', 'Show detailed breakdown')
+  .option('--smt', 'Enable SMT verification for preconditions/postconditions')
+  .option('--smt-timeout <ms>', 'SMT solver timeout in milliseconds', '5000')
+  .option('--temporal', 'Enable temporal verification')
+  .option('--temporal-min-samples <num>', 'Minimum samples for temporal verification', '10')
+  .action(async (spec: string, options) => {
+    const opts = program.opts();
+    
+    if (!options.impl) {
+      console.error(chalk.red('Error: --impl is required'));
+      process.exit(ExitCode.USAGE_ERROR);
+      return;
+    }
+
+    const result = await chaos(spec, {
+      impl: options.impl,
+      timeout: parseInt(options.timeout),
+      seed: options.seed ? parseInt(options.seed) : undefined,
+      continueOnFailure: options.continueOnFailure,
+      verbose: opts.verbose,
+      format: opts.format === 'json' ? 'json' : 'text',
+      smt: options.smt,
+      smtTimeout: options.smtTimeout ? parseInt(options.smtTimeout) : undefined,
+      temporal: options.temporal,
+      temporalMinSamples: options.temporalMinSamples ? parseInt(options.temporalMinSamples) : undefined,
+    });
+    
+    printChaosResult(result, {
+      detailed: options.detailed,
+      format: opts.format === 'json' ? 'json' : 'text',
+    });
+    
+    process.exit(getChaosExitCode(result));
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -379,16 +440,24 @@ program
   .option('--force', 'Overwrite existing directory')
   .option('--no-git', 'Skip git initialization')
   .option('-e, --examples', 'Include example files')
+  .option('--from-code <path>', 'Generate ISL spec from existing source code (file or directory)')
+  .option('--from-prompt <text>', 'Generate ISL spec from natural language prompt')
+  .option('--ai', 'Use AI for spec generation (requires ANTHROPIC_API_KEY for best results)')
+  .option('--api-key <key>', 'API key for AI provider (or use ANTHROPIC_API_KEY env)')
   .action(async (name: string | undefined, options) => {
     const opts = program.opts();
     const projectName = name ?? 'my-isl-project';
-    
+
     const result = await init(projectName, {
       template: options.template as 'minimal' | 'full' | 'api',
       directory: options.directory,
       force: options.force,
       skipGit: !options.git,
       examples: options.examples,
+      fromCode: options.fromCode,
+      fromPrompt: options.fromPrompt,
+      ai: options.ai,
+      apiKey: options.apiKey,
     });
     
     if (opts.format === 'json') {
@@ -666,135 +735,6 @@ program
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Vibecheck Command (Integration - defensive loading)
-// ─────────────────────────────────────────────────────────────────────────────
-
-program
-  .command('vibecheck <subcommand> [args...]')
-  .description('Vibecheck integration commands (verify, report)')
-  .option('-s, --spec <file>', 'ISL specification file')
-  .option('-i, --impl <file>', 'Implementation file to verify')
-  .option('-m, --mode <mode>', 'Verification mode (quick, full, strict)', 'full')
-  .option('--json', 'Output as JSON')
-  .action(async (subcommand: string, args: string[], options) => {
-    const opts = program.opts();
-    const isJson = opts.format === 'json' || options.json;
-    
-    // Check if vibecheck is available
-    const available = await loadVibecheck();
-    
-    if (!available || !vibecheckModule) {
-      if (isJson) {
-        console.log(JSON.stringify({
-          success: false,
-          error: 'Vibecheck module is not installed',
-          hint: 'Install with: npm install @isl-lang/vibecheck',
-        }, null, 2));
-      } else {
-        console.error(chalk.red('Error: Vibecheck module is not installed'));
-        console.log('');
-        console.log(chalk.gray('Vibecheck provides AI-powered verification and evidence collection.'));
-        console.log(chalk.gray('Install with: npm install @isl-lang/vibecheck'));
-      }
-      process.exit(ExitCode.USAGE_ERROR);
-      return;
-    }
-    
-    switch (subcommand) {
-      case 'verify': {
-        const specFile = options.spec || args[0];
-        if (!specFile) {
-          if (isJson) {
-            console.log(JSON.stringify({ success: false, error: 'Missing spec file' }, null, 2));
-          } else {
-            console.error(chalk.red('Error: Missing spec file'));
-            console.log(chalk.gray('Usage: isl vibecheck verify --spec <file> --impl <file>'));
-          }
-          process.exit(ExitCode.USAGE_ERROR);
-          return;
-        }
-        
-        if (!isJson) {
-          console.log('');
-          console.log(chalk.bold.cyan('🔍 Vibecheck Verify'));
-          console.log('');
-          console.log(chalk.gray(`Spec: ${specFile}`));
-          if (options.impl) console.log(chalk.gray(`Impl: ${options.impl}`));
-          console.log('');
-        }
-        
-        try {
-          const result = await vibecheckModule.runVibecheck({
-            spec: specFile,
-            impl: options.impl,
-            mode: options.mode,
-            verbose: opts.verbose,
-          });
-          
-          if (isJson) {
-            console.log(JSON.stringify(result, null, 2));
-          } else {
-            if (result.success) {
-              console.log(chalk.green(`✓ Verification passed`));
-              if (result.score !== undefined) {
-                console.log(chalk.gray(`  Score: ${result.score}%`));
-              }
-            } else {
-              console.log(chalk.red(`✗ Verification failed`));
-              if (result.error) {
-                console.log(chalk.gray(`  Error: ${result.error}`));
-              }
-            }
-          }
-          
-          process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
-        } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
-          if (isJson) {
-            console.log(JSON.stringify({ success: false, error: message }, null, 2));
-          } else {
-            console.error(chalk.red(`Vibecheck error: ${message}`));
-          }
-          process.exit(ExitCode.ISL_ERROR);
-        }
-        break;
-      }
-      
-      case 'report': {
-        if (isJson) {
-          console.log(JSON.stringify({
-            success: false,
-            error: 'Report subcommand not yet implemented',
-            hint: 'Use "isl vibecheck verify" to generate a verification report',
-          }, null, 2));
-        } else {
-          console.log(chalk.yellow('Report subcommand coming soon...'));
-          console.log(chalk.gray('For now, use: isl vibecheck verify --spec <file>'));
-        }
-        process.exit(ExitCode.SUCCESS);
-        break;
-      }
-      
-      default: {
-        if (isJson) {
-          console.log(JSON.stringify({
-            success: false,
-            error: `Unknown vibecheck subcommand: ${subcommand}`,
-            availableCommands: ['verify', 'report'],
-          }, null, 2));
-        } else {
-          console.error(chalk.red(`Unknown vibecheck subcommand: ${subcommand}`));
-          console.log('');
-          console.log(chalk.gray('Available subcommands:'));
-          console.log(chalk.gray('  verify   Run verification against an ISL spec'));
-          console.log(chalk.gray('  report   Generate verification report'));
-        }
-        process.exit(ExitCode.USAGE_ERROR);
-      }
-    }
-  });
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Policy Bundle Commands
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -861,7 +801,7 @@ program
     
     if (!isCi && !isJson) {
       console.log('');
-      console.log(chalk.bold.cyan('🚦 ISL Gate'));
+      console.log(chalk.bold.cyan('Shipgate'));
       console.log(chalk.gray(`   Spec: ${spec}`));
       console.log(chalk.gray(`   Impl: ${options.impl}`));
       console.log(chalk.gray(`   Threshold: ${options.threshold}%`));

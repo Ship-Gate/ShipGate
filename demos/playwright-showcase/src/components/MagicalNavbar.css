@@ -1,0 +1,195 @@
+/* Ultra Magical Navbar – CSS variables (set on :root by component or global) */
+:root {
+  --magical-bg: #030305;
+  --magical-text-main: #ffffff;
+  --magical-text-muted: #8892b0;
+  --magical-primary: #6366f1;
+  --magical-accent: #ec4899;
+  --magical-cyan: #06b6d4;
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  --scroll-velocity: 0;
+  --magical-nav-width-expanded: 1100px;
+  --magical-nav-width-collapsed: 500px;
+  --ease-elastic: cubic-bezier(0.175, 0.885, 0.32, 1.15);
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.magical-stage {
+  perspective: 1000px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.magical-navbar-card {
+  position: relative;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%) skewY(calc(var(--scroll-velocity) * 0.1deg));
+  width: 92%;
+  max-width: var(--magical-nav-width-expanded);
+  height: 80px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  background: rgba(15, 15, 20, 0.65);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow:
+    0 20px 40px -5px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  transition:
+    width 0.8s var(--ease-elastic),
+    height 0.8s var(--ease-elastic),
+    padding 0.8s var(--ease-elastic),
+    background 0.5s ease,
+    border-radius 0.8s var(--ease-elastic),
+    transform 0.1s linear;
+  pointer-events: auto;
+  overflow: hidden;
+  font-family: 'Outfit', sans-serif;
+}
+
+.magical-navbar-card::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    600px circle at var(--mouse-x) var(--mouse-y),
+    rgba(255, 255, 255, 0.4),
+    transparent 40%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.7;
+  transition: opacity 0.5s ease;
+}
+
+body.magical-nav-scrolled .magical-navbar-card {
+  top: 16px;
+  width: auto;
+  min-width: 480px;
+  max-width: var(--magical-nav-width-collapsed);
+  height: 60px;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  background: rgba(10, 10, 14, 0.85);
+  box-shadow:
+    0 15px 35px -10px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.magical-brand-container {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.magical-logo-text {
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.magical-nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.magical-nav-link {
+  position: relative;
+  padding: 10px 20px;
+  color: var(--magical-text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: 99px;
+  transition: color 0.3s ease;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+body.magical-nav-scrolled .magical-nav-link {
+  padding: 8px 16px;
+}
+
+.magical-nav-link:hover {
+  color: #fff;
+}
+
+.magical-nav-indicator {
+  position: absolute;
+  top: 4px;
+  left: 5px;
+  height: calc(100% - 8px);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  pointer-events: none;
+  z-index: 1;
+  transition:
+    width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.3s ease;
+  opacity: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.magical-actions-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.magical-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  padding: 8px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .magical-nav-menu {
+    display: none;
+  }
+
+  .magical-mobile-toggle {
+    display: flex;
+  }
+
+  .magical-navbar-card {
+    width: 90%;
+    min-width: auto;
+    justify-content: space-between;
+  }
+
+  body.magical-nav-scrolled .magical-navbar-card {
+    width: 92%;
+    min-width: auto;
+  }
+
+}

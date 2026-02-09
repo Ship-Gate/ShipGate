@@ -54,24 +54,54 @@ const DEFAULT_VOICE_ID = VOICE_IDS.matthew;
 
 let apiKey: string | null = null;
 let currentAudio: HTMLAudioElement | null = null;
+let audioContext: AudioContext | null = null;
 let audioCache: Map<string, string> = new Map();
+
+// Call this on user click to unlock audio. Creates a resumed AudioContext for Web Audio fallback.
+export function unlockAudioContext(): void {
+  try {
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (Ctx && !audioContext) {
+      audioContext = new Ctx();
+      audioContext.resume();
+    }
+  } catch {
+    // Ignore
+  }
+}
 
 // Set API key
 export function setElevenLabsApiKey(key: string): void {
   apiKey = key;
 }
 
-// Get API key from localStorage or environment
+// Get API key from environment, then localStorage
 export function getApiKey(): string | null {
   if (apiKey) return apiKey;
-  
+
+  // Try env first (Vite exposes VITE_* vars)
+  const envKey = (import.meta as { env?: Record<string, string> }).env?.VITE_ELEVENLABS_API_KEY;
+  if (envKey && typeof envKey === 'string' && envKey.trim()) {
+    apiKey = envKey.trim();
+    return apiKey;
+  }
+
   // Try localStorage
   const storedKey = localStorage.getItem('elevenlabs_api_key');
   if (storedKey) {
     apiKey = storedKey;
     return apiKey;
   }
-  
+
+  return null;
+}
+
+// Get voice ID from environment or return null (use default/selected)
+export function getEnvVoiceId(): string | null {
+  const envVoice = (import.meta as { env?: Record<string, string> }).env?.VITE_ELEVENLABS_VOICE_ID;
+  if (envVoice && typeof envVoice === 'string' && envVoice.trim()) {
+    return envVoice.trim();
+  }
   return null;
 }
 
@@ -140,7 +170,7 @@ export async function speak(
   // Stop any currently playing audio
   stopSpeaking();
   
-  // Play the audio
+  // Try HTML Audio first
   currentAudio = new Audio(audioUrl);
   currentAudio.onended = () => {
     currentAudio = null;
@@ -153,9 +183,22 @@ export async function speak(
   
   try {
     await currentAudio.play();
-  } catch (error) {
-    console.error('Failed to play audio:', error);
-    onEnd?.();
+  } catch {
+    // HTML Audio blocked (autoplay policy) - try Web Audio API
+    try {
+      const ctx = audioContext || new (window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)();
+      if (ctx.state === 'suspended') await ctx.resume();
+      const response = await fetch(audioUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = await ctx.decodeAudioData(arrayBuffer);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.onended = () => onEnd?.();
+      source.start(0);
+    } catch (fallbackError) {
+      onEnd?.();
+    }
   }
 }
 

@@ -1,5 +1,5 @@
-# ISL Studio CI - Self-gate and publish with provenance
-name: ISL Studio CI
+# Shipgate CI - Self-gate and publish with provenance
+name: Shipgate CI
 
 on:
   push:
@@ -33,10 +33,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build islstudio
-        run: pnpm --filter islstudio build
+      - name: Build shipgate
+        run: pnpm --filter shipgate build
 
-      - name: Run ISL Gate on self
+      - name: Run Shipgate on self
         run: |
           cd packages/islstudio
           node dist/cli.js gate --ci --output json > gate-result.json || true
@@ -44,10 +44,10 @@ jobs:
           VERDICT=$(jq -r '.verdict' gate-result.json)
           SCORE=$(jq -r '.score' gate-result.json)
           
-          echo "::notice::ISL Gate: $VERDICT (Score: $SCORE/100)"
+          echo "::notice::Shipgate: $VERDICT (Score: $SCORE/100)"
           
           if [ "$VERDICT" = "NO_SHIP" ]; then
-            echo "::error::ISL Gate blocked this PR"
+            echo "::error::Shipgate blocked this PR"
             jq -r '.violations[]? | "::warning file=\(.filePath // "unknown"),line=\(.line // 1),title=\(.ruleId)::\(.message)"' gate-result.json
             exit 1
           fi
@@ -71,10 +71,10 @@ jobs:
         run: pnpm install
 
       - name: Build
-        run: pnpm --filter islstudio build
+        run: pnpm --filter shipgate build
 
       - name: Test
-        run: pnpm --filter islstudio test
+        run: pnpm --filter shipgate test
 
   # Smoke test npm pack
   pack-smoke:
@@ -95,7 +95,7 @@ jobs:
         run: pnpm install
 
       - name: Build
-        run: pnpm --filter islstudio build
+        run: pnpm --filter shipgate build
 
       - name: Pack
         run: |
@@ -103,12 +103,12 @@ jobs:
           npm pack
           
           # Verify package contents
-          tar -tzf islstudio-*.tgz
+          tar -tzf shipgate-*.tgz
           
           # Install from tarball and verify
-          npm install -g islstudio-*.tgz
-          islstudio --version
-          islstudio help
+          npm install -g shipgate-*.tgz
+          shipgate --version
+          shipgate help
 
   # Snapshot test for rule IDs
   rule-snapshot:
@@ -182,7 +182,7 @@ jobs:
         run: pnpm install
 
       - name: Build
-        run: pnpm --filter islstudio build
+        run: pnpm --filter shipgate build
 
       - name: Publish with provenance
         run: |

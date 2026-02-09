@@ -121,13 +121,20 @@ export function isAllowedStubFile(filePath: string, allowlist: string[] = DEFAUL
   
   for (const pattern of allowlist) {
     // Convert glob to regex
-    const regexPattern = pattern
+    // Handle leading **/ specially - it should match zero or more path segments
+    const hasLeadingDoubleStar = pattern.startsWith('**/');
+    const patternToConvert = hasLeadingDoubleStar ? pattern.slice(3) : pattern;
+    
+    const regexPattern = patternToConvert
       .replace(/\*\*/g, '<<<DOUBLE_STAR>>>')
       .replace(/\*/g, '[^/]*')
-      .replace(/<<<DOUBLE_STAR>>>/g, '.*')
-      .replace(/\./g, '\\.');
+      .replace(/\./g, '\\.')
+      .replace(/<<<DOUBLE_STAR>>>/g, '.*');
     
-    const regex = new RegExp(regexPattern, 'i');
+    // If pattern started with **/, make the prefix optional (matches zero or more path segments)
+    const finalPattern = hasLeadingDoubleStar ? `(.*\\/)?${regexPattern}` : regexPattern;
+    
+    const regex = new RegExp(finalPattern, 'i');
     if (regex.test(normalizedPath)) {
       return true;
     }
