@@ -1,9 +1,9 @@
 {
   "meta": {
-    "generatedAt": "2026-02-09T06:37:21.951Z",
+    "generatedAt": "2026-02-09T07:45:14.431Z",
     "verdict": "BLOCK"
   },
-  "truthpackHash": "sha256:70ddef310a15dd3bca471734d3b57ef8fc4bc9271e59f548ea31652ee5cec7fe",
+  "truthpackHash": "sha256:f62c601049726eee7b5724e2f7d5f9a147a06f2a5fbd7a7ca68109aa41e491a6",
   "findings": [
     {
       "id": "F_FAKE_SUCCESS_31d90e72d8",
@@ -2946,7 +2946,7 @@
       ]
     },
     {
-      "id": "F_SILENT_CATCH_11c26ef40f",
+      "id": "F_SILENT_CATCH_351c8b1776",
       "severity": "WARN",
       "category": "SilentCatch",
       "title": "Catch block swallows error silently",
@@ -2954,9 +2954,9 @@
       "confidence": "med",
       "evidence": [
         {
-          "id": "ev_5c071c1f1a",
+          "id": "ev_3af761277d",
           "file": "packages/isl-proof/src/migrate.ts",
-          "lines": "429-436",
+          "lines": "438-445",
           "snippetHash": "sha256:dc0507259e64ff22045ba772c92d5437576b509151df24c6fad459a4166c1e49",
           "reason": "Silent catch block"
         }
@@ -3015,7 +3015,7 @@
       ]
     },
     {
-      "id": "F_SILENT_CATCH_0e2b94de6f",
+      "id": "F_SILENT_CATCH_30c4ace8a8",
       "severity": "WARN",
       "category": "SilentCatch",
       "title": "Catch block swallows error silently",
@@ -3023,9 +3023,9 @@
       "confidence": "med",
       "evidence": [
         {
-          "id": "ev_cb7d540999",
+          "id": "ev_39762229a7",
           "file": "packages/isl-proof/src/verification-engine.ts",
-          "lines": "423-429",
+          "lines": "417-423",
           "snippetHash": "sha256:bf9181d41a6aaacca3b29c254a54a5f79abfe68ceaf40850587676fda562ee95",
           "reason": "Silent catch block"
         }
@@ -3061,7 +3061,7 @@
       ]
     },
     {
-      "id": "F_SILENT_CATCH_577b64c0d4",
+      "id": "F_SILENT_CATCH_8c71ec8155",
       "severity": "WARN",
       "category": "SilentCatch",
       "title": "Catch block swallows error silently",
@@ -3069,9 +3069,9 @@
       "confidence": "med",
       "evidence": [
         {
-          "id": "ev_16a4983ff1",
+          "id": "ev_9b5a78cf98",
           "file": "packages/isl-proof/src/verifier.ts",
-          "lines": "202-208",
+          "lines": "203-209",
           "snippetHash": "sha256:31672018b67ce0a67edbfb6403d26425abbeb33afca416527f44ebb5d02d73be",
           "reason": "Silent catch block"
         }
@@ -3084,7 +3084,7 @@
       ]
     },
     {
-      "id": "F_SILENT_CATCH_4b13796e5e",
+      "id": "F_SILENT_CATCH_d44bf77c68",
       "severity": "WARN",
       "category": "SilentCatch",
       "title": "Catch block swallows error silently",
@@ -3092,9 +3092,9 @@
       "confidence": "med",
       "evidence": [
         {
-          "id": "ev_50d2ec5c95",
+          "id": "ev_3140f01aac",
           "file": "packages/isl-proof/src/verifier.ts",
-          "lines": "219-226",
+          "lines": "220-227",
           "snippetHash": "sha256:d423d9f7e92973f7e9033a4a861da90aa5c200eb72628da5e00bbc89de35e925",
           "reason": "Silent catch block"
         }
@@ -3107,7 +3107,7 @@
       ]
     },
     {
-      "id": "F_SILENT_CATCH_31f809a92b",
+      "id": "F_SILENT_CATCH_7da0eca332",
       "severity": "WARN",
       "category": "SilentCatch",
       "title": "Catch block swallows error silently",
@@ -3115,9 +3115,9 @@
       "confidence": "med",
       "evidence": [
         {
-          "id": "ev_d551606c7a",
+          "id": "ev_b857fd9b6b",
           "file": "packages/isl-proof/src/verifier.ts",
-          "lines": "392-394",
+          "lines": "393-395",
           "snippetHash": "sha256:598a0058eecffc12c587a83d31a81b02f0992281f568db2ddbdf07ec570f765d",
           "reason": "Silent catch block"
         }
@@ -7523,6 +7523,29 @@
       ]
     },
     {
+      "id": "F_SILENT_CATCH_1ba1faaf09",
+      "severity": "WARN",
+      "category": "SilentCatch",
+      "title": "Catch block swallows error silently",
+      "why": "Errors are caught but not logged, reported, or shown to users. This makes debugging nearly impossible and hides failures.",
+      "confidence": "med",
+      "evidence": [
+        {
+          "id": "ev_9963ee3bbe",
+          "file": "packages/core/src/reporting/generateReport.ts",
+          "lines": "87-93",
+          "snippetHash": "sha256:3edda7143780e71d9919a57b60177668f250c484ff72a90bbd2f6164b4be5bc7",
+          "reason": "Silent catch block"
+        }
+      ],
+      "fixHints": [
+        "Add console.error(err) or a logger call.",
+        "Show user-friendly error message (toast, alert, etc.).",
+        "Re-throw the error if it should propagate.",
+        "If intentionally ignoring, add a comment explaining why."
+      ]
+    },
+    {
       "id": "F_SILENT_CATCH_d51305ea8f",
       "severity": "WARN",
       "category": "SilentCatch",
@@ -7535,121 +7558,6 @@
           "file": "packages/core/src/team-config/teamConfigLoader.ts",
           "lines": "33-35",
           "snippetHash": "sha256:598a0058eecffc12c587a83d31a81b02f0992281f568db2ddbdf07ec570f765d",
-          "reason": "Silent catch block"
-        }
-      ],
-      "fixHints": [
-        "Add console.error(error) or a logger call.",
-        "Show user-friendly error message (toast, alert, etc.).",
-        "Re-throw the error if it should propagate.",
-        "If intentionally ignoring, add a comment explaining why."
-      ]
-    },
-    {
-      "id": "F_SILENT_CATCH_fa92e474dd",
-      "severity": "WARN",
-      "category": "SilentCatch",
-      "title": "Catch block swallows error silently",
-      "why": "Errors are caught but not logged, reported, or shown to users. This makes debugging nearly impossible and hides failures.",
-      "confidence": "med",
-      "evidence": [
-        {
-          "id": "ev_28713331e2",
-          "file": "packages/dashboard-api/src/routes/analytics.ts",
-          "lines": "213-215",
-          "snippetHash": "sha256:45ce89c03697836df42c27e0c7af8e9333b983cdecdf3a67da5dd51eed6bc5e7",
-          "reason": "Silent catch block"
-        }
-      ],
-      "fixHints": [
-        "Add console.error(error) or a logger call.",
-        "Show user-friendly error message (toast, alert, etc.).",
-        "Re-throw the error if it should propagate.",
-        "If intentionally ignoring, add a comment explaining why."
-      ]
-    },
-    {
-      "id": "F_SILENT_CATCH_f0809de560",
-      "severity": "WARN",
-      "category": "SilentCatch",
-      "title": "Catch block swallows error silently",
-      "why": "Errors are caught but not logged, reported, or shown to users. This makes debugging nearly impossible and hides failures.",
-      "confidence": "med",
-      "evidence": [
-        {
-          "id": "ev_7bdfa1fb40",
-          "file": "packages/dashboard-api/src/routes/analytics.ts",
-          "lines": "282-284",
-          "snippetHash": "sha256:45ce89c03697836df42c27e0c7af8e9333b983cdecdf3a67da5dd51eed6bc5e7",
-          "reason": "Silent catch block"
-        }
-      ],
-      "fixHints": [
-        "Add console.error(error) or a logger call.",
-        "Show user-friendly error message (toast, alert, etc.).",
-        "Re-throw the error if it should propagate.",
-        "If intentionally ignoring, add a comment explaining why."
-      ]
-    },
-    {
-      "id": "F_SILENT_CATCH_e0a6281b2a",
-      "severity": "WARN",
-      "category": "SilentCatch",
-      "title": "Catch block swallows error silently",
-      "why": "Errors are caught but not logged, reported, or shown to users. This makes debugging nearly impossible and hides failures.",
-      "confidence": "med",
-      "evidence": [
-        {
-          "id": "ev_7238cea1a4",
-          "file": "packages/dashboard-api/src/routes/analytics.ts",
-          "lines": "368-370",
-          "snippetHash": "sha256:45ce89c03697836df42c27e0c7af8e9333b983cdecdf3a67da5dd51eed6bc5e7",
-          "reason": "Silent catch block"
-        }
-      ],
-      "fixHints": [
-        "Add console.error(error) or a logger call.",
-        "Show user-friendly error message (toast, alert, etc.).",
-        "Re-throw the error if it should propagate.",
-        "If intentionally ignoring, add a comment explaining why."
-      ]
-    },
-    {
-      "id": "F_SILENT_CATCH_47d8276959",
-      "severity": "WARN",
-      "category": "SilentCatch",
-      "title": "Catch block swallows error silently",
-      "why": "Errors are caught but not logged, reported, or shown to users. This makes debugging nearly impossible and hides failures.",
-      "confidence": "med",
-      "evidence": [
-        {
-          "id": "ev_9193005e0f",
-          "file": "packages/dashboard-api/src/routes/domains.ts",
-          "lines": "101-103",
-          "snippetHash": "sha256:45ce89c03697836df42c27e0c7af8e9333b983cdecdf3a67da5dd51eed6bc5e7",
-          "reason": "Silent catch block"
-        }
-      ],
-      "fixHints": [
-        "Add console.error(error) or a logger call.",
-        "Show user-friendly error message (toast, alert, etc.).",
-        "Re-throw the error if it should propagate.",
-        "If intentionally ignoring, add a comment explaining why."
-      ]
-    },
-    {
-      "id": "F_SILENT_CATCH_ce03563628",
-      "severity": "WARN",
-      "category": "SilentCatch",
-      "title": "Catch block swallows error silently",
-      "why": "Errors are caught but not logged, reported, or shown to users. This makes debugging nearly impossible and hides failures.",
-      "confidence": "med",
-      "evidence": [
-        {
-          "id": "ev_1b2e340caf",
-          "file": "packages/dashboard-api/src/routes/verifications.ts",
-          "lines": "119-121",
-          "snippetHash": "sha256:45ce89c03697836df42c27e0c7af8e9333b983cdecdf3a67da5dd51eed6bc5e7",
           "reason": "Silent catch block"
         }
       ],
@@ -13602,8 +13510,8 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_44ef5c2e",
-          "file": "vibecheck-demo.ts",
+          "id": "ev_e30857a4",
+          "file": "shipgate-demo.ts",
           "lines": "9-9",
           "snippetHash": "sha256:a2e8764d92775bc41c68f142c35aeb88333773411f12016ef484937b95280ae7",
           "reason": "Client fetch(string) \"/api/users/me\""
@@ -13625,7 +13533,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_fe347da3",
+          "id": "ev_8d76c9b3",
           "file": "demos/playwright-showcase/src/pages/Comparison.tsx",
           "lines": "41-45",
           "snippetHash": "sha256:cd129e9dcd78665dfb2cfd5bfd51629d425268fc1a146821d0cc46e9cc031f50",
@@ -13648,7 +13556,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_d8406282",
+          "id": "ev_6fa8e6ca",
           "file": "demos/playwright-showcase/src/pages/Pipeline.tsx",
           "lines": "54-58",
           "snippetHash": "sha256:6fcbb545f221066670ce816dfd492be67e7c590d09ab031df99c31e8052553d3",
@@ -13671,7 +13579,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_d50c0721",
+          "id": "ev_c14d83b3",
           "file": "demos/playwright-showcase/src/pages/Pipeline.tsx",
           "lines": "66-70",
           "snippetHash": "sha256:a834bde12694aa2074794b197d1aad588f260e077eb2bb1bf8b55c16da4876f0",
@@ -13694,7 +13602,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_8e9382cd",
+          "id": "ev_e638f5a9",
           "file": "demos/playwright-showcase/src/pages/Pipeline.tsx",
           "lines": "78-82",
           "snippetHash": "sha256:2b60d56b0b7aa157c108d902ecbb2fcd96675118f2f1a3752ccfcf4e9e541b71",
@@ -13731,77 +13639,77 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_935369d5",
+          "id": "ev_dbefd4ea",
           "file": "packages/spec-assist/src/feature-flag.ts",
           "lines": "37-37",
           "snippetHash": "sha256:22da6a03c982280a9e462150d2d633b094ce83dc874e1f04436e49275a74e2c5",
           "reason": "Env usage: AI_ENABLED_ENV"
         },
         {
-          "id": "ev_d3a7d516",
+          "id": "ev_d65d3993",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "289-289",
           "snippetHash": "sha256:16d537b1bb28b1984b3e8e615859276d660e53ec2b5f50bde2e3b3a9c93cdaa9",
           "reason": "Env usage: AI_ENABLED_ENV"
         },
         {
-          "id": "ev_56371ef7",
+          "id": "ev_da008cc9",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "305-305",
           "snippetHash": "sha256:deab51aa105dfc812cc614b15a5be17151bac1f450eb4fcfc51494d3c154a154",
           "reason": "Env usage: AI_ENABLED_ENV"
         },
         {
-          "id": "ev_2a720ab2",
+          "id": "ev_ebda2bf4",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "312-312",
           "snippetHash": "sha256:c817c88206835e33b381f0404a6352f071b83df545005db3594666fa0e2f66da",
           "reason": "Env usage: AI_ENABLED_ENV"
         },
         {
-          "id": "ev_84b05714",
+          "id": "ev_310ddf3e",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "318-318",
           "snippetHash": "sha256:72aca19c176a7c53fe22c818c32c869061a4d2515cafd68dda6a48dbacbd5c35",
           "reason": "Env usage: AI_ENABLED_ENV"
         },
         {
-          "id": "ev_ff26e30a",
+          "id": "ev_7d81f7e3",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "324-324",
           "snippetHash": "sha256:deab51aa105dfc812cc614b15a5be17151bac1f450eb4fcfc51494d3c154a154",
           "reason": "Env usage: AI_ENABLED_ENV"
         },
         {
-          "id": "ev_342e1b71",
+          "id": "ev_c0460614",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "337-337",
           "snippetHash": "sha256:deab51aa105dfc812cc614b15a5be17151bac1f450eb4fcfc51494d3c154a154",
           "reason": "Env usage: AI_ENABLED_ENV"
         },
         {
-          "id": "ev_1066db55",
+          "id": "ev_c48dcc53",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "342-342",
           "snippetHash": "sha256:16d537b1bb28b1984b3e8e615859276d660e53ec2b5f50bde2e3b3a9c93cdaa9",
           "reason": "Env usage: AI_ENABLED_ENV"
         },
         {
-          "id": "ev_92882c54",
+          "id": "ev_33cb9faf",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "391-391",
           "snippetHash": "sha256:16d537b1bb28b1984b3e8e615859276d660e53ec2b5f50bde2e3b3a9c93cdaa9",
           "reason": "Env usage: AI_ENABLED_ENV"
         },
         {
-          "id": "ev_b0d2173d",
+          "id": "ev_6e4259ad",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "418-418",
           "snippetHash": "sha256:deab51aa105dfc812cc614b15a5be17151bac1f450eb4fcfc51494d3c154a154",
           "reason": "Env usage: AI_ENABLED_ENV"
         },
         {
-          "id": "ev_f89db624",
+          "id": "ev_5a1c5607",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "423-423",
           "snippetHash": "sha256:16d537b1bb28b1984b3e8e615859276d660e53ec2b5f50bde2e3b3a9c93cdaa9",
@@ -13823,49 +13731,49 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_dccfe9d3",
+          "id": "ev_5f295b95",
           "file": "packages/spec-assist/src/feature-flag.ts",
           "lines": "69-69",
           "snippetHash": "sha256:166c2281a23502ae87462091ca1e71dad8ea96e0551b6b1a49a534a6933d3e03",
           "reason": "Env usage: AI_PROVIDER_ENV"
         },
         {
-          "id": "ev_fd3a1f21",
+          "id": "ev_6a2b6bfc",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "290-290",
           "snippetHash": "sha256:892fa9328d4aade9959d4a714699510cd021fda8976e6aea33880f53b18eb352",
           "reason": "Env usage: AI_PROVIDER_ENV"
         },
         {
-          "id": "ev_2e91a47b",
+          "id": "ev_ddf706d4",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "325-325",
           "snippetHash": "sha256:16a03c4144884944876e27810f1c9ad0cf1afa7310fb01d2f380ac2db9ac6940",
           "reason": "Env usage: AI_PROVIDER_ENV"
         },
         {
-          "id": "ev_1dbacf01",
+          "id": "ev_c83429c9",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "338-338",
           "snippetHash": "sha256:2253eeda989219a4352e17e9289bae7078f973cdb721753e58f7f80ca6397ef6",
           "reason": "Env usage: AI_PROVIDER_ENV"
         },
         {
-          "id": "ev_2ae096a1",
+          "id": "ev_bc2d8e5c",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "343-343",
           "snippetHash": "sha256:892fa9328d4aade9959d4a714699510cd021fda8976e6aea33880f53b18eb352",
           "reason": "Env usage: AI_PROVIDER_ENV"
         },
         {
-          "id": "ev_e565674c",
+          "id": "ev_daf18f99",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "419-419",
           "snippetHash": "sha256:2253eeda989219a4352e17e9289bae7078f973cdb721753e58f7f80ca6397ef6",
           "reason": "Env usage: AI_PROVIDER_ENV"
         },
         {
-          "id": "ev_0969bdb7",
+          "id": "ev_1078048d",
           "file": "packages/spec-assist/src/spec-assist.test.ts",
           "lines": "424-424",
           "snippetHash": "sha256:892fa9328d4aade9959d4a714699510cd021fda8976e6aea33880f53b18eb352",
@@ -13887,7 +13795,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_cb656548",
+          "id": "ev_01740189",
           "file": "packages/verified-build/run-unified-gate.mjs",
           "lines": "12-12",
           "snippetHash": "sha256:4a4f4b5f35791077b3aca64ddd33f56c757f96aaac419e75d19d91d46bc61fd9",
@@ -13901,28 +13809,6 @@
       ]
     },
     {
-      "id": "F_ENV_UNDECLARED_CORS_ORIGIN",
-      "severity": "WARN",
-      "category": "EnvContract",
-      "title": "Env var used but not declared in env templates: CORS_ORIGIN",
-      "why": "Env var appears optional/guarded but should still be documented to prevent guesswork.",
-      "confidence": "low",
-      "evidence": [
-        {
-          "id": "ev_b506b09c",
-          "file": "packages/dashboard-api/src/app.ts",
-          "lines": "16-16",
-          "snippetHash": "sha256:96e6dd5399903eeb7bf35c833e71d5cff7788d0f09b89657343925e17a2ca8fa",
-          "reason": "Env usage: CORS_ORIGIN"
-        }
-      ],
-      "fixHints": [
-        "Add to .env.example: CORS_ORIGIN=your_value_here",
-        "Guard usage: if (process.env.CORS_ORIGIN) { /* use it */ }",
-        "Docs: https://12factor.net/config"
-      ]
-    },
-    {
       "id": "F_ENV_UNDECLARED_CORS_ORIGINS",
       "severity": "BLOCK",
       "category": "EnvContract",
@@ -13931,7 +13817,7 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_e7916652",
+          "id": "ev_1990e9c2",
           "file": "packages/marketplace-api/src/index.ts",
           "lines": "13-13",
           "snippetHash": "sha256:6de91333c746089702c790fc62b17dc91ed16019e22d36dfc3e1212889a126cf",
@@ -13953,7 +13839,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_8273cdd8",
+          "id": "ev_dbcb3b8a",
           "file": "packages/datadog/src/client.ts",
           "lines": "56-56",
           "snippetHash": "sha256:b790a1903734f99b04f0cc6564bd91baac812b94fd00914d503cc3d125b1a3e9",
@@ -13975,7 +13861,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_c3732570",
+          "id": "ev_827c13bf",
           "file": "packages/isl-adapters/src/github/context.ts",
           "lines": "31-31",
           "snippetHash": "sha256:3fc6a6672dd7d22d5aa0be82ccb61e9694618b0797f361e897cd89d9305b2452",
@@ -13997,7 +13883,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_94f8d825",
+          "id": "ev_b4ff1fd3",
           "file": "packages/isl-adapters/src/github/context.ts",
           "lines": "52-52",
           "snippetHash": "sha256:a59bba81b575f744c6ae417f8627e712d6e57720b44f7ccc2ed6411138b7bf8c",
@@ -14019,7 +13905,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_f1bee528",
+          "id": "ev_ff028e01",
           "file": "packages/isl-adapters/src/github/context.ts",
           "lines": "51-51",
           "snippetHash": "sha256:1be98ead372a87218960cdebe6d6be400bf48703a58aa3f96f855c5eba5ffe8f",
@@ -14041,35 +13927,35 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_fc4ac3e7",
+          "id": "ev_0870689e",
           "file": "packages/isl-adapters/tests/adapters.test.ts",
           "lines": "56-56",
           "snippetHash": "sha256:ac14d0f4c98a12330a62088735f7448d5b32d4049c950f323618cc3fa4353173",
           "reason": "Env usage: GITHUB_EVENT_NAME"
         },
         {
-          "id": "ev_dec98fc0",
+          "id": "ev_28853028",
           "file": "packages/isl-adapters/tests/adapters.test.ts",
           "lines": "59-59",
           "snippetHash": "sha256:c96e59ba19ac994ff737ec9779c020cf40b00fbd271c29bb66fd86d8ca8f4b65",
           "reason": "Env usage: GITHUB_EVENT_NAME"
         },
         {
-          "id": "ev_26d0d15d",
+          "id": "ev_5d31385f",
           "file": "packages/isl-adapters/tests/adapters.test.ts",
           "lines": "65-65",
           "snippetHash": "sha256:c96e59ba19ac994ff737ec9779c020cf40b00fbd271c29bb66fd86d8ca8f4b65",
           "reason": "Env usage: GITHUB_EVENT_NAME"
         },
         {
-          "id": "ev_9620f04a",
+          "id": "ev_eba91a06",
           "file": "packages/isl-adapters/src/github/context.ts",
           "lines": "27-27",
           "snippetHash": "sha256:4c10fefc9477668bfb3b5167bf3bdb89f35d44150dd8508e76e7e6081817e29c",
           "reason": "Env usage: GITHUB_EVENT_NAME"
         },
         {
-          "id": "ev_0b97cb3b",
+          "id": "ev_d489ec07",
           "file": "packages/isl-adapters/src/github/context.ts",
           "lines": "76-76",
           "snippetHash": "sha256:aa626be496172ab6ea626ebca5357c551956ff281ddb57b33b9e5c64b1419eed",
@@ -14091,7 +13977,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_4c77f3b4",
+          "id": "ev_f9634c05",
           "file": "packages/isl-adapters/src/github/context.ts",
           "lines": "48-48",
           "snippetHash": "sha256:24660f2c194e6e9e511b7e4c5104eb70e29137bffded290a37fd7eed431a4091",
@@ -14113,7 +13999,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_c5c7e979",
+          "id": "ev_14ee960d",
           "file": "packages/isl-adapters/src/github/context.ts",
           "lines": "47-47",
           "snippetHash": "sha256:44ac83ceaec95362dd50dbc3f8dd8541f4eabd5e913884fe15aa10a0eb4aa1ba",
@@ -14135,7 +14021,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_322eafc4",
+          "id": "ev_67015c35",
           "file": "packages/isl-adapters/src/github/context.ts",
           "lines": "33-33",
           "snippetHash": "sha256:9a15fd13401d4bb5e2613822101facb6247cb42a166130eecfc9d4a61f25b101",
@@ -14157,7 +14043,7 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_6f654719",
+          "id": "ev_b02f27e5",
           "file": "packages/isl-adapters/src/github/context.ts",
           "lines": "103-103",
           "snippetHash": "sha256:4765f5be1d183d01ac349cec6a89b9cda39d73debe7999c96941cab0f54f2241",
@@ -14171,42 +14057,6 @@
       ]
     },
     {
-      "id": "F_ENV_UNDECLARED_GITHUB_PR_NUMBER",
-      "severity": "WARN",
-      "category": "EnvContract",
-      "title": "Env var used but not declared in env templates: GITHUB_PR_NUMBER",
-      "why": "Env var appears optional/guarded but should still be documented to prevent guesswork.",
-      "confidence": "low",
-      "evidence": [
-        {
-          "id": "ev_5f83ae06",
-          "file": "scripts/github/commentEvidence.ts",
-          "lines": "65-65",
-          "snippetHash": "sha256:7f4d231699ccd85bd737fa2699089318a8ed1e5a3f0ace0f627396644536a3e6",
-          "reason": "Env usage: GITHUB_PR_NUMBER"
-        },
-        {
-          "id": "ev_bda0a16f",
-          "file": "packages/isl-adapters/src/github/context.ts",
-          "lines": "42-42",
-          "snippetHash": "sha256:910ae9aad0164350577643ccb04506bb39bfa188f2cebbdc549eb28692372064",
-          "reason": "Env usage: GITHUB_PR_NUMBER"
-        },
-        {
-          "id": "ev_62e4a3f0",
-          "file": "packages/isl-adapters/src/github/context.ts",
-          "lines": "84-84",
-          "snippetHash": "sha256:06952575e50deb1477beda4b91f4a2aa6c2266e02c6a196e5e40d09c32f47f5d",
-          "reason": "Env usage: GITHUB_PR_NUMBER"
-        }
-      ],
-      "fixHints": [
-        "Add to .env.example: GITHUB_PR_NUMBER=your_value_here",
-        "Guard usage: if (process.env.GITHUB_PR_NUMBER) { /* use it */ }",
-        "Docs: https://12factor.net/config"
-      ]
-    },
-    {
       "id": "F_ENV_UNDECLARED_GITHUB_REF_NAME",
       "severity": "BLOCK",
       "category": "EnvContract",
@@ -14215,7 +14065,7 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_14885b80",
+          "id": "ev_7b5f779d",
           "file": "packages/verified-build/run-unified-gate.mjs",
           "lines": "24-24",
           "snippetHash": "sha256:42770a99249559ce9564f7cf2ac041a0f5759766bf9e39c389288936370d598d",
@@ -14229,42 +14079,6 @@
       ]
     },
     {
-      "id": "F_ENV_UNDECLARED_GITHUB_REPOSITORY",
-      "severity": "WARN",
-      "category": "EnvContract",
-      "title": "Env var used but not declared in env templates: GITHUB_REPOSITORY",
-      "why": "Env var appears optional/guarded but should still be documented to prevent guesswork.",
-      "confidence": "low",
-      "evidence": [
-        {
-          "id": "ev_8cf4cc3f",
-          "file": "scripts/github/commentEvidence.ts",
-          "lines": "55-55",
-          "snippetHash": "sha256:bec7db331bbe0bed7fd6ee1f8b54931f7b8a6f90534cfafeb51c674b5182c55e",
-          "reason": "Env usage: GITHUB_REPOSITORY"
-        },
-        {
-          "id": "ev_ec39398d",
-          "file": "packages/isl-adapters/tests/adapters.test.ts",
-          "lines": "68-68",
-          "snippetHash": "sha256:462f07f0d15202ce2872be3eb6975799103a55fa6dfb16de0c2dbb12dc207654",
-          "reason": "Env usage: GITHUB_REPOSITORY"
-        },
-        {
-          "id": "ev_4ee66a42",
-          "file": "packages/isl-adapters/src/github/context.ts",
-          "lines": "36-36",
-          "snippetHash": "sha256:57c58d705cdb167f730a83cb3d60273f8ed9af262ecc22ffdd2d04215a8e405b",
-          "reason": "Env usage: GITHUB_REPOSITORY"
-        }
-      ],
-      "fixHints": [
-        "Add to .env.example: GITHUB_REPOSITORY=your_value_here",
-        "Guard usage: if (process.env.GITHUB_REPOSITORY) { /* use it */ }",
-        "Docs: https://12factor.net/config"
-      ]
-    },
-    {
       "id": "F_ENV_UNDECLARED_GITHUB_REPOSITORY_OWNER",
       "severity": "WARN",
       "category": "EnvContract",
@@ -14273,7 +14087,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_dfc0f357",
+          "id": "ev_7914a7b3",
           "file": "packages/isl-adapters/src/github/context.ts",
           "lines": "37-37",
           "snippetHash": "sha256:d6a4891d0b7debb3c2c32ac89aca07e306e35b0506d0d481c1ed204dec5be06d",
@@ -14295,7 +14109,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_feb2c8fb",
+          "id": "ev_43d562cb",
           "file": "packages/github-action/src/annotations.ts",
           "lines": "38-38",
           "snippetHash": "sha256:70aeb971f164ddb6e56756ef938376705229ee0f4692270caa84d8fc746ef631",
@@ -14317,7 +14131,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_6e1c99c4",
+          "id": "ev_d605812f",
           "file": "packages/verified-build/run-unified-gate.mjs",
           "lines": "11-11",
           "snippetHash": "sha256:9523a170779c4c89c144945a28f794d0fa7026c9ef8ffc1d2d2eaf5923977658",
@@ -14331,35 +14145,6 @@
       ]
     },
     {
-      "id": "F_ENV_UNDECLARED_ISL_AI_ENABLED",
-      "severity": "BLOCK",
-      "category": "EnvContract",
-      "title": "Env var used but not declared in env templates: ISL_AI_ENABLED",
-      "why": "Required env var is used with no fallback and not documented. This ships broken installs.",
-      "confidence": "high",
-      "evidence": [
-        {
-          "id": "ev_8c0d53b0",
-          "file": "demos/spec-assist-demo/demo.ts",
-          "lines": "11-11",
-          "snippetHash": "sha256:e8925f0c855c8fd75376c6ecafe858f61ecb7c77bc8712b971432c05308e6efa",
-          "reason": "Env usage: ISL_AI_ENABLED"
-        },
-        {
-          "id": "ev_8a3423a3",
-          "file": "packages/cli/src/commands/init.ts",
-          "lines": "602-602",
-          "snippetHash": "sha256:03edf4d60a29f70fd2a781729564aeb925467f67a0895753b4fda8513de810a8",
-          "reason": "Env usage: ISL_AI_ENABLED"
-        }
-      ],
-      "fixHints": [
-        "Add to .env.example: ISL_AI_ENABLED=your_value_here",
-        "Add fallback: const value = process.env.ISL_AI_ENABLED ?? 'default';",
-        "Docs: https://12factor.net/config"
-      ]
-    },
-    {
       "id": "F_ENV_UNDECLARED_ISL_AI_MODEL",
       "severity": "BLOCK",
       "category": "EnvContract",
@@ -14368,7 +14153,7 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_4bcd6e03",
+          "id": "ev_1ff486e8",
           "file": "packages/spec-assist/src/feature-flag.ts",
           "lines": "135-135",
           "snippetHash": "sha256:675363c0c665029ce982d7024ba469ee21dbb4ee8436c98a3c87855e50b4f716",
@@ -14382,35 +14167,6 @@
       ]
     },
     {
-      "id": "F_ENV_UNDECLARED_ISL_AI_PROVIDER",
-      "severity": "BLOCK",
-      "category": "EnvContract",
-      "title": "Env var used but not declared in env templates: ISL_AI_PROVIDER",
-      "why": "Required env var is used with no fallback and not documented. This ships broken installs.",
-      "confidence": "high",
-      "evidence": [
-        {
-          "id": "ev_9ddb59b5",
-          "file": "demos/spec-assist-demo/demo.ts",
-          "lines": "12-12",
-          "snippetHash": "sha256:f521ac9d281dd0c2c79bb489c53abb284c12ce903efa5c8299352caa8946d928",
-          "reason": "Env usage: ISL_AI_PROVIDER"
-        },
-        {
-          "id": "ev_7ba27b5d",
-          "file": "packages/cli/src/commands/init.ts",
-          "lines": "603-603",
-          "snippetHash": "sha256:3f1d48248388b73f49dd855fb146d5ec46a300d28c558a889f782edac467403c",
-          "reason": "Env usage: ISL_AI_PROVIDER"
-        }
-      ],
-      "fixHints": [
-        "Add to .env.example: ISL_AI_PROVIDER=your_value_here",
-        "Add fallback: const value = process.env.ISL_AI_PROVIDER ?? 'default';",
-        "Docs: https://12factor.net/config"
-      ]
-    },
-    {
       "id": "F_ENV_UNDECLARED_JAEGER_ENDPOINT",
       "severity": "WARN",
       "category": "EnvContract",
@@ -14419,7 +14175,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_dbb01117",
+          "id": "ev_1c35ab14",
           "file": "packages/opentelemetry/src/exporters/jaeger.ts",
           "lines": "115-115",
           "snippetHash": "sha256:190ed817832099710c8a3281182c0834e6085e563947432eaa1d50144c484ea0",
@@ -14441,21 +14197,21 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_abf2948d",
+          "id": "ev_aa5c42d9",
           "file": "packages/opentelemetry/src/exporters/jaeger.ts",
           "lines": "122-122",
           "snippetHash": "sha256:5d5bf9ccd6799b052915c7893b7460e9b6e377388d5cb8876eb957d4017d1b4e",
           "reason": "Env usage: OTEL_BATCH_PROCESSOR"
         },
         {
-          "id": "ev_6fe2dd13",
+          "id": "ev_12d831f8",
           "file": "packages/opentelemetry/src/exporters/otlp.ts",
           "lines": "212-212",
           "snippetHash": "sha256:5d5bf9ccd6799b052915c7893b7460e9b6e377388d5cb8876eb957d4017d1b4e",
           "reason": "Env usage: OTEL_BATCH_PROCESSOR"
         },
         {
-          "id": "ev_f9689a24",
+          "id": "ev_d87b0de7",
           "file": "packages/opentelemetry/src/exporters/zipkin.ts",
           "lines": "97-97",
           "snippetHash": "sha256:5d5bf9ccd6799b052915c7893b7460e9b6e377388d5cb8876eb957d4017d1b4e",
@@ -14477,7 +14233,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_7b4a47b7",
+          "id": "ev_116459ab",
           "file": "packages/opentelemetry/src/exporters/jaeger.ts",
           "lines": "116-116",
           "snippetHash": "sha256:16d221330947c91db0aa3d67595bd16ab44320c5af3fbce576a0929b30f40088",
@@ -14499,7 +14255,7 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_a17b4d59",
+          "id": "ev_8d6d725d",
           "file": "packages/opentelemetry/src/exporters/otlp.ts",
           "lines": "208-208",
           "snippetHash": "sha256:8cdbe85ccb03954fe68aee0829e6469aa389b677f8633e2ac0ce63a6c7aab0a6",
@@ -14513,28 +14269,6 @@
       ]
     },
     {
-      "id": "F_ENV_UNDECLARED_OTEL_EXPORTER_OTLP_ENDPOINT",
-      "severity": "WARN",
-      "category": "EnvContract",
-      "title": "Env var used but not declared in env templates: OTEL_EXPORTER_OTLP_ENDPOINT",
-      "why": "Env var appears optional/guarded but should still be documented to prevent guesswork.",
-      "confidence": "low",
-      "evidence": [
-        {
-          "id": "ev_03b7b423",
-          "file": "packages/opentelemetry/src/exporters/otlp.ts",
-          "lines": "200-200",
-          "snippetHash": "sha256:cccd5e23c8e7d378b47d55d30d8cbd1234f035d3f0a198aae22d696cd306fdd9",
-          "reason": "Env usage: OTEL_EXPORTER_OTLP_ENDPOINT"
-        }
-      ],
-      "fixHints": [
-        "Add to .env.example: OTEL_EXPORTER_OTLP_ENDPOINT=your_value_here",
-        "Guard usage: if (process.env.OTEL_EXPORTER_OTLP_ENDPOINT) { /* use it */ }",
-        "Docs: https://12factor.net/config"
-      ]
-    },
-    {
       "id": "F_ENV_UNDECLARED_OTEL_EXPORTER_OTLP_HEADERS",
       "severity": "WARN",
       "category": "EnvContract",
@@ -14543,14 +14277,14 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_2cd303fe",
+          "id": "ev_42f7813f",
           "file": "packages/opentelemetry/src/exporters/otlp.ts",
           "lines": "204-204",
           "snippetHash": "sha256:82201af44b25a660cdd56aa95c065e120faa970078cd26375f2af4fe0a5f16d1",
           "reason": "Env usage: OTEL_EXPORTER_OTLP_HEADERS"
         },
         {
-          "id": "ev_a87569fc",
+          "id": "ev_69311208",
           "file": "packages/opentelemetry/src/exporters/otlp.ts",
           "lines": "205-205",
           "snippetHash": "sha256:250036683ec3d544cccf464ac0c50e153ef0ddc073d8be1193b1ea75d505071f",
@@ -14572,7 +14306,7 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_15f93c5c",
+          "id": "ev_a28266f6",
           "file": "packages/opentelemetry/src/exporters/otlp.ts",
           "lines": "202-202",
           "snippetHash": "sha256:ddd32338ee4a85d2c967c1eeb71e35d0b9e393e2776c8c691c032d32b1e616e5",
@@ -14586,28 +14320,6 @@
       ]
     },
     {
-      "id": "F_ENV_UNDECLARED_OTEL_EXPORTER_OTLP_PROTOCOL",
-      "severity": "BLOCK",
-      "category": "EnvContract",
-      "title": "Env var used but not declared in env templates: OTEL_EXPORTER_OTLP_PROTOCOL",
-      "why": "Required env var is used with no fallback and not documented. This ships broken installs.",
-      "confidence": "high",
-      "evidence": [
-        {
-          "id": "ev_7dab5be1",
-          "file": "packages/opentelemetry/src/exporters/otlp.ts",
-          "lines": "203-203",
-          "snippetHash": "sha256:6134ff68dbedf1cb9a3cf2b410f067b9d7d3af746889d9f65c7d5db5146a6fe6",
-          "reason": "Env usage: OTEL_EXPORTER_OTLP_PROTOCOL"
-        }
-      ],
-      "fixHints": [
-        "Add to .env.example: OTEL_EXPORTER_OTLP_PROTOCOL=your_value_here",
-        "Add fallback: const value = process.env.OTEL_EXPORTER_OTLP_PROTOCOL ?? 'default';",
-        "Docs: https://12factor.net/config"
-      ]
-    },
-    {
       "id": "F_ENV_UNDECLARED_OTEL_EXPORTER_OTLP_TIMEOUT",
       "severity": "WARN",
       "category": "EnvContract",
@@ -14616,14 +14328,14 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_c3dd102c",
+          "id": "ev_4765426f",
           "file": "packages/opentelemetry/src/exporters/otlp.ts",
           "lines": "209-209",
           "snippetHash": "sha256:b4db27a023ccc9bb6bbd90da47ae5b8f68510e2db2883666de0632378fe80fb2",
           "reason": "Env usage: OTEL_EXPORTER_OTLP_TIMEOUT"
         },
         {
-          "id": "ev_b9248171",
+          "id": "ev_256366ee",
           "file": "packages/opentelemetry/src/exporters/otlp.ts",
           "lines": "210-210",
           "snippetHash": "sha256:72b5cd2b9a83504dec2b5003ffa7b65cf6039243d75adfddbc2f0a5564465825",
@@ -14645,7 +14357,7 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_96612ee4",
+          "id": "ev_5431051d",
           "file": "packages/opentelemetry/src/exporters/otlp.ts",
           "lines": "201-201",
           "snippetHash": "sha256:5d18999d9c10ff23d2903aab29a976386a31a4913573cac8cfded3212964d64a",
@@ -14667,7 +14379,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_d2f151f7",
+          "id": "ev_3debd61e",
           "file": "packages/opentelemetry/src/exporters/zipkin.ts",
           "lines": "95-95",
           "snippetHash": "sha256:4f508971f3096f2ce1b26f7c6568596d886abc2cf48296c45c6859ce6a962a80",
@@ -14681,42 +14393,6 @@
       ]
     },
     {
-      "id": "F_ENV_UNDECLARED_OTEL_SERVICE_NAME",
-      "severity": "WARN",
-      "category": "EnvContract",
-      "title": "Env var used but not declared in env templates: OTEL_SERVICE_NAME",
-      "why": "Env var appears optional/guarded but should still be documented to prevent guesswork.",
-      "confidence": "low",
-      "evidence": [
-        {
-          "id": "ev_2c849279",
-          "file": "packages/opentelemetry/src/exporters/jaeger.ts",
-          "lines": "113-113",
-          "snippetHash": "sha256:27cfffac40650a72d68b3f4bccac5063a032ae49ca66bfd69be3819d98da267c",
-          "reason": "Env usage: OTEL_SERVICE_NAME"
-        },
-        {
-          "id": "ev_c0c3124b",
-          "file": "packages/opentelemetry/src/exporters/otlp.ts",
-          "lines": "199-199",
-          "snippetHash": "sha256:27cfffac40650a72d68b3f4bccac5063a032ae49ca66bfd69be3819d98da267c",
-          "reason": "Env usage: OTEL_SERVICE_NAME"
-        },
-        {
-          "id": "ev_ed3d317e",
-          "file": "packages/opentelemetry/src/exporters/zipkin.ts",
-          "lines": "92-92",
-          "snippetHash": "sha256:27cfffac40650a72d68b3f4bccac5063a032ae49ca66bfd69be3819d98da267c",
-          "reason": "Env usage: OTEL_SERVICE_NAME"
-        }
-      ],
-      "fixHints": [
-        "Add to .env.example: OTEL_SERVICE_NAME=your_value_here",
-        "Guard usage: if (process.env.OTEL_SERVICE_NAME) { /* use it */ }",
-        "Docs: https://12factor.net/config"
-      ]
-    },
-    {
       "id": "F_ENV_UNDECLARED_PADDLE_ENVIRONMENT",
       "severity": "BLOCK",
       "category": "EnvContract",
@@ -14725,7 +14401,7 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_6e67cf7a",
+          "id": "ev_294d31da",
           "file": "packages/stdlib-billing/implementations/typescript/paddle.ts",
           "lines": "622-622",
           "snippetHash": "sha256:d73821e545a81f4e59640b115023eeccca025c1aa6725e78034052dad8e190c8",
@@ -14747,7 +14423,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_e5b0095a",
+          "id": "ev_5970947d",
           "file": "packages/vscode/src/client.ts",
           "lines": "188-188",
           "snippetHash": "sha256:79f09b79d00a6bc081fa6deb5cb3c999cc15eed8895641fa4a6a88c85812f463",
@@ -14769,7 +14445,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_dd394bc1",
+          "id": "ev_d71c9b3d",
           "file": "scripts/github/commentEvidence.ts",
           "lines": "65-65",
           "snippetHash": "sha256:7f4d231699ccd85bd737fa2699089318a8ed1e5a3f0ace0f627396644536a3e6",
@@ -14791,7 +14467,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_d915acdd",
+          "id": "ev_9f439c4f",
           "file": "packages/verified-build/run-unified-gate.mjs",
           "lines": "9-9",
           "snippetHash": "sha256:a5f84f09fab569965be793c0841984d36ff2664bfdabe27022930f50023d0d12",
@@ -14813,7 +14489,7 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_9b92cbab",
+          "id": "ev_fb2fe9af",
           "file": "packages/stdlib-files/implementations/typescript/s3.ts",
           "lines": "480-480",
           "snippetHash": "sha256:478c8c64ba2298350e55617b077bbfdb9f027bbba2cfabfa65c75a57d07aeb3b",
@@ -14835,7 +14511,7 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_9e7a4da2",
+          "id": "ev_fdc47f67",
           "file": "packages/stdlib-files/implementations/typescript/s3.ts",
           "lines": "495-495",
           "snippetHash": "sha256:6d7cb77235b050e7c9f94c26654b1b7358dbf5c09600075fdab1e4d5ab59b990",
@@ -14857,7 +14533,7 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_b91112b1",
+          "id": "ev_5f25d26e",
           "file": "packages/stdlib-files/implementations/typescript/s3.ts",
           "lines": "498-498",
           "snippetHash": "sha256:fdf2de6e7ed18636913f1a2818eff36046b26f3b59fd7bc78843772a7382de4d",
@@ -14879,7 +14555,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_3d27f50f",
+          "id": "ev_2fcd1b91",
           "file": "packages/stdlib-files/implementations/typescript/s3.ts",
           "lines": "481-481",
           "snippetHash": "sha256:51676725ef965b402a1d52bca6db431572056ad72fb315a5382495ce59d53e44",
@@ -14901,7 +14577,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_1940c35d",
+          "id": "ev_18836d13",
           "file": "packages/verified-build/run-unified-gate.mjs",
           "lines": "10-10",
           "snippetHash": "sha256:3e9f001be225fe16495898be80e26221d572e92827654c6b39df01f475181d8f",
@@ -14923,7 +14599,7 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_602e1e63",
+          "id": "ev_3f7f4e8e",
           "file": "packages/core/src/telemetry/telemetry.ts",
           "lines": "113-113",
           "snippetHash": "sha256:6a6d861376ce1fa5221690bef2ae8980999a77b0af82a6d307d064c5c9497ce4",
@@ -14945,7 +14621,7 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_f8f7e3bb",
+          "id": "ev_7c2e968c",
           "file": "packages/core/src/telemetry/telemetry.ts",
           "lines": "102-102",
           "snippetHash": "sha256:de737341b0d3928310fba11a6fac2676558f63f95edc6beecdefb17b69608557",
@@ -14967,7 +14643,7 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_8f5e5fc9",
+          "id": "ev_1de6b223",
           "file": "packages/marketplace-api/src/index.ts",
           "lines": "14-14",
           "snippetHash": "sha256:8159df0b7a3b416fb15d99a8d64163ce2ca49d616c0e5ee584091f56c04b5b1e",
@@ -14989,7 +14665,7 @@
       "confidence": "high",
       "evidence": [
         {
-          "id": "ev_0106af27",
+          "id": "ev_fca7a83d",
           "file": "packages/snapshot-testing/src/updater.ts",
           "lines": "97-97",
           "snippetHash": "sha256:606a743e0ea7b1e72e44daeeb273ef07f640c5134cd3ec7f90eebbc05ba10bca",
@@ -15011,7 +14687,7 @@
       "confidence": "low",
       "evidence": [
         {
-          "id": "ev_ba2ab0df",
+          "id": "ev_1eb1058a",
           "file": "packages/opentelemetry/src/exporters/zipkin.ts",
           "lines": "94-94",
           "snippetHash": "sha256:4435982c0586dc3f90c86aa02c500e0aeab67548343f0520bd5a7404f65d3e5b",
@@ -15025,15 +14701,133 @@
       ]
     },
     {
-      "id": "F_ENV_NO_TEMPLATE",
+      "id": "F_ENV_UNUSED_API_KEY",
       "severity": "WARN",
       "category": "EnvContract",
-      "title": "No .env.example/.env.template found",
-      "why": "Without an env contract, humans and AI guess env vars and ship broken setups.",
-      "confidence": "high",
+      "title": "Env var declared but never used: API_KEY",
+      "why": "Dead config creates confusion and invites hallucinated wiring.",
+      "confidence": "med",
       "evidence": [],
       "fixHints": [
-        "Add a .env.example listing required/optional vars with comments."
+        "Remove it from templates if obsolete, or wire it intentionally.",
+        "If used only in infra/runtime, document that explicitly (where/why)."
+      ]
+    },
+    {
+      "id": "F_ENV_UNUSED_CLERK_SECRET_KEY",
+      "severity": "WARN",
+      "category": "EnvContract",
+      "title": "Env var declared but never used: CLERK_SECRET_KEY",
+      "why": "Dead config creates confusion and invites hallucinated wiring.",
+      "confidence": "med",
+      "evidence": [],
+      "fixHints": [
+        "Remove it from templates if obsolete, or wire it intentionally.",
+        "If used only in infra/runtime, document that explicitly (where/why)."
+      ]
+    },
+    {
+      "id": "F_ENV_UNUSED_ENABLE_CIRCUIT_BREAKER",
+      "severity": "WARN",
+      "category": "EnvContract",
+      "title": "Env var declared but never used: ENABLE_CIRCUIT_BREAKER",
+      "why": "Dead config creates confusion and invites hallucinated wiring.",
+      "confidence": "med",
+      "evidence": [],
+      "fixHints": [
+        "Remove it from templates if obsolete, or wire it intentionally.",
+        "If used only in infra/runtime, document that explicitly (where/why)."
+      ]
+    },
+    {
+      "id": "F_ENV_UNUSED_ENABLE_METRICS",
+      "severity": "WARN",
+      "category": "EnvContract",
+      "title": "Env var declared but never used: ENABLE_METRICS",
+      "why": "Dead config creates confusion and invites hallucinated wiring.",
+      "confidence": "med",
+      "evidence": [],
+      "fixHints": [
+        "Remove it from templates if obsolete, or wire it intentionally.",
+        "If used only in infra/runtime, document that explicitly (where/why)."
+      ]
+    },
+    {
+      "id": "F_ENV_UNUSED_ENABLE_TRACING",
+      "severity": "WARN",
+      "category": "EnvContract",
+      "title": "Env var declared but never used: ENABLE_TRACING",
+      "why": "Dead config creates confusion and invites hallucinated wiring.",
+      "confidence": "med",
+      "evidence": [],
+      "fixHints": [
+        "Remove it from templates if obsolete, or wire it intentionally.",
+        "If used only in infra/runtime, document that explicitly (where/why)."
+      ]
+    },
+    {
+      "id": "F_ENV_UNUSED_LOG_LEVEL",
+      "severity": "WARN",
+      "category": "EnvContract",
+      "title": "Env var declared but never used: LOG_LEVEL",
+      "why": "Dead config creates confusion and invites hallucinated wiring.",
+      "confidence": "med",
+      "evidence": [],
+      "fixHints": [
+        "Remove it from templates if obsolete, or wire it intentionally.",
+        "If used only in infra/runtime, document that explicitly (where/why)."
+      ]
+    },
+    {
+      "id": "F_ENV_UNUSED_PROMETHEUS_PORT",
+      "severity": "WARN",
+      "category": "EnvContract",
+      "title": "Env var declared but never used: PROMETHEUS_PORT",
+      "why": "Dead config creates confusion and invites hallucinated wiring.",
+      "confidence": "med",
+      "evidence": [],
+      "fixHints": [
+        "Remove it from templates if obsolete, or wire it intentionally.",
+        "If used only in infra/runtime, document that explicitly (where/why)."
+      ]
+    },
+    {
+      "id": "F_ENV_UNUSED_VITE_CLERK_PUBLISHABLE_KEY",
+      "severity": "WARN",
+      "category": "EnvContract",
+      "title": "Env var declared but never used: VITE_CLERK_PUBLISHABLE_KEY",
+      "why": "Dead config creates confusion and invites hallucinated wiring.",
+      "confidence": "med",
+      "evidence": [],
+      "fixHints": [
+        "Remove it from templates if obsolete, or wire it intentionally.",
+        "If used only in infra/runtime, document that explicitly (where/why)."
+      ]
+    },
+    {
+      "id": "F_ENV_UNUSED_VITE_ELEVENLABS_API_KEY",
+      "severity": "WARN",
+      "category": "EnvContract",
+      "title": "Env var declared but never used: VITE_ELEVENLABS_API_KEY",
+      "why": "Dead config creates confusion and invites hallucinated wiring.",
+      "confidence": "med",
+      "evidence": [],
+      "fixHints": [
+        "Remove it from templates if obsolete, or wire it intentionally.",
+        "If used only in infra/runtime, document that explicitly (where/why)."
+      ]
+    },
+    {
+      "id": "F_ENV_UNUSED_VITE_ELEVENLABS_VOICE_ID",
+      "severity": "WARN",
+      "category": "EnvContract",
+      "title": "Env var declared but never used: VITE_ELEVENLABS_VOICE_ID",
+      "why": "Dead config creates confusion and invites hallucinated wiring.",
+      "confidence": "med",
+      "evidence": [],
+      "fixHints": [
+        "Remove it from templates if obsolete, or wire it intentionally.",
+        "If used only in infra/runtime, document that explicitly (where/why)."
       ]
     },
     {
@@ -15045,7 +14839,7 @@
       "confidence": "med",
       "evidence": [
         {
-          "id": "ev_3d390b43",
+          "id": "ev_7d37ae11",
           "file": "packages/core/src/audit-v2/fixtures/workspace1/app/api/users/route.ts",
           "lines": "10-17",
           "snippetHash": "sha256:37df94c99f0049fdd65a5a3949b4eaa7ea6df3a1ccbcfa7958e5e707078f36a2",
@@ -15068,7 +14862,7 @@
       "confidence": "med",
       "evidence": [
         {
-          "id": "ev_7d3985ad",
+          "id": "ev_37e5b210",
           "file": "packages/core/src/audit-v2/fixtures/workspace1/app/api/users/route.ts",
           "lines": "19-32",
           "snippetHash": "sha256:8ac3a8d07a466b0278745e15423606019bbe92c39bd61849100a684d3390458c",
@@ -15091,7 +14885,7 @@
       "confidence": "med",
       "evidence": [
         {
-          "id": "ev_aa4f5a3d",
+          "id": "ev_e53ead87",
           "file": "packages/core/src/audit-v2/fixtures/workspace1/app/api/users/route.ts",
           "lines": "34-47",
           "snippetHash": "sha256:59fadf09473ad0004df42652bc0914a6a64f8514392e9fe37c209930b642f680",
@@ -15108,12 +14902,12 @@
   ],
   "proofGraph": {
     "summary": {
-      "totalClaims": 651,
+      "totalClaims": 648,
       "verifiedClaims": 625,
-      "failedClaims": 26,
-      "gaps": 651,
+      "failedClaims": 23,
+      "gaps": 648,
       "riskScore": 100,
-      "confidence": 0.5141321044546843
+      "confidence": 0.5117283950617277
     },
     "topBlockers": [
       {
@@ -15130,7 +14924,7 @@
             "line": 65,
             "snippet": "sha256:13be830ecc63c91a7055bbc8fcb050984f6a136b9f5ea6c649bd48877dbd99e5",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.946Z",
+            "verifiedAt": "2026-02-09T07:45:14.428Z",
             "method": "static"
           }
         ],
@@ -15148,7 +14942,7 @@
         "line": 65
       },
       {
-        "id": "claim-592",
+        "id": "claim-588",
         "type": "ui_wired",
         "assertion": "Owner mode / env bypass signal detected: packages/isl-adapters/src/github/context.ts",
         "verified": false,
@@ -15156,7 +14950,7 @@
         "evidence": [],
         "gaps": [
           {
-            "id": "gap-592",
+            "id": "gap-588",
             "type": "untested_path",
             "description": "This is a production backdoor unless cryptographically gated. It cannot ship.",
             "severity": "critical",
@@ -15168,126 +14962,126 @@
         "line": 1
       },
       {
-        "id": "claim-599",
+        "id": "claim-595",
         "type": "env_declared",
         "assertion": "Env var used but not declared in env templates: AI_ENABLED_ENV",
         "verified": false,
         "confidence": 0.9,
         "evidence": [
           {
-            "id": "evidence-599-0",
+            "id": "evidence-595-0",
             "type": "file_citation",
             "file": "packages/spec-assist/src/feature-flag.ts",
             "line": 37,
             "snippet": "sha256:22da6a03c982280a9e462150d2d633b094ce83dc874e1f04436e49275a74e2c5",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-599-1",
+            "id": "evidence-595-1",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 289,
             "snippet": "sha256:16d537b1bb28b1984b3e8e615859276d660e53ec2b5f50bde2e3b3a9c93cdaa9",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-599-2",
+            "id": "evidence-595-2",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 305,
             "snippet": "sha256:deab51aa105dfc812cc614b15a5be17151bac1f450eb4fcfc51494d3c154a154",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-599-3",
+            "id": "evidence-595-3",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 312,
             "snippet": "sha256:c817c88206835e33b381f0404a6352f071b83df545005db3594666fa0e2f66da",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-599-4",
+            "id": "evidence-595-4",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 318,
             "snippet": "sha256:72aca19c176a7c53fe22c818c32c869061a4d2515cafd68dda6a48dbacbd5c35",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-599-5",
+            "id": "evidence-595-5",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 324,
             "snippet": "sha256:deab51aa105dfc812cc614b15a5be17151bac1f450eb4fcfc51494d3c154a154",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-599-6",
+            "id": "evidence-595-6",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 337,
             "snippet": "sha256:deab51aa105dfc812cc614b15a5be17151bac1f450eb4fcfc51494d3c154a154",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-599-7",
+            "id": "evidence-595-7",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 342,
             "snippet": "sha256:16d537b1bb28b1984b3e8e615859276d660e53ec2b5f50bde2e3b3a9c93cdaa9",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-599-8",
+            "id": "evidence-595-8",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 391,
             "snippet": "sha256:16d537b1bb28b1984b3e8e615859276d660e53ec2b5f50bde2e3b3a9c93cdaa9",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-599-9",
+            "id": "evidence-595-9",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 418,
             "snippet": "sha256:deab51aa105dfc812cc614b15a5be17151bac1f450eb4fcfc51494d3c154a154",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-599-10",
+            "id": "evidence-595-10",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 423,
             "snippet": "sha256:16d537b1bb28b1984b3e8e615859276d660e53ec2b5f50bde2e3b3a9c93cdaa9",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           }
         ],
         "gaps": [
           {
-            "id": "gap-599",
+            "id": "gap-595",
             "type": "missing_verification",
             "description": "Required env var is used with no fallback and not documented. This ships broken installs.",
             "severity": "critical",
@@ -15299,86 +15093,86 @@
         "line": 37
       },
       {
-        "id": "claim-600",
+        "id": "claim-596",
         "type": "env_declared",
         "assertion": "Env var used but not declared in env templates: AI_PROVIDER_ENV",
         "verified": false,
         "confidence": 0.9,
         "evidence": [
           {
-            "id": "evidence-600-0",
+            "id": "evidence-596-0",
             "type": "file_citation",
             "file": "packages/spec-assist/src/feature-flag.ts",
             "line": 69,
             "snippet": "sha256:166c2281a23502ae87462091ca1e71dad8ea96e0551b6b1a49a534a6933d3e03",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-600-1",
+            "id": "evidence-596-1",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 290,
             "snippet": "sha256:892fa9328d4aade9959d4a714699510cd021fda8976e6aea33880f53b18eb352",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-600-2",
+            "id": "evidence-596-2",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 325,
             "snippet": "sha256:16a03c4144884944876e27810f1c9ad0cf1afa7310fb01d2f380ac2db9ac6940",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-600-3",
+            "id": "evidence-596-3",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 338,
             "snippet": "sha256:2253eeda989219a4352e17e9289bae7078f973cdb721753e58f7f80ca6397ef6",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-600-4",
+            "id": "evidence-596-4",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 343,
             "snippet": "sha256:892fa9328d4aade9959d4a714699510cd021fda8976e6aea33880f53b18eb352",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-600-5",
+            "id": "evidence-596-5",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 419,
             "snippet": "sha256:2253eeda989219a4352e17e9289bae7078f973cdb721753e58f7f80ca6397ef6",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           },
           {
-            "id": "evidence-600-6",
+            "id": "evidence-596-6",
             "type": "file_citation",
             "file": "packages/spec-assist/src/spec-assist.test.ts",
             "line": 424,
             "snippet": "sha256:892fa9328d4aade9959d4a714699510cd021fda8976e6aea33880f53b18eb352",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           }
         ],
         "gaps": [
           {
-            "id": "gap-600",
+            "id": "gap-596",
             "type": "missing_verification",
             "description": "Required env var is used with no fallback and not documented. This ships broken installs.",
             "severity": "critical",
@@ -15390,26 +15184,26 @@
         "line": 69
       },
       {
-        "id": "claim-603",
+        "id": "claim-598",
         "type": "env_declared",
         "assertion": "Env var used but not declared in env templates: CORS_ORIGINS",
         "verified": false,
         "confidence": 0.9,
         "evidence": [
           {
-            "id": "evidence-603-0",
+            "id": "evidence-598-0",
             "type": "file_citation",
             "file": "packages/marketplace-api/src/index.ts",
             "line": 13,
             "snippet": "sha256:6de91333c746089702c790fc62b17dc91ed16019e22d36dfc3e1212889a126cf",
             "strength": 0.8,
-            "verifiedAt": "2026-02-09T06:37:21.950Z",
+            "verifiedAt": "2026-02-09T07:45:14.431Z",
             "method": "static"
           }
         ],
         "gaps": [
           {
-            "id": "gap-603",
+            "id": "gap-598",
             "type": "missing_verification",
             "description": "Required env var is used with no fallback and not documented. This ships broken installs.",
             "severity": "critical",
@@ -15430,28 +15224,28 @@
         "suggestion": "const res = await fetch(...); if (!res.ok) throw new Error('Request failed');"
       },
       {
-        "id": "gap-592",
+        "id": "gap-588",
         "type": "untested_path",
         "description": "This is a production backdoor unless cryptographically gated. It cannot ship.",
         "severity": "critical",
         "suggestion": "Delete owner mode bypass. If you need dev override, require a signed admin token + non-prod environment."
       },
       {
-        "id": "gap-599",
+        "id": "gap-595",
         "type": "missing_verification",
         "description": "Required env var is used with no fallback and not documented. This ships broken installs.",
         "severity": "critical",
         "suggestion": "Add to .env.example: AI_ENABLED_ENV=your_value_here"
       },
       {
-        "id": "gap-600",
+        "id": "gap-596",
         "type": "missing_verification",
         "description": "Required env var is used with no fallback and not documented. This ships broken installs.",
         "severity": "critical",
         "suggestion": "Add to .env.example: AI_PROVIDER_ENV=your_value_here"
       },
       {
-        "id": "gap-603",
+        "id": "gap-598",
         "type": "missing_verification",
         "description": "Required env var is used with no fallback and not documented. This ships broken installs.",
         "severity": "critical",

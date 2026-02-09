@@ -66,7 +66,7 @@ import { z, ZodError, ZodSchema } from 'zod';
 import { Domain, Entity } from '@isl-lang/core';
 import { Effect, Result } from '@isl-lang/runtime';
 
-import type { User } from '../types/user.js';
+import { type User } from '../types/user.js';
 
 import type { Config } from './types.js';
 import { validateUser } from './validation.js';`;

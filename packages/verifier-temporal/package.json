@@ -20,11 +20,13 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@isl-lang/isl-core": "workspace:*",
-    "@isl-lang/trace-format": "workspace:*"
+    "@isl-lang/trace-format": "workspace:*",
+    "@isl-lang/proof": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.1.0",
@@ -42,5 +44,6 @@
   "homepage": "https://intentlang.dev",
   "bugs": {
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
-  }
+  },
+  "sideEffects": false
 }

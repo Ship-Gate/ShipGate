@@ -227,6 +227,99 @@ function UserList() {
 }
 ```
 
+## Mapping Rules
+
+### Type Mapping (ISL → Proto)
+
+| ISL Type     | Proto Type                      | Notes                          |
+|--------------|---------------------------------|--------------------------------|
+| `String`     | `string`                        |                                |
+| `Int`        | `int64`                         |                                |
+| `Decimal`    | `double`                        |                                |
+| `Boolean`    | `bool`                          |                                |
+| `Timestamp`  | `google.protobuf.Timestamp`     | Adds import                    |
+| `UUID`       | `string`                        |                                |
+| `Duration`   | `google.protobuf.Duration`      | Adds import                    |
+| `List<T>`    | `repeated T`                    |                                |
+| `Map<K,V>`   | `map<K, V>`                     | Keys must be scalar            |
+| `Optional<T>`| `optional T`                    |                                |
+| Enum         | `enum` with `_UNSPECIFIED = 0`  | SCREAMING_SNAKE_CASE values    |
+| Struct       | `message`                       | Fields get sequential numbers  |
+| Union        | `message` with `oneof`          | Each variant is a nested type  |
+| Constrained  | Wrapper `message` + validation  | e.g., `Email { string value }` |
+
+### Naming Rules
+
+| Context         | Convention            | Example                        |
+|-----------------|-----------------------|--------------------------------|
+| Package         | `lower.dot.separated` | `domain.users.v1`             |
+| Service         | `PascalCase + Service`| `UserService`                  |
+| RPC             | `PascalCase`          | `CreateUser`                   |
+| Message         | `PascalCase`          | `CreateUserRequest`            |
+| Field           | `snake_case`          | `created_at`                   |
+| Enum            | `PascalCase`          | `UserStatus`                   |
+| Enum value      | `PREFIX_SCREAMING`    | `USER_STATUS_ACTIVE`           |
+| Field numbers   | Sequential from 1     | Deterministic per declaration  |
+
+### Error-to-gRPC-Status-Code Mapping
+
+ISL error names are pattern-matched to gRPC status codes:
+
+| ISL Error Pattern                        | gRPC Status Code       | Code |
+|------------------------------------------|------------------------|------|
+| `CREDENTIALS`, `AUTH_FAILED`, `TOKEN_*`  | `UNAUTHENTICATED`      | 16   |
+| `NOT_FOUND`, `MISSING`, `NO_SUCH`        | `NOT_FOUND`            | 5    |
+| `DUPLICATE`, `ALREADY_EXISTS`, `CONFLICT`| `ALREADY_EXISTS`       | 6    |
+| `DENIED`, `FORBIDDEN`, `LOCKED`          | `PERMISSION_DENIED`    | 7    |
+| `INVALID`, `VALIDATION`, `MALFORMED`     | `INVALID_ARGUMENT`     | 3    |
+| `PRECONDITION`, `INACTIVE`, `EXPIRED`    | `FAILED_PRECONDITION`  | 9    |
+| `RATE_LIMIT`, `THROTTLE`, `QUOTA`        | `RESOURCE_EXHAUSTED`   | 8    |
+| `TIMEOUT`, `DEADLINE`, `TIMED_OUT`       | `DEADLINE_EXCEEDED`    | 4    |
+| `ABORT`, `CONCURRENT`, `STALE`           | `ABORTED`              | 10   |
+| Retriable (no pattern match)             | `UNAVAILABLE`          | 14   |
+| Non-retriable (no pattern match)         | `INTERNAL`             | 13   |
+
+Use the error mapping API directly:
+
+```typescript
+import { mapErrorToGrpcStatus, mapBehaviorErrors, GrpcStatusCode } from '@intentos/codegen-grpc';
+
+const mapped = mapErrorToGrpcStatus(error);
+// { islErrorName: 'DUPLICATE_EMAIL', grpcCode: 6, grpcCodeName: 'ALREADY_EXISTS', ... }
+```
+
+## Binding Behaviors to gRPC Methods
+
+Each ISL `behavior` maps to one gRPC RPC method:
+
+1. **Behavior name** → RPC name (PascalCase)
+2. **`input` block fields** → `<Behavior>Request` message fields
+3. **`output.success` type** → `<Behavior>Response` `oneof result` success branch
+4. **`output.errors`** → `<Behavior>Error` message with error code enum
+5. **Behaviors are grouped by entity** into a single `service` (heuristic: name prefix matching like `CreateUser` → `UserService`)
+
+### Behavior grouping example
+
+```
+behavior CreateUser → UserService.CreateUser
+behavior GetUser   → UserService.GetUser
+behavior Login     → UserService.Login  (matched to User entity)
+```
+
+### CRUD generation
+
+When `generateCrud: true`, each entity automatically gets:
+- `Create<Entity>`, `Get<Entity>`, `Update<Entity>`, `Delete<Entity>`, `List<Entity>s`
+- `Watch<Entity>` (if `generateStreaming: true`)
+
+## Golden Tests
+
+Golden output files live in `samples/golden/`. To regenerate after intentional changes:
+
+```bash
+UPDATE_GOLDEN=1 npx vitest run tests/generate-golden.test.ts
+```
+
 ## API Reference
 
 ### `generate(domain, options)`
@@ -249,6 +342,10 @@ Main function to generate all proto and stub files.
 
 Generate proto type definitions from ISL type declarations.
 
+### `generateProtoEnums(enums, options)`
+
+Generate proto enums from ISL enum declarations.
+
 ### `generateProtoMessages(entities, options)`
 
 Generate proto messages from ISL entities.
@@ -260,6 +357,14 @@ Generate proto services from ISL behaviors.
 ### `generateCrudService(entity, options)`
 
 Generate a complete CRUD service for an entity.
+
+### `mapErrorToGrpcStatus(error)`
+
+Map a single ISL error to a gRPC status code.
+
+### `mapBehaviorErrors(errors)`
+
+Map all errors from a behavior to gRPC status codes.
 
 ## License
 

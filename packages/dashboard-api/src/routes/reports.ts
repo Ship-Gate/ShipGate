@@ -65,7 +65,12 @@ export function reportsRouter(queries: Queries): Router {
 
   // ── GET /api/v1/reports/:id — get a single report ─────────────────
   router.get('/:id', (req: Request, res: Response): void => {
-    const report = queries.getReport(req.params['id']!);
+    const id = Array.isArray(req.params['id']) ? req.params['id'][0] : req.params['id'];
+    if (!id) {
+      res.status(400).json({ ok: false, error: 'Missing id parameter' });
+      return;
+    }
+    const report = queries.getReport(id);
     if (!report) {
       res.status(404).json({ ok: false, error: 'Report not found' });
       return;

@@ -4,210 +4,178 @@
 
 import { describe, it, expect } from 'vitest';
 import { generate, generateProtoOnly, generateBufProject } from '../src/generator';
-import { generateProtoTypes } from '../src/proto/types';
+import { generateProtoTypes, generateProtoEnums } from '../src/proto/types';
 import { generateProtoMessages } from '../src/proto/messages';
 import { generateProtoServices, generateCrudService } from '../src/proto/services';
 import { generateBufYaml, generateBufGenYaml } from '../src/proto/options';
+import {
+  mapErrorToGrpcStatus,
+  mapBehaviorErrors,
+  GrpcStatusCode,
+} from '../src/error-mapping';
 import {
   toSnakeCase,
   toPascalCase,
   toScreamingSnakeCase,
   toProtoPackage,
 } from '../src/utils';
-import type { Domain, Entity, Behavior, TypeDeclaration } from '@isl-lang/isl-core';
+import type {
+  DomainDeclaration,
+  EntityDeclaration,
+  BehaviorDeclaration,
+  TypeDeclaration,
+  EnumDeclaration,
+  FieldDeclaration,
+  ErrorDeclaration,
+} from '@isl-lang/isl-core';
 
 // ==========================================================================
 // TEST FIXTURES
 // ==========================================================================
 
-const mockDomain: Domain = {
-  kind: 'Domain',
-  name: { kind: 'Identifier', name: 'Users', location: null as any },
-  version: { kind: 'StringLiteral', value: '1.0.0', location: null as any },
+const S = { start: { line: 0, column: 0, offset: 0 }, end: { line: 0, column: 0, offset: 0 } };
+const id = (name: string) => ({ kind: 'Identifier' as const, name, span: S });
+const str = (value: string) => ({ kind: 'StringLiteral' as const, value, span: S });
+
+const mockDomain: DomainDeclaration = {
+  kind: 'DomainDeclaration',
+  name: id('Users'),
+  version: str('1.0.0'),
+  uses: [],
   imports: [],
   types: [
     {
       kind: 'TypeDeclaration',
-      name: { kind: 'Identifier', name: 'Email', location: null as any },
-      definition: {
-        kind: 'ConstrainedType',
-        base: { kind: 'PrimitiveType', name: 'String', location: null as any },
-        constraints: [
-          {
-            kind: 'Constraint',
-            name: 'pattern',
-            value: {
-              kind: 'RegexLiteral',
-              pattern: '^[^\\s@]+@[^\\s@]+$',
-              flags: '',
-              location: null as any,
-            },
-            location: null as any,
+      name: id('Email'),
+      baseType: { kind: 'SimpleType', name: id('String'), span: S },
+      constraints: [
+        {
+          kind: 'TypeConstraint',
+          name: id('pattern'),
+          value: {
+            kind: 'StringLiteral',
+            value: '^[^\\s@]+@[^\\s@]+$',
+            span: S,
           },
-        ],
-        location: null as any,
-      },
-      annotations: [],
-      location: null as any,
+          span: S,
+        },
+      ],
+      span: S,
     },
+  ],
+  enums: [
     {
-      kind: 'TypeDeclaration',
-      name: { kind: 'Identifier', name: 'UserStatus', location: null as any },
-      definition: {
-        kind: 'EnumType',
-        variants: [
-          { kind: 'EnumVariant', name: { kind: 'Identifier', name: 'PENDING', location: null as any }, location: null as any },
-          { kind: 'EnumVariant', name: { kind: 'Identifier', name: 'ACTIVE', location: null as any }, location: null as any },
-          { kind: 'EnumVariant', name: { kind: 'Identifier', name: 'SUSPENDED', location: null as any }, location: null as any },
-        ],
-        location: null as any,
-      },
-      annotations: [],
-      location: null as any,
+      kind: 'EnumDeclaration',
+      name: id('UserStatus'),
+      variants: [id('PENDING'), id('ACTIVE'), id('SUSPENDED')],
+      span: S,
     },
   ],
   entities: [
     {
-      kind: 'Entity',
-      name: { kind: 'Identifier', name: 'User', location: null as any },
+      kind: 'EntityDeclaration',
+      name: id('User'),
       fields: [
         {
-          kind: 'Field',
-          name: { kind: 'Identifier', name: 'id', location: null as any },
-          type: { kind: 'PrimitiveType', name: 'UUID', location: null as any },
+          kind: 'FieldDeclaration',
+          name: id('id'),
+          type: { kind: 'SimpleType', name: id('UUID'), span: S },
           optional: false,
           annotations: [
-            { kind: 'Annotation', name: { kind: 'Identifier', name: 'immutable', location: null as any }, location: null as any },
-            { kind: 'Annotation', name: { kind: 'Identifier', name: 'unique', location: null as any }, location: null as any },
+            { kind: 'Annotation', name: id('immutable'), span: S },
+            { kind: 'Annotation', name: id('unique'), span: S },
           ],
-          location: null as any,
+          constraints: [],
+          span: S,
         },
         {
-          kind: 'Field',
-          name: { kind: 'Identifier', name: 'email', location: null as any },
-          type: {
-            kind: 'ReferenceType',
-            name: {
-              kind: 'QualifiedName',
-              parts: [{ kind: 'Identifier', name: 'Email', location: null as any }],
-              location: null as any,
-            },
-            location: null as any,
-          },
+          kind: 'FieldDeclaration',
+          name: id('email'),
+          type: { kind: 'SimpleType', name: id('Email'), span: S },
           optional: false,
           annotations: [],
-          location: null as any,
+          constraints: [],
+          span: S,
         },
         {
-          kind: 'Field',
-          name: { kind: 'Identifier', name: 'status', location: null as any },
-          type: {
-            kind: 'ReferenceType',
-            name: {
-              kind: 'QualifiedName',
-              parts: [{ kind: 'Identifier', name: 'UserStatus', location: null as any }],
-              location: null as any,
-            },
-            location: null as any,
-          },
+          kind: 'FieldDeclaration',
+          name: id('status'),
+          type: { kind: 'SimpleType', name: id('UserStatus'), span: S },
           optional: false,
           annotations: [],
-          location: null as any,
+          constraints: [],
+          span: S,
         },
         {
-          kind: 'Field',
-          name: { kind: 'Identifier', name: 'created_at', location: null as any },
-          type: { kind: 'PrimitiveType', name: 'Timestamp', location: null as any },
+          kind: 'FieldDeclaration',
+          name: id('created_at'),
+          type: { kind: 'SimpleType', name: id('Timestamp'), span: S },
           optional: false,
           annotations: [
-            { kind: 'Annotation', name: { kind: 'Identifier', name: 'immutable', location: null as any }, location: null as any },
+            { kind: 'Annotation', name: id('immutable'), span: S },
           ],
-          location: null as any,
+          constraints: [],
+          span: S,
         },
       ],
-      invariants: [],
-      location: null as any,
+      span: S,
     },
   ],
   behaviors: [
     {
-      kind: 'Behavior',
-      name: { kind: 'Identifier', name: 'CreateUser', location: null as any },
-      description: { kind: 'StringLiteral', value: 'Create a new user', location: null as any },
+      kind: 'BehaviorDeclaration',
+      name: id('CreateUser'),
+      description: str('Create a new user'),
       input: {
-        kind: 'InputSpec',
+        kind: 'InputBlock',
         fields: [
           {
-            kind: 'Field',
-            name: { kind: 'Identifier', name: 'email', location: null as any },
-            type: {
-              kind: 'ReferenceType',
-              name: {
-                kind: 'QualifiedName',
-                parts: [{ kind: 'Identifier', name: 'Email', location: null as any }],
-                location: null as any,
-              },
-              location: null as any,
-            },
+            kind: 'FieldDeclaration',
+            name: id('email'),
+            type: { kind: 'SimpleType', name: id('Email'), span: S },
             optional: false,
             annotations: [],
-            location: null as any,
+            constraints: [],
+            span: S,
           },
           {
-            kind: 'Field',
-            name: { kind: 'Identifier', name: 'idempotency_key', location: null as any },
-            type: { kind: 'PrimitiveType', name: 'String', location: null as any },
+            kind: 'FieldDeclaration',
+            name: id('idempotency_key'),
+            type: { kind: 'SimpleType', name: id('String'), span: S },
             optional: false,
             annotations: [],
-            location: null as any,
+            constraints: [],
+            span: S,
           },
         ],
-        location: null as any,
+        span: S,
       },
       output: {
-        kind: 'OutputSpec',
-        success: {
-          kind: 'ReferenceType',
-          name: {
-            kind: 'QualifiedName',
-            parts: [{ kind: 'Identifier', name: 'User', location: null as any }],
-            location: null as any,
-          },
-          location: null as any,
-        },
+        kind: 'OutputBlock',
+        success: { kind: 'SimpleType', name: id('User'), span: S },
         errors: [
           {
-            kind: 'ErrorSpec',
-            name: { kind: 'Identifier', name: 'DUPLICATE_EMAIL', location: null as any },
-            when: { kind: 'StringLiteral', value: 'Email already exists', location: null as any },
+            kind: 'ErrorDeclaration',
+            name: id('DUPLICATE_EMAIL'),
+            when: str('Email already exists'),
             retriable: false,
-            location: null as any,
+            span: S,
           },
           {
-            kind: 'ErrorSpec',
-            name: { kind: 'Identifier', name: 'INVALID_INPUT', location: null as any },
-            when: { kind: 'StringLiteral', value: 'Invalid input data', location: null as any },
+            kind: 'ErrorDeclaration',
+            name: id('INVALID_INPUT'),
+            when: str('Invalid input data'),
             retriable: false,
-            location: null as any,
+            span: S,
           },
         ],
-        location: null as any,
+        span: S,
       },
-      preconditions: [],
-      postconditions: [],
-      invariants: [],
-      temporal: [],
-      security: [],
-      compliance: [],
-      location: null as any,
+      span: S,
     },
   ],
   invariants: [],
-  policies: [],
-  views: [],
-  scenarios: [],
-  chaos: [],
-  location: null as any,
+  span: S,
 };
 
 // ==========================================================================
@@ -251,10 +219,10 @@ describe('Utils', () => {
 // ==========================================================================
 
 describe('Proto Type Generation', () => {
-  it('should generate enum types', () => {
-    const types = generateProtoTypes(mockDomain.types as TypeDeclaration[]);
-    
-    const userStatus = types.find(t => t.name === 'UserStatus');
+  it('should generate enum types from EnumDeclaration', () => {
+    const enums = generateProtoEnums(mockDomain.enums);
+
+    const userStatus = enums.find(t => t.name === 'UserStatus');
     expect(userStatus).toBeDefined();
     expect(userStatus?.definition).toContain('enum UserStatus');
     expect(userStatus?.definition).toContain('USER_STATUS_UNSPECIFIED = 0');
@@ -262,25 +230,25 @@ describe('Proto Type Generation', () => {
     expect(userStatus?.definition).toContain('USER_STATUS_ACTIVE = 2');
     expect(userStatus?.definition).toContain('USER_STATUS_SUSPENDED = 3');
   });
-  
+
   it('should generate constrained type wrappers', () => {
-    const types = generateProtoTypes(mockDomain.types as TypeDeclaration[], {
+    const types = generateProtoTypes(mockDomain.types, {
       includeValidation: true,
     });
-    
+
     const email = types.find(t => t.name === 'Email');
     expect(email).toBeDefined();
     expect(email?.definition).toContain('message Email');
     expect(email?.definition).toContain('string value = 1');
     expect(email?.isWrapper).toBe(true);
   });
-  
-  it('should include validation imports when requested', () => {
-    const types = generateProtoTypes(mockDomain.types as TypeDeclaration[], {
+
+  it('should include validation imports from entity messages', () => {
+    const messages = generateProtoMessages(mockDomain.entities, {
       includeValidation: true,
     });
-    
-    const hasValidationImport = types.some(t => 
+
+    const hasValidationImport = messages.some(t =>
       t.imports.has('validate/validate.proto')
     );
     expect(hasValidationImport).toBe(true);
@@ -293,13 +261,13 @@ describe('Proto Type Generation', () => {
 
 describe('Proto Message Generation', () => {
   it('should generate entity messages', () => {
-    const messages = generateProtoMessages(mockDomain.entities as Entity[], {
+    const messages = generateProtoMessages(mockDomain.entities, {
       includeValidation: true,
       generateLifecycleEnums: true,
     });
-    
+
     expect(messages).toHaveLength(1);
-    
+
     const userMsg = messages[0];
     expect(userMsg.name).toBe('User');
     expect(userMsg.definition).toContain('message User');
@@ -307,10 +275,10 @@ describe('Proto Message Generation', () => {
     expect(userMsg.definition).toContain('Email email = 2');
     expect(userMsg.definition).toContain('UserStatus status = 3');
   });
-  
+
   it('should include timestamp imports', () => {
-    const messages = generateProtoMessages(mockDomain.entities as Entity[]);
-    
+    const messages = generateProtoMessages(mockDomain.entities);
+
     const userMsg = messages[0];
     expect(userMsg.imports.has('google/protobuf/timestamp.proto')).toBe(true);
   });
@@ -323,45 +291,45 @@ describe('Proto Message Generation', () => {
 describe('Proto Service Generation', () => {
   it('should generate services from behaviors', () => {
     const services = generateProtoServices(
-      mockDomain.behaviors as Behavior[],
-      mockDomain.entities as Entity[],
+      mockDomain.behaviors,
+      mockDomain.entities,
       {
         includeValidation: true,
         generateErrorMessages: true,
         addIdempotencyOptions: true,
       }
     );
-    
+
     expect(services.length).toBeGreaterThan(0);
-    
+
     const service = services[0];
     expect(service.definition).toContain('service');
     expect(service.definition).toContain('rpc CreateUser');
     expect(service.definition).toContain('CreateUserRequest');
     expect(service.definition).toContain('CreateUserResponse');
   });
-  
+
   it('should generate error messages', () => {
     const services = generateProtoServices(
-      mockDomain.behaviors as Behavior[],
-      mockDomain.entities as Entity[],
+      mockDomain.behaviors,
+      mockDomain.entities,
       {
         generateErrorMessages: true,
       }
     );
-    
+
     const service = services[0];
     expect(service.definition).toContain('CreateUserError');
     expect(service.definition).toContain('DUPLICATE_EMAIL');
     expect(service.definition).toContain('INVALID_INPUT');
   });
-  
+
   it('should generate CRUD service', () => {
-    const crudService = generateCrudService(mockDomain.entities[0] as Entity, {
+    const crudService = generateCrudService(mockDomain.entities[0], {
       includeValidation: true,
       generateStreaming: true,
     });
-    
+
     expect(crudService.name).toBe('UserService');
     expect(crudService.definition).toContain('rpc CreateUser');
     expect(crudService.definition).toContain('rpc GetUser');
@@ -546,7 +514,83 @@ describe('Proto Output Format', () => {
   
   it('should have UNSPECIFIED as first enum value', () => {
     const proto = generateProtoOnly(mockDomain, { package: 'test.v1' });
-    
+
     expect(proto).toContain('USER_STATUS_UNSPECIFIED = 0');
+  });
+});
+
+// ==========================================================================
+// ERROR MAPPING TESTS
+// ==========================================================================
+
+describe('Error Mapping', () => {
+  const errors = mockDomain.behaviors[0].output!.errors;
+
+  it('should map DUPLICATE_EMAIL to ALREADY_EXISTS', () => {
+    const mapped = mapErrorToGrpcStatus(errors[0] as any);
+    expect(mapped.grpcCode).toBe(GrpcStatusCode.ALREADY_EXISTS);
+    expect(mapped.grpcCodeName).toBe('ALREADY_EXISTS');
+    expect(mapped.islErrorName).toBe('DUPLICATE_EMAIL');
+  });
+
+  it('should map INVALID_INPUT to INVALID_ARGUMENT', () => {
+    const mapped = mapErrorToGrpcStatus(errors[1] as any);
+    expect(mapped.grpcCode).toBe(GrpcStatusCode.INVALID_ARGUMENT);
+    expect(mapped.grpcCodeName).toBe('INVALID_ARGUMENT');
+  });
+
+  it('should map all behavior errors', () => {
+    const mapped = mapBehaviorErrors(errors as any);
+    expect(mapped).toHaveLength(2);
+    expect(mapped[0].grpcCode).toBe(GrpcStatusCode.ALREADY_EXISTS);
+    expect(mapped[1].grpcCode).toBe(GrpcStatusCode.INVALID_ARGUMENT);
+  });
+
+  it('should default retriable errors to UNAVAILABLE', () => {
+    const retriableError = {
+      kind: 'ErrorDeclaration' as const,
+      name: id('SOME_UNKNOWN_ERROR'),
+      when: str('Something went wrong'),
+      retriable: true,
+      span: S,
+    };
+    const mapped = mapErrorToGrpcStatus(retriableError as any);
+    expect(mapped.grpcCode).toBe(GrpcStatusCode.UNAVAILABLE);
+    expect(mapped.retriable).toBe(true);
+  });
+
+  it('should default non-retriable unknown errors to INTERNAL', () => {
+    const unknownError = {
+      kind: 'ErrorDeclaration' as const,
+      name: id('SOME_UNKNOWN_ERROR'),
+      when: str('Something went wrong'),
+      retriable: false,
+      span: S,
+    };
+    const mapped = mapErrorToGrpcStatus(unknownError as any);
+    expect(mapped.grpcCode).toBe(GrpcStatusCode.INTERNAL);
+  });
+});
+
+// ==========================================================================
+// DETERMINISTIC OUTPUT TESTS
+// ==========================================================================
+
+describe('Deterministic Output', () => {
+  it('should produce identical output on repeated calls', () => {
+    const opts = { package: 'test.v1', includeValidation: true };
+    const run1 = generateProtoOnly(mockDomain, opts);
+    const run2 = generateProtoOnly(mockDomain, opts);
+    expect(run1).toBe(run2);
+  });
+
+  it('should produce deterministic field numbers', () => {
+    const messages = generateProtoMessages(mockDomain.entities);
+    const userMsg = messages[0];
+    // Fields should always get the same numbers in the same order
+    expect(userMsg.definition).toContain('id = 1');
+    expect(userMsg.definition).toContain('email = 2');
+    expect(userMsg.definition).toContain('status = 3');
+    expect(userMsg.definition).toContain('created_at = 4');
   });
 });

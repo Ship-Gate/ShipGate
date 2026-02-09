@@ -106,3 +106,16 @@ export {
   generateJUnitReport,
   generateMarkdownReport,
 } from './report';
+
+// Simulator
+export {
+  RuntimeSimulator,
+  simulate,
+} from './simulator';
+
+export type {
+  SimulatorOptions,
+  SimulationResult,
+  ConditionEvaluation,
+  EntityValidation,
+} from './simulator';

@@ -1,8 +1,12 @@
 // ============================================================================
 // Request/Response Interceptors
+//
+// Auth interceptor delegates to the shared runtime engine.
+// Web-specific interceptors (timing, cache, logging) remain local.
 // ============================================================================
 
 import type { RequestInterceptor, ResponseInterceptor, RequestInitWithUrl } from './types.js';
+import { createAuthInterceptors as sharedCreateAuth } from '@isl-lang/generator-sdk/runtime';
 
 /**
  * Create a retry interceptor
@@ -75,64 +79,22 @@ export function createLoggingInterceptor(options?: {
 }
 
 /**
- * Create an auth interceptor with token refresh
+ * Create an auth interceptor with token refresh.
+ *
+ * Delegates to the shared runtime engine's createAuthInterceptors so that
+ * auth logic (token resolution, refresh coalescing) is implemented once.
  */
 export function createAuthInterceptor(options: {
   getToken: () => string | null;
   refreshToken: () => Promise<string>;
   onRefreshFailed: () => void;
 }): { request: RequestInterceptor; response: ResponseInterceptor } {
-  let isRefreshing = false;
-  let refreshPromise: Promise<string> | null = null;
-
-  return {
-    request: async (config) => {
-      const token = options.getToken();
-      if (token) {
-        config.headers = {
-          ...config.headers,
-          Authorization: `Bearer ${token}`,
-        };
-      }
-      return config;
-    },
-    response: async (response, request) => {
-      if (response.status !== 401) {
-        return response;
-      }
-
-      // Try to refresh token
-      if (!isRefreshing) {
-        isRefreshing = true;
-        refreshPromise = options.refreshToken()
-          .catch((error) => {
-            options.onRefreshFailed();
-            throw error;
-          })
-          .finally(() => {
-            isRefreshing = false;
-            refreshPromise = null;
-          });
-      }
-
-      try {
-        const newToken = await refreshPromise;
-        
-        // Retry original request with new token
-        const retryRequest: RequestInitWithUrl = {
-          ...request,
-          headers: {
-            ...((request.headers as Record<string, string>) ?? {}),
-            Authorization: `Bearer ${newToken}`,
-          },
-        };
-
-        return fetch(retryRequest.url, retryRequest);
-      } catch {
-        return response;
-      }
-    },
-  };
+  return sharedCreateAuth({
+    type: 'bearer',
+    token: () => options.getToken() ?? '',
+    refreshToken: options.refreshToken,
+    onUnauthorized: options.onRefreshFailed,
+  });
 }
 
 /**

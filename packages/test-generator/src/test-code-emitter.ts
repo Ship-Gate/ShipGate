@@ -213,11 +213,10 @@ function generateFileContent(
 
   const lines: string[] = [];
 
-  // File header with generation info
+  // File header with generation info (deterministic - no timestamps)
   lines.push(`// ============================================================================`);
   lines.push(`// Generated Tests for ${behaviorName}`);
   lines.push(`// Domain: ${domainName}`);
-  lines.push(`// Generated: ${new Date().toISOString()}`);
   lines.push(`// Seed: ${seed}`);
   lines.push(`// ============================================================================`);
   lines.push('');

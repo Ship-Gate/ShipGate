@@ -2,3 +2,4 @@ packages:
   - 'packages/*'
   - 'tests/*'
   - 'demos/*'
+  - 'samples/isl'

@@ -1,0 +1,51 @@
+npm warn Unknown project config "shamefully-hoist". This will stop working in the next major version of npm.
+npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of npm.
+npm warn Unknown project config "confirmModulesPurge". This will stop working in the next major version of npm.
+
+≡ƒôª Package Stamp Tool (DRY RUN)
+
+Scanning 215 packages...
+
+Found 14 issue(s) across 11 package(s):
+
+  ≡ƒôü @isl-lang/diff-viewer
+  ΓÜá∩╕Å  src/index.ts: Missing entry point (other .ts files exist) ΓåÆ Skipped ΓÇö manual barrel export needed
+
+  ≡ƒôü @isl-lang/docs
+  ΓÜá∩╕Å  src/index.ts: Missing entry point (other .ts files exist) ΓåÆ Skipped ΓÇö manual barrel export needed
+
+  ≡ƒôü @isl-lang/env-reality-checker
+  ΓÜá∩╕Å  tsconfig.json: strict not enabled ΓåÆ Patched missing fields
+  ΓÜá∩╕Å  package.json: sideEffects missing ΓåÆ Patched missing fields
+
+  ≡ƒôü @isl-lang/mock-detector
+  ΓÜá∩╕Å  tsconfig.json: strict not enabled, declaration not enabled ΓåÆ Patched missing fields
+
+  ≡ƒôü @isl-lang/security-verifier-enhancer
+  ΓÜá∩╕Å  tsconfig.json: strict not enabled ΓåÆ Patched missing fields
+  ΓÜá∩╕Å  vitest.config.ts: Missing ΓåÆ Created from template
+
+  ≡ƒôü @isl-lang/stdlib-time
+  ΓÜá∩╕Å  src/index.ts: Missing entry point (other .ts files exist) ΓåÆ Skipped ΓÇö manual barrel export needed
+
+  ≡ƒôü @isl-lang/trace-viewer
+  ΓÜá∩╕Å  src/index.ts: Missing entry point (other .ts files exist) ΓåÆ Skipped ΓÇö manual barrel export needed
+
+  ≡ƒôü @isl-lang/truthpack-v2
+  ΓÜá∩╕Å  tsconfig.json: strict not enabled ΓåÆ Patched missing fields
+  ΓÜá∩╕Å  package.json: sideEffects missing ΓåÆ Patched missing fields
+
+  ≡ƒôü @isl-lang/visual-editor
+  ΓÜá∩╕Å  src/index.ts: Missing entry point (other .ts files exist) ΓåÆ Skipped ΓÇö manual barrel export needed
+
+  ≡ƒôü shipgate-isl
+  ΓÜá∩╕Å  src/index.ts: Missing entry point (other .ts files exist) ΓåÆ Skipped ΓÇö manual barrel export needed
+
+  ≡ƒôü vscode-islstudio
+  ΓÜá∩╕Å  src/index.ts: Missing entry point (other .ts files exist) ΓåÆ Skipped ΓÇö manual barrel export needed
+
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  Would fix: 14 issues in 11 packages
+  Run with --apply to write changes to disk.
+ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+

@@ -2,8 +2,8 @@
 // C# Controller Templates
 // ============================================================================
 
-import type { CSharpClassInfo, CSharpGeneratorOptions } from '../types';
-import { generateUsings, generateXmlDoc, generateAttributes } from './model';
+import type { CSharpClassInfo, CSharpGeneratorOptions } from '../types.js';
+import { generateUsings, generateXmlDoc, generateAttributes } from './model.js';
 
 /**
  * HTTP method type

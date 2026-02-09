@@ -4,13 +4,17 @@
   "description": "Property-Based Testing for ISL - Generate random inputs satisfying preconditions and verify postconditions",
   "type": "module",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
     "./cli": {
+      "types": "./dist/cli.d.ts",
       "import": "./dist/cli.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "bin": {
     "isl-pbt": "./dist/cli.js"
@@ -19,12 +23,13 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup --config false src/index.ts src/cli.ts --format esm --clean --sourcemap --no-dts --external @isl-lang/parser --external @isl-lang/verifier-runtime",
+    "build": "tsup --config false src/index.ts src/cli.ts --format esm --clean --sourcemap --dts --external @isl-lang/parser --external @isl-lang/verifier-runtime",
     "dev": "tsup --watch",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@isl-lang/parser": "workspace:*",
@@ -38,5 +43,6 @@
     "vitest": "^1.2.0"
   },
   "author": "mevla",
-  "license": "MIT"
+  "license": "MIT",
+  "sideEffects": false
 }

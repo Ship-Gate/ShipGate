@@ -16,7 +16,9 @@
     "build": "tsup src/index.ts --format esm --no-dts --clean",
     "dev": "tsup src/index.ts --format esm --no-dts --watch",
     "test": "vitest run --passWithNoTests",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@isl-lang/isl-core": "workspace:*",
@@ -27,7 +29,8 @@
     "tsup": "^8.0.1",
     "typescript": "^5.3.3",
     "vitest": "^1.2.0",
-    "@types/node": "^20.11.0"
+    "@types/node": "^20.11.0",
+    "rimraf": "^5.0.5"
   },
   "author": "mevla",
   "license": "MIT",
@@ -40,5 +43,7 @@
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
   },
   "private": true,
-  "experimental": true
+  "experimental": true,
+  "types": "./dist/index.d.ts",
+  "sideEffects": false
 }

@@ -34,7 +34,8 @@
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "glob": "^10.3.10"
@@ -47,5 +48,6 @@
     "vitest": "^1.0.0"
   },
   "private": true,
-  "experimental": true
+  "experimental": true,
+  "sideEffects": false
 }

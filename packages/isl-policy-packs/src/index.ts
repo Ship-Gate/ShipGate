@@ -94,6 +94,12 @@ export {
   TRACE_PASSWORD_PATTERNS,
   REDACTED_MARKERS,
 } from './packs/security.js';
+export {
+  starterPolicyPack,
+  noFakeEndpointsRule,
+  noMissingEnvVarsRule,
+  noSwallowedErrorsRule,
+} from './packs/starter.js';
 
 /**
  * All built-in policy packs
@@ -105,6 +111,7 @@ export const builtinPacks = [
   'rate-limit',
   'quality',
   'security',
+  'starter',
 ] as const;
 
 export type BuiltinPackId = typeof builtinPacks[number];

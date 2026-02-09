@@ -24,6 +24,33 @@ export * from './errors.js';
 export { ImportResolver, resolveImports } from './resolver.js';
 export { Bundler, bundleModules, createEmptyBundle, type BundlerOptions } from './bundler.js';
 
+// Re-export TS config utilities
+export {
+  parseTSConfig,
+  findTSConfig,
+  hashTSConfig,
+  resolvePathAlias,
+  matchesPathAlias,
+  type PathAliases,
+  type TSConfig,
+} from './tsconfig.js';
+
+// Re-export package exports utilities
+export {
+  resolvePackageExport,
+  findPackageJson,
+  type PackageExports,
+  type PackageJson,
+} from './package-exports.js';
+
+// Re-export cache utilities
+export {
+  ResolverCache,
+  hashLockfile,
+  getFileMtime,
+  type CacheKey,
+} from './cache.js';
+
 // Stdlib registry
 export {
   StdlibRegistryManager,

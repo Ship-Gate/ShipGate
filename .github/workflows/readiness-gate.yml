@@ -1,0 +1,200 @@
+name: Readiness Gate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/**'
+      - 'experimental.json'
+      - 'scripts/readiness*.ts'
+      - 'scripts/promote-package.ts'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/**'
+      - 'experimental.json'
+      - 'scripts/readiness*.ts'
+      - 'scripts/promote-package.ts'
+
+concurrency:
+  group: readiness-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  readiness-scan:
+    name: Readiness Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run readiness scan
+        run: npx tsx scripts/readiness.ts
+
+      - name: Upload readiness report
+        uses: actions/upload-artifact@v4
+        with:
+          name: readiness-report
+          path: |
+            reports/readiness.json
+            reports/readiness.md
+
+  production-threshold:
+    name: Production Threshold Enforcement
+    runs-on: ubuntu-latest
+    needs: readiness-scan
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Enforce production readiness
+        run: npx tsx scripts/readiness.ts --strict
+        # Fails if any production package is below readiness threshold
+
+  anti-drift:
+    name: Anti-Drift Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Detect changed packages
+        id: changes
+        run: |
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- 'packages/' | \
+            sed -n 's|^packages/\([^/]*\)/.*|\1|p' | sort -u | tr '\n' ' ')
+          echo "changed_packages=${CHANGED}" >> "$GITHUB_OUTPUT"
+          echo "Changed packages: ${CHANGED}"
+
+      - name: Check readiness evidence for changed packages
+        run: |
+          npx tsx scripts/readiness.ts --quiet
+
+          CHANGED="${{ steps.changes.outputs.changed_packages }}"
+          if [ -z "$CHANGED" ]; then
+            echo "No package changes detected."
+            exit 0
+          fi
+
+          FAILURES=0
+          for pkg in $CHANGED; do
+            # Check if this is a production package
+            TIER=$(node -e "
+              const r = require('./reports/readiness.json');
+              const p = r.packages.find(p => p.dir === '$pkg');
+              console.log(p ? p.tier : 'unknown');
+            " 2>/dev/null || echo "unknown")
+
+            if [ "$TIER" = "production" ]; then
+              # Production packages must maintain readiness
+              READY=$(node -e "
+                const r = require('./reports/readiness.json');
+                const p = r.packages.find(p => p.dir === '$pkg');
+                console.log(p ? p.ready : false);
+              " 2>/dev/null || echo "false")
+
+              if [ "$READY" != "true" ]; then
+                echo "::error::Production package '$pkg' changed but readiness dropped below threshold"
+                FAILURES=$((FAILURES + 1))
+              else
+                echo "✅ $pkg: production readiness maintained"
+              fi
+            else
+              echo "ℹ️  $pkg: non-production ($TIER) — readiness advisory only"
+            fi
+          done
+
+          if [ $FAILURES -gt 0 ]; then
+            echo ""
+            echo "::error::$FAILURES production package(s) have readiness drift. Update evidence or fix gates."
+            exit 1
+          fi
+
+      - name: Check experimental.json consistency
+        run: |
+          # Verify no package appears in multiple tiers
+          node -e "
+            const fs = require('fs');
+            const cfg = JSON.parse(fs.readFileSync('experimental.json', 'utf-8'));
+
+            function flatten(obj) {
+              const out = [];
+              for (const v of Object.values(obj)) {
+                if (Array.isArray(v)) out.push(...v);
+              }
+              return out;
+            }
+
+            const prod = flatten(cfg.production);
+            const partial = flatten(cfg.partial);
+            const exp = flatten(cfg.experimental);
+            const internal = cfg.internal?.packages ?? [];
+
+            const all = [...prod, ...partial, ...exp, ...internal];
+            const seen = new Map();
+            let dupes = 0;
+
+            for (const pkg of all) {
+              if (seen.has(pkg)) {
+                console.error('Duplicate: ' + pkg + ' in ' + seen.get(pkg) + ' and another tier');
+                dupes++;
+              }
+              const tier = prod.includes(pkg) ? 'production' :
+                           partial.includes(pkg) ? 'partial' :
+                           exp.includes(pkg) ? 'experimental' : 'internal';
+              seen.set(pkg, tier);
+            }
+
+            if (dupes > 0) {
+              console.error(dupes + ' duplicate(s) found in experimental.json');
+              process.exit(1);
+            }
+            console.log('✅ experimental.json: no duplicate tier entries (' + all.length + ' packages)');
+          "

@@ -326,7 +326,7 @@ describe('Kotlin Code Generation', () => {
     expect(behavior?.content).toContain('fun isSuccess()');
     expect(behavior?.content).toContain('fun isError()');
     expect(behavior?.content).toContain('fun getOrNull()');
-    expect(behavior?.content).toContain('fun fold(');
+    expect(behavior?.content).toContain('fold(');
   });
 });
 

@@ -45,6 +45,7 @@ import {
   trustScore, printTrustScoreResult, printTrustScoreHistory, getTrustScoreExitCode,
   heal, printHealResult, getHealExitCode,
   verifyProof, printProofVerifyResult, getProofVerifyExitCode,
+  proofPack, printProofPackResult, getProofPackExitCode,
   createPolicyBundle, printCreateBundleResult, getCreateBundleExitCode,
   verifyPolicyBundle, printVerifyBundleResult, getVerifyBundleExitCode,
   watch,
@@ -54,9 +55,15 @@ import {
   specQuality, printSpecQualityResult, getSpecQualityExitCode,
   policyCheck, printPolicyCheckResult, getPolicyCheckExitCode,
   policyInit, printPolicyInitResult,
+  shipgateChaosRun, printShipGateChaosResult, getShipGateChaosExitCode,
+  verifyEvolution, printEvolutionResult, getEvolutionExitCode,
+  simulateCommand, printSimulateResult, getSimulateExitCode,
+  verifyRuntime, printVerifyRuntimeResult, getVerifyRuntimeExitCode,
+  policyEngineCheck, printPolicyEngineResult, getPolicyEngineExitCode,
 } from './commands/index.js';
 import type { FailOnLevel } from './commands/verify.js';
 import { TeamConfigError } from '@isl-lang/core';
+import { withSpan, ISL_ATTR } from '@isl-lang/observability';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Version
@@ -81,7 +88,11 @@ const COMMANDS = [
   'isl-generate', // Generate ISL specs from source code
   'spec-quality', // Score ISL spec quality
   'shipgate', // ShipGate config management
+  'shipgate truthpack build', 'shipgate truthpack diff', // Truthpack v2
+  'shipgate simulate', // Behavior simulation
+  'shipgate verify runtime', // Runtime probe verification
   'policy', 'policy check', 'policy team-init', // Team policy enforcement
+  'verify evolution', // API evolution verification
 ];
 
 
@@ -198,6 +209,7 @@ program
   .option('-o, --output <dir>', 'Output directory')
   .option('--force', 'Overwrite existing files')
   .action(async (target: string, file: string, options) => {
+    await withSpan('cli.gen', { attributes: { [ISL_ATTR.COMMAND]: 'gen', [ISL_ATTR.CODEGEN_TARGET]: target, [ISL_ATTR.CODEGEN_SOURCE]: file } }, async (genSpan) => {
     const opts = program.opts();
     const result = await gen(target, file, {
       output: options.output,
@@ -206,8 +218,18 @@ program
       format: opts.format,
     });
     
+    genSpan.setAttribute(ISL_ATTR.DURATION_MS, result.duration);
+    genSpan.setAttribute(ISL_ATTR.EXIT_CODE, getGenExitCode(result));
+    if (result.files.length > 0) {
+      genSpan.setAttribute(ISL_ATTR.CODEGEN_OUTPUT, result.files.map(f => f.path).join(','));
+    }
+    if (!result.success) {
+      genSpan.setError(result.errors.join('; '));
+    }
+
     printGenResult(result, { format: opts.format });
     process.exit(getGenExitCode(result));
+    }); // end withSpan('cli.gen')
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -288,13 +310,16 @@ program
   .option('--all', 'Enable all verification modes (SMT + PBT + Temporal)')
   .option('-r, --report <format>', 'Generate formatted report: md, pdf, json, html (or legacy: path to write evidence report)')
   .option('-o, --report-output <path>', 'Output path for formatted report file (default: stdout for text formats)')
+  .option('--explain', 'Generate detailed explanation reports (verdict-explain.json and .md)')
   .action(async (path: string | undefined, options) => {
+    await withSpan('cli.verify', { attributes: { [ISL_ATTR.COMMAND]: 'verify' } }, async (cliSpan) => {
     const opts = program.opts();
 
     // ── Proof bundle mode ────────────────────────────────────────────────
     if (options.proof) {
       try {
         const { verifyProof: vp, formatProofVerificationResult } = await import('@isl-lang/proof');
+        cliSpan.addEvent('verify.proof_bundle', { path: options.proof });
         const proofResult = await vp(options.proof, {
           bundleDir: options.proof,
           verbose: opts.verbose,
@@ -306,6 +331,7 @@ program
         });
         console.log(formatted);
 
+        cliSpan.setAttribute(ISL_ATTR.EXIT_CODE, proofResult.success ? 0 : 1);
         process.exit(proofResult.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
         return;
       } catch (error) {
@@ -314,6 +340,7 @@ program
             `Error verifying proof bundle: ${error instanceof Error ? error.message : String(error)}`,
           ),
         );
+        cliSpan.setError((error instanceof Error ? error.message : String(error)));
         process.exit(ExitCode.ISL_ERROR);
         return;
       }
@@ -418,6 +445,7 @@ program
       detailed: options.detailed,
       report: options.report,
       timeout: parseInt(options.timeout),
+      explain: options.explain,
     });
 
     // ── Apply ShipGate config enforcement ───────────────────────────────
@@ -516,7 +544,15 @@ program
       // handled by the verify internals (options.report passed through).
     }
 
+    cliSpan.setAttribute(ISL_ATTR.VERIFY_VERDICT, result.verdict);
+    cliSpan.setAttribute(ISL_ATTR.VERIFY_SCORE, result.score);
+    cliSpan.setAttribute(ISL_ATTR.VERIFY_MODE, result.mode);
+    cliSpan.setAttribute(ISL_ATTR.FILE_COUNT, result.files.length);
+    cliSpan.setAttribute(ISL_ATTR.DURATION_MS, result.duration);
+    cliSpan.setAttribute(ISL_ATTR.EXIT_CODE, getUnifiedExitCode(result));
+
     process.exit(getUnifiedExitCode(result));
+    }); // end withSpan('cli.verify')
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -727,6 +763,9 @@ program
   .option('--load <file>', 'Load an ISL file on start')
   .option('--context <json>', 'Set initial evaluation context')
   .option('--parse', 'Parse mode (non-interactive, for piped input)')
+  .option('--eval <commands>', 'Non-interactive mode: execute commands separated by semicolons and exit')
+  .option('--timeout <ms>', 'Command timeout in milliseconds', '30000')
+  .option('--allow-writes', 'Allow filesystem writes (default: false)')
   .action(async (options) => {
     const opts = program.opts();
     await repl({
@@ -734,6 +773,9 @@ program
       load: options.load,
       context: options.context,
       parse: options.parse,
+      eval: options.eval,
+      timeout: parseInt(options.timeout),
+      allowWrites: options.allowWrites,
     });
   });
 
@@ -1136,6 +1178,33 @@ policyCommand
     process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
   });
 
+policyCommand
+  .command('engine-check [directory]')
+  .description('Run the DSL-based policy engine against a project directory')
+  .option('--pack <packs...>', 'Only run specific pack IDs (e.g. starter)')
+  .option('--ci', 'CI mode: JSON to stdout, one-line summary to stderr')
+  .action(async (directory: string | undefined, options) => {
+    const opts = program.opts();
+    const isJson = opts.format === 'json';
+    const isCi = options.ci || isCI();
+
+    const result = await policyEngineCheck({
+      directory,
+      packs: options.pack,
+      format: isJson ? 'json' : isCi ? 'json' : 'pretty',
+      ci: isCi,
+      verbose: opts.verbose,
+    });
+
+    if (isJson || isCi) {
+      printPolicyEngineResult(result, { format: 'json', ci: isCi });
+    } else {
+      printPolicyEngineResult(result, { verbose: opts.verbose });
+    }
+
+    process.exit(getPolicyEngineExitCode(result));
+  });
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Gate Command (SHIP/NO-SHIP)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1293,6 +1362,34 @@ program
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Proof Pack Command
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('proof pack')
+  .description('Pack artifacts into a deterministic, hashable, verifiable proof bundle')
+  .requiredOption('--spec <file>', 'ISL spec file')
+  .option('--evidence <dir>', 'Evidence directory (contains results.json, traces, etc.)')
+  .option('-o, --output <dir>', 'Output directory for the proof bundle', '.proof-bundle')
+  .option('--sign-secret <secret>', 'HMAC secret for signing the bundle')
+  .option('--timestamp <iso>', 'Fixed ISO 8601 timestamp (for deterministic builds)')
+  .action(async (options) => {
+    const opts = program.opts();
+    const result = await proofPack({
+      spec: options.spec,
+      evidence: options.evidence,
+      output: options.output,
+      signSecret: options.signSecret,
+      timestamp: options.timestamp,
+      format: opts.format,
+      verbose: opts.verbose,
+    });
+    
+    printProofPackResult(result, { format: opts.format });
+    process.exit(getProofPackExitCode(result));
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Watch Command
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1419,6 +1516,210 @@ shipgateCommand
     }
 
     process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
+  });
+
+shipgateCommand
+  .command('truthpack build')
+  .description('Build truthpack v2 - canonical project reality snapshot')
+  .option('-r, --repo-root <dir>', 'Repository root (default: cwd)')
+  .option('-o, --output <dir>', 'Output directory (default: .shipgate/truthpack)')
+  .option('--include <patterns>', 'Include file patterns (comma-separated)')
+  .option('--exclude <patterns>', 'Exclude file patterns (comma-separated)')
+  .option('--no-dependencies', 'Skip dependency extraction')
+  .option('--no-db-schema', 'Skip DB schema detection')
+  .option('--no-auth', 'Skip auth model detection')
+  .option('--no-runtime-probes', 'Skip runtime probe detection')
+  .action(async (options) => {
+    const opts = program.opts();
+    const result = await truthpackBuild({
+      repoRoot: options.repoRoot,
+      outputDir: options.output,
+      includePatterns: options.include?.split(','),
+      excludePatterns: options.exclude?.split(','),
+      includeDependencies: options.dependencies !== false,
+      detectDbSchema: options.dbSchema !== false,
+      detectAuth: options.auth !== false,
+      detectRuntimeProbes: options.runtimeProbes !== false,
+    });
+
+    printTruthpackBuildResult(result, {
+      format: opts.format,
+      verbose: opts.verbose,
+    });
+
+    process.exit(getTruthpackBuildExitCode(result));
+  });
+
+shipgateCommand
+  .command('truthpack diff')
+  .description('Compare truthpack v2 and detect drift')
+  .option('-r, --repo-root <dir>', 'Repository root (default: cwd)')
+  .option('--old <dir>', 'Old truthpack directory (default: .shipgate/truthpack/.previous)')
+  .option('--new <dir>', 'New truthpack directory (default: .shipgate/truthpack)')
+  .action(async (options) => {
+    const opts = program.opts();
+    const result = await truthpackDiff({
+      repoRoot: options.repoRoot,
+      oldDir: options.old,
+      newDir: options.new,
+    });
+
+    printTruthpackDiffResult(result, {
+      format: opts.format,
+      verbose: opts.verbose,
+    });
+
+    process.exit(getTruthpackDiffExitCode(result));
+  });
+
+shipgateCommand
+  .command('fix')
+  .description('Auto-fix Shipgate findings with safe, minimal diffs')
+  .option('--dry-run', 'Preview fixes without applying (default)')
+  .option('--apply', 'Apply fixes to files')
+  .option('--only <rule>', 'Only apply fixes for specific rule (can be used multiple times)', (val, prev) => {
+    prev = prev || [];
+    prev.push(val);
+    return prev;
+  }, [])
+  .option('--evidence <path>', 'Path to evidence bundle JSON (default: auto-detect)')
+  .option('--min-confidence <score>', 'Minimum confidence threshold (0-1, default: 0.6)', '0.6')
+  .action(async (options) => {
+    const opts = program.opts();
+    const { runShipgateFix } = await import('@isl-lang/autofix');
+    
+    const result = await runShipgateFix({
+      projectRoot: process.cwd(),
+      dryRun: !options.apply,
+      apply: options.apply || false,
+      only: options.only || [],
+      evidencePath: options.evidence,
+      minConfidence: parseFloat(options.minConfidence || '0.6'),
+      format: opts.format === 'json' ? 'json' : 'pretty',
+    });
+
+    process.exit(result.exitCode);
+  });
+
+shipgateCommand
+  .command('simulate')
+  .description('Simulate ISL behaviors against generated inputs')
+  .requiredOption('-s, --spec <file>', 'ISL spec file')
+  .option('-b, --behavior <name>', 'Behavior name to simulate (default: all behaviors)')
+  .option('--generate', 'Generate inputs automatically')
+  .option('-i, --input <file>', 'Input test data file (JSON)')
+  .option('-c, --count <number>', 'Number of generated inputs (default: 5)', '5')
+  .option('-t, --timeout <ms>', 'Timeout per simulation in milliseconds (default: 5000)', '5000')
+  .action(async (options) => {
+    const opts = program.opts();
+    const isJson = opts.format === 'json';
+
+    const result = await simulateCommand({
+      spec: options.spec,
+      behavior: options.behavior,
+      generate: options.generate,
+      input: options.input,
+      count: parseInt(options.count),
+      timeout: parseInt(options.timeout),
+      verbose: opts.verbose,
+      format: isJson ? 'json' : 'text',
+    });
+
+    printSimulateResult(result, {
+      format: opts.format,
+      verbose: opts.verbose,
+    });
+
+    process.exit(getSimulateExitCode(result));
+  });
+
+// ── Verify Runtime Subcommand ──────────────────────────────────────────────
+
+const verifyRuntimeCommand = shipgateCommand
+  .command('verify runtime')
+  .description('Probe a running application against Truthpack route/env index.\n' +
+    '  Checks route existence, env vars, fake-success patterns, and builds claims.')
+  .requiredOption('-u, --url <baseUrl>', 'Base URL of the running application (e.g. http://localhost:3000)')
+  .option('--truthpack <dir>', 'Path to truthpack directory (default: .guardrail/truthpack)')
+  .option('-o, --output <dir>', 'Output directory for report artifacts')
+  .option('-t, --timeout <ms>', 'Timeout per route probe in milliseconds', '10000')
+  .option('--route-filter <prefixes>', 'Only probe routes with these path prefixes (comma-separated)')
+  .option('--skip-auth', 'Skip routes requiring authentication')
+  .option('--browser', 'Use Playwright browser probing for UI routes')
+  .option('--header <key=value>', 'Extra HTTP header (repeatable)', (val: string, prev: string[]) => {
+    prev = prev || [];
+    prev.push(val);
+    return prev;
+  }, [] as string[])
+  .option('--auth-token <token>', 'Bearer token for authenticated routes')
+  .option('--concurrency <n>', 'Number of concurrent probes', '4')
+  .action(async (options) => {
+    const opts = program.opts();
+    const isJson = opts.format === 'json';
+
+    const result = await verifyRuntime({
+      baseUrl: options.url,
+      truthpackDir: options.truthpack,
+      outputDir: options.output,
+      timeout: options.timeout ? parseInt(options.timeout) : undefined,
+      routeFilter: options.routeFilter?.split(','),
+      skipAuth: options.skipAuth,
+      browser: options.browser,
+      headers: options.header,
+      authToken: options.authToken,
+      concurrency: options.concurrency ? parseInt(options.concurrency) : undefined,
+      verbose: opts.verbose,
+      json: isJson,
+      format: isJson ? 'json' : 'text',
+    });
+
+    printVerifyRuntimeResult(result, {
+      json: isJson,
+      verbose: opts.verbose,
+      format: opts.format,
+    });
+
+    process.exit(getVerifyRuntimeExitCode(result));
+  });
+
+const chaosCommand = shipgateCommand
+  .command('chaos')
+  .description('Chaos engineering commands');
+
+chaosCommand
+  .command('run')
+  .description('Run chaos tests with deterministic seeds, bounded timeouts, and invariant violation claims')
+  .requiredOption('--spec <file>', 'ISL spec file')
+  .requiredOption('--impl <file>', 'Implementation file')
+  .option('--seed <seed>', 'Deterministic seed for reproducibility (auto-generated if not provided)')
+  .option('-t, --timeout <ms>', 'Test timeout in milliseconds (default: 30000, max: 300000 for CI safety)', '30000')
+  .option('--continue-on-failure', 'Continue running scenarios after failure')
+  .option('-d, --detailed', 'Show detailed breakdown')
+  .action(async (options) => {
+    const opts = program.opts();
+    const isJson = opts.format === 'json';
+    
+    const seed = options.seed ? parseInt(options.seed) : undefined;
+    const timeout = parseInt(options.timeout);
+
+    const result = await shipgateChaosRun(options.spec, options.impl, {
+      spec: options.spec,
+      impl: options.impl,
+      seed,
+      timeout,
+      continueOnFailure: options.continueOnFailure,
+      verbose: opts.verbose,
+      json: isJson,
+      format: isJson ? 'json' : 'text',
+    });
+
+    printShipGateChaosResult(result, {
+      detailed: options.detailed,
+      format: opts.format,
+      json: isJson,
+    });
+
+    process.exit(getShipGateChaosExitCode(result));
   });
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -2,15 +2,29 @@
   "name": "@isl-lang/language-server",
   "version": "1.0.0",
   "description": "Language Server Protocol implementation for ISL",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
   "bin": {
     "isl-language-server": "./dist/bin/server.js"
   },
   "scripts": {
     "build": "tsc",
     "test": "vitest run --passWithNoTests",
-    "start": "node dist/bin/server.js"
+    "start": "node dist/bin/server.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "vscode-languageserver": "^9.0.1",
@@ -21,7 +35,9 @@
   "devDependencies": {
     "@types/node": "^20.11.0",
     "typescript": "^5.3.3",
-    "vitest": "^1.2.0"
+    "vitest": "^1.2.0",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
   },
   "keywords": [
     "isl",
@@ -39,5 +55,6 @@
   "homepage": "https://intentlang.dev",
   "bugs": {
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
-  }
+  },
+  "sideEffects": false
 }

@@ -29,18 +29,23 @@
     "./intent": {
       "import": "./dist/packs/intent.js",
       "types": "./dist/packs/intent.d.ts"
+    },
+    "./starter": {
+      "import": "./dist/packs/starter.js",
+      "types": "./dist/packs/starter.d.ts"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts src/bundle.ts src/packs/auth.ts src/packs/payments.ts src/packs/pii.ts src/packs/rate-limit.ts src/packs/intent.ts --format esm --dts --clean",
+    "build": "tsup src/index.ts src/bundle.ts src/packs/auth.ts src/packs/payments.ts src/packs/pii.ts src/packs/rate-limit.ts src/packs/intent.ts src/packs/starter.ts --format esm --dts --clean",
     "dev": "tsup src/index.ts --format esm --dts --watch",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@isl-lang/firewall": "workspace:*"
@@ -55,5 +60,6 @@
   "author": "mevla",
   "license": "MIT",
   "private": true,
-  "experimental": true
+  "experimental": true,
+  "sideEffects": false
 }

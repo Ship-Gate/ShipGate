@@ -1,123 +1,74 @@
 // ============================================================================
-// Web SDK Types
+// Web SDK Types — Thin skin over @isl-lang/generator-sdk/runtime
+// ============================================================================
+
+// --- Re-exports from shared runtime (single source of truth) ----------------
+export type {
+  HttpMethod,
+  RetryConfig,
+  AuthConfig,
+  RequestInitWithUrl,
+  RequestInterceptor,
+  ResponseInterceptor,
+  ApiResponse,
+  ISLErrorType as ISLError,
+  ValidationResult,
+} from '@isl-lang/generator-sdk/runtime';
+
+export {
+  ApiError,
+  DEFAULT_RETRY,
+  DEFAULT_CACHE,
+  DEFAULT_HEADERS,
+  DEFAULT_TIMEOUT,
+} from '@isl-lang/generator-sdk/runtime';
+
+import type {
+  HttpMethod,
+  RetryConfig,
+  AuthConfig,
+  CacheConfig as SharedCacheConfig,
+  InterceptorsConfig,
+  ISLErrorType,
+} from '@isl-lang/generator-sdk/runtime';
+import {
+  DEFAULT_RETRY,
+  DEFAULT_CACHE,
+  DEFAULT_HEADERS,
+  DEFAULT_TIMEOUT,
+} from '@isl-lang/generator-sdk/runtime';
+
+// ============================================================================
+// Web-specific extensions
 // ============================================================================
 
 /**
- * HTTP methods supported
+ * Web cache config extends shared cache with storage location
  */
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+export interface CacheConfig extends SharedCacheConfig {
+  storage: 'memory' | 'localStorage' | 'sessionStorage';
+}
 
 /**
- * Request configuration
+ * Request/Response interceptors (alias)
+ */
+export interface Interceptors extends InterceptorsConfig {}
+
+/**
+ * Request configuration (web-specific wrapper)
  */
 export interface RequestConfig {
-  /** Base URL for API */
   baseUrl: string;
-  
-  /** Default headers */
   headers?: Record<string, string>;
-  
-  /** Request timeout in ms */
   timeout?: number;
-  
-  /** Retry configuration */
   retry?: RetryConfig;
-  
-  /** Authentication */
   auth?: AuthConfig;
-  
-  /** Request interceptors */
   interceptors?: Interceptors;
-  
-  /** Enable request caching */
   cache?: CacheConfig;
 }
 
 /**
- * Retry configuration
- */
-export interface RetryConfig {
-  /** Max retry attempts */
-  maxAttempts: number;
-  
-  /** Base delay between retries (ms) */
-  baseDelay: number;
-  
-  /** Max delay (ms) */
-  maxDelay: number;
-  
-  /** Status codes to retry */
-  retryableStatusCodes: number[];
-  
-  /** Backoff strategy */
-  backoff: 'linear' | 'exponential';
-}
-
-/**
- * Authentication configuration
- */
-export interface AuthConfig {
-  type: 'bearer' | 'api-key' | 'basic' | 'oauth2';
-  token?: string | (() => string | Promise<string>);
-  apiKey?: string;
-  apiKeyHeader?: string;
-  refreshToken?: () => Promise<string>;
-  onUnauthorized?: () => void;
-}
-
-/**
- * Cache configuration
- */
-export interface CacheConfig {
-  enabled: boolean;
-  ttl: number;
-  storage: 'memory' | 'localStorage' | 'sessionStorage';
-  maxSize?: number;
-}
-
-/**
- * Request/Response interceptors
- */
-export interface Interceptors {
-  request?: RequestInterceptor[];
-  response?: ResponseInterceptor[];
-}
-
-/**
- * Extended request init with URL
- */
-export type RequestInitWithUrl = RequestInit & { url: string };
-
-export type RequestInterceptor = (config: RequestInitWithUrl) => Promise<RequestInitWithUrl>;
-export type ResponseInterceptor = (response: Response, request: RequestInitWithUrl) => Promise<Response>;
-
-/**
- * API Response wrapper
- */
-export interface ApiResponse<T> {
-  data: T;
-  status: number;
-  headers: Headers;
-  ok: boolean;
-}
-
-/**
- * API Error
- */
-export class ApiError extends Error {
-  constructor(
-    public status: number,
-    public statusText: string,
-    public body: unknown,
-    public headers: Headers
-  ) {
-    super(`API Error: ${status} ${statusText}`);
-    this.name = 'ApiError';
-  }
-}
-
-/**
- * Validation error
+ * Validation error (field-level)
  */
 export interface ValidationError {
   field: string;
@@ -166,18 +117,9 @@ export interface ErrorDef {
 export type ISLWebClientConfig = RequestConfig;
 
 /**
- * Generic ISL Error type
- */
-export interface ISLError {
-  code: string;
-  message: string;
-  details?: Record<string, unknown>;
-}
-
-/**
  * Result type for operations
  */
-export interface Result<TData, TError = ISLError> {
+export interface Result<TData, TError = ISLErrorType> {
   success: boolean;
   data?: TData;
   error?: TError;
@@ -190,7 +132,7 @@ export interface QueryOptions<TData> {
   enabled?: boolean;
   refetchInterval?: number;
   onSuccess?: (data: TData) => void;
-  onError?: (error: ISLError) => void;
+  onError?: (error: ISLErrorType) => void;
   select?: (data: TData) => TData;
 }
 
@@ -199,7 +141,7 @@ export interface QueryOptions<TData> {
  */
 export interface MutationOptions<TInput, TOutput> {
   onSuccess?: (data: TOutput, input: TInput) => void;
-  onError?: (error: ISLError, input: TInput) => void;
+  onError?: (error: ISLErrorType, input: TInput) => void;
   onSettled?: () => void;
   validate?: (input: TInput) => { valid: boolean; errors?: string[] };
 }
@@ -224,38 +166,19 @@ export interface WebSocketMessage<T = unknown> {
 }
 
 /**
- * Validation result
- */
-export interface ValidationResult {
-  valid: boolean;
-  errors?: Array<{ field: string; message: string }>;
-}
-
-/**
- * Default configuration
+ * Default configuration (derived from shared defaults)
  */
 export const DEFAULT_CONFIG: Required<RequestConfig> = {
   baseUrl: '',
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  },
-  timeout: 30000,
-  retry: {
-    maxAttempts: 3,
-    baseDelay: 1000,
-    maxDelay: 10000,
-    retryableStatusCodes: [408, 429, 500, 502, 503, 504],
-    backoff: 'exponential',
-  },
-  auth: {
-    type: 'bearer',
-  },
+  headers: { ...DEFAULT_HEADERS },
+  timeout: DEFAULT_TIMEOUT,
+  retry: { ...DEFAULT_RETRY },
+  auth: { type: 'bearer' },
   interceptors: {},
   cache: {
-    enabled: false,
-    ttl: 60000,
+    enabled: DEFAULT_CACHE.enabled,
+    ttl: DEFAULT_CACHE.ttl,
+    maxSize: DEFAULT_CACHE.maxSize,
     storage: 'memory',
-    maxSize: 100,
   },
 };

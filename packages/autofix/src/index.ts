@@ -438,3 +438,41 @@ export type { PatchEntry } from './diff-generator.js';
 // ── New: CLI Integration ─────────────────────────────────────────────────────
 export { runFixCLI } from './cli-integration.js';
 export type { FixCLIOptions } from './cli-integration.js';
+
+// ── Shipgate Fixes ──────────────────────────────────────────────────────────
+export {
+  suggestFixes,
+  registerFixer,
+  getFixer,
+  listFixers,
+  readFileSafe,
+  writeFileSafe,
+  generatePatchDiff,
+} from './shipgate-fixes.js';
+export type {
+  FixContext,
+  FixSuggestion,
+  SuggestFixesResult,
+  Fixer,
+} from './shipgate-fixes.js';
+
+// ── Patch Engine ───────────────────────────────────────────────────────────
+export {
+  applyPatches,
+  previewPatches,
+} from './patch-engine.js';
+export type {
+  ApplyPatchesResult,
+  ApplyPatchesOptions,
+} from './patch-engine.js';
+
+// ── Shipgate Fix CLI ─────────────────────────────────────────────────────────
+export { runShipgateFix } from './shipgate-fix-cli.js';
+export type { ShipgateFixOptions } from './shipgate-fix-cli.js';
+
+// ── Proof Bundle Integration ──────────────────────────────────────────────────
+export {
+  createPatchesMetadata,
+  addPatchesToProofBundle,
+} from './proof-bundle-integration.js';
+export type { AppliedPatchesMetadata } from './proof-bundle-integration.js';

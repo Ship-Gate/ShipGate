@@ -4,16 +4,21 @@
   "description": "ISL Pipeline: NL → ISL → Code → Gate → Proof",
   "type": "module",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "bin": {
     "isl-pipeline": "./dist/cli.js",
     "isl-performance": "./dist/performance/cli.js"
   },
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -23,7 +28,10 @@
     "cli": "tsx src/cli.ts",
     "test": "vitest run --passWithNoTests",
     "benchmark": "tsx src/performance/cli.ts benchmark",
-    "perf:regression": "tsx src/performance/cli.ts regression"
+    "perf:regression": "tsx src/performance/cli.ts regression",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@isl-lang/isl-core": "workspace:*",
@@ -37,8 +45,10 @@
     "tsup": "^8.0.1",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
-    "vitest": "^1.2.0"
+    "vitest": "^1.2.0",
+    "rimraf": "^5.0.5"
   },
   "author": "ISL Team",
-  "license": "MIT"
+  "license": "MIT",
+  "sideEffects": false
 }

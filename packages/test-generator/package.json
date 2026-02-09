@@ -20,7 +20,9 @@
     "test:watch": "vitest",
     "test:update": "vitest run --update",
     "lint": "eslint src/**/*.ts",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "keywords": [
     "isl",
@@ -41,7 +43,8 @@
     "@types/node": "^20.10.0",
     "typescript": "^5.3.0",
     "vitest": "^1.0.0",
-    "rimraf": "^5.0.0"
+    "rimraf": "^5.0.0",
+    "tsup": "^8.0.1"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -53,5 +56,12 @@
   "homepage": "https://intentlang.dev",
   "bugs": {
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
-  }
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
 }

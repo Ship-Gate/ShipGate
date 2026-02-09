@@ -1,0 +1,54 @@
+{
+  "generatedAt": "2026-02-09T09:21:10.497Z",
+  "totalPackages": 1,
+  "readyCount": 0,
+  "notReadyCount": 1,
+  "threshold": 75,
+  "packages": [
+    {
+      "name": "@isl-lang/effect-handlers",
+      "dir": "effect-handlers",
+      "tier": "experimental",
+      "assessedAt": "2026-02-09T09:21:10.497Z",
+      "gates": {
+        "build": {
+          "pass": false,
+          "detail": "Build script is a stub/echo"
+        },
+        "typecheck": {
+          "pass": false,
+          "detail": "Typecheck script is missing or stubbed"
+        },
+        "test": {
+          "pass": false,
+          "detail": "Test script is missing or stubbed"
+        },
+        "docs": {
+          "pass": true,
+          "detail": "README.md present (419 chars)",
+          "evidence": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\effect-handlers\\README.md"
+        },
+        "coverage": {
+          "pass": false,
+          "detail": "No coverage script or report"
+        },
+        "exports": {
+          "pass": true,
+          "detail": "Exports configured (3 entries)"
+        },
+        "perf": {
+          "pass": false,
+          "detail": "No performance validation"
+        },
+        "security": {
+          "pass": true,
+          "detail": "Private package (OK for non-production)"
+        }
+      },
+      "score": 3,
+      "total": 8,
+      "percent": 38,
+      "ready": false
+    }
+  ]
+}

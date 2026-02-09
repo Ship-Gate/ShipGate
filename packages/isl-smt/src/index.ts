@@ -117,5 +117,40 @@ export {
   type FormalModeOptions,
 } from './verifier.js';
 
+// Safe Solver (reliability wrapper)
+export {
+  SafeSolver,
+  createSafeSolver,
+  measureQuery,
+  type SafeSolverLimits,
+  type SafeSolverResult,
+  type QueryMetrics,
+} from './safe-solver.js';
+
+// SMT-LIB Generator with Source Mapping
+export {
+  generateFromPreconditions,
+  generateFromPostconditions,
+  generateFromRefinements,
+  generateFromInvariants,
+  type SourceMappedAssertion,
+  type SMTSourceMap,
+  type GeneratedSMTLib,
+  type SMTLibGeneratorOptions,
+} from './smtlib-generator.js';
+
+// Failure Diagnostics
+export {
+  minimizeCounterexample,
+  extractCounterexample,
+  analyzeUnsat,
+  classifyUnknown,
+  buildDiagnosticReport,
+  type MinimalCounterexample,
+  type UnsatAnalysis,
+  type UnknownReason,
+  type DiagnosticReport,
+} from './diagnostics.js';
+
 // Re-export useful utilities from prover
 export { Expr, Sort, Decl, toSMTLib } from '@isl-lang/prover';

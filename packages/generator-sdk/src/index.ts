@@ -154,3 +154,9 @@ export {
 // ============================================================================
 
 export { scaffold, type ScaffoldOptions, type ScaffoldResult } from './cli/scaffold.js';
+
+// ============================================================================
+// Runtime (shared SDK engine)
+// ============================================================================
+
+export * as runtime from './runtime/index.js';

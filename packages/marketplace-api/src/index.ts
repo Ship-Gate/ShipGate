@@ -1,29 +1,27 @@
 /**
- * Intent Marketplace API Entry Point
- * 
- * Starts the Express server for the Intent Marketplace.
+ * Marketplace API – Entry point
+ *
+ * Starts the Fastify server for the ISL Marketplace.
  */
 
-import { createApp } from './app.js';
+import { buildServer } from './server.js';
 
 const PORT = parseInt(process.env.PORT ?? '3100', 10);
 const HOST = process.env.HOST ?? '0.0.0.0';
 
-const app = createApp({
-  corsOrigins: process.env.CORS_ORIGINS?.split(',') ?? '*',
-  trustProxy: process.env.TRUST_PROXY === 'true',
-});
+async function main() {
+  const app = await buildServer({ logger: true });
 
-app.listen(PORT, HOST, () => {
-  const logger = {
-    info: (msg: string) => process.stdout.write(`[INFO] ${msg}\n`),
-  };
-  
-  logger.info(`Intent Marketplace API running on http://${HOST}:${PORT}`);
-  logger.info(`Environment: ${process.env.NODE_ENV ?? 'development'}`);
-});
+  try {
+    await app.listen({ port: PORT, host: HOST });
+  } catch (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+}
 
-export { createApp };
-export * from './services/intent.js';
-export * from './services/search.js';
-export * from './services/trust.js';
+main();
+
+export { buildServer } from './server.js';
+export { MarketplaceStore } from './db/store.js';
+export type { Author, Pack, PackVersion, Signature, PackCategory } from './types.js';

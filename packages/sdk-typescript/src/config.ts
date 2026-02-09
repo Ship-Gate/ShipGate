@@ -1,75 +1,41 @@
 /**
- * ISL Configuration - Client configuration types.
+ * ISL Configuration - Re-exported from the shared runtime engine.
+ *
+ * Platform-agnostic config types live in @isl-lang/generator-sdk/runtime.
+ * This module provides backward-compatible aliases for sdk-typescript consumers.
  */
 
+import type {
+  ISLClientConfig as SharedClientConfig,
+  RetryConfig as SharedRetryConfig,
+  VerificationConfig as SharedVerificationConfig,
+  AuthConfig,
+} from '@isl-lang/generator-sdk/runtime';
+import { DEFAULT_RETRY, DEFAULT_TIMEOUT } from '@isl-lang/generator-sdk/runtime';
+
+export type { SharedVerificationConfig as VerificationConfig };
+
 /**
- * Retry configuration
+ * Retry configuration (backward-compatible wrapper)
  */
 export interface RetryConfig {
-  /** Maximum number of retry attempts */
   readonly maxRetries?: number;
-  /** HTTP status codes to retry on */
   readonly retryOnStatus?: readonly number[];
-  /** Base for exponential backoff */
   readonly exponentialBase?: number;
-  /** Initial delay in ms */
   readonly initialDelay?: number;
-  /** Maximum delay in ms */
   readonly maxDelay?: number;
 }
 
 /**
- * Verification configuration
+ * ISL Client configuration (extends shared config with legacy fields)
  */
-export interface VerificationConfig {
-  /** Enable precondition checking */
-  readonly enablePreconditions?: boolean;
-  /** Enable postcondition checking */
-  readonly enablePostconditions?: boolean;
-  /** Throw on violation */
-  readonly throwOnViolation?: boolean;
-  /** Log violations */
-  readonly logViolations?: boolean;
-}
-
-/**
- * Request interceptor
- */
-export type RequestInterceptor = (request: Request) => Request | Promise<Request>;
-
-/**
- * Response interceptor
- */
-export type ResponseInterceptor = (response: Response) => Response | Promise<Response>;
-
-/**
- * Interceptors configuration
- */
-export interface InterceptorsConfig {
-  readonly request?: RequestInterceptor;
-  readonly response?: ResponseInterceptor;
-}
-
-/**
- * ISL Client configuration
- */
-export interface ISLClientConfig {
-  /** Base URL of the API */
-  readonly baseUrl: string;
-  /** Authentication token */
+export interface ISLClientConfig extends Omit<SharedClientConfig, 'retry' | 'auth'> {
+  /** Authentication token (convenience shorthand for auth.token) */
   readonly authToken?: string;
-  /** Request timeout in ms */
-  readonly timeout?: number;
-  /** Custom fetch implementation */
-  readonly fetch?: typeof fetch;
   /** Retry configuration */
   readonly retry?: RetryConfig;
   /** Verification configuration */
-  readonly verification?: VerificationConfig;
-  /** Request/response interceptors */
-  readonly interceptors?: InterceptorsConfig;
-  /** Custom headers */
-  readonly headers?: Record<string, string>;
+  readonly verification?: SharedVerificationConfig;
 }
 
 /**
@@ -83,16 +49,17 @@ export const defaultConfig: Required<Omit<ISLClientConfig, 'authToken' | 'fetch'
 } = {
   baseUrl: '',
   authToken: undefined,
-  timeout: 30000,
+  timeout: DEFAULT_TIMEOUT,
   fetch: undefined,
   interceptors: undefined,
   headers: undefined,
+  cache: { enabled: false, ttl: 60_000, maxSize: 100 },
   retry: {
-    maxRetries: 3,
-    retryOnStatus: [429, 500, 502, 503, 504],
+    maxRetries: DEFAULT_RETRY.maxAttempts,
+    retryOnStatus: [...DEFAULT_RETRY.retryableStatusCodes],
     exponentialBase: 2,
-    initialDelay: 1000,
-    maxDelay: 30000,
+    initialDelay: DEFAULT_RETRY.baseDelay,
+    maxDelay: DEFAULT_RETRY.maxDelay,
   },
   verification: {
     enablePreconditions: true,

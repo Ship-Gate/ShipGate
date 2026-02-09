@@ -1,0 +1,50 @@
+name: Codegen Quality Gate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/codegen-*/**'
+      - 'packages/codegen-harness/**'
+      - 'packages/cli/src/commands/gen.ts'
+      - 'packages/cli/src/commands/generate.ts'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/codegen-*/**'
+      - 'packages/codegen-harness/**'
+      - 'packages/cli/src/commands/gen.ts'
+      - 'packages/cli/src/commands/generate.ts'
+
+concurrency:
+  group: codegen-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  codegen-golden:
+    name: Codegen Golden + Compile Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build parser (harness dependency)
+        run: pnpm --filter @isl-lang/parser build
+
+      - name: Run codegen golden tests + TS compile check
+        run: pnpm test:codegen

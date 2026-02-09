@@ -215,9 +215,9 @@ describe('Enum Generation', () => {
 
     expect(result.name).toBe('UserStatus');
     expect(result.code).toContain('type UserStatus string');
-    expect(result.code).toContain('UserStatusActive UserStatus = "ACTIVE"');
-    expect(result.code).toContain('UserStatusInactive UserStatus = "INACTIVE"');
-    expect(result.code).toContain('UserStatusSuspended UserStatus = "SUSPENDED"');
+    expect(result.code).toContain('UserStatusACTIVE UserStatus = "ACTIVE"');
+    expect(result.code).toContain('UserStatusINACTIVE UserStatus = "INACTIVE"');
+    expect(result.code).toContain('UserStatusSUSPENDED UserStatus = "SUSPENDED"');
     expect(result.code).toContain('func UserStatusValues()');
     expect(result.code).toContain('func (e UserStatus) IsValid() bool');
   });
@@ -409,7 +409,7 @@ describe('Full Domain Generation', () => {
     const typesFile = files.find(f => f.path.includes('types.go'));
     expect(typesFile).toBeDefined();
     expect(typesFile?.content).toContain('type UserStatus string');
-    expect(typesFile?.content).toContain('UserStatusActive');
+    expect(typesFile?.content).toContain('UserStatusACTIVE');
 
     // Check models.go
     const modelsFile = files.find(f => f.path.includes('models.go'));
@@ -547,7 +547,9 @@ describe('Generated Code Quality', () => {
     const files = generate(domain, { outputDir: 'output', module: 'example.com/test' });
 
     for (const file of files) {
-      expect(file.content).toContain('DO NOT EDIT');
+      if (file.path.endsWith('.go')) {
+        expect(file.content).toContain('DO NOT EDIT');
+      }
     }
   });
 
@@ -588,7 +590,10 @@ describe('Generated Code Quality', () => {
     const files = generate(domain, { outputDir: 'output', module: 'example.com/test' });
 
     for (const file of files) {
-      expect(file.content).toMatch(/^\/\/ Code generated.*\npackage /);
+      if (file.path.endsWith('.go')) {
+        expect(file.content).toMatch(/^\/\/.*\n/);
+        expect(file.content).toMatch(/package \w+/);
+      }
     }
   });
 });

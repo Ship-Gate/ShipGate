@@ -46,7 +46,9 @@
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest --coverage",
     "lint": "eslint src/",
-    "clean": "rm -rf dist/"
+    "clean": "rm -rf dist/",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "uuid": "^9.0.0"
@@ -58,7 +60,9 @@
     "express": "^4.18.2",
     "next": "^14.1.0",
     "typescript": "^5.3.3",
-    "vitest": "^1.2.0"
+    "vitest": "^1.2.0",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
   },
   "peerDependencies": {
     "express": "^4.0.0",
@@ -90,5 +94,12 @@
   "homepage": "https://intentlang.dev",
   "bugs": {
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
-  }
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
 }

@@ -264,3 +264,37 @@ export type {
   PBTMetrics,
   PBTTrustContribution,
 } from './verification-integration.js';
+
+// ============================================================================
+// ISL TYPE-AWARE SHRINKING (v1.2.0)
+// ============================================================================
+
+// Type-aware shrinker - shrink strategies driven by ISL type definitions
+export {
+  withTypeShrink,
+  typeShrink,
+  shrinkEntityInstance,
+} from './type-shrinker.js';
+
+// Scenario Runner - execute behaviors with generated inputs, ISL attribution
+export {
+  runScenario,
+} from './scenario-runner.js';
+
+export type {
+  ISLAttribution,
+  ScenarioIteration,
+  MinimalCounterexample,
+  ScenarioResult,
+} from './scenario-runner.js';
+
+// Failure Formatter - human-friendly failure output with ISL element context
+export {
+  formatFailure,
+  formatFailureJSON,
+} from './failure-formatter.js';
+
+export type {
+  FailureReport,
+  ShrunkField,
+} from './failure-formatter.js';

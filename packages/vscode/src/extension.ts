@@ -11,6 +11,7 @@ import { createLanguageClient, startClient, stopClient } from './client';
 import { registerCommands } from './commands-legacy';
 import {
   registerGenerateCommand,
+  registerGenerateSkeletonCommand,
   registerVerifyCommands,
   registerCoverageCommand,
   getLastCoverageReport,
@@ -37,6 +38,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   // ── ShipGate commands ──
   registerGenerateCommand(context, outputChannel);
+  registerGenerateSkeletonCommand(context, outputChannel);
   const diagnosticCollection = registerVerifyCommands(context, outputChannel);
   registerCoverageCommand(context, outputChannel);
 

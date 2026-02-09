@@ -24,6 +24,16 @@
     "ai-safety",
     "ship-gate"
   ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "engines": {
     "node": ">=18"
   },
@@ -47,7 +57,8 @@
     "clean": "rimraf dist",
     "prepack": "pnpm run build",
     "postinstall": "node scripts/postinstall.js || true",
-    "pack:check": "npm pack --dry-run"
+    "pack:check": "npm pack --dry-run",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "devDependencies": {
     "@isl-lang/build-runner": "workspace:*",
@@ -62,13 +73,17 @@
     "@isl-lang/parser": "workspace:*",
     "@isl-lang/pbt": "workspace:*",
     "@isl-lang/pipeline": "workspace:*",
+    "@isl-lang/isl-policy-engine": "workspace:*",
     "@isl-lang/policy-packs": "workspace:*",
     "@isl-lang/proof": "workspace:*",
     "@isl-lang/repl": "workspace:*",
     "@isl-lang/semantic-analysis": "workspace:*",
     "@isl-lang/spec-assist": "workspace:*",
     "@isl-lang/typechecker": "workspace:*",
+    "@isl-lang/verifier-runtime": "workspace:*",
     "@isl-lang/verifier-temporal": "workspace:*",
+    "@isl-lang/truthpack-v2": "workspace:*",
+    "@isl-lang/observability": "workspace:*",
     "@types/node": "^25.1.0",
     "@types/picomatch": "^4.0.2",
     "chalk": "^5.3.0",
@@ -82,5 +97,6 @@
     "typescript": "^5.3.3",
     "vitest": "^1.2.0",
     "yaml": "^2.3.4"
-  }
+  },
+  "sideEffects": false
 }

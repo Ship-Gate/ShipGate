@@ -1,0 +1,1097 @@
+{
+  "schemaVersion": "1.0.0",
+  "timestamp": "2026-02-09T09:25:06.809Z",
+  "git": {
+    "commitSha": "403f4b6862276e7fedbe9e0af2514f4c1c2f1dbc",
+    "branch": "main",
+    "tag": null,
+    "dirty": true
+  },
+  "environment": {
+    "nodeVersion": "v24.12.0",
+    "pnpmVersion": "8.15.0",
+    "os": "win32",
+    "arch": "x64",
+    "ci": false
+  },
+  "lockfileHash": "aec48edc8bdc67df3e564922a677cfeb71eeb361085a4c26bafe7e54cdb08a8c",
+  "packages": [
+    {
+      "name": "@isl-lang/adapters",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/agent-os",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/ai-copilot",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/ai-generator",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/api-gateway",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/api-generator",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/api-versioning",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/audit-viewer",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/autofix",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/build-runner",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/ci-docker",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/circuit-breaker",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/claims-verifier",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/cli-ux",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/codegen",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/codegen-client",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-core",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/codegen-csharp",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-db",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-docs",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-edge",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-go",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-graphql",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-grpc",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-harness",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-jvm",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-kubernetes",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-loadtest",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-migrations",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-mocks",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-openapi",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-pipelines",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-property-tests",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-python",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-python-advanced",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-runtime",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-rust",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-sdk",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-terraform",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-tests",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-types",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/codegen-ui",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-validators",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/codegen-wasm",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/comparator",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/compliance",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/contract-testing",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/contracts",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/core",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/coverage",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/dashboard-api",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/dashboard-web",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/datadog",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/db-generator",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/db-reality-verifier",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/dependency-analyzer",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/diff-viewer",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/distributed",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/distributed-tracing",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/docs",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/docs-advanced",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/edge-runtime",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/effect-handlers",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/effect-system",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/effects",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/env-reality-checker",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/error-catalog",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/errors",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/evaluator",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/event-sourcing",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/evidence",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/evidence-html",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/evidence-schema",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/expression-compiler",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/fake-success-ui-detector",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/feature-flags",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/firewall",
+      "version": "0.2.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/formal-verification",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/fuzzer",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/gate",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/gate-action",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/generator",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/generator-sdk",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/github-action",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/github-action-gate",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/github-app",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/grafana",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/graphql-codegen",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/hallucination-scanner",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/healer",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/health-check",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/import-resolver",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/inference",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/intent-translator",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/interpreter",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/isl-ai",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/isl-cli",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/isl-compiler",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/isl-core",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/isl-federation",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/isl-lsp",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/isl-policy-engine",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/isl-runtime",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/isl-smt",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/isl-stdlib",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/isl-verify",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/islstudio",
+      "version": "0.1.2",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/java-resolver",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/language-server",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/lsp",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/lsp-core",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/lsp-server",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/marketplace-api",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/marketplace-web",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/mcp-server",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/migration-tools",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/migrations",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/mock-detector",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/mock-server",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/multi-tenant",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/mutation-testing",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/observability",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/opentelemetry",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/parser",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/patch-engine",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/pbt",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/phantom-dependency-scanner",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/pipeline",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/playground",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/policy-engine",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/policy-packs",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/postconditions",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/private-registry",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/prometheus",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/proof",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/prover",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/registry-client",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/repl",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/runtime",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/runtime-interpreter",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/runtime-sdk",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/runtime-universal",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/runtime-verify",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/schema-evolution",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/sdk-react-native",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/sdk-typescript",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/sdk-web",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/security-policies",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/security-scanner",
+      "version": "1.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/security-verifier-enhancer",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/semantic-analysis",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/semantics",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/sentry",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/simulator",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/slack-bot",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/snapshot-testing",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/spec-assist",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/spec-federation",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/spec-reviewer",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/state-machine",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/static-analyzer",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-actors",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-ai",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/stdlib-analytics",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-api",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-audit",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-auth",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-billing",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-cache",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-core",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-database",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-distributed",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-email",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-events",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-files",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-http",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-idempotency",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-messaging",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-ml",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/stdlib-notifications",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-observability",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-payments",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-queue",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-rate-limit",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-realtime",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-runtime",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-saas",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-scheduling",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-search",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/stdlib-time",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/stdlib-workflow",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/streaming",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/test-generator",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/test-runtime",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/test-runtime-legacy",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/trace-format",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/trace-viewer",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/translator",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/trust-score",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/truthpack-v2",
+      "version": "2.0.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/typechecker",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/verified-build",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/verifier",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/verifier-chaos",
+      "version": "0.2.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/verifier-formal",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/verifier-runtime",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/verifier-security",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/verifier-temporal",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/verify-pipeline",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "@isl-lang/versioner",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@isl-lang/visual-editor",
+      "version": "0.1.0",
+      "private": true
+    },
+    {
+      "name": "@shipgate/sdk",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "shipgate",
+      "version": "1.0.0",
+      "private": false
+    },
+    {
+      "name": "shipgate-isl",
+      "version": "0.1.0",
+      "private": false
+    },
+    {
+      "name": "vscode-islstudio",
+      "version": "1.0.0",
+      "private": true
+    }
+  ],
+  "buildCommand": "pnpm build:production",
+  "testCommand": "pnpm test:production"
+}

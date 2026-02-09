@@ -1,0 +1,61 @@
+{
+  "domain": "PaymentsIdempotency",
+  "parseSuccess": true,
+  "checkSuccess": true,
+  "minEntities": 2,
+  "minBehaviors": 3,
+  "claims": [
+    {
+      "id": "pay-transfer-postcondition",
+      "type": "postcondition",
+      "behavior": "TransferFunds",
+      "description": "Balances updated atomically; sender debited, receiver credited",
+      "verdict": "pass"
+    },
+    {
+      "id": "pay-idempotency-invariant",
+      "type": "invariant",
+      "behavior": "TransferFunds",
+      "description": "Replaying same idempotency_key returns original result without re-executing",
+      "verdict": "pass"
+    },
+    {
+      "id": "pay-balance-non-negative",
+      "type": "invariant",
+      "description": "Account balance never goes negative",
+      "verdict": "pass"
+    },
+    {
+      "id": "pay-money-conservation",
+      "type": "invariant",
+      "description": "Total money across all accounts is conserved",
+      "verdict": "pass"
+    },
+    {
+      "id": "pay-refund-postcondition",
+      "type": "postcondition",
+      "behavior": "RefundTransaction",
+      "description": "Refund reverses balances and marks transaction REFUNDED",
+      "verdict": "pass"
+    },
+    {
+      "id": "pay-refund-once-invariant",
+      "type": "invariant",
+      "behavior": "RefundTransaction",
+      "description": "A transaction can only be refunded once",
+      "verdict": "pass"
+    },
+    {
+      "id": "pay-idempotent-scenario",
+      "type": "scenario",
+      "description": "Idempotent transfer scenario deducts only once",
+      "verdict": "pass"
+    },
+    {
+      "id": "pay-refund-scenario",
+      "type": "scenario",
+      "description": "Transfer then refund conserves total money",
+      "verdict": "pass"
+    }
+  ]
+}

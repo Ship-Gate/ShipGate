@@ -87,11 +87,11 @@ export async function verifyProofBundle(
 
   // Load manifest
   const manifestPath = path.join(bundlePath, 'manifest.json');
-  let manifest: ProofBundleManifest;
+  let manifest: ProofBundleManifest | { schemaVersion?: string; [key: string]: unknown };
 
   try {
     const content = await fs.readFile(manifestPath, 'utf-8');
-    manifest = JSON.parse(content);
+    manifest = JSON.parse(content) as ProofBundleManifest;
     totalChecks++;
     passedChecks++;
   } catch (err) {
@@ -113,12 +113,13 @@ export async function verifyProofBundle(
 
   // Check schema version
   totalChecks++;
-  if (manifest.schemaVersion !== '2.0.0') {
-    if (manifest.schemaVersion?.startsWith('1.')) {
+  const schemaVersion = manifest.schemaVersion as string;
+  if (schemaVersion !== '2.0.0') {
+    if (schemaVersion?.startsWith('1.')) {
       issues.push({
         severity: 'warning',
         code: 'SCHEMA_VERSION_OLD',
-        message: `Schema version ${manifest.schemaVersion} is outdated, expected 2.0.0`,
+        message: `Schema version ${schemaVersion} is outdated, expected 2.0.0`,
         details: 'Bundle may be missing new fields',
       });
       passedChecks++;
@@ -126,7 +127,7 @@ export async function verifyProofBundle(
       issues.push({
         severity: 'error',
         code: 'SCHEMA_VERSION_INVALID',
-        message: `Unsupported schema version: ${manifest.schemaVersion}`,
+        message: `Unsupported schema version: ${schemaVersion}`,
       });
     }
   } else {

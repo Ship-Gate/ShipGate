@@ -24,6 +24,12 @@ export interface ReplOptions {
   context?: string;
   /** Parse-only mode (piped input) */
   parse?: boolean;
+  /** Non-interactive mode: execute commands and exit */
+  eval?: string;
+  /** Command timeout in milliseconds (default: 30000) */
+  timeout?: number;
+  /** Allow filesystem writes (default: false) */
+  allowWrites?: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -36,6 +42,15 @@ interface ReplState {
   braceCount: number;
   evalContext: Record<string, unknown>;
   preContext: Record<string, unknown> | null;
+  loadedDomain: {
+    ast: unknown;
+    path: string;
+    entities: unknown[];
+    behaviors: unknown[];
+    types: unknown[];
+  } | null;
+  allowWrites: boolean;
+  timeout: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -45,16 +60,24 @@ interface ReplState {
 const HELP_TEXT = `
 ${chalk.bold('ISL REPL Commands:')}
 
-  ${chalk.cyan('.help')}         Show this help message
-  ${chalk.cyan('.parse <isl>')}  Parse ISL and show AST
-  ${chalk.cyan('.eval <expr>')}  Evaluate expression against context
-  ${chalk.cyan('.check')}        Type check intents
-  ${chalk.cyan('.gen')}          Generate TypeScript from intents
-  ${chalk.cyan('.load <file>')} Load an .isl file
-  ${chalk.cyan('.context')}      Set evaluation context (JSON)
-  ${chalk.cyan('.clear')}        Clear the screen
-  ${chalk.cyan('.history')}      Show command history
-  ${chalk.cyan('.exit')}         Exit the REPL (or press Ctrl+D)
+  ${chalk.cyan(':load <file>')}  Load an ISL domain file
+  ${chalk.cyan(':ast')}           Show AST of loaded domain
+  ${chalk.cyan(':types')}         Show type information
+  ${chalk.cyan(':verify')}        Verify domain (subset)
+  ${chalk.cyan(':gen <target>')} Generate code (ts, rust, go, openapi)
+  ${chalk.cyan(':truthpack')}    Show truthpack info (if available)
+  
+  ${chalk.cyan('.help')}          Show this help message
+  ${chalk.cyan('.parse <isl>')}   Parse ISL and show AST
+  ${chalk.cyan('.eval <expr>')}   Evaluate expression against context
+  ${chalk.cyan('.check')}         Type check intents
+  ${chalk.cyan('.load <file>')}   Load an .isl file
+  ${chalk.cyan('.context')}       Set evaluation context (JSON)
+  ${chalk.cyan('.clear')}         Clear the screen
+  ${chalk.cyan('.history')}       Show command history
+  ${chalk.cyan('.exit')}          Exit the REPL (or press Ctrl+D)
+  
+${chalk.bold('Note:')} Colon commands (:load, :ast, etc.) are aliases for dot commands
 
 ${chalk.bold('Multi-line Input:')}
 
@@ -76,7 +99,7 @@ ${chalk.bold('Expression Evaluation:')}
 // REPL Commands
 // ─────────────────────────────────────────────────────────────────────────────
 
-function handleCommand(cmd: string, state: ReplState): boolean {
+function handleCommand(cmd: string, state: ReplState): Promise<boolean> | boolean {
   const parts = cmd.slice(1).split(/\s+/);
   const name = (parts[0] ?? '').toLowerCase();
   const rawArgs = cmd.slice(1 + name.length).trim();
@@ -124,11 +147,13 @@ function handleCommand(cmd: string, state: ReplState): boolean {
     case 'parse':
     case 'p':
     case 'ast': {
-      if (!rawArgs) {
-        process.stdout.write(chalk.yellow('Usage: .parse <isl code>\n'));
-        return true;
+      if (rawArgs) {
+        evaluateInput(rawArgs, state, true);
+      } else if (state.loadedDomain) {
+        handleAst(state);
+      } else {
+        process.stdout.write(chalk.yellow('Usage: .ast or :ast (requires loaded domain)\n'));
       }
-      evaluateInput(rawArgs, state, true);
       return true;
     }
 
@@ -192,23 +217,39 @@ function handleCommand(cmd: string, state: ReplState): boolean {
 
     case 'check':
     case 'c':
-      process.stdout.write(chalk.green('✓') + ' Type check passed (no issues)\n');
-      return true;
+    case 'verify': {
+      return handleVerify(state);
+    }
 
     case 'gen':
     case 'generate':
-    case 'g':
-      process.stdout.write(chalk.yellow('⚠ No intents loaded for generation. Use .load first.\n'));
+    case 'g': {
+      const target = rawArgs.split(/\s+/)[0] || 'ts';
+      return handleGen(target, state);
+    }
+
+    case 'types': {
+      return handleTypes(state);
+    }
+
+    case 'truthpack': {
+      return handleTruthpack(state);
+    }
+
+    case 'write': {
+      state.allowWrites = true;
+      process.stdout.write(chalk.green('✓ Filesystem writes enabled\n'));
       return true;
+    }
 
     case 'load':
-    case 'l':
+    case 'l': {
       if (!rawArgs) {
         process.stdout.write('Usage: .load <file.isl>\n');
         return true;
       }
-      evaluateFile(rawArgs, state);
-      return true;
+      return handleLoad(rawArgs, state);
+    }
 
     case 'list':
     case 'ls':
@@ -293,26 +334,8 @@ function resolvePath(
 // File Loading
 // ─────────────────────────────────────────────────────────────────────────────
 
-function evaluateFile(filePath: string, state: ReplState): void {
-  try {
-    const fs = require('fs');
-    const path = require('path');
-    const resolvedPath = path.isAbsolute(filePath)
-      ? filePath
-      : path.resolve(process.cwd(), filePath);
-
-    if (!fs.existsSync(resolvedPath)) {
-      process.stdout.write(chalk.red(`✗ File not found: ${resolvedPath}\n`));
-      return;
-    }
-
-    const content = fs.readFileSync(resolvedPath, 'utf-8');
-    evaluateInput(content, state, false);
-  } catch (err) {
-    process.stdout.write(
-      chalk.red(`✗ Failed to load: ${err instanceof Error ? err.message : String(err)}\n`)
-    );
-  }
+async function evaluateFile(filePath: string, state: ReplState): Promise<void> {
+  await handleLoad(filePath, state);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -420,6 +443,304 @@ function printResult(ast: unknown, unwrap: boolean): void {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Timeout Wrapper
+// ─────────────────────────────────────────────────────────────────────────────
+
+function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  errorMessage: string = 'Command timed out'
+): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
+    ),
+  ]);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Command Handlers
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function handleLoad(filePath: string, state: ReplState): Promise<boolean> {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const resolvedPath = path.isAbsolute(filePath)
+      ? filePath
+      : path.resolve(process.cwd(), filePath);
+
+    if (!fs.existsSync(resolvedPath)) {
+      process.stdout.write(chalk.red(`✗ File not found: ${resolvedPath}\n`));
+      return true;
+    }
+
+    const content = fs.readFileSync(resolvedPath, 'utf-8');
+    const { domain: ast, errors } = parseISL(content, resolvedPath);
+
+    if (errors.length > 0) {
+      process.stdout.write(chalk.red('✗ Parse errors:\n'));
+      for (const error of errors) {
+        process.stdout.write(`  ${error.message}\n`);
+      }
+      return true;
+    }
+
+    if (!ast) {
+      process.stdout.write(chalk.yellow('⚠ No domain found in file\n'));
+      return true;
+    }
+
+    const domain = ast as {
+      name?: { name?: string };
+      entities?: unknown[];
+      behaviors?: unknown[];
+      types?: unknown[];
+    };
+
+    state.loadedDomain = {
+      ast,
+      path: resolvedPath,
+      entities: domain.entities || [],
+      behaviors: domain.behaviors || [],
+      types: domain.types || [],
+    };
+
+    const name = domain.name?.name ?? 'Unknown';
+    const entityCount = state.loadedDomain.entities.length;
+    const behaviorCount = state.loadedDomain.behaviors.length;
+    const typeCount = state.loadedDomain.types.length;
+
+    process.stdout.write(
+      chalk.green('✓') +
+        ` Loaded: ${name} (${entityCount} entities, ${behaviorCount} behaviors, ${typeCount} types)\n`
+    );
+    return true;
+  } catch (err) {
+    process.stdout.write(
+      chalk.red(`✗ Failed to load: ${err instanceof Error ? err.message : String(err)}\n`)
+    );
+    return true;
+  }
+}
+
+function handleAst(state: ReplState): boolean {
+  if (!state.loadedDomain) {
+    process.stdout.write(chalk.yellow('⚠ No domain loaded. Use :load <file.isl> first.\n'));
+    return true;
+  }
+
+  process.stdout.write('\n');
+  process.stdout.write(JSON.stringify(state.loadedDomain.ast, null, 2) + '\n');
+  process.stdout.write('\n');
+  return true;
+}
+
+function handleTypes(state: ReplState): boolean {
+  if (!state.loadedDomain) {
+    process.stdout.write(chalk.yellow('⚠ No domain loaded. Use :load <file.isl> first.\n'));
+    return true;
+  }
+
+  process.stdout.write('\n');
+  process.stdout.write(chalk.bold('Types:\n'));
+
+  // Show entity types
+  if (state.loadedDomain.entities.length > 0) {
+    process.stdout.write(chalk.cyan('\nEntities:\n'));
+    for (const entity of state.loadedDomain.entities as Array<{
+      name?: { name?: string };
+      fields?: Array<{ name?: { name?: string }; type?: { name?: string } }>;
+    }>) {
+      const name = entity.name?.name ?? 'Unknown';
+      process.stdout.write(`  ${chalk.yellow(name)}`);
+      if (entity.fields && entity.fields.length > 0) {
+        const fields = entity.fields
+          .map(f => `${f.name?.name ?? '?'}: ${f.type?.name ?? '?'}`)
+          .join(', ');
+        process.stdout.write(` { ${fields} }`);
+      }
+      process.stdout.write('\n');
+    }
+  }
+
+  // Show custom types
+  if (state.loadedDomain.types.length > 0) {
+    process.stdout.write(chalk.cyan('\nCustom Types:\n'));
+    for (const type of state.loadedDomain.types as Array<{ name?: { name?: string } }>) {
+      const name = type.name?.name ?? 'Unknown';
+      process.stdout.write(`  ${chalk.yellow(name)}\n`);
+    }
+  }
+
+  // Show behavior signatures
+  if (state.loadedDomain.behaviors.length > 0) {
+    process.stdout.write(chalk.cyan('\nBehaviors:\n'));
+    for (const behavior of state.loadedDomain.behaviors as Array<{
+      name?: { name?: string };
+      inputs?: Array<{ name?: { name?: string }; type?: { name?: string } }>;
+      output?: { name?: string };
+    }>) {
+      const name = behavior.name?.name ?? 'Unknown';
+      const inputs =
+        behavior.inputs?.map(i => `${i.name?.name ?? '?'}: ${i.type?.name ?? '?'}`).join(', ') ||
+        '';
+      const output = behavior.output?.name ?? 'void';
+      process.stdout.write(`  ${chalk.blue(name)}(${inputs}) -> ${chalk.yellow(output)}\n`);
+    }
+  }
+
+  process.stdout.write('\n');
+  return true;
+}
+
+async function handleVerify(state: ReplState): Promise<boolean> {
+  if (!state.loadedDomain) {
+    process.stdout.write(chalk.yellow('⚠ No domain loaded. Use :load <file.isl> first.\n'));
+    return true;
+  }
+
+  try {
+    // Try to import typechecker with timeout
+    let check: (domain: unknown) => { success: boolean; errors: unknown[]; warnings: unknown[] };
+    try {
+      const typecheckerPromise = import('@isl-lang/typechecker');
+      const typechecker = await withTimeout(
+        typecheckerPromise,
+        state.timeout,
+        'Typechecker import timed out'
+      );
+      check = typechecker.check;
+    } catch {
+      process.stdout.write(chalk.yellow('⚠ Typechecker not available. Install @isl-lang/typechecker\n'));
+      return true;
+    }
+
+    const result = await withTimeout(
+      Promise.resolve(check(state.loadedDomain.ast)),
+      state.timeout,
+      'Verification timed out'
+    );
+
+    if (result.success && result.errors.length === 0) {
+      process.stdout.write(chalk.green('✓ Type check passed\n'));
+      if (result.warnings.length > 0) {
+        process.stdout.write(chalk.yellow(`⚠ ${result.warnings.length} warning(s)\n`));
+      }
+    } else {
+      process.stdout.write(chalk.red(`✗ ${result.errors.length} error(s) found:\n`));
+      for (const error of result.errors as Array<{ message?: string }>) {
+        process.stdout.write(`  ${error.message ?? 'Unknown error'}\n`);
+      }
+    }
+    return true;
+  } catch (err) {
+    process.stdout.write(
+      chalk.red(`✗ Verification failed: ${err instanceof Error ? err.message : String(err)}\n`)
+    );
+    return true;
+  }
+}
+
+async function handleGen(target: string, state: ReplState): Promise<boolean> {
+  if (!state.loadedDomain) {
+    process.stdout.write(chalk.yellow('⚠ No domain loaded. Use :load <file.isl> first.\n'));
+    return true;
+  }
+
+  if (!state.allowWrites) {
+    process.stdout.write(
+      chalk.yellow('⚠ Filesystem writes disabled. Use --allow-writes flag or :write command.\n')
+    );
+    process.stdout.write(chalk.gray('Generated code preview:\n\n'));
+  }
+
+  try {
+    // Import codegen with timeout
+    const genModulePromise = import('../gen.js');
+    const genModule = await withTimeout(
+      genModulePromise,
+      state.timeout,
+      'Codegen import timed out'
+    );
+    const { gen } = genModule;
+    const genPromise = gen(target, state.loadedDomain.path, {
+      output: state.allowWrites ? './generated' : undefined,
+      force: false,
+      verbose: false,
+    });
+    const result = await withTimeout(
+      genPromise,
+      state.timeout,
+      'Code generation timed out'
+    );
+
+    if (result.success) {
+      if (state.allowWrites && result.files.length > 0) {
+        process.stdout.write(chalk.green(`✓ Generated ${result.files.length} file(s)\n`));
+        for (const file of result.files) {
+          process.stdout.write(`  ${file.path}\n`);
+        }
+      } else {
+        // Show preview
+        for (const file of result.files) {
+          process.stdout.write(chalk.gray(`\n// ${file.path}\n`));
+          process.stdout.write(file.content.substring(0, 500));
+          if (file.content.length > 500) {
+            process.stdout.write(chalk.gray('\n... (truncated)\n'));
+          }
+        }
+      }
+    } else {
+      process.stdout.write(chalk.red(`✗ Generation failed:\n`));
+      for (const error of result.errors) {
+        process.stdout.write(`  ${error}\n`);
+      }
+    }
+    return true;
+  } catch (err) {
+    process.stdout.write(
+      chalk.red(`✗ Generation failed: ${err instanceof Error ? err.message : String(err)}\n`)
+    );
+    return true;
+  }
+}
+
+async function handleTruthpack(state: ReplState): Promise<boolean> {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const truthpackPath = path.join(process.cwd(), '.shipgate', 'truthpack', 'truthpack.json');
+
+    if (!fs.existsSync(truthpackPath)) {
+      process.stdout.write(
+        chalk.yellow('⚠ Truthpack not found. Run: shipgate truthpack build\n')
+      );
+      return true;
+    }
+
+    const truthpack = JSON.parse(fs.readFileSync(truthpackPath, 'utf-8'));
+
+    process.stdout.write('\n');
+    process.stdout.write(chalk.bold('Truthpack Info:\n'));
+    process.stdout.write(`  Routes: ${truthpack.routes?.length ?? 0}\n`);
+    process.stdout.write(`  Env Vars: ${truthpack.envVars?.length ?? 0}\n`);
+    process.stdout.write(`  Dependencies: ${truthpack.dependencies?.length ?? 0}\n`);
+    if (truthpack.provenance) {
+      process.stdout.write(`  Commit: ${truthpack.provenance.commitHash?.substring(0, 8) ?? 'N/A'}\n`);
+    }
+    process.stdout.write('\n');
+    return true;
+  } catch (err) {
+    process.stdout.write(
+      chalk.red(`✗ Failed to load truthpack: ${err instanceof Error ? err.message : String(err)}\n`)
+    );
+    return true;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Banner
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -444,7 +765,16 @@ export async function repl(options: ReplOptions = {}): Promise<void> {
     braceCount: 0,
     evalContext: {},
     preContext: null,
+    loadedDomain: null,
+    allowWrites: options.allowWrites ?? false,
+    timeout: options.timeout ?? 30000,
   };
+
+  // Handle non-interactive mode with --eval
+  if (options.eval) {
+    await handleNonInteractiveMode(options.eval, state);
+    return;
+  }
 
   // Apply --context option
   if (options.context) {
@@ -480,7 +810,7 @@ export async function repl(options: ReplOptions = {}): Promise<void> {
 
   // Apply --load option
   if (options.load) {
-    evaluateFile(options.load, state);
+    await evaluateFile(options.load, state);
   }
 
   const rl = createInterface({
@@ -496,12 +826,13 @@ export async function repl(options: ReplOptions = {}): Promise<void> {
 
   rl.prompt();
 
-  rl.on('line', (line) => {
+  rl.on('line', async (line) => {
     const trimmed = line.trim();
 
     // Handle dot commands (. prefix)
     if (trimmed.startsWith('.') && state.braceCount === 0 && state.multilineBuffer.length === 0) {
-      const handled = handleCommand(trimmed, state);
+      const result = handleCommand(trimmed, state);
+      const handled = result instanceof Promise ? await result : result;
       if (!handled) {
         process.stdout.write(chalk.yellow(`Unknown command: ${trimmed}. Type .help for commands.\n`));
       }
@@ -512,7 +843,8 @@ export async function repl(options: ReplOptions = {}): Promise<void> {
 
     // Handle colon commands (: prefix) as aliases
     if (trimmed.startsWith(':') && state.braceCount === 0 && state.multilineBuffer.length === 0) {
-      const handled = handleCommand('.' + trimmed.slice(1), state);
+      const result = handleCommand('.' + trimmed.slice(1), state);
+      const handled = result instanceof Promise ? await result : result;
       if (!handled) {
         process.stdout.write(chalk.yellow(`Unknown command: ${trimmed}. Type .help for commands.\n`));
       }
@@ -558,6 +890,34 @@ export async function repl(options: ReplOptions = {}): Promise<void> {
       rl.prompt();
     }
   });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Non-Interactive Mode Handler
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function handleNonInteractiveMode(evalString: string, state: ReplState): Promise<void> {
+  const commands = evalString.split(';').map(c => c.trim()).filter(Boolean);
+  
+  for (const cmd of commands) {
+    const trimmed = cmd.trim();
+    
+    // Handle colon/dot commands
+    if (trimmed.startsWith(':') || trimmed.startsWith('.')) {
+      const normalized = trimmed.startsWith(':') ? '.' + trimmed.slice(1) : trimmed;
+      const result = handleCommand(normalized, state);
+      const handled = result instanceof Promise ? await result : result;
+      if (!handled) {
+        process.stderr.write(`Unknown command: ${trimmed}\n`);
+        process.exit(ExitCode.USAGE_ERROR);
+      }
+    } else {
+      // Treat as ISL code to parse
+      evaluateInput(trimmed, state, false);
+    }
+  }
+  
+  process.exit(ExitCode.SUCCESS);
 }
 
 export default repl;

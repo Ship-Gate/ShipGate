@@ -29,7 +29,8 @@
     "test:watch": "vitest",
     "test:update": "vitest run -u",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "diff": "^5.1.0",
@@ -74,5 +75,6 @@
   "homepage": "https://intentlang.dev",
   "bugs": {
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
-  }
+  },
+  "sideEffects": false
 }

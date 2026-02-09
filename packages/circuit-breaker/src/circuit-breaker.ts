@@ -14,6 +14,7 @@ export class CircuitBreaker {
   private stateChangedAt: number = Date.now();
   private slowCalls = 0;
   private recentCalls: { duration: number; success: boolean; timestamp: number }[] = [];
+  private executionLock: Promise<void> = Promise.resolve();
 
   constructor(config: CircuitBreakerConfig) {
     this.config = {
@@ -29,28 +30,42 @@ export class CircuitBreaker {
 
   /**
    * Execute a function with circuit breaker protection
+   * Thread-safe: uses a lock to prevent race conditions during state transitions
    */
   async execute<T>(fn: () => Promise<T>): Promise<T> {
-    if (!this.canExecute()) {
-      throw new CircuitOpenError(this.config.name);
-    }
-
-    const startTime = Date.now();
+    // Acquire lock to ensure thread-safe state checks and transitions
+    await this.executionLock;
+    
+    let releaseLock: () => void;
+    this.executionLock = new Promise<void>(resolve => {
+      releaseLock = resolve;
+    });
 
     try {
-      const result = await this.withTimeout(fn);
-      this.recordSuccess(Date.now() - startTime);
-      return result;
-    } catch (error) {
-      this.recordFailure(error as Error, Date.now() - startTime);
-      throw error;
+      if (!this.canExecute()) {
+        throw new CircuitOpenError(this.config.name);
+      }
+
+      const startTime = Date.now();
+
+      try {
+        const result = await this.withTimeout(fn);
+        this.recordSuccess(Date.now() - startTime);
+        return result;
+      } catch (error) {
+        this.recordFailure(error as Error, Date.now() - startTime);
+        throw error;
+      }
+    } finally {
+      releaseLock!();
     }
   }
 
   /**
    * Check if request can be executed
+   * Must be called within execution lock for thread safety
    */
-  canExecute(): boolean {
+  private canExecute(): boolean {
     this.cleanupOldCalls();
 
     switch (this.state) {
@@ -106,6 +121,8 @@ export class CircuitBreaker {
 
   /**
    * Manually reset the circuit
+   * Note: This is a synchronous operation. For thread-safe state changes during execution,
+   * use the execute() method which handles locking automatically.
    */
   reset(): void {
     this.transitionTo('CLOSED');
@@ -117,6 +134,8 @@ export class CircuitBreaker {
 
   /**
    * Force circuit open
+   * Note: This is a synchronous operation. For thread-safe state changes during execution,
+   * use the execute() method which handles locking automatically.
    */
   forceOpen(): void {
     this.transitionTo('OPEN');
@@ -124,6 +143,8 @@ export class CircuitBreaker {
 
   /**
    * Force circuit closed
+   * Note: This is a synchronous operation. For thread-safe state changes during execution,
+   * use the execute() method which handles locking automatically.
    */
   forceClosed(): void {
     this.transitionTo('CLOSED');
@@ -245,18 +266,38 @@ export class CircuitBreaker {
 
   private async withTimeout<T>(fn: () => Promise<T>): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new TimeoutError(this.config.name, this.config.timeout));
+      let timeoutId: NodeJS.Timeout | null = null;
+      let isResolved = false;
+
+      const cleanup = () => {
+        if (timeoutId !== null) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+      };
+
+      timeoutId = setTimeout(() => {
+        if (!isResolved) {
+          isResolved = true;
+          cleanup();
+          reject(new TimeoutError(this.config.name, this.config.timeout));
+        }
       }, this.config.timeout);
 
       fn()
         .then(result => {
-          clearTimeout(timeoutId);
-          resolve(result);
+          if (!isResolved) {
+            isResolved = true;
+            cleanup();
+            resolve(result);
+          }
         })
         .catch(error => {
-          clearTimeout(timeoutId);
-          reject(error);
+          if (!isResolved) {
+            isResolved = true;
+            cleanup();
+            reject(error);
+          }
         });
     });
   }

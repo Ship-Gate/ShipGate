@@ -46,5 +46,24 @@ export {
   generateStructValidator,
 } from './validation.js';
 
+export {
+  generateHandlers,
+  generateHandlerSkeleton,
+  generateServiceImpl,
+  type GeneratedHandler,
+} from './handlers.js';
+
+export {
+  generateTestStubs,
+  type GeneratedTestFile,
+} from './test-gen.js';
+
+export {
+  generateGoMod,
+  generateDocGo,
+  generateScaffold,
+  type ScaffoldFile,
+} from './scaffold.js';
+
 // Re-export AST types for consumers
 export type * from './ast-types.js';

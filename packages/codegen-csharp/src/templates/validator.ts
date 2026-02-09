@@ -2,8 +2,8 @@
 // C# Validator Templates
 // ============================================================================
 
-import type { CSharpClassInfo, CSharpPropertyInfo, CSharpGeneratorOptions } from '../types';
-import { generateUsings, generateXmlDoc } from './model';
+import type { CSharpClassInfo, CSharpPropertyInfo, CSharpGeneratorOptions } from '../types.js';
+import { generateUsings, generateXmlDoc } from './model.js';
 
 /**
  * Generate FluentValidation validator

@@ -88,7 +88,7 @@ export async function migrateV1ToV2(
   try {
     // Load v1 bundle
     const v1ManifestPath = path.join(v1BundlePath, 'bundle.json');
-    let v1Bundle: ProofBundleV1;
+    let v1Bundle: ProofBundleV1 | null = null;
 
     try {
       const content = await fs.readFile(v1ManifestPath, 'utf-8');
@@ -112,7 +112,7 @@ export async function migrateV1ToV2(
         }
       }
 
-      if (!found) {
+      if (!found || !v1Bundle) {
         return {
           success: false,
           errors: [`Could not find v1 bundle manifest: ${err instanceof Error ? err.message : String(err)}`],
@@ -120,6 +120,15 @@ export async function migrateV1ToV2(
           missingForProven: [],
         };
       }
+    }
+
+    if (!v1Bundle) {
+      return {
+        success: false,
+        errors: [`Failed to load v1 bundle from ${v1BundlePath}`],
+        warnings: [],
+        missingForProven: [],
+      };
     }
 
     // Validate v1 bundle

@@ -1,0 +1,24 @@
+{
+  "runId": "2026-02-09T07-13-3a5ae03e",
+  "command": "fix",
+  "args": [
+    "--plan-only"
+  ],
+  "timestamp": "2026-02-09T07:13:06.584Z",
+  "duration": 1928100,
+  "project": {
+    "path": "c:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS",
+    "git": "403f4b6862276e7fedbe9e0af2514f4c1c2f1dbc",
+    "branch": null
+  },
+  "environment": {
+    "nodeVersion": "v24.12.0",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "execution": {
+    "exitCode": 0,
+    "endTime": "2026-02-09T07:45:14.684Z"
+  },
+  "outputs": []
+}

@@ -121,3 +121,42 @@ export {
   // Constants
   DEFAULT_TRACE_TIMING_OPTIONS,
 } from './trace-timing.js';
+
+// Sequence-based temporal verification
+export {
+  verifySequenceRule,
+  verifySequenceRules,
+  type SequenceRuleType,
+  type SequenceRule,
+  type BeforeRule,
+  type CooldownRule,
+  type RetryRule,
+  type TimeWindowRule,
+  type SequenceRuleUnion,
+  type EventMatcher,
+  type SequenceVerificationResult,
+  type SequenceViolation,
+  type SequenceEvidence,
+} from './sequence-verifier.js';
+
+// Claim graph integration
+export {
+  sequenceResultToClaim,
+  temporalPropertyResultToClaim,
+  sequenceResultsToClaims,
+  temporalPropertyResultsToClaims,
+} from './claim-integration.js';
+
+// Test traces (for testing and examples)
+export {
+  createLoginTrace,
+  createLoginTraceViolation,
+  createRateLimitTrace,
+  createRateLimitTraceRespected,
+  createRetryTrace,
+  createRetryTraceViolation,
+  createTimeWindowTrace,
+  createTimeWindowTraceViolation,
+  createComplexTrace,
+  testTraces,
+} from './test-traces.js';

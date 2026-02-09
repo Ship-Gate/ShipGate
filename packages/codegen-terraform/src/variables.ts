@@ -3,11 +3,11 @@
 // ============================================================================
 
 import type { CloudProvider, VariableDefinition } from './types';
-import { generateNetworkVariables } from './resources/network';
-import { generateDatabaseVariables } from './resources/database';
-import { generateComputeVariables } from './resources/compute';
-import { generateQueueVariables } from './resources/queue';
-import { generateStorageVariables } from './resources/storage';
+import { generateNetworkVariables, generateNetworkOutputs } from './resources/network';
+import { generateDatabaseVariables, generateDatabaseOutputs } from './resources/database';
+import { generateComputeVariables, generateComputeOutputs } from './resources/compute';
+import { generateQueueVariables, generateQueueOutputs } from './resources/queue';
+import { generateStorageVariables, generateStorageOutputs } from './resources/storage';
 
 /**
  * Generate common variables for all providers
@@ -171,12 +171,6 @@ export function generateOutputsFile(
   queueNames: string[],
   storageNames: string[]
 ): string {
-  const { generateNetworkOutputs } = require('./resources/network');
-  const { generateDatabaseOutputs } = require('./resources/database');
-  const { generateComputeOutputs } = require('./resources/compute');
-  const { generateQueueOutputs } = require('./resources/queue');
-  const { generateStorageOutputs } = require('./resources/storage');
-
   const sections: string[] = [
     '# ============================================================================',
     '# Outputs',

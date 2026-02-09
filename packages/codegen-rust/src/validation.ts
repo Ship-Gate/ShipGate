@@ -2,7 +2,7 @@
 // Validator Crate Derives Generation
 // ============================================================================
 
-import type { Field, Constraint, TypeDefinition, Annotation } from './ast-types';
+import type { Field, Constraint, TypeDefinition } from './ast-types';
 import { mapConstraintsToValidation } from './types';
 
 export interface ValidationConfig {
@@ -80,15 +80,16 @@ export function generateValidationFieldAttrs(
  */
 function needsNestedValidation(typeDef: TypeDefinition): boolean {
   switch (typeDef.kind) {
-    case 'ReferenceType':
-      return true; // Custom types may have validation
+    case 'StructType':
+      return true;
+    case 'ConstrainedType':
+      return true;
     case 'ListType':
       return needsNestedValidation(typeDef.element);
     case 'OptionalType':
       return needsNestedValidation(typeDef.inner);
-    case 'StructType':
-      return true;
     default:
+      // ReferenceType excluded: target may be an enum (no Validate derive)
       return false;
   }
 }

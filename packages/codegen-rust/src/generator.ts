@@ -204,7 +204,7 @@ function generateModelsFile(
  */
 function generateTraitsFile(
   code: string[],
-  imports: RustImport[],
+  _imports: RustImport[],
   options: GeneratorOptions
 ): string {
   const lines: string[] = [];
@@ -214,16 +214,16 @@ function generateTraitsFile(
   lines.push(`//! Generated from ISL specification for ${options.crateName}`);
   lines.push('');
   
-  // Standard imports
-  const allImports = mergeImports([
+  // Traits only need async_trait + crate-local re-exports
+  const traitImports = mergeImports([
     { crate: 'async_trait', items: ['async_trait'] },
-    ...imports,
   ]);
   
-  lines.push(generateImports(allImports));
+  lines.push(generateImports(traitImports));
   lines.push('');
   lines.push('use crate::models::*;');
   lines.push('use crate::errors::*;');
+  lines.push('use crate::types::*;');
   lines.push('');
   
   // Trait definitions
@@ -247,11 +247,10 @@ function generateErrorsFile(
   lines.push(`//! Generated from ISL specification for ${options.crateName}`);
   lines.push('');
   
-  // Standard imports
+  // Error files only need serde + thiserror
   const allImports = mergeImports([
     { crate: 'serde', items: ['Deserialize', 'Serialize'] },
     { crate: 'thiserror', items: ['Error'] },
-    ...imports,
   ]);
   
   lines.push(generateImports(allImports));

@@ -1,0 +1,68 @@
+{
+  "domain": "EventSourcing",
+  "parseSuccess": true,
+  "checkSuccess": true,
+  "minEntities": 2,
+  "minBehaviors": 5,
+  "claims": [
+    {
+      "id": "es-create-event-appended",
+      "type": "postcondition",
+      "behavior": "CreateOrder",
+      "description": "OrderCreated event appended; projection shows CREATED with correct total",
+      "verdict": "pass"
+    },
+    {
+      "id": "es-confirm-event-appended",
+      "type": "postcondition",
+      "behavior": "ConfirmOrder",
+      "description": "OrderConfirmed event appended; version incremented",
+      "verdict": "pass"
+    },
+    {
+      "id": "es-ship-event-appended",
+      "type": "postcondition",
+      "behavior": "ShipOrder",
+      "description": "OrderShipped event with tracking number appended",
+      "verdict": "pass"
+    },
+    {
+      "id": "es-cancel-guard",
+      "type": "invariant",
+      "behavior": "CancelOrder",
+      "description": "Shipped/delivered orders cannot be cancelled",
+      "verdict": "pass"
+    },
+    {
+      "id": "es-replay-deterministic",
+      "type": "invariant",
+      "behavior": "ReplayEvents",
+      "description": "Replay is deterministic and matches current projection",
+      "verdict": "pass"
+    },
+    {
+      "id": "es-append-only",
+      "type": "invariant",
+      "description": "Events are append-only; never mutated or deleted",
+      "verdict": "pass"
+    },
+    {
+      "id": "es-optimistic-concurrency",
+      "type": "invariant",
+      "description": "Version conflict detected on stale expected_version",
+      "verdict": "pass"
+    },
+    {
+      "id": "es-lifecycle-scenario",
+      "type": "scenario",
+      "description": "Order lifecycle with event replay produces consistent state",
+      "verdict": "pass"
+    },
+    {
+      "id": "es-conflict-scenario",
+      "type": "scenario",
+      "description": "Optimistic concurrency conflict detected correctly",
+      "verdict": "pass"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "domain": "AuthRoles",
+  "decision": "SHIP",
+  "trustScore": 100,
+  "summary": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0
+  },
+  "blockers": []
+}

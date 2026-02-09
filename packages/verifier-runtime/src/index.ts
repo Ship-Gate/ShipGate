@@ -123,3 +123,27 @@ export {
   type ReportFormat,
   type ReportOptions,
 } from './reporter.js';
+
+// Runtime Probe (Playwright-based route/env/side-effect verification)
+export {
+  runRuntimeProbe,
+  loadTruthpack,
+  probeRoutes,
+  probeSingleRoute,
+  probeBrowserRoute,
+  checkEnvVars,
+  checkSingleEnvVar,
+  buildAllClaims,
+  buildRouteClaims,
+  buildEnvClaims,
+  scoreClaims,
+  buildReport as buildProbeReport,
+  buildProofArtifact,
+  writeReportToDir,
+  formatHumanSummary,
+  formatCliSummary,
+  type RuntimeProbeConfig,
+  type RuntimeProbeReport,
+  type RuntimeProofArtifact,
+  type RuntimeProbeResult,
+} from './probe/index.js';

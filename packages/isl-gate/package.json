@@ -29,18 +29,23 @@
     "./pr-analysis": {
       "import": "./dist/pr-analysis/index.js",
       "types": "./dist/pr-analysis/index.d.ts"
+    },
+    "./verdict-scoring": {
+      "import": "./dist/verdict-scoring/index.js",
+      "types": "./dist/verdict-scoring/index.d.ts"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts src/scoring/index.ts src/trust-score/index.ts src/types/index.ts src/specless/index.ts src/pr-analysis/index.ts --format esm --dts --clean",
+    "build": "tsup src/index.ts src/scoring/index.ts src/trust-score/index.ts src/types/index.ts src/specless/index.ts src/pr-analysis/index.ts src/verdict-scoring/index.ts --format esm --dts --clean",
     "dev": "tsup src/index.ts --format esm --dts --watch",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "zod": "^3.22.4",
@@ -54,9 +59,15 @@
     "@isl-lang/firewall": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@isl-lang/hallucination-scanner": { "optional": true },
-    "@isl-lang/security-scanner": { "optional": true },
-    "@isl-lang/firewall": { "optional": true }
+    "@isl-lang/hallucination-scanner": {
+      "optional": true
+    },
+    "@isl-lang/security-scanner": {
+      "optional": true
+    },
+    "@isl-lang/firewall": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -66,5 +77,6 @@
     "rimraf": "^5.0.5"
   },
   "author": "mevla",
-  "license": "MIT"
+  "license": "MIT",
+  "sideEffects": false
 }

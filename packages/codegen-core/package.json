@@ -33,7 +33,8 @@
     "test:watch": "vitest",
     "test:snapshot": "vitest run --update",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "prettier": "^3.2.0"
@@ -51,5 +52,6 @@
     "formatter"
   ],
   "author": "ISL Team",
-  "license": "MIT"
+  "license": "MIT",
+  "sideEffects": false
 }

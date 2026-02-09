@@ -3,15 +3,27 @@ name: Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      canary:
+        description: 'Publish canary versions of experimental packages only'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
+  # ── Stable release via Changesets ──────────────────────────────────────
   release:
     name: Release
     runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.canary != 'true' }}
     permissions:
       contents: write
       pull-requests: write
@@ -38,10 +50,20 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build all packages
-        run: pnpm turbo build
+        run: pnpm build:production
 
       - name: Run tests
-        run: pnpm turbo test
+        run: pnpm test:production
+
+      - name: Generate release manifest (provenance)
+        run: npx tsx scripts/generate-release-manifest.ts
+
+      - name: Upload release manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-manifest
+          path: reports/release-manifest.json
+          retention-days: 90
 
       - name: Create Release Pull Request or Publish
         id: changesets
@@ -56,18 +78,64 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Create Git Tags
+      - name: Post-publish provenance update
         if: steps.changesets.outputs.published == 'true'
         run: |
           echo "Published packages:"
           echo '${{ steps.changesets.outputs.publishedPackages }}'
+          # Re-generate manifest with final published versions
+          npx tsx scripts/generate-release-manifest.ts
 
-  # Publish VS Code extension separately
+      - name: Commit release manifest
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/release-manifest.json
+          git diff --cached --quiet || git commit -m "chore: update release manifest [skip ci]"
+          git push
+
+  # ── Canary publish for experimental packages ───────────────────────────
+  canary:
+    name: Canary Publish
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.canary == 'true' }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm turbo build
+
+      - name: Publish canary versions
+        run: npx tsx scripts/canary-publish.ts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # ── VS Code extension ──────────────────────────────────────────────────
   vscode-publish:
     name: Publish VS Code Extension
     runs-on: ubuntu-latest
     needs: release
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.event.inputs.canary != 'true' && github.ref == 'refs/heads/main' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -113,12 +181,12 @@ jobs:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
         continue-on-error: true
 
-  # Create GitHub Release for tags
+  # ── GitHub Release ─────────────────────────────────────────────────────
   github-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
     needs: release
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.event.inputs.canary != 'true' && github.ref == 'refs/heads/main' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

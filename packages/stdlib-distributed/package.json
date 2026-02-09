@@ -37,29 +37,66 @@
       }
     },
     "./actor": {
-      "import": "./dist/actor.js",
-      "require": "./dist/actor.cjs"
+      "import": {
+        "types": "./dist/actor.d.ts",
+        "default": "./dist/actor.js"
+      },
+      "require": {
+        "types": "./dist/actor.d.cts",
+        "default": "./dist/actor.cjs"
+      }
     },
     "./crdt": {
-      "import": "./dist/crdt.js",
-      "require": "./dist/crdt.cjs"
+      "import": {
+        "types": "./dist/crdt.d.ts",
+        "default": "./dist/crdt.js"
+      },
+      "require": {
+        "types": "./dist/crdt.d.cts",
+        "default": "./dist/crdt.cjs"
+      }
     },
     "./saga": {
-      "import": "./dist/saga.js",
-      "require": "./dist/saga.cjs"
+      "import": {
+        "types": "./dist/saga.d.ts",
+        "default": "./dist/saga.js"
+      },
+      "require": {
+        "types": "./dist/saga.d.cts",
+        "default": "./dist/saga.cjs"
+      }
     },
     "./consensus": {
-      "import": "./dist/consensus.js",
-      "require": "./dist/consensus.cjs"
+      "import": {
+        "types": "./dist/consensus.d.ts",
+        "default": "./dist/consensus.js"
+      },
+      "require": {
+        "types": "./dist/consensus.d.cts",
+        "default": "./dist/consensus.cjs"
+      }
     },
     "./coordination": {
-      "import": "./dist/coordination.js",
-      "require": "./dist/coordination.cjs"
+      "import": {
+        "types": "./dist/coordination.d.ts",
+        "default": "./dist/coordination.js"
+      },
+      "require": {
+        "types": "./dist/coordination.d.cts",
+        "default": "./dist/coordination.cjs"
+      }
     },
     "./service-mesh": {
-      "import": "./dist/service-mesh.js",
-      "require": "./dist/service-mesh.cjs"
-    }
+      "import": {
+        "types": "./dist/service-mesh.d.ts",
+        "default": "./dist/service-mesh.js"
+      },
+      "require": {
+        "types": "./dist/service-mesh.d.cts",
+        "default": "./dist/service-mesh.cjs"
+      }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
@@ -69,13 +106,16 @@
     "build": "tsup && tsc --emitDeclarationOnly",
     "dev": "tsup --watch",
     "test": "vitest run --passWithNoTests",
-    "typecheck": "echo 'TODO: Fix tsconfig to exclude docs-advanced JSX files' && exit 0"
+    "typecheck": "echo 'TODO: Fix tsconfig to exclude docs-advanced JSX files' && exit 0",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
     "tsup": "^8.0.1",
     "typescript": "^5.3.2",
-    "vitest": "^1.0.4"
+    "vitest": "^1.0.4",
+    "rimraf": "^5.0.5"
   },
   "engines": {
     "node": ">=18"
@@ -83,5 +123,6 @@
   "homepage": "https://intentlang.dev",
   "bugs": {
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
-  }
+  },
+  "sideEffects": false
 }

@@ -1,21 +1,27 @@
 /**
  * ISL Client - Core API client for ISL-verified endpoints
+ *
+ * Uses shared retry/backoff logic from @isl-lang/generator-sdk/runtime.
+ * Keeps React-Native-specific offline queue and secure storage local.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
+import {
+  calculateRetryDelay as sharedCalcDelay,
+  sleep,
+  DEFAULT_TIMEOUT,
+} from '@isl-lang/generator-sdk/runtime';
 import type {
   ISLClientConfig,
   RequestOptions,
-  Result,
   OfflineQueueItem,
   SyncStatus,
   NetworkState,
   RetryConfig,
-  ISLError,
 } from '../types';
+import type { Result, ISLErrorType as ISLError } from '@isl-lang/generator-sdk/runtime';
 import { generateId } from '../utils/helpers';
 
-const DEFAULT_TIMEOUT = 30000;
 const DEFAULT_RETRY_CONFIG: RetryConfig = {
   maxRetries: 3,
   backoff: 'exponential',
@@ -504,17 +510,19 @@ export class ISLClient {
     return false;
   }
 
-  // Helpers
+  // Helpers — delegate to the shared runtime engine
   private calculateRetryDelay(attempt: number, config: RetryConfig): number {
-    if (config.backoff === 'linear') {
-      return Math.min(config.initialDelayMs * attempt, config.maxDelayMs);
-    }
-    // Exponential backoff
-    return Math.min(config.initialDelayMs * Math.pow(2, attempt - 1), config.maxDelayMs);
+    return sharedCalcDelay(attempt, {
+      maxAttempts: config.maxRetries,
+      baseDelay: config.initialDelayMs,
+      maxDelay: config.maxDelayMs,
+      retryableStatusCodes: [],
+      backoff: config.backoff,
+    });
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return sleep(ms);
   }
 
   private notifyListeners(): void {

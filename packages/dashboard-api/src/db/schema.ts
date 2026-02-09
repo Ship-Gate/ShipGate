@@ -2,6 +2,7 @@ import initSqlJs, { type Database } from 'sql.js';
 import path from 'node:path';
 import fs from 'node:fs';
 import { AUTH_SCHEMA_SQL } from '../auth/schema.js';
+import { BACKBONE_SCHEMA_SQL } from '../backbone/schema.js';
 
 export type { Database } from 'sql.js';
 
@@ -65,6 +66,7 @@ export async function openDatabase(dbPath?: string): Promise<Database> {
 
   db.run(SCHEMA_SQL);
   db.run(AUTH_SCHEMA_SQL);
+  db.run(BACKBONE_SCHEMA_SQL);
 
   return db;
 }
@@ -77,6 +79,7 @@ export async function openMemoryDatabase(): Promise<Database> {
   const db = new SQL.Database();
   db.run(SCHEMA_SQL);
   db.run(AUTH_SCHEMA_SQL);
+  db.run(BACKBONE_SCHEMA_SQL);
   return db;
 }
 

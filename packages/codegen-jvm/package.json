@@ -51,7 +51,8 @@
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@isl-lang/isl-core": "workspace:*"
@@ -80,5 +81,6 @@
   "bugs": {
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
   },
-  "private": true
+  "private": true,
+  "sideEffects": false
 }

@@ -1,27 +1,39 @@
 ---
-description: Testing patterns
-globs: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"]
+description: Testing patterns and requirements
+globs: ["**/*.test.ts", "**/*.spec.ts"]
 alwaysApply: false
+priority: 70
 ---
 
-# Testing: Vitest, Jest, React Testing Library, Playwright
+# Testing Guidelines
 
-## Unit Tests
+## File Naming
+- Test files: `*.test.ts`
+- Integration tests: `*.integration.test.ts`
 
+## Test Structure
 ```typescript
-describe('Feature', () => {
-  it('should work', () => {
-    expect(result).toBe('expected')
-  })
-})
+describe('ComponentName', () => {
+  describe('method or scenario', () => {
+    it('should do something specific', () => {
+      // Arrange
+      // Act
+      // Assert
+    });
+  });
+});
 ```
 
-## E2E Tests
+## Requirements
+- All new features must have tests
+- All bug fixes must have regression tests
+- Test edge cases and error conditions
 
-```typescript
-test('user flow', async ({ page }) => {
-  await page.goto('/')
-  await page.click('button')
-})
-```
+## Forbidden
+- No skipped tests without explanation
+- No tests that depend on execution order
+- No tests that mutate global state
 
+---
+<!-- guardrail:auto-generated -->
+*Verified by Guardrail ✓*

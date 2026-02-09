@@ -1,0 +1,92 @@
+openapi: "3.0.3"
+info:
+  title: "Auth API"
+  version: "1.0.0"
+  description: "API specification for Auth"
+paths:
+  /login:
+    post:
+      operationId: "Login"
+      summary: "Login"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                email:
+                  type: "string"
+                password:
+                  type: "string"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+  /register:
+    post:
+      operationId: "Register"
+      summary: "Register"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                email:
+                  type: "string"
+                password:
+                  type: "string"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+components:
+  schemas:
+    User:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        email:
+          type: "string"
+        password_hash:
+          type: "string"
+        status:
+          $ref: "#/components/schemas/UserStatus"
+        created_at:
+          type: "string"
+          format: "date-time"
+      required:
+        - id
+        - email
+        - password_hash
+        - status
+        - created_at
+    Session:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        user_id:
+          type: "string"
+          format: "uuid"
+        expires_at:
+          type: "string"
+          format: "date-time"
+        revoked:
+          type: "boolean"
+      required:
+        - id
+        - user_id
+        - expires_at
+        - revoked

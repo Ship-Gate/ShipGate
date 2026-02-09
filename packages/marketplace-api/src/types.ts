@@ -1,54 +1,51 @@
 /**
- * Local type definitions for the marketplace API.
- * 
- * These types mirror the Prisma schema and allow the code to compile
- * without needing a generated Prisma client.
+ * Marketplace API – Domain types
+ *
+ * Maps 1-to-1 to the Postgres schema in db/schema.sql.
  */
 
-// Enums matching schema.prisma
-export enum IntentCategory {
-  AUTH = 'AUTH',
-  PAYMENT = 'PAYMENT',
-  DATA = 'DATA',
-  WORKFLOW = 'WORKFLOW',
-  INTEGRATION = 'INTEGRATION',
-  SECURITY = 'SECURITY',
-  GENERAL = 'GENERAL',
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+export type PackCategory =
+  | 'AUTH'
+  | 'PAYMENT'
+  | 'DATA'
+  | 'WORKFLOW'
+  | 'INTEGRATION'
+  | 'SECURITY'
+  | 'GENERAL';
+
+export const PACK_CATEGORIES: PackCategory[] = [
+  'AUTH', 'PAYMENT', 'DATA', 'WORKFLOW', 'INTEGRATION', 'SECURITY', 'GENERAL',
+];
+
+// ---------------------------------------------------------------------------
+// Core domain models
+// ---------------------------------------------------------------------------
+
+export interface Author {
+  id: string;
+  username: string;
+  displayName: string;
+  email: string;
+  apiKeyHash: string;
+  publicKey: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export enum VerificationStatus {
-  PENDING = 'PENDING',
-  RUNNING = 'RUNNING',
-  PASSED = 'PASSED',
-  FAILED = 'FAILED',
-  ERROR = 'ERROR',
-}
-
-export enum IncidentSeverity {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL',
-}
-
-export enum IncidentStatus {
-  OPEN = 'OPEN',
-  INVESTIGATING = 'INVESTIGATING',
-  RESOLVED = 'RESOLVED',
-  CLOSED = 'CLOSED',
-}
-
-// Model types matching schema.prisma
-export interface IntentPackage {
+export interface Pack {
   id: string;
   name: string;
   displayName: string;
   description: string;
-  author: string;
+  authorId: string;
   repository: string | null;
   license: string;
-  keywords: string;
-  category: IntentCategory;
+  keywords: string[];
+  category: PackCategory;
   downloads: number;
   stars: number;
   isVerified: boolean;
@@ -57,88 +54,38 @@ export interface IntentPackage {
   updatedAt: Date;
 }
 
-export interface IntentVersion {
+export interface PackVersion {
   id: string;
-  packageId: string;
+  packId: string;
   version: string;
   contract: string;
-  changelog: string | null;
   readme: string | null;
+  changelog: string | null;
   isLatest: boolean;
   downloads: number;
   publishedAt: Date;
 }
 
-export interface Verification {
+export interface Signature {
   id: string;
   versionId: string;
-  verifier: string;
-  status: VerificationStatus;
-  trustScore: number | null;
-  totalTests: number;
-  passedTests: number;
-  failedTests: number;
-  coverage: number | null;
-  report: string | null;
-  runAt: Date;
-}
-
-export interface TrustMetrics {
-  id: string;
-  packageId: string;
-  trustScore: number;
-  verificationCount: number;
-  deploymentCount: number;
-  incidentCount: number;
-  avgTestCoverage: number | null;
-  avgPassRate: number | null;
-  lastVerified: Date | null;
-  maintainerScore: number;
-  communityScore: number;
-  securityScore: number;
-  updatedAt: Date;
-}
-
-export interface Deployment {
-  id: string;
-  packageName: string;
-  version: string;
-  environment: string;
-  platform: string | null;
-  anonymous: boolean;
-  deployedAt: Date;
-}
-
-export interface Incident {
-  id: string;
-  packageName: string;
-  version: string | null;
-  severity: IncidentSeverity;
-  title: string;
-  description: string;
-  status: IncidentStatus;
-  reportedBy: string;
-  resolvedAt: Date | null;
+  algorithm: string;
+  digest: string;
+  signature: string | null;
+  signerId: string | null;
+  verified: boolean;
   createdAt: Date;
 }
 
-// Extended types with relations
-export interface IntentPackageWithRelations extends IntentPackage {
-  versions?: IntentVersionWithRelations[];
-  trustMetrics?: TrustMetrics | null;
+// ---------------------------------------------------------------------------
+// Composite / response helpers
+// ---------------------------------------------------------------------------
+
+export interface PackWithLatest extends Pack {
+  latestVersion?: PackVersion | null;
+  authorUsername?: string;
 }
 
-export interface IntentVersionWithRelations extends IntentVersion {
-  verifications?: Verification[];
+export interface PackVersionWithSignatures extends PackVersion {
+  signatures?: Signature[];
 }
-
-/**
- * PrismaClient placeholder type.
- * 
- * This allows the code to compile without a generated Prisma client.
- * At runtime, the actual PrismaClient from @prisma/client will be used.
- * 
- * Run `pnpm db:generate` to generate the real Prisma client with full types.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type PrismaClient = any;

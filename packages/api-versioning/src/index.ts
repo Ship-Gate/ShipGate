@@ -47,6 +47,14 @@ export {
 } from './compatibility/checker.js';
 export { generateReport, generateSummary } from './compatibility/report.js';
 
+// Versioning Rules
+export {
+  createVersioningRules,
+  determineVersionBump,
+  type VersionBump,
+  type VersioningRules,
+} from './versioning-rules.js';
+
 // Middleware (re-export for convenience)
 export { versioningMiddleware, versionRouter } from './middleware/express.js';
 export { versioningPlugin } from './middleware/fastify.js';

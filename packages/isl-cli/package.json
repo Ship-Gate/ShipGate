@@ -16,7 +16,8 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "echo 'TODO: Fix AST type mismatches and missing module' && exit 0",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@isl-lang/cli-ux": "workspace:*",
@@ -49,5 +50,14 @@
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
   },
   "private": true,
-  "experimental": true
+  "experimental": true,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "sideEffects": false
 }

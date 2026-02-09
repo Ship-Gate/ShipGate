@@ -1,32 +1,36 @@
 /**
  * Core types for the ISL React Native SDK
+ *
+ * Shared types (Result, errors, retry, validation) come from the canonical
+ * runtime engine in @isl-lang/generator-sdk/runtime.
+ * This file re-exports them and adds React-Native-specific types.
  */
 
-// Result type for API responses
-export type Result<TData, TError> =
-  | { success: true; data: TData }
-  | { success: false; error: TError };
+// --- Re-exports from the shared runtime (single source of truth) -----------
+export type {
+  Result,
+  ValidationResult,
+  ValidationFieldError as ValidationError,
+  RetryConfig as SharedRetryConfig,
+  CacheConfig as SharedCacheConfig,
+  RequestOptions,
+  ApiErrorType as ApiError,
+  NetworkErrorType as NetworkError,
+  TimeoutErrorType as TimeoutError,
+  ValidationApiErrorType as ValidationApiError,
+  AuthErrorType as AuthError,
+  RateLimitErrorType as RateLimitError,
+  ISLErrorType as ISLError,
+} from '@isl-lang/generator-sdk/runtime';
 
-// Validation result
-export interface ValidationResult {
-  valid: boolean;
-  errors?: ValidationError[];
-}
+import type {
+  ISLErrorType,
+  ValidationFieldError,
+} from '@isl-lang/generator-sdk/runtime';
 
-export interface ValidationError {
-  field: string;
-  message: string;
-  code?: string;
-}
-
-// Request options
-export interface RequestOptions {
-  signal?: AbortSignal;
-  headers?: Record<string, string>;
-  timeout?: number;
-  retry?: RetryConfig;
-  cache?: CacheConfig;
-}
+// ============================================================================
+// React-Native-specific retry/cache (convenience wrappers with RN naming)
+// ============================================================================
 
 export interface RetryConfig {
   maxRetries: number;
@@ -41,7 +45,10 @@ export interface CacheConfig {
   key?: string;
 }
 
-// Offline queue item
+// ============================================================================
+// Offline / Sync (RN-only concerns)
+// ============================================================================
+
 export interface OfflineQueueItem {
   id: string;
   endpoint: string;
@@ -51,7 +58,6 @@ export interface OfflineQueueItem {
   retryCount: number;
 }
 
-// Sync status
 export interface SyncStatus {
   isOnline: boolean;
   pendingCount: number;
@@ -59,14 +65,16 @@ export interface SyncStatus {
   isSyncing: boolean;
 }
 
-// Network state
 export interface NetworkState {
   isConnected: boolean;
   isInternetReachable: boolean | null;
   type: 'wifi' | 'cellular' | 'unknown' | 'none';
 }
 
-// Query state
+// ============================================================================
+// Hook State Types
+// ============================================================================
+
 export interface QueryState<TData, TError> {
   data: TData | null;
   error: TError | null;
@@ -77,7 +85,6 @@ export interface QueryState<TData, TError> {
   errorUpdatedAt: number | null;
 }
 
-// Mutation state
 export interface MutationState<TData, TError> {
   data: TData | null;
   error: TError | null;
@@ -86,7 +93,6 @@ export interface MutationState<TData, TError> {
   isError: boolean;
 }
 
-// Subscription state
 export interface SubscriptionState<TData, TError> {
   data: TData | null;
   error: TError | null;
@@ -95,7 +101,10 @@ export interface SubscriptionState<TData, TError> {
   connectionId: string | null;
 }
 
-// ISL Client configuration
+// ============================================================================
+// Client Configuration
+// ============================================================================
+
 export interface ISLClientConfig {
   baseUrl: string;
   wsUrl?: string;
@@ -109,7 +118,10 @@ export interface ISLClientConfig {
   onNetworkChange?: (state: NetworkState) => void;
 }
 
-// Query options
+// ============================================================================
+// Hook Options
+// ============================================================================
+
 export interface QueryOptions<TData, TError> {
   enabled?: boolean;
   refetchInterval?: number;
@@ -124,17 +136,15 @@ export interface QueryOptions<TData, TError> {
   initialData?: TData;
 }
 
-// Mutation options
 export interface MutationOptions<TInput, TData, TError> {
   onSuccess?: (data: TData, input: TInput) => void;
   onError?: (error: TError, input: TInput) => void;
   onSettled?: (data: TData | null, error: TError | null, input: TInput) => void;
-  validate?: (input: TInput) => ValidationResult;
+  validate?: (input: TInput) => { valid: boolean; errors?: ValidationFieldError[] };
   optimisticUpdate?: (input: TInput) => TData;
   rollback?: (input: TInput) => void;
 }
 
-// Subscription options
 export interface SubscriptionOptions<TData, TError> {
   onData?: (data: TData) => void;
   onError?: (error: TError) => void;
@@ -145,7 +155,10 @@ export interface SubscriptionOptions<TData, TError> {
   maxReconnectAttempts?: number;
 }
 
-// WebSocket message types
+// ============================================================================
+// WebSocket
+// ============================================================================
+
 export interface WSMessage<T = unknown> {
   type: 'subscribe' | 'unsubscribe' | 'data' | 'error' | 'ping' | 'pong';
   channel?: string;
@@ -153,48 +166,3 @@ export interface WSMessage<T = unknown> {
   id?: string;
   timestamp?: number;
 }
-
-// API Error types
-export interface ApiError {
-  code: string;
-  message: string;
-  details?: Record<string, unknown>;
-  statusCode?: number;
-}
-
-export type NetworkError = {
-  code: 'NETWORK_ERROR';
-  message: string;
-  isOffline: boolean;
-};
-
-export type TimeoutError = {
-  code: 'TIMEOUT';
-  message: string;
-  timeoutMs: number;
-};
-
-export type ValidationApiError = {
-  code: 'VALIDATION_ERROR';
-  message: string;
-  errors: ValidationError[];
-};
-
-export type AuthError = {
-  code: 'AUTH_ERROR' | 'TOKEN_EXPIRED' | 'UNAUTHORIZED';
-  message: string;
-};
-
-export type RateLimitError = {
-  code: 'RATE_LIMITED';
-  message: string;
-  retryAfter: number;
-};
-
-export type ISLError =
-  | ApiError
-  | NetworkError
-  | TimeoutError
-  | ValidationApiError
-  | AuthError
-  | RateLimitError;

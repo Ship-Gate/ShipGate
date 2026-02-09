@@ -9,8 +9,8 @@ import type {
   FlagAuditEvent,
   BehaviorGate,
   BehaviorModification,
-} from './types';
-import { FlagEvaluator } from './evaluator';
+} from './types.js';
+import { FlagEvaluator } from './evaluator.js';
 
 export class FeatureFlagProvider {
   private config: FlagProviderConfig;
@@ -262,7 +262,7 @@ export class FeatureFlagProvider {
             flagKey: flag.key,
             behavior: override.behavior,
             domain: override.domain,
-            gateType: override.modifications.some(m => m.type === 'disable') 
+            gateType: override.modifications.some((m) => m.type === 'disable') 
               ? 'disable' 
               : override.modifications.length > 0 
                 ? 'modify' 
@@ -321,6 +321,7 @@ export class FeatureFlagProvider {
       action,
       context,
       result,
+      reasoning: result?.reasoning,
     });
 
     // Keep only last 1000 events

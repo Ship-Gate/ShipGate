@@ -25,6 +25,7 @@ import {
   generateSeed,
 } from './data-synthesizer';
 import { emitTestFile } from './test-code-emitter';
+import { generateScenarioTests } from './scenario-generator';
 
 // ============================================================================
 // MAIN GENERATOR
@@ -32,6 +33,25 @@ import { emitTestFile } from './test-code-emitter';
 
 /**
  * Generate executable test files from an ISL domain specification
+ * 
+ * This is the main entry point for test generation. It processes behaviors,
+ * scenarios, and generates runnable test suites.
+ * 
+ * @param domain - Parsed ISL domain
+ * @param options - Generation options
+ * @returns Generation result with files and metadata
+ */
+export function generateTests(
+  domain: AST.Domain,
+  options: GenerateOptions
+): GenerateResult {
+  return generate(domain, options);
+}
+
+/**
+ * Generate executable test files from an ISL domain specification
+ * 
+ * @deprecated Use generateTests instead
  */
 export function generate(
   domain: AST.Domain,
@@ -67,8 +87,13 @@ export function generate(
   });
 
   try {
+    // Sort behaviors deterministically for stable output
+    const sortedBehaviors = [...domain.behaviors].sort((a, b) => 
+      a.name.name.localeCompare(b.name.name)
+    );
+
     // Generate test files for each behavior
-    for (const behavior of domain.behaviors) {
+    for (const behavior of sortedBehaviors) {
       const ctx = createContext(behavior);
       const strategy = getStrategy(behavior, domain, forceDomain);
       const detectedDomain = strategy.domain;
@@ -78,6 +103,20 @@ export function generate(
         assertions,
         coverage,
       } = generateBehaviorTestFile(behavior, domain, strategy, ctx, framework);
+
+      // Generate snapshot for structured outputs if appropriate
+      const shouldGenerateSnapshot = behavior.output?.success && 
+        (behavior.output.success.kind === 'StructType' || 
+         behavior.output.success.kind === 'ReferenceType');
+      
+      if (shouldGenerateSnapshot && options.includeSnapshots !== false) {
+        const snapshot = generateSnapshot(behavior, domain);
+        files.push({
+          path: `${outputDir}/__snapshots__/${behavior.name.name}.snapshot.ts`,
+          content: snapshot,
+          type: 'test',
+        });
+      }
 
       files.push({
         path: `${outputDir}/${behavior.name.name}.test.ts`,
@@ -273,6 +312,10 @@ ${postconditionTests}
 ${errorTests}
 
 ${invariantTests}
+
+${scenarioTestsBlock}
+
+${pbtStubs}
 });
 `.trim();
 
@@ -409,6 +452,93 @@ function generateInvariantBlock(
   return `
   describe('Invariants', () => {
 ${tests}
+  });
+  `.trim();
+}
+
+/**
+ * Generate scenario test block
+ */
+function generateScenarioBlock(
+  scenarioTests: Array<{ name: string; description: string; code: string }>,
+  framework: TestFramework
+): string {
+  if (scenarioTests.length === 0) {
+    return '  // No scenarios defined';
+  }
+
+  const tests = scenarioTests.map(scenario => `
+    it('${escapeString(scenario.description)}', async () => {
+${indentCode(scenario.code, 6)}
+    });
+  `).join('\n');
+
+  return `
+  describe('Scenarios', () => {
+${tests}
+  });
+  `.trim();
+}
+
+/**
+ * Generate property-based test stubs (hooks into isl-pbt if present)
+ */
+function generatePBTStubs(
+  behavior: AST.Behavior,
+  domain: AST.Domain,
+  framework: TestFramework
+): string {
+  // Check if isl-pbt is available
+  let pbtAvailable = false;
+  try {
+    // Try to require isl-pbt (will fail if not installed)
+    require.resolve('@isl-lang/isl-pbt');
+    pbtAvailable = true;
+  } catch {
+    // isl-pbt not available, generate stub
+  }
+
+  if (!pbtAvailable) {
+    return `  // Property-based tests: Install @isl-lang/isl-pbt to enable
+  // describe('Property-Based Tests', () => {
+  //   it('should satisfy all preconditions and postconditions', async () => {
+  //     const { runPBT } = await import('@isl-lang/isl-pbt');
+  //     const report = await runPBT(domain, '${behavior.name.name}', implementation, {
+  //       numTests: 100,
+  //       seed: 12345,
+  //     });
+  //     expect(report.success).toBe(true);
+  //   });
+  // });`;
+  }
+
+  const behaviorName = behavior.name.name;
+  const importStmt = framework === 'vitest' 
+    ? `import { runPBT } from '@isl-lang/isl-pbt';`
+    : `const { runPBT } = require('@isl-lang/isl-pbt');`;
+
+  return `
+  describe('Property-Based Tests', () => {
+    it('should satisfy all preconditions and postconditions', async () => {
+      ${importStmt}
+      // TODO: Provide implementation function
+      const implementation = {
+        async execute(input) {
+          // Implement ${behaviorName} behavior
+          throw new Error('Not implemented');
+        },
+      };
+      
+      const report = await runPBT(domain, '${behaviorName}', implementation, {
+        numTests: 100,
+        seed: 12345,
+      });
+      
+      expect(report.success).toBe(true);
+      if (!report.success) {
+        console.error('PBT failures:', report.violations);
+      }
+    });
   });
   `.trim();
 }
@@ -612,6 +742,35 @@ function indentCode(code: string, spaces: number): string {
   return code.split('\n').map(line => indent + line).join('\n');
 }
 
+/**
+ * Generate snapshot test file for structured outputs
+ */
+function generateSnapshot(
+  behavior: AST.Behavior,
+  domain: AST.Domain
+): string {
+  const behaviorName = behavior.name.name;
+  const framework = 'vitest'; // Default to vitest for snapshots
+  
+  return `import { describe, it, expect } from '${framework === 'vitest' ? 'vitest' : '@jest/globals'}';
+import { ${behaviorName} } from '../src/${behaviorName}';
+import type { ${behaviorName}Input } from '../src/types';
+
+describe('${behaviorName} - Snapshot Tests', () => {
+  it('should match snapshot for structured output', async () => {
+    const input: ${behaviorName}Input = {
+      // TODO: Fill in test input
+    } as ${behaviorName}Input;
+    
+    const result = await ${behaviorName}(input);
+    
+    // Snapshot test for structured output
+    expect(result).toMatchSnapshot();
+  });
+});
+`;
+}
+
 // ============================================================================
 // ENHANCED GENERATION WITH DATA SYNTHESIS
 // ============================================================================
@@ -629,6 +788,8 @@ export interface EnhancedGenerateOptions extends GenerateOptions {
   includePreconditionViolations?: boolean;
   /** Maximum inputs per category */
   maxInputsPerCategory?: number;
+  /** Force a specific domain strategy */
+  forceDomain?: DomainType;
 }
 
 /**
@@ -677,7 +838,7 @@ export function generateWithSynthesis(
         : generateSeed(behavior.name.name);
 
       const testFile = emitTestFile(behavior, domain, {
-        framework,
+        framework: framework ?? 'vitest',
         seed,
         includeBoundary,
         includeInvalid: includeNegativeTests,

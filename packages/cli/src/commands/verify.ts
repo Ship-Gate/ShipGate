@@ -26,6 +26,7 @@ import {
 } from '@isl-lang/import-resolver';
 import { output } from '../output.js';
 import { loadConfig } from '../config.js';
+import { withSpan, ISL_ATTR } from '@isl-lang/observability';
 import type { TemporalClauseResult } from '@isl-lang/verifier-temporal';
 import { formatGitLab, formatJUnit } from './output-formats.js';
 
@@ -1865,6 +1866,8 @@ export interface UnifiedVerifyOptions {
   report?: string;
   /** Test timeout in ms (default: 30000) */
   timeout?: number;
+  /** Generate explain reports */
+  explain?: boolean;
 }
 
 /** Per-file verification result */
@@ -2309,12 +2312,37 @@ export async function unifiedVerify(
     const matchedSpec = specMap.get(codeFile);
 
     if (matchedSpec) {
-      // ISL verification
-      const result = await runISLFileVerification(codeFile, matchedSpec, options);
+      // ISL verification — traced per-file
+      const result = await withSpan('verify.file', {
+        attributes: {
+          [ISL_ATTR.IMPL_FILE]: relative(process.cwd(), codeFile),
+          [ISL_ATTR.SPEC_FILE]: relative(process.cwd(), matchedSpec),
+          [ISL_ATTR.VERIFY_MODE]: 'isl',
+        },
+      }, async (fileSpan) => {
+        const r = await runISLFileVerification(codeFile, matchedSpec, options);
+        fileSpan.setAttribute(ISL_ATTR.VERIFY_FILE_STATUS, r.status);
+        fileSpan.setAttribute(ISL_ATTR.VERIFY_SCORE, r.score);
+        fileSpan.setAttribute(ISL_ATTR.DURATION_MS, r.duration);
+        if (r.status === 'FAIL') fileSpan.setError(r.blockers.join('; '));
+        return r;
+      });
       fileResults.push(result);
     } else {
-      // Specless verification via gate
-      const result = await runSpeclessFileVerification(codeFile, projectRoot);
+      // Specless verification via gate — traced per-file
+      const result = await withSpan('verify.file', {
+        attributes: {
+          [ISL_ATTR.IMPL_FILE]: relative(process.cwd(), codeFile),
+          [ISL_ATTR.VERIFY_MODE]: 'specless',
+        },
+      }, async (fileSpan) => {
+        const r = await runSpeclessFileVerification(codeFile, projectRoot);
+        fileSpan.setAttribute(ISL_ATTR.VERIFY_FILE_STATUS, r.status);
+        fileSpan.setAttribute(ISL_ATTR.VERIFY_SCORE, r.score);
+        fileSpan.setAttribute(ISL_ATTR.DURATION_MS, r.duration);
+        if (r.status === 'FAIL') fileSpan.setError(r.blockers.join('; '));
+        return r;
+      });
       fileResults.push(result);
     }
   }
@@ -2362,7 +2390,7 @@ export async function unifiedVerify(
     case 'WARN': exitCode = 4; break;
   }
 
-  return {
+  const unifiedResult: UnifiedVerifyResult = {
     verdict,
     score: avgScore,
     coverage,
@@ -2373,6 +2401,28 @@ export async function unifiedVerify(
     duration: Date.now() - startTime,
     exitCode,
   };
+
+  // Generate explain reports if requested
+  if (options.explain) {
+    try {
+      const { generateExplainReportsForVerify } = await import('./verify-explain.js');
+      const outputDir = options.report && !options.report.includes('.') 
+        ? options.report 
+        : './reports';
+      const reports = await generateExplainReportsForVerify(unifiedResult, outputDir);
+      if (options.verbose) {
+        console.error(chalk.gray(`[shipgate] Explain reports generated:`));
+        console.error(chalk.gray(`  - ${reports.jsonPath}`));
+        console.error(chalk.gray(`  - ${reports.mdPath}`));
+      }
+    } catch (err) {
+      if (options.verbose) {
+        console.error(chalk.yellow(`[shipgate] Failed to generate explain reports: ${err instanceof Error ? err.message : String(err)}`));
+      }
+    }
+  }
+
+  return unifiedResult;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

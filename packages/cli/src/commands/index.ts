@@ -38,6 +38,8 @@ export { heal, printHealResult, getHealExitCode, type HealOptions, type HealResu
 
 export { verifyProof, printProofVerifyResult, getProofVerifyExitCode, type ProofVerifyCommandOptions, type ProofVerifyResult } from './proof.js';
 
+export { proofPack, printProofPackResult, getProofPackExitCode, type ProofPackOptions, type ProofPackResult } from './proof-pack.js';
+
 export { createPolicyBundle, printCreateBundleResult, getCreateBundleExitCode, verifyPolicyBundle, printVerifyBundleResult, getVerifyBundleExitCode, type CreateBundleOptions, type CreateBundleResult, type VerifyBundleOptions, type VerifyBundleResult } from './policy-bundle.js';
 
 export { watch, type WatchOptions, type WatchResult } from './watch.js';
@@ -51,3 +53,15 @@ export { islGenerate, printIslGenerateResult, getIslGenerateExitCode, type IslGe
 export { specQuality, printSpecQualityResult, getSpecQualityExitCode, type SpecQualityCommandOptions, type SpecQualityCommandResult } from './spec-quality.js';
 
 export { policyCheck, printPolicyCheckResult, getPolicyCheckExitCode, policyInit, printPolicyInitResult, type PolicyCheckOptions, type PolicyCheckResult, type PolicyInitOptions, type PolicyInitResult } from './policy-team.js';
+
+export { truthpackBuild, truthpackDiff, printTruthpackBuildResult, printTruthpackDiffResult, getTruthpackBuildExitCode, getTruthpackDiffExitCode, type TruthpackBuildOptions, type TruthpackBuildResult, type TruthpackDiffOptions, type TruthpackDiffResult } from './truthpack.js';
+
+export { shipgateChaosRun, printShipGateChaosResult, getShipGateChaosExitCode, type ShipGateChaosOptions, type ShipGateChaosResult, type ViolationClaim, type ReproductionStep } from './shipgate-chaos.js';
+
+export { verifyEvolution, printEvolutionResult, getEvolutionExitCode, type EvolutionVerifyOptions, type EvolutionVerifyResult } from './verify-evolution.js';
+
+export { simulateCommand, printSimulateResult, getSimulateExitCode, type SimulateOptions, type SimulateResult } from './simulate.js';
+
+export { verifyRuntime, printVerifyRuntimeResult, getVerifyRuntimeExitCode, type VerifyRuntimeOptions, type VerifyRuntimeResult } from './verify-runtime.js';
+
+export { policyEngineCheck, printPolicyEngineResult, getPolicyEngineExitCode, type PolicyEngineCheckOptions, type PolicyEngineCheckResult } from './policy-engine.js';

@@ -40,6 +40,30 @@ export interface ResolverOptions {
    * Default: '.isl'
    */
   defaultExtension?: string;
+
+  /**
+   * Additional file extensions to try when resolving imports
+   * Order matters - tried in sequence
+   * Default: ['.isl']
+   */
+  extensions?: string[];
+
+  /**
+   * Path to tsconfig.json (if not provided, will search up from basePath)
+   */
+  tsconfigPath?: string;
+
+  /**
+   * Project root directory (for resolving node_modules and lockfiles)
+   * Default: basePath
+   */
+  projectRoot?: string;
+
+  /**
+   * Whether to enable caching
+   * Default: true
+   */
+  enableCache?: boolean;
 }
 
 /**

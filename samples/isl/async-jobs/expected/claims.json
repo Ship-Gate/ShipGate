@@ -1,0 +1,67 @@
+{
+  "domain": "AsyncJobs",
+  "parseSuccess": true,
+  "checkSuccess": true,
+  "minEntities": 2,
+  "minBehaviors": 5,
+  "claims": [
+    {
+      "id": "jobs-enqueue-postcondition",
+      "type": "postcondition",
+      "behavior": "EnqueueJob",
+      "description": "Job created in QUEUED status with attempt=0",
+      "verdict": "pass"
+    },
+    {
+      "id": "jobs-process-postcondition",
+      "type": "postcondition",
+      "behavior": "ProcessJob",
+      "description": "Job transitions to RUNNING with incremented attempt",
+      "verdict": "pass"
+    },
+    {
+      "id": "jobs-complete-postcondition",
+      "type": "postcondition",
+      "behavior": "CompleteJob",
+      "description": "Job transitions to COMPLETED with result stored",
+      "verdict": "pass"
+    },
+    {
+      "id": "jobs-fail-retry-postcondition",
+      "type": "postcondition",
+      "behavior": "FailJob",
+      "description": "Failed job re-queued if attempts remain, else dead-lettered",
+      "verdict": "pass"
+    },
+    {
+      "id": "jobs-concurrency-invariant",
+      "type": "invariant",
+      "description": "Running jobs per queue never exceeds concurrency limit",
+      "verdict": "pass"
+    },
+    {
+      "id": "jobs-priority-invariant",
+      "type": "invariant",
+      "description": "Higher priority jobs dequeued first",
+      "verdict": "pass"
+    },
+    {
+      "id": "jobs-dead-letter-invariant",
+      "type": "invariant",
+      "description": "Dead-letter jobs are never auto-retried",
+      "verdict": "pass"
+    },
+    {
+      "id": "jobs-retry-scenario",
+      "type": "scenario",
+      "description": "Job retries twice then moves to dead-letter",
+      "verdict": "pass"
+    },
+    {
+      "id": "jobs-priority-scenario",
+      "type": "scenario",
+      "description": "CRITICAL priority processed before LOW",
+      "verdict": "pass"
+    }
+  ]
+}

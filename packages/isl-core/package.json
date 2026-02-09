@@ -61,7 +61,8 @@
     "test:pack": "pnpm build && pnpm pack && node --experimental-vm-modules tests/pack-smoke.test.mjs",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist *.tgz",
-    "prepublishOnly": "pnpm build && pnpm test"
+    "prepublishOnly": "pnpm build && pnpm test",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@isl-lang/parser": "workspace:*"
@@ -96,5 +97,6 @@
   "homepage": "https://intentlang.dev",
   "bugs": {
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
-  }
+  },
+  "sideEffects": false
 }

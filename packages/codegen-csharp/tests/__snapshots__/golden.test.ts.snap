@@ -1,0 +1,728 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Golden Output Snapshots > should produce stable Controller output 1`] = `
+"using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Shop.Generated;
+using Shop.Generated.Services;
+using Swashbuckle.AspNetCore.Annotations;
+
+namespace Shop.Generated.Controllers;
+
+/// <summary>
+/// API controller for Product operations
+/// </summary>
+
+[ApiController]
+[Route("api/[controller]")]
+[Produces("application/json")]
+
+public class ProductController : ControllerBase
+{
+    private readonly IProductService _service;
+
+    public ProductController(IProductService service)
+    {
+        _service = service;
+    }
+
+    /// <summary>
+    /// Get all Product entities
+    /// </summary>
+
+    [HttpGet]
+    [SwaggerOperation(Summary = "Get all Product entities")]
+    [ProducesResponseType(typeof(IEnumerable<Product>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IEnumerable<Product>>> GetAll(CancellationToken cancellationToken = default)
+    {
+        var result = await _service.GetAllAsync(cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get a Product by ID
+    /// </summary>
+
+    [HttpGet("{id}")]
+    [SwaggerOperation(Summary = "Get a Product by ID")]
+    [ProducesResponseType(typeof(Product), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Product>> GetById([FromRoute] Guid id, CancellationToken cancellationToken = default)
+    {
+        var result = await _service.GetByIdAsync(id, cancellationToken);
+        if (result == null)
+            return NotFound();
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Create a new Product
+    /// </summary>
+
+    [HttpPost]
+    [SwaggerOperation(Summary = "Create a new Product")]
+    [ProducesResponseType(typeof(Product), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Product>> Create([FromBody] Product request, CancellationToken cancellationToken = default)
+    {
+        var result = await _service.CreateAsync(request, cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
+
+    /// <summary>
+    /// Update an existing Product
+    /// </summary>
+
+    [HttpPut("{id}")]
+    [SwaggerOperation(Summary = "Update an existing Product")]
+    [ProducesResponseType(typeof(Product), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Product>> Update([FromRoute] Guid id, [FromBody] Product request, CancellationToken cancellationToken = default)
+    {
+        var result = await _service.UpdateAsync(id, request, cancellationToken);
+        if (result == null)
+            return NotFound();
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Delete a Product
+    /// </summary>
+
+    [HttpDelete("{id}")]
+    [SwaggerOperation(Summary = "Delete a Product")]
+    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<bool>> Delete([FromRoute] Guid id, CancellationToken cancellationToken = default)
+    {
+        var success = await _service.DeleteAsync(id, cancellationToken);
+        if (!success)
+            return NotFound();
+        return NoContent();
+    }
+
+}"
+`;
+
+exports[`Golden Output Snapshots > should produce stable CreateDto output 1`] = `
+"using System;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
+namespace Shop.Generated.Dtos;
+
+/// <summary>
+/// DTO for creating a new Product
+/// </summary>
+
+public class CreateProductDto
+{
+    /// <summary>
+    /// Product name
+    /// </summary>
+
+    [Required]
+
+    public string Name { get; set; }
+    /// <summary>
+    /// Unit price
+    /// </summary>
+
+    [Required]
+
+    public decimal Price { get; set; }
+    /// <summary>
+    /// Stock keeping unit
+    /// </summary>
+
+    [Required]
+
+    public string Sku { get; set; }
+    /// <summary>
+    /// Product description
+    /// </summary>
+
+    public string? Description { get; set; }
+    [Required]
+
+    public bool InStock { get; set; }
+}"
+`;
+
+exports[`Golden Output Snapshots > should produce stable Model output 1`] = `
+"using System;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
+namespace Shop.Generated;
+
+/// <summary>
+/// A product in the catalog
+/// </summary>
+
+public partial class Product
+{
+    /// <summary>
+    /// Unique identifier
+    /// </summary>
+    [Key]
+    public required Guid Id { get; set; }
+    /// <summary>
+    /// Creation timestamp
+    /// </summary>
+    public required DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    /// <summary>
+    /// Last update timestamp
+    /// </summary>
+    public DateTimeOffset? UpdatedAt { get; set; }
+    /// <summary>
+    /// Product name
+    /// </summary>
+    public required string Name { get; set; }
+    /// <summary>
+    /// Unit price
+    /// </summary>
+    public required decimal Price { get; set; }
+    /// <summary>
+    /// Stock keeping unit
+    /// </summary>
+    public required string Sku { get; set; }
+    /// <summary>
+    /// Product description
+    /// </summary>
+    public string? Description { get; set; }
+    public required bool InStock { get; set; }
+}"
+`;
+
+exports[`Golden Output Snapshots > should produce stable Repository Interface output 1`] = `
+"using Shop.Generated;
+
+namespace Shop.Generated.Repositories;
+
+/// <summary>
+/// Repository interface for Product data access
+/// </summary>
+
+public interface IProductRepository
+{
+    /// <summary>
+    /// Get all entities
+    /// </summary>
+
+    Task<IEnumerable<Product>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get entity by ID
+    /// </summary>
+
+    Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Find entities by predicate
+    /// </summary>
+
+    Task<IEnumerable<Product>> FindAsync(Func<Product, bool> predicate, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Create new entity
+    /// </summary>
+
+    Task<Product> CreateAsync(Product entity, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Update existing entity
+    /// </summary>
+
+    Task<Product> UpdateAsync(Product entity, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Delete entity by ID
+    /// </summary>
+
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Check if entity exists
+    /// </summary>
+
+    Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Count all entities
+    /// </summary>
+
+    Task<int> CountAsync(CancellationToken cancellationToken = default);
+
+}"
+`;
+
+exports[`Golden Output Snapshots > should produce stable ResponseDto output 1`] = `
+"using System;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
+namespace Shop.Generated.Dtos;
+
+/// <summary>
+/// Response DTO for Product
+/// </summary>
+
+public class ProductResponseDto
+{
+    /// <summary>
+    /// Unique identifier
+    /// </summary>
+
+    [Key]
+
+    public Guid Id { get; set; }
+    /// <summary>
+    /// Creation timestamp
+    /// </summary>
+
+    public DateTimeOffset CreatedAt { get; set; }
+    /// <summary>
+    /// Last update timestamp
+    /// </summary>
+
+    public DateTimeOffset? UpdatedAt { get; set; }
+    /// <summary>
+    /// Product name
+    /// </summary>
+
+    public string Name { get; set; }
+    /// <summary>
+    /// Unit price
+    /// </summary>
+
+    public decimal Price { get; set; }
+    /// <summary>
+    /// Stock keeping unit
+    /// </summary>
+
+    public string Sku { get; set; }
+    /// <summary>
+    /// Product description
+    /// </summary>
+
+    public string? Description { get; set; }
+    public bool InStock { get; set; }
+}"
+`;
+
+exports[`Golden Output Snapshots > should produce stable Service Implementation output 1`] = `
+"using Microsoft.Extensions.Logging;
+using Shop.Generated;
+using Shop.Generated.Repositories;
+
+namespace Shop.Generated.Services;
+
+/// <summary>
+/// Service implementation for Product operations
+/// </summary>
+
+public class ProductService : IProductService
+{
+    private readonly IProductRepository _repository;
+    private readonly ILogger<ProductService> _logger;
+
+    public ProductService(
+        IProductRepository repository,
+        ILogger<ProductService> logger)
+    {
+        _repository = repository;
+        _logger = logger;
+    }
+
+    public async Task<IEnumerable<Product>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogDebug("Getting all Product entities");
+        return await _repository.GetAllAsync(cancellationToken);
+    }
+
+    public async Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        _logger.LogDebug("Getting Product with ID {Id}", id);
+        return await _repository.GetByIdAsync(id, cancellationToken);
+    }
+
+    public async Task<Product> CreateAsync(Product entity, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Creating new Product");
+        var result = await _repository.CreateAsync(entity, cancellationToken);
+        _logger.LogInformation("Created Product with ID {Id}", result.Id);
+        return result;
+    }
+
+    public async Task<Product?> UpdateAsync(Guid id, Product entity, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Updating Product with ID {Id}", id);
+        
+        var existing = await _repository.GetByIdAsync(id, cancellationToken);
+        if (existing == null)
+        {
+            _logger.LogWarning("Product with ID {Id} not found", id);
+            return null;
+        }
+        
+        var result = await _repository.UpdateAsync(entity, cancellationToken);
+        _logger.LogInformation("Updated Product with ID {Id}", id);
+        return result;
+    }
+
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Deleting Product with ID {Id}", id);
+        
+        var existing = await _repository.GetByIdAsync(id, cancellationToken);
+        if (existing == null)
+        {
+            _logger.LogWarning("Product with ID {Id} not found for deletion", id);
+            return false;
+        }
+        
+        await _repository.DeleteAsync(id, cancellationToken);
+        _logger.LogInformation("Deleted Product with ID {Id}", id);
+        return true;
+    }
+}"
+`;
+
+exports[`Golden Output Snapshots > should produce stable Service Interface output 1`] = `
+"using Shop.Generated;
+
+namespace Shop.Generated.Services;
+
+/// <summary>
+/// Service interface for Product operations
+/// </summary>
+
+public interface IProductService
+{
+    /// <summary>
+    /// Get all Product entities
+    /// </summary>
+
+    Task<IEnumerable<Product>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get a Product by ID
+    /// </summary>
+
+    Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Create a new Product
+    /// </summary>
+
+    Task<Product> CreateAsync(Product entity, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Update an existing Product
+    /// </summary>
+
+    Task<Product?> UpdateAsync(Guid id, Product entity, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Delete a Product by ID
+    /// </summary>
+
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+}"
+`;
+
+exports[`Golden Output Snapshots > should produce stable UpdateDto output 1`] = `
+"using System;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
+namespace Shop.Generated.Dtos;
+
+/// <summary>
+/// DTO for updating an existing Product
+/// </summary>
+
+public class UpdateProductDto
+{
+    /// <summary>
+    /// Product name
+    /// </summary>
+
+    public string? Name { get; set; }
+    /// <summary>
+    /// Unit price
+    /// </summary>
+
+    public decimal? Price { get; set; }
+    /// <summary>
+    /// Stock keeping unit
+    /// </summary>
+
+    public string? Sku { get; set; }
+    /// <summary>
+    /// Product description
+    /// </summary>
+
+    public string? Description { get; set; }
+    public bool? InStock { get; set; }
+}"
+`;
+
+exports[`Golden Output Snapshots > should produce stable project file 1`] = `
+"<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Shop.Generated</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>"
+`;
+
+exports[`Golden Output Snapshots > should produce stable solution file 1`] = `
+"Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shop.Generated", "src\\Shop.Generated.csproj", "{00000000-0000-0000-0000-000000000002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shop.Generated.Tests", "tests\\Shop.Generated.Tests.csproj", "{00000000-0000-0000-0000-000000000003}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{00000000-0000-0000-0000-000000000002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00000000-0000-0000-0000-000000000002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00000000-0000-0000-0000-000000000002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00000000-0000-0000-0000-000000000002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00000000-0000-0000-0000-000000000003}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00000000-0000-0000-0000-000000000003}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00000000-0000-0000-0000-000000000003}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00000000-0000-0000-0000-000000000003}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal"
+`;
+
+exports[`Golden Output Snapshots > should produce stable test project file 1`] = `
+"<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>Shop.Generated.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.6.6" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="coverlet.collector" Version="6.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\\src\\Shop.Generated.csproj" />
+  </ItemGroup>
+
+</Project>"
+`;
+
+exports[`Golden Output Snapshots > should produce stable xUnit Controller Tests output 1`] = `
+"using Microsoft.AspNetCore.Mvc;
+using Moq;
+using Shop.Generated;
+using Shop.Generated.Controllers;
+using Shop.Generated.Services;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Xunit;
+
+namespace Shop.Generated.Tests;
+
+public class ProductControllerTests
+{
+    private readonly Mock<IProductService> _mockService;
+    private readonly ProductController _controller;
+
+    public ProductControllerTests()
+    {
+        _mockService = new Mock<IProductService>();
+        _controller = new ProductController(_mockService.Object);
+    }
+
+    [Fact]
+    public async Task GetAll_ReturnsOkResult()
+    {
+        // Arrange
+        var items = new List<Product>();
+        _mockService.Setup(s => s.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(items);
+
+        // Act
+        var result = await _controller.GetAll(CancellationToken.None);
+
+        // Assert
+        Assert.IsType<OkObjectResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task GetById_WithInvalidId_ReturnsNotFound()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        _mockService.Setup(s => s.GetByIdAsync(id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Product?)null);
+
+        // Act
+        var result = await _controller.GetById(id, CancellationToken.None);
+
+        // Assert
+        Assert.IsType<NotFoundResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task Delete_WithValidId_ReturnsNoContent()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        _mockService.Setup(s => s.DeleteAsync(id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _controller.Delete(id, CancellationToken.None);
+
+        // Assert
+        Assert.IsType<NoContentResult>(result.Result);
+    }
+}"
+`;
+
+exports[`Golden Output Snapshots > should produce stable xUnit Model Tests output 1`] = `
+"using Shop.Generated;
+using Shop.Generated.Dtos;
+using System;
+using Xunit;
+
+namespace Shop.Generated.Tests;
+
+public class ProductTests
+{
+    [Fact]
+    public void Product_Can_Be_Created()
+    {
+        // Arrange & Act
+        var entity = new Product
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = DateTimeOffset.UtcNow,
+            Name = "test-value",
+            Price = 9.99m,
+            Sku = "test-value",
+            InStock = true,
+        };
+
+        // Assert
+        Assert.NotNull(entity);
+    }
+
+    [Fact]
+    public void Product_Required_Properties_Are_Set()
+    {
+        // Arrange
+        var entity = new Product
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = DateTimeOffset.UtcNow,
+            Name = "test-value",
+            Price = 9.99m,
+            Sku = "test-value",
+            InStock = true,
+        };
+
+        // Assert
+        Assert.NotEqual(Guid.Empty, entity.Id);
+        Assert.NotNull(entity.CreatedAt);
+        Assert.False(string.IsNullOrEmpty(entity.Name));
+        Assert.NotEqual(default, entity.Price);
+        Assert.False(string.IsNullOrEmpty(entity.Sku));
+        Assert.NotNull(entity.InStock);
+    }
+
+    [Fact]
+    public void Product_Id_Should_Be_Valid_Guid()
+    {
+        // Arrange
+        var expectedId = Guid.NewGuid();
+
+        var entity = new Product
+        {
+            Id = expectedId,
+            CreatedAt = DateTimeOffset.UtcNow,
+            Name = "test-value",
+            Price = 9.99m,
+            Sku = "test-value",
+            InStock = true,
+        };
+
+        // Assert
+        Assert.Equal(expectedId, entity.Id);
+        Assert.NotEqual(Guid.Empty, entity.Id);
+    }
+
+}"
+`;
+
+exports[`Golden Output Snapshots > should produce the expected file list 1`] = `
+[
+  "Controllers/ProductController.cs",
+  "Data/DbContext.cs",
+  "Dtos/CreateProductDto.cs",
+  "Dtos/ProductResponseDto.cs",
+  "Dtos/UpdateProductDto.cs",
+  "Extensions/RepositoryExtensions.cs",
+  "Extensions/ServiceExtensions.cs",
+  "Models/Product.cs",
+  "Repositories/IProductRepository.cs",
+  "Repositories/ProductRepository.cs",
+  "Services/IProductService.cs",
+  "Services/ProductService.cs",
+  "Tests/ProductControllerTests.cs",
+  "Tests/ProductTests.cs",
+  "Tests/Tests.csproj",
+]
+`;

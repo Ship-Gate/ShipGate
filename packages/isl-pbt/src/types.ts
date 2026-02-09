@@ -123,6 +123,7 @@ export interface FieldConstraints {
   format?: string;
   pattern?: RegExp;
   enum?: string[];
+  precision?: number;
 }
 
 // ============================================================================

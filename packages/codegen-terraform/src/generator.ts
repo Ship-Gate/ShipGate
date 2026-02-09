@@ -49,7 +49,7 @@ export function generate(
   const version = domain.version.value;
 
   // Analyze domain and extract requirements
-  const requirements = analyzeInfrastructureRequirements(domain, features);
+  const requirements = extractInfrastructureRequirements(domain, features);
 
   // Generate main.tf
   const mainContent = generateMainTf(domain, provider, requirements, features);
@@ -206,9 +206,10 @@ function generateMainTf(
 }
 
 /**
- * Analyze domain and extract infrastructure requirements
+ * Analyze domain and extract infrastructure requirements.
+ * Public API: use this to inspect what infra a domain needs before generating TF.
  */
-function analyzeInfrastructureRequirements(
+export function extractInfrastructureRequirements(
   domain: AST.Domain,
   features: InfraFeature[]
 ): InfrastructureRequirements {

@@ -20,7 +20,8 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {},
   "devDependencies": {
@@ -32,5 +33,6 @@
   },
   "author": "IntentOS Team",
   "license": "MIT",
-  "private": true
+  "private": true,
+  "sideEffects": false
 }

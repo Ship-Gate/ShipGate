@@ -15,7 +15,7 @@ pnpm add @isl-lang/test-generator
 ## Quick Start
 
 ```typescript
-import { generate } from '@isl-lang/test-generator';
+import { generateTests, writeFiles } from '@isl-lang/test-generator';
 import { parse } from '@isl-lang/parser';
 
 // Parse your ISL spec
@@ -45,17 +45,32 @@ const domain = parse(`
 `);
 
 // Generate tests
-const result = generate(domain, {
+const result = generateTests(domain, {
   framework: 'vitest',
   outputDir: './tests',
   emitMetadata: true,
+  includeSnapshots: true, // Generate snapshot tests for structured outputs
 });
 
-// Write generated files
-for (const file of result.files) {
-  await writeFile(file.path, file.content);
-}
+// Write files with automatic formatting
+writeFiles(result.files, {
+  outputDir: './tests',
+  format: true, // Format with prettier/biome
+  sortFiles: true, // Deterministic file ordering
+});
 ```
+
+## How Binding Works
+
+The test generator binds ISL behaviors to test cases through several mechanisms:
+
+1. **Precondition Binding**: Each precondition expression is analyzed and converted to input validation tests
+2. **Postcondition Binding**: Postcondition predicates are compiled to assertion statements
+3. **Scenario Binding**: ISL scenario blocks (given/when/then) are converted to concrete test cases
+4. **Error Binding**: Error specifications generate negative test cases
+5. **Property-Based Binding**: Hooks into `@isl-lang/isl-pbt` for property-based test generation
+
+The generator uses domain-specific strategies to understand context and generate meaningful assertions beyond simple equality checks.
 
 ## Supported Patterns
 
@@ -116,6 +131,12 @@ interface GenerateOptions {
   // Generate helper utilities (default: true)
   includeHelpers?: boolean;
   
+  // Generate snapshot tests for structured outputs (default: true)
+  includeSnapshots?: boolean;
+  
+  // Include property-based test stubs (default: true)
+  includePropertyTests?: boolean;
+  
   // Generate test-metadata.json (default: true)
   emitMetadata?: boolean;
   
@@ -123,6 +144,83 @@ interface GenerateOptions {
   forceDomain?: 'auth' | 'payments' | 'uploads' | 'webhooks' | 'generic';
 }
 ```
+
+## Features
+
+### Scenario Tests
+
+The generator automatically converts ISL scenario blocks into test cases:
+
+```isl
+scenarios CreateUser {
+  scenario "successful user creation" {
+    given {
+      email = "alice@example.com"
+    }
+    when {
+      result = CreateUser(email: email)
+    }
+    then {
+      result is success
+      result.id != null
+    }
+  }
+}
+```
+
+Generates:
+```typescript
+describe('Scenarios', () => {
+  it('successful user creation', async () => {
+    // Given: Setup test state
+    const email = "alice@example.com";
+    
+    // When: Execute behavior
+    const result = await CreateUser(email);
+    
+    // Then: Verify outcomes
+    expect(result.success).toBe(true);
+    expect(result.id).not.toBeNull();
+  });
+});
+```
+
+### Property-Based Test Stubs
+
+When `@isl-lang/isl-pbt` is available, the generator creates property-based test hooks:
+
+```typescript
+describe('Property-Based Tests', () => {
+  it('should satisfy all preconditions and postconditions', async () => {
+    const { runPBT } = await import('@isl-lang/isl-pbt');
+    const report = await runPBT(domain, 'Login', implementation, {
+      numTests: 100,
+      seed: 12345,
+    });
+    expect(report.success).toBe(true);
+  });
+});
+```
+
+### Snapshot Tests
+
+For structured outputs, snapshot tests are automatically generated:
+
+```typescript
+describe('Login - Snapshot Tests', () => {
+  it('should match snapshot for structured output', async () => {
+    const result = await Login(input);
+    expect(result).toMatchSnapshot();
+  });
+});
+```
+
+### Deterministic Output
+
+The generator ensures deterministic output:
+- Behaviors are sorted alphabetically
+- Files are written in stable order
+- Code is formatted consistently (prettier/biome)
 
 ## Output Structure
 
@@ -283,6 +381,61 @@ Detect which domain strategy matches a behavior.
 ### `registerStrategy(strategy)`
 
 Register a custom domain strategy.
+
+## Golden Testing Integration
+
+The test generator integrates with `@isl-lang/codegen-harness` for deterministic golden file testing:
+
+```typescript
+import { vitestGenerator, jestGenerator } from '@isl-lang/test-generator';
+
+// Use in codegen-harness
+import { ALL_GENERATORS } from '@isl-lang/codegen-harness';
+
+// Add test generators
+const generators = [
+  ...ALL_GENERATORS,
+  vitestGenerator,
+  jestGenerator,
+];
+```
+
+### Deterministic Output
+
+All generated tests use seeded random number generation, ensuring:
+- ✅ Same ISL spec → same test code
+- ✅ Suitable for version control
+- ✅ CI/CD regression testing
+- ✅ Golden file comparison
+
+The generator removes timestamps and uses stable formatting for deterministic output.
+
+## Pure Behaviors vs API Behaviors
+
+The generator automatically detects behavior types:
+
+### Pure Behaviors (Unit Tests)
+Behaviors without side effects generate unit tests:
+- No entity lookups or mutations
+- Simple input/output transformations
+- Fast, isolated tests
+- Example: `CalculateTotal`, `ValidateEmail`
+
+### API Behaviors (Integration Scaffolds)
+Behaviors with side effects generate integration test scaffolds:
+- Entity lookups/mutations
+- External service calls
+- Database operations
+- Example: `CreatePayment`, `Login`, `UploadFile`
+
+The generator creates appropriate test structures for each type automatically.
+
+## Examples
+
+See [EXAMPLES.md](./EXAMPLES.md) for three comprehensive examples:
+1. Pure Function Behavior (Unit Tests)
+2. API Behavior (Integration Scaffolds)
+3. Authentication Behavior (Domain-Specific)
 
 ## License
 

@@ -1,0 +1,99 @@
+{
+  "domain": "HardMode",
+  "parseSuccess": true,
+  "checkSuccess": true,
+  "minEntities": 3,
+  "minBehaviors": 5,
+  "claims": [
+    {
+      "id": "hm-create-reservation-postcondition",
+      "type": "postcondition",
+      "behavior": "CreateReservation",
+      "description": "Reservation created in HELD status with 10-minute hold window",
+      "verdict": "pass"
+    },
+    {
+      "id": "hm-capacity-invariant",
+      "type": "invariant",
+      "description": "At any point in time, active reservations never exceed resource capacity",
+      "verdict": "pass"
+    },
+    {
+      "id": "hm-state-machine-invariant",
+      "type": "invariant",
+      "description": "Only valid state transitions allowed (PENDING→HELD→CONFIRMED/EXPIRED/CANCELLED)",
+      "verdict": "pass"
+    },
+    {
+      "id": "hm-temporal-ordering-invariant",
+      "type": "invariant",
+      "description": "confirmed_at < starts_at and held_until < starts_at",
+      "verdict": "pass"
+    },
+    {
+      "id": "hm-hold-deadline",
+      "type": "invariant",
+      "behavior": "ConfirmReservation",
+      "description": "Confirmation after held_until is rejected with no grace period",
+      "verdict": "pass"
+    },
+    {
+      "id": "hm-optimistic-concurrency",
+      "type": "invariant",
+      "behavior": "ConfirmReservation",
+      "description": "Stale version triggers VERSION_CONFLICT",
+      "verdict": "pass"
+    },
+    {
+      "id": "hm-late-cancel-blocked",
+      "type": "invariant",
+      "behavior": "CancelReservation",
+      "description": "Cancellation within 1 hour of starts_at is blocked",
+      "verdict": "pass"
+    },
+    {
+      "id": "hm-expire-holds-postcondition",
+      "type": "postcondition",
+      "behavior": "ExpireHolds",
+      "description": "Only HELD reservations past held_until are expired; CONFIRMED untouched",
+      "verdict": "pass"
+    },
+    {
+      "id": "hm-conflict-detection-postcondition",
+      "type": "postcondition",
+      "behavior": "DetectConflicts",
+      "description": "Detects time points where active reservations exceed capacity",
+      "verdict": "pass"
+    },
+    {
+      "id": "hm-conflicts-resolved-invariant",
+      "type": "invariant",
+      "description": "Detected conflicts must be resolved by moving reservation to CONFLICT status",
+      "verdict": "pass"
+    },
+    {
+      "id": "hm-hold-expiration-scenario",
+      "type": "scenario",
+      "description": "Hold expires after 10-minute deadline without confirmation",
+      "verdict": "pass"
+    },
+    {
+      "id": "hm-capacity-double-booking-scenario",
+      "type": "scenario",
+      "description": "Capacity-2 resource allows 2 concurrent; rejects 3rd",
+      "verdict": "pass"
+    },
+    {
+      "id": "hm-optimistic-concurrency-scenario",
+      "type": "scenario",
+      "description": "Second confirm with stale version raises VERSION_CONFLICT",
+      "verdict": "pass"
+    },
+    {
+      "id": "hm-late-cancel-scenario",
+      "type": "scenario",
+      "description": "Cancellation within 1 hour of start is blocked",
+      "verdict": "pass"
+    }
+  ]
+}

@@ -4,18 +4,16 @@
  * 
  * Model Context Protocol server that exposes ISL tools to AI assistants.
  * 
- * Core Tools:
- * - isl_check: Parse and type check an ISL spec
- * - isl_generate: Generate TypeScript code from ISL spec
- * - isl_constraints: Extract pre/postconditions from a behavior
- * - isl_suggest: Suggest fixes for verification failures
- * 
- * Pipeline Tools (SHIP/NO-SHIP workflow):
- * - isl_build: Build ISL specs from prompt → code + tests
- * - isl_verify: Run verification → collect evidence
- * - isl_gate: SHIP/NO-SHIP decision with evidence bundle ⭐
- * 
- * Translator Tools (optional):
+ * ── Unified Shipgate API (first-class) ──────────────────────────────────
+ * - scan:         Parse + typecheck an ISL spec
+ * - verify:       Verify implementation against spec → trust score
+ * - proof_pack:   Create deterministic evidence bundle
+ * - proof_verify: Verify evidence bundle integrity
+ * - gen:          Generate TypeScript from ISL spec
+ *
+ * ── Legacy Tools (backward-compatible) ──────────────────────────────────
+ * - isl_check, isl_generate, isl_constraints, isl_suggest
+ * - isl_build, isl_verify, isl_gate
  * - isl_translate, isl_validate_ast, isl_repair_ast, isl_print
  * 
  * Resources:
@@ -34,6 +32,21 @@ import {
 import { parse } from '@isl-lang/parser';
 import { check } from '@isl-lang/typechecker';
 import { generate as generateRuntime } from '@isl-lang/codegen-runtime';
+
+// Unified core operations (single source of truth)
+import {
+  scan as coreScan,
+  verifySpec as coreVerify,
+  proofPack as coreProofPack,
+  proofVerify as coreProofVerify,
+  gen as coreGen,
+} from './core.js';
+import type {
+  VerifyResult as CoreVerifyResult,
+} from './core.js';
+
+// Auth guard
+import { resolveAuthConfig, createAuthGuard } from './auth.js';
 
 // Pipeline tools
 import {
@@ -120,11 +133,95 @@ const server = new Server(
 // Tool Handlers
 // ============================================================================
 
+// ============================================================================
+// Auth Guard
+// ============================================================================
+
+const authConfig = resolveAuthConfig();
+const authGuard = createAuthGuard(authConfig);
+
+// ============================================================================
+// Unified Shipgate Tool Schemas
+// ============================================================================
+
+const UNIFIED_TOOL_SCHEMAS: ToolDefinition[] = [
+  {
+    name: 'scan',
+    description: 'Parse and typecheck an ISL specification. Returns domain info, diagnostics, and AST summary. This is the entry point for all spec validation.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        source: { type: 'string', description: 'ISL source code' },
+        filename: { type: 'string', description: 'Optional filename for diagnostics' },
+      },
+      required: ['source'],
+    },
+  },
+  {
+    name: 'verify',
+    description: 'Verify an implementation against an ISL spec. Returns SHIP/NO-SHIP decision, trust score, clause-by-clause results, and blockers.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        spec: { type: 'string', description: 'ISL specification source code' },
+        implementation: { type: 'string', description: 'Implementation source code' },
+        framework: { type: 'string', enum: ['vitest', 'jest'], description: 'Test framework (default: vitest)' },
+        timeout: { type: 'number', description: 'Per-test timeout in ms (default: 30000)' },
+        threshold: { type: 'number', description: 'Minimum trust score to SHIP (default: 95)' },
+        allowSkipped: { type: 'boolean', description: 'Allow skipped tests to pass (default: false)' },
+      },
+      required: ['spec', 'implementation'],
+    },
+  },
+  {
+    name: 'proof_pack',
+    description: 'Create a deterministic evidence bundle from verification results. Produces a fingerprinted manifest with artifact hashes for tamper detection.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        spec: { type: 'string', description: 'ISL specification source code' },
+        implementation: { type: 'string', description: 'Implementation source code' },
+        verifyResult: { type: 'object', description: 'Result from the verify tool' },
+        outputDir: { type: 'string', description: 'Directory to write bundle (omit for in-memory)' },
+      },
+      required: ['spec', 'implementation', 'verifyResult'],
+    },
+  },
+  {
+    name: 'proof_verify',
+    description: 'Verify an evidence bundle\'s integrity. Recomputes artifact hashes and fingerprint to detect tampering.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        bundlePath: { type: 'string', description: 'Path to the evidence bundle directory' },
+      },
+      required: ['bundlePath'],
+    },
+  },
+  {
+    name: 'gen',
+    description: 'Generate TypeScript types and runtime verification code from an ISL specification.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        source: { type: 'string', description: 'ISL source code' },
+        mode: { type: 'string', enum: ['development', 'production', 'test'], description: 'Code generation mode (default: development)' },
+      },
+      required: ['source'],
+    },
+  },
+];
+
 // List available tools
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   const coreTools: ToolDefinition[] = [
     // ========================================================================
-    // Core Tools
+    // Unified Shipgate API (first-class)
+    // ========================================================================
+    ...UNIFIED_TOOL_SCHEMAS,
+
+    // ========================================================================
+    // Legacy Tools (backward-compatible)
     // ========================================================================
     {
       name: 'isl_check',
@@ -231,8 +328,74 @@ interface CallToolResult {
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
+  // Auth guard — reject if token mode is active and token is missing/invalid
+  const authCtx = authGuard((args ?? {}) as Record<string, unknown>);
+  if (!authCtx.authenticated) {
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({ success: false, error: authCtx.error }, null, 2),
+        },
+      ],
+      isError: true,
+    };
+  }
+
   switch (name) {
-    // Core tools
+    // ==================================================================
+    // Unified Shipgate API
+    // ==================================================================
+    case 'scan':
+      return formatMCPResponse(
+        coreScan(
+          (args as { source: string; filename?: string }).source,
+          (args as { source: string; filename?: string }).filename,
+        ),
+      );
+
+    case 'verify':
+      return formatMCPResponse(
+        await coreVerify(
+          (args as { spec: string }).spec,
+          (args as { implementation: string }).implementation,
+          {
+            framework: (args as Record<string, unknown>).framework as 'vitest' | 'jest' | undefined,
+            timeout: (args as Record<string, unknown>).timeout as number | undefined,
+            threshold: (args as Record<string, unknown>).threshold as number | undefined,
+            allowSkipped: (args as Record<string, unknown>).allowSkipped as boolean | undefined,
+          },
+        ),
+      );
+
+    case 'proof_pack':
+      return formatMCPResponse(
+        await coreProofPack(
+          (args as { spec: string }).spec,
+          (args as { implementation: string }).implementation,
+          (args as { verifyResult: CoreVerifyResult }).verifyResult,
+          (args as { outputDir?: string }).outputDir,
+        ),
+      );
+
+    case 'proof_verify':
+      return formatMCPResponse(
+        await coreProofVerify(
+          (args as { bundlePath: string }).bundlePath,
+        ),
+      );
+
+    case 'gen':
+      return formatMCPResponse(
+        coreGen(
+          (args as { source: string }).source,
+          { mode: (args as { mode?: string }).mode as 'development' | 'production' | 'test' | undefined },
+        ),
+      );
+
+    // ==================================================================
+    // Legacy tools (backward-compatible)
+    // ==================================================================
     case 'isl_check':
       return handleCheck(args as { source: string; filename?: string });
     

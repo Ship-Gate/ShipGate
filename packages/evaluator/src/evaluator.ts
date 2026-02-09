@@ -9,7 +9,6 @@ import type {
   EntityStore,
   BuiltinRegistry,
   LambdaValue,
-  DiagnosticPayload,
 } from './types.js';
 import {
   EvaluationError,

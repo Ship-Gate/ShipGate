@@ -1,0 +1,40 @@
+{
+  "name": "@isl-lang/db-reality-verifier",
+  "version": "0.1.0",
+  "description": "Agent 30 — Database Reality Verifier: Detect hallucinated DB schema usage",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@types/node": "^20.10.0",
+    "glob": "^10.3.10"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "rimraf": "^5.0.5"
+  },
+  "author": "mevla",
+  "license": "MIT",
+  "private": true,
+  "sideEffects": false
+}

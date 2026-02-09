@@ -1,0 +1,70 @@
+{
+  "domain": "MultiTenantSaas",
+  "parseSuccess": true,
+  "checkSuccess": true,
+  "minEntities": 3,
+  "minBehaviors": 5,
+  "claims": [
+    {
+      "id": "mt-create-tenant-postcondition",
+      "type": "postcondition",
+      "behavior": "CreateTenant",
+      "description": "Tenant created with owner as first TenantUser",
+      "verdict": "pass"
+    },
+    {
+      "id": "mt-add-user-postcondition",
+      "type": "postcondition",
+      "behavior": "AddUserToTenant",
+      "description": "User count incremented; membership recorded",
+      "verdict": "pass"
+    },
+    {
+      "id": "mt-user-limit-invariant",
+      "type": "invariant",
+      "behavior": "AddUserToTenant",
+      "description": "User count never exceeds plan max_users",
+      "verdict": "pass"
+    },
+    {
+      "id": "mt-upgrade-no-reduce",
+      "type": "invariant",
+      "behavior": "UpgradePlan",
+      "description": "Upgrade never reduces quotas",
+      "verdict": "pass"
+    },
+    {
+      "id": "mt-tenant-isolation",
+      "type": "invariant",
+      "behavior": "QueryTenantData",
+      "description": "Queries never return data from another tenant",
+      "verdict": "pass"
+    },
+    {
+      "id": "mt-access-denied",
+      "type": "postcondition",
+      "behavior": "QueryTenantData",
+      "description": "Non-members cannot query tenant data",
+      "verdict": "pass"
+    },
+    {
+      "id": "mt-suspend-readonly",
+      "type": "invariant",
+      "behavior": "SuspendTenant",
+      "description": "Suspended tenants are read-only; no new resources",
+      "verdict": "pass"
+    },
+    {
+      "id": "mt-isolation-scenario",
+      "type": "scenario",
+      "description": "Tenant isolation enforced across tenants",
+      "verdict": "pass"
+    },
+    {
+      "id": "mt-user-limit-scenario",
+      "type": "scenario",
+      "description": "User limit enforced by plan tier",
+      "verdict": "pass"
+    }
+  ]
+}

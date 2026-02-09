@@ -129,3 +129,80 @@ export type {
   ProofVerifyCheck,
   FailClosedSummary,
 } from './proof-verify.js';
+
+// Canonical JSON serialization (deterministic hashing)
+export {
+  canonicalJsonStringify,
+  canonicalJsonCompact,
+  normalizeJson,
+} from './canonical-json.js';
+
+// ProofBundle v1 — deterministic, hashable, verifiable bundles
+export {
+  createBundle,
+  verifyBundle as verifyBundleV1,
+  bundleHash,
+  serializeBundle,
+  parseBundle,
+} from './bundle-hash.js';
+
+export type {
+  ProofBundleV1,
+  CreateBundleInput,
+  BundleVerdict,
+  BundleClaim,
+  ClaimStatus,
+  BundleVerdictArtifact,
+  BundleTraceRef,
+  BundleEvidence,
+  VerifyBundleResult,
+  VerifyBundleCheck,
+} from './bundle-hash.js';
+
+// Unified Claim Graph
+export {
+  ClaimGraphBuilder,
+  createClaimGraphBuilder,
+  buildClaimGraph,
+} from './claim-graph.js';
+
+export type {
+  UnifiedClaim,
+  ClaimGraph,
+  ClaimKind,
+  ClaimStatus as UnifiedClaimStatus,
+  ClaimSubject,
+  ClaimLocation,
+  ClaimEvidence,
+  ClaimRelationship,
+  GraphBuilderOptions,
+} from './claim-graph.js';
+
+// Claim adapters
+export {
+  fromBundleClaim,
+  fromClaimsVerifierClaim,
+  fromFirewallClaim,
+  fromVerifierClauseResult,
+  createRouteClaim,
+  createEnvClaim,
+} from './claim-adapters.js';
+
+// Claim export
+export {
+  exportClaimGraphToJson,
+  exportClaimGraphToHtml,
+  serializeClaimGraph,
+} from './claim-export.js';
+
+// Claim integration
+export {
+  buildUnifiedClaimGraph,
+  extractClaimsFromProofBundle,
+  extractClaimsFromVerifierReport,
+  mergeClaimCollections,
+} from './claim-integration.js';
+
+export type {
+  ClaimCollection,
+} from './claim-integration.js';

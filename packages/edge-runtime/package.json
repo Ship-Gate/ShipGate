@@ -27,7 +27,9 @@
     "build": "tsc",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@isl-lang/verifier-runtime": "workspace:*"
@@ -36,7 +38,9 @@
     "@cloudflare/workers-types": "^4.20240117.0",
     "@types/node": "^20.0.0",
     "typescript": "^5.3.0",
-    "vitest": "^1.0.0"
+    "vitest": "^1.0.0",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
   },
   "files": [
     "dist",
@@ -63,5 +67,6 @@
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
   },
   "private": true,
-  "experimental": true
+  "experimental": true,
+  "sideEffects": false
 }

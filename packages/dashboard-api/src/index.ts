@@ -18,6 +18,8 @@ import { ensureAuditSchema } from './audit/schema.js';
 import { createAuditQueries } from './audit/queries.js';
 import { createAuditService } from './audit/service.js';
 import { auditRouter } from './audit/routes.js';
+import { createBackboneQueries } from './backbone/queries.js';
+import { backboneRouter } from './backbone/routes.js';
 
 // Re-export types for consumers
 export type {
@@ -50,6 +52,24 @@ export {
   type AuditActor,
   type AuditRecord,
 } from './audit/index.js';
+
+// Backbone module (orgs / projects / runs / artifacts / verdicts)
+export {
+  BACKBONE_SCHEMA_SQL,
+  BACKBONE_SCHEMA_VERSION,
+  createBackboneQueries,
+  backboneRouter,
+  type BackboneQueries,
+  type Org,
+  type Project,
+  type Run,
+  type Artifact,
+  type Verdict,
+  type RunWithDetails,
+  type CreateOrgInput,
+  type CreateProjectInput,
+  type SubmitRunInput,
+} from './backbone/index.js';
 
 // Auth module
 export {
@@ -158,12 +178,16 @@ export function createApp(options: CreateAppOptions): Express {
     res.json({ ok: true, data: { status: 'healthy', uptime: process.uptime() } });
   });
 
+  // ── Backbone subsystem (orgs / projects / runs / artifacts / verdicts)
+  const bbQueries = createBackboneQueries(options.db);
+
   // ── Route mounts ─────────────────────────────────────────────────────
   app.use('/api/v1/reports', reportsRouter(queries));
   app.use('/api/v1/coverage', coverageRouter(queries));
   app.use('/api/v1/trends', trendsRouter(queries));
   app.use('/api/v1/drift', driftRouter(queries));
   app.use('/api/v1/audit', auditRouter(auditQueries));
+  app.use('/api/v1/backbone', backboneRouter(bbQueries));
 
   // ── Error handling ───────────────────────────────────────────────────
   app.use(notFoundHandler);

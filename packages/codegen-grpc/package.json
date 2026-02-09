@@ -38,7 +38,8 @@
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@isl-lang/isl-core": "workspace:*"
@@ -50,7 +51,9 @@
     "@vitest/coverage-v8": "^1.0.0",
     "eslint": "^8.55.0",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
-    "@typescript-eslint/parser": "^6.13.0"
+    "@typescript-eslint/parser": "^6.13.0",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -77,5 +80,6 @@
   },
   "homepage": "https://intentlang.dev",
   "private": true,
-  "experimental": true
+  "experimental": true,
+  "sideEffects": false
 }

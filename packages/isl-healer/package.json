@@ -20,7 +20,8 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "diff": "^5.1.0"
@@ -52,5 +53,6 @@
     "self-healing",
     "patch",
     "code-generation"
-  ]
+  ],
+  "sideEffects": false
 }

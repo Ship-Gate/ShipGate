@@ -18,10 +18,14 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts src/tools/pipeline/index.ts src/tools/pipeline/pipeline-tools.ts src/tools/pipeline/gate-tool.ts src/tools/pipeline/pipeline-types.ts src/tools/pipeline/gate-types.ts --format esm --dts --clean",
+    "build": "tsup src/index.ts src/core.ts src/auth.ts src/tools/pipeline/index.ts src/tools/pipeline/pipeline-tools.ts src/tools/pipeline/gate-tool.ts src/tools/pipeline/pipeline-types.ts src/tools/pipeline/gate-types.ts --format esm --dts --clean",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
@@ -34,7 +38,9 @@
     "@types/node": "^20.0.0",
     "tsup": "^8.0.1",
     "tsx": "^4.0.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "rimraf": "^5.0.5"
   },
   "keywords": [
     "isl",
@@ -51,5 +57,6 @@
     "url": "git+https://github.com/isl-lang/isl.git"
   },
   "private": true,
-  "experimental": true
+  "experimental": true,
+  "sideEffects": false
 }

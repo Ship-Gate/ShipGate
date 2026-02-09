@@ -2,7 +2,7 @@
 // C# Model Templates
 // ============================================================================
 
-import type { CSharpClassInfo, CSharpPropertyInfo, CSharpGeneratorOptions } from '../types';
+import type { CSharpClassInfo, CSharpPropertyInfo, CSharpGeneratorOptions } from '../types.js';
 
 /**
  * Generate using statements

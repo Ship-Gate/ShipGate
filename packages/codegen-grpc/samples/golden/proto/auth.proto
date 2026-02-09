@@ -1,0 +1,162 @@
+syntax = "proto3";
+
+package isl.auth.v1;
+
+option go_package = "github.com/isl-lang/auth/gen/go";
+
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/field_mask.proto";
+
+// ==========================================================================
+// Types
+// ==========================================================================
+
+message Email {
+  string value = 1;
+}
+
+message HashedPassword {
+  string value = 1 [(validate.rules).string = {min_len = 60}];
+}
+
+enum Role {
+  ROLE_UNSPECIFIED = 0;
+  ROLE_ADMIN = 1;
+  ROLE_USER = 2;
+  ROLE_GUEST = 3;
+}
+
+enum SessionStatus {
+  SESSION_STATUS_UNSPECIFIED = 0;
+  SESSION_STATUS_ACTIVE = 1;
+  SESSION_STATUS_EXPIRED = 2;
+  SESSION_STATUS_REVOKED = 3;
+}
+
+// ==========================================================================
+// Entities
+// ==========================================================================
+
+// User entity
+message User {
+  string id = 1;
+  Email email = 2 [(validate.rules).message = {required = true}];
+  HashedPassword password_hash = 3 [json_name = "passwordHash", (validate.rules).message = {required = true}];
+  Role role = 4 [(validate.rules).message = {required = true}];
+  google.protobuf.Timestamp created_at = 5 [json_name = "createdAt"];
+}
+
+// Field mask for User updates
+message UserFieldMask {
+  google.protobuf.FieldMask paths = 1;
+}
+
+// Session entity
+message Session {
+  string id = 1;
+  string user_id = 2 [json_name = "userId"];
+  string token = 3;
+  SessionStatus status = 4 [(validate.rules).message = {required = true}];
+  google.protobuf.Timestamp expires_at = 5 [json_name = "expiresAt"];
+}
+
+// Field mask for Session updates
+message SessionFieldMask {
+  google.protobuf.FieldMask paths = 1;
+}
+
+// ==========================================================================
+// Services
+// ==========================================================================
+
+message RegisterUserRequest {
+  Email email = 1 [(validate.rules).message.required = true];
+  string password = 2 [(validate.rules).string.min_len = 1];
+  Role role = 3;
+}
+
+message RegisterUserResponse {
+  oneof result {
+    User user = 1;
+    RegisterUserError error = 2;
+  }
+}
+
+enum RegisterUserErrorCode {
+  REGISTER_USER_ERROR_CODE_UNSPECIFIED = 0;
+  REGISTER_USER_ERROR_CODE_DUPLICATE_EMAIL = 1;
+  REGISTER_USER_ERROR_CODE_INVALID_EMAIL = 2;
+  REGISTER_USER_ERROR_CODE_WEAK_PASSWORD = 3;
+}
+
+message RegisterUserError {
+  RegisterUserErrorCode code = 1;
+  string message = 2;
+  bool retriable = 3;
+  int32 retry_after_seconds = 4;
+  map<string, string> details = 5;
+}
+
+message LoginRequest {
+  Email email = 1 [(validate.rules).message.required = true];
+  string password = 2 [(validate.rules).string.min_len = 1];
+}
+
+message LoginResponse {
+  oneof result {
+    Session session = 1;
+    LoginError error = 2;
+  }
+}
+
+enum LoginErrorCode {
+  LOGIN_ERROR_CODE_UNSPECIFIED = 0;
+  LOGIN_ERROR_CODE_INVALID_CREDENTIALS = 1;
+  LOGIN_ERROR_CODE_ACCOUNT_LOCKED = 2;
+}
+
+message LoginError {
+  LoginErrorCode code = 1;
+  string message = 2;
+  bool retriable = 3;
+  int32 retry_after_seconds = 4;
+  map<string, string> details = 5;
+}
+
+message LogoutRequest {
+  string session_id = 1;
+}
+
+message LogoutResponse {
+  oneof result {
+    bool data = 1;
+    LogoutError error = 2;
+  }
+}
+
+enum LogoutErrorCode {
+  LOGOUT_ERROR_CODE_UNSPECIFIED = 0;
+  LOGOUT_ERROR_CODE_SESSION_NOT_FOUND = 1;
+  LOGOUT_ERROR_CODE_SESSION_EXPIRED = 2;
+}
+
+message LogoutError {
+  LogoutErrorCode code = 1;
+  string message = 2;
+  bool retriable = 3;
+  int32 retry_after_seconds = 4;
+  map<string, string> details = 5;
+}
+
+
+
+// UserService - RPC service for User operations
+service UserService {
+  // Register a new user account
+  rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
+  // Authenticate user and create session
+  rpc Login(LoginRequest) returns (LoginResponse);
+  // Revoke the current session
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+}

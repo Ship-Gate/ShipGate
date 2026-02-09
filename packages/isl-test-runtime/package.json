@@ -21,7 +21,8 @@
     "test": "tsx run-tests.ts",
     "test:scenarios": "tsx run-tests.ts --scenarios",
     "test:export": "tsx run-tests.ts --export",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:unit": "tsx run-tests.ts"
   },
   "dependencies": {
     "@isl-lang/trace-format": "workspace:*",
@@ -35,5 +36,6 @@
     "vitest": "^1.2.0"
   },
   "author": "mevla",
-  "license": "MIT"
+  "license": "MIT",
+  "sideEffects": false
 }

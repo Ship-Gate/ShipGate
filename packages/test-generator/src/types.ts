@@ -28,6 +28,8 @@ export interface GenerateOptions {
   includeHelpers?: boolean;
   /** Include property-based tests */
   includePropertyTests?: boolean;
+  /** Include snapshot tests for structured outputs */
+  includeSnapshots?: boolean;
   /** Auto-detect domain from spec patterns */
   autoDetectDomain?: boolean;
   /** Force specific domain strategy */

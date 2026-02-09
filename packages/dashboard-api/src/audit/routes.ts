@@ -99,7 +99,12 @@ export function auditRouter(auditQueries: AuditQueries): Router {
 
   // ── GET /api/v1/audit/:id — get single audit record ─────────────────
   router.get('/:id', (req: Request, res: Response): void => {
-    const record = auditQueries.getAuditRecord(req.params['id']!);
+    const id = Array.isArray(req.params['id']) ? req.params['id'][0] : req.params['id'];
+    if (!id) {
+      res.status(400).json({ ok: false, error: 'Missing id parameter' });
+      return;
+    }
+    const record = auditQueries.getAuditRecord(id);
     if (!record) {
       res.status(404).json({ ok: false, error: 'Audit record not found' });
       return;

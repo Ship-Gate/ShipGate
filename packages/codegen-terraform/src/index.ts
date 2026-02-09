@@ -3,7 +3,7 @@
 // Generates Terraform/OpenTofu infrastructure from ISL domain specifications
 // ============================================================================
 
-export { generate } from './generator';
+export { generate, extractInfrastructureRequirements } from './generator';
 
 // Types
 export type {

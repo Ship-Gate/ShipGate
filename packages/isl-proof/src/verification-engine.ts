@@ -5,17 +5,17 @@
  * - evaluator from @isl-lang/evaluator
  * - runtime trace events (from tests or proof bundle)
  * 
- * Fail-closed: if a postcondition cannot be evaluated (unknown), verdict is NOT_PROVEN (or INCOMPLETE_PROOF).
+ * Fail-closed: if a postcondition cannot be evaluated (unknown), verdict is UNPROVEN (or INCOMPLETE_PROOF).
  * Must link each failed clause to code location + evidence.
  * 
  * @module @isl-lang/proof
  */
 
-import type { DomainDeclaration } from '@isl-lang/isl-core';
+import type { Domain } from '@isl-lang/parser';
 import type { SourceSpan } from '@isl-lang/isl-core';
-import type { EvaluationContext, EntityStore, EntityStoreSnapshot } from '@isl-lang/evaluator/types';
-import { Evaluator } from '@isl-lang/evaluator/evaluator';
-import { InMemoryEntityStore, SnapshotEntityStore, createSnapshotStore } from '@isl-lang/evaluator/environment';
+import type { EvaluationContext, EntityStore, EntityStoreSnapshot } from '@isl-lang/evaluator';
+import { Evaluator } from '@isl-lang/evaluator';
+import { InMemoryEntityStore, SnapshotEntityStore, createSnapshotStore } from '@isl-lang/evaluator';
 
 // ============================================================================
 // Types
@@ -50,13 +50,7 @@ export interface TraceEvent {
   stateAfter?: EntityStoreSnapshot;
 }
 
-/**
- * Entity store snapshot
- */
-export interface EntityStoreSnapshot {
-  entities: Map<string, Map<string, Record<string, unknown>>>;
-  timestamp: number;
-}
+// EntityStoreSnapshot is imported from @isl-lang/evaluator
 
 /**
  * Trace slice - relevant events for evaluating a clause
@@ -116,7 +110,7 @@ export interface ClauseEvidence {
  */
 export type VerificationVerdict = 
   | 'PROVEN'           // All clauses proven
-  | 'NOT_PROVEN'       // Some clauses could not be evaluated
+  | 'UNPROVEN'       // Some clauses could not be evaluated
   | 'INCOMPLETE_PROOF' // Missing trace data
   | 'VIOLATED';        // Some clauses failed
 
@@ -146,10 +140,10 @@ export interface VerificationResult {
 
 export class VerificationEngine {
   private evaluator: Evaluator;
-  private domain: DomainDeclaration;
+  private domain: Domain;
   private traces: TraceEvent[] = [];
 
-  constructor(domain: DomainDeclaration) {
+  constructor(domain: Domain) {
     this.evaluator = new Evaluator();
     this.domain = domain;
   }
@@ -249,14 +243,14 @@ export class VerificationEngine {
     // Extract postconditions from behaviors
     for (const behavior of this.domain.behaviors) {
       if (behavior.postconditions) {
-        for (const condition of behavior.postconditions.conditions) {
-          for (const stmt of condition.statements) {
+        for (const postconditionBlock of behavior.postconditions) {
+          for (const predicate of postconditionBlock.predicates) {
             clauses.push({
-              clauseId: `${behavior.name.value}_postcondition_${stmt.span.start.line}_${stmt.span.start.column}`,
+              clauseId: `${behavior.name.name}_postcondition_${predicate.location.line}_${predicate.location.column}`,
               type: 'postcondition',
-              behavior: behavior.name.value,
-              sourceSpan: this.spanToInfo(stmt.span),
-              expression: stmt.expression,
+              behavior: behavior.name.name,
+              sourceSpan: this.locationToInfo(predicate.location),
+              expression: predicate,
             });
           }
         }
@@ -266,11 +260,11 @@ export class VerificationEngine {
       if (behavior.invariants) {
         for (const inv of behavior.invariants) {
           clauses.push({
-            clauseId: `${behavior.name.value}_invariant_${inv.span.start.line}_${inv.span.start.column}`,
+            clauseId: `${behavior.name.name}_invariant_${inv.location.line}_${inv.location.column}`,
             type: 'invariant',
-            behavior: behavior.name.value,
-            sourceSpan: this.spanToInfo(inv.span),
-            expression: inv.expression,
+            behavior: behavior.name.name,
+            sourceSpan: this.locationToInfo(inv.location),
+            expression: inv,
           });
         }
       }
@@ -278,12 +272,12 @@ export class VerificationEngine {
 
     // Extract global invariants
     for (const invBlock of this.domain.invariants) {
-      for (const inv of invBlock.invariants) {
+      for (const inv of invBlock.predicates) {
         clauses.push({
-          clauseId: `global_invariant_${inv.span.start.line}_${inv.span.start.column}`,
+          clauseId: `global_invariant_${inv.location.line}_${inv.location.column}`,
           type: 'invariant',
-          sourceSpan: this.spanToInfo(inv.span),
-          expression: inv.expression,
+          sourceSpan: this.locationToInfo(inv.location),
+          expression: inv,
         });
       }
     }
@@ -291,13 +285,13 @@ export class VerificationEngine {
     return clauses;
   }
 
-  private spanToInfo(span: SourceSpan): SourceSpanInfo {
+  private locationToInfo(location: { file?: string; line: number; column: number; endLine: number; endColumn: number }): SourceSpanInfo {
     return {
-      file: span.file || 'unknown',
-      startLine: span.start.line,
-      startColumn: span.start.column,
-      endLine: span.end.line,
-      endColumn: span.end.column,
+      file: location.file || 'unknown',
+      startLine: location.line,
+      startColumn: location.column,
+      endLine: location.endLine,
+      endColumn: location.endColumn,
     };
   }
 
@@ -451,11 +445,11 @@ export class VerificationEngine {
       store,
       oldState: oldStore ? this.snapshotFromStore(oldStore) : undefined,
       domain: {
-        name: this.domain.name.value,
+        name: this.domain.name.name,
         entities: this.domain.entities.map(e => ({
-          name: e.name.value,
+          name: e.name.name,
           fields: e.fields.map(f => ({
-            name: f.name.value,
+            name: f.name.name,
             type: f.type,
             optional: f.optional,
           })),
@@ -514,7 +508,7 @@ export class VerificationEngine {
 
     const hasNotProven = evidence.some(e => e.evaluatedResult.status === 'not_proven');
     if (hasNotProven) {
-      return 'NOT_PROVEN';
+      return 'UNPROVEN';
     }
 
     const allProven = evidence.every(e => e.evaluatedResult.status === 'proven');
@@ -567,7 +561,7 @@ export class VerificationEngine {
  * Verify a domain against trace events
  */
 export async function verifyDomain(
-  domain: DomainDeclaration,
+  domain: Domain,
   traces: TraceEvent[]
 ): Promise<VerificationResult> {
   const engine = new VerificationEngine(domain);

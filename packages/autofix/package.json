@@ -20,18 +20,21 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "diff": "^5.1.0"
   },
   "peerDependencies": {
     "@isl-lang/isl-core": "workspace:*",
-    "@isl-lang/ai-generator": "workspace:*"
+    "@isl-lang/ai-generator": "workspace:*",
+    "@isl-lang/gate": "workspace:*"
   },
   "devDependencies": {
     "@isl-lang/isl-core": "workspace:*",
     "@isl-lang/ai-generator": "workspace:*",
+    "@isl-lang/gate": "workspace:*",
     "@types/diff": "^5.0.9",
     "@types/node": "^25.1.0",
     "rimraf": "^5.0.5",
@@ -49,5 +52,6 @@
   "bugs": {
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
   },
-  "private": true
+  "private": true,
+  "sideEffects": false
 }

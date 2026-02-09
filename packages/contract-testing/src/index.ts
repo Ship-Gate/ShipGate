@@ -14,3 +14,14 @@ export { ContractRunner, type RunnerOptions, type TestResult } from './runner.js
 export { CoverageAnalyzer, type CoverageReport } from './coverage.js';
 export { MutationTester, type MutationResult } from './mutation.js';
 export { TestGenerator, generateTests, type TestSuite } from './generator.js';
+export { ScenarioParser, type ISLScenario, type ParsedScenarios } from './scenario-parser.js';
+export { ContractTestHarness, type TestCase, type Assertion } from './harness.js';
+export { VitestTestGenerator, type TestGenerationOptions } from './vitest-generator.js';
+export {
+  InMemoryAuthAdapter,
+  InMemoryPaymentAdapter,
+  InMemoryUserAdapter,
+  type MockAuthAdapter,
+  type MockPaymentAdapter,
+  type MockUserAdapter,
+} from './mock-adapters.js';

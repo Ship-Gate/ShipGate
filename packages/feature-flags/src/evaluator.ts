@@ -8,7 +8,8 @@ import type {
   TargetingRule,
   Condition,
   RolloutConfig,
-} from './types';
+  EvaluationReasoning,
+} from './types.js';
 import murmurhash from 'murmurhash';
 
 export class FlagEvaluator {
@@ -52,7 +53,7 @@ export class FlagEvaluator {
 
     // Return default variant
     if (flag.variants && flag.variants.length > 0) {
-      const defaultVariant = flag.variants.find(v => v.key === flag.defaultVariant) 
+      const defaultVariant = flag.variants.find((v) => v.key === flag.defaultVariant) 
         ?? flag.variants[0]!;
       
       return {
@@ -85,8 +86,13 @@ export class FlagEvaluator {
     );
 
     for (const rule of sortedRules) {
-      if (this.matchesRule(rule, context)) {
-        const variant = flag.variants?.find(v => v.key === rule.variant);
+      const matchResult = this.matchesRuleWithDetails(rule, context);
+      if (matchResult.matched) {
+        const variant = flag.variants?.find((v) => v.key === rule.variant);
+        const reasoning: EvaluationReasoning = {
+          matchedTargetingRuleId: rule.id,
+          matchedConditions: matchResult.matchedConditions,
+        };
         return {
           flagKey: flag.key,
           enabled: true,
@@ -94,6 +100,7 @@ export class FlagEvaluator {
           value: variant?.value,
           reason: 'TARGETING_MATCH',
           metadata: { ruleId: rule.id, ...variant?.payload },
+          reasoning,
         };
       }
     }
@@ -102,15 +109,27 @@ export class FlagEvaluator {
   }
 
   /**
-   * Check if context matches a targeting rule
+   * Check if context matches a targeting rule and return detailed match information
    */
-  private matchesRule(rule: TargetingRule, context: EvaluationContext): boolean {
+  private matchesRuleWithDetails(
+    rule: TargetingRule,
+    context: EvaluationContext
+  ): { matched: boolean; matchedConditions: Array<{ attribute: string; operator: string; value: unknown }> } {
+    const matchedConditions: Array<{ attribute: string; operator: string; value: unknown }> = [];
+    
     for (const condition of rule.conditions) {
-      if (!this.matchesCondition(condition, context)) {
-        return false;
+      if (this.matchesCondition(condition, context)) {
+        matchedConditions.push({
+          attribute: condition.attribute,
+          operator: condition.operator,
+          value: condition.value,
+        });
+      } else {
+        return { matched: false, matchedConditions: [] };
       }
     }
-    return true;
+    
+    return { matched: true, matchedConditions };
   }
 
   /**
@@ -187,6 +206,8 @@ export class FlagEvaluator {
     switch (attribute) {
       case 'userId':
         return context.userId;
+      case 'orgId':
+        return context.orgId;
       case 'sessionId':
         return context.sessionId;
       case 'environment':
@@ -236,12 +257,24 @@ export class FlagEvaluator {
     }
 
     // Calculate hash for deterministic bucketing
-    const stickinessKey = rollout.stickiness ?? 'userId';
+    // Prefer orgId over userId for stickiness if available
+    const stickinessKey = rollout.stickiness ?? (context.orgId ? 'orgId' : 'userId');
     const stickinessValue = this.getAttributeValue(stickinessKey, context);
-    const bucket = this.getBucket(flag.key, String(stickinessValue ?? ''));
+    const stickinessValueStr = String(stickinessValue ?? '');
+    const bucketResult = this.getBucketWithDetails(flag.key, stickinessValueStr);
+    const bucket = bucketResult.bucket;
+    const hashValue = bucketResult.hashValue;
 
-    if (bucket < percentage) {
-      // User is in the rollout
+    if (bucket <= percentage) {
+      // User/org is in the rollout
+      const reasoning: EvaluationReasoning = {
+        bucket,
+        stickinessKey,
+        stickinessValue: stickinessValueStr,
+        rolloutPercentage: percentage,
+        hashValue,
+      };
+
       if (flag.variants && flag.variants.length > 0) {
         const variant = this.selectVariantByWeight(flag.variants, bucket);
         return {
@@ -251,6 +284,7 @@ export class FlagEvaluator {
           value: variant.value,
           reason: 'ROLLOUT',
           metadata: { percentage, bucket, ...variant.payload },
+          reasoning,
         };
       }
 
@@ -259,9 +293,11 @@ export class FlagEvaluator {
         enabled: true,
         reason: 'ROLLOUT',
         metadata: { percentage, bucket },
+        reasoning,
       };
     }
 
+    // User/org is not in the rollout - return null but include reasoning for audit
     return null;
   }
 
@@ -303,11 +339,16 @@ export class FlagEvaluator {
   }
 
   /**
-   * Get deterministic bucket (0-100) for a user
+   * Get deterministic bucket with detailed hash information for audit logging
+   * Returns bucket in 0-100 range (inclusive) using stable hash
    */
-  private getBucket(flagKey: string, userId: string): number {
-    const hash = murmurhash.v3(`${flagKey}:${userId}`);
-    return (hash % 100);
+  private getBucketWithDetails(
+    flagKey: string,
+    stickinessValue: string
+  ): { bucket: number; hashValue: number } {
+    const hash = murmurhash.v3(`${flagKey}:${stickinessValue}`);
+    const bucket = Math.abs(hash) % 101;
+    return { bucket, hashValue: hash };
   }
 
   /**

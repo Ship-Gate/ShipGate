@@ -22,11 +22,11 @@ Respond with clarification requests, not guesses:
 3. ✓ Types match actual implementations
 4. ✓ Patterns match existing codebase conventions
 
-## Verified API Routes (610 total)
-Reference `.shipgate/truthpack/routes.json` for verified endpoints.
+## Verified API Routes (713 total)
+Reference `.vibecheck/truthpack/routes.json` for verified endpoints.
 
-## Verified Contracts (7606 total)
-Reference `.shipgate/truthpack/contracts.json` for verified types.
+## Verified Contracts (8174 total)
+Reference `.vibecheck/truthpack/contracts.json` for verified types.
 
 ---
 <!-- guardrail:auto-generated -->

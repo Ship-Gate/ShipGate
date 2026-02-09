@@ -18,5 +18,16 @@ export { generateGoStubs, type GoStubOptions } from './grpc/go';
 // Connect-RPC generation
 export { generateConnectTypeScript, type ConnectOptions } from './connect/typescript';
 
+// Error mapping
+export {
+  mapErrorToGrpcStatus,
+  mapBehaviorErrors,
+  generateErrorMappingComment,
+  generateStatusCodeMap,
+  GrpcStatusCode,
+  GRPC_STATUS_NAMES,
+  type MappedError,
+} from './error-mapping';
+
 // Utilities
 export { toProtoCase, toSnakeCase, toPascalCase, toCamelCase } from './utils';

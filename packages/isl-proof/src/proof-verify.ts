@@ -370,14 +370,14 @@ export function formatVerificationResult(
   // Verdict
   const verdictIcon = {
     PROVEN: '✓',
-    NOT_PROVEN: '⚠',
+    UNPROVEN: '⚠',
     INCOMPLETE_PROOF: '○',
     VIOLATED: '✗',
   }[result.verdict];
 
   const verdictColor = {
     PROVEN: '\x1b[32m',      // green
-    NOT_PROVEN: '\x1b[33m',   // yellow
+    UNPROVEN: '\x1b[33m',   // yellow
     INCOMPLETE_PROOF: '\x1b[36m', // cyan
     VIOLATED: '\x1b[31m',     // red
   }[result.verdict];

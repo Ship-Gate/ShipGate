@@ -179,6 +179,14 @@ export class ISLCodeActionProvider {
       }
     }
 
+    // Generate skeleton from spec — available when cursor is inside a domain
+    if (this.isInDomain(lines, range.start.line)) {
+      const domainName = this.extractDomainName(lines);
+      if (domainName) {
+        actions.push(this.createGenerateSkeletonAction(document, domainName));
+      }
+    }
+
     return actions;
   }
 
@@ -1071,5 +1079,38 @@ ${indent}}
       }
     }
     return false;
+  }
+
+  private isInDomain(lines: string[], lineNum: number): boolean {
+    for (let i = lineNum; i >= 0; i--) {
+      const line = lines[i] || '';
+      if (line.match(/^\s*domain\s+\w+/)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private extractDomainName(lines: string[]): string | undefined {
+    for (const line of lines) {
+      const match = line.match(/^\s*domain\s+(\w+)/);
+      if (match) return match[1];
+    }
+    return undefined;
+  }
+
+  private createGenerateSkeletonAction(
+    document: TextDocument,
+    domainName: string
+  ): CodeAction {
+    return {
+      title: `Generate implementation skeleton for ${domainName}`,
+      kind: CodeActionKind.Source,
+      command: {
+        title: 'Generate Skeleton from ISL Spec',
+        command: 'isl.generateSkeleton',
+        arguments: [document.uri, domainName],
+      },
+    };
   }
 }

@@ -17,6 +17,10 @@
 
 import { program } from './cli.js';
 import { ExitCode } from './exit-codes.js';
+import { initTracing, shutdownTracing } from '@isl-lang/observability';
+
+// Initialise tracing early — noop unless ISL_TRACE=1 or SHIPGATE_TRACE=1
+initTracing({ serviceName: 'shipgate-cli', serviceVersion: '1.0.0' });
 
 // Intercept process.exit to handle Commander's direct calls
 const originalExit = process.exit;
@@ -40,5 +44,9 @@ process.exit = function(code?: number | null): never {
   return originalExit.call(process, code ?? 0);
 };
 
-// Parse command line arguments and execute
-program.parse();
+// Parse command line arguments and execute — flush traces before exit
+program.parseAsync().then(() => shutdownTracing()).catch(async (err) => {
+  await shutdownTracing();
+  console.error(err);
+  process.exit(ExitCode.INTERNAL_ERROR);
+});

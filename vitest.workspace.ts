@@ -296,4 +296,37 @@ export default defineWorkspace([
       },
     },
   },
+  // MCP Server package (unified Shipgate API)
+  {
+    test: {
+      name: 'mcp-server',
+      root: './packages/mcp-server',
+      globals: true,
+      environment: 'node',
+      include: ['tests/**/*.test.ts'],
+      testTimeout: 60000,
+    },
+  },
+  // Codegen Quality Harness (golden output + compile checks)
+  {
+    test: {
+      name: 'codegen-harness',
+      root: './packages/codegen-harness',
+      globals: true,
+      environment: 'node',
+      include: ['tests/**/*.test.ts'],
+      testTimeout: 30000,
+    },
+  },
+  // gRPC/Proto Code Generator
+  {
+    test: {
+      name: 'codegen-grpc',
+      root: './packages/codegen-grpc',
+      globals: true,
+      environment: 'node',
+      include: ['tests/**/*.test.ts'],
+      testTimeout: 30000,
+    },
+  },
 ]);

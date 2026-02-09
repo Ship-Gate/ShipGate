@@ -31,6 +31,13 @@ import {
   generateBehaviorTypes,
 } from './interfaces.js';
 
+import {
+  generateHandlers,
+  generateServiceImpl,
+} from './handlers.js';
+
+import { generateTestStubs } from './test-gen.js';
+import { generateScaffold } from './scaffold.js';
 import { renderValidationHelpers, renderRegexValidator } from './templates/validation.tmpl.js';
 
 // Generator options
@@ -40,13 +47,16 @@ export interface GeneratorOptions {
   packageName?: string;
   includeValidation?: boolean;
   includeMocks?: boolean;
+  includeHandlers?: boolean;
+  includeTests?: boolean;
+  includeScaffold?: boolean;
 }
 
 // Generated file
 export interface GeneratedFile {
   path: string;
   content: string;
-  type: 'types' | 'models' | 'interfaces' | 'validation' | 'errors';
+  type: 'types' | 'models' | 'interfaces' | 'validation' | 'errors' | 'handlers' | 'tests' | 'scaffold';
 }
 
 // Generator result
@@ -95,6 +105,48 @@ export function generate(domain: Domain, options: GeneratorOptions): GeneratedFi
   if (errorsFile) {
     files.push(errorsFile);
   }
+
+  // Generate handlers.go (handler skeletons with precondition checks)
+  if (options.includeHandlers !== false) {
+    const handlersFile = generateHandlersFile(domain, packageName, typeRegistry);
+    if (handlersFile) {
+      files.push(handlersFile);
+    }
+  }
+
+  // Generate handlers_test.go (test stubs from scenarios)
+  if (options.includeTests !== false) {
+    const testFiles = generateTestStubs(packageName, domain.behaviors, domain.scenarios);
+    for (const tf of testFiles) {
+      files.push({ path: tf.path, content: tf.content, type: 'tests' });
+    }
+  }
+
+  // Generate scaffold files (go.mod, doc.go)
+  if (options.includeScaffold !== false) {
+    const scaffoldFiles = generateScaffold(domain, options.module);
+    for (const sf of scaffoldFiles) {
+      files.push({ path: sf.path, content: sf.content, type: 'scaffold' });
+    }
+  }
+
+  // Stable output ordering: scaffold first, then types, models, interfaces, handlers, errors, validation, tests
+  const typeOrder: Record<string, number> = {
+    scaffold: 0,
+    types: 1,
+    models: 2,
+    interfaces: 3,
+    handlers: 4,
+    errors: 5,
+    validation: 6,
+    tests: 7,
+  };
+  files.sort((a, b) => {
+    const oa = typeOrder[a.type] ?? 99;
+    const ob = typeOrder[b.type] ?? 99;
+    if (oa !== ob) return oa - ob;
+    return a.path.localeCompare(b.path);
+  });
 
   return files;
 }
@@ -391,6 +443,44 @@ function generateErrorsFile(
     path: `${packageName}/errors.go`,
     content,
     type: 'errors',
+  };
+}
+
+/**
+ * Generate handlers.go file
+ */
+function generateHandlersFile(
+  domain: Domain,
+  packageName: string,
+  _typeRegistry: Map<string, string>
+): GeneratedFile | null {
+  if (domain.behaviors.length === 0) {
+    return null;
+  }
+
+  const imports = emptyImports();
+  imports.standard.add('context');
+  imports.standard.add('fmt');
+  const sections: string[] = [];
+
+  // Service implementation struct
+  const implResult = generateServiceImpl(domain.name.name, domain.behaviors);
+  mergeInto(imports, implResult.imports);
+  sections.push(implResult.code);
+
+  // Handler skeletons
+  const handlers = generateHandlers(domain.name.name, domain.behaviors);
+  for (const handler of handlers) {
+    mergeInto(imports, handler.imports);
+    sections.push(handler.code);
+  }
+
+  const content = formatGoFile(packageName, imports, sections);
+
+  return {
+    path: `${packageName}/handlers.go`,
+    content,
+    type: 'handlers',
   };
 }
 

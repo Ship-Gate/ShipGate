@@ -15,6 +15,7 @@ import type {
   RegexLiteral,
   ConstraintDefinition,
 } from '../types';
+import type { EnumDeclaration } from '@isl-lang/isl-core';
 import { toTypeDefinition } from '../types';
 import {
   toScreamingSnakeCase,
@@ -481,6 +482,47 @@ function generateConstraintValidation(constraints: ConstraintDefinition[]): stri
   
   if (rules.length === 0) return null;
   return `[(validate.rules).${ruleType} = {${rules.join(', ')}}]`;
+}
+
+// ==========================================================================
+// ENUM DECLARATION GENERATION (from isl-core EnumDeclaration)
+// ==========================================================================
+
+/**
+ * Generate proto enums from isl-core EnumDeclaration nodes.
+ * These are top-level enum declarations in the domain (separate from TypeDeclaration).
+ */
+export function generateProtoEnums(
+  enums: EnumDeclaration[],
+  _options: ProtoTypeOptions = {}
+): GeneratedProtoType[] {
+  const results: GeneratedProtoType[] = [];
+
+  for (const enumDecl of enums) {
+    const name = toPascalCase(enumDecl.name.name);
+    const prefix = toScreamingSnakeCase(name);
+    const lines: string[] = [`enum ${name} {`];
+
+    lines.push(`  ${prefix}_UNSPECIFIED = 0;`);
+
+    let value = 1;
+    for (const variant of enumDecl.variants) {
+      const variantName = `${prefix}_${toScreamingSnakeCase(variant.name)}`;
+      lines.push(`  ${variantName} = ${value};`);
+      value++;
+    }
+
+    lines.push('}');
+
+    results.push({
+      name,
+      definition: lines.join('\n'),
+      imports: new Set<string>(),
+      isWrapper: false,
+    });
+  }
+
+  return results;
 }
 
 // ==========================================================================

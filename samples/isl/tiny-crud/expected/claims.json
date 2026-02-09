@@ -1,0 +1,57 @@
+{
+  "domain": "TinyCrud",
+  "parseSuccess": true,
+  "checkSuccess": true,
+  "minEntities": 1,
+  "minBehaviors": 5,
+  "claims": [
+    {
+      "id": "crud-create-postcondition",
+      "type": "postcondition",
+      "behavior": "CreateTodo",
+      "description": "Created todo exists with correct title and OPEN status",
+      "verdict": "pass"
+    },
+    {
+      "id": "crud-read-idempotent",
+      "type": "postcondition",
+      "behavior": "GetTodo",
+      "description": "Read returns the exact entity by ID",
+      "verdict": "pass"
+    },
+    {
+      "id": "crud-update-postcondition",
+      "type": "postcondition",
+      "behavior": "UpdateTodo",
+      "description": "Updated fields reflect new values; unchanged fields preserved",
+      "verdict": "pass"
+    },
+    {
+      "id": "crud-delete-postcondition",
+      "type": "postcondition",
+      "behavior": "DeleteTodo",
+      "description": "Entity no longer exists after deletion",
+      "verdict": "pass"
+    },
+    {
+      "id": "crud-archived-invariant",
+      "type": "invariant",
+      "behavior": "UpdateTodo",
+      "description": "ARCHIVED is a terminal status — no transition to OPEN",
+      "verdict": "pass"
+    },
+    {
+      "id": "crud-list-filter",
+      "type": "postcondition",
+      "behavior": "ListTodos",
+      "description": "Status filter correctly restricts results",
+      "verdict": "pass"
+    },
+    {
+      "id": "crud-lifecycle-scenario",
+      "type": "scenario",
+      "description": "Full CRUD lifecycle executes without errors",
+      "verdict": "pass"
+    }
+  ]
+}

@@ -56,7 +56,8 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@isl-lang/parser": "workspace:*",
@@ -72,5 +73,6 @@
   },
   "author": "mevla",
   "license": "MIT",
-  "experimental": true
+  "experimental": true,
+  "sideEffects": false
 }

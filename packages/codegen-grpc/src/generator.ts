@@ -3,7 +3,7 @@
 // ============================================================================
 
 import type { Domain } from './types';
-import { generateProtoTypes, collectTypeImports } from './proto/types';
+import { generateProtoTypes, generateProtoEnums, collectTypeImports } from './proto/types';
 import { generateProtoMessages } from './proto/messages';
 import { generateProtoServices, generateCrudService } from './proto/services';
 import { generateProtoOptions, generateBufYaml, generateBufGenYaml } from './proto/options';
@@ -69,12 +69,20 @@ export function generate(domain: Domain, options: GenerateOptions): GeneratedFil
   // Collect all imports
   const allImports = new Set<string>();
   
-  // Generate types
+  // Generate types from TypeDeclaration
   const protoTypes = generateProtoTypes(domain.types, {
     includeValidation: options.includeValidation,
   });
   
-  collectTypeImports(protoTypes).forEach(i => allImports.add(i));
+  // Generate enums from EnumDeclaration (separate from types in isl-core)
+  const protoEnums = generateProtoEnums(domain.enums ?? [], {
+    includeValidation: options.includeValidation,
+  });
+  
+  // Merge types and enums
+  const allProtoTypes = [...protoTypes, ...protoEnums];
+  
+  collectTypeImports(allProtoTypes).forEach(i => allImports.add(i));
   
   // Generate entity messages
   const entityMessages = generateProtoMessages(domain.entities, {
@@ -123,7 +131,7 @@ export function generate(domain: Domain, options: GenerateOptions): GeneratedFil
     package: protoPackage,
     goPackage: options.goPackage,
     imports: Array.from(allImports),
-    types: protoTypes,
+    types: allProtoTypes,
     messages: entityMessages,
     services: services.length > 0 ? services : crudServices,
   });

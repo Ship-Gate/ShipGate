@@ -25,6 +25,24 @@ import {
   maxDepthExceededError,
   invalidImportPathError,
 } from './errors.js';
+import {
+  parseTSConfig,
+  findTSConfig,
+  hashTSConfig,
+  resolvePathAlias,
+  matchesPathAlias,
+  type PathAliases,
+} from './tsconfig.js';
+import {
+  resolvePackageExport,
+  findPackageJson,
+} from './package-exports.js';
+import {
+  ResolverCache,
+  hashLockfile,
+  getFileMtime,
+  type CacheKey,
+} from './cache.js';
 
 /**
  * Default resolver options
@@ -40,11 +58,23 @@ const DEFAULT_OPTIONS: Partial<ResolverOptions> = {
  * 
  * Resolves local module imports (./foo.isl, ../bar.isl), detects cycles,
  * and builds a dependency graph for bundling.
+ * 
+ * Supports:
+ * - TS path aliases (paths + baseUrl)
+ * - Extension resolution order
+ * - Index file resolution
+ * - Package exports resolution
+ * - Fast caching (tsconfig hash + lockfile hash + file mtime)
  */
 export class ImportResolver {
   private options: Required<ResolverOptions>;
   private cache: Map<string, ResolvedModule> = new Map();
+  private resolverCache: ResolverCache;
   private errors: ResolverError[] = [];
+  private pathAliases: PathAliases | null = null;
+  private tsconfigHash: string = '';
+  private lockfileHash: string = '';
+  private projectRoot: string;
 
   constructor(options: ResolverOptions) {
     this.options = {
@@ -52,7 +82,36 @@ export class ImportResolver {
       ...options,
       readFile: options.readFile ?? this.defaultReadFile.bind(this),
       fileExists: options.fileExists ?? this.defaultFileExists.bind(this),
+      extensions: options.extensions ?? [options.defaultExtension ?? '.isl'],
+      projectRoot: options.projectRoot ?? options.basePath,
+      enableCache: options.enableCache ?? true,
     } as Required<ResolverOptions>;
+
+    this.projectRoot = this.options.projectRoot;
+    this.resolverCache = new ResolverCache();
+    
+    // Initialize tsconfig and lockfile hashes
+    this.initializeConfig().catch(() => {
+      // Silently fail - will resolve without path aliases
+    });
+  }
+
+  /**
+   * Initialize tsconfig and lockfile hashes
+   */
+  private async initializeConfig(): Promise<void> {
+    // Find and parse tsconfig
+    const tsconfigPath = this.options.tsconfigPath
+      ? this.options.tsconfigPath
+      : await findTSConfig(this.projectRoot);
+
+    if (tsconfigPath) {
+      this.tsconfigHash = await hashTSConfig(tsconfigPath);
+      this.pathAliases = await parseTSConfig(tsconfigPath, this.projectRoot);
+    }
+
+    // Hash lockfile
+    this.lockfileHash = await hashLockfile(this.projectRoot);
   }
 
   /**
@@ -218,6 +277,16 @@ export class ImportResolver {
     const baseDir = path.dirname(normalizedPath);
 
     for (const importSpec of importSpecs) {
+      // Validate import path format
+      if (!this.isValidImportPath(importSpec.from)) {
+        this.errors.push(invalidImportPathError(
+          importSpec.from,
+          'Import path must be relative (./ or ../), a TS path alias, or a node module',
+          importSpec.location
+        ));
+        continue;
+      }
+
       const resolvedPath = await this.resolveImportPath(
         importSpec.from,
         baseDir,
@@ -272,77 +341,203 @@ export class ImportResolver {
 
   /**
    * Resolve an import path to an absolute file path
+   * Supports:
+   * - Relative paths (./foo, ../bar)
+   * - TS path aliases (@/components, @utils/*)
+   * - Node modules (lodash, @types/node)
+   * - Package exports (package.json exports field)
    */
   private async resolveImportPath(
     importPath: string,
     baseDir: string,
     location: AST.SourceLocation
   ): Promise<string | null> {
-    // Validate import path
-    if (!this.isValidImportPath(importPath)) {
-      this.errors.push(invalidImportPathError(
+    const searchedPaths: string[] = [];
+
+    // Check cache first
+    if (this.options.enableCache) {
+      const fileMtime = await getFileMtime(baseDir);
+      const cacheKey: CacheKey = {
+        tsconfigHash: this.tsconfigHash,
+        lockfileHash: this.lockfileHash,
+        fileMtime,
         importPath,
-        'Import path must be a relative path starting with "./" or "../"',
-        location
-      ));
-      return null;
-    }
-
-    // Resolve relative path
-    let resolvedPath = path.resolve(baseDir, importPath);
-
-    // Add extension if not present
-    if (!path.extname(resolvedPath)) {
-      resolvedPath = resolvedPath + this.options.defaultExtension;
-    }
-
-    // Normalize
-    resolvedPath = this.normalizePath(resolvedPath);
-
-    // Check if file exists
-    const searchedPaths: string[] = [resolvedPath];
-    
-    let exists = await this.options.fileExists(resolvedPath);
-    
-    // Try with default extension if doesn't exist
-    if (!exists && !resolvedPath.endsWith(this.options.defaultExtension)) {
-      const withExtension = resolvedPath + this.options.defaultExtension;
-      searchedPaths.push(withExtension);
-      if (await this.options.fileExists(withExtension)) {
-        resolvedPath = withExtension;
-        exists = true;
+        baseDir,
+      };
+      const cached = this.resolverCache.get(cacheKey);
+      if (cached) {
+        return cached.path;
       }
     }
 
-    // Try index file in directory
-    if (!exists) {
-      const indexPath = path.join(resolvedPath, 'index' + this.options.defaultExtension);
-      searchedPaths.push(indexPath);
-      if (await this.options.fileExists(indexPath)) {
-        resolvedPath = indexPath;
-        exists = true;
+    // 1. Try relative path resolution
+    if (importPath.startsWith('./') || importPath.startsWith('../')) {
+      const resolved = await this.resolveRelativePath(importPath, baseDir, searchedPaths);
+      if (resolved) {
+        return resolved;
       }
     }
 
-    if (!exists) {
-      this.errors.push(moduleNotFoundError(
-        importPath,
-        resolvedPath,
-        searchedPaths,
-        location
-      ));
-      return null;
+    // 2. Try TS path aliases
+    if (this.pathAliases && matchesPathAlias(importPath, this.pathAliases)) {
+      const candidates = resolvePathAlias(importPath, this.pathAliases);
+      for (const candidate of candidates) {
+        searchedPaths.push(candidate);
+        const resolved = await this.tryResolveFile(candidate, searchedPaths);
+        if (resolved) {
+          return resolved;
+        }
+      }
     }
 
-    return resolvedPath;
+    // 3. Try node_modules resolution
+    const nodeModuleResolved = await this.resolveNodeModule(importPath, searchedPaths);
+    if (nodeModuleResolved) {
+      return nodeModuleResolved;
+    }
+
+    // Not found
+    this.errors.push(moduleNotFoundError(
+      importPath,
+      importPath,
+      searchedPaths,
+      location
+    ));
+    return null;
   }
 
   /**
-   * Check if an import path is valid (local relative path)
+   * Resolve a relative path (./foo or ../bar)
+   */
+  private async resolveRelativePath(
+    importPath: string,
+    baseDir: string,
+    searchedPaths: string[]
+  ): Promise<string | null> {
+    let resolvedPath = path.resolve(baseDir, importPath);
+    resolvedPath = this.normalizePath(resolvedPath);
+
+    return this.tryResolveFile(resolvedPath, searchedPaths);
+  }
+
+  /**
+   * Try to resolve a file path with extensions and index files
+   */
+  private async tryResolveFile(
+    filePath: string,
+    searchedPaths: string[]
+  ): Promise<string | null> {
+    // If path already has an extension, try it directly
+    const ext = path.extname(filePath);
+    if (ext) {
+      searchedPaths.push(filePath);
+      if (await this.options.fileExists(filePath)) {
+        return filePath;
+      }
+    }
+
+    // Try each extension in order
+    for (const extension of this.options.extensions) {
+      const withExt = filePath + extension;
+      searchedPaths.push(withExt);
+      if (await this.options.fileExists(withExt)) {
+        return withExt;
+      }
+    }
+
+    // Try index files in directory
+    for (const extension of this.options.extensions) {
+      const indexPath = path.join(filePath, 'index' + extension);
+      searchedPaths.push(indexPath);
+      if (await this.options.fileExists(indexPath)) {
+        return indexPath;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Resolve a node module (package name)
+   */
+  private async resolveNodeModule(
+    importPath: string,
+    searchedPaths: string[]
+  ): Promise<string | null> {
+    // Find package.json
+    const packageInfo = await findPackageJson(importPath, this.projectRoot);
+    if (!packageInfo) {
+      return null;
+    }
+
+    // Extract subpath
+    const parts = importPath.split('/');
+    let subpath = '.';
+    if (importPath.startsWith('@')) {
+      if (parts.length > 2) {
+        subpath = './' + parts.slice(2).join('/');
+      }
+    } else {
+      if (parts.length > 1) {
+        subpath = './' + parts.slice(1).join('/');
+      }
+    }
+
+    // Try package.json exports field
+    const resolved = await resolvePackageExport(
+      packageInfo.path,
+      subpath,
+      ['import', 'types', 'default']
+    );
+
+    if (resolved) {
+      searchedPaths.push(resolved);
+      if (await this.options.fileExists(resolved)) {
+        return resolved;
+      }
+    }
+
+    // Fallback: try main/types fields
+    if (subpath === '.') {
+      if (packageInfo.packageJson.types) {
+        const typesPath = path.join(packageInfo.path, packageInfo.packageJson.types);
+        searchedPaths.push(typesPath);
+        if (await this.options.fileExists(typesPath)) {
+          return typesPath;
+        }
+      }
+      if (packageInfo.packageJson.main) {
+        const mainPath = path.join(packageInfo.path, packageInfo.packageJson.main);
+        searchedPaths.push(mainPath);
+        if (await this.options.fileExists(mainPath)) {
+          return mainPath;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Check if an import path is valid
    */
   private isValidImportPath(importPath: string): boolean {
-    // Must be a relative path
-    return importPath.startsWith('./') || importPath.startsWith('../');
+    // Relative path
+    if (importPath.startsWith('./') || importPath.startsWith('../')) {
+      return true;
+    }
+
+    // TS path alias
+    if (this.pathAliases && matchesPathAlias(importPath, this.pathAliases)) {
+      return true;
+    }
+
+    // Node module (not starting with / or .)
+    if (!importPath.startsWith('/') && !importPath.startsWith('.')) {
+      return true;
+    }
+
+    return false;
   }
 
   /**

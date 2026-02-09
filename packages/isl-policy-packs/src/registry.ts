@@ -129,6 +129,7 @@ export async function loadBuiltinPacks(reg: PolicyPackRegistry): Promise<void> {
     { intentPolicyPack },
     { qualityPolicyPack },
     { securityPolicyPack },
+    { starterPolicyPack },
   ] = await Promise.all([
     import('./packs/auth.js'),
     import('./packs/payments.js'),
@@ -137,6 +138,7 @@ export async function loadBuiltinPacks(reg: PolicyPackRegistry): Promise<void> {
     import('./packs/intent.js'),
     import('./packs/quality.js'),
     import('./packs/security.js'),
+    import('./packs/starter.js'),
   ]);
 
   reg.registerPack(authPolicyPack);
@@ -146,4 +148,5 @@ export async function loadBuiltinPacks(reg: PolicyPackRegistry): Promise<void> {
   reg.registerPack(intentPolicyPack);
   reg.registerPack(qualityPolicyPack);
   reg.registerPack(securityPolicyPack);
+  reg.registerPack(starterPolicyPack);
 }

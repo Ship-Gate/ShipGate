@@ -4,6 +4,6 @@
  * ISL-aware feature flag system with behavioral targeting
  */
 
-export * from './types';
-export { FlagEvaluator } from './evaluator';
-export { FeatureFlagProvider } from './provider';
+export * from './types.js';
+export { FlagEvaluator } from './evaluator.js';
+export { FeatureFlagProvider } from './provider.js';

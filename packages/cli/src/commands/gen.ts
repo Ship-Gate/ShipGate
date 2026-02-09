@@ -16,6 +16,7 @@ import { output } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
 import { loadConfig, type ISLConfig } from '../config.js';
 import { findClosestMatch, formatCount } from '../utils.js';
+import { withSpan, ISL_ATTR } from '@isl-lang/observability';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -530,7 +531,14 @@ export async function gen(target: string, file: string, options: GenOptions = {}
     // Parse ISL file
     spinner && (spinner.text = 'Parsing ISL file...');
     const source = await readFile(filePath, 'utf-8');
-    const { domain: ast, errors: parseErrors } = parseISL(source, filePath);
+    const { domain: ast, errors: parseErrors } = await withSpan('codegen.parse', {
+      attributes: { [ISL_ATTR.CODEGEN_SOURCE]: relative(process.cwd(), filePath) },
+    }, async (parseSpan) => {
+      const parsed = parseISL(source, filePath);
+      parseSpan.setAttribute('isl.parse.error_count', parsed.errors.length);
+      if (parsed.errors.length > 0) parseSpan.setError(parsed.errors.map(e => e.message).join('; '));
+      return parsed;
+    });
     
     if (parseErrors.length > 0 || !ast) {
       spinner?.fail('Parse failed');
@@ -547,24 +555,30 @@ export async function gen(target: string, file: string, options: GenOptions = {}
     // Generate code
     spinner && (spinner.text = `Generating ${normalizedTarget} code...`);
     
-    let content: string;
-    switch (normalizedTarget) {
-      case 'ts':
-      case 'typescript':
-        content = generateTypeScript(ast);
-        break;
-      case 'rust':
-        content = generateRust(ast);
-        break;
-      case 'go':
-        content = generateGo(ast);
-        break;
-      case 'openapi':
-        content = generateOpenAPI(ast);
-        break;
-      default:
-        throw new Error(`Generator not implemented for: ${normalizedTarget}`);
-    }
+    const content: string = await withSpan('codegen.emit', {
+      attributes: { [ISL_ATTR.CODEGEN_TARGET]: normalizedTarget },
+    }, async (emitSpan) => {
+      let generated: string;
+      switch (normalizedTarget) {
+        case 'ts':
+        case 'typescript':
+          generated = generateTypeScript(ast);
+          break;
+        case 'rust':
+          generated = generateRust(ast);
+          break;
+        case 'go':
+          generated = generateGo(ast);
+          break;
+        case 'openapi':
+          generated = generateOpenAPI(ast);
+          break;
+        default:
+          throw new Error(`Generator not implemented for: ${normalizedTarget}`);
+      }
+      emitSpan.setAttribute('isl.codegen.output_bytes', generated.length);
+      return generated;
+    });
     
     // Write file
     const domainName = ast.name.name.toLowerCase();

@@ -9,13 +9,15 @@ import type {
   CSharpTypeInfo,
   GeneratedFile,
   GenerationResult,
-} from './types';
-import { DEFAULT_OPTIONS, ISL_TO_CSHARP_TYPES } from './types';
-import { generateModel } from './templates/model';
-import { generateFluentValidator, generateValidatorDIExtension } from './templates/validator';
-import { generateController, generateMinimalApiEndpoints } from './templates/controller';
-import { generateServiceInterface, generateServiceImplementation, generateServiceDIExtension } from './templates/service';
-import { generateRepositoryInterface, generateEFRepository, generateDbContext, generateRepositoryDIExtension } from './templates/repository';
+} from './types.js';
+import { DEFAULT_OPTIONS, ISL_TO_CSHARP_TYPES } from './types.js';
+import { generateModel } from './templates/model.js';
+import { generateFluentValidator, generateValidatorDIExtension } from './templates/validator.js';
+import { generateController, generateMinimalApiEndpoints } from './templates/controller.js';
+import { generateServiceInterface, generateServiceImplementation, generateServiceDIExtension } from './templates/service.js';
+import { generateRepositoryInterface, generateEFRepository, generateDbContext, generateRepositoryDIExtension } from './templates/repository.js';
+import { generateCreateDto, generateUpdateDto, generateResponseDto } from './templates/dto.js';
+import { generateModelTests, generateControllerTests, generateTestProjectFile, generateSolutionFile } from './templates/xunit.js';
 
 /**
  * ISL AST types (simplified for this implementation)
@@ -215,12 +217,77 @@ export function generate(
     }
   }
 
+  // Generate DTOs
+  for (const model of models) {
+    const createDto = generateCreateDto(model, mergedOptions);
+    files.push({
+      path: `Dtos/Create${model.name}Dto.cs`,
+      content: createDto,
+      type: 'model',
+    });
+
+    const updateDto = generateUpdateDto(model, mergedOptions);
+    files.push({
+      path: `Dtos/Update${model.name}Dto.cs`,
+      content: updateDto,
+      type: 'model',
+    });
+
+    const responseDto = generateResponseDto(model, mergedOptions);
+    files.push({
+      path: `Dtos/${model.name}ResponseDto.cs`,
+      content: responseDto,
+      type: 'model',
+    });
+
+    statistics.models += 3;
+    statistics.totalLines += createDto.split('\n').length + updateDto.split('\n').length + responseDto.split('\n').length;
+  }
+
+  // Generate xUnit tests
+  if (mergedOptions.generateTests) {
+    for (const model of models) {
+      const modelTestContent = generateModelTests(model, mergedOptions);
+      files.push({
+        path: `Tests/${model.name}Tests.cs`,
+        content: modelTestContent,
+        type: 'test',
+      });
+      statistics.tests++;
+      statistics.totalLines += modelTestContent.split('\n').length;
+
+      if (mergedOptions.webFramework === 'aspnet-core') {
+        const controllerTestContent = generateControllerTests(model, mergedOptions);
+        files.push({
+          path: `Tests/${model.name}ControllerTests.cs`,
+          content: controllerTestContent,
+          type: 'test',
+        });
+        statistics.tests++;
+        statistics.totalLines += controllerTestContent.split('\n').length;
+      }
+    }
+
+    // Test project file
+    const testProjectContent = generateTestProjectFile(mergedOptions);
+    files.push({
+      path: 'Tests/Tests.csproj',
+      content: testProjectContent,
+      type: 'config',
+    });
+    statistics.totalLines += testProjectContent.split('\n').length;
+  }
+
   // Generate project file
   const projectFile = generateProjectFile(mergedOptions);
+
+  // Generate solution file
+  const solutionFile = generateSolutionFile(mergedOptions);
 
   return {
     files,
     projectFile,
+    solutionFile,
     warnings,
     statistics,
   };
@@ -519,8 +586,8 @@ ${packageRefs}
  */
 function pascalCase(str: string): string {
   return str
-    .replace(/[-_](.)/g, (_, c) => c.toUpperCase())
-    .replace(/^(.)/, (_, c) => c.toUpperCase());
+    .replace(/[-_](.)/g, (_: string, c: string) => c.toUpperCase())
+    .replace(/^(.)/, (_: string, c: string) => c.toUpperCase());
 }
 
 /**
@@ -534,7 +601,7 @@ function camelCase(str: string): string {
 /**
  * Generate all files to the output directory
  */
-export async function generateToDirectory(
+export function generateToDirectory(
   domain: ISLDomain,
   options: Partial<CSharpGeneratorOptions> = {}
 ): Promise<GenerationResult> {
@@ -543,5 +610,5 @@ export async function generateToDirectory(
   // In a real implementation, this would write files to disk
   // For now, we just return the result
   
-  return result;
+  return Promise.resolve(result);
 }

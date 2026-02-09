@@ -46,6 +46,7 @@ export {
   DiagnosticError,
 } from './types.js';
 
+// DiagnosticPayload exported but not used in evaluator.ts - keeping for API compatibility
 export type {
   DiagnosticPayload,
 } from './types.js';

@@ -5,15 +5,32 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    # Nightly full integration run at 03:00 UTC
+    - cron: '0 3 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# ──────────────────────────────────────────────────────────────
+# Shared setup anchor — reused across jobs via YAML anchors
+# (GitHub Actions doesn't support anchors, so we use a composite
+#  action in .github/actions/shipgate-setup instead)
+# ──────────────────────────────────────────────────────────────
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
 jobs:
-  build:
-    name: Build & Test
+  # ============================================================
+  # Fast gate: build + typecheck + lint  (single turbo call)
+  # ============================================================
+  build-check:
+    name: Build / Typecheck / Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,24 +48,28 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
+      - name: Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-node20-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-node20-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build all packages
-        run: pnpm turbo build
+      - name: Build + Typecheck + Lint (parallel via turbo)
+        run: pnpm turbo run build typecheck lint --concurrency=4 --cache-dir=.turbo
 
-      - name: Run tests
-        run: pnpm turbo test
-
-      - name: Type check
-        run: pnpm turbo typecheck
-
-      - name: Lint
-        run: pnpm turbo lint
-
-  size-check:
-    name: Bundle Size Check
+  # ============================================================
+  # Fast unit tests — always runs
+  # ============================================================
+  test-unit:
+    name: Unit Tests
     runs-on: ubuntu-latest
+    needs: build-check
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,11 +85,99 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
+      - name: Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-node20-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-node20-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm turbo build
+      - name: Run unit tests
+        run: pnpm turbo run test:unit --concurrency=4 --cache-dir=.turbo
+
+  # ============================================================
+  # Slow integration tests — nightly or label "run-integration"
+  # ============================================================
+  test-integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: build-check
+    timeout-minutes: 30
+    if: >-
+      github.event_name == 'schedule' ||
+      contains(github.event.pull_request.labels.*.name, 'run-integration') ||
+      github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-node20-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-node20-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run integration tests
+        run: pnpm turbo run test:integration --concurrency=4 --cache-dir=.turbo
+        env:
+          INTEGRATION: true
+
+  # ============================================================
+  # Bundle size check — runs alongside unit tests
+  # ============================================================
+  size-check:
+    name: Bundle Size Check
+    runs-on: ubuntu-latest
+    needs: build-check
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-node20-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-node20-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (from cache)
+        run: pnpm turbo run build --cache-dir=.turbo
 
       - name: Check bundle sizes
         run: |
@@ -83,9 +192,13 @@ jobs:
             fi
           done
 
+  # ============================================================
+  # Security audit — parallel, non-blocking
+  # ============================================================
   audit:
     name: Security Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -108,9 +221,14 @@ jobs:
         run: pnpm audit --audit-level=high
         continue-on-error: true
 
+  # ============================================================
+  # Node version matrix — nightly only (not every PR)
+  # ============================================================
   test-matrix:
     name: Test on Node ${{ matrix.node }}
     runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -130,20 +248,29 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: 'pnpm'
 
+      - name: Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-node${{ matrix.node }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-node${{ matrix.node }}-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm turbo build
+      - name: Build + Test
+        run: pnpm turbo run build test:unit --concurrency=4 --cache-dir=.turbo
 
-      - name: Test
-        run: pnpm turbo test
-
-  # Ensure packages work in both ESM and CJS
+  # ============================================================
+  # Module compatibility — only after build, only on main
+  # ============================================================
   module-test:
     name: Module Compatibility
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-check
+    if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -159,11 +286,19 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
+      - name: Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-node20-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-node20-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build packages
-        run: pnpm turbo build
+      - name: Build packages (from cache)
+        run: pnpm turbo run build --cache-dir=.turbo
 
       - name: Test ESM import
         run: |
@@ -178,3 +313,22 @@ jobs:
             const { parse } = require('./packages/parser/dist/index.cjs');
             console.log('CJS require works:', typeof parse === 'function');
           "
+
+  # ============================================================
+  # CI Gate — summarizes all required checks
+  # ============================================================
+  ci-gate:
+    name: CI Gate
+    runs-on: ubuntu-latest
+    needs: [build-check, test-unit]
+    if: always()
+    steps:
+      - name: Check required jobs
+        run: |
+          echo "build-check: ${{ needs.build-check.result }}"
+          echo "test-unit:   ${{ needs.test-unit.result }}"
+          if [ "${{ needs.build-check.result }}" != "success" ] || [ "${{ needs.test-unit.result }}" != "success" ]; then
+            echo "::error::Required CI checks failed"
+            exit 1
+          fi
+          echo "All required checks passed"

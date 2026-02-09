@@ -1,0 +1,68 @@
+{
+  "domain": "AuthRoles",
+  "parseSuccess": true,
+  "checkSuccess": true,
+  "minEntities": 3,
+  "minBehaviors": 5,
+  "claims": [
+    {
+      "id": "auth-register-postcondition",
+      "type": "postcondition",
+      "behavior": "Register",
+      "description": "New user created with VIEWER role and PENDING status",
+      "verdict": "pass"
+    },
+    {
+      "id": "auth-login-postcondition",
+      "type": "postcondition",
+      "behavior": "Login",
+      "description": "Session created with future expiry; failed count reset",
+      "verdict": "pass"
+    },
+    {
+      "id": "auth-login-fail-postcondition",
+      "type": "postcondition",
+      "behavior": "Login",
+      "description": "Failed login increments failed_login_count",
+      "verdict": "pass"
+    },
+    {
+      "id": "auth-lockout-invariant",
+      "type": "invariant",
+      "description": "Account locked after >5 failed login attempts",
+      "verdict": "pass"
+    },
+    {
+      "id": "auth-no-escalation-invariant",
+      "type": "invariant",
+      "behavior": "AssignRole",
+      "description": "Cannot assign role higher than actor's own role",
+      "verdict": "pass"
+    },
+    {
+      "id": "auth-super-admin-permission",
+      "type": "postcondition",
+      "behavior": "CheckPermission",
+      "description": "SUPER_ADMIN always gets allowed=true",
+      "verdict": "pass"
+    },
+    {
+      "id": "auth-password-never-logged",
+      "type": "invariant",
+      "description": "Password field is never written to logs",
+      "verdict": "pass"
+    },
+    {
+      "id": "auth-escalation-scenario",
+      "type": "scenario",
+      "description": "Role escalation prevention scenario passes",
+      "verdict": "pass"
+    },
+    {
+      "id": "auth-lockout-scenario",
+      "type": "scenario",
+      "description": "Account lockout after failed logins scenario passes",
+      "verdict": "pass"
+    }
+  ]
+}

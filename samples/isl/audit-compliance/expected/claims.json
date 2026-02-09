@@ -1,0 +1,67 @@
+{
+  "domain": "AuditCompliance",
+  "parseSuccess": true,
+  "checkSuccess": true,
+  "minEntities": 2,
+  "minBehaviors": 4,
+  "claims": [
+    {
+      "id": "audit-record-postcondition",
+      "type": "postcondition",
+      "behavior": "RecordAuditEntry",
+      "description": "Entry created with correct checksum chain linking to predecessor",
+      "verdict": "pass"
+    },
+    {
+      "id": "audit-append-only-invariant",
+      "type": "invariant",
+      "description": "Audit entries are append-only: no update or delete",
+      "verdict": "pass"
+    },
+    {
+      "id": "audit-checksum-chain-invariant",
+      "type": "invariant",
+      "description": "Each entry's checksum includes its predecessor's checksum",
+      "verdict": "pass"
+    },
+    {
+      "id": "audit-query-postcondition",
+      "type": "postcondition",
+      "behavior": "QueryAuditLog",
+      "description": "Query results respect all filters and are sorted by created_at desc",
+      "verdict": "pass"
+    },
+    {
+      "id": "audit-verify-integrity",
+      "type": "postcondition",
+      "behavior": "VerifyChainIntegrity",
+      "description": "Valid chain returns valid=true; tampered chain identifies first broken entry",
+      "verdict": "pass"
+    },
+    {
+      "id": "audit-export-self-logged",
+      "type": "invariant",
+      "behavior": "ExportComplianceReport",
+      "description": "Export action itself is recorded in the audit log",
+      "verdict": "pass"
+    },
+    {
+      "id": "audit-critical-retention",
+      "type": "invariant",
+      "description": "CRITICAL entries always use REGULATORY_7Y or PERMANENT retention",
+      "verdict": "pass"
+    },
+    {
+      "id": "audit-tamper-scenario",
+      "type": "scenario",
+      "description": "Tamper detection verifies chain integrity",
+      "verdict": "pass"
+    },
+    {
+      "id": "audit-retention-scenario",
+      "type": "scenario",
+      "description": "Retention policy enforcement for critical entries",
+      "verdict": "pass"
+    }
+  ]
+}

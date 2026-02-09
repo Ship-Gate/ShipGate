@@ -87,6 +87,7 @@ export interface BehaviorModification {
 
 export interface EvaluationContext {
   userId?: string;
+  orgId?: string;
   sessionId?: string;
   attributes?: Record<string, unknown>;
   environment?: string;
@@ -100,6 +101,42 @@ export interface EvaluationResult {
   value?: unknown;
   reason: EvaluationReason;
   metadata?: Record<string, unknown>;
+  /**
+   * Detailed reasoning about why this evaluation decision was made.
+   * Includes bucketing information, targeting rule matches, etc.
+   */
+  reasoning?: EvaluationReasoning;
+}
+
+export interface EvaluationReasoning {
+  /**
+   * The bucket value (0-100) assigned to this user/org for deterministic rollout
+   */
+  bucket?: number;
+  /**
+   * The stickiness key used for bucketing (userId, orgId, etc.)
+   */
+  stickinessKey?: string;
+  /**
+   * The stickiness value used for bucketing
+   */
+  stickinessValue?: string;
+  /**
+   * Percentage threshold used in rollout evaluation
+   */
+  rolloutPercentage?: number;
+  /**
+   * Which targeting rule matched, if any
+   */
+  matchedTargetingRuleId?: string;
+  /**
+   * Which conditions matched in targeting evaluation
+   */
+  matchedConditions?: Array<{ attribute: string; operator: string; value: unknown }>;
+  /**
+   * Hash value used for deterministic bucketing
+   */
+  hashValue?: number;
 }
 
 export type EvaluationReason =
@@ -132,6 +169,10 @@ export interface FlagAuditEvent {
   previousValue?: unknown;
   newValue?: unknown;
   actor?: string;
+  /**
+   * Detailed reasoning proving why the flag evaluated a certain way
+   */
+  reasoning?: EvaluationReasoning;
 }
 
 export interface BehaviorGate {

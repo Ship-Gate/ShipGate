@@ -29,13 +29,16 @@
     "test:watch": "vitest",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-native": ">=0.72.0"
   },
   "dependencies": {
+    "@isl-lang/generator-sdk": "workspace:*",
     "@react-native-async-storage/async-storage": "^1.21.0",
     "expo-secure-store": "^12.8.0",
     "zod": "^3.22.4"
@@ -48,7 +51,8 @@
     "react-native": "^0.73.0",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0",
-    "vitest": "^1.0.0"
+    "vitest": "^1.0.0",
+    "rimraf": "^5.0.5"
   },
   "keywords": [
     "react-native",
@@ -73,5 +77,7 @@
   "bugs": {
     "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
   },
-  "experimental": true
+  "experimental": true,
+  "type": "module",
+  "sideEffects": false
 }

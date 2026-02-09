@@ -4,7 +4,7 @@
 // ============================================================================
 
 // Main generators
-export { generate, generateWithSynthesis } from './generator';
+export { generate, generateTests, generateWithSynthesis } from './generator';
 export type { EnhancedGenerateOptions } from './generator';
 
 // Data synthesis
@@ -63,7 +63,6 @@ export type {
   DomainType,
   AssertionStatus,
   GenerateOptions,
-  GeneratedFile,
   GenerateResult,
   GeneratorError,
   ErrorCode,
@@ -84,6 +83,9 @@ export type {
   CompilerContext,
 } from './types';
 
+// Re-export GeneratedFile from types (not golden-adapter to avoid conflict)
+export type { GeneratedFile } from './types';
+
 // Strategies
 export {
   getStrategy,
@@ -97,3 +99,30 @@ export {
   WebhooksStrategy,
   GenericStrategy,
 } from './strategies';
+
+// Golden testing harness adapter
+export {
+  createTestGeneratorAdapter,
+  vitestGenerator,
+  jestGenerator,
+} from './golden-adapter';
+export type { CodeGenerator as GoldenCodeGenerator, GeneratedFile as GoldenGeneratedFile } from './golden-adapter';
+
+// File writer
+export {
+  writeFiles,
+  generateSnapshotFile,
+} from './file-writer';
+export type { WriteOptions, WriteResult } from './file-writer';
+
+// Scenario generator
+export {
+  generateScenarioTests,
+} from './scenario-generator';
+export type { ScenarioTest } from './scenario-generator';
+
+// Execution verifier
+export {
+  verifyGeneratedTests,
+} from './execution-verifier';
+export type { VerificationOptions, VerificationResult } from './execution-verifier';
