@@ -63,6 +63,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build CLI dependencies
+        run: pnpm exec turbo build --filter=...shipgate
+        description: Build workspace deps of shipgate so dist/ exist for CLI bundle
+
       - name: Build CLI package
         working-directory: packages/cli
         run: pnpm run build
@@ -117,6 +121,12 @@ jobs:
           # Full smoke test suite (vitest)
           pnpm run test:smoke
           echo "✓ Smoke tests passed"
+
+      - name: Run e2e consumer tests
+        working-directory: packages/cli
+        run: |
+          pnpm run test:e2e-consumer
+          echo "✓ E2E consumer (init/check/gate from separate dir) passed"
 
       - name: Publish to npm
         if: steps.dry_run.outputs.value != 'true'
