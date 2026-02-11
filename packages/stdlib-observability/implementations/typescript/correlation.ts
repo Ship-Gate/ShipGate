@@ -36,7 +36,8 @@ export interface CorrelationContext {
 
 interface AsyncLocalStorage<T> {
   getStore(): T | undefined;
-  run<R>(store: T, callback: (...args: any[]) => R, ...args: any[]): R;
+  enterWith(store: T): void;
+  run<R>(store: T, callback: (...args: unknown[]) => R, ...args: unknown[]): R;
   exit<R>(callback: (...args: any[]) => R, ...args: any[]): R;
 }
 
@@ -61,7 +62,15 @@ class SimpleContextStack<T> {
     }
   }
 
-  exit<R>(callback: (...args: any[]) => R, ...args: any[]): R {
+  enterWith(store: T): void {
+    if (this.stack.length > 0) {
+      this.stack[this.stack.length - 1] = store;
+    } else {
+      this.stack.push(store);
+    }
+  }
+
+  exit<R>(callback: (...args: unknown[]) => R, ...args: unknown[]): R {
     const current = this.stack.pop();
     try {
       return callback(...args);

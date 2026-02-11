@@ -24,7 +24,8 @@
     "start": "node dist/bin/server.js",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "vscode-languageserver": "^9.0.1",

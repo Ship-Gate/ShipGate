@@ -34,7 +34,8 @@
     "test:snapshot": "vitest run --update",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "prettier": "^3.2.0"

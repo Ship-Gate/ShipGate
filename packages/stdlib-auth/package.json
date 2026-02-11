@@ -10,11 +10,11 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     },
-    "./jwt": "./dist/jwt/index.js",
-    "./oauth": "./dist/oauth/index.js",
-    "./rbac": "./dist/rbac/index.js",
-    "./mfa": "./dist/mfa/index.js",
-    "./session": "./dist/session/index.js"
+    "./jwt": "./dist/jwt.js",
+    "./oauth": "./dist/oauth.js",
+    "./rbac": "./dist/rbac.js",
+    "./mfa": "./dist/mfa.js",
+    "./session": "./dist/session.js"
   },
   "scripts": {
     "build": "tsc",
@@ -22,7 +22,8 @@
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "jose": "^5.2.0",

@@ -101,20 +101,20 @@ export function useAuditLog(initialFilters: AuditFilters = DEFAULT_FILTERS) {
 
   // Initial fetch and filter changes
   useEffect(() => {
-    fetchEvents(true);
+    void fetchEvents(true);
   }, [filters]);
 
   // Load more events
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {
       setPage((p) => p + 1);
-      fetchEvents(false);
+      void fetchEvents(false);
     }
   }, [loading, hasMore, fetchEvents]);
 
   // Refresh events
   const refresh = useCallback(() => {
-    fetchEvents(true);
+    void fetchEvents(true);
   }, [fetchEvents]);
 
   // Update filters
@@ -171,7 +171,7 @@ export function useAuditEvent(id: string) {
       }
     }
 
-    fetch();
+    void fetch();
   }, [id]);
 
   return { event, loading, error };
@@ -209,7 +209,7 @@ export function useComplianceReport(
       }
     }
 
-    fetch();
+    void fetch();
   }, [framework, dateRange.start?.toISOString(), dateRange.end?.toISOString()]);
 
   return { data, loading, error };
@@ -253,7 +253,7 @@ export function useComplianceSummary() {
       }
     }
 
-    fetch();
+    void fetch();
   }, []);
 
   return { summaries, loading, error };
@@ -307,7 +307,7 @@ export function useAuditStatistics(dateRange?: DateRange) {
       }
     }
 
-    fetch();
+    void fetch();
   }, [dateRange?.start?.toISOString(), dateRange?.end?.toISOString()]);
 
   return { statistics, loading, error };
@@ -336,7 +336,7 @@ export function useDomains() {
       }
     }
 
-    fetch();
+    void fetch();
   }, []);
 
   return { domains, loading };
@@ -372,7 +372,7 @@ export function useBehaviors(domain?: string) {
       }
     }
 
-    fetch();
+    void fetch();
   }, [domain]);
 
   return { behaviors, loading };

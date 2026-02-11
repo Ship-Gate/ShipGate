@@ -33,7 +33,6 @@ function useApiCall<T>(
     setError(null)
     try {
       if (USE_MOCK) {
-        // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 300))
         setData(mockFetcher())
       } else {
@@ -49,7 +48,34 @@ function useApiCall<T>(
   }, deps)
 
   useEffect(() => {
-    fetchData()
+    void fetchData()
+  }, [fetchData])
+
+  return { data, loading, error, refetch: fetchData }
+}
+
+/** Always fetches from real API (no mock). Used for runs/proof-bundles. */
+function useRealApiCall<T>(fetcher: () => Promise<T>, deps: unknown[] = []): UseApiState<T> {
+  const [data, setData] = useState<T | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await fetcher()
+      setData(result)
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Unknown error'))
+    } finally {
+      setLoading(false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps)
+
+  useEffect(() => {
+    void fetchData()
   }, [fetchData])
 
   return { data, loading, error, refetch: fetchData }
@@ -110,6 +136,60 @@ export function useVerification(id: string): UseApiState<VerificationResult> {
     [id]
   )
 }
+
+// ── Runs (Shipgate dashboard) ────────────────────────────────────────────
+
+import {
+  listRuns,
+  getRun,
+  getRunDiff,
+  ingestProofBundle,
+  type ListRunsParams,
+  type VerificationReport,
+  type ReportDiff,
+  type IngestProofBundlePayload,
+} from '@/lib/runs-api'
+
+export function useRuns(params: ListRunsParams = {}) {
+  const { repo, branch, verdict, q, from, to, page = 1, limit = 20 } = params
+  return useRealApiCall(
+    () => listRuns({ repo, branch, verdict, q, from, to, page, limit }),
+    [repo, branch, verdict, q, from, to, page, limit]
+  )
+}
+
+export function useRun(id: string | null) {
+  const fetcher = useCallback(() => (id ? getRun(id) : Promise.reject(new Error('No id'))), [id])
+  return useRealApiCall(fetcher, [id ?? ''])
+}
+
+export function useRunDiff(id: string | null) {
+  const fetcher = useCallback(() => (id ? getRunDiff(id) : Promise.reject(new Error('No id'))), [id])
+  return useRealApiCall(fetcher, [id ?? ''])
+}
+
+export function useIngestProofBundle() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+
+  const ingest = useCallback(async (payload: IngestProofBundlePayload) => {
+    setLoading(true)
+    setError(null)
+    try {
+      return await ingestProofBundle(payload)
+    } catch (err) {
+      const e = err instanceof Error ? err : new Error('Unknown error')
+      setError(e)
+      throw e
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  return { ingest, loading, error }
+}
+
+// ── Legacy (domains / verifications) ────────────────────────────────────
 
 export function useTriggerVerification() {
   const [loading, setLoading] = useState(false)

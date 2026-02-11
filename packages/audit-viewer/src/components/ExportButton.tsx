@@ -79,7 +79,7 @@ export function ExportButton({ filters }: ExportButtonProps) {
           </SelectItem>
         </SelectContent>
       </Select>
-      <Button onClick={handleExport} disabled={loading}>
+      <Button onClick={() => void handleExport()} disabled={loading}>
         {loading ? (
           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
         ) : (

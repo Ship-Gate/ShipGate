@@ -325,7 +325,7 @@ export class ISLEdgeRuntime {
   private extractContext(request: Request): EdgeRequestContext {
     const headers: Record<string, string> = {};
 
-    request.headers.forEach((value, key) => {
+    request.headers.forEach((value: string, key: string) => {
       headers[key.toLowerCase()] = value;
     });
 

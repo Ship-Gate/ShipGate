@@ -2,7 +2,8 @@
  * User Service - User operations with verification.
  */
 
-import type { RetryConfig, VerificationConfig, InterceptorsConfig } from '../config';
+import type { ISLClientConfig } from '../config';
+import type { RequestInitWithUrl } from '@isl-lang/generator-sdk/runtime';
 import type {
   User,
   CreateUserInput,
@@ -23,28 +24,14 @@ import { ok, err, CreateUserErrors, GetUserErrors } from '../results';
 import { RuntimeChecker } from '../verification';
 
 /**
- * Resolved service config type
- */
-interface ServiceConfig {
-  baseUrl: string;
-  authToken: string | undefined;
-  timeout: number;
-  fetch: typeof fetch | undefined;
-  retry: Required<RetryConfig>;
-  verification: Required<VerificationConfig>;
-  interceptors: InterceptorsConfig | undefined;
-  headers: Record<string, string> | undefined;
-}
-
-/**
  * User service for user-related operations
  */
 export class UserService {
-  private readonly config: ServiceConfig;
+  private readonly config: ISLClientConfig;
   private readonly checker: RuntimeChecker;
   private readonly fetchFn: typeof fetch;
 
-  constructor(config: ServiceConfig) {
+  constructor(config: ISLClientConfig) {
     this.config = config;
     this.checker = new RuntimeChecker(config.verification);
     this.fetchFn = config.fetch ?? globalThis.fetch;
@@ -303,22 +290,28 @@ export class UserService {
       headers['Authorization'] = `Bearer ${this.config.authToken}`;
     }
 
-    let request = new Request(url, {
+    let requestConfig: RequestInitWithUrl = {
+      url,
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
-    });
+    };
 
-    // Apply request interceptor
+    // Apply request interceptors
     if (this.config.interceptors?.request) {
-      request = await this.config.interceptors.request(request);
+      for (const interceptor of this.config.interceptors.request) {
+        requestConfig = await interceptor(requestConfig);
+      }
     }
 
-    let response = await this.fetchFn(request);
+    const { url: reqUrl, ...reqInit } = requestConfig;
+    let response = await this.fetchFn(reqUrl, reqInit);
 
-    // Apply response interceptor
+    // Apply response interceptors
     if (this.config.interceptors?.response) {
-      response = await this.config.interceptors.response(response);
+      for (const interceptor of this.config.interceptors.response) {
+        response = await interceptor(response, requestConfig);
+      }
     }
 
     return response;

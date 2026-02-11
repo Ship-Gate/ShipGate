@@ -1,5 +1,5 @@
 ---
-description: API route patterns (825 verified routes)
+description: API route patterns (826 verified routes)
 globs: ["**/api/**/*.ts", "**/routes/**/*.ts"]
 alwaysApply: false
 priority: 80
@@ -7,7 +7,7 @@ priority: 80
 
 # API Conventions
 
-## Verified Routes (825 total)
+## Verified Routes (826 total)
 - `POST Profiler.enable` → bench\profiler.ts:48
 - `POST Profiler.start` → bench\profiler.ts:49
 - `POST Profiler.stop` → bench\profiler.ts:79
@@ -19,7 +19,7 @@ priority: 80
 - `POST /auth/oauth/login` → demos\flagship-auth-payments\src\server.ts:59
 - `POST /auth/token/refresh` → demos\flagship-auth-payments\src\server.ts:75
 
-... and 815 more in .vibecheck/truthpack/routes.json
+... and 816 more in .vibecheck/truthpack/routes.json
 
 ## Pattern Requirements
 - Use consistent HTTP methods (GET for read, POST for create, etc.)

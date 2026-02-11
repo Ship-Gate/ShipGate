@@ -21,7 +21,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "tree-sitter": "^0.21.0",

@@ -69,7 +69,7 @@ export function EventDetail({ event, loading }: EventDetailProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => copyToClipboard(event.id)}
+            onClick={() => void copyToClipboard(event.id)}
           >
             Copy ID
           </Button>

@@ -20,6 +20,18 @@ import {
 // ============================================================================
 
 /**
+ * Preserve TIMEOUT reason code when propagating unknown from child evaluations
+ */
+function preserveTimeoutCode(...results: EvalResult[]): 'TIMEOUT' | 'PROPAGATED' {
+  for (const r of results) {
+    if (r.kind === 'unknown' && (r as { reasonCode?: string }).reasonCode === 'TIMEOUT') {
+      return 'TIMEOUT';
+    }
+  }
+  return 'PROPAGATED';
+}
+
+/**
  * Create a blame span from an expression for diagnostics
  */
 function createBlameSpan(expr: Expression, path?: string): BlameSpan {
@@ -508,7 +520,8 @@ function evalAnd(
     return fail('Right operand of AND is false', { left: leftResult, right: rightResult });
   }
   if (combined === 'unknown') {
-    return unknown('PROPAGATED', 'AND has unknown operand', { left: leftResult, right: rightResult });
+    const code = preserveTimeoutCode(leftResult, rightResult);
+    return unknown(code, 'AND has unknown operand', { left: leftResult, right: rightResult });
   }
   return ok({ left: leftResult, right: rightResult });
 }
@@ -537,7 +550,8 @@ function evalOr(
     return ok({ left: leftResult, right: rightResult });
   }
   if (combined === 'unknown') {
-    return unknown('PROPAGATED', 'OR has unknown operands', { left: leftResult, right: rightResult });
+    const code = preserveTimeoutCode(leftResult, rightResult);
+    return unknown(code, 'OR has unknown operands', { left: leftResult, right: rightResult });
   }
   return fail('Both operands of OR are false', { left: leftResult, right: rightResult });
 }
@@ -569,7 +583,8 @@ function evalImplies(
     return ok({ left: leftResult, right: rightResult });
   }
   if (combined === 'unknown') {
-    return unknown('PROPAGATED', 'Implication has unknown value', { left: leftResult, right: rightResult });
+    const code = preserveTimeoutCode(leftResult, rightResult);
+    return unknown(code, 'Implication has unknown value', { left: leftResult, right: rightResult });
   }
   return fail('Implication failed: antecedent true but consequent false', {
     left: leftResult,
@@ -592,7 +607,8 @@ function evalIff(
   
   // If either is unknown, result is unknown
   if (leftResult.kind === 'unknown' || rightResult.kind === 'unknown') {
-    return unknown('PROPAGATED', 'IFF has unknown operand', { left: leftResult, right: rightResult });
+    const code = preserveTimeoutCode(leftResult, rightResult);
+    return unknown(code, 'IFF has unknown operand', { left: leftResult, right: rightResult });
   }
   
   // IFF is true if both sides have the same truth value
@@ -2406,10 +2422,20 @@ export function foldConstants(expr: Expression): FoldResult {
           ctx, 0, 100
         );
         
-        if (result.kind !== 'unknown' && result.evidence !== undefined) {
-          // Create a literal from the result
+        if (result.kind !== 'unknown') {
+          // For logical operators, result.kind directly gives the boolean value
+          const logicalOps = ['and', '&&', 'or', '||', 'implies', 'iff'];
+          if (logicalOps.includes(binExpr.operator)) {
+            const value = result.kind === 'true';
+            return {
+              expr: { kind: 'BooleanLiteral' as const, value, location: binExpr.location } as unknown as Expression,
+              folded: true,
+              value,
+            };
+          }
+          // Create a literal from the result evidence for other operators
           const value = result.evidence;
-          if (typeof value === 'boolean') {
+          if (value !== undefined && typeof value === 'boolean') {
             return {
               expr: { kind: 'BooleanLiteral' as const, value, location: binExpr.location } as unknown as Expression,
               folded: true,

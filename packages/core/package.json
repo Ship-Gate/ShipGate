@@ -57,7 +57,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@isl-lang/parser": "workspace:*",
@@ -74,5 +75,7 @@
   "author": "mevla",
   "license": "MIT",
   "experimental": true,
-  "sideEffects": ["./dist/chunk-*.js"]
+  "sideEffects": [
+    "./dist/chunk-*.js"
+  ]
 }

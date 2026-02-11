@@ -1,0 +1,551 @@
+/* ============================================================================
+ * Shipgate — Shared Webview Stylesheet
+ *
+ * Zero hardcoded colors. All values via var(--vscode-*).
+ * 8px spacing scale. Full keyboard/a11y support.
+ * Used by both sidebar.js and report.js.
+ * ============================================================================ */
+
+/* ── Reset ─────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size, 13px);
+  color: var(--vscode-foreground);
+  background: var(--vscode-sideBar-background, var(--vscode-editor-background));
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── Spacing scale (8px base) ──────────────────────────────────── */
+
+.sg-p-8  { padding: 8px; }
+.sg-p-16 { padding: 16px; }
+.sg-p-24 { padding: 24px; }
+.sg-mb-4  { margin-bottom: 4px; }
+.sg-mb-8  { margin-bottom: 8px; }
+.sg-mb-16 { margin-bottom: 16px; }
+.sg-mb-24 { margin-bottom: 24px; }
+.sg-mt-8  { margin-top: 8px; }
+.sg-mt-16 { margin-top: 16px; }
+.sg-gap-8  { gap: 8px; }
+.sg-gap-16 { gap: 16px; }
+
+/* ── Layout helpers ────────────────────────────────────────────── */
+
+.sg-flex { display: flex; }
+.sg-flex-col { display: flex; flex-direction: column; }
+.sg-flex-row { display: flex; flex-direction: row; }
+.sg-items-center { align-items: center; }
+.sg-justify-between { justify-content: space-between; }
+.sg-flex-1 { flex: 1; min-width: 0; }
+.sg-flex-wrap { flex-wrap: wrap; }
+.sg-hidden { display: none !important; }
+
+/* ── Panel root ────────────────────────────────────────────────── */
+
+.sg-panel {
+  padding: 16px;
+}
+
+.sg-panel--report {
+  padding: 24px;
+  max-width: 960px;
+}
+
+/* ── Section ───────────────────────────────────────────────────── */
+
+.sg-section {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--vscode-widget-border, rgba(128,128,128,.2));
+}
+
+.sg-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+/* ── Section title ─────────────────────────────────────────────── */
+
+.sg-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sg-section-title::before {
+  content: '';
+  width: 3px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--vscode-textLink-foreground);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+/* ── Summary / description text ────────────────────────────────── */
+
+.sg-summary {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* ── Badges ────────────────────────────────────────────────────── */
+
+.sg-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.sg-badge--ship {
+  background: var(--vscode-testing-iconPassed, #238636);
+  color: #fff;
+}
+
+.sg-badge--warn {
+  background: var(--vscode-editorWarning-foreground, #9e6a03);
+  color: #fff;
+}
+
+.sg-badge--noship {
+  background: var(--vscode-editorError-foreground, #da3633);
+  color: #fff;
+}
+
+.sg-badge--idle {
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+}
+
+.sg-badge--connected {
+  background: var(--vscode-testing-iconPassed, #238636);
+  color: #fff;
+}
+
+.sg-badge--disconnected {
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+}
+
+.sg-badge--checking {
+  background: var(--vscode-editorWarning-foreground, #9e6a03);
+  color: #fff;
+}
+
+/* ── Severity dots ─────────────────────────────────────────────── */
+
+.sg-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sg-dot--pass { background: var(--vscode-testing-iconPassed, #238636); }
+.sg-dot--warn { background: var(--vscode-editorWarning-foreground, #9e6a03); }
+.sg-dot--fail { background: var(--vscode-editorError-foreground, #da3633); }
+
+/* ── Buttons ───────────────────────────────────────────────────── */
+
+.sg-btn {
+  display: block;
+  width: 100%;
+  padding: 7px 12px;
+  margin-bottom: 6px;
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: 4px;
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.sg-btn:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.sg-btn:focus-visible {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+
+.sg-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sg-btn--primary {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border-color: var(--vscode-button-background);
+  font-weight: 500;
+}
+
+.sg-btn--primary:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.sg-btn--sm {
+  display: inline-flex;
+  width: auto;
+  padding: 4px 10px;
+  margin-bottom: 0;
+  font-size: 11px;
+}
+
+/* ── Links ─────────────────────────────────────────────────────── */
+
+.sg-link {
+  color: var(--vscode-textLink-foreground);
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 11px;
+}
+
+.sg-link:hover {
+  color: var(--vscode-textLink-activeForeground);
+  text-decoration: underline;
+}
+
+.sg-link:focus-visible {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+
+/* ── Cards / stat blocks ───────────────────────────────────────── */
+
+.sg-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.sg-stat {
+  padding: 8px;
+  border-radius: 4px;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-widget-border, rgba(128,128,128,.15));
+  text-align: center;
+}
+
+.sg-stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--vscode-foreground);
+}
+
+.sg-stat-label {
+  font-size: 10px;
+  color: var(--vscode-descriptionForeground);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+/* ── Intent Drift gauge ────────────────────────────────────────── */
+
+.sg-gauge {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--sg-gauge-color, var(--vscode-badge-background)) calc(var(--sg-gauge-pct, 0) * 3.6deg),
+    var(--vscode-editor-background) 0
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0;
+  transition: transform 0.2s ease;
+}
+
+.sg-gauge:hover {
+  transform: scale(1.03);
+}
+
+.sg-gauge-inner {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--vscode-sideBar-background, var(--vscode-editor-background));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--vscode-foreground);
+}
+
+/* ── Findings rows ─────────────────────────────────────────────── */
+
+.sg-findings {
+  border: 1px solid var(--vscode-widget-border, rgba(128,128,128,.15));
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.sg-finding {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--vscode-widget-border, rgba(128,128,128,.1));
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.sg-finding:last-child {
+  border-bottom: none;
+}
+
+.sg-finding:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.sg-finding:focus-visible {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: -2px;
+}
+
+.sg-finding[aria-selected="true"] {
+  background: var(--vscode-list-activeSelectionBackground);
+  color: var(--vscode-list-activeSelectionForeground);
+}
+
+.sg-finding-file {
+  color: var(--vscode-textLink-foreground);
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.sg-finding-msg {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.sg-finding-score {
+  font-size: 10px;
+  color: var(--vscode-descriptionForeground);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ── Filter chips ──────────────────────────────────────────────── */
+
+.sg-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.sg-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  border: 1px solid var(--vscode-button-border, transparent);
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  cursor: pointer;
+  transition: background 0.12s ease;
+  gap: 4px;
+}
+
+.sg-chip:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.sg-chip:focus-visible {
+  outline: 2px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+
+.sg-chip[aria-pressed="true"],
+.sg-chip--active {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.sg-chip-count {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+/* ── Search input ──────────────────────────────────────────────── */
+
+.sg-search {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--vscode-input-border, var(--vscode-widget-border));
+  border-radius: 4px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  font-family: inherit;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.sg-search::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.sg-search:focus {
+  outline: none;
+  border-color: var(--vscode-focusBorder);
+}
+
+/* ── Report header (sticky) ────────────────────────────────────── */
+
+.sg-report-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--vscode-editor-background);
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--vscode-widget-border, rgba(128,128,128,.2));
+}
+
+.sg-report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.sg-report-meta {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sg-report-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Empty state ───────────────────────────────────────────────── */
+
+.sg-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+}
+
+.sg-empty-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+  opacity: 0.4;
+}
+
+/* ── Welcome banner (sidebar only) ─────────────────────────────── */
+
+.sg-welcome {
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-widget-border, rgba(128,128,128,.15));
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* ── Item row (PRs, workflows) ─────────────────────────────────── */
+
+.sg-item {
+  padding: 3px 0;
+  font-size: 11px;
+}
+
+/* ── Spinner ───────────────────────────────────────────────────── */
+
+.sg-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--vscode-descriptionForeground);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: sg-spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+@keyframes sg-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Scrollbar (VS Code-matching) ──────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--vscode-scrollbarSlider-activeBackground);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ── Reduced motion ────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

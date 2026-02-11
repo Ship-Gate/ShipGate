@@ -309,18 +309,35 @@ see [POSTCONDITION_PRIMITIVES.md](./POSTCONDITION_PRIMITIVES.md).
 - `incremented(field)`: Verify field was incremented (any positive amount)
 - `entity_created(entityType)`: Verify entity was created
 
-## Limitations (v1)
+## Arithmetic Operators
 
-- No arithmetic operations (planned for v2)
+| Operator | Description | Example |
+|---------|-------------|---------|
+| `+` | Addition (or string concatenation) | `x + 5`, `"hello" + "world"` |
+| `-` | Subtraction | `x - 5` |
+| `*` | Multiplication | `x * 2` |
+| `/` | Division | `x / 2` (returns unknown on divide-by-zero) |
+| `%` | Modulo | `x % 10` |
+
+## Limitations (v1)
 - Limited index access support
 - No lambda expressions (planned for v2)
 - No pattern matching (planned for v2)
 - No temporal operators (planned for v2)
 
-## Future Enhancements
+## String Methods
 
-- Arithmetic operators (`+`, `-`, `*`, `/`, `%`)
-- String operations (`contains`, `startsWith`, `endsWith`)
+| Method | Description | Example |
+|--------|-------------|---------|
+| `contains` / `includes` | Substring check | `email.contains("@")` |
+| `startsWith` | Prefix check | `path.startsWith("/api")` |
+| `endsWith` | Suffix check | `file.endsWith(".json")` |
+| `trim`, `toLowerCase`, `toUpperCase` | Transform | `name.trim()` |
+| `split`, `substring`, `slice` | Split/extract | `str.split(",")` |
+| `replace`, `replaceAll` | Replace | `str.replace("old", "new")` |
+| `charAt` | Character at index | `str.charAt(0)` |
+
+## Future Enhancements
 - More quantifiers (`none`, `count`, `sum`)
 - Lambda expressions
 - Pattern matching

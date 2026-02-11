@@ -2513,6 +2513,12 @@ var ISLCodeActionProvider = class {
         actions.push(this.createGenerateCrudBehaviorsAction(document, entityName, range));
       }
     }
+    if (this.isInDomain(lines, range.start.line)) {
+      const domainName = this.extractDomainName(lines);
+      if (domainName) {
+        actions.push(this.createGenerateSkeletonAction(document, domainName));
+      }
+    }
     return actions;
   }
   // ============================================================================
@@ -3249,6 +3255,33 @@ ${indent}}
     }
     return false;
   }
+  isInDomain(lines, lineNum) {
+    for (let i = lineNum; i >= 0; i--) {
+      const line = lines[i] || "";
+      if (line.match(/^\s*domain\s+\w+/)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  extractDomainName(lines) {
+    for (const line of lines) {
+      const match = line.match(/^\s*domain\s+(\w+)/);
+      if (match) return match[1];
+    }
+    return void 0;
+  }
+  createGenerateSkeletonAction(document, domainName) {
+    return {
+      title: `Generate implementation skeleton for ${domainName}`,
+      kind: vscodeLanguageserver.CodeActionKind.Source,
+      command: {
+        title: "Generate Skeleton from ISL Spec",
+        command: "isl.generateSkeleton",
+        arguments: [document.uri, domainName]
+      }
+    };
+  }
 };
 var ISLFormattingProvider = class {
   format(document, options) {
@@ -3383,8 +3416,8 @@ var ISLFormattingProvider = class {
   }
 };
 var SUPPORTED_EXTENSIONS = /* @__PURE__ */ new Set([".ts", ".tsx", ".js", ".jsx"]);
-var SOURCE_HOST = "vibecheck-host";
-var SOURCE_REALITY_GAP = "vibecheck-reality-gap";
+var SOURCE_HOST = "shipgate-host";
+var SOURCE_REALITY_GAP = "shipgate-reality-gap";
 function tierToLSPSeverity(tier) {
   switch (tier) {
     case "hard_block":
@@ -3653,7 +3686,7 @@ var ISLServer = class {
       for (const diag of params.context.diagnostics) {
         if (diag.source !== SOURCE_HOST && diag.source !== SOURCE_REALITY_GAP) continue;
         const data = diag.data;
-        const suppressComment = diag.source === SOURCE_HOST ? `// vibecheck-ignore` : `// islstudio-ignore ${diag.code}`;
+        const suppressComment = diag.source === SOURCE_HOST ? `// shipgate-ignore` : `// islstudio-ignore ${diag.code}`;
         actions.push({
           title: `Suppress ${diag.code} for this line`,
           kind: node.CodeActionKind.QuickFix,

@@ -19,7 +19,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "build": "tsup src/index.ts --format esm,cjs --clean",
     "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
     "test": "vitest run --passWithNoTests",
     "test:unit": "vitest run --passWithNoTests",
@@ -31,6 +31,7 @@
     "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
+    "@isl-lang/isl-smt": "workspace:^",
     "@isl-lang/prover": "workspace:*",
     "z3-solver": "^4.15.4"
   },

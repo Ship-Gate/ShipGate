@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { AuditEvent } from '@/lib/types';
-import { cn, formatTimestamp, formatDuration, getVerdictColor } from '@/lib/utils';
+import { cn, formatTimestamp, formatDuration } from '@/lib/utils';
 
 interface EventTimelineProps {
   events: AuditEvent[];

@@ -55,6 +55,12 @@ export default function RootLayout({
                   </a>
                   <a
                     className="transition-colors hover:text-foreground/80 text-muted-foreground"
+                    href="/runs"
+                  >
+                    Runs
+                  </a>
+                  <a
+                    className="transition-colors hover:text-foreground/80 text-muted-foreground"
                     href="/domains"
                   >
                     Domains

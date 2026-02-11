@@ -22,8 +22,8 @@ function CopyButton({ text }: { text: string }) {
       type="button"
       onClick={handleCopy}
       className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs
-                 bg-white/10 hover:bg-white/20 text-white/70 hover:text-white
-                 transition-all duration-200 border border-white/10"
+                 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white
+                 transition-all duration-200 border border-zinc-700"
       aria-label={`Copy: ${text}`}
     >
       {copied ? (
@@ -118,12 +118,15 @@ export default function TerminalDemo() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-100px' }}
       transition={{ duration: 0.5 }}
-      className="mt-32 max-w-4xl mx-auto px-4 scroll-mt-28"
+      className="py-24 md:py-32 max-w-4xl mx-auto px-4 scroll-mt-24"
     >
-      <h2 className="section-heading mx-auto mb-4 text-center">
+      <p className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3 text-center">
+        Demo
+      </p>
+      <h2 className="text-3xl md:text-4xl font-semibold text-white mx-auto mb-4 text-center">
         See it work
       </h2>
-      <p className="text-white/80 text-center mb-8 max-w-2xl mx-auto">
+      <p className="text-zinc-400 text-center mb-8 max-w-2xl mx-auto">
         Watch Shipgate catch fake features, hallucinated APIs, and security blind spots — in real time.
       </p>
 
@@ -134,16 +137,16 @@ export default function TerminalDemo() {
       </div>
 
       {/* Terminal window */}
-      <div className="rounded-2xl border border-white/15 bg-black/80 backdrop-blur-sm overflow-hidden shadow-2xl shadow-black/40">
+      <div className="rounded-2xl border border-zinc-700 bg-zinc-900/80 backdrop-blur-sm overflow-hidden shadow-2xl shadow-black/40">
         {/* Title bar */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/5">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-700/80 bg-zinc-800/50">
           <div className="flex items-center gap-3">
             <div className="flex gap-1.5">
               <div className="w-3 h-3 rounded-full bg-red-500/80" />
               <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
               <div className="w-3 h-3 rounded-full bg-green-500/80" />
             </div>
-            <span className="text-xs text-white/50 font-mono">Terminal — shipgate verify</span>
+            <span className="text-xs text-zinc-400 font-mono">Terminal — shipgate verify</span>
           </div>
           <button
             type="button"

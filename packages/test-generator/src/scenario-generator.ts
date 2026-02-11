@@ -163,7 +163,7 @@ function generateAssertionFromExpression(
   framework: TestFramework
 ): string {
   // Handle result is success/failure
-  if (expr.kind === 'BinaryExpr' && expr.operator === 'is') {
+  if (expr.kind === 'BinaryExpr' && (expr.operator as string) === 'is') {
     const left = generateExpressionCode(expr.left, behavior, domain);
     const right = generateExpressionCode(expr.right, behavior, domain);
     
@@ -220,23 +220,23 @@ function generateExpressionCode(
     
     case 'MemberExpr':
       const object = generateExpressionCode(expr.object, behavior, domain);
-      const property = expr.property.name;
+      const property = expr.property?.name ?? 'unknown';
       return `${object}.${property}`;
     
     case 'ResultExpr':
-      return `result.${expr.property.name}`;
+      return `result.${expr.property?.name ?? 'unknown'}`;
     
     case 'InputExpr':
-      return `input.${expr.property.name}`;
+      return `input.${expr.property?.name ?? 'unknown'}`;
     
     case 'BinaryExpr':
       const left = generateExpressionCode(expr.left, behavior, domain);
       const right = generateExpressionCode(expr.right, behavior, domain);
-      const op = expr.operator === 'is' ? '===' : expr.operator;
+      const op = (expr.operator as string) === 'is' ? '===' : expr.operator;
       return `(${left} ${op} ${right})`;
     
     case 'CallExpr':
-      const funcName = expr.callee.name;
+      const funcName = 'name' in expr.callee ? expr.callee.name : 'unknown';
       const args = expr.arguments.map(arg => generateExpressionCode(arg, behavior, domain)).join(', ');
       return `${funcName}(${args})`;
     

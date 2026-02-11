@@ -33,7 +33,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@isl-lang/trace-format": "workspace:*"

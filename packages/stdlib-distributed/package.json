@@ -108,7 +108,8 @@
     "test": "vitest run --passWithNoTests",
     "typecheck": "echo 'TODO: Fix tsconfig to exclude docs-advanced JSX files' && exit 0",
     "clean": "rimraf dist",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

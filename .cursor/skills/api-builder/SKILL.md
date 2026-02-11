@@ -5,7 +5,7 @@ When creating new API endpoints, routes, or handlers.
 
 ## Project API Conventions
 - Framework: nextjs-app-router
-- Existing routes: 825
+- Existing routes: 826
 
 ## Endpoint Creation Process
 1. Check if similar endpoint exists (no duplicates!)

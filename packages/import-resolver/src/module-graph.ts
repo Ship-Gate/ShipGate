@@ -905,6 +905,12 @@ export class ModuleGraphBuilder {
       views: [],
       scenarios: [],
       chaos: [],
+      apis: [],
+      storage: [],
+      workflows: [],
+      events: [],
+      handlers: [],
+      screens: [],
       location: defaultLocation,
     };
 

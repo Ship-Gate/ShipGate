@@ -1,10 +1,10 @@
-# ISL Gate GitHub Action
+# Shipgate GitHub Action
 
-A GitHub Action that runs ISL/Shipgate gate checks and reports results via PR comments and Check Run annotations.
+A GitHub Action that runs Shipgate gate checks and reports results via PR comments and Check Run annotations.
 
 ## Features
 
-- **SHIP/NO_SHIP Decision Engine**: Runs authoritative gate checks on your code
+- **SHIP/NO_SHIP Decision Engine**: Blocks unsafe AI-generated code before merge
 - **PR Comments**: Idempotent comments that update existing bot comments
 - **Check Run Annotations**: File-level annotations with severity levels
 - **Changed Files Only**: In PR mode, only checks files that have changed
@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: isl-lang/github-action-gate@v1
+      - uses: shipgate/gate-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -64,7 +64,7 @@ That's it. Every PR will now:
 ## Example: Check Mode (Don't Block)
 
 ```yaml
-- uses: isl-lang/gate-action@v1
+- uses: shipgate/gate-action@v1
   with:
     mode: check  # Comment only, don't block
 ```
@@ -72,7 +72,7 @@ That's it. Every PR will now:
 ## Example: Strict Mode
 
 ```yaml
-- uses: isl-lang/gate-action@v1
+- uses: shipgate/gate-action@v1
   with:
     threshold: 90
     fail-on: any  # Block on any violation
@@ -81,7 +81,7 @@ That's it. Every PR will now:
 ## Example: Use Output
 
 ```yaml
-- uses: isl-lang/gate-action@v1
+- uses: shipgate/gate-action@v1
   id: gate
 
 - name: Handle Result
@@ -120,7 +120,7 @@ Create `.islstudio/config.json`:
 
 When the action runs, it posts a comment like:
 
-> ## 🛑 ISL Gate: NO_SHIP
+> ## 🛑 Shipgate: NO_SHIP
 >
 > **Score:** 45/100
 >
@@ -134,7 +134,7 @@ When the action runs, it posts a comment like:
 > ### How to Fix
 >
 > ```bash
-> npx islstudio gate --explain
+> npx shipgate gate --explain
 > ```
 
 ## License

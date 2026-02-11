@@ -51,7 +51,7 @@ export async function fetchAuditEvents(
     throw new Error(`Failed to fetch audit events: ${response.statusText}`);
   }
   
-  return response.json();
+  return response.json() as Promise<PaginatedResult<AuditEvent>>;
 }
 
 /**
@@ -64,7 +64,7 @@ export async function fetchAuditEvent(id: string): Promise<AuditEvent> {
     throw new Error(`Failed to fetch audit event: ${response.statusText}`);
   }
   
-  return response.json();
+  return response.json() as Promise<AuditEvent>;
 }
 
 /**
@@ -78,13 +78,13 @@ export async function fetchAuditStatistics(
   if (dateRange?.start) params.set('startDate', dateRange.start.toISOString());
   if (dateRange?.end) params.set('endDate', dateRange.end.toISOString());
   
-  const response = await fetch(`${API_BASE}/statistics?${params}`);
+  const response = await fetch(`${API_BASE}/statistics?${params.toString()}`);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch statistics: ${response.statusText}`);
   }
   
-  return response.json();
+  return response.json() as Promise<AuditStatistics>;
 }
 
 /**
@@ -97,7 +97,7 @@ export async function fetchDomains(): Promise<string[]> {
     throw new Error(`Failed to fetch domains: ${response.statusText}`);
   }
   
-  return response.json();
+  return response.json() as Promise<string[]>;
 }
 
 /**
@@ -111,7 +111,7 @@ export async function fetchBehaviors(domain?: string): Promise<string[]> {
     throw new Error(`Failed to fetch behaviors: ${response.statusText}`);
   }
   
-  return response.json();
+  return response.json() as Promise<string[]>;
 }
 
 /**
@@ -126,13 +126,13 @@ export async function fetchComplianceReport(
   if (dateRange.start) params.set('startDate', dateRange.start.toISOString());
   if (dateRange.end) params.set('endDate', dateRange.end.toISOString());
   
-  const response = await fetch(`${API_BASE}/compliance/report?${params}`);
+  const response = await fetch(`${API_BASE}/compliance/report?${params.toString()}`);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch compliance report: ${response.statusText}`);
   }
   
-  return response.json();
+  return response.json() as Promise<ComplianceReport>;
 }
 
 /**
@@ -145,7 +145,7 @@ export async function fetchComplianceSummary(): Promise<ComplianceSummary[]> {
     throw new Error(`Failed to fetch compliance summary: ${response.statusText}`);
   }
   
-  return response.json();
+  return response.json() as Promise<ComplianceSummary[]>;
 }
 
 /**
@@ -190,7 +190,7 @@ export async function replayVerification(eventId: string): Promise<AuditEvent> {
     throw new Error(`Failed to replay verification: ${response.statusText}`);
   }
   
-  return response.json();
+  return response.json() as Promise<AuditEvent>;
 }
 
 // ============================================================================

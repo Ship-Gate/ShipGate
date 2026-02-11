@@ -20,7 +20,7 @@
     "noUnusedParameters": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
     "noImplicitAny": false,
     "isolatedModules": true,
     "noEmit": true

@@ -57,6 +57,7 @@ export function scanFile(options: ScanOptions): MockFinding[] {
   // Scan each line
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+    if (line === undefined) continue;
     const lineNumber = i + 1; // 1-indexed
 
     // Detect hardcoded success responses
@@ -204,7 +205,7 @@ export function calculateSummary(
     precision: {
       truePositives,
       falsePositives,
-      precisionScore,
+      score: precisionScore,
     },
   };
 }

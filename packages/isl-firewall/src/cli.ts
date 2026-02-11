@@ -170,8 +170,49 @@ async function runGate(args: string[]) {
     }
   }
 
+  // Record run for evidence/metrics (blocked PR metrics, rule calibration)
+  await recordGateRun({
+    verdict: verdict as 'SHIP' | 'NO_SHIP',
+    score,
+    filesChecked: filesToCheck.length,
+    violations: results.flatMap((r) =>
+      r.result.violations.map((v) => ({
+        policyId: v.policyId,
+        message: v.message,
+        severity: v.severity,
+        tier: v.tier,
+        file: relative(process.cwd(), r.file),
+      }))
+    ),
+    source: 'firewall',
+  });
+
   // Exit with appropriate code
   process.exit(verdict === 'SHIP' ? 0 : 1);
+}
+
+async function recordGateRun(record: {
+  verdict: 'SHIP' | 'NO_SHIP';
+  score: number;
+  filesChecked: number;
+  violations: Array<{ policyId: string; message: string; severity: string; tier: string; file?: string }>;
+  source: string;
+}): Promise<void> {
+  try {
+    const { mkdir, writeFile } = await import('fs/promises');
+    const { join } = await import('path');
+    const runId = `${new Date().toISOString().replace(/[:-]/g, '').slice(0, 15)}-${Math.random().toString(36).slice(2, 10)}`;
+    const runsDir = join(process.cwd(), '.shipgate', 'runs');
+    const runDir = join(runsDir, runId);
+    await mkdir(runDir, { recursive: true });
+    await writeFile(
+      join(runDir, 'manifest.json'),
+      JSON.stringify({ ...record, runId, timestamp: new Date().toISOString() }, null, 2),
+      'utf-8'
+    );
+  } catch {
+    // Non-fatal: metrics recording failed
+  }
 }
 
 function showStatus() {

@@ -221,6 +221,34 @@ Open the Command Palette and run **"Shipgate: Verify Workspace"**. Violations ap
 
 ---
 
+## Development
+
+### Run the Extension (F5)
+
+1. Open the repo root in VS Code.
+2. Press **F5** or run **Run > Start Debugging**.
+3. A new Extension Development Host window opens with the extension loaded.
+
+### Run Tests
+
+```bash
+# From repo root
+pnpm run test:unit --filter shipgate-isl
+
+# From packages/vscode
+pnpm run test:unit
+```
+
+### Package
+
+```bash
+cd packages/vscode
+pnpm run build
+npx vsce package --no-dependencies
+```
+
+---
+
 ## Links
 
 - [Shipgate Documentation](https://shipgate.dev/docs)

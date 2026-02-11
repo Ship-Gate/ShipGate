@@ -1,6 +1,6 @@
-name: 'ISL Studio Gate'
-description: 'Block unsafe PRs with evidence. SHIP or NO_SHIP verdict on every change.'
-author: 'ISL Team'
+name: 'Shipgate'
+description: 'Block unsafe AI-generated code. SHIP or NO_SHIP verdict on every change.'
+author: 'Shipgate'
 
 branding:
   icon: 'shield'
@@ -16,7 +16,7 @@ inputs:
     required: false
     default: '80'
   config-path:
-    description: 'Path to .islstudio/config.json'
+    description: 'Path to .shipgate/config.json or .islstudio/config.json'
     required: false
     default: '.islstudio/config.json'
   fail-on:

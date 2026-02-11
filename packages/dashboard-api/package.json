@@ -17,12 +17,14 @@
   ],
   "scripts": {
     "build": "tsup",
+    "seed": "tsx scripts/seed-proof-bundle.ts",
     "dev": "tsup --watch",
     "start": "node dist/index.js",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "cors": "^2.8.5",

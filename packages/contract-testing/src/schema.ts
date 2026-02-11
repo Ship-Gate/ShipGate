@@ -4,12 +4,9 @@
  * Validate data against ISL-derived JSON schemas.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import AjvDefault from 'ajv';
+import Ajv from 'ajv';
 import type { ValidateFunction, ErrorObject } from 'ajv';
 
-// Get the actual Ajv constructor
-const Ajv = AjvDefault.default ?? AjvDefault;
 type AjvInstance = InstanceType<typeof Ajv>;
 
 export interface ValidationResult {

@@ -414,6 +414,9 @@ declare class ISLCodeActionProvider {
     private getWordAtRange;
     private isInBehavior;
     private isInOutput;
+    private isInDomain;
+    private extractDomainName;
+    private createGenerateSkeletonAction;
 }
 
 declare class ISLFormattingProvider {
@@ -447,8 +450,8 @@ declare class ISLSemanticTokensProvider {
     private isInString;
 }
 
-declare const SOURCE_HOST = "vibecheck-host";
-declare const SOURCE_REALITY_GAP = "vibecheck-reality-gap";
+declare const SOURCE_HOST = "shipgate-host";
+declare const SOURCE_REALITY_GAP = "shipgate-reality-gap";
 interface ScannerDiagnosticsOptions {
     projectRoot: string;
     enabled: boolean;

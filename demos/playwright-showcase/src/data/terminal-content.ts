@@ -13,7 +13,7 @@ export const TERMINAL_INIT_LINES: TerminalLine[] = [
   { text: '', type: 'blank', delay: 400 },
   { text: '  ✓ Detected: Next.js + TypeScript', type: 'success', delay: 600 },
   { text: '  ✓ Generated 12 behavioral specs', type: 'success', delay: 400 },
-  { text: '  ✓ Created .shipgate/config.yml', type: 'success', delay: 400 },
+  { text: '  ✓ Created .shipgate.yml', type: 'success', delay: 400 },
   { text: '', type: 'blank', delay: 200 },
 ];
 

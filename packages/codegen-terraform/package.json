@@ -12,7 +12,8 @@
     "clean": "rimraf dist",
     "validate": "terraform fmt -check -recursive",
     "typecheck": "tsc --noEmit",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "isl",

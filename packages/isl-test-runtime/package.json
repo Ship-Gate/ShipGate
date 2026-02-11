@@ -22,7 +22,8 @@
     "test:scenarios": "tsx run-tests.ts --scenarios",
     "test:export": "tsx run-tests.ts --export",
     "clean": "rimraf dist",
-    "test:unit": "tsx run-tests.ts"
+    "test:unit": "tsx run-tests.ts",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@isl-lang/trace-format": "workspace:*",

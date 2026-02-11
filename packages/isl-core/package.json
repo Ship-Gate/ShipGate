@@ -62,7 +62,8 @@
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist *.tgz",
     "prepublishOnly": "pnpm build && pnpm test",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@isl-lang/parser": "workspace:*"

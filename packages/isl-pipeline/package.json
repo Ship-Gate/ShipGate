@@ -31,7 +31,8 @@
     "perf:regression": "tsx src/performance/cli.ts regression",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@isl-lang/isl-core": "workspace:*",

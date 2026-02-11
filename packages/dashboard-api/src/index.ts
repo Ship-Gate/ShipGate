@@ -10,6 +10,7 @@ import { getTelemetry } from './utils/telemetry.js';
 import { openDatabase, openMemoryDatabase, saveDatabase } from './db/schema.js';
 import { createQueries } from './db/queries.js';
 import { reportsRouter } from './routes/reports.js';
+import { proofBundlesRouter } from './routes/proof-bundles.js';
 import { coverageRouter } from './routes/coverage.js';
 import { trendsRouter, driftRouter } from './routes/trends.js';
 import { errorHandler, notFoundHandler } from './middleware/error.js';
@@ -183,6 +184,7 @@ export function createApp(options: CreateAppOptions): Express {
 
   // ── Route mounts ─────────────────────────────────────────────────────
   app.use('/api/v1/reports', reportsRouter(queries));
+  app.use('/api/v1/proof-bundles', proofBundlesRouter(queries));
   app.use('/api/v1/coverage', coverageRouter(queries));
   app.use('/api/v1/trends', trendsRouter(queries));
   app.use('/api/v1/drift', driftRouter(queries));

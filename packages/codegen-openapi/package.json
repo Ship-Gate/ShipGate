@@ -50,7 +50,8 @@
     "clean": "rimraf dist",
     "validate": "openapi-generator-cli validate -i test-output/openapi.yaml",
     "prepublishOnly": "pnpm run build && pnpm run test",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@isl-lang/parser": "workspace:*",

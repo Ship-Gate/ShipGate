@@ -96,7 +96,7 @@ class ApiClient {
       throw new Error(`API error: ${response.status} ${response.statusText}`)
     }
 
-    return response.json()
+    return response.json() as Promise<T>
   }
 
   async getDashboardStats(): Promise<DashboardStats> {

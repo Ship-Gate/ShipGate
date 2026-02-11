@@ -13,7 +13,8 @@
     "lint": "eslint src/",
     "typecheck": "echo 'TODO: Fix Octokit API mismatches and missing modules' && exit 0",
     "clean": "rimraf dist",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@octokit/app": "^16.0.0",

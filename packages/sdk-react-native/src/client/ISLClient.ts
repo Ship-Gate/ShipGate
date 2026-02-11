@@ -175,7 +175,7 @@ export class ISLClient {
 
     // Check cache for GET requests
     if (method === 'GET' && options?.cache?.enabled) {
-      const cached = await this.getFromCache<TOutput>(endpoint, options.cache.key);
+      const cached = await this.getFromCache<TOutput>(endpoint);
       if (cached) {
         return { success: true, data: cached };
       }
@@ -183,7 +183,15 @@ export class ISLClient {
 
     const url = `${this.config.baseUrl}${endpoint}`;
     const timeout = options?.timeout ?? this.config.timeout ?? DEFAULT_TIMEOUT;
-    const retryConfig = options?.retry ?? this.config.retry ?? DEFAULT_RETRY_CONFIG;
+    const sdkRetry = options?.retry;
+    const retryConfig: RetryConfig = sdkRetry
+      ? {
+          maxRetries: sdkRetry.maxAttempts ?? DEFAULT_RETRY_CONFIG.maxRetries,
+          backoff: sdkRetry.backoff ?? DEFAULT_RETRY_CONFIG.backoff,
+          initialDelayMs: sdkRetry.baseDelay ?? DEFAULT_RETRY_CONFIG.initialDelayMs,
+          maxDelayMs: sdkRetry.maxDelay ?? DEFAULT_RETRY_CONFIG.maxDelayMs,
+        }
+      : this.config.retry ?? DEFAULT_RETRY_CONFIG;
 
     let lastError: TError | null = null;
     let attempts = 0;
@@ -231,7 +239,7 @@ export class ISLClient {
         if (response.ok) {
           // Cache successful GET responses
           if (method === 'GET' && options?.cache?.enabled) {
-            await this.setCache(endpoint, data, options.cache.ttlMs, options.cache.key);
+            await this.setCache(endpoint, data, options.cache.ttl ?? 60_000);
           }
           return { success: true, data };
         } else {

@@ -13,7 +13,8 @@
     "update-golden": "tsx scripts/update-golden.ts",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@isl-lang/parser": "workspace:*"

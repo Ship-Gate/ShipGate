@@ -4,7 +4,8 @@
 
 import type { Middleware, ProduceContext, ConsumeContext } from '../types.js';
 import type { HandlerResult } from '../types.js';
-import { BackoffCalculator, BackoffType } from '../dead-letter/policy.js';
+import { BackoffCalculator } from '../dead-letter/policy.js';
+import { BackoffType } from '../dead-letter/types.js';
 
 // ============================================================================
 // RETRY CONFIGURATION

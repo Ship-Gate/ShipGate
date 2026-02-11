@@ -2,7 +2,7 @@
  * ShipGate ISL — VS Code Extension
  *
  * Entry point. Wires up the LSP client, ShipGate commands,
- * CodeLens provider, status bar, and diagnostics integration.
+ * CodeLens provider, status bar, diagnostics, and Shipgate scan features.
  */
 
 import * as vscode from 'vscode';
@@ -17,11 +17,23 @@ import {
   registerValidateCommand,
   getLastCoverageReport,
 } from './commands/index';
+import { registerScanCommands } from './commands/scan';
 import { registerCodeLensProvider, setupDiagnosticsIntegration } from './providers/index';
 import { createShipGateStatusBar, ShipGateStatusBar } from './views/status-bar';
+import { createShipgateScanStatusBar } from './views/shipgateStatusBar';
+import { ShipgateSidebarProvider, type SidebarState } from './views/shipgateSidebar/sidebarProvider';
+import { ShipgateReportPanel } from './views/shipgateReport/reportPanel';
+import { loadGitHubState } from './commands/github';
+import { runCodeToIsl } from './commands/codeToIsl';
+import { join } from 'path';
+import { readdirSync, existsSync } from 'fs';
+import { FirewallService } from './services/firewallService';
+import { firewallResultToDiagnostics, registerFirewallCodeActions } from './diagnostics/firewallDiagnostics';
+import { ship } from './services/shipService';
 
 let client: LanguageClient | undefined;
 let statusBar: ShipGateStatusBar | undefined;
+let scanStatusBar: ReturnType<typeof createShipgateScanStatusBar> | undefined;
 let outputChannel: vscode.OutputChannel;
 
 // ============================================================================
@@ -36,6 +48,237 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   // ── Status bar (renders immediately for perceived speed) ──
   statusBar = createShipGateStatusBar(context);
+
+  // ── Shipgate scan: status bar, diagnostics, sidebar, report, commands ──
+  const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
+  const scanState = { lastResult: null as import('./model/types').ScanResult | null, workspaceRoot };
+  const scanDiagnosticCollection = vscode.languages.createDiagnosticCollection('shipgate-scan');
+  context.subscriptions.push(scanDiagnosticCollection);
+
+  const githubState = {
+    connected: false,
+    repo: null as import('./services/githubService').GitHubRepoInfo | null,
+    pulls: [] as import('./services/githubService').GitHubPullRequest[],
+    workflowRuns: [] as import('./services/githubService').GitHubWorkflowRun[],
+    error: null as string | null,
+  };
+
+  function getWorkflows(): { name: string; path: string }[] {
+    const wfDir = join(workspaceRoot, '.github', 'workflows');
+    if (!existsSync(wfDir)) return [];
+    try {
+      return readdirSync(wfDir)
+        .filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'))
+        .map((f) => ({ name: f.replace(/\.(yml|yaml)$/, ''), path: join(wfDir, f) }));
+    } catch {
+      return [];
+    }
+  }
+
+  let islGeneratePath: string | null = null;
+  const updateIslPath = () => {
+    const uri = vscode.window.activeTextEditor?.document.uri;
+    islGeneratePath = uri?.scheme === 'file' ? vscode.workspace.asRelativePath(uri) : null;
+  };
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor(updateIslPath)
+  );
+  updateIslPath();
+
+  const firewallService = new FirewallService();
+  if (workspaceRoot) {
+    firewallService.configure(workspaceRoot);
+  }
+
+  const firewallDiagnosticCollection = vscode.languages.createDiagnosticCollection('shipgate-firewall');
+  context.subscriptions.push(firewallDiagnosticCollection);
+
+  // ── Firewall quick-fix code actions ──
+  registerFirewallCodeActions(context);
+
+  const getState = (): SidebarState => ({
+    scan: scanState.lastResult,
+    github: githubState,
+    workflows: getWorkflows(),
+    islGeneratePath,
+    firewall: firewallService.getState(),
+  });
+
+  scanStatusBar = createShipgateScanStatusBar(context, 'shipgate.runScan');
+  scanStatusBar.setVerdict('Idle');
+
+  const sidebarProvider = new ShipgateSidebarProvider(context.extensionUri, getState, workspaceRoot);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider('shipgate.sidebar', sidebarProvider)
+  );
+
+  registerScanCommands(
+    context,
+    scanState,
+    scanDiagnosticCollection,
+    (result) => {
+      scanState.lastResult = result;
+      sidebarProvider.refresh();
+    },
+    scanStatusBar
+  );
+
+  // ── GitHub commands ──
+  const runGitHubConnect = async () => {
+    const token = vscode.workspace.getConfiguration('shipgate').get<string>('github.token', '');
+    if (!token) {
+      await vscode.commands.executeCommand('workbench.action.openSettings', 'shipgate.github.token');
+      vscode.window.showInformationMessage('Add shipgate.github.token in settings to connect.');
+      return;
+    }
+    const state = await loadGitHubState(workspaceRoot, token);
+    Object.assign(githubState, state);
+    sidebarProvider.refresh();
+  };
+  context.subscriptions.push(
+    vscode.commands.registerCommand('shipgate.githubConnect', runGitHubConnect),
+    vscode.commands.registerCommand('shipgate.githubRefresh', runGitHubConnect)
+  );
+
+  // ── Auto-connect GitHub on activation ──
+  const autoToken = vscode.workspace.getConfiguration('shipgate').get<string>('github.token', '');
+  if (autoToken && workspaceRoot) {
+    loadGitHubState(workspaceRoot, autoToken).then((state) => {
+      Object.assign(githubState, state);
+      sidebarProvider.refresh();
+    }).catch(() => { /* silent */ });
+  }
+
+  // ── Ship to GitHub command ──
+  context.subscriptions.push(
+    vscode.commands.registerCommand('shipgate.ship', async () => {
+      const token = vscode.workspace.getConfiguration('shipgate').get<string>('github.token', '');
+      if (!token) {
+        const choice = await vscode.window.showWarningMessage(
+          'GitHub token required to ship. Add it now?',
+          'Open Settings',
+          'Cancel'
+        );
+        if (choice === 'Open Settings') {
+          await vscode.commands.executeCommand('workbench.action.openSettings', 'shipgate.github.token');
+        }
+        return;
+      }
+
+      // Gate on scan verdict
+      const lastVerdict = scanState.lastResult?.result?.verdict;
+      if (lastVerdict === 'NO_SHIP') {
+        const force = await vscode.window.showWarningMessage(
+          'Scan verdict is NO_SHIP. Fix violations before shipping.',
+          'Ship Anyway',
+          'Run Scan',
+          'Cancel'
+        );
+        if (force === 'Run Scan') {
+          await vscode.commands.executeCommand('shipgate.runScan');
+          return;
+        }
+        if (force !== 'Ship Anyway') return;
+      }
+
+      // Collect options via quick input
+      const message = await vscode.window.showInputBox({
+        prompt: 'Commit message',
+        value: 'shipgate: verified ship',
+        placeHolder: 'Describe your changes',
+      });
+      if (!message) return;
+
+      const prTitle = await vscode.window.showInputBox({
+        prompt: 'PR title',
+        value: message,
+        placeHolder: 'Pull request title',
+      });
+      if (!prTitle) return;
+
+      const draftChoice = await vscode.window.showQuickPick(
+        [
+          { label: 'Ready for review', value: false },
+          { label: 'Draft PR', value: true },
+        ],
+        { placeHolder: 'PR type' }
+      );
+      if (!draftChoice) return;
+
+      // Execute ship
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: 'Shipgate: Shipping to GitHub...',
+          cancellable: false,
+        },
+        async (progress) => {
+          progress.report({ message: 'Committing changes...' });
+          try {
+            const result = await ship({
+              cwd: workspaceRoot,
+              token,
+              message,
+              prTitle,
+              draft: draftChoice.value,
+            });
+
+            if (result.prUrl) {
+              const open = await vscode.window.showInformationMessage(
+                `Shipped! PR #${result.prNumber} created on ${result.branch}`,
+                'Open PR',
+                'Close'
+              );
+              if (open === 'Open PR') {
+                vscode.env.openExternal(vscode.Uri.parse(result.prUrl));
+              }
+            } else {
+              vscode.window.showInformationMessage(
+                `Pushed to ${result.branch} (${result.commitSha})${result.error ? ` — ${result.error}` : ''}`
+              );
+            }
+
+            // Refresh GitHub state
+            const newState = await loadGitHubState(workspaceRoot, token);
+            Object.assign(githubState, newState);
+            sidebarProvider.refresh();
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            vscode.window.showErrorMessage(`Ship failed: ${msg}`);
+          }
+        }
+      );
+    })
+  );
+
+  // ── Open Walkthrough command ──
+  context.subscriptions.push(
+    vscode.commands.registerCommand('shipgate.openWalkthrough', () => {
+      vscode.commands.executeCommand('workbench.action.openWalkthrough', 'shipgate.shipgate-isl#shipgate-walkthrough');
+    })
+  );
+
+  // ── Code to ISL command ──
+  context.subscriptions.push(
+    vscode.commands.registerCommand('shipgate.codeToIsl', async () => {
+      const editor = vscode.window.activeTextEditor;
+      let targetPath = workspaceRoot;
+      if (editor?.document.uri?.scheme === 'file') {
+        const folder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
+        if (folder) targetPath = editor.document.uri.fsPath;
+      }
+
+      const result = await runCodeToIsl(workspaceRoot, targetPath);
+      if (result.success) {
+        vscode.window.showInformationMessage(
+          `Generated ${result.generatedCount ?? 0} ISL spec(s) from code.`
+        );
+        sidebarProvider.refresh();
+      } else {
+        vscode.window.showErrorMessage(`Code to ISL failed: ${result.error}`);
+      }
+    })
+  );
 
   // ── ShipGate commands ──
   registerGenerateCommand(context, outputChannel);
@@ -95,6 +338,77 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     })
   );
 
+  // ── Live Firewall on save ──
+  const firewallEnabled = () =>
+    vscode.workspace.getConfiguration('shipgate').get<boolean>('firewall.enabled', true);
+  const firewallRunOnSave = () =>
+    vscode.workspace.getConfiguration('shipgate').get<boolean>('firewall.runOnSave', true);
+
+  context.subscriptions.push(
+    firewallService.onStateChange(() => sidebarProvider.refresh())
+  );
+
+  context.subscriptions.push(
+    vscode.workspace.onDidSaveTextDocument(async (doc) => {
+      if (!firewallEnabled() || !firewallRunOnSave()) return;
+      if (doc.uri.scheme !== 'file') return;
+      const filePath = doc.uri.fsPath;
+      const folder = vscode.workspace.getWorkspaceFolder(doc.uri);
+      const root = folder?.uri.fsPath ?? workspaceRoot;
+      if (!firewallService.isSupported(filePath)) return;
+
+      firewallService.configure(root);
+      try {
+        const result = await firewallService.evaluate(filePath, doc.getText());
+        const diags = firewallResultToDiagnostics(doc.uri, result, doc);
+        firewallDiagnosticCollection.set(doc.uri, diags);
+      } catch {
+        firewallDiagnosticCollection.delete(doc.uri);
+      }
+    })
+  );
+
+  // Clear firewall diagnostics when document is closed
+  context.subscriptions.push(
+    vscode.workspace.onDidCloseTextDocument((doc) => {
+      firewallDiagnosticCollection.delete(doc.uri);
+    })
+  );
+
+  // ── Manual Run Firewall command ──
+  context.subscriptions.push(
+    vscode.commands.registerCommand('shipgate.runFirewall', async () => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        vscode.window.showInformationMessage('Open a file to run the firewall.');
+        return;
+      }
+      const doc = editor.document;
+      if (doc.uri.scheme !== 'file') return;
+      const filePath = doc.uri.fsPath;
+      const folder = vscode.workspace.getWorkspaceFolder(doc.uri);
+      const root = folder?.uri.fsPath ?? workspaceRoot;
+      if (!firewallService.isSupported(filePath)) {
+        vscode.window.showWarningMessage('Firewall supports .ts, .tsx, .js, .jsx files only.');
+        return;
+      }
+      firewallService.configure(root);
+      try {
+        const result = await firewallService.evaluate(filePath, doc.getText());
+        const diags = firewallResultToDiagnostics(doc.uri, result, doc);
+        firewallDiagnosticCollection.set(doc.uri, diags);
+        const msg = result.allowed
+          ? `Firewall: allowed (${result.violations.length} warning(s))`
+          : `Firewall: blocked (${result.violations.length} violation(s))`;
+        vscode.window.showInformationMessage(msg);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        vscode.window.showErrorMessage(`Firewall failed: ${message}`);
+        firewallDiagnosticCollection.delete(doc.uri);
+      }
+    })
+  );
+
   const activationTime = Date.now() - startTime;
   outputChannel.appendLine(`[ShipGate] Extension activated in ${activationTime}ms`);
 
@@ -117,6 +431,10 @@ export async function deactivate(): Promise<void> {
   if (statusBar) {
     statusBar.dispose();
     statusBar = undefined;
+  }
+  if (scanStatusBar) {
+    scanStatusBar.dispose();
+    scanStatusBar = undefined;
   }
 }
 

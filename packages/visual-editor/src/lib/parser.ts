@@ -27,7 +27,7 @@ export function parseISL(code: string): ParseResult {
       // Domain declaration
       const domainMatch = trimmed.match(/^domain\s+(\w+)\s*\{?$/);
       if (domainMatch) {
-        domainName = domainMatch[1];
+        domainName = domainMatch[1] ?? 'Domain';
         braceCount++;
         continue;
       }
@@ -132,8 +132,8 @@ function createEntityNode(name: string, content: string[], position: { x: number
       if (fieldMatch) {
         fields.push({
           id: `f${Date.now()}_${Math.random()}`,
-          name: fieldMatch[1],
-          type: fieldMatch[2],
+          name: fieldMatch[1] ?? '',
+          type: fieldMatch[2] ?? '',
           optional: !!fieldMatch[3],
           annotations: extractAnnotations(line),
         });
@@ -167,7 +167,7 @@ function createBehaviorNode(name: string, content: string[], position: { x: numb
   for (const line of content) {
     if (line.startsWith('description:')) {
       const match = line.match(/description:\s*"([^"]+)"/);
-      if (match) description = match[1];
+      if (match) description = match[1] ?? '';
       continue;
     }
     
@@ -197,8 +197,8 @@ function createBehaviorNode(name: string, content: string[], position: { x: numb
       if (match) {
         inputs.push({
           id: `i${Date.now()}_${Math.random()}`,
-          name: match[1],
-          type: match[2],
+          name: match[1] ?? '',
+          type: match[2] ?? '',
           optional: !!match[3],
           annotations: [],
         });
@@ -207,10 +207,10 @@ function createBehaviorNode(name: string, content: string[], position: { x: numb
     
     if (currentSection === 'output') {
       const successMatch = line.match(/success:\s*(\w+)/);
-      if (successMatch) outputType = successMatch[1];
+      if (successMatch) outputType = successMatch[1] ?? 'Boolean';
       
       const errorMatch = line.match(/error\s+(\w+)/);
-      if (errorMatch) errors.push(errorMatch[1]);
+      if (errorMatch) errors.push(errorMatch[1] ?? '');
     }
     
     if (currentSection === 'pre') {
@@ -240,13 +240,14 @@ function createBehaviorNode(name: string, content: string[], position: { x: numb
 }
 
 function createTypeNode(name: string, definition: string, position: { x: number; y: number }): ISLNode {
-  const baseType = definition.split('{')[0].trim();
+  const baseType = (definition.split('{')[0] ?? definition).trim();
   const constraints: string[] = [];
   
   if (definition.includes('{')) {
     const constraintPart = definition.match(/\{([^}]+)\}/);
-    if (constraintPart) {
-      constraints.push(...constraintPart[1].split(',').map(c => c.trim()));
+    const constraintStr = constraintPart?.[1];
+    if (constraintStr) {
+      constraints.push(...constraintStr.split(',').map(c => c.trim()));
     }
   }
   
@@ -267,7 +268,8 @@ function extractAnnotations(line: string): string[] {
   const annotations: string[] = [];
   const matches = line.matchAll(/@(\w+)/g);
   for (const match of matches) {
-    annotations.push(`@${match[1]}`);
+    const cap = match[1];
+    if (cap) annotations.push(`@${cap}`);
   }
   return annotations;
 }

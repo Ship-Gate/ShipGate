@@ -14,12 +14,11 @@ export {
   InMemoryLogExporter,
   setLogContext,
   getLogContext,
-  withLogContext,
-  withoutLogContext,
+  clearLogContext,
   getDefaultLogger,
   setDefaultLogger,
 } from './logging';
-export type { LoggerConfig, LogExporter, LogContext } from './logging';
+export type { LoggerConfig, LogExporter } from './logging';
 
 // Re-export metrics module
 export {

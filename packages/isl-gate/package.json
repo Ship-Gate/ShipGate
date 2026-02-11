@@ -45,7 +45,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "zod": "^3.22.4",
@@ -78,5 +79,7 @@
   },
   "author": "mevla",
   "license": "MIT",
-  "sideEffects": ["./dist/chunk-*.js"]
+  "sideEffects": [
+    "./dist/chunk-*.js"
+  ]
 }

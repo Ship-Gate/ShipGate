@@ -348,7 +348,7 @@ export class S3StorageProvider implements StorageProvider {
 
     const response = await this.client.send(command);
 
-    const objects: StorageMetadata[] = (response.Contents ?? []).map(obj => ({
+    const objects: StorageMetadata[] = (response.Contents ?? []).map((obj) => ({
       key: obj.Key ?? '',
       size: obj.Size ?? 0,
       contentType: 'application/octet-stream', // Not returned by list
@@ -358,7 +358,7 @@ export class S3StorageProvider implements StorageProvider {
     }));
 
     const prefixes = (response.CommonPrefixes ?? [])
-      .map(p => p.Prefix)
+      .map((p) => p.Prefix)
       .filter((p): p is string => p !== undefined);
 
     return {

@@ -3,9 +3,10 @@ import type { Queries } from '../db/queries.js';
 import {
   CreateReportSchema,
   ListReportsQuerySchema,
-  type PaginatedResponse,
-  type VerificationReport,
   type ApiResponse,
+  type PaginatedResponse,
+  type ReportDiff,
+  type VerificationReport,
 } from '../types.js';
 import { validateBody, validateQuery } from '../middleware/validate.js';
 
@@ -33,6 +34,9 @@ export function reportsRouter(queries: Queries): Router {
         branch?: string;
         verdict?: string;
         triggeredBy?: string;
+        q?: string;
+        from?: string;
+        to?: string;
         page: number;
         limit: number;
       };
@@ -42,6 +46,9 @@ export function reportsRouter(queries: Queries): Router {
         branch: query.branch,
         verdict: query.verdict as 'SHIP' | 'WARN' | 'NO_SHIP' | undefined,
         triggeredBy: query.triggeredBy as 'ci' | 'cli' | 'vscode' | undefined,
+        q: query.q,
+        from: query.from,
+        to: query.to,
         page: query.page,
         limit: query.limit,
       });
@@ -76,6 +83,22 @@ export function reportsRouter(queries: Queries): Router {
       return;
     }
     const response: ApiResponse<VerificationReport> = { ok: true, data: report };
+    res.json(response);
+  });
+
+  // ── GET /api/v1/reports/:id/diff — compare to previous run ───────────
+  router.get('/:id/diff', (req: Request, res: Response): void => {
+    const id = Array.isArray(req.params['id']) ? req.params['id'][0] : req.params['id'];
+    if (!id) {
+      res.status(400).json({ ok: false, error: 'Missing id parameter' });
+      return;
+    }
+    const diff = queries.getReportDiff(id);
+    if (!diff) {
+      res.status(404).json({ ok: false, error: 'Report not found' });
+      return;
+    }
+    const response: ApiResponse<ReportDiff> = { ok: true, data: diff };
     res.json(response);
   });
 

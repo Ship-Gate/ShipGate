@@ -209,7 +209,7 @@ describe('LSP Integration Tests', () => {
         fileName: '/test.isl',
       };
       mockDocuments.set(docUri, doc as never);
-      (vscode.window as { activeTextEditor: unknown }).activeTextEditor = doc;
+      (vscode.window as { activeTextEditor: unknown }).activeTextEditor = { document: doc };
 
       // Mock LSP validate response with errors
       (mockClient.sendRequest as ReturnType<typeof vi.fn>).mockResolvedValue({
@@ -251,7 +251,7 @@ describe('LSP Integration Tests', () => {
         fileName: '/test.isl',
       };
       mockDocuments.set(docUri, doc as never);
-      (vscode.window as { activeTextEditor: unknown }).activeTextEditor = doc;
+      (vscode.window as { activeTextEditor: unknown }).activeTextEditor = { document: doc };
 
       (mockClient.sendRequest as ReturnType<typeof vi.fn>).mockResolvedValue({
         valid: true,

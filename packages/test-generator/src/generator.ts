@@ -18,6 +18,7 @@ import type {
   GeneratedAssertion,
   StrategyContext,
   TestFramework,
+  DomainType,
 } from './types';
 import { getStrategy, detectDomain } from './strategies';
 import {
@@ -272,6 +273,13 @@ function generateBehaviorTestFile(
 
   // Generate invariant tests
   const invariantTests = generateInvariantBlock(behavior, domain, framework);
+
+  // Generate scenario tests
+  const scenarios = generateScenarioTests(behavior, domain, framework);
+  const scenarioTestsBlock = generateScenarioBlock(scenarios, framework);
+
+  // Generate property-based test stubs
+  const pbtStubs = generatePBTStubs(behavior, domain, framework);
 
   // Compute coverage
   const coverage: CoverageInfo = {

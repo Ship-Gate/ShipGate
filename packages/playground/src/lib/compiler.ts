@@ -91,14 +91,14 @@ function tokenize(source: string): Token[] {
   }
 
   while (pos < source.length) {
-    const char = source[pos]
+    const char = source[pos] ?? ''
     const location = makeLocation()
 
     // Whitespace
     if (/\s/.test(char)) {
       let value = ''
-      while (pos < source.length && /\s/.test(source[pos])) {
-        value += source[pos]
+      while (pos < source.length && /\s/.test(source[pos] ?? '')) {
+        value += source[pos] ?? ''
         advance()
       }
       tokens.push({ type: 'WHITESPACE', value, location })
@@ -108,8 +108,8 @@ function tokenize(source: string): Token[] {
     // Comments
     if (source.slice(pos, pos + 2) === '//') {
       let value = ''
-      while (pos < source.length && source[pos] !== '\n') {
-        value += source[pos]
+      while (pos < source.length && (source[pos] ?? '') !== '\n') {
+        value += source[pos] ?? ''
         advance()
       }
       tokens.push({ type: 'COMMENT', value, location })
@@ -121,7 +121,7 @@ function tokenize(source: string): Token[] {
       let value = '/*'
       advance(2)
       while (pos < source.length && source.slice(pos, pos + 2) !== '*/') {
-        value += source[pos]
+        value += source[pos] ?? ''
         advance()
       }
       if (pos < source.length) {
@@ -137,12 +137,15 @@ function tokenize(source: string): Token[] {
       const quote = char
       let value = quote
       advance()
-      while (pos < source.length && source[pos] !== quote) {
-        if (source[pos] === '\\' && pos + 1 < source.length) {
-          value += source[pos]
+      while (pos < source.length && (source[pos] ?? '') !== quote) {
+        const curr = source[pos] ?? ''
+        if (curr === '\\' && pos + 1 < source.length) {
+          value += curr
           advance()
+          value += source[pos] ?? ''
+        } else {
+          value += curr
         }
-        value += source[pos]
         advance()
       }
       if (pos < source.length) {
@@ -156,8 +159,8 @@ function tokenize(source: string): Token[] {
     // Numbers
     if (/\d/.test(char)) {
       let value = ''
-      while (pos < source.length && /[\d.]/.test(source[pos])) {
-        value += source[pos]
+      while (pos < source.length && /[\d.]/.test(source[pos] ?? '')) {
+        value += source[pos] ?? ''
         advance()
       }
       tokens.push({ type: 'NUMBER', value, location })
@@ -167,8 +170,8 @@ function tokenize(source: string): Token[] {
     // Identifiers and keywords
     if (/[a-zA-Z_]/.test(char)) {
       let value = ''
-      while (pos < source.length && /[a-zA-Z0-9_]/.test(source[pos])) {
-        value += source[pos]
+      while (pos < source.length && /[a-zA-Z0-9_]/.test(source[pos] ?? '')) {
+        value += source[pos] ?? ''
         advance()
       }
       const type = KEYWORDS.includes(value) ? 'KEYWORD' : 'IDENTIFIER'
@@ -180,8 +183,9 @@ function tokenize(source: string): Token[] {
     if (/[=<>!&|+\-*/%]/.test(char)) {
       let value = char
       advance()
-      if (pos < source.length && /[=<>&|]/.test(source[pos])) {
-        value += source[pos]
+      const nextChar = source[pos] ?? ''
+      if (pos < source.length && /[=<>&|]/.test(nextChar)) {
+        value += nextChar
         advance()
       }
       tokens.push({ type: 'OPERATOR', value, location })
@@ -190,7 +194,7 @@ function tokenize(source: string): Token[] {
 
     // Punctuation
     if (/[{}()\[\]:;,.]/.test(char)) {
-      tokens.push({ type: 'PUNCTUATION', value: char, location })
+      tokens.push({ type: 'PUNCTUATION', value: char as string, location })
       advance()
       continue
     }

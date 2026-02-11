@@ -1,6 +1,6 @@
 'use client';
 
-import { ComplianceReport, ComplianceSummaryCard } from '@/components/ComplianceReport';
+import { ComplianceReport } from '@/components/ComplianceReport';
 
 export default function CompliancePage() {
   return (

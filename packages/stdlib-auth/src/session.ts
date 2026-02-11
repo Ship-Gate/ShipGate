@@ -43,10 +43,13 @@ export class SessionManager {
 
       if (activeSessions.length >= this.policy.maxConcurrentSessions) {
         // Revoke oldest session
-        const oldest = activeSessions.sort(
+        const sorted = activeSessions.sort(
           (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
-        )[0];
-        await this.revoke(oldest.id, 'max_sessions_exceeded');
+        );
+        const oldest = sorted[0];
+        if (oldest) {
+          await this.revoke(oldest.id, 'max_sessions_exceeded');
+        }
       }
     }
 

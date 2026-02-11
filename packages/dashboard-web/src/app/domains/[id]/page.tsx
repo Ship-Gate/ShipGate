@@ -71,7 +71,7 @@ export default function DomainDetailPage({ params }: PageProps) {
           </div>
           <p className="text-muted-foreground">{domain.description}</p>
         </div>
-        <Button onClick={handleVerify} disabled={triggerLoading}>
+        <Button onClick={() => void handleVerify()} disabled={triggerLoading}>
           {triggerLoading ? (
             <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
           ) : (

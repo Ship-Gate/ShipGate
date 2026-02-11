@@ -65,6 +65,9 @@ export const ListReportsQuerySchema = z.object({
   branch: z.string().optional(),
   verdict: VerdictSchema.optional(),
   triggeredBy: TriggerSchema.optional(),
+  q: z.string().optional(),
+  from: z.string().optional(),
+  to: z.string().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
@@ -140,4 +143,11 @@ export interface CoverageSummary {
     specless: number;
   };
   lastUpdated: string;
+}
+
+export interface ReportDiff {
+  current: VerificationReport;
+  previous: VerificationReport | null;
+  newFailures: FileResult[];
+  resolved: FileResult[];
 }

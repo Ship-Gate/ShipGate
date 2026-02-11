@@ -278,6 +278,12 @@ export class Bundler {
       views: [],
       scenarios: [],
       chaos: [],
+      apis: [],
+      storage: [],
+      workflows: [],
+      events: [],
+      handlers: [],
+      screens: [],
       location: entryAst.location,
     };
 
@@ -459,6 +465,12 @@ export function createEmptyBundle(
     views: [],
     scenarios: [],
     chaos: [],
+    apis: [],
+    storage: [],
+    workflows: [],
+    events: [],
+    handlers: [],
+    screens: [],
     location,
   };
 }

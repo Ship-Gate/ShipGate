@@ -137,7 +137,7 @@ function ToolItem({
   tool: ToolItem;
   onDragStart: (e: React.DragEvent, type: ISLNodeType) => void;
 }) {
-  const Icon = iconMap[tool.icon];
+  const Icon = iconMap[tool.icon] ?? Database;
   const colorClass = getColorClass(tool.type);
 
   return (

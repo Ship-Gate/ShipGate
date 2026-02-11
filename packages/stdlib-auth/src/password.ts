@@ -148,14 +148,20 @@ export function generatePassword(options: {
   const passwordArray = password.split('');
   for (let i = 0; i < requirements.length && i < length; i++) {
     const reqChars = requirements[i];
+    if (!reqChars) continue;
     const randomIndex = Math.floor(Math.random() * reqChars.length);
-    passwordArray[i] = reqChars[randomIndex];
+    const char = reqChars[randomIndex];
+    if (char !== undefined) {
+      passwordArray[i] = char;
+    }
   }
 
   // Shuffle
   for (let i = passwordArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [passwordArray[i], passwordArray[j]] = [passwordArray[j], passwordArray[i]];
+    const tmp = passwordArray[i]!;
+    passwordArray[i] = passwordArray[j]!;
+    passwordArray[j] = tmp;
   }
 
   return passwordArray.join('');

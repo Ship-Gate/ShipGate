@@ -66,7 +66,7 @@ export async function shipCommand(
     }
 
     // ── Dynamic import of isl-ship ────────────────────────────────────────
-    spinner?.text = 'Loading generators...';
+    if (spinner) spinner.text = 'Loading generators...';
 
     let shipModule: {
       ship: (source: string, opts: {
@@ -111,7 +111,7 @@ export async function shipCommand(
     }
 
     // ── Generate ──────────────────────────────────────────────────────────
-    spinner?.text = 'Generating full-stack application...';
+    if (spinner) spinner.text = 'Generating full-stack application...';
 
     const outputDir = resolve(options.output ?? `./${options.name ?? 'output'}`);
 
@@ -149,7 +149,7 @@ export async function shipCommand(
     }
 
     // ── Write files ───────────────────────────────────────────────────────
-    spinner?.text = `Writing ${result.files.length} files...`;
+    if (spinner) spinner.text = `Writing ${result.files.length} files...`;
 
     let written = 0;
     for (const file of result.files) {

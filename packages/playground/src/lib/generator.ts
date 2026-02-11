@@ -81,7 +81,7 @@ export function generateTests(domain: Domain): string {
     
     // Generate test for each precondition
     for (let i = 0; i < behavior.preconditions.length; i++) {
-      const pre = behavior.preconditions[i]
+      const pre = behavior.preconditions[i] ?? ''
       lines.push(`    it('should require: ${escapeString(pre)}', async () => {`)
       lines.push(`      // Precondition: ${pre}`)
       lines.push(`      // TODO: Set up test to verify precondition`)
@@ -92,7 +92,7 @@ export function generateTests(domain: Domain): string {
     
     // Generate test for each postcondition
     for (let i = 0; i < behavior.postconditions.length; i++) {
-      const post = behavior.postconditions[i]
+      const post = behavior.postconditions[i] ?? ''
       lines.push(`    it('should ensure: ${escapeString(post)}', async () => {`)
       lines.push(`      // Postcondition: ${post}`)
       lines.push(`      // TODO: Set up test to verify postcondition`)

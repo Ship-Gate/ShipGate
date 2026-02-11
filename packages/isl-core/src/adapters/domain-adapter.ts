@@ -514,6 +514,12 @@ export function domainDeclarationToDomain(decl: DomainDeclaration): ParserDomain
     views: [], // Not in isl-core AST
     scenarios: [], // Not in isl-core AST
     chaos: [], // Not in isl-core AST
+    apis: [], // Not in isl-core AST
+    storage: [], // Not in isl-core AST
+    workflows: [], // Not in isl-core AST
+    events: [], // Not in isl-core AST
+    handlers: [], // Not in isl-core AST
+    screens: [], // Not in isl-core AST
     location: spanToLocation(decl.span),
   } as Domain;
 }

@@ -17,7 +17,8 @@
     "test:watch": "vitest",
     "typecheck": "echo 'TODO: Fix AST type mismatches and missing module' && exit 0",
     "clean": "rimraf dist",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@isl-lang/cli-ux": "workspace:*",

@@ -2,10 +2,15 @@ name: Shipgate VS Code Extension
 
 on:
   push:
-    paths: ['packages/vscode/**']
-    tags: ['vscode-v*']
+    paths: ['packages/vscode/**', 'packages/isl-firewall/**', 'packages/lsp-server/**']
+    branches: [main]
   pull_request:
-    paths: ['packages/vscode/**']
+    paths: ['packages/vscode/**', 'packages/isl-firewall/**', 'packages/lsp-server/**']
+
+# Clean CI: no cache, fresh install every run
+concurrency:
+  group: vscode-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -15,26 +20,34 @@ jobs:
     name: Build & Package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - uses: pnpm/action-setup@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      # Install from repo root (monorepo workspace)
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build extension
+        run: pnpm run build
         working-directory: packages/vscode
 
       - name: Type check
         run: pnpm run typecheck
         working-directory: packages/vscode
 
-      - name: Build extension
-        run: pnpm run build
+      - name: Run unit tests
+        run: pnpm run test:unit
         working-directory: packages/vscode
 
       - name: Package VSIX
@@ -42,7 +55,9 @@ jobs:
         working-directory: packages/vscode
 
       - name: Verify VSIX was created
-        run: ls -la packages/vscode/*.vsix
+        run: |
+          ls -la packages/vscode/*.vsix
+          echo "✓ Extension packaged successfully"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -61,17 +76,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
       - uses: pnpm/action-setup@v4
         with:
           version: 9
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        working-directory: packages/vscode
 
       - name: Build extension
         run: pnpm run build
@@ -80,13 +95,12 @@ jobs:
       - name: Validate tag matches package.json version
         run: |
           TAG_VERSION="${GITHUB_REF#refs/tags/vscode-v}"
-          PKG_VERSION=$(node -p "require('./package.json').version")
+          PKG_VERSION=$(node -p "require('./packages/vscode/package.json').version")
           if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
             echo "::error::Tag version ($TAG_VERSION) does not match package.json version ($PKG_VERSION)"
             exit 1
           fi
           echo "Version match confirmed: $TAG_VERSION"
-        working-directory: packages/vscode
 
       - name: Publish to VS Code Marketplace
         run: npx vsce publish --no-dependencies

@@ -65,7 +65,8 @@
     "test": "echo 'Skipping test - package has known issues'",
     "typecheck": "echo 'Skipping typecheck - package has known issues'",
     "clean": "rimraf dist",
-    "test:unit": "echo 'Skipping test - package has known issues'"
+    "test:unit": "echo 'Skipping test - package has known issues'",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

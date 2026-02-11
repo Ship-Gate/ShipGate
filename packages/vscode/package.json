@@ -35,10 +35,11 @@
     "security",
     "code quality"
   ],
-  "main": "./dist/extension.js",
+  "main": "./dist/extension.cjs",
   "activationEvents": [
     "onLanguage:isl",
-    "workspaceContains:**/*.isl"
+    "workspaceContains:**/*.isl",
+    "onStartupFinished"
   ],
   "contributes": {
     "languages": [
@@ -155,6 +156,134 @@
         "title": "ISL: Generate Skeleton from Spec",
         "category": "ISL",
         "icon": "$(file-code)"
+      },
+      {
+        "command": "shipgate.runScan",
+        "title": "Shipgate: Run Scan",
+        "category": "Shipgate",
+        "icon": "$(search)"
+      },
+      {
+        "command": "shipgate.openReport",
+        "title": "Shipgate: Open Report",
+        "category": "Shipgate",
+        "icon": "$(book)"
+      },
+      {
+        "command": "shipgate.openSettings",
+        "title": "Shipgate: Open Settings",
+        "category": "Shipgate",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "shipgate.selectWorkspaceRoot",
+        "title": "Shipgate: Select Workspace Root",
+        "category": "Shipgate",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "shipgate.codeToIsl",
+        "title": "Shipgate: Code to ISL",
+        "category": "Shipgate",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "shipgate.githubConnect",
+        "title": "Shipgate: Connect GitHub",
+        "category": "Shipgate",
+        "icon": "$(link)"
+      },
+      {
+        "command": "shipgate.githubRefresh",
+        "title": "Shipgate: Refresh GitHub",
+        "category": "Shipgate",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "shipgate.runFirewall",
+        "title": "Shipgate: Run Firewall on Current File",
+        "category": "Shipgate",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "shipgate.openWalkthrough",
+        "title": "Shipgate: Get Started",
+        "category": "Shipgate",
+        "icon": "$(book)"
+      },
+      {
+        "command": "shipgate.ship",
+        "title": "Shipgate: Ship to GitHub",
+        "category": "Shipgate",
+        "icon": "$(rocket)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "shipgate-container",
+          "title": "Shipgate",
+          "icon": "icons/isl-dark.svg"
+        }
+      ]
+    },
+    "views": {
+      "shipgate-container": [
+        {
+          "type": "webview",
+          "id": "shipgate.sidebar",
+          "name": "Shipgate"
+        }
+      ]
+    },
+    "walkthroughs": [
+      {
+        "id": "shipgate-walkthrough",
+        "title": "Shipgate: Get Started",
+        "description": "Learn how to verify AI-generated code and catch violations before they ship.",
+        "steps": [
+          {
+            "id": "overview",
+            "title": "Welcome to Shipgate",
+            "description": "Behavioral verification for AI-generated code. Catch violations before they ship.\n\nOpen the **Shipgate** panel in the Explorer sidebar to get started.",
+            "media": {
+              "markdown": "media/walkthrough/step1-overview.md"
+            }
+          },
+          {
+            "id": "run-scan",
+            "title": "Run Your First Scan",
+            "description": "The Intent Drift gauge shows how well your code matches your specs. Click Run Scan to verify your workspace.\n\n[Run Scan](command:shipgate.runScan)",
+            "media": {
+              "markdown": "media/walkthrough/step2-scan.md"
+            },
+            "completionEvents": ["onCommand:shipgate.runScan"]
+          },
+          {
+            "id": "live-firewall",
+            "title": "Live Firewall",
+            "description": "Runs automatically on save for .ts and .js files. Blocks ghost routes, env vars, and imports.\n\n[Open Settings](command:workbench.action.openSettings?%5B%22shipgate%22%5D)",
+            "media": {
+              "markdown": "media/walkthrough/step3-firewall.md"
+            }
+          },
+          {
+            "id": "github",
+            "title": "Connect GitHub",
+            "description": "Link your repo to see PRs and workflow runs. Add shipgate.github.token in settings.\n\n[Configure](command:workbench.action.openSettings?%5B%22shipgate.github.token%22%5D)",
+            "media": {
+              "markdown": "media/walkthrough/step4-github.md"
+            }
+          },
+          {
+            "id": "code-to-isl",
+            "title": "Code to ISL",
+            "description": "Generate intent specs from existing code. Select a file or folder, then click Generate ISL from Code.\n\n[Try It](command:shipgate.codeToIsl)",
+            "media": {
+              "markdown": "media/walkthrough/step5-code-to-isl.md"
+            }
+          }
+        ]
       }
     ],
     "menus": {
@@ -261,6 +390,36 @@
         {
           "command": "isl.generateSkeleton",
           "when": "resourceLangId == isl"
+        },
+        {
+          "command": "shipgate.runScan"
+        },
+        {
+          "command": "shipgate.openReport"
+        },
+        {
+          "command": "shipgate.openSettings"
+        },
+        {
+          "command": "shipgate.selectWorkspaceRoot"
+        },
+        {
+          "command": "shipgate.codeToIsl"
+        },
+        {
+          "command": "shipgate.githubConnect"
+        },
+        {
+          "command": "shipgate.githubRefresh"
+        },
+        {
+          "command": "shipgate.runFirewall"
+        },
+        {
+          "command": "shipgate.openWalkthrough"
+        },
+        {
+          "command": "shipgate.ship"
         }
       ]
     },
@@ -323,6 +482,41 @@
           "type": "boolean",
           "default": true,
           "description": "Automatically refresh coverage decorations on save"
+        },
+        "shipgate.scan.executablePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to shipgate/isl CLI executable. Empty = auto-detect (workspace local, pnpm, npx)"
+        },
+        "shipgate.scan.configPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to .shipgate.yml. Empty = auto-detect in workspace root"
+        },
+        "shipgate.scan.projectRoot": {
+          "type": "string",
+          "default": "",
+          "description": "Project root for scan. Empty = workspace root"
+        },
+        "shipgate.scan.scanOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run scan automatically on file save"
+        },
+        "shipgate.github.token": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub token for API access (repo, PRs, workflow runs). Use a fine-grained token with repo scope."
+        },
+        "shipgate.firewall.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable live firewall checks on file save"
+        },
+        "shipgate.firewall.runOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run firewall automatically when files are saved"
         }
       }
     },
@@ -337,18 +531,20 @@
   },
   "scripts": {
     "vscode:prepublish": "pnpm run build",
-    "build": "node esbuild.js --production",
-    "watch": "node esbuild.js --watch",
+    "build": "node esbuild.cjs --production",
+    "watch": "node esbuild.cjs --watch",
     "lint": "eslint src --ext ts",
     "typecheck": "tsc --noEmit",
-    "test": "node ./out/test/runTest.js",
+    "test": "vitest run",
     "clean": "rimraf dist out",
     "package": "vsce package --no-dependencies",
     "publish": "vsce publish --no-dependencies",
     "prepublishOnly": "pnpm run build",
-    "test:unit": "node ./out/test/runTest.js"
+    "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@isl-lang/firewall": "workspace:*",
     "@isl-lang/lsp-server": "workspace:*",
     "vscode-languageclient": "^9.0.1"
   },
@@ -375,6 +571,11 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "media",
+    "icons",
+    "syntaxes",
+    "snippets",
+    "language-configuration.json"
   ]
 }

@@ -372,17 +372,16 @@ export class Logger {
   // ==========================================================================
 
   child(attributes: Record<string, unknown>): Logger {
-    return new Logger(
-      {
-        ...this.config,
-        defaultAttributes: {
-          ...this.config.defaultAttributes,
-          ...attributes,
-        },
+    return new Logger({
+      ...this.config,
+      defaultAttributes: {
+        ...this.config.defaultAttributes,
+        ...attributes,
       },
-      this.exporters,
-      { bufferSize: this.bufferSize, flushInterval: 0 } // Child shares parent's flush
-    );
+      exporters: this.exporters,
+      bufferSize: this.bufferSize,
+      flushInterval: 0, // Child shares parent's flush
+    });
   }
 }
 

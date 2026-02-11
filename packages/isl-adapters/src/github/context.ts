@@ -66,7 +66,7 @@ export function parseRepository(repository: string): { owner: string; repo: stri
   if (parts.length !== 2) {
     return null;
   }
-  return { owner: parts[0], repo: parts[1] };
+  return { owner: parts[0]!, repo: parts[1]! };
 }
 
 /**
@@ -90,7 +90,7 @@ export function getPRNumber(): number | null {
   const ref = process.env.GITHUB_REF ?? '';
   const match = ref.match(/refs\/pull\/(\d+)/);
   if (match) {
-    return parseInt(match[1], 10);
+    return parseInt(match[1]!, 10);
   }
   
   return null;

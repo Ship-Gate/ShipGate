@@ -131,6 +131,8 @@ const PUBLISH_ORDER = [
   '@isl-lang/lsp-core',
   '@isl-lang/lsp-server',
   '@isl-lang/repl',
+  // Shipgate (user-facing)
+  'shipgate',
 ];
 
 // Package name -> folder name (when different from @isl-lang/ scope suffix)
@@ -144,6 +146,7 @@ const PACKAGE_NAME_TO_DIR: Record<string, string> = {
   '@isl-lang/evidence-schema': 'evidence',
   '@isl-lang/static-analyzer': 'isl-expression-evaluator',
   '@isl-lang/trace-format': 'isl-trace-format',
+  shipgate: 'cli',
 };
 
 function getPackageDir(packageName: string): string {

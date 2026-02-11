@@ -19,7 +19,7 @@
     "noUnusedParameters": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
     "declarationDir": "./dist"
   },
   "include": ["src/**/*"],

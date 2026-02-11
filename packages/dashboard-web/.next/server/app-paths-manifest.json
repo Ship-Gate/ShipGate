@@ -1,8 +1,11 @@
 {
   "/_not-found": "app/_not-found.js",
   "/domains/[id]/page": "app/domains/[id]/page.js",
+  "/runs/page": "app/runs/page.js",
   "/page": "app/page.js",
-  "/verifications/[id]/page": "app/verifications/[id]/page.js",
   "/sitemap.xml/route": "app/sitemap.xml/route.js",
+  "/runs/[id]/page": "app/runs/[id]/page.js",
+  "/runs/upload/page": "app/runs/upload/page.js",
+  "/verifications/[id]/page": "app/verifications/[id]/page.js",
   "/privacy/page": "app/privacy/page.js"
 }

@@ -10,8 +10,10 @@ export {
   firewallQuickCheckTool,
   firewallStatusTool,
   firewallSetModeTool,
+  firewallApplyAllowlistTool,
   handleFirewallEvaluate,
   handleFirewallQuickCheck,
+  handleFirewallApplyAllowlist,
   handleFirewallStatus,
 } from './firewall-tools.js';
 

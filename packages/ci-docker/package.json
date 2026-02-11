@@ -12,7 +12,8 @@
     "test": "echo 'No tests for Docker image' && exit 0",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",
-    "test:unit": "echo 'No tests for Docker image' && exit 0"
+    "test:unit": "echo 'No tests for Docker image' && exit 0",
+    "test:coverage": "vitest run --coverage"
   },
   "type": "module",
   "exports": {

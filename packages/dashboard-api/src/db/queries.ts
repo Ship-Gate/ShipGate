@@ -7,6 +7,8 @@ import type {
   TrendPoint,
   DriftAlert,
   CoverageSummary,
+  ReportDiff,
+  FileResult,
 } from '../types.js';
 
 // ── Helpers ────────────────────────────────────────────────────────────
@@ -48,10 +50,11 @@ function rowToReport(row: Record<string, unknown>): VerificationReport {
 export function createQueries(db: Database) {
   // ── INSERT ─────────────────────────────────────────────────────────
 
-  function insertReport(input: CreateReportInput): VerificationReport {
+  function insertReport(input: CreateReportInput, extendedRaw?: Record<string, unknown>): VerificationReport {
     const id = uuidv4();
     const timestamp = new Date().toISOString();
-    const report: VerificationReport = { id, timestamp, ...input };
+    const report: VerificationReport & Record<string, unknown> = { id, timestamp, ...input };
+    if (extendedRaw) Object.assign(report, extendedRaw);
 
     db.run(
       `INSERT INTO reports
@@ -80,7 +83,14 @@ export function createQueries(db: Database) {
       }),
     );
 
-    return report;
+    return report as VerificationReport;
+  }
+
+  function insertReportWithProofBundle(
+    input: CreateReportInput,
+    proofBundle: Record<string, unknown>,
+  ): VerificationReport {
+    return insertReport(input, { proofBundle });
   }
 
   // ── SELECT ONE ─────────────────────────────────────────────────────
@@ -114,6 +124,18 @@ export function createQueries(db: Database) {
     if (query.triggeredBy) {
       conditions.push('triggered_by = $triggeredBy');
       params['triggeredBy'] = query.triggeredBy;
+    }
+    if (query.from) {
+      conditions.push('timestamp >= $from');
+      params['from'] = query.from;
+    }
+    if (query.to) {
+      conditions.push('timestamp <= $to');
+      params['to'] = query.to;
+    }
+    if (query.q) {
+      conditions.push('(repo LIKE $q OR branch LIKE $q OR commit_sha LIKE $q)');
+      params['q'] = `%${query.q}%`;
     }
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -257,9 +279,46 @@ export function createQueries(db: Database) {
     return alerts;
   }
 
+  // ── DIFF (compare to previous run on same repo+branch) ───────────────
+
+  function getReportDiff(id: string): ReportDiff | undefined {
+    const current = getReport(id);
+    if (!current) return undefined;
+
+    const previousRows = queryAll(
+      db,
+      `SELECT raw_json FROM reports
+       WHERE repo = $repo AND branch = $branch AND timestamp < $timestamp
+       ORDER BY timestamp DESC LIMIT 1`,
+      { repo: current.repo, branch: current.branch, timestamp: current.timestamp },
+    );
+    const previous = previousRows[0] ? rowToReport(previousRows[0]) : null;
+
+    const prevByPath = new Map<string, FileResult>();
+    if (previous) {
+      for (const f of previous.files) prevByPath.set(f.path, f);
+    }
+
+    const newFailures: FileResult[] = [];
+    const resolved: FileResult[] = [];
+
+    for (const f of current.files) {
+      const prev = prevByPath.get(f.path);
+      if (f.verdict === 'fail' || f.verdict === 'warn') {
+        if (!prev || prev.verdict === 'pass') newFailures.push(f);
+      } else {
+        if (prev && (prev.verdict === 'fail' || prev.verdict === 'warn')) resolved.push(f);
+      }
+    }
+
+    return { current, previous, newFailures, resolved };
+  }
+
   return {
     insertReport,
+    insertReportWithProofBundle,
     getReport,
+    getReportDiff,
     listReports,
     getCoverageSummary,
     getTrends,

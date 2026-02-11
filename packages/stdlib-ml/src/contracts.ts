@@ -80,7 +80,7 @@ export function validateModelSpec(spec: ModelSpec): ValidationResult {
 function validateArchitecture(
   arch: ModelSpec['architecture'],
   errors: ValidationError[],
-  warnings: ValidationWarning[]
+  _warnings: ValidationWarning[]
 ): void {
   switch (arch.kind) {
     case 'MLP':
@@ -294,7 +294,7 @@ export function validateFairnessConstraint(constraint: FairnessConstraint): Vali
  */
 export function evaluateFairness(
   predictions: Array<{ prediction: unknown; actual: unknown; group: string }>,
-  protectedAttribute: string
+  _protectedAttribute: string
 ): FairnessMetrics {
   const groups = [...new Set(predictions.map(p => p.group))];
   
@@ -415,7 +415,7 @@ export function checkSafetyConstraints<T>(
 
   for (const constraint of constraints) {
     switch (constraint.kind) {
-      case 'OutputBound':
+      case 'OutputBound': {
         const value = prediction.result as number;
         if (typeof value === 'number') {
           if (constraint.min !== undefined && value < constraint.min) {
@@ -426,6 +426,7 @@ export function checkSafetyConstraints<T>(
           }
         }
         break;
+      }
 
       // Other constraint checks would require external services
     }

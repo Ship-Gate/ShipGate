@@ -19,7 +19,7 @@ export function registerValidateCommand(
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand('shipgate.validateISL', async () => {
-      await validateCurrentFile(getClient(), outputChannel);
+      await validateCurrentFile(getClient, outputChannel);
     })
   );
 }
@@ -32,7 +32,7 @@ async function validateCurrentFile(
   outputChannel: vscode.OutputChannel
 ): Promise<void> {
   const editor = vscode.window.activeTextEditor;
-  if (!editor) {
+  if (!editor?.document) {
     vscode.window.showWarningMessage('ShipGate: Open an ISL file first');
     return;
   }

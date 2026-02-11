@@ -10,15 +10,18 @@ export default function SolutionSection() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-100px' }}
       transition={{ duration: 0.5 }}
-      className="relative mt-32 max-w-6xl mx-auto px-4 scroll-mt-28"
+      className="relative py-24 md:py-32 max-w-6xl mx-auto px-4 scroll-mt-24"
     >
-      <h2 className="section-heading mx-auto mb-4 text-center">
+      <p className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3 text-center">
+        Solution
+      </p>
+      <h2 className="text-3xl md:text-4xl font-semibold text-white mx-auto mb-4 text-center">
         The Solution
       </h2>
-      <p className="text-white/80 text-center mb-6 max-w-2xl mx-auto text-lg">
+      <p className="text-zinc-400 text-center mb-6 max-w-2xl mx-auto text-lg">
         ISL behavioral specs + Shipgate verification
       </p>
-      <p className="text-cyan-400 text-center mb-16 max-w-2xl mx-auto text-xl font-semibold tracking-wide">
+      <p className="text-emerald-400 text-center mb-16 max-w-2xl mx-auto text-xl font-semibold tracking-wide">
         Define intent. Verify reality.
       </p>
 
@@ -32,9 +35,9 @@ export default function SolutionSection() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="relative"
         >
-          <div className="rounded-2xl border border-emerald-500/30 bg-black/60 backdrop-blur-sm overflow-hidden">
+          <div className="rounded-2xl border border-zinc-700 bg-zinc-900/60 backdrop-blur-sm overflow-hidden">
             {/* Window chrome */}
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/5">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-700/80 bg-zinc-800/50">
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-red-500/80" />
                 <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
@@ -42,7 +45,7 @@ export default function SolutionSection() {
               </div>
               <div className="flex items-center gap-2 ml-3">
                 <FileCheck className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs text-white/60 font-mono">transfer.isl</span>
+                <span className="text-xs text-zinc-400 font-mono">transfer.isl</span>
               </div>
             </div>
             {/* Code content */}
@@ -71,9 +74,9 @@ export default function SolutionSection() {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="relative"
         >
-          <div className="rounded-2xl border border-red-500/30 bg-black/60 backdrop-blur-sm overflow-hidden">
+          <div className="rounded-2xl border border-red-500/30 bg-zinc-900/60 backdrop-blur-sm overflow-hidden">
             {/* Window chrome */}
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/5">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-700/80 bg-zinc-800/50">
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-red-500/80" />
                 <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
@@ -81,7 +84,7 @@ export default function SolutionSection() {
               </div>
               <div className="flex items-center gap-2 ml-3">
                 <AlertTriangle className="w-4 h-4 text-red-400" />
-                <span className="text-xs text-white/60 font-mono">shipgate verify</span>
+                <span className="text-xs text-zinc-400 font-mono">shipgate gate</span>
               </div>
             </div>
             {/* Violation content */}

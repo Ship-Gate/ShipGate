@@ -243,6 +243,51 @@ function checkSecurity(dir: string, pkgJson: Record<string, unknown>): GateResul
     return { pass: false, detail: 'Production package is marked private' };
   }
 
+  // Check for eval() and new Function() usage
+  const srcDir = join(dir, 'src');
+  if (existsSync(srcDir)) {
+    const issues: string[] = [];
+    
+    function searchFiles(currentDir: string) {
+      for (const item of readdirSync(currentDir)) {
+        const fullPath = join(currentDir, item);
+        const stat = statSync(fullPath);
+        
+        if (stat.isDirectory() && !item.startsWith('.') && item !== 'node_modules') {
+          searchFiles(fullPath);
+        } else if (stat.isFile() && (item.endsWith('.ts') || item.endsWith('.js'))) {
+          const content = readFileSync(fullPath, 'utf-8');
+          
+          // Check for eval (but not this.eval which is fine)
+          if (/\beval\s*\(/.test(content) && !/this\.eval/.test(content)) {
+            const lines = content.split('\n');
+            lines.forEach((line, i) => {
+              if (/\beval\s*\(/.test(line) && !/this\.eval/.test(line)) {
+                issues.push(`${item}:${i + 1}: eval() usage`);
+              }
+            });
+          }
+          
+          // Check for new Function
+          if (/new\s+Function/.test(content)) {
+            const lines = content.split('\n');
+            lines.forEach((line, i) => {
+              if (/new\s+Function/.test(line)) {
+                issues.push(`${item}:${i + 1}: new Function() usage`);
+              }
+            });
+          }
+        }
+      }
+    }
+    
+    searchFiles(srcDir);
+    
+    if (issues.length > 0) {
+      return { pass: false, detail: `Security issues found: ${issues.join(', ')}` };
+    }
+  }
+
   // Check for known vulnerability patterns (placeholder)
   const hasLockfile = existsSync(join(dir, 'pnpm-lock.yaml'));
   return { pass: true, detail: isPrivate ? 'Private package (OK for non-production)' : 'No security flags' };
