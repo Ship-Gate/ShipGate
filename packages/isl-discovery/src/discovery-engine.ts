@@ -44,7 +44,7 @@ export async function discover(options: DiscoveryOptions): Promise<DiscoveryResu
   if (verbose) console.log('[Discovery] Matching symbols...');
   const bindings = matchSymbols(islSymbols, codeSymbols, { minConfidence });
 
-  // Step 4: Calculate statistics
+  // Step 4: Calculate statistics and unbound list (every ISL symbol without a binding is reported)
   const boundISLSymbols = new Set(bindings.map(b => `${b.islSymbol.domain}.${b.islSymbol.name}`));
   const unboundSymbols = islSymbols.filter(
     s => !boundISLSymbols.has(`${s.domain}.${s.name}`)

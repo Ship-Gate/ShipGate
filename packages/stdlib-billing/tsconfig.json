@@ -6,7 +6,7 @@
     "lib": ["ES2022", "DOM"],
     "types": ["node"],
     "outDir": "./dist",
-    "rootDir": "./implementations/typescript",
+    "rootDir": "./src",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -21,7 +21,7 @@
     "isolatedModules": true
   },
   "include": [
-    "implementations/typescript/**/*.ts"
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",

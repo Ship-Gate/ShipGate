@@ -21,6 +21,9 @@ import {
   failure,
 } from './types';
 
+export { LogLevel };
+export type { LogEntry, LogInput, LogOutput, LoggerConfig, LogExporter };
+
 // ============================================================================
 // ID Generation
 // ============================================================================
@@ -197,7 +200,11 @@ export class InMemoryLogExporter implements LogExporter {
     this.entries = [];
   }
 
-  getEntries(): LogEntry[] {
+  getLogs(): LogEntry[] {
+    return [...this.entries];
+  }
+
+  getSamples(): LogEntry[] {
     return [...this.entries];
   }
 
@@ -219,14 +226,12 @@ export class Logger {
   private flushTimer?: ReturnType<typeof setInterval>;
 
   constructor(
-    config: Partial<LoggerConfig> = {},
-    exporters: LogExporter[] = [new ConsoleLogExporter()],
-    options: { bufferSize?: number; flushInterval?: number } = {}
+    config: Partial<LoggerConfig> & { exporter?: LogExporter; exporters?: LogExporter[]; bufferSize?: number; flushInterval?: number } = {}
   ) {
     this.config = { ...DEFAULT_LOGGER_CONFIG, ...config };
-    this.exporters = exporters;
-    this.bufferSize = options.bufferSize ?? 100;
-    this.flushInterval = options.flushInterval ?? 5000;
+    this.exporters = config.exporters ?? (config.exporter ? [config.exporter] : [new ConsoleLogExporter()]);
+    this.bufferSize = config.bufferSize ?? 100;
+    this.flushInterval = config.flushInterval ?? 5000;
 
     if (this.flushInterval > 0) {
       this.flushTimer = setInterval(() => this.flush(), this.flushInterval);

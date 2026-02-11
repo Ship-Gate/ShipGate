@@ -68,8 +68,14 @@ domain Example {
 
   // Define a test scenario
   scenario "Create user with valid email" {
-    given: { no existing user with email "test@example.com" }
-    when: CreateUser(email: "test@example.com", name: "Test User")
-    then: success with User where email == "test@example.com"
+    given {
+      User.count == 0
+    }
+    when {
+      CreateUser(email: "test@example.com", name: "Test User")
+    }
+    then {
+      User.email == "test@example.com"
+    }
   }
 }

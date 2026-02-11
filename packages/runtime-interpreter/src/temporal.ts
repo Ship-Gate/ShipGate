@@ -3,9 +3,9 @@
 // @isl-lang/runtime-interpreter/temporal
 // ============================================================================
 
-import type { Value, Expression, Environment, ExecutionContext } from './types';
-import { evaluate } from './evaluator';
-import { extendEnvironment } from './environment';
+import type { Value, Expression, Environment, ExecutionContext } from './types.js';
+import { evaluate } from './evaluator.js';
+import { extendEnvironment } from './environment.js';
 
 // ============================================================================
 // TEMPORAL PROPERTY TYPES

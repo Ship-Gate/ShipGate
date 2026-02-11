@@ -90,6 +90,7 @@ DomainMember
   / m:PolicyDecl       { return { _memberKind: 'policy', value: m }; }
   / m:ViewDecl         { return { _memberKind: 'view', value: m }; }
   / m:ScenarioBlock    { return { _memberKind: 'scenarioBlock', value: m }; }
+  / m:StandaloneScenario { return { _memberKind: 'scenarioBlock', value: { kind: 'ScenarioBlock', behaviorName: { kind: 'Identifier', name: 'global', location: loc() }, scenarios: [m.value], location: loc() } }; }
   / m:ChaosBlock       { return { _memberKind: 'chaosBlock', value: m }; }
   / Comment _          { return null; }
 
@@ -582,6 +583,11 @@ ScenarioBlock
     }
 
 ScenarioItem
+  = "scenario" __ name:StringLit _ "{" _ given:GivenBlock? when:WhenBlock then:ThenBlock "}" _ {
+      return { kind: 'Scenario', name, given: given || [], when: when || [], then: then || [], location: loc() };
+    }
+
+StandaloneScenario
   = "scenario" __ name:StringLit _ "{" _ given:GivenBlock? when:WhenBlock then:ThenBlock "}" _ {
       return { kind: 'Scenario', name, given: given || [], when: when || [], then: then || [], location: loc() };
     }

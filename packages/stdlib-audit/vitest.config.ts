@@ -8,8 +8,10 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['implementations/typescript/**/*.ts'],
+      include: ['src/**/*.ts', 'implementations/typescript/**/*.ts'],
       exclude: [
+        'src/**/*.d.ts',
+        'src/**/index.ts',
         'implementations/typescript/**/*.d.ts',
         'implementations/typescript/**/index.ts',
       ],

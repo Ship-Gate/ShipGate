@@ -9,16 +9,17 @@ export * from './types';
 // Re-export logging module
 export {
   Logger,
+  LogLevel,
   ConsoleLogExporter,
   InMemoryLogExporter,
   setLogContext,
-  clearLogContext,
   getLogContext,
-  logLevelToString,
-  parseLogLevel,
+  withLogContext,
+  withoutLogContext,
   getDefaultLogger,
   setDefaultLogger,
 } from './logging';
+export type { LoggerConfig, LogExporter, LogContext } from './logging';
 
 // Re-export metrics module
 export {
@@ -28,6 +29,7 @@ export {
   getDefaultRegistry,
   setDefaultRegistry,
 } from './metrics';
+export type { MetricType, MetricUnit } from './types';
 
 // Re-export tracing module
 export {
@@ -42,6 +44,13 @@ export {
 } from './tracing';
 export type { TracerConfig } from './tracing';
 
+// Re-export tracing enums from types
+export {
+  SpanKind,
+  SpanStatus,
+  PropagationFormat,
+} from './types';
+
 // Re-export alerting module
 export {
   AlertManager,
@@ -52,6 +61,28 @@ export {
   setDefaultAlertManager,
 } from './alerts';
 export type { NotificationChannel, QueryEvaluator } from './alerts';
+
+// Re-export correlation module
+export {
+  getCorrelationContext,
+  setCorrelationContext,
+  withCorrelationContext,
+  withoutCorrelationContext,
+  generateCorrelationId,
+  generateRequestId,
+  startNewTrace,
+  extractCorrelationFromHeaders,
+  injectCorrelationIntoHeaders,
+  isValidTraceId,
+  isValidSpanId,
+  isValidUUID,
+  createCorrelationMiddleware,
+} from './correlation';
+export type { 
+  CorrelationContext, 
+  CorrelationHeaders, 
+  CorrelationMiddleware 
+} from './correlation';
 
 // Re-export health module
 export {
@@ -64,6 +95,12 @@ export {
   setDefaultHealthRegistry,
 } from './health';
 export type { HealthCheckFunction } from './health';
+
+// Re-export health enums from types
+export {
+  HealthStatus,
+  HealthCheckType,
+} from './types';
 
 // Import default exports
 import LoggingModule from './logging';

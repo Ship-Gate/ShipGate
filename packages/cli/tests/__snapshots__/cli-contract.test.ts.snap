@@ -2,11 +2,17 @@
 
 exports[`CLI Contract Snapshots > command aliases > alias map snapshot 1`] = `"gate:trust-score → trust-score"`;
 
+exports[`CLI Contract Snapshots > command argument signatures > 'bind' args 1`] = `"spec <required>"`;
+
 exports[`CLI Contract Snapshots > command argument signatures > 'build' args 1`] = `"pattern <required>"`;
+
+exports[`CLI Contract Snapshots > command argument signatures > 'chaos run' args 1`] = `"spec <required>"`;
 
 exports[`CLI Contract Snapshots > command argument signatures > 'chaos' args 1`] = `"spec <required>"`;
 
 exports[`CLI Contract Snapshots > command argument signatures > 'check' args 1`] = `"files [optional] ..."`;
+
+exports[`CLI Contract Snapshots > command argument signatures > 'demo' args 1`] = `"(no arguments)"`;
 
 exports[`CLI Contract Snapshots > command argument signatures > 'fmt' args 1`] = `"file <required>"`;
 
@@ -47,9 +53,17 @@ exports[`CLI Contract Snapshots > command argument signatures > 'policy team-ini
 
 exports[`CLI Contract Snapshots > command argument signatures > 'policy' args 1`] = `"(no arguments)"`;
 
+exports[`CLI Contract Snapshots > command argument signatures > 'proof attest' args 1`] = `"bundle-path <required>"`;
+
+exports[`CLI Contract Snapshots > command argument signatures > 'proof badge' args 1`] = `"bundle-path <required>"`;
+
+exports[`CLI Contract Snapshots > command argument signatures > 'proof comment' args 1`] = `"bundle-path <required>"`;
+
 exports[`CLI Contract Snapshots > command argument signatures > 'proof pack' args 1`] = `"(no arguments)"`;
 
 exports[`CLI Contract Snapshots > command argument signatures > 'proof verify' args 1`] = `"bundle-path <required>"`;
+
+exports[`CLI Contract Snapshots > command argument signatures > 'proof' args 1`] = `"(no arguments)"`;
 
 exports[`CLI Contract Snapshots > command argument signatures > 'repl' args 1`] = `"(no arguments)"`;
 
@@ -57,9 +71,27 @@ exports[`CLI Contract Snapshots > command argument signatures > 'shipgate chaos 
 
 exports[`CLI Contract Snapshots > command argument signatures > 'shipgate chaos' args 1`] = `"(no arguments)"`;
 
+exports[`CLI Contract Snapshots > command argument signatures > 'shipgate coverage' args 1`] = `"(no arguments)"`;
+
+exports[`CLI Contract Snapshots > command argument signatures > 'shipgate domain init' args 1`] = `"(no arguments)"`;
+
+exports[`CLI Contract Snapshots > command argument signatures > 'shipgate domain validate' args 1`] = `"(no arguments)"`;
+
+exports[`CLI Contract Snapshots > command argument signatures > 'shipgate domain' args 1`] = `"(no arguments)"`;
+
 exports[`CLI Contract Snapshots > command argument signatures > 'shipgate fix' args 1`] = `"(no arguments)"`;
 
 exports[`CLI Contract Snapshots > command argument signatures > 'shipgate init' args 1`] = `"(no arguments)"`;
+
+exports[`CLI Contract Snapshots > command argument signatures > 'shipgate migrate' args 1`] = `"file <required>"`;
+
+exports[`CLI Contract Snapshots > command argument signatures > 'shipgate packs install' args 1`] = `"name <required>"`;
+
+exports[`CLI Contract Snapshots > command argument signatures > 'shipgate packs list' args 1`] = `"(no arguments)"`;
+
+exports[`CLI Contract Snapshots > command argument signatures > 'shipgate packs verify' args 1`] = `"name <required>"`;
+
+exports[`CLI Contract Snapshots > command argument signatures > 'shipgate packs' args 1`] = `"(no arguments)"`;
 
 exports[`CLI Contract Snapshots > command argument signatures > 'shipgate simulate' args 1`] = `"(no arguments)"`;
 
@@ -67,21 +99,31 @@ exports[`CLI Contract Snapshots > command argument signatures > 'shipgate truthp
 
 exports[`CLI Contract Snapshots > command argument signatures > 'shipgate truthpack diff' args 1`] = `"(no arguments)"`;
 
+exports[`CLI Contract Snapshots > command argument signatures > 'shipgate truthpack' args 1`] = `"(no arguments)"`;
+
 exports[`CLI Contract Snapshots > command argument signatures > 'shipgate verify runtime' args 1`] = `"(no arguments)"`;
 
 exports[`CLI Contract Snapshots > command argument signatures > 'shipgate' args 1`] = `"(no arguments)"`;
 
 exports[`CLI Contract Snapshots > command argument signatures > 'spec-quality' args 1`] = `"file <required>"`;
 
+exports[`CLI Contract Snapshots > command argument signatures > 'trust-score explain' args 1`] = `"spec <required>"`;
+
 exports[`CLI Contract Snapshots > command argument signatures > 'verify' args 1`] = `"path [optional]"`;
 
 exports[`CLI Contract Snapshots > command argument signatures > 'watch' args 1`] = `"files [optional] ..."`;
 
+exports[`CLI Contract Snapshots > command descriptions > 'bind' description 1`] = `"Discover and bind ISL specifications to implementation code\\n\\n"`;
+
 exports[`CLI Contract Snapshots > command descriptions > 'build' description 1`] = `"Full ISL build pipeline: parse → check → codegen → testgen → verify → evidence\\n  Supports glob patterns: specs/**/*.isl"`;
+
+exports[`CLI Contract Snapshots > command descriptions > 'chaos run' description 1`] = `"Run chaos tests with scenario selection, N trials, and metrics output"`;
 
 exports[`CLI Contract Snapshots > command descriptions > 'chaos' description 1`] = `"Run chaos testing pipeline against an ISL specification (fault injection)"`;
 
 exports[`CLI Contract Snapshots > command descriptions > 'check' description 1`] = `"Parse and type check ISL files"`;
+
+exports[`CLI Contract Snapshots > command descriptions > 'demo' description 1`] = `"One-command demo that proves ShipGate value immediately\\n\\n"`;
 
 exports[`CLI Contract Snapshots > command descriptions > 'fmt' description 1`] = `"Format an ISL file"`;
 
@@ -119,9 +161,17 @@ exports[`CLI Contract Snapshots > command descriptions > 'policy team-init' desc
 
 exports[`CLI Contract Snapshots > command descriptions > 'policy' description 1`] = `"Policy pack and bundle management"`;
 
+exports[`CLI Contract Snapshots > command descriptions > 'proof attest' description 1`] = `"Generate SLSA-style attestation JSON from a proof bundle"`;
+
+exports[`CLI Contract Snapshots > command descriptions > 'proof badge' description 1`] = `"Generate a badge (SVG or URL) from a proof bundle"`;
+
+exports[`CLI Contract Snapshots > command descriptions > 'proof comment' description 1`] = `"Generate GitHub PR comment from a proof bundle"`;
+
 exports[`CLI Contract Snapshots > command descriptions > 'proof pack' description 1`] = `"Pack artifacts into a deterministic, hashable, verifiable proof bundle"`;
 
 exports[`CLI Contract Snapshots > command descriptions > 'proof verify' description 1`] = `"Verify a proof bundle is valid and check its integrity"`;
+
+exports[`CLI Contract Snapshots > command descriptions > 'proof' description 1`] = `"Proof bundle management"`;
 
 exports[`CLI Contract Snapshots > command descriptions > 'repl' description 1`] = `"Start interactive ISL REPL"`;
 
@@ -129,9 +179,27 @@ exports[`CLI Contract Snapshots > command descriptions > 'shipgate chaos run' de
 
 exports[`CLI Contract Snapshots > command descriptions > 'shipgate chaos' description 1`] = `"Chaos engineering commands"`;
 
+exports[`CLI Contract Snapshots > command descriptions > 'shipgate coverage' description 1`] = `"Generate coverage report for ISL specifications\\n"`;
+
+exports[`CLI Contract Snapshots > command descriptions > 'shipgate domain init' description 1`] = `"Initialize a new domain pack with specs, tests, and publish workflow"`;
+
+exports[`CLI Contract Snapshots > command descriptions > 'shipgate domain validate' description 1`] = `"Validate a domain pack structure and specs"`;
+
+exports[`CLI Contract Snapshots > command descriptions > 'shipgate domain' description 1`] = `"Domain pack management - create, validate, and publish domain packs"`;
+
 exports[`CLI Contract Snapshots > command descriptions > 'shipgate fix' description 1`] = `"Auto-fix Shipgate findings with safe, minimal diffs"`;
 
 exports[`CLI Contract Snapshots > command descriptions > 'shipgate init' description 1`] = `"Interactive project setup — generates .shipgate.yml, ISL specs, and CI workflow"`;
+
+exports[`CLI Contract Snapshots > command descriptions > 'shipgate migrate' description 1`] = `"Migrate ISL spec to newer version"`;
+
+exports[`CLI Contract Snapshots > command descriptions > 'shipgate packs install' description 1`] = `"Install an ISL pack from the registry"`;
+
+exports[`CLI Contract Snapshots > command descriptions > 'shipgate packs list' description 1`] = `"List installed packs"`;
+
+exports[`CLI Contract Snapshots > command descriptions > 'shipgate packs verify' description 1`] = `"Verify pack integrity"`;
+
+exports[`CLI Contract Snapshots > command descriptions > 'shipgate packs' description 1`] = `"ISL pack marketplace - browse and install domain/spec packs"`;
 
 exports[`CLI Contract Snapshots > command descriptions > 'shipgate simulate' description 1`] = `"Simulate ISL behaviors against generated inputs"`;
 
@@ -139,15 +207,28 @@ exports[`CLI Contract Snapshots > command descriptions > 'shipgate truthpack bui
 
 exports[`CLI Contract Snapshots > command descriptions > 'shipgate truthpack diff' description 1`] = `"Compare truthpack v2 and detect drift"`;
 
+exports[`CLI Contract Snapshots > command descriptions > 'shipgate truthpack' description 1`] = `"Truthpack v2 - canonical project reality snapshot"`;
+
 exports[`CLI Contract Snapshots > command descriptions > 'shipgate verify runtime' description 1`] = `"Probe a running application against Truthpack route/env index.\\n"`;
 
 exports[`CLI Contract Snapshots > command descriptions > 'shipgate' description 1`] = `"ShipGate configuration management"`;
 
 exports[`CLI Contract Snapshots > command descriptions > 'spec-quality' description 1`] = `"Score an ISL spec on quality dimensions (completeness, specificity, security, testability, consistency)"`;
 
+exports[`CLI Contract Snapshots > command descriptions > 'trust-score explain' description 1`] = `"Explain trust score with evidence breakdown and history analysis"`;
+
 exports[`CLI Contract Snapshots > command descriptions > 'verify' description 1`] = `"Verify code against ISL specifications (auto-detects mode)\\n\\n"`;
 
 exports[`CLI Contract Snapshots > command descriptions > 'watch' description 1`] = `"Watch ISL files and rerun parse/check + optionally gate on changes"`;
+
+exports[`CLI Contract Snapshots > command option signatures > 'bind' options 1`] = `
+"--code-dirs <dirs>  Code directories to search (comma-separated)
+--exclude <patterns>  Exclude file patterns (comma-separated globs)
+--include <patterns>  Include file patterns (comma-separated globs)
+--min-confidence <threshold>  Minimum confidence threshold (0-1) [default: 0.3]
+-i, --impl <dir>  Implementation directory (default: current directory) [default: .]
+-o, --output <file>  Output bindings file (default: .shipgate.bindings.json)"
+`;
 
 exports[`CLI Contract Snapshots > command option signatures > 'build' options 1`] = `
 "--no-chaos  Skip chaos test generation
@@ -157,6 +238,21 @@ exports[`CLI Contract Snapshots > command option signatures > 'build' options 1`
 --test-framework <framework>  Test framework (vitest, jest) [default: vitest]
 -o, --output <dir>  Output directory [default: ./generated]
 -t, --target <target>  Code generation target (typescript) [default: typescript]"
+`;
+
+exports[`CLI Contract Snapshots > command option signatures > 'chaos run' options 1`] = `
+"--continue-on-failure  Continue running scenarios after failure
+--metrics  Show detailed metrics output
+--seed <seed>  Random seed for reproducibility
+--smt  Enable SMT verification for preconditions/postconditions
+--smt-solver <solver>  SMT solver to use: builtin, z3, cvc5, or auto (default: auto) [default: auto]
+--smt-timeout <ms>  SMT solver timeout in milliseconds [default: 5000]
+--temporal  Enable temporal verification
+--temporal-min-samples <num>  Minimum samples for temporal verification [default: 10]
+-d, --detailed  Show detailed breakdown
+-i, --impl <file>  Implementation file to verify
+-n, --trials <num>  Number of trials to run [default: 1]
+-t, --timeout <ms>  Test timeout in milliseconds [default: 30000]"
 `;
 
 exports[`CLI Contract Snapshots > command option signatures > 'chaos' options 1`] = `
@@ -174,6 +270,12 @@ exports[`CLI Contract Snapshots > command option signatures > 'chaos' options 1`
 exports[`CLI Contract Snapshots > command option signatures > 'check' options 1`] = `
 "--debug  Print resolved imports debug info
 -w, --watch  Watch for changes"
+`;
+
+exports[`CLI Contract Snapshots > command option signatures > 'demo' options 1`] = `
+"--fix  Apply the fix and re-run gate
+--keep  Keep demo files after completion
+-o, --output <dir>  Output directory for demo (default: ./shipgate-demo) [default: ./shipgate-demo]"
 `;
 
 exports[`CLI Contract Snapshots > command option signatures > 'fmt' options 1`] = `
@@ -289,6 +391,20 @@ exports[`CLI Contract Snapshots > command option signatures > 'policy team-init'
 
 exports[`CLI Contract Snapshots > command option signatures > 'policy' options 1`] = `"(no options)"`;
 
+exports[`CLI Contract Snapshots > command option signatures > 'proof attest' options 1`] = `
+"--include-manifest  Include full manifest in attestation
+-o, --output <file>  Output file path (default: stdout)"
+`;
+
+exports[`CLI Contract Snapshots > command option signatures > 'proof badge' options 1`] = `
+"--badge-url-base <url>  Badge service URL base (for URL format)
+--bundle-url <url>  Bundle URL (for linking from badge)
+-f, --format <format>  Output format: svg or url (default: svg) [default: svg]
+-o, --output <file>  Output file path (for SVG format)"
+`;
+
+exports[`CLI Contract Snapshots > command option signatures > 'proof comment' options 1`] = `"-o, --output <file>  Output file path (default: stdout)"`;
+
 exports[`CLI Contract Snapshots > command option signatures > 'proof pack' options 1`] = `
 "--evidence <dir>  Evidence directory (contains results.json, traces, etc.)
 --sign-secret <secret>  HMAC secret for signing the bundle
@@ -302,6 +418,8 @@ exports[`CLI Contract Snapshots > command option signatures > 'proof verify' opt
 --skip-file-check  Skip file completeness check
 --skip-signature-check  Skip signature verification"
 `;
+
+exports[`CLI Contract Snapshots > command option signatures > 'proof' options 1`] = `"(no options)"`;
 
 exports[`CLI Contract Snapshots > command option signatures > 'repl' options 1`] = `
 "--allow-writes  Allow filesystem writes (default: false)
@@ -323,6 +441,27 @@ exports[`CLI Contract Snapshots > command option signatures > 'shipgate chaos ru
 
 exports[`CLI Contract Snapshots > command option signatures > 'shipgate chaos' options 1`] = `"(no options)"`;
 
+exports[`CLI Contract Snapshots > command option signatures > 'shipgate coverage' options 1`] = `
+"--json  Output as JSON
+-b, --bindings <file>  Bindings file path (default: .shipgate.bindings.json)
+-d, --detailed  Show detailed constraint breakdown
+-t, --traces <dir>  Verification traces directory"
+`;
+
+exports[`CLI Contract Snapshots > command option signatures > 'shipgate domain init' options 1`] = `
+"--force  Overwrite existing files
+--no-examples  Skip example spec file
+-d, --directory <dir>  Target directory (default: current directory)
+-n, --name <name>  Pack name (default: current directory name)"
+`;
+
+exports[`CLI Contract Snapshots > command option signatures > 'shipgate domain validate' options 1`] = `
+"-d, --directory <dir>  Pack directory (default: current directory)
+-t, --test  Run pack unit tests"
+`;
+
+exports[`CLI Contract Snapshots > command option signatures > 'shipgate domain' options 1`] = `"(no options)"`;
+
 exports[`CLI Contract Snapshots > command option signatures > 'shipgate fix' options 1`] = `
 "--apply  Apply fixes to files
 --dry-run  Preview fixes without applying (default)
@@ -334,6 +473,25 @@ exports[`CLI Contract Snapshots > command option signatures > 'shipgate init' op
 "--force  Overwrite existing files
 -d, --directory <dir>  Project root directory (default: cwd)"
 `;
+
+exports[`CLI Contract Snapshots > command option signatures > 'shipgate migrate' options 1`] = `
+"--dry-run  Preview migration without writing files
+-o, --output <file>  Output file (default: overwrites input)
+-t, --target <version>  Target ISL version (default: 0.2)
+-v, --verbose  Show detailed warnings"
+`;
+
+exports[`CLI Contract Snapshots > command option signatures > 'shipgate packs install' options 1`] = `
+"--skip-verify  Skip integrity verification
+-d, --dir <dir>  Install directory (default: ./shipgate/packs/<name>)
+-v, --version <version>  Pack version (default: latest)"
+`;
+
+exports[`CLI Contract Snapshots > command option signatures > 'shipgate packs list' options 1`] = `"(no options)"`;
+
+exports[`CLI Contract Snapshots > command option signatures > 'shipgate packs verify' options 1`] = `"(no options)"`;
+
+exports[`CLI Contract Snapshots > command option signatures > 'shipgate packs' options 1`] = `"(no options)"`;
 
 exports[`CLI Contract Snapshots > command option signatures > 'shipgate simulate' options 1`] = `
 "--generate  Generate inputs automatically
@@ -361,6 +519,8 @@ exports[`CLI Contract Snapshots > command option signatures > 'shipgate truthpac
 -r, --repo-root <dir>  Repository root (default: cwd)"
 `;
 
+exports[`CLI Contract Snapshots > command option signatures > 'shipgate truthpack' options 1`] = `"(no options)"`;
+
 exports[`CLI Contract Snapshots > command option signatures > 'shipgate verify runtime' options 1`] = `
 "--auth-token <token>  Bearer token for authenticated routes
 --browser  Use Playwright browser probing for UI routes
@@ -378,6 +538,18 @@ exports[`CLI Contract Snapshots > command option signatures > 'shipgate' options
 exports[`CLI Contract Snapshots > command option signatures > 'spec-quality' options 1`] = `
 "--fix  Show detailed fix suggestions with ISL examples
 -s, --min-score <score>  Minimum score to pass (fail if below) [default: 0]"
+`;
+
+exports[`CLI Contract Snapshots > command option signatures > 'trust-score explain' options 1`] = `
+"--commit-hash <hash>  Git commit hash to tag this evaluation
+--history <count>  Number of history entries to show (default: 10) [default: 10]
+--history-path <path>  Custom history file path (default: .isl-gate/trust-history.json)
+--json  Output as JSON
+--project-root <path>  Project root directory for fingerprinting
+--unknown-penalty <penalty>  Penalty for unknown/uncovered categories 0.0-1.0 (default: 0.5) [default: 0.5]
+-i, --impl <file>  Implementation file or directory to verify
+-t, --threshold <score>  Minimum trust score to SHIP (default: 80) [default: 80]
+-w, --weights <weights>  Custom weights (e.g. "preconditions=30,postconditions=25,invariants=20,temporal=10,chaos=5,coverage=10")"
 `;
 
 exports[`CLI Contract Snapshots > command option signatures > 'verify' options 1`] = `

@@ -30,12 +30,12 @@ export const ID_PATTERNS = {
   UUID_V7: /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
   UUID_ANY: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
   COMPACT_UUID: /^[0-9a-f]{32}$/i,
-  ULID: /^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$/i,
+  ULID: /^[0-9A-HJKMNP-TV-Z]{26}$/i,
   KSUID: /^[0-9A-Za-z]{27}$/,
   NANO_ID: /^[A-Za-z0-9_-]{21}$/,
   SHORT_ID: /^[A-Za-z0-9_-]{8,12}$/,
-  HUMAN_CODE: /^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{6}$/,
-  OBJECT_ID: /^[0-9a-f]{24}$/,
+  HUMAN_CODE: /^[1-9A-HJ-NP-Z]{6}$/i,
+  OBJECT_ID: /^[0-9a-f]{24}$/i,
   SNOWFLAKE: /^\d{18,19}$/,
   EAN13: /^\d{13}$/,
   UPC_A: /^\d{12}$/,
@@ -46,7 +46,7 @@ export const ID_PATTERNS = {
   STRIPE_CUSTOMER: /^cus_[A-Za-z0-9]{14,}$/,
   STRIPE_PAYMENT_INTENT: /^pi_[A-Za-z0-9]{24,}$/,
   STRIPE_SUBSCRIPTION: /^sub_[A-Za-z0-9]{14,}$/,
-  ARN: /^arn:aws:[a-z0-9-]+:[a-z0-9-]*:\d{12}:.+$/,
+  ARN: /^arn:aws:[a-z0-9-]+:[a-z0-9-]*:(?:\d{12})?:.+$/,
   GITHUB_REPO: /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}\/[a-zA-Z0-9._-]{1,100}$/,
   K8S_NAME: /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/,
   API_KEY: /^(sk|pk)_(live|test)_[A-Za-z0-9]{32,}$/,
@@ -244,18 +244,17 @@ export function generateUUID(): UUID {
 
 const ULID_ENCODING = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
+let _ulidLastTs = 0;
+let _ulidSameMsCounter = 0;
+
 export function generateULID(): ULID {
   const timestamp = Date.now();
-  const randomBytes = new Uint8Array(10);
-  
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    crypto.getRandomValues(randomBytes);
-  } else {
-    for (let i = 0; i < 10; i++) {
-      randomBytes[i] = Math.floor(Math.random() * 256);
-    }
+
+  if (timestamp !== _ulidLastTs) {
+    _ulidLastTs = timestamp;
+    _ulidSameMsCounter = 0;
   }
-  
+
   // Encode timestamp (first 10 characters)
   let timestampPart = '';
   let t = timestamp;
@@ -263,17 +262,15 @@ export function generateULID(): ULID {
     timestampPart = ULID_ENCODING[t % 32] + timestampPart;
     t = Math.floor(t / 32);
   }
-  
-  // Encode randomness (last 16 characters)
+
+  // Encode counter (0, 1, 2, ...) so ULIDs in same ms sort monotonically
+  let n = _ulidSameMsCounter;
   let randomPart = '';
-  for (let i = 0; i < 10; i++) {
-    randomPart += ULID_ENCODING[randomBytes[i]! % 32];
-    if (i % 2 === 1 && i < 9) {
-      randomPart += ULID_ENCODING[Math.floor(randomBytes[i]! / 32)];
-    }
+  for (let i = 0; i < 16; i++) {
+    randomPart = ULID_ENCODING[n % 32] + randomPart;
+    n = Math.floor(n / 32);
   }
-  randomPart = randomPart.slice(0, 16);
-  
+  _ulidSameMsCounter += 1;
   return (timestampPart + randomPart) as ULID;
 }
 

@@ -238,10 +238,12 @@
       "@isl-lang/stdlib-idempotency",
       "@isl-lang/verifier-formal",
       "@isl-lang/codegen-jvm",
-      "@isl-lang/semantic-analysis"
+      "@isl-lang/semantic-analysis",
+      "@isl-lang/isl-discovery",
+      "@isl-lang/verifier-temporal"
     ]
   },
-  
+
   "internal": {
     "description": "Internal UI/web apps - already marked private, not published",
     "packages": [

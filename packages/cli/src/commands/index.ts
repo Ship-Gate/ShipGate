@@ -22,6 +22,10 @@ export { parse, printParseResult, getParseExitCode, type ParseOptions, type Pars
 
 export { gen, printGenResult, getGenExitCode, VALID_TARGETS, type GenOptions, type GenResult, type GenerationTarget } from './gen.js';
 
+export { genAI, type AIGenOptions } from './gen-ai.js';
+
+export { configSet, configGet, configList, configPath, printConfigResult, getConfigExitCode, type ConfigCommandResult } from './config.js';
+
 export { repl, type ReplOptions } from './repl.js';
 
 export { fmt, printFmtResult, getFmtExitCode, type FmtOptions, type FmtResult } from './fmt.js';
@@ -95,3 +99,5 @@ export { diffOpenAPI, printDiffOpenAPIResult, getDiffOpenAPIExitCode, type DiffO
 export { coverage, printCoverageResult, getCoverageExitCode, type CoverageCommandOptions, type CoverageCommandResult } from './coverage.js';
 
 export { demo, printDemoResult, getDemoExitCode, type DemoOptions, type DemoResult } from './demo.js';
+
+export { shipCommand, type ShipCommandOptions, type ShipCommandResult } from './ship.js';

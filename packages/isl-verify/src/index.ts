@@ -4,17 +4,17 @@
  * Verification engine for ISL implementations.
  */
 
-export * from './runner/index.js';
-export * from './reporter/index.js';
+export * from './runner/index';
+export * from './reporter/index';
 
 import type { Domain } from '@isl-lang/parser';
-import { runTests, type TestResult, type RunnerOptions } from './runner/index.js';
+import { runTests, type TestResult, type RunnerOptions } from './runner/index';
 import { 
   calculateTrustScore, 
   formatTrustReport, 
   type TrustScore, 
   type TrustCalculatorOptions 
-} from './reporter/index.js';
+} from './reporter/index';
 
 export interface VerificationResult {
   testResult: TestResult;

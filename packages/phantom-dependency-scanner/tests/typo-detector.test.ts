@@ -19,9 +19,10 @@ describe('Typo Detector', () => {
 
   it('should respect similarity threshold', () => {
     const candidates = ['lodash', 'express', 'react'];
-    const results = findTypoCandidates('lodahs', candidates, 5, 0.9); // High threshold
+    // lodahs vs lodash: transposition = 2 edits, similarity 1 - 2/6 ≈ 0.667
+    const results = findTypoCandidates('lodahs', candidates, 5, 0.6);
 
-    // Should still find lodash (very similar)
     expect(results.length).toBeGreaterThan(0);
+    expect(results).toContain('lodash');
   });
 });

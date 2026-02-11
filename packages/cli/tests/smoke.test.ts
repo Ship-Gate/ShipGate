@@ -173,19 +173,21 @@ describe('shipgate init', () => {
   it('init creates minimal project structure', async () => {
     const { mkdtempSync, rmSync, existsSync, readFileSync } = require('fs');
     const { join } = require('path');
-    const tmpDir = mkdtempSync(join(require('os').tmpdir(), 'shipgate-test-'));
-    
+    const os = require('os');
+    // Use a subdir that does not exist yet so init can create it (init refuses existing dir without --force)
+    const tmpDir = mkdtempSync(join(os.tmpdir(), 'shipgate-test-'));
+    const projectDir = join(tmpDir, 'test-project');
+    const dirArg = projectDir.replace(/\\/g, '/');
     try {
-      const { exitCode, stdout, stderr } = exec(`init test-project --directory "${tmpDir}"`);
+      const { exitCode, stdout, stderr } = exec(`init test-project --directory "${dirArg}"`);
+      if (exitCode !== 0) {
+        throw new Error(`init failed (exit ${exitCode}): stdout=${stdout.slice(0, 500)} stderr=${stderr.slice(0, 500)}`);
+      }
       expect(exitCode).toBe(0);
-      
-      // Check that key files were created
-      const projectDir = join(tmpDir, 'test-project');
+      // Init with --directory writes into that directory
       expect(existsSync(join(projectDir, 'package.json'))).toBe(true);
       expect(existsSync(join(projectDir, 'src', 'test-project.isl'))).toBe(true);
       expect(existsSync(join(projectDir, 'isl.config.json'))).toBe(true);
-      
-      // Verify ISL file has content
       const islContent = readFileSync(join(projectDir, 'src', 'test-project.isl'), 'utf-8');
       expect(islContent).toContain('domain');
       expect(islContent).toContain('entity');

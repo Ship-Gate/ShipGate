@@ -37,6 +37,25 @@ export type TokenKind =
   | 'FOR' | 'FIELDS' | 'CONSISTENCY' | 'CACHE' | 'TTL' | 'INVALIDATE_ON'
   | 'SCOPE' | 'GLOBAL' | 'TRANSACTION' | 'APPLIES_TO' | 'RULES' | 'DEFAULT'
   | 'STEP' | 'COMPENSATIONS' | 'TIMEOUT' | 'ON_FAILURE'
+  // API / Endpoints
+  | 'API' | 'ENDPOINT' | 'GET' | 'POST_METHOD' | 'PUT' | 'PATCH' | 'DELETE_METHOD'
+  | 'WEBSOCKET' | 'GRAPHQL' | 'QUERY' | 'MUTATION' | 'SUBSCRIPTION'
+  | 'MIDDLEWARE' | 'CORS' | 'AUTH' | 'BODY' | 'PARAMS' | 'HEADERS' | 'RESPONSE'
+  // Storage / Persistence
+  | 'STORAGE' | 'ENGINE' | 'TABLE' | 'COLLECTION' | 'INDEXES' | 'UNIQUE_INDEX'
+  | 'MIGRATIONS' | 'SEEDS'
+  // Relationships
+  | 'RELATES' | 'OWNS' | 'BELONGS_TO' | 'HAS_MANY' | 'HAS_ONE' | 'MANY_TO_MANY'
+  // Computed fields
+  | 'COMPUTED'
+  // Workflows
+  | 'WORKFLOW' | 'PARALLEL' | 'AWAIT_KW' | 'RETRY' | 'ROLLBACK'
+  // Events
+  | 'EVENT' | 'EMITS' | 'SUBSCRIBES' | 'HANDLER' | 'ASYNC_KW'
+  // Screens / UI
+  | 'SCREEN' | 'COMPONENT' | 'FORM' | 'LAYOUT' | 'NAVIGATION' | 'SUBMIT' | 'VALIDATE'
+  // Config / Environment
+  | 'CONFIG' | 'ENV' | 'SECRET' | 'DATABASE' | 'PORT'
   // Type keywords
   | 'STRING_TYPE' | 'INT_TYPE' | 'DECIMAL_TYPE' | 'BOOLEAN_TYPE'
   | 'TIMESTAMP_TYPE' | 'UUID_TYPE' | 'DURATION_TYPE' | 'LIST' | 'MAP'
@@ -62,7 +81,11 @@ export type TokenKind =
   | 'COUNTER' | 'GAUGE' | 'HISTOGRAM' | 'BY'
   | 'ON' | 'LEVEL' | 'INCLUDE' | 'EXCLUDE'
   | 'EVENTUAL' | 'STRONG' | 'STRONGLY_CONSISTENT'
-  | 'PER' | 'AUTHENTICATED' | 'REFERENCES';
+  | 'PER' | 'AUTHENTICATED' | 'REFERENCES'
+  // Full-stack keywords
+  | 'API_KW' | 'ENDPOINT_KW' | 'STORAGE_KW' | 'WORKFLOW_KW'
+  | 'EVENT_KW' | 'EMITS_KW' | 'SCREEN_KW' | 'CONFIG_KW'
+  | 'COMPUTED_KW' | 'HANDLER_KW';
 
 export interface Token {
   type: TokenType;
@@ -179,6 +202,75 @@ export const KEYWORDS: Map<string, TokenKind> = new Map([
   ['compensations', 'COMPENSATIONS'],
   ['timeout', 'TIMEOUT'],
   ['on_failure', 'ON_FAILURE'],
+  
+  // API / Endpoints
+  ['api', 'API'],
+  ['endpoint', 'ENDPOINT'],
+  ['GET', 'GET'],
+  ['POST', 'POST_METHOD'],
+  ['PUT', 'PUT'],
+  ['PATCH', 'PATCH'],
+  ['DELETE', 'DELETE_METHOD'],
+  ['websocket', 'WEBSOCKET'],
+  ['graphql', 'GRAPHQL'],
+  ['query', 'QUERY'],
+  ['mutation', 'MUTATION'],
+  ['subscription', 'SUBSCRIPTION'],
+  ['middleware', 'MIDDLEWARE'],
+  ['cors', 'CORS'],
+  ['auth', 'AUTH'],
+  ['body', 'BODY'],
+  ['params', 'PARAMS'],
+  ['headers', 'HEADERS'],
+  
+  // Storage / Persistence
+  ['storage', 'STORAGE'],
+  ['engine', 'ENGINE'],
+  ['table', 'TABLE'],
+  ['collection', 'COLLECTION'],
+  ['indexes', 'INDEXES'],
+  ['migrations', 'MIGRATIONS'],
+  ['seeds', 'SEEDS'],
+  
+  // Relationships
+  ['owns', 'OWNS'],
+  ['belongs_to', 'BELONGS_TO'],
+  ['has_many', 'HAS_MANY'],
+  ['has_one', 'HAS_ONE'],
+  ['many_to_many', 'MANY_TO_MANY'],
+  
+  // Computed
+  ['computed', 'COMPUTED'],
+  
+  // Workflows
+  ['workflow', 'WORKFLOW'],
+  ['parallel', 'PARALLEL'],
+  ['await', 'AWAIT_KW'],
+  ['retry', 'RETRY'],
+  ['rollback', 'ROLLBACK'],
+  
+  // Events
+  ['event', 'EVENT'],
+  ['emits', 'EMITS'],
+  ['subscribes', 'SUBSCRIBES'],
+  ['handler', 'HANDLER'],
+  ['async', 'ASYNC_KW'],
+  
+  // Screens / UI
+  ['screen', 'SCREEN'],
+  ['component', 'COMPONENT'],
+  ['form', 'FORM'],
+  ['layout', 'LAYOUT'],
+  ['navigation', 'NAVIGATION'],
+  ['submit', 'SUBMIT'],
+  ['validate', 'VALIDATE'],
+  
+  // Config / Environment
+  ['config', 'CONFIG'],
+  ['env', 'ENV'],
+  ['secret', 'SECRET'],
+  ['database', 'DATABASE'],
+  ['port', 'PORT'],
   
   // Types
   ['String', 'STRING_TYPE'],

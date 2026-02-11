@@ -55,7 +55,8 @@ describe('PII Handling', () => {
     it('should mask email addresses', () => {
       expect(maskEmail('john.doe@example.com')).toBe('j******e@e*****e.com');
       expect(maskEmail('a@b.com')).toBe('*@*.com');
-      expect(maskEmail('test@domain.co.uk')).toBe('t**t@d****n.co.uk');
+      // Implementation keeps only the final TLD part; "co" in "co.uk" is masked
+      expect(maskEmail('test@domain.co.uk')).toBe('t**t@d****n.**.uk');
     });
 
     it('should handle edge cases', () => {

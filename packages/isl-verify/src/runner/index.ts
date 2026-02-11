@@ -1,4 +1,4 @@
-export * from './test-runner.js';
+export * from './test-runner';
 
 export interface RunnerOptions {
   timeout?: number;

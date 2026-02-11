@@ -289,9 +289,10 @@ export class InMemorySessionRepository implements SessionRepository {
 
   async create(sessionData: Omit<Session, 'id' | 'createdAt'>): Promise<Session> {
     const now = new Date();
+    const providedId = (sessionData as Partial<Session>).id;
     const session: Session = {
       ...sessionData,
-      id: uuidv4(),
+      id: providedId ?? uuidv4(),
       createdAt: now,
     };
 

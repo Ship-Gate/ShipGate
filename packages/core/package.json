@@ -74,5 +74,5 @@
   "author": "mevla",
   "license": "MIT",
   "experimental": true,
-  "sideEffects": false
+  "sideEffects": ["./dist/chunk-*.js"]
 }

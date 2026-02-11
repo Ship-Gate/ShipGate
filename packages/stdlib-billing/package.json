@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Billing and subscription management standard library for ISL",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",

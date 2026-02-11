@@ -52,7 +52,8 @@ export async function getPostsDrizzle() {
   return db.select(cols as Record<string, unknown>).from(posts);
 }
 
-// Valid SQL template (mocked; no drizzle-orm dependency in fixture)
+// Valid SQL template - tagged template literal for extractor
+const sql = (strings: TemplateStringsArray, ..._values: unknown[]) => strings.join('?');
 export async function getRecentPosts() {
-  return Promise.resolve([]) as Promise<unknown>;
+  return sql`SELECT * FROM "Post" ORDER BY "createdAt" DESC LIMIT 10` as unknown as Promise<unknown[]>;
 }

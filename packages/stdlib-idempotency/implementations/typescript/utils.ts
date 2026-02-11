@@ -82,7 +82,7 @@ export function unprefixKey(key: string, prefix?: string): string {
  * Compute SHA-256 hash of request data
  */
 export function computeRequestHash(data: unknown): RequestHash {
-  const canonical = canonicalize(data);
+  const canonical = canonicalize(data) ?? '';
   const hash = createHash('sha256').update(canonical).digest('hex');
   return hash as RequestHash;
 }
@@ -232,7 +232,17 @@ export function deserializeResponse(serialized: string): {
   headers?: Record<string, string>;
 } {
   try {
-    return JSON.parse(serialized);
+    const parsed = JSON.parse(serialized);
+    // Check if it's a properly serialized response (has body and statusCode)
+    if (parsed && typeof parsed === 'object' && 'body' in parsed && 'statusCode' in parsed) {
+      return parsed;
+    }
+    // Legacy format - parsed successfully but not a serialized response
+    return {
+      body: serialized,
+      statusCode: 200,
+      contentType: 'application/json',
+    };
   } catch {
     // Legacy format - just the body
     return {

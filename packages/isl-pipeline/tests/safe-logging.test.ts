@@ -259,7 +259,7 @@ describe('Safe Logging Utilities', () => {
   
   describe('maskIp', () => {
     it('should mask IPv4 middle octets', () => {
-      expect(maskIp('192.168.1.100')).toBe('192.***.***. 100');
+      expect(maskIp('192.168.1.100')).toBe('192.***.***.100');
     });
 
     it('should preserve first and last octets', () => {

@@ -107,6 +107,7 @@ export class Parser {
     this.current = 0;
 
     try {
+      this.skipOptionalVersionPragma();
       const domain = this.parseDomain();
       return {
         success: !this.errors.hasErrors(),
@@ -129,6 +130,20 @@ export class Parser {
         tokens,
         islVersion,
       };
+    }
+  }
+
+  /**
+   * If the current token is islVersion pragma (identifier "islVersion" followed by string),
+   * consume it so that parseDomain() sees "domain" next.
+   */
+  private skipOptionalVersionPragma(): void {
+    const t = this.currentToken();
+    if (t.type === 'IDENTIFIER' && t.value === 'islVersion') {
+      this.advance();
+      if (this.check('STRING_LITERAL')) {
+        this.advance();
+      }
     }
   }
 
@@ -193,6 +208,14 @@ export class Parser {
       views: [],
       scenarios: [],
       chaos: [],
+      // Full-stack constructs
+      apis: [],
+      storage: [],
+      workflows: [],
+      events: [],
+      handlers: [],
+      screens: [],
+      config: undefined,
       location: start.location,
     };
 
@@ -281,12 +304,55 @@ export class Parser {
       case 'SCENARIOS':
         domain.scenarios.push(this.parseScenarioBlock());
         break;
+      case 'SCENARIO':
+        domain.scenarios.push(this.parseStandaloneScenario());
+        break;
       case 'CHAOS':
         domain.chaos.push(this.parseChaosBlock());
         break;
+      // Full-stack constructs
+      case 'API':
+        domain.apis.push(this.parseApiBlock());
+        break;
+      case 'STORAGE':
+        domain.storage.push(this.parseStorageDecl());
+        break;
+      case 'WORKFLOW':
+        domain.workflows.push(this.parseWorkflowDecl());
+        break;
+      case 'EVENT':
+        domain.events.push(this.parseEventDecl());
+        break;
+      case 'HANDLER':
+        domain.handlers.push(this.parseHandlerDecl());
+        break;
+      case 'SCREEN':
+        domain.screens.push(this.parseScreenDecl());
+        break;
+      case 'CONFIG':
+        domain.config = this.parseConfigBlock();
+        break;
       default:
+        if (token.type === 'IDENTIFIER' && token.value === 'import') {
+          domain.imports.push(this.parseSingularImport());
+          break;
+        }
         throw unexpectedToken(token, 'domain member');
     }
+  }
+
+  /** Parse singular import: import Identifier from "path" */
+  private parseSingularImport(): AST.Import {
+    const start = this.advance(); // consume 'import'
+    const name = this.parseIdentifier();
+    this.expect('FROM', "Expected 'from'");
+    const from = this.parseStringLiteral();
+    return {
+      kind: 'Import',
+      items: [{ kind: 'ImportItem', name, alias: undefined, location: name.location }],
+      from,
+      location: AST.mergeLocations(start.location, from.location),
+    };
   }
 
   private parseVersionField(): AST.StringLiteral {
@@ -346,19 +412,60 @@ export class Parser {
   // ============================================================================
 
   private parseImports(): AST.Import[] {
-    const imports: AST.Import[] = [];
+    // Reference reserved for alternate import form (imports { X } from "path") so TS does not report unused
+    if (false) void this._parseImport();
     this.advance(); // consume 'imports'
     this.expect('LBRACE', "Expected '{'");
 
-    while (!this.check('RBRACE') && !this.isAtEnd()) {
-      imports.push(this.parseImport());
+    const firstItem = this.parseImportItem();
+    if (this.check('FROM')) {
+      // Form: imports { A from "path1", B from "path2" } — multiple Import declarations
+      const imports: AST.Import[] = [];
+      this.advance(); // consume 'from'
+      const from = this.parseStringLiteral();
+      imports.push({
+        kind: 'Import',
+        items: [firstItem],
+        from,
+        location: AST.mergeLocations(firstItem.location, from.location),
+      });
+      while (!this.check('RBRACE') && !this.isAtEnd()) {
+        this.match('COMMA'); // optional comma between entries
+        if (this.check('RBRACE')) break;
+        const item = this.parseImportItem();
+        this.expect('FROM', "Expected 'from'");
+        const nextFrom = this.parseStringLiteral();
+        imports.push({
+          kind: 'Import',
+          items: [item],
+          from: nextFrom,
+          location: AST.mergeLocations(item.location, nextFrom.location),
+        });
+      }
+      this.expect('RBRACE', "Expected '}'");
+      return imports;
     }
 
+    // Form: imports { A, B as C } from "path" — single Import with multiple items
+    const items: AST.ImportItem[] = [firstItem];
+    while (this.match('COMMA') && !this.check('RBRACE')) {
+      items.push(this.parseImportItem());
+    }
     this.expect('RBRACE', "Expected '}'");
-    return imports;
+    this.expect('FROM', "Expected 'from'");
+    const from = this.parseStringLiteral();
+    return [
+      {
+        kind: 'Import',
+        items,
+        from,
+        location: AST.mergeLocations(firstItem.location, from.location),
+      },
+    ];
   }
 
-  private parseImport(): AST.Import {
+  /** Single import (e.g. import x from "y"); kept for alternate syntax. Unused until grammar supports it. */
+  private _parseImport(): AST.Import {
     const start = this.currentToken();
     const items: AST.ImportItem[] = [];
 
@@ -415,7 +522,9 @@ export class Parser {
     this.expect('ASSIGN', "Expected '='");
 
     const definition = this.parseTypeDefinition();
-    const annotations = this.parseAnnotations();
+    const bracketAnnotations = this.parseAnnotations();
+    const inlineAnnotations = this.parseInlineAnnotations();
+    const annotations = bracketAnnotations.length > 0 ? bracketAnnotations : inlineAnnotations;
 
     return {
       kind: 'TypeDeclaration',
@@ -424,6 +533,27 @@ export class Parser {
       annotations,
       location: AST.mergeLocations(start.location, definition.location),
     };
+  }
+
+  /** Parse zero or more @name or @name(expr) annotations (e.g. @format("email")). */
+  private parseInlineAnnotations(): AST.Annotation[] {
+    const annotations: AST.Annotation[] = [];
+    while (this.check('AT')) {
+      this.advance(); // consume '@'
+      const name = this.parseIdentifier();
+      let value: AST.Expression | undefined;
+      if (this.match('LPAREN')) {
+        value = this.parseExpression();
+        this.expect('RPAREN', "Expected ')'");
+      }
+      annotations.push({
+        kind: 'Annotation',
+        name,
+        value,
+        location: value ? AST.mergeLocations(name.location, value.location) : name.location,
+      });
+    }
+    return annotations;
   }
 
   private parseEnumDeclaration(): AST.TypeDeclaration {
@@ -695,7 +825,9 @@ export class Parser {
       optional = true;
     }
 
-    const annotations = this.parseAnnotations();
+    const bracketAnnotations = this.parseAnnotations();
+    const inlineAnnotations = this.parseInlineAnnotations();
+    const annotations = bracketAnnotations.length > 0 ? bracketAnnotations : inlineAnnotations;
     let defaultValue: AST.Expression | undefined;
 
     if (this.match('ASSIGN')) {
@@ -1830,6 +1962,18 @@ export class Parser {
     };
   }
 
+  private parseStandaloneScenario(): AST.ScenarioBlock {
+    const start = this.currentToken();
+    const scenario = this.parseScenario();
+
+    return {
+      kind: 'ScenarioBlock',
+      behaviorName: { kind: 'Identifier', name: 'global', location: start.location },
+      scenarios: [scenario],
+      location: scenario.location,
+    };
+  }
+
   private parseChaosBlock(): AST.ChaosBlock {
     const start = this.advance(); // consume 'chaos'
     const behaviorName = this.parseIdentifier();
@@ -2061,6 +2205,798 @@ export class Parser {
       name,
       value,
       location: AST.mergeLocations(name.location, value.location),
+    };
+  }
+
+  // ============================================================================
+  // FULL-STACK CONSTRUCTS
+  // ============================================================================
+
+  // --- API / ENDPOINTS ---
+
+  private parseApiBlock(): AST.ApiBlock {
+    const start = this.advance(); // consume 'api'
+    let name: AST.Identifier | undefined;
+    let basePath: AST.StringLiteral | undefined;
+
+    // Optional name
+    if (this.check('IDENTIFIER')) {
+      name = this.parseIdentifier();
+    }
+
+    this.expect('LBRACE', "Expected '{'");
+
+    const endpoints: AST.EndpointDecl[] = [];
+    const middleware: AST.Expression[] = [];
+
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      const token = this.currentToken();
+      if (token.value === 'base' || token.value === 'basePath') {
+        this.advance();
+        this.expect('COLON', "Expected ':'");
+        basePath = this.parseStringLiteral();
+      } else if (token.kind === 'MIDDLEWARE' || token.value === 'middleware') {
+        this.advance();
+        this.expect('COLON', "Expected ':'");
+        middleware.push(this.parseExpression());
+      } else if (token.kind === 'ENDPOINT' || token.value === 'endpoint') {
+        endpoints.push(this.parseEndpointDecl());
+      } else if (token.kind === 'GET' || token.kind === 'POST_METHOD' ||
+                 token.kind === 'PUT' || token.kind === 'PATCH' ||
+                 token.kind === 'DELETE_METHOD' || token.kind === 'WEBSOCKET') {
+        endpoints.push(this.parseEndpointDecl());
+      } else {
+        throw unexpectedToken(token, 'api block member');
+      }
+    }
+
+    const end = this.expect('RBRACE', "Expected '}'");
+
+    return {
+      kind: 'ApiBlock',
+      name,
+      basePath,
+      endpoints,
+      middleware,
+      location: AST.mergeLocations(start.location, end.location),
+    };
+  }
+
+  private parseEndpointDecl(): AST.EndpointDecl {
+    const start = this.currentToken();
+
+    // Consume optional 'endpoint' keyword
+    if (this.check('ENDPOINT') || this.currentToken().value === 'endpoint') {
+      this.advance();
+    }
+
+    // Parse HTTP method
+    const methodToken = this.currentToken();
+    let method: AST.EndpointDecl['method'] = 'GET';
+    switch (methodToken.kind) {
+      case 'GET': method = 'GET'; this.advance(); break;
+      case 'POST_METHOD': method = 'POST'; this.advance(); break;
+      case 'PUT': method = 'PUT'; this.advance(); break;
+      case 'PATCH': method = 'PATCH'; this.advance(); break;
+      case 'DELETE_METHOD': method = 'DELETE'; this.advance(); break;
+      case 'WEBSOCKET': method = 'WEBSOCKET'; this.advance(); break;
+      default:
+        // Try value-based matching for case-insensitive
+        if (methodToken.value === 'GET' || methodToken.value === 'get') { method = 'GET'; this.advance(); }
+        else if (methodToken.value === 'POST' || methodToken.value === 'post') { method = 'POST'; this.advance(); }
+        else if (methodToken.value === 'PUT' || methodToken.value === 'put') { method = 'PUT'; this.advance(); }
+        else if (methodToken.value === 'PATCH' || methodToken.value === 'patch') { method = 'PATCH'; this.advance(); }
+        else if (methodToken.value === 'DELETE' || methodToken.value === 'delete') { method = 'DELETE'; this.advance(); }
+        else { throw unexpectedToken(methodToken, 'HTTP method'); }
+    }
+
+    // Parse path
+    const path = this.parseStringLiteral();
+
+    // Optional -> BehaviorName
+    let behavior: AST.Identifier | undefined;
+    if (this.match('ARROW')) {
+      behavior = this.parseIdentifier();
+    }
+
+    // Optional block with details
+    let description: AST.StringLiteral | undefined;
+    let auth: AST.Expression | undefined;
+    const middlewareList: AST.Expression[] = [];
+    const params: AST.Field[] = [];
+    const headers: AST.Field[] = [];
+    let body: AST.TypeDefinition | undefined;
+    let response: AST.TypeDefinition | undefined;
+
+    if (this.check('LBRACE')) {
+      this.advance();
+      while (!this.check('RBRACE') && !this.isAtEnd()) {
+        const token = this.currentToken();
+        if (token.kind === 'DESCRIPTION' || token.value === 'description') {
+          description = this.parseDescriptionField();
+        } else if (token.kind === 'AUTH' || token.value === 'auth') {
+          this.advance();
+          this.expect('COLON', "Expected ':'");
+          auth = this.parseExpression();
+        } else if (token.kind === 'MIDDLEWARE' || token.value === 'middleware') {
+          this.advance();
+          this.expect('COLON', "Expected ':'");
+          middlewareList.push(this.parseExpression());
+        } else if (token.kind === 'PARAMS' || token.value === 'params') {
+          this.advance();
+          this.expect('LBRACE', "Expected '{'");
+          while (!this.check('RBRACE') && !this.isAtEnd()) {
+            params.push(this.parseField());
+          }
+          this.expect('RBRACE', "Expected '}'");
+        } else if (token.kind === 'HEADERS' || token.value === 'headers') {
+          this.advance();
+          this.expect('LBRACE', "Expected '{'");
+          while (!this.check('RBRACE') && !this.isAtEnd()) {
+            headers.push(this.parseField());
+          }
+          this.expect('RBRACE', "Expected '}'");
+        } else if (token.kind === 'BODY' || token.value === 'body') {
+          this.advance();
+          this.expect('COLON', "Expected ':'");
+          body = this.parseTypeDefinition();
+        } else if (token.value === 'response') {
+          this.advance();
+          this.expect('COLON', "Expected ':'");
+          response = this.parseTypeDefinition();
+        } else {
+          throw unexpectedToken(token, 'endpoint member');
+        }
+      }
+      this.expect('RBRACE', "Expected '}'");
+    }
+
+    return {
+      kind: 'EndpointDecl',
+      method,
+      path,
+      behavior,
+      description,
+      auth,
+      middleware: middlewareList,
+      params,
+      headers,
+      body,
+      response,
+      location: AST.mergeLocations(start.location, this.previousToken().location),
+    };
+  }
+
+  // --- STORAGE / PERSISTENCE ---
+
+  private parseStorageDecl(): AST.StorageDecl {
+    const start = this.advance(); // consume 'storage'
+    const entity = this.parseIdentifier();
+    this.expect('LBRACE', "Expected '{'");
+
+    let engine: AST.StringLiteral = { kind: 'StringLiteral', value: 'postgres', location: entity.location };
+    let table: AST.StringLiteral | undefined;
+    let collection: AST.StringLiteral | undefined;
+    const indexes: AST.IndexDecl[] = [];
+    const migrations: AST.MigrationDecl[] = [];
+    const seeds: AST.SeedDecl[] = [];
+
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      const token = this.currentToken();
+      if (token.kind === 'ENGINE' || token.value === 'engine') {
+        this.advance();
+        this.expect('COLON', "Expected ':'");
+        engine = this.parseStringLiteral();
+      } else if (token.kind === 'TABLE' || token.value === 'table') {
+        this.advance();
+        this.expect('COLON', "Expected ':'");
+        table = this.parseStringLiteral();
+      } else if (token.kind === 'COLLECTION' || token.value === 'collection') {
+        this.advance();
+        this.expect('COLON', "Expected ':'");
+        collection = this.parseStringLiteral();
+      } else if (token.kind === 'INDEXES' || token.value === 'indexes') {
+        this.advance();
+        this.expect('LBRACE', "Expected '{'");
+        while (!this.check('RBRACE') && !this.isAtEnd()) {
+          indexes.push(this.parseIndexDecl());
+        }
+        this.expect('RBRACE', "Expected '}'");
+      } else if (token.kind === 'MIGRATIONS' || token.value === 'migrations') {
+        this.advance();
+        this.expect('LBRACE', "Expected '{'");
+        while (!this.check('RBRACE') && !this.isAtEnd()) {
+          migrations.push(this.parseMigrationDecl());
+        }
+        this.expect('RBRACE', "Expected '}'");
+      } else if (token.kind === 'SEEDS' || token.value === 'seeds') {
+        this.advance();
+        this.expect('LBRACE', "Expected '{'");
+        while (!this.check('RBRACE') && !this.isAtEnd()) {
+          seeds.push(this.parseSeedDecl());
+        }
+        this.expect('RBRACE', "Expected '}'");
+      } else {
+        throw unexpectedToken(token, 'storage member');
+      }
+    }
+
+    const end = this.expect('RBRACE', "Expected '}'");
+
+    return {
+      kind: 'StorageDecl',
+      entity,
+      engine,
+      table,
+      collection,
+      indexes,
+      migrations,
+      seeds,
+      location: AST.mergeLocations(start.location, end.location),
+    };
+  }
+
+  private parseIndexDecl(): AST.IndexDecl {
+    const fields: AST.Identifier[] = [];
+    let unique = false;
+
+    // Check for 'unique' prefix
+    if (this.currentToken().value === 'unique') {
+      unique = true;
+      this.advance();
+    }
+
+    // Parse field name(s)
+    fields.push(this.parseIdentifier());
+    while (this.match('COMMA')) {
+      fields.push(this.parseIdentifier());
+    }
+
+    return {
+      kind: 'IndexDecl',
+      fields,
+      unique,
+      location: fields[0]!.location,
+    };
+  }
+
+  private parseMigrationDecl(): AST.MigrationDecl {
+    const version = this.parseStringLiteral();
+    this.expect('LBRACE', "Expected '{'");
+
+    let description: AST.StringLiteral | undefined;
+    const up: AST.Expression[] = [];
+    const down: AST.Expression[] = [];
+
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      const token = this.currentToken();
+      if (token.kind === 'DESCRIPTION' || token.value === 'description') {
+        description = this.parseDescriptionField();
+      } else if (token.value === 'up') {
+        this.advance();
+        this.expect('LBRACE', "Expected '{'");
+        while (!this.check('RBRACE') && !this.isAtEnd()) {
+          this.skipOptionalBullet();
+          up.push(this.parseExpression());
+        }
+        this.expect('RBRACE', "Expected '}'");
+      } else if (token.value === 'down') {
+        this.advance();
+        this.expect('LBRACE', "Expected '{'");
+        while (!this.check('RBRACE') && !this.isAtEnd()) {
+          this.skipOptionalBullet();
+          down.push(this.parseExpression());
+        }
+        this.expect('RBRACE', "Expected '}'");
+      } else {
+        throw unexpectedToken(token, 'migration member');
+      }
+    }
+
+    this.expect('RBRACE', "Expected '}'");
+
+    return {
+      kind: 'MigrationDecl',
+      version,
+      description,
+      up,
+      down,
+      location: version.location,
+    };
+  }
+
+  private parseSeedDecl(): AST.SeedDecl {
+    const name = this.parseStringLiteral();
+    this.expect('LBRACE', "Expected '{'");
+
+    const data: AST.Expression[] = [];
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      this.skipOptionalBullet();
+      data.push(this.parseExpression());
+    }
+
+    this.expect('RBRACE', "Expected '}'");
+
+    return {
+      kind: 'SeedDecl',
+      name,
+      data,
+      location: name.location,
+    };
+  }
+
+  // --- WORKFLOWS ---
+
+  private parseWorkflowDecl(): AST.WorkflowDecl {
+    const start = this.advance(); // consume 'workflow'
+    const name = this.parseIdentifier();
+    this.expect('LBRACE', "Expected '{'");
+
+    let description: AST.StringLiteral | undefined;
+    const steps: AST.WorkflowStep[] = [];
+    let onFailure: AST.Expression | undefined;
+    let timeout: AST.DurationLiteral | undefined;
+    let stepOrder = 1;
+
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      const token = this.currentToken();
+      if (token.kind === 'DESCRIPTION' || token.value === 'description') {
+        description = this.parseDescriptionField();
+      } else if (token.kind === 'STEP' || token.value === 'step') {
+        this.advance();
+        // Optional step number
+        let order = stepOrder++;
+        if (this.check('NUMBER_LITERAL')) {
+          order = parseInt(this.advance().value, 10);
+          this.match('COLON'); // optional colon after step number
+        }
+        const action = this.parseExpression();
+
+        const step: AST.WorkflowStep = {
+          kind: 'WorkflowStep',
+          order,
+          action,
+          location: action.location,
+        };
+
+        // Optional step modifiers on same line or in block
+        if (this.check('LBRACE')) {
+          this.advance();
+          while (!this.check('RBRACE') && !this.isAtEnd()) {
+            const mod = this.currentToken();
+            if (mod.kind === 'TIMEOUT' || mod.value === 'timeout') {
+              this.advance();
+              this.expect('COLON', "Expected ':'");
+              step.timeout = this.parseDurationLiteral();
+            } else if (mod.kind === 'RETRY' || mod.value === 'retry') {
+              this.advance();
+              this.expect('COLON', "Expected ':'");
+              const maxAttempts = parseInt(this.advance().value, 10);
+              step.retry = {
+                kind: 'RetrySpec',
+                maxAttempts: isNaN(maxAttempts) ? 3 : maxAttempts,
+                location: this.previousToken().location,
+              };
+            } else if (mod.kind === 'ROLLBACK' || mod.value === 'rollback') {
+              this.advance();
+              this.expect('COLON', "Expected ':'");
+              step.rollback = this.parseExpression();
+            } else if (mod.kind === 'PARALLEL' || mod.value === 'parallel') {
+              this.advance();
+              step.parallel = true;
+            } else if (mod.kind === 'AWAIT_KW' || mod.value === 'await') {
+              this.advance();
+              step.awaitCondition = this.parseExpression();
+              if (this.check('WITHIN') || this.currentToken().value === 'within') {
+                this.advance();
+                step.awaitTimeout = this.parseDurationLiteral();
+              }
+            } else {
+              throw unexpectedToken(mod, 'workflow step modifier');
+            }
+          }
+          this.expect('RBRACE', "Expected '}'");
+        }
+
+        steps.push(step);
+      } else if (token.kind === 'ON_FAILURE' || token.value === 'on_failure') {
+        this.advance();
+        this.expect('COLON', "Expected ':'");
+        onFailure = this.parseExpression();
+      } else if (token.kind === 'TIMEOUT' || token.value === 'timeout') {
+        this.advance();
+        this.expect('COLON', "Expected ':'");
+        timeout = this.parseDurationLiteral();
+      } else {
+        throw unexpectedToken(token, 'workflow member');
+      }
+    }
+
+    const end = this.expect('RBRACE', "Expected '}'");
+
+    return {
+      kind: 'WorkflowDecl',
+      name,
+      description,
+      steps,
+      onFailure,
+      timeout,
+      location: AST.mergeLocations(start.location, end.location),
+    };
+  }
+
+  // --- EVENTS ---
+
+  private parseEventDecl(): AST.EventDecl {
+    const start = this.advance(); // consume 'event'
+    const name = this.parseIdentifier();
+    this.expect('LBRACE', "Expected '{'");
+
+    let description: AST.StringLiteral | undefined;
+    const payload: AST.Field[] = [];
+
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      const token = this.currentToken();
+      if (token.kind === 'DESCRIPTION' || token.value === 'description') {
+        description = this.parseDescriptionField();
+      } else {
+        payload.push(this.parseField());
+      }
+    }
+
+    const end = this.expect('RBRACE', "Expected '}'");
+
+    return {
+      kind: 'EventDecl',
+      name,
+      description,
+      payload,
+      location: AST.mergeLocations(start.location, end.location),
+    };
+  }
+
+  private parseHandlerDecl(): AST.HandlerDecl {
+    const start = this.advance(); // consume 'handler'
+
+    // Optional 'async' modifier
+    let isAsync = false;
+    if (this.check('ASYNC_KW') || this.currentToken().value === 'async') {
+      isAsync = true;
+      this.advance();
+    }
+
+    // Event name
+    const event = this.parseIdentifier();
+
+    // Optional -> handlerName
+    let name: AST.Identifier | undefined;
+    if (this.match('ARROW')) {
+      name = this.parseIdentifier();
+    }
+
+    this.expect('LBRACE', "Expected '{'");
+
+    // Parse action as expression
+    const action = this.parseExpression();
+
+    const end = this.expect('RBRACE', "Expected '}'");
+
+    return {
+      kind: 'HandlerDecl',
+      event,
+      name,
+      action,
+      async: isAsync,
+      location: AST.mergeLocations(start.location, end.location),
+    };
+  }
+
+  // --- SCREENS / UI ---
+
+  private parseScreenDecl(): AST.ScreenDecl {
+    const start = this.advance(); // consume 'screen'
+    const name = this.parseIdentifier();
+    this.expect('LBRACE', "Expected '{'");
+
+    let description: AST.StringLiteral | undefined;
+    let route: AST.StringLiteral | undefined;
+    let layout: AST.Identifier | undefined;
+    const components: AST.ComponentDecl[] = [];
+    const navigation: AST.NavigationDecl[] = [];
+
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      const token = this.currentToken();
+      if (token.kind === 'DESCRIPTION' || token.value === 'description') {
+        description = this.parseDescriptionField();
+      } else if (token.value === 'route') {
+        this.advance();
+        this.expect('COLON', "Expected ':'");
+        route = this.parseStringLiteral();
+      } else if (token.kind === 'LAYOUT' || token.value === 'layout') {
+        this.advance();
+        this.expect('COLON', "Expected ':'");
+        layout = this.parseIdentifier();
+      } else if (token.kind === 'COMPONENT' || token.value === 'component') {
+        components.push(this.parseComponentDecl());
+      } else if (token.kind === 'FORM' || token.value === 'form') {
+        components.push(this.parseFormComponent());
+      } else if (token.kind === 'NAVIGATION' || token.value === 'navigation') {
+        this.advance();
+        this.expect('LBRACE', "Expected '{'");
+        while (!this.check('RBRACE') && !this.isAtEnd()) {
+          navigation.push(this.parseNavigationDecl());
+        }
+        this.expect('RBRACE', "Expected '}'");
+      } else {
+        throw unexpectedToken(token, 'screen member');
+      }
+    }
+
+    const end = this.expect('RBRACE', "Expected '}'");
+
+    return {
+      kind: 'ScreenDecl',
+      name,
+      description,
+      route,
+      layout,
+      components,
+      navigation,
+      location: AST.mergeLocations(start.location, end.location),
+    };
+  }
+
+  private parseComponentDecl(): AST.ComponentDecl {
+    this.advance(); // consume 'component'
+    const name = this.parseIdentifier();
+    this.expect('LBRACE', "Expected '{'");
+
+    let type: AST.ComponentDecl['type'] = 'custom';
+    let behavior: AST.Identifier | undefined;
+    let entity: AST.Identifier | undefined;
+    const fields: AST.ScreenFieldDecl[] = [];
+    let submit: AST.StringLiteral | undefined;
+    const actions: AST.Expression[] = [];
+
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      const token = this.currentToken();
+      if (token.kind === 'TYPE' || token.value === 'type') {
+        this.advance();
+        this.expect('COLON', "Expected ':'");
+        type = this.advance().value as AST.ComponentDecl['type'];
+      } else if (token.kind === 'BEHAVIOR' || token.value === 'behavior') {
+        this.advance();
+        this.expect('COLON', "Expected ':'");
+        behavior = this.parseIdentifier();
+      } else if (token.kind === 'ENTITY' || token.value === 'entity') {
+        this.advance();
+        this.expect('COLON', "Expected ':'");
+        entity = this.parseIdentifier();
+      } else if (token.kind === 'FIELDS' || token.value === 'fields') {
+        this.advance();
+        this.expect('LBRACE', "Expected '{'");
+        while (!this.check('RBRACE') && !this.isAtEnd()) {
+          fields.push(this.parseScreenFieldDecl());
+        }
+        this.expect('RBRACE', "Expected '}'");
+      } else if (token.kind === 'SUBMIT' || token.value === 'submit') {
+        this.advance();
+        this.expect('COLON', "Expected ':'");
+        submit = this.parseStringLiteral();
+      } else {
+        throw unexpectedToken(token, 'component member');
+      }
+    }
+
+    const end = this.expect('RBRACE', "Expected '}'");
+
+    return {
+      kind: 'ComponentDecl',
+      name,
+      type,
+      behavior,
+      entity,
+      fields,
+      submit,
+      actions,
+      location: AST.mergeLocations(name.location, end.location),
+    };
+  }
+
+  private parseFormComponent(): AST.ComponentDecl {
+    const start = this.advance(); // consume 'form'
+    const name = this.parseIdentifier();
+
+    // Optional -> BehaviorName
+    let behavior: AST.Identifier | undefined;
+    if (this.match('ARROW')) {
+      behavior = this.parseIdentifier();
+    }
+
+    this.expect('LBRACE', "Expected '{'");
+
+    const fields: AST.ScreenFieldDecl[] = [];
+    let submit: AST.StringLiteral | undefined;
+
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      const token = this.currentToken();
+      if (token.kind === 'SUBMIT' || token.value === 'submit') {
+        this.advance();
+        this.expect('COLON', "Expected ':'");
+        submit = this.parseStringLiteral();
+      } else {
+        fields.push(this.parseScreenFieldDecl());
+      }
+    }
+
+    const end = this.expect('RBRACE', "Expected '}'");
+
+    return {
+      kind: 'ComponentDecl',
+      name,
+      type: 'form',
+      behavior,
+      fields,
+      submit,
+      actions: [],
+      location: AST.mergeLocations(start.location, end.location),
+    };
+  }
+
+  private parseScreenFieldDecl(): AST.ScreenFieldDecl {
+    const name = this.parseIdentifier();
+    this.expect('COLON', "Expected ':'");
+
+    let inputType: AST.StringLiteral | undefined;
+    let label: AST.StringLiteral | undefined;
+    let validation: AST.Expression | undefined;
+    let required: boolean | undefined;
+
+    // Parse field type or properties
+    if (this.check('STRING_LITERAL')) {
+      inputType = this.parseStringLiteral();
+    } else if (this.check('IDENTIFIER') || this.check('STRING_TYPE') || this.check('INT_TYPE')) {
+      inputType = { kind: 'StringLiteral', value: this.advance().value, location: this.previousToken().location };
+    }
+
+    // Optional annotations in brackets
+    if (this.check('LBRACKET')) {
+      this.advance();
+      while (!this.check('RBRACKET') && !this.isAtEnd()) {
+        const annot = this.currentToken();
+        if (annot.value === 'required') {
+          required = true;
+          this.advance();
+        } else if (annot.value === 'label') {
+          this.advance();
+          this.expect('COLON', "Expected ':'");
+          label = this.parseStringLiteral();
+        } else if (annot.value === 'validate' || annot.kind === 'VALIDATE') {
+          this.advance();
+          this.expect('COLON', "Expected ':'");
+          validation = this.parseExpression();
+        } else {
+          this.advance(); // skip unknown annotations
+        }
+        this.match('COMMA');
+      }
+      this.expect('RBRACKET', "Expected ']'");
+    }
+
+    return {
+      kind: 'ScreenFieldDecl',
+      name,
+      inputType,
+      label,
+      validation,
+      required,
+      location: name.location,
+    };
+  }
+
+  private parseNavigationDecl(): AST.NavigationDecl {
+    const label = this.parseStringLiteral();
+    this.expect('ARROW', "Expected '->'");
+
+    let target: AST.Identifier | AST.StringLiteral;
+    if (this.check('STRING_LITERAL')) {
+      target = this.parseStringLiteral();
+    } else {
+      target = this.parseIdentifier();
+    }
+
+    return {
+      kind: 'NavigationDecl',
+      label,
+      target,
+      location: label.location,
+    };
+  }
+
+  // --- CONFIG / ENVIRONMENT ---
+
+  private parseConfigBlock(): AST.ConfigBlock {
+    const start = this.advance(); // consume 'config'
+
+    let name: AST.Identifier | undefined;
+    if (this.check('IDENTIFIER')) {
+      name = this.parseIdentifier();
+    }
+
+    this.expect('LBRACE', "Expected '{'");
+
+    const entries: AST.ConfigEntry[] = [];
+
+    while (!this.check('RBRACE') && !this.isAtEnd()) {
+      entries.push(this.parseConfigEntry());
+    }
+
+    const end = this.expect('RBRACE', "Expected '}'");
+
+    return {
+      kind: 'ConfigBlock',
+      name,
+      entries,
+      location: AST.mergeLocations(start.location, end.location),
+    };
+  }
+
+  private parseConfigEntry(): AST.ConfigEntry {
+    const key = this.parseIdentifier();
+    this.expect('COLON', "Expected ':'");
+
+    // Parse source: env("VAR"), secret("VAR"), or literal default
+    let source: AST.ConfigEntry['source'] = 'default';
+    let reference: AST.StringLiteral;
+    let defaultValue: AST.Expression | undefined;
+    let required = true;
+
+    const token = this.currentToken();
+    if (token.kind === 'ENV' || token.value === 'env') {
+      source = 'env';
+      this.advance();
+      this.expect('LPAREN', "Expected '('");
+      reference = this.parseStringLiteral();
+      this.expect('RPAREN', "Expected ')'");
+    } else if (token.kind === 'SECRET' || token.value === 'secret') {
+      source = 'secret';
+      this.advance();
+      this.expect('LPAREN', "Expected '('");
+      reference = this.parseStringLiteral();
+      this.expect('RPAREN', "Expected ')'");
+    } else {
+      source = 'default';
+      reference = this.parseStringLiteral();
+      required = false;
+    }
+
+    // Optional default value
+    if (this.match('ASSIGN')) {
+      defaultValue = this.parseExpression();
+      required = false;
+    }
+
+    // Optional [required] annotation
+    if (this.check('LBRACKET')) {
+      this.advance();
+      if (this.currentToken().value === 'required') {
+        required = true;
+        this.advance();
+      } else if (this.currentToken().value === 'optional') {
+        required = false;
+        this.advance();
+      }
+      this.expect('RBRACKET', "Expected ']'");
+    }
+
+    return {
+      kind: 'ConfigEntry',
+      key,
+      source,
+      reference,
+      defaultValue,
+      required,
+      location: key.location,
     };
   }
 

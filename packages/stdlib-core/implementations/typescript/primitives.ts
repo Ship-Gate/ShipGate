@@ -106,7 +106,11 @@ export interface CryptoAmount {
 // ============================================================================
 
 export function isValidEmail(value: string): value is Email {
-  return PATTERNS.EMAIL.test(value) && value.length <= 254;
+  if (!PATTERNS.EMAIL.test(value) || value.length > 254) return false;
+  const at = value.indexOf('@');
+  if (at <= 0 || at > 64) return false; // local part max 64 octets (RFC 5321)
+  const domain = value.slice(at + 1);
+  return domain.length <= 253; // max domain 253 (RFC 1035)
 }
 
 export function isValidPhone(value: string): value is Phone {
@@ -215,7 +219,8 @@ export function luhnCheck(cardNumber: string): boolean {
 }
 
 export function isValidCreditCard(value: string): value is CreditCardNumber {
-  return luhnCheck(value);
+  if (/\D/.test(value)) return false; // no dashes/spaces; digits only
+  return PATTERNS.CREDIT_CARD.test(value) && luhnCheck(value);
 }
 
 // ============================================================================

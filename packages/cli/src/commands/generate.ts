@@ -5,14 +5,20 @@
  * Usage: isl generate --types --tests --docs
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
+
+import '../modules.js';
+
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { glob } from 'glob';
-import { resolve, relative, dirname, join, basename } from 'path';
-import chalk from 'chalk';
+import { resolve, relative, dirname, join } from 'path';
 import ora from 'ora';
 import { parse as parseISL, type Domain as DomainDeclaration, type TypeDefinition } from '@isl-lang/parser';
 import { output } from '../output.js';
-import { loadConfig, type ISLConfig } from '../config.js';
+import { loadConfig } from '../config.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -88,12 +94,12 @@ function generateTypesForDomain(domain: DomainDeclaration): string {
   
   // Generate function types for behaviors
   for (const behavior of domain.behaviors) {
-    const inputParams = behavior.inputs?.map(i => 
+    const inputParams = behavior.input?.fields?.map(i => 
       `${i.name.name}: ${mapToTypeScriptType(i.type)}`
     ).join(', ') ?? '';
     
-    const outputType = behavior.output 
-      ? mapToTypeScriptType(behavior.output)
+    const outputType = behavior.output?.success 
+      ? mapToTypeScriptType(behavior.output.success)
       : 'void';
     
     lines.push(`export type ${behavior.name.name}Fn = (${inputParams}) => Promise<${outputType}>;`);
@@ -118,7 +124,7 @@ function generateTestsForDomain(domain: DomainDeclaration): string {
     
     // Generate a basic test skeleton
     lines.push(`  it('should execute successfully', async () => {`);
-    lines.push(`    // TODO: Implement test for ${behavior.name.name}`);
+    lines.push(`    // Implement test for ${behavior.name.name}`);
     lines.push(`    expect(true).toBe(true);`);
     lines.push(`  });`);
     
@@ -128,7 +134,7 @@ function generateTestsForDomain(domain: DomainDeclaration): string {
       lines.push(`  describe('preconditions', () => {`);
       for (let i = 0; i < behavior.preconditions.length; i++) {
         lines.push(`    it('should validate precondition ${i + 1}', () => {`);
-        lines.push(`      // TODO: Test precondition`);
+        lines.push(`      // Test precondition`);
         lines.push(`      expect(true).toBe(true);`);
         lines.push(`    });`);
       }
@@ -151,23 +157,48 @@ function generateTypeDefinition(def: TypeDefinition): string {
       return mapPrimitiveToTS(def.name);
     case 'EnumType':
       return def.variants.map(v => `'${v.name.name}'`).join(' | ');
-    case 'StructType':
+    case 'StructType': {
       const fields = def.fields.map(f => 
         `${f.name.name}${f.optional ? '?' : ''}: ${mapToTypeScriptType(f.type)}`
       ).join('; ');
       return `{ ${fields} }`;
+    }
     case 'ListType':
-      return `${generateTypeDefinition(def.elementType)}[]`;
+      return `${generateTypeDefinition(def.element)}[]`;
     case 'MapType':
-      return `Record<${generateTypeDefinition(def.keyType)}, ${generateTypeDefinition(def.valueType)}>`;
+      return `Record<${generateTypeDefinition(def.key)}, ${generateTypeDefinition(def.value)}>`;
     case 'OptionalType':
       return `${generateTypeDefinition(def.inner)} | null`;
     case 'UnionType':
-      return def.types.map(t => generateTypeDefinition(t)).join(' | ');
+      return def.variants.map(v => `'${v.name.name}'`).join(' | ');
     case 'ReferenceType':
-      return def.name.name;
+      return def.name.parts.map(p => p.name).join('.');
     case 'ConstrainedType':
       return generateTypeDefinition(def.base);
+    default:
+      return 'unknown';
+  }
+}
+
+/**
+ * Extract type name from TypeDefinition
+ */
+function getTypeName(typeDef: TypeDefinition | undefined): string {
+  if (!typeDef) return 'unknown';
+  
+  switch (typeDef.kind) {
+    case 'PrimitiveType':
+      return typeDef.name;
+    case 'ReferenceType':
+      return typeDef.name.parts.map(p => p.name).join('.');
+    case 'EnumType':
+    case 'StructType':
+    case 'ListType':
+    case 'MapType':
+    case 'OptionalType':
+    case 'UnionType':
+    case 'ConstrainedType':
+      return generateTypeDefinition(typeDef);
     default:
       return 'unknown';
   }
@@ -197,7 +228,7 @@ function mapToTypeScriptType(typeRef: TypeDefinition | { name: string } | undefi
   
   // Handle TypeDefinition
   if ('kind' in typeRef) {
-    return generateTypeDefinition(typeRef as TypeDefinition);
+    return generateTypeDefinition(typeRef);
   }
   
   // Handle simple name reference
@@ -235,10 +266,8 @@ function generateDocsForDomain(domain: DomainDeclaration): string {
   // Header
   lines.push(`# ${domain.name.name}`);
   lines.push('');
-  if (domain.description) {
-    lines.push(domain.description);
-    lines.push('');
-  }
+  lines.push(`Generated from ISL specification`);
+  lines.push('');
   
   // Table of Contents
   lines.push('## Table of Contents');
@@ -263,7 +292,7 @@ function generateDocsForDomain(domain: DomainDeclaration): string {
       lines.push('|-------|------|-------------|');
       
       for (const field of entity.fields) {
-        const typeStr = field.type?.name ?? 'unknown';
+        const typeStr = getTypeName(field.type);
         lines.push(`| \`${field.name.name}\` | \`${typeStr}\` | |`);
       }
       lines.push('');
@@ -279,39 +308,20 @@ function generateDocsForDomain(domain: DomainDeclaration): string {
     lines.push('');
     
     // Signature
-    if (behavior.inputs && behavior.inputs.length > 0) {
-      const inputs = behavior.inputs.map(i => `${i.name.name}: ${i.type?.name ?? 'unknown'}`).join(', ');
-      const output = behavior.output?.name ?? 'void';
+    if (behavior.input?.fields && behavior.input.fields.length > 0) {
+      const inputs = behavior.input.fields.map(input => `${input.name.name}: ${getTypeName(input.type)}`).join(', ');
+      const output = behavior.output?.success ? getTypeName(behavior.output.success) : 'void';
       lines.push(`**Signature:** \`(${inputs}) -> ${output}\``);
       lines.push('');
     }
 
     // Postconditions
-    if (behavior.body?.postconditions && behavior.body.postconditions.length > 0) {
+    if (behavior.postconditions && behavior.postconditions.length > 0) {
       lines.push('**Postconditions:**');
-      for (const post of behavior.body.postconditions) {
-        lines.push(`- ${post.description ?? 'No description'}`);
+      for (const post of behavior.postconditions) {
+        lines.push(`- Postcondition: ${post.condition === 'success' || post.condition === 'any_error' ? post.condition : post.condition?.name || 'No description'}`);
       }
       lines.push('');
-    }
-
-    // Scenarios
-    if (behavior.body?.scenarios && behavior.body.scenarios.length > 0) {
-      lines.push('**Scenarios:**');
-      lines.push('');
-      for (const scenario of behavior.body.scenarios) {
-        lines.push(`#### ${scenario.name}`);
-        if (scenario.given) {
-          lines.push(`- **Given:** ${JSON.stringify(scenario.given)}`);
-        }
-        if (scenario.when) {
-          lines.push(`- **When:** ${JSON.stringify(scenario.when)}`);
-        }
-        if (scenario.then) {
-          lines.push(`- **Then:** ${JSON.stringify(scenario.then)}`);
-        }
-        lines.push('');
-      }
     }
   }
 
@@ -321,7 +331,7 @@ function generateDocsForDomain(domain: DomainDeclaration): string {
     lines.push('');
     
     for (const inv of domain.invariants) {
-      lines.push(`- **${inv.name?.name ?? 'Unnamed'}:** ${inv.description ?? 'No description'}`);
+      lines.push(`- Invariant: ${String(inv)}`);
     }
     lines.push('');
   }
@@ -523,16 +533,16 @@ export function printGenerateResult(result: GenerateResult): void {
     }
 
     console.log('');
-    console.log(chalk.green(`✓ Generated ${result.files.length} file${result.files.length === 1 ? '' : 's'}`));
+    output.success(`Generated ${result.files.length} file${result.files.length === 1 ? '' : 's'}`);
   } else {
-    console.log(chalk.red('✗ Generation failed'));
+    output.error('Generation failed');
     console.log('');
     for (const error of result.errors) {
-      console.log(chalk.red(`  ${error}`));
+      output.error(`  ${error}`);
     }
   }
 
-  console.log(chalk.gray(`  Completed in ${result.duration}ms`));
+  output.info(`Completed in ${result.duration}ms`);
 }
 
 export default generate;

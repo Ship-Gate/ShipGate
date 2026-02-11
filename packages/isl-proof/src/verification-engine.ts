@@ -242,31 +242,40 @@ export class VerificationEngine {
 
     // Extract postconditions from behaviors
     for (const behavior of this.domain.behaviors) {
-      if (behavior.postconditions) {
-        for (const postconditionBlock of behavior.postconditions) {
-          for (const predicate of postconditionBlock.predicates) {
-            clauses.push({
-              clauseId: `${behavior.name.name}_postcondition_${predicate.location.line}_${predicate.location.column}`,
-              type: 'postcondition',
-              behavior: behavior.name.name,
-              sourceSpan: this.locationToInfo(predicate.location),
-              expression: predicate,
-            });
-          }
+      const postconditionBlocks = Array.isArray(behavior.postconditions)
+        ? behavior.postconditions
+        : behavior.postconditions
+          ? [behavior.postconditions]
+          : [];
+      for (const postconditionBlock of postconditionBlocks) {
+        const predicates = Array.isArray(postconditionBlock.predicates)
+          ? postconditionBlock.predicates
+          : postconditionBlock.predicates ? [postconditionBlock.predicates] : [];
+        for (const predicate of predicates) {
+          clauses.push({
+            clauseId: `${behavior.name.name}_postcondition_${predicate.location.line}_${predicate.location.column}`,
+            type: 'postcondition',
+            behavior: behavior.name.name,
+            sourceSpan: this.locationToInfo(predicate.location),
+            expression: predicate,
+          });
         }
       }
 
       // Extract invariants from behaviors
-      if (behavior.invariants) {
-        for (const inv of behavior.invariants) {
-          clauses.push({
-            clauseId: `${behavior.name.name}_invariant_${inv.location.line}_${inv.location.column}`,
-            type: 'invariant',
-            behavior: behavior.name.name,
-            sourceSpan: this.locationToInfo(inv.location),
-            expression: inv,
-          });
-        }
+      const invariantList = Array.isArray(behavior.invariants)
+        ? behavior.invariants
+        : behavior.invariants
+          ? [behavior.invariants]
+          : [];
+      for (const inv of invariantList) {
+        clauses.push({
+          clauseId: `${behavior.name.name}_invariant_${inv.location.line}_${inv.location.column}`,
+          type: 'invariant',
+          behavior: behavior.name.name,
+          sourceSpan: this.locationToInfo(inv.location),
+          expression: inv,
+        });
       }
     }
 

@@ -30,7 +30,7 @@ export interface VersionCompatibility {
 export const VERSION_COMPATIBILITY: Record<ISLVersion, VersionCompatibility> = {
   '0.1': {
     version: '0.1',
-    compatibleWith: ['0.2'],
+    compatibleWith: ['0.1', '0.2'],
     migrationRequired: true,
     migrationNotes: 'v0.1 specs should be migrated to v0.2 for best compatibility',
   },
@@ -94,13 +94,13 @@ export function getMigrationWarnings(
   }
   
   const compat = VERSION_COMPATIBILITY[sourceVersion];
-  if (compat.migrationRequired && !compat.compatibleWith.includes(targetVersion)) {
+  if (compat.migrationRequired && sourceVersion !== targetVersion) {
     warnings.push(
-      `ISL version ${sourceVersion} requires migration to ${targetVersion}. ` +
-      (compat.migrationNotes || '')
+      `ISL version ${sourceVersion} migration to ${targetVersion} recommended. ` +
+      (compat.migrationNotes ?? '')
     );
   }
-  
+
   return warnings;
 }
 

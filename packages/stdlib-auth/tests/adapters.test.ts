@@ -3,12 +3,12 @@
 // Tests for Fastify and Express adapters
 // ============================================================================
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { 
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import {
   AuthService,
-  createInMemoryAuthService,
   InMemoryUserRepository,
-  InMemorySessionRepository
+  InMemorySessionRepository,
+  UserStatus,
 } from '../implementations/typescript/index.js';
 import { 
   authenticate as fastifyAuthenticate,
@@ -27,16 +27,27 @@ describe('Fastify Adapter', () => {
   let mockReply: Partial<FastifyReply>;
 
   beforeEach(() => {
-    authService = createInMemoryAuthService();
-    
+    const sessionRepo = new InMemorySessionRepository();
+    class ActiveUserRepo extends InMemoryUserRepository {
+      override async create(
+        data: Parameters<InMemoryUserRepository['create']>[0]
+      ): Promise<Awaited<ReturnType<InMemoryUserRepository['create']>>> {
+        return super.create({ ...data, status: UserStatus.ACTIVE } as Parameters<InMemoryUserRepository['create']>[0]);
+      }
+    }
+    authService = new AuthService({
+      userRepository: new ActiveUserRepo(),
+      sessionRepository: sessionRepo,
+    });
+
     mockRequest = {
       headers: {},
-      ip: '192.168.1.1'
+      ip: '192.168.1.1',
     };
-    
+
     mockReply = {
       code: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis()
+      send: vi.fn().mockReturnThis(),
     };
   });
 
@@ -118,18 +129,29 @@ describe('Express Adapter', () => {
   let mockNext: NextFunction;
 
   beforeEach(() => {
-    authService = createInMemoryAuthService();
-    
+    const sessionRepo = new InMemorySessionRepository();
+    class ActiveUserRepo extends InMemoryUserRepository {
+      override async create(
+        data: Parameters<InMemoryUserRepository['create']>[0]
+      ): Promise<Awaited<ReturnType<InMemoryUserRepository['create']>>> {
+        return super.create({ ...data, status: UserStatus.ACTIVE } as Parameters<InMemoryUserRepository['create']>[0]);
+      }
+    }
+    authService = new AuthService({
+      userRepository: new ActiveUserRepo(),
+      sessionRepository: sessionRepo,
+    });
+
     mockRequest = {
       headers: {},
-      ip: '192.168.1.1'
+      ip: '192.168.1.1',
     };
-    
+
     mockResponse = {
       status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis()
+      json: vi.fn().mockReturnThis(),
     };
-    
+
     mockNext = vi.fn();
   });
 
@@ -243,11 +265,3 @@ describe('Express Adapter', () => {
     });
   });
 });
-
-// Mock vi for vitest
-const vi = {
-  fn: () => ({
-    mockReturnThis: function() { return this; },
-    mockReturnValue: function(value: any) { return this; }
-  })
-};

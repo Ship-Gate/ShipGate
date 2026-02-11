@@ -3,46 +3,29 @@ node_modules/
 
 # Build outputs
 dist/
-build/
-*.tsbuildinfo
+generated/
 
-# Environment files
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
 .env
 .env.local
 .env.*.local
 
-# Test coverage
-coverage/
-
-# IDE and OS files
-.DS_Store
-Thumbs.db
-.idea/
-*.swp
-*.swo
-
 # Logs
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
 
-# Next.js
-.next/
-out/
+# Test coverage
+coverage/
 
-# Turbo
-.turbo/
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-
-# Post-release verification logs
-artifacts/post_release/
-
-# Package manager locks (keep pnpm-lock.yaml)
-package-lock.json
-yarn.lock
+# ISL generated files (optional - uncomment to ignore)
+# generated/

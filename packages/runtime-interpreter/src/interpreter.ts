@@ -12,10 +12,10 @@ import type {
   TraceEntry,
   ContractMode,
   EntityStore,
-} from './types';
-import { evaluate } from './evaluator';
-import { createEnvironment, extendEnvironment } from './environment';
-import { InterpreterError, ContractViolationError } from './types';
+} from './types.js';
+import { evaluate } from './evaluator.js';
+import { createEnvironment, extendEnvironment } from './environment.js';
+import { InterpreterError, ContractViolationError } from './types.js';
 
 // ============================================================================
 // INTERPRETER
@@ -136,7 +136,7 @@ export class Interpreter {
         };
       }
       
-      const err = error as Error;
+      const err = error instanceof Error ? error : new Error(String(error));
       this.traceError(behaviorName, err);
       
       // Check if it's a known error type from the behavior

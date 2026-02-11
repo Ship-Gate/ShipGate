@@ -112,7 +112,7 @@ describe('String Module', () => {
     });
 
     test('replace replaces first occurrence', () => {
-      expect(String.replace('hello hello', 'hello', 'hi').value).toBe('hi hello');
+      expect(String.replace('hello hello', 'hello', 'hi')).toBe('hi hello');
     });
 
     test('replaceAll replaces all occurrences', () => {

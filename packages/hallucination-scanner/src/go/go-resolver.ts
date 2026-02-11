@@ -69,17 +69,23 @@ function parseGoMod(content: string, dir: string): GoModInfo | null {
     if (directive === 'require') {
       if (tokens.length >= 3) {
         require.set(tokens[1]!, tokens[2]!);
-      } else if (tokens.length === 1) {
-        // require ( ... ) block
-        if (i < lines.length && lines[i]?.trim() === '(') {
+      } else if (tokens.length === 1 && i < lines.length && lines[i]?.trim() === '(') {
+        i++;
+        while (i < lines.length) {
+          const blockTokens = tokenizeLine(lines[i] ?? '');
           i++;
-          while (i < lines.length) {
-            const blockTokens = tokenizeLine(lines[i] ?? '');
-            i++;
-            if (blockTokens.length >= 1 && blockTokens[0] === ')') break;
-            if (blockTokens.length >= 2) {
-              require.set(blockTokens[0]!, blockTokens[1]!);
-            }
+          if (blockTokens.length >= 1 && blockTokens[0] === ')') break;
+          if (blockTokens.length >= 2) {
+            require.set(blockTokens[0]!, blockTokens[1]!);
+          }
+        }
+      } else if (tokens.length === 2 && tokens[1] === '(') {
+        while (i < lines.length) {
+          const blockTokens = tokenizeLine(lines[i] ?? '');
+          i++;
+          if (blockTokens.length >= 1 && blockTokens[0] === ')') break;
+          if (blockTokens.length >= 2) {
+            require.set(blockTokens[0]!, blockTokens[1]!);
           }
         }
       }

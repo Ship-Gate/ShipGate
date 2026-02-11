@@ -24,7 +24,7 @@ import type {
 
   ScannerOptions,
 
-} from '@isl-lang/firewall';
+} from '@isl-lang/isl-firewall';
 
 
 
@@ -148,7 +148,7 @@ export async function runHostScanCommand(
 
 ): Promise<ScanCommandResult> {
 
-  const { runHostScan } = await import('@isl-lang/firewall');
+  const { runHostScan } = await import('@isl-lang/isl-firewall');
 
   const result = await runHostScan(files, {
 
@@ -180,7 +180,7 @@ export async function runRealityGapScanCommand(
 
 ): Promise<ScanCommandResult> {
 
-  const { runRealityGapScan } = await import('@isl-lang/firewall');
+  const { runRealityGapScan } = await import('@isl-lang/isl-firewall');
 
   const result = await runRealityGapScan(files, {
 

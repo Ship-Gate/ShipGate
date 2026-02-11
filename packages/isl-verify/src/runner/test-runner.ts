@@ -69,7 +69,7 @@ function detectLanguage(implCode: string, implPath?: string): ImplementationLang
       case '.ts':
       case '.tsx':
         return 'typescript';
-      case '.js':
+      case '':
       case '.jsx':
       case '.mjs':
         return 'javascript';
@@ -476,7 +476,7 @@ export default defineConfig({
         );
       } else {
         await writeFile(
-          join(workDir, 'jest.config.js'),
+          join(workDir, 'jest.config'),
           `module.exports = {
   testEnvironment: 'node',
   transform: { '^.+\\\\.tsx?$': 'ts-jest' },

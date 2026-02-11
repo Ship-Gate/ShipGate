@@ -124,8 +124,8 @@ describe('resolveGo', () => {
         throw new Error(`file not found: ${p}`);
       },
       fileExists: async (p) => {
-        // internal/handler exists
-        if (p.includes('internal/handler') || p.includes('internal\\handler')) return true;
+        const normalized = p.replace(/\\/g, '/');
+        if (normalized.includes('internal/handler')) return true;
         if (p.endsWith('main.go')) return true;
         if (p.endsWith('go.mod')) return true;
         return false;
@@ -159,7 +159,7 @@ describe('resolveGo', () => {
       goModContent: GO_MOD_CONTENT,
       readFile: async () => VALID_GO_SOURCE,
       fileExists: async (p) => {
-        if (p.includes('internal/handler') || p.includes('internal\\handler')) return true;
+        if (p.replace(/\\/g, '/').includes('internal/handler')) return true;
         return p.endsWith('main.go') || p.endsWith('go.mod');
       },
     });
@@ -180,7 +180,7 @@ describe('resolveGo', () => {
       goModContent: GO_MOD_CONTENT,
       readFile: async () => VALID_GO_SOURCE,
       fileExists: async (p) => {
-        if (p.includes('internal/handler') || p.includes('internal\\handler')) return true;
+        if (p.replace(/\\/g, '/').includes('internal/handler')) return true;
         return p.endsWith('main.go') || p.endsWith('go.mod');
       },
     });
@@ -197,7 +197,7 @@ describe('resolveGo', () => {
       goModContent: GO_MOD_CONTENT,
       readFile: async () => VALID_GO_SOURCE,
       fileExists: async (p) => {
-        if (p.includes('internal/handler') || p.includes('internal\\handler')) return true;
+        if (p.replace(/\\/g, '/').includes('internal/handler')) return true;
         return p.endsWith('main.go') || p.endsWith('go.mod');
       },
     });

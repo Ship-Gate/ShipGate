@@ -61,5 +61,5 @@
   "license": "MIT",
   "private": true,
   "experimental": true,
-  "sideEffects": false
+  "sideEffects": ["./dist/chunk-*.js"]
 }

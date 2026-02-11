@@ -56,9 +56,9 @@ const PII_VALUE_PATTERNS: Array<{ pattern: RegExp; replacement: string }> = [
     pattern: /\b\d{3}[-.\s]?\d{2}[-.\s]?\d{4}\b/g, 
     replacement: '[SSN_REDACTED]' 
   },
-  // Phone numbers
+  // Phone numbers (include leading + so full match is replaced)
   { 
-    pattern: /\b(\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g, 
+    pattern: /\+\d{1,3}[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b|\b(1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g, 
     replacement: '[PHONE_REDACTED]' 
   },
   // Credit card numbers
@@ -81,13 +81,13 @@ const PII_VALUE_PATTERNS: Array<{ pattern: RegExp; replacement: string }> = [
     pattern: /Bearer\s+[A-Za-z0-9_-]+/gi, 
     replacement: '[BEARER_REDACTED]' 
   },
-  // API keys (common formats)
+  // API keys (Stripe-style sk_test_/sk_live_ and sk_/pk_ prefix)
   { 
-    pattern: /sk[-_][A-Za-z0-9]{20,}/g, 
+    pattern: /sk_(?:test|live)_[A-Za-z0-9]+|sk[-_][A-Za-z0-9_-]{20,}/g, 
     replacement: '[API_KEY_REDACTED]' 
   },
   { 
-    pattern: /pk[-_][A-Za-z0-9]{20,}/g, 
+    pattern: /pk[-_][A-Za-z0-9_-]{20,}/g, 
     replacement: '[API_KEY_REDACTED]' 
   },
 ];
@@ -152,7 +152,11 @@ export function redactObject(
       PII_FIELD_PATTERNS.some(pattern => pattern.test(key));
     
     if (shouldRedact) {
-      result[key] = '[REDACTED]';
+      if (Array.isArray(value)) {
+        result[key] = value.map(item => redact(item, fieldsToRedact));
+      } else {
+        result[key] = '[REDACTED]';
+      }
     } else if (value && typeof value === 'object' && !Array.isArray(value)) {
       result[key] = redactObject(value as Record<string, unknown>, fieldsToRedact);
     } else if (typeof value === 'string') {
@@ -177,9 +181,8 @@ const MASK_CHAR = '*';
  * Mask a string, showing only first and last N characters
  */
 export function mask(str: string, visibleChars: number = 2): string {
-  if (!str || str.length <= visibleChars * 2) {
-    return MASK_CHAR.repeat(str?.length || 4);
-  }
+  if (str === undefined || str === null || str.length === 0) return '';
+  if (str.length <= visibleChars * 2) return MASK_CHAR.repeat(str.length);
   return str.slice(0, visibleChars) + MASK_CHAR.repeat(str.length - visibleChars * 2) + str.slice(-visibleChars);
 }
 
@@ -207,8 +210,8 @@ export function maskEmail(email: string): string {
 }
 
 /**
- * Mask an IP address
- * @example maskIp('192.168.1.100') // => '192.***.***. 100'
+ * Mask an IP address (middle octets)
+ * @example maskIp('192.168.1.100') // => '192.***.***.100'
  */
 export function maskIp(ip: string): string {
   if (ip.includes('.')) {

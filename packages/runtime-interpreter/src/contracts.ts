@@ -12,16 +12,14 @@ import type {
   EntityDefinition,
   InvariantDefinition,
   ContractMode,
-} from './types';
-import { evaluate } from './evaluator';
-import { extendEnvironment } from './environment';
-import { ContractViolationError } from './types';
+} from './types.js';
+import { evaluate } from './evaluator.js';
+import { extendEnvironment } from './environment.js';
+import { ContractViolationError } from './types.js';
 
 // ============================================================================
-// CONTRACT MODES (re-export from types for convenience)
+// CONTRACT CONFIG
 // ============================================================================
-
-export type { ContractMode };
 
 export interface ContractConfig {
   mode: ContractMode;

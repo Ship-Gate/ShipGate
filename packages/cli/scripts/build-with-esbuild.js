@@ -14,6 +14,14 @@ const __dirname = dirname(__filename);
 const CLI_DIR = resolve(__dirname, '..');
 const ROOT_DIR = resolve(CLI_DIR, '../..');
 
+// Read version from package.json for injection
+let cliVersion = '1.0.0';
+try {
+  const pkgPath = resolve(CLI_DIR, 'package.json');
+  const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+  if (pkg.version) cliVersion = pkg.version;
+} catch (_) {}
+
 // Load aliases
 let aliases = {};
 try {
@@ -49,6 +57,9 @@ const buildOptions = {
   format: 'cjs',
   platform: 'node',
   target: 'node18',
+  define: {
+    __SHIPGATE_CLI_VERSION__: JSON.stringify(cliVersion),
+  },
   // Shebang is already in src/index.ts, esbuild will preserve it
   external: [
     '@isl-lang/inference',

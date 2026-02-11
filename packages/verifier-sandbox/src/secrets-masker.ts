@@ -12,9 +12,14 @@ export interface SecretsMaskerOptions {
 }
 
 /**
- * Default secret patterns to mask
+ * Default secret patterns to mask.
+ * Order matters: more specific (e.g. Bearer JWT) before generic.
  */
 const DEFAULT_SECRET_PATTERNS: RegExp[] = [
+  // Bearer <token> (JWT or any token) - mask token part
+  /(Bearer\s+)([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)/gi,
+  // JWT-like: xxxxx.yyyyy.zzzzz (base64-ish with two dots)
+  /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g,
   // API keys
   /(api[_-]?key|apikey)\s*[:=]\s*['"]?([a-zA-Z0-9_\-]{20,})['"]?/gi,
   // Tokens
@@ -27,12 +32,8 @@ const DEFAULT_SECRET_PATTERNS: RegExp[] = [
   /(AWS[_-]?SECRET[_-]?ACCESS[_-]?KEY|AWS[_-]?ACCESS[_-]?KEY[_-]?ID)\s*[:=]\s*['"]?([A-Z0-9]{20,})['"]?/gi,
   // Private keys
   /-----BEGIN\s+(RSA\s+)?PRIVATE\s+KEY-----[\s\S]*?-----END\s+(RSA\s+)?PRIVATE\s+KEY-----/gi,
-  // JWT tokens
-  /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g,
   // Credit cards
   /\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g,
-  // Email addresses (optional - can be disabled)
-  // /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g,
 ];
 
 export class SecretsMasker {
@@ -45,23 +46,26 @@ export class SecretsMasker {
   }
 
   /**
-   * Mask secrets in text
+   * Mask secrets in text.
+   * Replace callback receives (match, ...captures, offset, entireString).
+   * When there are capture groups, mask the last capture (value); else mask whole match.
    */
   mask(text: string): string {
     let masked = text;
-    
     for (const pattern of this.patterns) {
       masked = masked.replace(pattern, (match, ...groups) => {
-        // For patterns with capture groups, mask the value part
-        if (groups.length > 0 && groups[groups.length - 1]) {
-          const value = groups[groups.length - 1];
-          return match.replace(value, this.maskChar);
+        // Last two args from String.replace are offset and entireString
+        const captures = groups.slice(0, -2);
+        const valueToMask =
+          captures.length >= 1 && captures[captures.length - 1] !== undefined
+            ? String(captures[captures.length - 1])
+            : null;
+        if (valueToMask !== null) {
+          return match.replace(valueToMask, this.maskChar);
         }
-        // Otherwise mask the entire match
         return this.maskChar;
       });
     }
-    
     return masked;
   }
 

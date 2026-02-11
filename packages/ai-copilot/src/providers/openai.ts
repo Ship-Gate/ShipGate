@@ -82,10 +82,10 @@ Provide ${request.maxCompletions ?? 3} possible completions.`;
         { role: 'user', content: prompt },
       ],
     };
-    const response = await this.client.chat.completions.create(createOptions as Parameters<OpenAI['chat']['completions']['create']>[0]);
+    const response = await this.client.chat.completions.create(createOptions as Parameters<OpenAI['chat']['completions']['create']>[0]) as OpenAI.Chat.Completions.ChatCompletion;
 
     return {
-      completions: response.choices.map((choice, i) => ({
+      completions: response.choices.map((choice: OpenAI.Chat.Completions.ChatCompletion.Choice, i: number) => ({
         text: choice.message?.content ?? '',
         displayText: (choice.message?.content ?? '').split('\n')[0],
         kind: 'snippet' as const,

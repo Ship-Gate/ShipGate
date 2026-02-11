@@ -3,8 +3,8 @@
 // @isl-lang/runtime-interpreter/builtins
 // ============================================================================
 
-import type { Value, Environment, NativeFunction, EffectHandler } from './types';
-import { InterpreterError, TypeMismatchError } from './types';
+import type { Value, Environment, NativeFunction, EffectHandler } from './types.js';
+import { InterpreterError, TypeMismatchError } from './types.js';
 
 // Helper to safely get an argument from the args array
 function getArg(args: Value[], index: number, name?: string): Value {

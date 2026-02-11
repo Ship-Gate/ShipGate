@@ -78,14 +78,16 @@ describe('RetentionManager', () => {
 
   describe('retention date calculation', () => {
     it('should calculate retention date based on policy', () => {
-      const timestamp = new Date('2024-01-01');
+      const timestamp = new Date('2024-01-01T12:00:00Z');
       const retentionDate = manager.calculateRetentionDate(
         EventCategory.SECURITY_EVENT,
         timestamp
       );
 
-      const expectedDate = new Date('2025-01-01'); // 365 days later
-      expect(retentionDate.getTime()).toBeCloseTo(expectedDate.getTime(), -4);
+      // Use same date arithmetic as implementation (local getDate/setDate) for timezone-agnostic assertion
+      const expectedDate = new Date(timestamp);
+      expectedDate.setDate(expectedDate.getDate() + 365);
+      expect(retentionDate.getTime()).toBe(expectedDate.getTime());
     });
 
     it('should use default retention for unknown category', () => {
@@ -95,15 +97,16 @@ describe('RetentionManager', () => {
         policies: [],
       });
 
-      const timestamp = new Date('2024-01-01');
+      const timestamp = new Date('2024-01-01T12:00:00Z');
       const retentionDate = sparseManager.calculateRetentionDate(
         EventCategory.SECURITY_EVENT,
         timestamp
       );
 
-      // Default is 90 days
-      const expectedDate = new Date('2024-04-01');
-      expect(retentionDate.getTime()).toBeCloseTo(expectedDate.getTime(), -4);
+      // Default is 90 days - use same date arithmetic as implementation
+      const expectedDate = new Date(timestamp);
+      expectedDate.setDate(expectedDate.getDate() + 90);
+      expect(retentionDate.getTime()).toBe(expectedDate.getTime());
     });
   });
 

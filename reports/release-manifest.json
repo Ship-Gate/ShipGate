@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0.0",
-  "timestamp": "2026-02-09T19:20:04.417Z",
+  "timestamp": "2026-02-10T00:53:29.704Z",
   "git": {
-    "commitSha": "5823fbcb7a3eeb979cfebfecc89db95e203a89cb",
-    "branch": "release/workflow-audit-dry-run",
+    "commitSha": "2a63d2066127b089e98664d8565362537fb62862",
+    "branch": "main",
     "tag": null,
     "dirty": true
   },
@@ -14,7 +14,7 @@
     "arch": "x64",
     "ci": false
   },
-  "lockfileHash": "c88c121cf890fbe9d8ee08d09b19314c931b1e0dade2e5bf0496d9c43bc92da2",
+  "lockfileHash": "cea66f928f191fab15eb50e4b460d457ac233145bb408565462c4a9247acc42c",
   "packages": [
     {
       "name": "@isl-lang/adapters",

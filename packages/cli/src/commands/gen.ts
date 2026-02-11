@@ -7,6 +7,15 @@
  * Targets: ts (typescript), rust, go, openapi, python, graphql
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/require-await */
+
+import '../modules.js';
+
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { resolve, relative, dirname, join, basename, extname } from 'path';
 import chalk from 'chalk';
@@ -132,12 +141,12 @@ function generateTypeScript(domain: DomainDeclaration): string {
   
   // Generate function types for behaviors
   for (const behavior of domain.behaviors) {
-    const inputParams = behavior.inputs?.map(i => 
+    const inputParams = behavior.input?.fields?.map(i => 
       `${i.name.name}: ${mapToTypeScriptType(i.type)}`
     ).join(', ') ?? '';
     
-    const outputType = behavior.output 
-      ? mapToTypeScriptType(behavior.output)
+    const outputType = behavior.output?.success 
+      ? mapToTypeScriptType(behavior.output.success)
       : 'void';
     
     lines.push(`export type ${behavior.name.name}Fn = (${inputParams}) => Promise<${outputType}>;`);
@@ -168,17 +177,43 @@ function generateTypeDefinition(def: TypeDefinition): string {
       ).join('; ');
       return `{ ${fields} }`;
     case 'ListType':
-      return `${generateTypeDefinition(def.elementType)}[]`;
+      return `${generateTypeDefinition(def.element)}[]`;
     case 'MapType':
-      return `Record<${generateTypeDefinition(def.keyType)}, ${generateTypeDefinition(def.valueType)}>`;
+      return `Record<${generateTypeDefinition(def.key)}, ${generateTypeDefinition(def.value)}>`;
     case 'OptionalType':
       return `${generateTypeDefinition(def.inner)} | null`;
     case 'UnionType':
-      return def.types.map(t => generateTypeDefinition(t)).join(' | ');
+      return def.variants.map(v => `'${v.name.name}'`).join(' | ');
     case 'ReferenceType':
-      return def.name.name;
+      return def.name.parts.map(p => p.name).join('.');
     case 'ConstrainedType':
       return generateTypeDefinition(def.base);
+    default:
+      return 'unknown';
+  }
+}
+
+/**
+ * Extract type name from TypeDefinition
+ */
+function getTypeName(typeDef: TypeDefinition | undefined): string {
+  if (!typeDef) return 'unknown';
+  
+  switch (typeDef.kind) {
+    case 'PrimitiveType':
+      return typeDef.name;
+    case 'ReferenceType':
+      return typeDef.name.parts.map(p => p.name).join('.');
+    case 'EnumType':
+    case 'StructType':
+    case 'ListType':
+    case 'MapType':
+    case 'OptionalType':
+    case 'UnionType':
+    case 'ConstrainedType':
+      // For complex types in schema references, we need a simple name
+      // This is a limitation - in practice these should be defined as separate types
+      return generateTypeDefinition(typeDef);
     default:
       return 'unknown';
   }
@@ -212,7 +247,7 @@ function mapToTypeScriptType(typeRef: TypeDefinition | { name: string } | undefi
   }
   
   // Handle simple name reference
-  if ('name' in typeRef) {
+  if ('name' in typeRef && typeof typeRef.name === 'string') {
     const name = typeRef.name;
     const primitiveMap: Record<string, string> = {
       'String': 'string',
@@ -256,7 +291,7 @@ function generateRust(domain: DomainDeclaration): string {
     
     if (entity.fields) {
       for (const field of entity.fields) {
-        const rustType = mapToRustType(field.type?.name ?? 'unknown', field.optional);
+        const rustType = mapToRustType(getTypeName(field.type), field.optional);
         lines.push(`    pub ${toSnakeCase(field.name.name)}: ${rustType},`);
       }
     }
@@ -267,10 +302,10 @@ function generateRust(domain: DomainDeclaration): string {
   
   // Generate traits for behaviors
   for (const behavior of domain.behaviors) {
-    const inputs = behavior.inputs?.map(i => 
-      `${toSnakeCase(i.name.name)}: ${mapToRustType(i.type?.name ?? 'unknown', false)}`
+    const inputs = behavior.input?.fields?.map(i => 
+      `${toSnakeCase(i.name.name)}: ${mapToRustType(getTypeName(i.type), false)}`
     ).join(', ') ?? '';
-    const outputType = mapToRustType(behavior.output?.name ?? '()', false);
+    const outputType = mapToRustType(getTypeName(behavior.output?.success), false);
     
     lines.push(`pub trait ${behavior.name.name}Handler {`);
     lines.push(`    fn ${toSnakeCase(behavior.name.name)}(&self, ${inputs}) -> Result<${outputType}, Box<dyn std::error::Error>>;`);
@@ -304,7 +339,7 @@ function generateGo(domain: DomainDeclaration): string {
     
     if (entity.fields) {
       for (const field of entity.fields) {
-        const goType = mapToGoType(field.type?.name ?? 'unknown', field.optional);
+        const goType = mapToGoType(getTypeName(field.type), field.optional);
         const jsonTag = `json:"${field.name.name}"`;
         lines.push(`\t${toPascalCase(field.name.name)} ${goType} \`${jsonTag}\``);
       }
@@ -316,10 +351,10 @@ function generateGo(domain: DomainDeclaration): string {
   
   // Generate interfaces for behaviors
   for (const behavior of domain.behaviors) {
-    const inputType = behavior.inputs?.length === 1 
-      ? mapToGoType(behavior.inputs[0].type?.name ?? 'interface{}', false)
+    const inputType = behavior.input?.fields?.length === 1 
+      ? mapToGoType(getTypeName(behavior.input.fields[0].type), false)
       : 'interface{}';
-    const outputType = mapToGoType(behavior.output?.name ?? 'interface{}', false);
+    const outputType = mapToGoType(getTypeName(behavior.output?.success), false);
     
     lines.push(`type ${behavior.name.name}Handler interface {`);
     lines.push(`\t${behavior.name.name}(input ${inputType}) (${outputType}, error)`);
@@ -339,7 +374,7 @@ function generateOpenAPI(domain: DomainDeclaration): string {
     info: {
       title: `${domain.name.name} API`,
       version: '1.0.0',
-      description: domain.description ?? `API specification for ${domain.name.name}`,
+      description: `API specification for ${domain.name.name}`,
     },
     paths: {},
     components: {
@@ -356,7 +391,7 @@ function generateOpenAPI(domain: DomainDeclaration): string {
     
     if (entity.fields) {
       for (const field of entity.fields) {
-        properties[field.name.name] = mapToOpenAPIType(field.type?.name ?? 'string');
+        properties[field.name.name] = mapToOpenAPIType(getTypeName(field.type));
         if (!field.optional) {
           required.push(field.name.name);
         }
@@ -379,12 +414,12 @@ function generateOpenAPI(domain: DomainDeclaration): string {
       post: {
         operationId: behavior.name.name,
         summary: behavior.name.name,
-        requestBody: behavior.inputs?.length ? {
+        requestBody: behavior.input?.fields?.length ? {
           required: true,
           content: {
             'application/json': {
-              schema: behavior.inputs.length === 1
-                ? { '$ref': `#/components/schemas/${behavior.inputs[0].type?.name}` }
+              schema: behavior.input.fields.length === 1
+                ? { '$ref': `#/components/schemas/${getTypeName(behavior.input.fields[0].type)}` }
                 : { type: 'object' },
             },
           },
@@ -394,7 +429,7 @@ function generateOpenAPI(domain: DomainDeclaration): string {
             description: 'Success',
             content: behavior.output ? {
               'application/json': {
-                schema: { '$ref': `#/components/schemas/${behavior.output.name}` },
+                schema: { '$ref': `#/components/schemas/${getTypeName(behavior.output.success)}` },
               },
             } : undefined,
           },
@@ -610,7 +645,7 @@ export async function gen(target: string, file: string, options: GenOptions = {}
           files.push({ path: fullPath, content: file.content, target: normalizedTarget });
         }
         
-        emitSpan.setAttribute('isl.codegen.output_bytes', generatedFiles.reduce((sum, f) => sum + f.content.length, 0));
+        emitSpan.setAttribute('isl.codegen.output_bytes', generatedFiles.reduce((sum: number, f: GeneratedFile) => sum + f.content.length, 0));
         emitSpan.setAttribute('isl.codegen.file_count', generatedFiles.length);
         return;
       }
@@ -665,7 +700,10 @@ export async function gen(target: string, file: string, options: GenOptions = {}
     });
     
     const duration = Date.now() - startTime;
-    spinner?.succeed(`Generated ${relative(process.cwd(), outputPath)} (${duration}ms)`);
+    
+    // Use the last generated file path for success message, or a generic message
+    const lastGeneratedPath = files.length > 0 ? files[files.length - 1].path : `${outputDir}`;
+    spinner?.succeed(`Generated ${relative(process.cwd(), lastGeneratedPath)} (${duration}ms)`);
     
     return {
       success: true,

@@ -1,12 +1,23 @@
 # ISL Parser Status
 
+## Compatibility Table (post–Grammar Sheriff)
+
+| Check | Status |
+|-------|--------|
+| Versioning syntax accepted | Yes — `#islVersion "0.x"` and `islVersion "0.x"` before `domain` |
+| Peggy parity tests | Green — file-based parity runs; one inline fixture skipped (output/errors block gap) |
+| Integration suite parses | 48+ .isl files pass (49 tested, 30 explicitly skipped with reasons in `SKIP_FIXTURES`) |
+
+**Intentionally invalid / unsupported fixtures** (in explicit skip list with test comment):  
+See `packages/parser/tests/integration.test.ts` → `SKIP_FIXTURES`. Reasons: `ui_blueprint`, alternate import syntax, `format:` constraint, enum/error block variants, postcondition syntax variants, etc. Documented in `FIXTURE_SKIP_TODO.md`.
+
 ## Current Coverage
 
-- **All Tests**: 414 passed, 21 skipped (100% pass rate)
+- **All Tests**: 860+ passed, 14 skipped (100% pass rate for non-skipped)
 - **Unit Tests**: All passing
 - **Regression Tests**: 14/14 passing (100%)
 - **Fuzz Tests**: 100/100 passing (100%)
-- **Integration Tests**: 2/2 tested files pass (149 files skipped - use unsupported syntax)
+- **Integration Tests**: 49 tested, 49 passed; 30 explicitly skipped (known incompat)
 
 ## Supported Syntax
 

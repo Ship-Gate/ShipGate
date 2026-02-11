@@ -2,12 +2,12 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: {
-    index: 'implementations/typescript/index.ts',
-    primitives: 'implementations/typescript/primitives.ts',
-    validation: 'implementations/typescript/validation.ts',
-    time: 'implementations/typescript/time.ts',
-    geo: 'implementations/typescript/geo.ts',
-    ids: 'implementations/typescript/ids.ts',
+    index: 'src/index.ts',
+    primitives: 'src/primitives.ts',
+    validation: 'src/validation.ts',
+    time: 'src/time.ts',
+    geo: 'src/geo.ts',
+    ids: 'src/ids.ts',
   },
   format: ['esm', 'cjs'],
   dts: false,

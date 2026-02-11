@@ -45,6 +45,10 @@ Shipgate 1.0.0 is the first stable release of **Shipgate** — stop AI from ship
 
 ---
 
+## Production build and quarantine (1.0)
+
+- **Production build:** `pnpm build:production` runs build on all packages except experimental, internal, and **quarantine** sets. As of 1.0, quarantine includes: codegen-tests, isl-verify, isl-verify-pipeline, isl-healer, claims-verifier, test-generator, mock-detector, solver-z3-wasm, stdlib-observability, stdlib-ai, stdlib-idempotency, verifier-formal, codegen-jvm, semantic-analysis, **isl-discovery** (parser types resolution), **verifier-temporal** (build clean race). These are not published in 1.0; fix and un-quarantine in a later release.
+
 ## What’s Explicitly NOT Included / Experimental
 
 The following are **excluded from the default production build** (see `experimental.json` and `scripts/run-production.ts`). They are **not** part of the 1.0 promise:

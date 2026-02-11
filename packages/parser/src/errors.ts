@@ -53,6 +53,11 @@ const ISL_KEYWORDS = [
   'use', 'imports', 'from', 'lifecycle', 'actors', 'description', 'when', 'retriable',
   'retry_after', 'eventually', 'always', 'within', 'never', 'immediately',
   'requires', 'rate_limit', 'compliance', 'given', 'then', 'inject',
+  // Full-stack keywords
+  'api', 'endpoint', 'storage', 'workflow', 'event', 'handler', 'screen', 'config',
+  'middleware', 'auth', 'params', 'headers', 'body', 'engine', 'table', 'indexes',
+  'form', 'component', 'navigation', 'env', 'secret', 'emits', 'subscribes',
+  'step', 'parallel', 'await', 'retry', 'rollback', 'submit', 'layout',
 ];
 
 /**

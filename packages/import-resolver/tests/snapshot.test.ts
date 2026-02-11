@@ -18,7 +18,8 @@ domain Main {
   version: "1.0.0"
 
   imports {
-    User, Email from "./types.isl"
+    User from "./types.isl"
+    Email from "./types.isl"
     CreateUser from "./behaviors.isl"
   }
 

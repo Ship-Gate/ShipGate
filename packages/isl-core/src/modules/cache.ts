@@ -32,6 +32,9 @@ interface CacheEntry {
 
   /** Last access time */
   lastAccessedAt: number;
+
+  /** Monotonic order of last access (get or set); used for LRU eviction */
+  accessOrder: number;
 }
 
 /**
@@ -88,6 +91,8 @@ export class ASTCache {
   private cache: Map<ModuleId, CacheEntry> = new Map();
   private options: Required<ASTCacheOptions>;
   private stats = { hits: 0, misses: 0, invalidations: 0 };
+  /** Monotonic counter for access order; ensures LRU is unambiguous when timestamps coincide */
+  private accessCounter = 0;
 
   constructor(options: ASTCacheOptions = {}) {
     this.options = {
@@ -128,9 +133,10 @@ export class ASTCache {
       return null;
     }
 
-    // Update access stats
+    // Update access stats and recency for LRU
     entry.accessCount++;
     entry.lastAccessedAt = Date.now();
+    entry.accessOrder = ++this.accessCounter;
 
     this.stats.hits++;
     return entry.ast;
@@ -177,6 +183,7 @@ export class ASTCache {
       cachedAt: Date.now(),
       accessCount: 0,
       lastAccessedAt: Date.now(),
+      accessOrder: ++this.accessCounter,
     });
   }
 
@@ -319,21 +326,21 @@ export class ASTCache {
   }
 
   /**
-   * Evict the least recently used entry.
+   * Evict the least recently used entry (by access order; get and set both refresh).
    */
   private evictLRU(): void {
-    let oldestKey: ModuleId | null = null;
-    let oldestTime = Infinity;
+    let lruKey: ModuleId | null = null;
+    let minOrder = Infinity;
 
     for (const [id, entry] of this.cache) {
-      if (entry.lastAccessedAt < oldestTime) {
-        oldestTime = entry.lastAccessedAt;
-        oldestKey = id;
+      if (entry.accessOrder < minOrder) {
+        minOrder = entry.accessOrder;
+        lruKey = id;
       }
     }
 
-    if (oldestKey) {
-      this.cache.delete(oldestKey);
+    if (lruKey) {
+      this.cache.delete(lruKey);
       this.stats.invalidations++;
     }
   }

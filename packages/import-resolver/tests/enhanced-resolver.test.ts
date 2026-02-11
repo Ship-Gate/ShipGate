@@ -300,7 +300,8 @@ describe('Enhanced Import Resolver', () => {
           domain Main {
             version: "1.0.0"
             imports {
-              User, Order from "./types"
+              User from "./types"
+              Order from "./types"
             }
           }
         `,
@@ -311,8 +312,6 @@ describe('Enhanced Import Resolver', () => {
               User from "./user.isl"
               Order from "./order.isl"
             }
-            entity User { id: UUID }
-            entity Order { id: UUID }
           }
         `,
         'types/user.isl': `

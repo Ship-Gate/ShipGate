@@ -453,6 +453,7 @@ export const SEMANTIC_RULES: SemanticRule[] = [
         /redact\s*\(/,
         /redactPii\s*\(/,
         /maskPii\s*\(/,
+        /maskEmail\s*\(/,
         /sanitize\s*\(/,
         /sanitizeLogs?\s*\(/,
         /safeError\s*\(/,

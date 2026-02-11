@@ -527,6 +527,12 @@ export class ImportResolver {
       return true;
     }
 
+    // Bare file path (e.g. "types.isl") must be relative
+    const hasIslExtension = this.options.extensions.some(ext => importPath.endsWith(ext));
+    if (hasIslExtension && !importPath.startsWith('./') && !importPath.startsWith('../')) {
+      return false;
+    }
+
     // TS path alias
     if (this.pathAliases && matchesPathAlias(importPath, this.pathAliases)) {
       return true;

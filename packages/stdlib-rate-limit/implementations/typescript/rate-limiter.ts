@@ -69,7 +69,7 @@ export class RateLimiter {
         return this.createAllowResult(input, Infinity);
       }
 
-      const config = this.getConfig(input.configName);
+      const config = this.getConfigOrDefault(input.configName);
       if (!config) {
         throw new Error(`Rate limit config not found: ${input.configName}`);
       }
@@ -129,7 +129,7 @@ export class RateLimiter {
    */
   async increment(input: IncrementInput): Promise<IncrementResult> {
     try {
-      const config = this.getConfig(input.configName);
+      const config = this.getConfigOrDefault(input.configName);
       if (!config) {
         throw new Error(`Rate limit config not found: ${input.configName}`);
       }
@@ -168,14 +168,36 @@ export class RateLimiter {
    */
   async checkAndIncrement(input: CheckInput): Promise<CheckResult> {
     const checkResult = await this.check(input);
-    
+
     if (checkResult.allowed) {
-      await this.increment({
+      const incResult = await this.increment({
         key: input.key,
         identifierType: input.identifierType,
         configName: input.configName,
         amount: input.weight ?? 1,
       });
+      return {
+        ...checkResult,
+        remaining: incResult.remaining,
+      };
+    }
+
+    if (checkResult.action === RateLimitAction.DENY) {
+      const config = this.getConfigOrDefault(input.configName);
+      if (config) {
+        const violation: Violation = {
+          id: randomUUID(),
+          key: input.key,
+          identifierType: input.identifierType,
+          configName: config.name,
+          timestamp: new Date(),
+          requestCount: config.limit + 1,
+          limit: config.limit,
+          actionTaken: RateLimitAction.DENY,
+        };
+        await this.storage.recordViolation(violation);
+        this.options.onViolation?.(violation);
+      }
     }
 
     return checkResult;
@@ -190,7 +212,7 @@ export class RateLimiter {
     isBlocked: boolean;
     blockExpiresAt?: Date;
   }> {
-    const config = this.getConfig(input.configName);
+    const config = this.getConfigOrDefault(input.configName);
     if (!config) {
       throw new Error(`Rate limit config not found: ${input.configName}`);
     }
@@ -327,9 +349,16 @@ export class RateLimiter {
   }
 
   /**
-   * Get a config by name
+   * Get a config by name (returns undefined if name not found; use listConfigs for default)
    */
   getConfig(name: string): RateLimitConfig | undefined {
+    return this.configs.get(name);
+  }
+
+  /**
+   * Get config by name, falling back to default config when not found
+   */
+  getConfigOrDefault(name: string): RateLimitConfig | undefined {
     return this.configs.get(name) ?? this.configs.get(this.options.defaultConfig);
   }
 
@@ -460,9 +489,8 @@ export class RateLimiter {
   }
 
   private createAllowResult(input: CheckInput, remaining: number): CheckResult {
-    const configName = input.configName ?? this.options.defaultConfig;
-    const config = this.getConfig(configName);
-    
+    const config = this.getConfigOrDefault(input.configName ?? this.options.defaultConfig);
+
     return {
       action: RateLimitAction.ALLOW,
       allowed: true,
@@ -470,7 +498,7 @@ export class RateLimiter {
       limit: config?.limit ?? Infinity,
       resetAt: new Date(Date.now() + (config?.windowMs ?? 60000)),
       bucketKey: this.options.keyGenerator(input),
-      configName,
+      configName: config?.name ?? this.options.defaultConfig,
     };
   }
 

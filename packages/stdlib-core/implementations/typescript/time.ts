@@ -194,15 +194,19 @@ export const DATE_PATTERNS = {
   ISO_TIME: /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,9})?$/,
   ISO_DATETIME: /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,9})?(?:Z|[+-](?:0[0-9]|1[0-4]):[0-5][0-9])$/,
   UTC_OFFSET: /^[+-](?:0[0-9]|1[0-4]):[0-5][0-9]$/,
-  CRON: /^(\*|([0-5]?\d)([-\/][0-5]?\d)*)\s+(\*|([01]?\d|2[0-3])([-\/]([01]?\d|2[0-3]))*)\s+(\*|([1-9]|[12]\d|3[01])([-\/]([1-9]|[12]\d|3[01]))*)\s+(\*|([1-9]|1[0-2])([-\/]([1-9]|1[0-2]))*)\s+(\*|[0-6]([-\/][0-6])*)$/,
+  CRON: /^(\*(\/\d+)?|([0-5]?\d)([-\/][0-5]?\d)*)\s+(\*(\/\d+)?|([01]?\d|2[0-3])([-\/]([01]?\d|2[0-3]))*)\s+(\*(\/\d+)?|([1-9]|[12]\d|3[01])([-\/]([1-9]|[12]\d|3[01]))*)\s+(\*(\/\d+)?|([1-9]|1[0-2])([-\/]([1-9]|1[0-2]))*)\s+(\*(\/\d+)?|[0-6]([-\/][0-6])*)$/,
 } as const;
 
 export function isValidISODate(value: string): boolean {
   if (!DATE_PATTERNS.ISO_DATE.test(value)) {
     return false;
   }
-  const date = new Date(value);
-  return !isNaN(date.getTime());
+  const date = new Date(value + 'T00:00:00Z');
+  if (isNaN(date.getTime())) return false;
+  const parts = value.split('-').map(Number);
+  const [y, m, d] = parts;
+  if (y === undefined || m === undefined || d === undefined) return false;
+  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
 }
 
 export function isValidISOTime(value: string): boolean {

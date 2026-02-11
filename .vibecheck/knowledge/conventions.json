@@ -11,8 +11,7 @@
     {
       "category": "error-handling",
       "rules": [
-        "Always handle async errors with try/catch",
-        "Use custom error classes for domain errors"
+        "Always handle async errors with try/catch"
       ]
     }
   ]

@@ -219,7 +219,7 @@ describe('Credit Card Validation', () => {
   test('isValidCreditCard validates format and checksum', () => {
     expect(isValidCreditCard('4111111111111111')).toBe(true);
     expect(isValidCreditCard('4111-1111-1111-1111')).toBe(false); // Has dashes
-    expect(isValidCreditCard('411111111111111')).toBe(true); // 15 digits (Amex)
+    expect(isValidCreditCard('340000000000009')).toBe(true); // 15 digits (Amex, valid Luhn)
   });
 });
 

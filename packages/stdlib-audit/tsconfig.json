@@ -2,7 +2,6 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./implementations/typescript",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -16,6 +15,7 @@
     "lib": ["ES2022"]
   },
   "include": [
+    "src/**/*.ts",
     "implementations/typescript/**/*.ts"
   ],
   "exclude": [

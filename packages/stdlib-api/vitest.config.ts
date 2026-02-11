@@ -12,5 +12,8 @@ export default defineConfig({
       exclude: ['src/**/*.d.ts'],
     },
     testTimeout: 10000,
+    alias: {
+      '@isl-lang/stdlib-core': new URL('../stdlib-core/src/index.ts', import.meta.url).pathname,
+    },
   },
 });

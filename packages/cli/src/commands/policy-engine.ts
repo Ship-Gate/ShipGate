@@ -113,7 +113,7 @@ async function discoverFiles(
 // Claim Extraction (lightweight, pattern-based)
 // ============================================================================
 
-import type { Claim, Evidence } from '@isl-lang/firewall';
+import type { Claim, Evidence } from '@isl-lang/isl-firewall';
 
 function extractClaims(files: PolicyFileInput[], baseDir: string): Claim[] {
   const claims: Claim[] = [];

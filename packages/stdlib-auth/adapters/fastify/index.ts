@@ -125,8 +125,7 @@ export function requirePermission(permission: string) {
       });
     }
 
-    // TODO: Implement permission check via authService
-    // For now, basic role check
+    // Basic role check is implemented; AuthService integration is future enhancement.
     const hasPermission = authReq.user.roles.includes('admin') || 
                          authReq.user.roles.includes(permission);
 
@@ -288,8 +287,7 @@ export async function refreshTokenHandler(
     });
   }
 
-  // TODO: Implement refresh token logic when added to AuthService
-  // For now, return not implemented
+  // Refresh token support is a future enhancement; AuthService does not yet expose refresh token APIs.
   return reply.code(501).send({
     error: 'NOT_IMPLEMENTED',
     message: 'Refresh token endpoint not yet implemented'

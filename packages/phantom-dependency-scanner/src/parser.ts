@@ -42,8 +42,9 @@ export function parseImports(source: string, filePath: string): ParsedImport[] {
         const specifier = match[2] ?? match[1]!; // Use second group if available, otherwise first
         let symbols: string[] | undefined;
 
-        // Extract symbols from named imports
-        if (match[1] && match[1].includes('{')) {
+        // Extract symbols from named imports (braced list) or single default
+        // Use trimmed line to detect braced form: content inside {} never contains '{'
+        if (match[1] && trimmed.includes('{')) {
           const symbolStr = match[1].replace(/[{}]/g, '').trim();
           symbols = symbolStr
             .split(',')

@@ -21,6 +21,14 @@ describe('Workspace Detection', () => {
     expect(workspaceInfo.isPnpmWorkspace).toBe(false);
   });
 
+  it('should not detect workspace when packages/ exists but no pnpm-workspace.yaml', async () => {
+    const projectRoot = path.join(fixturesDir, 'non-workspace-with-packages');
+    const workspaceInfo = await detectWorkspace(projectRoot);
+
+    expect(workspaceInfo.isPnpmWorkspace).toBe(false);
+    expect(workspaceInfo.workspacePackages.length).toBe(0);
+  });
+
   it('should check if package is workspace package', async () => {
     const projectRoot = path.join(fixturesDir, 'workspace-project');
     const workspaceInfo = await detectWorkspace(projectRoot);

@@ -104,15 +104,16 @@ describe('Event Hashing', () => {
   describe('verifyEventChain', () => {
     it('should verify valid chain', () => {
       const event1 = createTestEvent('event-1');
+      event1.timestamp = new Date('2024-01-01T00:00:00Z');
       event1.hash = hashEvent(event1);
 
       const event2 = createTestEvent('event-2', event1.hash);
-      event2.hash = hashEvent(event2);
       event2.timestamp = new Date('2024-01-01T00:01:00Z');
+      event2.hash = hashEvent(event2);
 
       const event3 = createTestEvent('event-3', event2.hash);
-      event3.hash = hashEvent(event3);
       event3.timestamp = new Date('2024-01-01T00:02:00Z');
+      event3.hash = hashEvent(event3);
 
       const result = verifyEventChain([event1, event2, event3]);
 
@@ -123,11 +124,12 @@ describe('Event Hashing', () => {
 
     it('should detect broken chain', () => {
       const event1 = createTestEvent('event-1');
+      event1.timestamp = new Date('2024-01-01T00:00:00Z');
       event1.hash = hashEvent(event1);
 
       const event2 = createTestEvent('event-2', 'wrong-hash');
-      event2.hash = hashEvent(event2);
       event2.timestamp = new Date('2024-01-01T00:01:00Z');
+      event2.hash = hashEvent(event2);
 
       const result = verifyEventChain([event1, event2]);
 

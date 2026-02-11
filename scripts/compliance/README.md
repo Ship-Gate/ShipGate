@@ -14,9 +14,12 @@ pnpm compliance:verify-licenses
 ```
 
 **Checks:**
-- All `package.json` files contain `"license": "MIT"`
+- All `package.json` files contain `"license": "MIT"` (excluding test fixtures)
 - Core packages include LICENSE files
 - Reports any missing or non-MIT licenses
+
+**Excluded from scope (not shipping in 1.0):**
+- Paths under `tests/fixtures/`, `fixtures/`, or `__fixtures__/` — test-only package trees used by e.g. phantom-dependency-scanner; excluded to avoid requiring fake licenses on fixture data.
 
 **Exit Codes:**
 - `0` - All packages compliant

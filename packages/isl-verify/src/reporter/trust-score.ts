@@ -4,7 +4,7 @@
  * Calculates trust scores for implementations based on verification results.
  */
 
-import type { TestResult, TestDetail } from '../runner/test-runner.js';
+import type { TestResult, TestDetail } from '../runner/test-runner';
 
 export interface TrustScore {
   overall: number;           // 0-100

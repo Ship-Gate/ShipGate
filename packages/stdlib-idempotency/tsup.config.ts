@@ -13,6 +13,7 @@ export default defineConfig({
     'middleware/fastify': 'implementations/typescript/middleware/fastify.ts',
   },
   format: ['cjs', 'esm'],
+  tsconfig: 'tsconfig.json',
   dts: true,
   clean: true,
   sourcemap: true,

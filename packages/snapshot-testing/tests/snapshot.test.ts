@@ -265,16 +265,16 @@ domain Auth {
 
     it('should parse entities', () => {
       const elements = parseIslElements(sampleISL);
-      const entity = elements.find(e => e.type === 'entity');
-      expect(entity).toBeDefined();
-      expect(entity?.name).toBe('User');
+      const domain = elements.find(e => e.type === 'domain');
+      expect(domain).toBeDefined();
+      expect(domain?.content).toContain('entity User');
     });
 
     it('should parse behaviors', () => {
       const elements = parseIslElements(sampleISL);
-      const behavior = elements.find(e => e.type === 'behavior');
-      expect(behavior).toBeDefined();
-      expect(behavior?.name).toBe('Login');
+      const domain = elements.find(e => e.type === 'domain');
+      expect(domain).toBeDefined();
+      expect(domain?.content).toContain('behavior Login');
     });
   });
 

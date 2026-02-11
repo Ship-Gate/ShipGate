@@ -14,6 +14,9 @@
  *   isl lint <file>            # Lint ISL file for best practices
  */
 
+/** Injected at build time from package.json */
+declare const __SHIPGATE_CLI_VERSION__: string | undefined;
+
 import { Command, InvalidArgumentError } from 'commander';
 import chalk from 'chalk';
 import path from 'path';
@@ -39,6 +42,8 @@ import {
   interactiveInit, printInteractiveInitResult,
   parse, printParseResult, getParseExitCode,
   gen, printGenResult, getGenExitCode, VALID_TARGETS,
+  genAI,
+  configSet, configGet, configList, configPath, printConfigResult, getConfigExitCode,
   repl,
   fmt, printFmtResult, getFmtExitCode,
   lint, printLintResult, getLintExitCode,
@@ -75,16 +80,17 @@ import {
   bind, printBindResult, getBindExitCode,
   truthpackBuild, printTruthpackBuildResult, getTruthpackBuildExitCode,
   truthpackDiff, printTruthpackDiffResult, getTruthpackDiffExitCode,
+  shipCommand,
 } from './commands/index.js';
 import type { FailOnLevel } from './commands/verify.js';
 import { TeamConfigError } from '@isl-lang/core';
 import { initTracing, shutdownTracing, getCurrentTraceId, withSpan, ISL_ATTR, type TracedSpan } from '@isl-lang/observability';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Version
+// Version (injected at build time from package.json)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const VERSION = '1.0.0';
+const VERSION = typeof __SHIPGATE_CLI_VERSION__ !== 'undefined' ? __SHIPGATE_CLI_VERSION__ : '1.0.0';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Available Commands (for suggestions)
@@ -254,12 +260,49 @@ program
 
 program
   .command('gen <target> <file>')
-  .description(`Generate code from ISL spec\n  Targets: ${VALID_TARGETS.join(', ')}\n  Examples:\n    isl gen python auth.isl    # Generate Python Pydantic models\n    isl gen graphql api.isl    # Generate GraphQL schema and resolvers`)
+  .description(`Generate code from ISL spec\n  Targets: ${VALID_TARGETS.join(', ')}\n  Examples:\n    isl gen python auth.isl    # Generate Python Pydantic models\n    isl gen graphql api.isl    # Generate GraphQL schema and resolvers\n    isl gen ts auth.isl --ai   # AI-powered implementation generation`)
   .option('-o, --output <dir>', 'Output directory')
   .option('--force', 'Overwrite existing files')
+  .option('--ai', 'Use AI (LLM) to generate real implementations instead of type stubs')
+  .option('--provider <provider>', 'AI provider: anthropic or openai (default: anthropic)')
+  .option('--model <model>', 'AI model override')
+  .option('--include-tests', 'Include tests in AI-generated output')
+  .option('--include-validation', 'Include validation logic in AI-generated output')
+  .option('--style <style>', 'Code style: functional, oop, or hybrid (default: hybrid)')
   .action(async (target: string, file: string, options) => {
     await withSpan('cli.gen', { attributes: { [ISL_ATTR.COMMAND]: 'gen', [ISL_ATTR.CODEGEN_TARGET]: target, [ISL_ATTR.CODEGEN_SOURCE]: file } }, async (genSpan: TracedSpan) => {
     const opts = program.opts();
+
+    // AI-powered generation
+    if (options.ai) {
+      const result = await genAI(target, file, {
+        output: options.output,
+        force: options.force,
+        verbose: opts.verbose,
+        format: opts.format,
+        provider: options.provider,
+        model: options.model,
+        includeTests: options.includeTests,
+        includeValidation: options.includeValidation,
+        style: options.style,
+      });
+
+      genSpan.setAttribute('isl.ai.enabled', true);
+      genSpan.setAttribute(ISL_ATTR.DURATION_MS, result.duration);
+      genSpan.setAttribute(ISL_ATTR.EXIT_CODE, getGenExitCode(result));
+      if (result.files.length > 0) {
+        genSpan.setAttribute(ISL_ATTR.CODEGEN_OUTPUT, result.files.map(f => f.path).join(','));
+      }
+      if (!result.success) {
+        genSpan.setError(result.errors.join('; '));
+      }
+
+      printGenResult(result, { format: opts.format });
+      process.exit(getGenExitCode(result));
+      return;
+    }
+
+    // Template-based generation (default)
     const result = await gen(target, file, {
       output: options.output,
       force: options.force,
@@ -279,6 +322,54 @@ program
     printGenResult(result, { format: opts.format });
     process.exit(getGenExitCode(result));
     }); // end withSpan('cli.gen')
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Config Command (API keys, AI settings)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const configCmd = program
+  .command('config')
+  .description('Manage ISL CLI configuration (API keys, AI settings)\n  Examples:\n    isl config set ai.provider anthropic\n    isl config set ai.apiKey ${ANTHROPIC_API_KEY}\n    isl config list');
+
+configCmd
+  .command('set <key> <value>')
+  .description('Set a configuration value')
+  .action(async (key: string, value: string) => {
+    const opts = program.opts();
+    const result = await configSet(key, value);
+    printConfigResult(result, { format: opts.format });
+    process.exit(getConfigExitCode(result));
+  });
+
+configCmd
+  .command('get <key>')
+  .description('Get a configuration value')
+  .action(async (key: string) => {
+    const opts = program.opts();
+    const result = await configGet(key);
+    printConfigResult(result, { format: opts.format });
+    process.exit(getConfigExitCode(result));
+  });
+
+configCmd
+  .command('list')
+  .description('List all configuration values')
+  .action(async () => {
+    const opts = program.opts();
+    const result = await configList();
+    printConfigResult(result, { format: opts.format });
+    process.exit(getConfigExitCode(result));
+  });
+
+configCmd
+  .command('path')
+  .description('Show config file path')
+  .action(async () => {
+    const opts = program.opts();
+    const result = await configPath();
+    printConfigResult(result, { format: opts.format });
+    process.exit(getConfigExitCode(result));
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1796,6 +1887,38 @@ program
     
     printDemoResult(result, { verbose: opts.verbose });
     process.exit(getDemoExitCode(result));
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ship Command — Full-stack app generation
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('ship')
+  .description('Generate a complete, runnable full-stack application from an ISL spec\n\n' +
+    '  One spec → one command → running app.\n' +
+    '  Generates API routes, Prisma schema, runtime contracts, Docker, and more.\n\n' +
+    '  Example: isl ship specs/fullstack-example.isl --stack express+prisma+postgres')
+  .argument('<file>', 'ISL specification file')
+  .option('-o, --output <dir>', 'Output directory')
+  .option('-s, --stack <stack>', 'Technology stack (e.g. express+prisma+postgres)', 'express+prisma+postgres')
+  .option('-n, --name <name>', 'Project name (default: domain name)')
+  .option('--force', 'Overwrite existing files')
+  .option('--no-docker', 'Skip Docker file generation')
+  .option('--no-contracts', 'Skip runtime contract enforcement')
+  .action(async (file: string, options: Record<string, unknown>) => {
+    const opts = program.opts();
+    const result = await shipCommand(file, {
+      output: options.output as string | undefined,
+      stack: options.stack as string | undefined,
+      name: options.name as string | undefined,
+      force: options.force as boolean | undefined,
+      noDocker: options.docker === false,
+      noContracts: options.contracts === false,
+      verbose: opts.verbose as boolean | undefined,
+      format: opts.format as 'pretty' | 'json' | 'quiet' | undefined,
+    });
+    process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
   });
 
 const shipgateCommand = program

@@ -1,17 +1,17 @@
 {
   "name": "shipgate",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "ShipGate — Stop AI from shipping fake features. Define what your code should do. We enforce it.",
   "author": "ISL Team",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/guardiavault-oss/ISL-LANG.git",
+    "url": "git+https://github.com/Ship-Gate/ShipGate.git",
     "directory": "packages/cli"
   },
   "homepage": "https://shipgate.dev",
   "bugs": {
-    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+    "url": "https://github.com/Ship-Gate/ShipGate/issues"
   },
   "keywords": [
     "shipgate",
@@ -38,11 +38,12 @@
     "node": ">=18"
   },
   "bin": {
-    "shipgate": "./dist/cli.cjs",
-    "isl": "./dist/cli.cjs"
+    "shipgate": "dist/cli.cjs",
+    "isl": "dist/cli.cjs"
   },
   "files": [
-    "dist/",
+    "dist",
+    "dist/cli.cjs",
     "README.md",
     "LICENSE",
     "scripts/postinstall.js"
@@ -59,6 +60,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:smoke": "vitest run tests/smoke.test.ts",
+    "test:e2e-consumer": "vitest run tests/e2e-published.test.ts",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "clean": "rimraf dist",
@@ -75,9 +77,12 @@
     "@opentelemetry/semantic-conventions": "^1.22.0"
   },
   "devDependencies": {
+    "@isl-lang/ai-copilot": "workspace:*",
     "@isl-lang/autofix": "workspace:*",
     "@isl-lang/build-runner": "workspace:*",
     "@isl-lang/codegen-openapi": "workspace:*",
+    "@isl-lang/codegen-python": "workspace:*",
+    "@isl-lang/codegen-graphql": "workspace:*",
     "@isl-lang/core": "workspace:*",
     "@isl-lang/evaluator": "workspace:*",
     "@isl-lang/gate": "workspace:*",

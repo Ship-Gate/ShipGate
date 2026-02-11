@@ -10,9 +10,9 @@ import type {
   ExecutionContext,
   Pattern,
   MatchCase,
-} from './types';
-import { extendEnvironment, lookupBinding } from './environment';
-import { InterpreterError, TypeMismatchError, UnhandledEffectError } from './types';
+} from './types.js';
+import { extendEnvironment, lookupBinding } from './environment.js';
+import { InterpreterError, TypeMismatchError, UnhandledEffectError } from './types.js';
 
 // ============================================================================
 // EXPRESSION EVALUATOR

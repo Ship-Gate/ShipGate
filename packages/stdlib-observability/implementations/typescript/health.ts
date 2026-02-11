@@ -163,49 +163,9 @@ export function createTcpHealthCheck(
 // ============================================================================
 
 export function createCustomHealthCheck(
-  check: () => Promise<boolean> | boolean,
-  options: {
-    timeout?: Duration;
-    healthyMessage?: string;
-    unhealthyMessage?: string;
-  } = {}
+  checkFn: () => Promise<HealthCheckResult>
 ): HealthCheckFunction {
-  const {
-    timeout = 5000,
-    healthyMessage = 'Check passed',
-    unhealthyMessage = 'Check failed',
-  } = options;
-
-  return async (): Promise<HealthCheckResult> => {
-    const startTime = Date.now();
-
-    try {
-      const timeoutPromise = new Promise<boolean>((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout')), timeout);
-      });
-
-      const checkPromise = Promise.resolve(check());
-      const checkResult = await Promise.race([checkPromise, timeoutPromise]);
-
-      const durationMs = Date.now() - startTime;
-
-      return {
-        status: checkResult ? HealthStatus.HEALTHY : HealthStatus.UNHEALTHY,
-        message: checkResult ? healthyMessage : unhealthyMessage,
-        durationMs,
-      };
-    } catch (error) {
-      const durationMs = Date.now() - startTime;
-      const message =
-        error instanceof Error ? error.message : 'Health check failed';
-
-      return {
-        status: HealthStatus.UNHEALTHY,
-        message,
-        durationMs,
-      };
-    }
-  };
+  return checkFn;
 }
 
 // ============================================================================
@@ -225,32 +185,28 @@ export class HealthCheckRegistry {
 
   register(
     name: string,
-    fn: HealthCheckFunction,
-    options: {
+    config: {
+      type: HealthCheckType;
       description?: string;
-      type?: HealthCheckType;
-      endpoint?: string;
       timeout?: Duration;
       interval?: Duration;
-      unhealthyThreshold?: number;
-      healthyThreshold?: number;
-    } = {}
+      checkFn: HealthCheckFunction;
+    }
   ): void {
-    const config: HealthCheck = {
+    const healthCheck: HealthCheck = {
       name,
-      description: options.description,
-      type: options.type ?? HealthCheckType.CUSTOM,
-      endpoint: options.endpoint,
-      timeout: options.timeout ?? 5000,
-      interval: options.interval ?? 30000,
+      description: config.description,
+      type: config.type,
+      timeout: config.timeout ?? 5000,
+      interval: config.interval ?? 30000,
       status: HealthStatus.UNKNOWN,
-      unhealthyThreshold: options.unhealthyThreshold ?? 3,
-      healthyThreshold: options.healthyThreshold ?? 2,
+      unhealthyThreshold: 3,
+      healthyThreshold: 2,
       consecutiveFailures: 0,
       consecutiveSuccesses: 0,
     };
 
-    this.checks.set(name, { config, fn });
+    this.checks.set(name, { config: healthCheck, fn: config.checkFn });
   }
 
   registerHttp(
@@ -272,24 +228,31 @@ export class HealthCheckRegistry {
       timeout: options.timeout,
     });
 
-    this.register(name, fn, {
-      ...options,
+    this.register(name, {
       type: HealthCheckType.HTTP,
-      endpoint,
+      description: options.description,
+      timeout: options.timeout,
+      interval: options.interval,
+      checkFn: fn,
     });
   }
 
   registerCustom(
     name: string,
-    check: () => Promise<boolean> | boolean,
+    checkFn: () => Promise<HealthCheckResult>,
     options: {
       description?: string;
       timeout?: Duration;
       interval?: Duration;
     } = {}
   ): void {
-    const fn = createCustomHealthCheck(check, { timeout: options.timeout });
-    this.register(name, fn, { ...options, type: HealthCheckType.CUSTOM });
+    this.register(name, {
+      type: HealthCheckType.CUSTOM,
+      description: options.description,
+      timeout: options.timeout,
+      interval: options.interval,
+      checkFn,
+    });
   }
 
   unregister(name: string): boolean {
@@ -452,6 +415,11 @@ export class HealthCheckRegistry {
 
     return status;
   }
+
+  clear(): void {
+    this.checks.clear();
+    this.stopBackgroundChecks();
+  }
 }
 
 // ============================================================================
@@ -469,18 +437,28 @@ export class ProbeRegistry {
 
   registerLivenessCheck(
     name: string,
-    fn: HealthCheckFunction,
-    options?: Parameters<HealthCheckRegistry['register']>[2]
+    config: {
+      type: HealthCheckType;
+      description?: string;
+      timeout?: Duration;
+      interval?: Duration;
+      checkFn: HealthCheckFunction;
+    }
   ): void {
-    this.liveness.register(name, fn, options);
+    this.liveness.register(name, config);
   }
 
   registerReadinessCheck(
     name: string,
-    fn: HealthCheckFunction,
-    options?: Parameters<HealthCheckRegistry['register']>[2]
+    config: {
+      type: HealthCheckType;
+      description?: string;
+      timeout?: Duration;
+      interval?: Duration;
+      checkFn: HealthCheckFunction;
+    }
   ): void {
-    this.readiness.register(name, fn, options);
+    this.readiness.register(name, config);
   }
 
   async checkLiveness(): Promise<Result<CheckHealthOutput>> {

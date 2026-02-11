@@ -343,6 +343,23 @@ describe('ASTCache', () => {
       expect(smallCache.has(id2)).toBe(false);
       expect(smallCache.has(id3)).toBe(true);
     });
+
+    it('get() refreshes recency so LRU evicts the non-accessed entry', () => {
+      const smallCache = createCache({ maxSize: 2 });
+      const id1 = createModuleId('/a.isl');
+      const id2 = createModuleId('/b.isl');
+      const id3 = createModuleId('/c.isl');
+
+      smallCache.set(id1, mockAst, 1);
+      smallCache.set(id2, mockAst, 2);
+      smallCache.get(id2, 2); // refresh id2, id1 is now LRU
+
+      smallCache.set(id3, mockAst, 3); // should evict id1
+
+      expect(smallCache.has(id1)).toBe(false);
+      expect(smallCache.has(id2)).toBe(true);
+      expect(smallCache.has(id3)).toBe(true);
+    });
   });
 
   describe('statistics', () => {

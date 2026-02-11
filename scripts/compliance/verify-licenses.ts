@@ -30,6 +30,16 @@ interface VerificationResult {
   missingLicenseFile: PackageInfo[];
 }
 
+/** Paths that are test fixtures or non-shipping; excluded from license compliance. */
+function isExcludedFromCompliance(packageJsonPath: string): boolean {
+  const normalized = packageJsonPath.replace(/\\/g, '/');
+  return (
+    normalized.includes('/tests/fixtures/') ||
+    normalized.includes('/fixtures/') ||
+    normalized.includes('/__fixtures__/')
+  );
+}
+
 function findPackages(): string[] {
   const packageJsonFiles: string[] = [];
 
@@ -50,7 +60,9 @@ function findPackages(): string[] {
           if (stat.isDirectory()) {
             walkDir(fullPath);
           } else if (entry === 'package.json') {
-            packageJsonFiles.push(fullPath);
+            if (!isExcludedFromCompliance(fullPath)) {
+              packageJsonFiles.push(fullPath);
+            }
           }
         } catch (error) {
           // Skip files we can't access

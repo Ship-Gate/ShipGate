@@ -32,6 +32,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js",
+      "require": "./dist/client.cjs"
+    },
     "./http": {
       "types": "./dist/http.d.ts",
       "import": "./dist/http.js",
@@ -66,6 +71,9 @@
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",
     "test:unit": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@isl-lang/stdlib-core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

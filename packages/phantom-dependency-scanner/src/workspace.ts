@@ -84,24 +84,19 @@ export async function detectWorkspace(projectRoot: string): Promise<WorkspaceInf
 }
 
 /**
- * Find workspace root by looking for pnpm-workspace.yaml
+ * Find workspace root only if pnpm-workspace.yaml exists at the scan root.
+ * Does not walk up to parent directories, so a plain repo or a subpackage
+ * is not falsely detected as a workspace when a parent monorepo has a config.
  */
 async function findWorkspaceRoot(startDir: string): Promise<string | null> {
-  let current = path.resolve(startDir);
-
-  while (current !== path.dirname(current)) {
-    const workspaceYamlPath = path.join(current, 'pnpm-workspace.yaml');
-    try {
-      await fs.access(workspaceYamlPath);
-      return current;
-    } catch {
-      // Continue searching
-    }
-
-    current = path.dirname(current);
+  const projectRoot = path.resolve(startDir);
+  const workspaceYamlPath = path.join(projectRoot, 'pnpm-workspace.yaml');
+  try {
+    await fs.access(workspaceYamlPath);
+    return projectRoot;
+  } catch {
+    return null;
   }
-
-  return null;
 }
 
 /**

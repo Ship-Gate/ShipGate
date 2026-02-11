@@ -1,4 +1,5 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
@@ -15,8 +16,17 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@isl-lang/codegen-python": ["../../packages/codegen-python/dist"],
+      "@isl-lang/codegen-graphql": ["../../packages/codegen-graphql/dist"],
+      "@isl-lang/core": ["../../packages/core/dist"],
+      "@isl-lang/parser": ["../../packages/parser/dist"],
+      "@isl-lang/isl-core": ["../../packages/isl-core/dist"],
+      "@isl-lang/isl-verify": ["../../packages/isl-verify/dist"],
+      "@isl-lang/isl-firewall": ["../../packages/isl-firewall/dist"]
+    }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/modules.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

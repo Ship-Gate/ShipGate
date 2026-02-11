@@ -26,7 +26,7 @@ describe('Database Reality Verifier', () => {
       expect(schema.tables.find((t) => t.name === 'Comment')).toBeDefined();
 
       const userTable = schema.tables.find((t) => t.name === 'User');
-      expect(userTable?.columns).toHaveLength(5);
+      expect(userTable?.columns).toHaveLength(6);
       expect(userTable?.columns.find((c) => c.name === 'email')).toBeDefined();
       expect(userTable?.columns.find((c) => c.name === 'name')).toBeDefined();
     });

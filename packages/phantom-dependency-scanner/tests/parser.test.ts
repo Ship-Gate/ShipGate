@@ -52,4 +52,28 @@ describe('Import Parser', () => {
 
     expect(imports.length).toBe(3);
   });
+
+  it('should parse list with extra spaces and trailing comma', () => {
+    const source = `import { debounce , throttle , } from 'lodash';`;
+    const imports = parseImports(source, 'test.ts');
+
+    expect(imports.length).toBe(1);
+    expect(imports[0]?.symbols).toEqual(['debounce', 'throttle']);
+  });
+
+  it('should parse aliased symbols and use final name', () => {
+    const source = `import { debounce as deb, throttle as th } from 'lodash';`;
+    const imports = parseImports(source, 'test.ts');
+
+    expect(imports.length).toBe(1);
+    expect(imports[0]?.symbols).toEqual(['deb', 'th']);
+  });
+
+  it('should parse single named import', () => {
+    const source = `import { debounce } from 'lodash';`;
+    const imports = parseImports(source, 'test.ts');
+
+    expect(imports.length).toBe(1);
+    expect(imports[0]?.symbols).toEqual(['debounce']);
+  });
 });

@@ -273,19 +273,19 @@ describe('intent/no-pii-logging', () => {
       it('should flag logging token', () => {
         const code = `logger.info('Token:', accessToken);`;
         const violations = checkCode(code);
-        expect(violations.some(v => v.message.includes('token'))).toBe(true);
+        expect(violations.some(v => /token/i.test(v.message))).toBe(true);
       });
 
       it('should flag logging secret', () => {
         const code = `console.log('Secret:', apiSecret);`;
         const violations = checkCode(code);
-        expect(violations.some(v => v.message.includes('secret'))).toBe(true);
+        expect(violations.some(v => /secret/i.test(v.message))).toBe(true);
       });
 
       it('should flag logging credential', () => {
         const code = `console.log('Credentials:', credential);`;
         const violations = checkCode(code);
-        expect(violations.some(v => v.message.includes('credential'))).toBe(true);
+        expect(violations.some(v => /credential/i.test(v.message))).toBe(true);
       });
 
       it('should flag logging apiKey', () => {
@@ -297,7 +297,7 @@ describe('intent/no-pii-logging', () => {
       it('should flag logging authorization', () => {
         const code = `console.log('Auth:', authorization);`;
         const violations = checkCode(code);
-        expect(violations.some(v => v.message.includes('authorization'))).toBe(true);
+        expect(violations.some(v => /authorization|auth/i.test(v.message))).toBe(true);
       });
     });
 
@@ -306,19 +306,19 @@ describe('intent/no-pii-logging', () => {
       it('should flag logging email', () => {
         const code = `console.log('Email:', email);`;
         const violations = checkCode(code);
-        expect(violations.some(v => v.message.includes('email'))).toBe(true);
+        expect(violations.some(v => /email/i.test(v.message))).toBe(true);
       });
 
       it('should flag logging SSN', () => {
         const code = `console.log('SSN:', ssn);`;
         const violations = checkCode(code);
-        expect(violations.some(v => v.message.includes('ssn'))).toBe(true);
+        expect(violations.some(v => /ssn/i.test(v.message))).toBe(true);
       });
 
       it('should flag logging phone', () => {
         const code = `console.log('Phone:', phoneNumber);`;
         const violations = checkCode(code);
-        expect(violations.some(v => v.message.includes('phone'))).toBe(true);
+        expect(violations.some(v => /phone/i.test(v.message))).toBe(true);
       });
 
       it('should flag logging dateOfBirth', () => {
@@ -330,7 +330,7 @@ describe('intent/no-pii-logging', () => {
       it('should flag logging passport', () => {
         const code = `console.log('Passport:', passportNumber);`;
         const violations = checkCode(code);
-        expect(violations.some(v => v.message.includes('passport'))).toBe(true);
+        expect(violations.some(v => /passport/i.test(v.message))).toBe(true);
       });
     });
 
@@ -345,7 +345,7 @@ describe('intent/no-pii-logging', () => {
       it('should flag logging CVV', () => {
         const code = `console.log('CVV:', cvv);`;
         const violations = checkCode(code);
-        expect(violations.some(v => v.message.includes('cvv'))).toBe(true);
+        expect(violations.some(v => /cvv/i.test(v.message))).toBe(true);
       });
 
       it('should flag logging bankAccount', () => {
@@ -514,7 +514,7 @@ describe('intent/no-pii-logging', () => {
       `;
       const violations = checkCode(code);
       expect(violations.filter(v => 
-        v.message.includes('audit') && v.message.includes('email')
+        /audit/i.test(v.message) && /email/i.test(v.message)
       ).length).toBe(0);
     });
   });
@@ -572,7 +572,7 @@ describe('intent/no-pii-logging', () => {
       const code = `console.log('Password:', password);`;
       const violations = checkCode(code);
       expect(violations.some(v => 
-        v.message.includes('password') && v.severity === 'critical'
+        /password/i.test(v.message) && v.severity === 'critical'
       )).toBe(true);
     });
 
@@ -580,7 +580,7 @@ describe('intent/no-pii-logging', () => {
       const code = `console.log('Token:', accessToken);`;
       const violations = checkCode(code);
       expect(violations.some(v => 
-        v.message.includes('token') && v.severity === 'critical'
+        /token/i.test(v.message) && v.severity === 'critical'
       )).toBe(true);
     });
 
@@ -588,7 +588,7 @@ describe('intent/no-pii-logging', () => {
       const code = `logger.info('Email:', email);`;
       const violations = checkCode(code);
       expect(violations.some(v => 
-        v.message.includes('email') && v.severity === 'high'
+        /email/i.test(v.message) && v.severity === 'high'
       )).toBe(true);
     });
 

@@ -60,7 +60,8 @@ export function matchSymbols(
 }
 
 /**
- * Match by exact or similar name
+ * Match by exact or similar name.
+ * PascalCase ISL (e.g. CreateUser, ExactMatch) matches camelCase code (createUser, exactMatch) via lowercase comparison.
  */
 function matchByName(islSymbol: ISLSymbol, codeSymbol: CodeSymbol): {
   codeSymbol: CodeSymbol;
@@ -74,7 +75,7 @@ function matchByName(islSymbol: ISLSymbol, codeSymbol: CodeSymbol): {
   const islName = islSymbol.name.toLowerCase();
   const codeName = codeSymbol.name.toLowerCase();
 
-  // Exact match
+  // Exact match (case-insensitive so ExactMatch ↔ exactMatch)
   if (islName === codeName) {
     confidence = 0.95;
     evidence.push({

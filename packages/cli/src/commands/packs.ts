@@ -315,11 +315,9 @@ async function verifyPack(packPath: string, manifest: PackManifest): Promise<{ v
     }
   }
   
-  // TODO: Verify signature if present
-  if (manifest.signature) {
-    // Signature verification would go here
-  }
-  
+  // Signature verification is not supported yet; manifest.signature is ignored.
+  // Integrity is enforced via file checksums and size checks above. See README-PACKS.md for future plans.
+
   return {
     valid: errors.length === 0,
     errors,

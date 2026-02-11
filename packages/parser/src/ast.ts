@@ -39,6 +39,14 @@ export interface Domain extends ASTNode {
   views: View[];
   scenarios: ScenarioBlock[];
   chaos: ChaosBlock[];
+  // Full-stack constructs
+  apis: ApiBlock[];
+  storage: StorageDecl[];
+  workflows: WorkflowDecl[];
+  events: EventDecl[];
+  handlers: HandlerDecl[];
+  screens: ScreenDecl[];
+  config?: ConfigBlock;
 }
 
 /** use stdlib-auth [@ "1.0.0"] [as alias]; module is identifier or string path */
@@ -697,6 +705,191 @@ export type BehaviorDeclaration = Behavior;
 export type FieldDeclaration = Field;
 
 /** @deprecated Use TypeDeclaration */
+// ============================================================================
+// API / ENDPOINTS
+// ============================================================================
+
+export interface ApiBlock extends ASTNode {
+  kind: 'ApiBlock';
+  name?: Identifier;
+  basePath?: StringLiteral;
+  endpoints: EndpointDecl[];
+  middleware: Expression[];
+}
+
+export interface EndpointDecl extends ASTNode {
+  kind: 'EndpointDecl';
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'WEBSOCKET';
+  path: StringLiteral;
+  behavior?: Identifier;
+  description?: StringLiteral;
+  auth?: Expression;
+  middleware: Expression[];
+  params: Field[];
+  headers: Field[];
+  body?: TypeDefinition;
+  response?: TypeDefinition;
+}
+
+// ============================================================================
+// STORAGE / PERSISTENCE
+// ============================================================================
+
+export interface StorageDecl extends ASTNode {
+  kind: 'StorageDecl';
+  entity: Identifier;
+  engine: StringLiteral;
+  table?: StringLiteral;
+  collection?: StringLiteral;
+  indexes: IndexDecl[];
+  migrations: MigrationDecl[];
+  seeds: SeedDecl[];
+}
+
+export interface IndexDecl extends ASTNode {
+  kind: 'IndexDecl';
+  fields: Identifier[];
+  unique: boolean;
+  name?: StringLiteral;
+}
+
+export interface MigrationDecl extends ASTNode {
+  kind: 'MigrationDecl';
+  version: StringLiteral;
+  description?: StringLiteral;
+  up: Expression[];
+  down: Expression[];
+}
+
+export interface SeedDecl extends ASTNode {
+  kind: 'SeedDecl';
+  name: StringLiteral;
+  data: Expression[];
+}
+
+// ============================================================================
+// WORKFLOWS
+// ============================================================================
+
+export interface WorkflowDecl extends ASTNode {
+  kind: 'WorkflowDecl';
+  name: Identifier;
+  description?: StringLiteral;
+  steps: WorkflowStep[];
+  onFailure?: Expression;
+  timeout?: DurationLiteral;
+}
+
+export interface WorkflowStep extends ASTNode {
+  kind: 'WorkflowStep';
+  order: number;
+  name?: Identifier;
+  action: Expression;
+  parallel?: boolean;
+  timeout?: DurationLiteral;
+  retry?: RetrySpec;
+  rollback?: Expression;
+  awaitCondition?: Expression;
+  awaitTimeout?: DurationLiteral;
+}
+
+export interface RetrySpec extends ASTNode {
+  kind: 'RetrySpec';
+  maxAttempts: number;
+  delay?: DurationLiteral;
+  backoff?: 'linear' | 'exponential';
+}
+
+// ============================================================================
+// EVENTS
+// ============================================================================
+
+export interface EventDecl extends ASTNode {
+  kind: 'EventDecl';
+  name: Identifier;
+  description?: StringLiteral;
+  payload: Field[];
+}
+
+export interface EmitsDecl extends ASTNode {
+  kind: 'EmitsDecl';
+  event: Identifier;
+  condition?: Expression;
+}
+
+export interface HandlerDecl extends ASTNode {
+  kind: 'HandlerDecl';
+  event: Identifier;
+  name?: Identifier;
+  action: Expression;
+  async: boolean;
+}
+
+// ============================================================================
+// SCREENS / UI
+// ============================================================================
+
+export interface ScreenDecl extends ASTNode {
+  kind: 'ScreenDecl';
+  name: Identifier;
+  description?: StringLiteral;
+  route?: StringLiteral;
+  layout?: Identifier;
+  components: ComponentDecl[];
+  navigation: NavigationDecl[];
+}
+
+export interface ComponentDecl extends ASTNode {
+  kind: 'ComponentDecl';
+  name: Identifier;
+  type: 'form' | 'list' | 'detail' | 'chart' | 'custom';
+  behavior?: Identifier;
+  entity?: Identifier;
+  fields: ScreenFieldDecl[];
+  submit?: StringLiteral;
+  actions: Expression[];
+}
+
+export interface ScreenFieldDecl extends ASTNode {
+  kind: 'ScreenFieldDecl';
+  name: Identifier;
+  inputType?: StringLiteral;
+  label?: StringLiteral;
+  validation?: Expression;
+  required?: boolean;
+}
+
+export interface NavigationDecl extends ASTNode {
+  kind: 'NavigationDecl';
+  label: StringLiteral;
+  target: Identifier | StringLiteral;
+  icon?: StringLiteral;
+}
+
+// ============================================================================
+// CONFIG / ENVIRONMENT
+// ============================================================================
+
+export interface ConfigBlock extends ASTNode {
+  kind: 'ConfigBlock';
+  name?: Identifier;
+  entries: ConfigEntry[];
+}
+
+export interface ConfigEntry extends ASTNode {
+  kind: 'ConfigEntry';
+  key: Identifier;
+  type?: TypeDefinition;
+  source: 'env' | 'secret' | 'default';
+  reference: StringLiteral;
+  defaultValue?: Expression;
+  required: boolean;
+}
+
+// ============================================================================
+// DEPRECATED ALIASES
+// ============================================================================
+
 export type EnumDeclaration = TypeDeclaration;
 
 /** @deprecated Use Expression instead */
