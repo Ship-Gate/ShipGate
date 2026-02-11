@@ -62,7 +62,12 @@ export function registerScanCommands(
         const err = out.error || 'Unknown error';
         outputChannel.appendLine(`[Shipgate] Scan failed: ${err}`);
         if (out.stderr) outputChannel.appendLine(out.stderr);
-        vscode.window.showErrorMessage(`Shipgate scan failed: ${err}`);
+        const hint =
+          /command not found|Cannot find module|ENOENT|not found/i.test(err) ||
+          (out.stderr && /command not found|Cannot find module|ENOENT/i.test(out.stderr))
+            ? ' Build the CLI first: pnpm --filter shipgate build'
+            : '';
+        vscode.window.showErrorMessage(`Shipgate scan failed: ${err}${hint}`);
         statusBar?.setVerdict('Idle');
       }
     }),
@@ -73,10 +78,12 @@ export function registerScanCommands(
         vscode.window.showWarningMessage('Shipgate: Open a workspace folder first.');
         return;
       }
+      const config = getShipgateConfig(root);
       ShipgateReportPanel.createOrShow(
         context.extensionUri,
         state.lastResult,
-        root
+        root,
+        config.configPath || null
       );
     }),
 

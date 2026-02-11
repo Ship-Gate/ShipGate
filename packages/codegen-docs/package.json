@@ -2,11 +2,12 @@
   "name": "@isl-lang/codegen-docs",
   "version": "0.1.0",
   "description": "Generate beautiful documentation from ISL specifications",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",
@@ -20,11 +21,7 @@
     "tsup": "^8.0.1",
     "rimraf": "^5.0.5"
   },
-  "keywords": [
-    "isl",
-    "documentation",
-    "codegen"
-  ],
+  "keywords": ["isl", "documentation", "codegen"],
   "license": "MIT",
   "author": "mevla",
   "repository": {
@@ -46,9 +43,5 @@
     }
   },
   "sideEffects": false,
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ]
+  "files": ["dist", "README.md", "LICENSE"]
 }

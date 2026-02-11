@@ -33,7 +33,7 @@ function Root() {
 
 const root = (
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Root />
     </BrowserRouter>
   </React.StrictMode>

@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "description": "Generate executable Jest/Vitest tests from ISL behaviors and scenarios",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "lint": "eslint src/**/*.ts",
@@ -15,13 +16,7 @@
     "test:unit": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage"
   },
-  "keywords": [
-    "isl",
-    "test-generation",
-    "jest",
-    "vitest",
-    "codegen"
-  ],
+  "keywords": ["isl", "test-generation", "jest", "vitest", "codegen"],
   "author": "mevla",
   "license": "MIT",
   "dependencies": {
@@ -54,9 +49,5 @@
     }
   },
   "sideEffects": false,
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ]
+  "files": ["dist", "README.md", "LICENSE"]
 }

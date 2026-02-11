@@ -66,6 +66,152 @@
   }
 }
 
+/* Landing page: hero, section-heading, soft-card (from ContentCard.css) */
+@import '../components/landing/ContentCard.css';
+
+/* --------------- Section heading: readable text + stroke + glow --------------- */
+.section-heading {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  font-size: clamp(44px, 4vw, 70px);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  margin: 0;
+  padding-top: 72px;
+  position: relative;
+  width: min(60%, 720px);
+  text-align: right;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: white;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+  text-shadow:
+    0 0 20px rgba(59, 130, 246, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.section-heading::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -10px;
+  width: 62%;
+  height: 10px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 70% 50%, rgba(59, 130, 246, 0.25), transparent);
+  filter: blur(2px);
+  opacity: 1;
+}
+
+/* Problem section: center heading and content */
+#problem .section-heading,
+.problem-content .section-heading {
+  width: 100%;
+  max-width: 720px;
+  text-align: center;
+  padding-top: 0;
+}
+#problem .section-heading::after,
+.problem-content .section-heading::after {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: 40%;
+}
+
+/* Hero 3D parallax */
+.hero-wrapper--parallax {
+  perspective: 1400px;
+  overflow: hidden;
+}
+.hero-content--3d {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* --------------- Hero: animated stripes + scaling title --------------- */
+.hero-wrapper {
+  --stripe-color: #fff;
+  width: 100%;
+  position: relative;
+  min-height: 100vh;
+}
+
+.hero-wrapper .hero {
+  width: 100%;
+  min-height: 100vh;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  place-content: center;
+  place-items: center;
+  --stripes: repeating-linear-gradient(
+    100deg,
+    var(--stripe-color) 0%,
+    var(--stripe-color) 7%,
+    transparent 10%,
+    transparent 12%,
+    var(--stripe-color) 16%
+  );
+  --rainbow: repeating-linear-gradient(
+    100deg,
+    #60a5fa 10%,
+    #e879f9 15%,
+    #60a5fa 20%,
+    #5eead4 25%,
+    #60a5fa 30%
+  );
+  background-image: var(--stripes), var(--rainbow);
+  background-size: 300%, 200%;
+  background-position: 50% 50%, 50% 50%;
+  filter: blur(10px) invert(100%) opacity(0.45) saturate(0.85);
+  mask-image: radial-gradient(ellipse 120% 80% at 80% 10%, black 15%, transparent 55%);
+}
+
+.hero-marquee {
+  position: absolute;
+  bottom: 12vh;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 5;
+}
+
+.hero-wrapper .hero-content {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  place-content: center;
+  place-items: center;
+  flex-flow: column;
+  gap: 4.5%;
+  text-align: center;
+  transform: translateY(-12vh);
+  color: white;
+}
+
+.hero-title-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05em;
+  line-height: 0.95;
+  padding: 0;
+  margin: 1px 0;
+}
+
+.hero-wrapper .h1--scalingSize {
+  font-size: clamp(2.5rem, 8vw + 2rem, 7rem);
+  position: relative;
+  font-weight: 700;
+  color: white;
+  padding: 0;
+}
+
 @layer utilities {
   /* Screen reader only - for skip links and accessibility */
   .sr-only {

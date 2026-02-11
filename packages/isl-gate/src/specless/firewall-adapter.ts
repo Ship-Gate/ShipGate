@@ -146,8 +146,9 @@ export const firewallHostCheck: SpeclessCheck = {
     try {
       const mod = await import(/* @vite-ignore */ '@isl-lang/firewall');
       const runHostScan = mod.runHostScan as (files: string[], opts: { projectRoot: string }) => Promise<ScanResult>;
+      const projectRoot = context.projectRoot ?? process.cwd();
       const result = await runHostScan([file], {
-        projectRoot: context.projectRoot,
+        projectRoot,
       });
 
       return scanResultToEvidence(result, 'firewall-host', hostCheckName);
@@ -174,8 +175,9 @@ export const firewallRealityGapCheck: SpeclessCheck = {
     try {
       const mod = await import(/* @vite-ignore */ '@isl-lang/firewall');
       const runRealityGapScan = mod.runRealityGapScan as (files: string[], opts: { projectRoot: string }) => Promise<ScanResult>;
+      const projectRoot = context.projectRoot ?? process.cwd();
       const result = await runRealityGapScan([file], {
-        projectRoot: context.projectRoot,
+        projectRoot,
       });
 
       return scanResultToEvidence(result, 'firewall-reality-gap', realityGapCheckName);

@@ -64,19 +64,19 @@ export async function runAuthoritativeGate(
       implSource = resolved.implSource;
     } catch (resolveError) {
       if (input.specOptional) {
-        // No valid spec: return SHIP with "no spec" reason so caller can rely on firewall-only path
+        // No valid spec and resolve failed: code is unverified — assign low baseline score
         const noSpecResult: AuthoritativeGateResult = {
-          verdict: 'SHIP',
-          exitCode: EXIT_CODES.SHIP,
-          score: 100,
-          confidence: 100,
-          summary: 'No spec provided; run unified gate or firewall for full check.',
+          verdict: 'NO_SHIP',
+          exitCode: EXIT_CODES.NO_SHIP,
+          score: 30,
+          confidence: 80,
+          summary: 'NO_SHIP: No spec provided and implementation could not be resolved; code is unverified.',
           aggregation: {
             signals: [],
-            overallScore: 100,
-            tests: { total: 0, passed: 0, failed: 0, skipped: 0, passRate: 100 },
+            overallScore: 30,
+            tests: { total: 0, passed: 0, failed: 0, skipped: 0, passRate: 0 },
             findings: { critical: 0, high: 0, medium: 0, low: 0, total: 0 },
-            blockingIssues: [],
+            blockingIssues: ['No ISL spec and no specless checks available; code is unverified.'],
           },
           thresholds,
           evidence: {
@@ -89,8 +89,8 @@ export async function runAuthoritativeGate(
           },
           reasons: [{
             code: 'NO_SPEC',
-            message: 'No valid spec provided; use runUnifiedGate or firewall for security/policy checks.',
-            severity: 'info',
+            message: 'No ISL spec provided; code is unverified. Add an ISL spec or run isl-generate.',
+            severity: 'medium',
             source: 'verifier',
             blocking: false,
           }],
@@ -172,7 +172,7 @@ export async function runAuthoritativeGate(
     // ========================================================================
     // Step 8: Write evidence bundle (if requested)
     // ========================================================================
-    if (input.writeBundle !== false) {
+    if (input.writeBundle !== false && input.projectRoot) {
       const evidencePath = input.evidencePath ?? join(input.projectRoot, 'evidence');
       await writeBundle(evidencePath, result, specSource, implSource);
     }
@@ -245,16 +245,20 @@ async function resolveInputs(input: AuthoritativeGateInput): Promise<{
   }
 
   // Resolve implementation
-  if (existsSync(input.implementation)) {
-    const stats = await stat(input.implementation);
+  const impl = input.implementation;
+  if (impl == null || typeof impl !== 'string') {
+    throw new Error('Implementation path is required but was undefined or not a string');
+  }
+  if (existsSync(impl)) {
+    const stats = await stat(impl);
     if (stats.isDirectory()) {
-      implSource = await readDirectoryFiles(input.implementation);
+      implSource = await readDirectoryFiles(impl);
     } else {
-      implSource = await readFile(input.implementation, 'utf-8');
+      implSource = await readFile(impl, 'utf-8');
     }
   } else {
     // Assume it's source code
-    implSource = input.implementation;
+    implSource = impl;
   }
 
   return { specSource, implSource };
@@ -295,19 +299,19 @@ async function collectSpeclessSignals(
 ): Promise<VerificationSignal[]> {
   const signals: VerificationSignal[] = [];
 
-  // Informational: specless verification mode
+  // Informational: specless verification mode (no score — real checks provide scores)
   signals.push(
     createSignal(
       'static_analysis',
       true,
       'Specless verification: no ISL spec; running registered specless checks.',
-      { score: 100, blocking: false }
+      { blocking: false }
     )
   );
 
   // ── Run all registered specless checks ───────────────────────────────
   const gateContext: GateContext = {
-    projectRoot: input.projectRoot,
+    projectRoot: input.projectRoot ?? process.cwd(),
     implementation: implSource,
     specOptional: true,
   };
@@ -348,6 +352,20 @@ async function collectSpeclessSignals(
             ? [createFinding(findingId, severity, evidence.details, { blocking })]
             : [],
         }
+      )
+    );
+  }
+
+  // ── If no real checks produced results, mark as unverified ──────────
+  const realResults = speclessEvidence.filter(e => e.result !== 'skip');
+  if (realResults.length === 0) {
+    // No specless checks ran — code is unverified; assign a low baseline score
+    signals.push(
+      createSignal(
+        'static_analysis',
+        false,
+        'No ISL spec and no specless checks available; code is unverified.',
+        { score: 30, blocking: false }
       )
     );
   }
@@ -426,7 +444,7 @@ async function collectSignals(
   }
 
   // Optional: dependency audit (critical vulns = NO_SHIP)
-  if (input.dependencyAudit) {
+  if (input.dependencyAudit && input.projectRoot) {
     try {
       const auditSignal = await collectDependencyAuditSignal(input.projectRoot);
       signals.push(auditSignal);
@@ -529,6 +547,9 @@ async function collectVerifierSignal(specSource: string, implSource: string): Pr
 }
 
 async function collectDependencyAuditSignal(projectRoot: string): Promise<VerificationSignal> {
+  if (!projectRoot || typeof projectRoot !== 'string') {
+    return createBlockingSignal('dependency_audit', true, 'No project root; skip audit', { score: 100 });
+  }
   const { spawnSync } = await import('child_process');
   const { existsSync } = await import('fs');
   const { join } = await import('path');

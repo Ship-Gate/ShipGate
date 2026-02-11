@@ -14,7 +14,9 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { checkMoneyTransfer, checkPiiLogging, checkInputValidation } from './checker.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __dirname = typeof import.meta.url === 'string'
+  ? dirname(fileURLToPath(import.meta.url))
+  : process.cwd();
 
 const CYAN = '\x1b[36m';
 const RED = '\x1b[31m';

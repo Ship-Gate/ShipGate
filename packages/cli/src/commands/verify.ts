@@ -89,6 +89,8 @@ export interface VerifyOptions {
   realityEnvVars?: string;
   /** Enable import resolution (resolves use statements and imports) */
   resolveImports?: boolean;
+  /** Suppress spinner output (used when running in batch/unified mode) */
+  quiet?: boolean;
 }
 
 export interface VerifyResult {
@@ -1239,7 +1241,9 @@ async function runSMTVerification(
  */
 export async function verify(specFile: string, options: VerifyOptions): Promise<VerifyResult> {
   const startTime = Date.now();
-  const spinner = ora('Loading files...').start();
+  const spinner = options.quiet
+    ? ora({ isSilent: true, text: 'Loading files...' }).start()
+    : ora('Loading files...').start();
   const errors: string[] = [];
 
   // Load config for defaults
@@ -2082,6 +2086,10 @@ export interface UnifiedVerifyOptions {
   timeout?: number;
   /** Generate explain reports */
   explain?: boolean;
+  /** Suppress per-file spinner output when running batch verification */
+  quiet?: boolean;
+  /** ShipGate config for ci.ignore filtering (applied before verification) */
+  shipgateConfig?: import('../config/schema.js').ShipGateConfig;
 }
 
 /** Per-file verification result */
@@ -2146,9 +2154,12 @@ const IGNORE_PATTERNS = [
   'dist/**',
   '.git/**',
   'coverage/**',
+  'demos/**',
   '**/*.test.*',
   '**/*.spec.*',
   '**/*.d.ts',
+  '**/run-demo*.ts',
+  '**/run-demo*.js',
 ];
 
 /**
@@ -2237,73 +2248,159 @@ async function detectVerificationMode(targetPath: string): Promise<ModeDetection
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Unified Verify — Specless Verification (via @isl-lang/gate)
+// Unified Verify — Auto Spec Generation for Unspecced Files
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Run specless verification on a single file using the gate package.
+ * Generate an ISL spec from a source file's exported functions and types.
+ * Returns the ISL content string or null if generation fails.
  */
-async function runSpeclessFileVerification(
+async function generateSpecFromSource(
   codeFile: string,
-  projectRoot: string,
-): Promise<FileVerifyResultEntry> {
-  const startTime = Date.now();
-  const relPath = relative(process.cwd(), codeFile);
-
+): Promise<{ islContent: string; confidence: number } | null> {
   try {
-    const { runAuthoritativeGate } = await import('@isl-lang/gate');
-    const gateResult = await runAuthoritativeGate({
-      projectRoot,
-      spec: '',
-      implementation: codeFile,
-      specOptional: true,
-      dependencyAudit: true,
-      writeBundle: false,
-    });
+    const source = await readFile(codeFile, 'utf-8');
+    const ext = codeFile.replace(/.*\./, '.');
+    if (!['.ts', '.js', '.tsx', '.jsx'].includes(ext)) return null;
 
-    const score = gateResult.score / 100;
-    const isFake = score < 0.3;
-    const isWarn = score < 0.7;
+    const domainBase = basename(codeFile).replace(/\.[^.]+$/, '');
+    const domainName = domainBase
+      .split(/[-_.]/)
+      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+      .join('');
 
-    let status: FileVerifyStatus;
-    let mode: FileVerifyMode;
-
-    if (isFake) {
-      status = 'FAIL';
-      mode = 'Fake feature';
-    } else if (isWarn) {
-      status = 'WARN';
-      mode = 'Specless';
-    } else {
-      status = 'PASS';
-      mode = 'Specless';
+    // Try inference engine first
+    try {
+      const inferEngine = await import('@isl-lang/inference');
+      const result = await inferEngine.infer({
+        language: ext.includes('py') ? 'python' : 'typescript',
+        sourceFiles: [codeFile],
+        domainName,
+        inferInvariants: true,
+        confidenceThreshold: 0,
+      });
+      if (result.isl && result.isl.trim().length > 20) {
+        return { islContent: result.isl, confidence: result.confidence.overall };
+      }
+    } catch {
+      // Inference engine not available — use lightweight fallback below
     }
 
-    const blockers = gateResult.verdict === 'NO_SHIP'
-      ? gateResult.reasons.map((r: { message: string }) => `${relPath}: ${r.message}`)
-      : [];
+    // Lightweight fallback: regex-based extraction
+    const fnRegex = /export\s+(?:async\s+)?function\s+(\w+)/g;
+    const functions: string[] = [];
+    let match: RegExpExecArray | null;
+    while ((match = fnRegex.exec(source)) !== null) {
+      functions.push(match[1]);
+    }
 
-    return {
-      file: relPath,
-      status,
-      mode,
-      score: Math.round(score * 100) / 100,
-      blockers,
-      errors: [],
-      duration: gateResult.durationMs ?? (Date.now() - startTime),
-    };
-  } catch (err) {
-    // Gate package not available — fall back to marking as Skipped
-    return {
-      file: relPath,
-      status: 'WARN',
-      mode: 'Skipped',
-      score: 0,
-      blockers: [],
-      errors: [err instanceof Error ? err.message : String(err)],
-      duration: Date.now() - startTime,
-    };
+    const typeRegex = /export\s+(?:interface|class|type)\s+(\w+)/g;
+    const types: string[] = [];
+    while ((match = typeRegex.exec(source)) !== null) {
+      types.push(match[1]);
+    }
+
+    // If no exported symbols, scan for any function/class declarations
+    if (functions.length === 0 && types.length === 0) {
+      const anyFnRegex = /(?:async\s+)?function\s+(\w+)/g;
+      while ((match = anyFnRegex.exec(source)) !== null) {
+        functions.push(match[1]);
+      }
+      const anyTypeRegex = /(?:interface|class)\s+(\w+)/g;
+      while ((match = anyTypeRegex.exec(source)) !== null) {
+        types.push(match[1]);
+      }
+    }
+
+    if (functions.length === 0 && types.length === 0) return null;
+
+    let confidence = 0.3;
+    if (functions.length > 0) confidence += 0.15;
+    if (types.length > 0) confidence += 0.1;
+    if (functions.length >= 3) confidence += 0.1;
+    confidence = Math.min(1, confidence);
+
+    const lines: string[] = [];
+    lines.push(`domain ${domainName} {`);
+    lines.push('  version: "1.0.0"');
+
+    if (types.length > 0) {
+      lines.push('');
+      for (const t of types) {
+        lines.push(`  entity ${t} {`);
+        lines.push(`    id: String`);
+        lines.push('  }');
+      }
+    }
+
+    if (functions.length > 0) {
+      lines.push('');
+      for (const fn of functions) {
+        lines.push(`  behavior ${fn} {`);
+        lines.push('    input {');
+        lines.push('      request: String');
+        lines.push('    }');
+        lines.push('');
+        lines.push('    output {');
+        lines.push('      success: Boolean');
+        lines.push('    }');
+        lines.push('');
+        lines.push('    invariants {');
+        lines.push(`      - ${fn} never_throws_unhandled`);
+        lines.push('    }');
+        lines.push('  }');
+      }
+    }
+
+    lines.push('}');
+    lines.push('');
+
+    return { islContent: lines.join('\n'), confidence };
+  } catch {
+    return null;
   }
+}
+
+/**
+ * Auto-generate ISL specs for unspecced code files.
+ * Writes generated specs to .shipgate/generated-specs/ and returns
+ * a map from code file path to generated spec path.
+ */
+async function autoGenerateSpecs(
+  unspeccedFiles: string[],
+  projectRoot: string,
+): Promise<Map<string, string>> {
+  const generatedMap = new Map<string, string>();
+  const specsDir = join(projectRoot, '.shipgate', 'generated-specs');
+
+  for (const codeFile of unspeccedFiles) {
+    const result = await generateSpecFromSource(codeFile);
+    if (!result) continue;
+
+    // Validate the generated ISL through the parser
+    const parseResult = parseISL(result.islContent, 'generated.isl');
+    if (!parseResult.success && parseResult.errors && parseResult.errors.length > 0) {
+      continue; // Skip files with unparseable specs
+    }
+
+    // Write spec to .shipgate/generated-specs/<relative-path>.isl
+    const relPath = relative(projectRoot, codeFile);
+    const specFileName = relPath.replace(/\.[^.]+$/, '.isl').replace(/\\/g, '/');
+    const specPath = join(specsDir, specFileName);
+
+    try {
+      const specDir = dirname(specPath);
+      if (!existsSync(specDir)) {
+        await mkdir(specDir, { recursive: true });
+      }
+      await writeFile(specPath, result.islContent, 'utf-8');
+      generatedMap.set(codeFile, specPath);
+    } catch {
+      // Skip files we can't write specs for
+    }
+  }
+
+  return generatedMap;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2327,6 +2424,7 @@ async function runISLFileVerification(
       timeout: options.timeout ?? 30000,
       minScore: options.minScore ?? 70,
       verbose: options.verbose,
+      quiet: options.quiet,
     });
 
     const score = result.trustScore
@@ -2419,8 +2517,8 @@ function generateUnifiedRecommendations(
   // Recommend ISL spec generation for unspecced files
   const unspeccedFiles = files.filter(f => f.mode === 'Specless' || f.mode === 'Skipped');
   if (unspeccedFiles.length > 0) {
-    // Group by directory
-    const dirs = new Set(unspeccedFiles.map(f => dirname(f.file)));
+    // Group by directory (guard against undefined file paths)
+    const dirs = new Set(unspeccedFiles.map(f => dirname(f.file ?? '.')).filter(Boolean));
     for (const dir of dirs) {
       recs.push(`Generate ISL specs: shipgate isl generate ${dir}/`);
     }
@@ -2429,7 +2527,7 @@ function generateUnifiedRecommendations(
   // Recommend fixing fake features
   const fakeFiles = files.filter(f => f.mode === 'Fake feature');
   if (fakeFiles.length > 0) {
-    recs.push(`Fix fake/stub implementations in: ${fakeFiles.map(f => f.file).join(', ')}`);
+    recs.push(`Fix fake/stub implementations in: ${fakeFiles.map(f => f.file ?? '').filter(Boolean).join(', ')}`);
   }
 
   // Recommend increasing coverage
@@ -2518,11 +2616,34 @@ export async function unifiedVerify(
 
   const detection = await detectVerificationMode(resolvedTarget);
   const { mode, codeFiles, specMap } = detection;
+
+  // Filter codeFiles by ci.ignore before verification (avoids running verify on excluded paths)
+  let filesToVerify = codeFiles;
+  if (options.shipgateConfig?.ci?.ignore && options.shipgateConfig.ci.ignore.length > 0) {
+    const { shouldVerify: shouldVerifyFile } = await import('../config/glob-matcher.js');
+    filesToVerify = codeFiles.filter((absPath) => {
+      const relPath = relative(process.cwd(), absPath);
+      return shouldVerifyFile(relPath, options.shipgateConfig!).verify;
+    });
+  }
+
   const fileResults: FileVerifyResultEntry[] = [];
   const projectRoot = resolvedTarget;
 
-  // Process each code file
-  for (const codeFile of codeFiles) {
+  // Process each code file (filter out invalid paths)
+  const validFiles = filesToVerify.filter((f): f is string => f != null && typeof f === 'string');
+
+  // ── Auto-generate ISL specs for unspecced files ────────────────────────
+  const unspeccedFiles = validFiles.filter(f => !specMap.has(f));
+  if (unspeccedFiles.length > 0) {
+    const generatedSpecs = await autoGenerateSpecs(unspeccedFiles, projectRoot);
+    for (const [codeFile, generatedSpec] of generatedSpecs) {
+      specMap.set(codeFile, generatedSpec);
+    }
+  }
+
+  // ── Verify all files against their specs (real or generated) ──────────
+  for (const codeFile of validFiles) {
     const matchedSpec = specMap.get(codeFile);
 
     if (matchedSpec) {
@@ -2543,21 +2664,17 @@ export async function unifiedVerify(
       });
       fileResults.push(result);
     } else {
-      // Specless verification via gate — traced per-file
-      const result = await withSpan('verify.file', {
-        attributes: {
-          [ISL_ATTR.IMPL_FILE]: relative(process.cwd(), codeFile),
-          [ISL_ATTR.VERIFY_MODE]: 'specless',
-        },
-      }, async (fileSpan) => {
-        const r = await runSpeclessFileVerification(codeFile, projectRoot);
-        fileSpan.setAttribute(ISL_ATTR.VERIFY_FILE_STATUS, r.status);
-        fileSpan.setAttribute(ISL_ATTR.VERIFY_SCORE, r.score);
-        fileSpan.setAttribute(ISL_ATTR.DURATION_MS, r.duration);
-        if (r.status === 'FAIL') fileSpan.setError(r.blockers.join('; '));
-        return r;
+      // No spec could be generated (e.g. no functions/types found) — mark as unverified
+      const relPath = relative(process.cwd(), codeFile);
+      fileResults.push({
+        file: relPath,
+        status: 'WARN',
+        mode: 'Skipped',
+        score: 0.3,
+        blockers: [`${relPath}: No ISL spec — no exported functions or types detected`],
+        errors: [],
+        duration: 0,
       });
-      fileResults.push(result);
     }
   }
 

@@ -8,6 +8,41 @@ Phase 1.2 — Publish the Shipgate CLI and related packages to npm.
 2. **Login** — `npm login`
 3. **Build** — Full monorepo build must pass: `pnpm build`
 
+---
+
+## Publish EVERYTHING (full monorepo)
+
+To publish all ~80+ public packages in dependency order:
+
+```bash
+# 1. Login to npm
+npm login
+
+# 2. (Optional) Dry run — verify without publishing
+pnpm publish-packages -- --dry-run
+
+# 3. Full publish
+pnpm publish-packages
+
+# If you have 2FA enabled, pass your OTP (expires every ~30s):
+pnpm publish-packages -- --otp=123456
+
+# Or use an npm Automation token (recommended for 80+ packages):
+# Create at npmjs.com → Access Tokens → Generate → Automation (bypasses 2FA)
+export NPM_TOKEN=your_automation_token
+```
+
+This runs `scripts/publish.ts` which:
+- Verifies npm login
+- Builds all target packages (`pnpm turbo build`)
+- Publishes in dependency order (parser → core → gate → … → shipgate)
+- Skips private packages
+- Creates git tag
+
+**Note:** First run may take 30–60 minutes. Some packages may fail if they have build issues; the script continues and reports failures at the end.
+
+---
+
 ## Packages to Publish
 
 | Package | Location | Command |

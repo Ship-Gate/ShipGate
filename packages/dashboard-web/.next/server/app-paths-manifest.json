@@ -1,11 +1,18 @@
 {
   "/_not-found": "app/_not-found.js",
-  "/domains/[id]/page": "app/domains/[id]/page.js",
-  "/runs/page": "app/runs/page.js",
+  "/api/login/route": "app/api/login/route.js",
+  "/contact/page": "app/contact/page.js",
+  "/api/logout/route": "app/api/logout/route.js",
+  "/login/page": "app/login/page.js",
   "/page": "app/page.js",
   "/sitemap.xml/route": "app/sitemap.xml/route.js",
-  "/runs/[id]/page": "app/runs/[id]/page.js",
-  "/runs/upload/page": "app/runs/upload/page.js",
-  "/verifications/[id]/page": "app/verifications/[id]/page.js",
-  "/privacy/page": "app/privacy/page.js"
+  "/privacy/page": "app/privacy/page.js",
+  "/dashboard/domains/page": "app/dashboard/domains/page.js",
+  "/dashboard/domains/[id]/page": "app/dashboard/domains/[id]/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/dashboard/runs/page": "app/dashboard/runs/page.js",
+  "/dashboard/runs/[id]/page": "app/dashboard/runs/[id]/page.js",
+  "/dashboard/runs/upload/page": "app/dashboard/runs/upload/page.js",
+  "/dashboard/verifications/[id]/page": "app/dashboard/verifications/[id]/page.js",
+  "/dashboard/verifications/page": "app/dashboard/verifications/page.js"
 }

@@ -7,10 +7,7 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
-
-const execFileAsync = promisify(execFile);
+import { spawn } from 'child_process';
 
 /** Shape of a single violation from the CLI JSON output */
 interface VerifyViolation {
@@ -134,32 +131,78 @@ async function verifyWorkspace(outputChannel: vscode.OutputChannel): Promise<voi
 // CLI invocation
 // ---------------------------------------------------------------------------
 
+function runWithShell(
+  executable: string,
+  args: string[],
+  cwd: string,
+  timeoutMs: number
+): Promise<{ stdout: string; stderr: string; code: number | null }> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(executable, args, {
+      cwd,
+      shell: true,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, FORCE_COLOR: '0' },
+    });
+
+    let stdout = '';
+    let stderr = '';
+    proc.stdout?.on('data', (chunk: Buffer) => {
+      stdout += chunk.toString();
+    });
+    proc.stderr?.on('data', (chunk: Buffer) => {
+      stderr += chunk.toString();
+    });
+
+    const timer = setTimeout(() => {
+      proc.kill('SIGTERM');
+      reject(new Error('Verify timed out'));
+    }, timeoutMs);
+
+    proc.on('close', (code) => {
+      clearTimeout(timer);
+      resolve({ stdout, stderr, code });
+    });
+    proc.on('error', (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+  });
+}
+
 async function runVerify(
   targets: string[],
   outputChannel: vscode.OutputChannel
 ): Promise<VerifyOutput> {
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? process.cwd();
-  const args = ['verify', '--format', 'json', ...targets];
+  const verifyTargets = targets.length > 0 ? targets : ['.'];
+  const args = ['verify', '--format', 'json', ...verifyTargets];
+  const timeoutMs = 120_000;
 
-  const runWithBin = async (
-    bin: string,
-    extraArgs: string[]
-  ): Promise<{ stdout: string; stderr: string }> =>
-    execFileAsync(bin, extraArgs, {
-      cwd: workspaceRoot,
-      timeout: 120_000,
-      maxBuffer: 10 * 1024 * 1024,
-    });
+  const tryRun = async (
+    executable: string,
+    execArgs: string[]
+  ): Promise<{ stdout: string; stderr: string }> => {
+    const { stdout, stderr, code } = await runWithShell(
+      executable,
+      execArgs,
+      workspaceRoot,
+      timeoutMs
+    );
+    if (code !== 0 && code != null) {
+      throw new Error(stderr || `Exit code ${code}`);
+    }
+    return { stdout, stderr };
+  };
 
   try {
-    const { stdout, stderr } = await runWithBin('shipgate', args);
+    const { stdout, stderr } = await tryRun('shipgate', args);
     if (stderr) outputChannel.appendLine(`[ShipGate] stderr: ${stderr}`);
     return parseVerifyOutput(stdout);
   } catch {
     try {
       outputChannel.appendLine('[ShipGate] Falling back to npx shipgate...');
-      const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-      const { stdout, stderr } = await runWithBin(npx, ['shipgate', ...args]);
+      const { stdout, stderr } = await tryRun('npx', ['--yes', 'shipgate', ...args]);
       if (stderr) outputChannel.appendLine(`[ShipGate] stderr: ${stderr}`);
       return parseVerifyOutput(stdout);
     } catch (err) {

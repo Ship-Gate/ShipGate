@@ -7,8 +7,9 @@ import { CookieConsent } from '@/components/CookieConsent'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'IntentOS Dashboard',
-  description: 'Verification dashboard for IntentOS domains',
+  title: 'Shipgate — AI Code. Verified.',
+  description: 'Shipgate verifies AI-generated code against your intent specs. Catches fake features, hallucinated APIs, and security blind spots. AI Code. Verified.',
+  icons: { icon: '/logo.svg' },
 }
 
 export default function RootLayout({
@@ -17,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className={cn(inter.className, 'min-h-screen bg-background antialiased')}>
         {/* Skip to main content link for accessibility */}
         <a
@@ -27,69 +28,54 @@ export default function RootLayout({
           Skip to main content
         </a>
         <div className="relative flex min-h-screen flex-col">
-          <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-14 items-center">
-              <div className="mr-4 flex">
-                <a className="mr-6 flex items-center space-x-2" href="/">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-6 w-6 text-primary"
-                  >
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-                    <path d="m9 12 2 2 4-4" />
-                  </svg>
-                  <span className="font-bold">IntentOS</span>
+          <header className="sticky top-0 z-50 w-full pt-4 pb-4 mt-[-46px] mb-[-46px]">
+            <div className="flex justify-center">
+              <nav
+                className="flex items-center gap-1 rounded-full bg-black px-6 py-2.5 shadow-lg"
+                aria-label="Main navigation"
+              >
+                <a
+                  className="rounded-full px-4 py-2 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white"
+                  href="/"
+                >
+                  Landing
                 </a>
-                <nav className="flex items-center space-x-6 text-sm font-medium">
-                  <a
-                    className="transition-colors hover:text-foreground/80 text-foreground"
-                    href="/"
-                  >
-                    Dashboard
-                  </a>
-                  <a
-                    className="transition-colors hover:text-foreground/80 text-muted-foreground"
-                    href="/runs"
-                  >
-                    Runs
-                  </a>
-                  <a
-                    className="transition-colors hover:text-foreground/80 text-muted-foreground"
-                    href="/domains"
-                  >
-                    Domains
-                  </a>
-                  <a
-                    className="transition-colors hover:text-foreground/80 text-muted-foreground"
-                    href="/verifications"
-                  >
-                    Verifications
-                  </a>
-                </nav>
-              </div>
+                <a
+                  className="rounded-full px-4 py-2 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white"
+                  href="/#pricing"
+                >
+                  Pricing
+                </a>
+                <a
+                  className="rounded-full px-4 py-2 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white"
+                  href="/#how-it-works"
+                >
+                  How it works
+                </a>
+                <a
+                  className="rounded-full px-4 py-2 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white"
+                  href="/#demo"
+                >
+                  Demo
+                </a>
+                <a
+                  className="rounded-full px-4 py-2 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white"
+                  href="/contact"
+                >
+                  Contact
+                </a>
+                <a
+                  className="rounded-full px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10"
+                  href="/login"
+                >
+                  Dashboard
+                </a>
+              </nav>
             </div>
           </header>
           <main id="main-content" className="flex-1" tabIndex={-1}>
             {children}
           </main>
-          <footer className="border-t py-6">
-            <div className="container flex flex-col items-center justify-between gap-4 md:h-10 md:flex-row">
-              <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-                IntentOS Verification Dashboard
-              </p>
-              <div className="flex gap-4 text-sm">
-                <a href="/privacy" className="text-muted-foreground hover:text-foreground">
-                  Privacy Policy
-                </a>
-              </div>
-            </div>
-          </footer>
         </div>
         <CookieConsent />
       </body>

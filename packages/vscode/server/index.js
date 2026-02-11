@@ -1,4 +1,4 @@
-import { createConnection, ProposedFeatures, TextDocuments, CodeActionKind as CodeActionKind$1, TextDocumentSyncKind, TextEdit as TextEdit$1, SemanticTokensBuilder, CompletionItemKind, SymbolKind } from 'vscode-languageserver/node';
+import { createConnection, ProposedFeatures, TextDocuments, CodeActionKind as CodeActionKind$1, TextDocumentSyncKind, TextEdit as TextEdit$1, SemanticTokensBuilder, CompletionItemKind, SymbolKind } from 'vscode-languageserver/node.js';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { DiagnosticSeverity, IncrementalParser, SymbolIndex } from '@isl-lang/lsp-core';
 export { DiagnosticSeverity } from '@isl-lang/lsp-core';
@@ -3256,7 +3256,7 @@ ${indent}}
       kind: CodeActionKind.Source,
       command: {
         title: "Generate Skeleton from ISL Spec",
-        command: "isl.generateSkeleton",
+        command: "shipgate.isl.generateSkeleton",
         arguments: [document.uri, domainName]
       }
     };

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-02-11T05:29:17.402Z",
+  "generatedAt": "2026-02-11T19:44:59.781Z",
   "routes": [
     {
       "path": "Profiler.enable",
@@ -1076,7 +1076,7 @@
       "method": "GET",
       "handler": "res",
       "file": "packages\\dashboard-api\\src\\index.ts",
-      "line": 169,
+      "line": 170,
       "parameters": [],
       "middleware": []
     },
@@ -1085,7 +1085,7 @@
       "method": "GET",
       "handler": "res",
       "file": "packages\\dashboard-api\\src\\index.ts",
-      "line": 176,
+      "line": 177,
       "parameters": [],
       "middleware": []
     },
@@ -2304,15 +2304,6 @@
       "middleware": []
     },
     {
-      "path": "GITHUB_TOKEN",
-      "method": "GET",
-      "handler": "code",
-      "file": "packages\\env-reality-checker\\src\\index.test.ts",
-      "line": 93,
-      "parameters": [],
-      "middleware": []
-    },
-    {
       "path": "content-type",
       "method": "GET",
       "handler": "anonymous",
@@ -2336,6 +2327,15 @@
       "handler": "message",
       "file": "packages\\effects\\src\\isl.ts",
       "line": 154,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "GITHUB_TOKEN",
+      "method": "GET",
+      "handler": "code",
+      "file": "packages\\env-reality-checker\\src\\index.test.ts",
+      "line": 93,
       "parameters": [],
       "middleware": []
     },
@@ -2936,66 +2936,6 @@
       "middleware": []
     },
     {
-      "path": "app/api/auth/login/route.ts",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\isl-healer\\tests\\login-integration.test.ts",
-      "line": 230,
-      "parameters": [],
-      "middleware": [],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "app/api/auth/login/route.ts",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\isl-healer\\tests\\login-integration.test.ts",
-      "line": 360,
-      "parameters": [],
-      "middleware": [],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "app/api/auth/login/route.ts",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\isl-healer\\tests\\login-integration.test.ts",
-      "line": 375,
-      "parameters": [],
-      "middleware": [],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "app/api/auth/login/route.ts",
-      "method": "GET",
-      "handler": "it",
-      "file": "packages\\isl-healer\\tests\\login-integration.test.ts",
-      "line": 389,
-      "parameters": [],
-      "middleware": [],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "app/api/auth/login/route.ts",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\isl-healer\\tests\\login-integration.test.ts",
-      "line": 404,
-      "parameters": [],
-      "middleware": [],
-      "auth": {
-        "required": true
-      }
-    },
-    {
       "path": "Authorization",
       "method": "GET",
       "handler": "user",
@@ -3168,6 +3108,66 @@
       "line": 232,
       "parameters": [],
       "middleware": []
+    },
+    {
+      "path": "app/api/auth/login/route.ts",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\isl-healer\\tests\\login-integration.test.ts",
+      "line": 230,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "app/api/auth/login/route.ts",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\isl-healer\\tests\\login-integration.test.ts",
+      "line": 360,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "app/api/auth/login/route.ts",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\isl-healer\\tests\\login-integration.test.ts",
+      "line": 375,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "app/api/auth/login/route.ts",
+      "method": "GET",
+      "handler": "it",
+      "file": "packages\\isl-healer\\tests\\login-integration.test.ts",
+      "line": 389,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "app/api/auth/login/route.ts",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\isl-healer\\tests\\login-integration.test.ts",
+      "line": 404,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
     },
     {
       "path": "x-request-id",
@@ -5302,20 +5302,20 @@
       "middleware": []
     },
     {
-      "path": "http://example.com",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\verifier-sandbox\\src\\acceptance.test.ts",
-      "line": 77,
-      "parameters": [],
-      "middleware": []
-    },
-    {
       "path": "User",
       "method": "DELETE",
       "handler": "user",
       "file": "packages\\verifier-runtime\\tests\\verifier.test.ts",
       "line": 704,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "http://example.com",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\verifier-sandbox\\src\\acceptance.test.ts",
+      "line": 77,
       "parameters": [],
       "middleware": []
     },
@@ -5383,6 +5383,24 @@
       "middleware": []
     },
     {
+      "path": "x-forwarded-for",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "demos\\5280-remodeling-landing\\src\\lib\\rate-limit.ts",
+      "line": 12,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-real-ip",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "demos\\5280-remodeling-landing\\src\\lib\\rate-limit.ts",
+      "line": 13,
+      "parameters": [],
+      "middleware": []
+    },
+    {
       "path": "/dashboard",
       "method": "GET",
       "handler": "res",
@@ -5554,6 +5572,62 @@
       "line": 80,
       "parameters": [],
       "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/login",
+      "method": "POST",
+      "handler": "async",
+      "file": "demos\\isl-demo\\src\\auth\\login.ts",
+      "line": 14,
+      "parameters": [],
+      "middleware": [
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/reset-password",
+      "method": "POST",
+      "handler": "async",
+      "file": "demos\\isl-demo\\src\\auth\\login.ts",
+      "line": 34,
+      "parameters": [],
+      "middleware": [
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/login",
+      "method": "POST",
+      "handler": "async",
+      "file": "demos\\isl-demo\\src\\auth\\login.ts",
+      "line": 14,
+      "parameters": [],
+      "middleware": [
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/reset-password",
+      "method": "POST",
+      "handler": "async",
+      "file": "demos\\isl-demo\\src\\auth\\login.ts",
+      "line": 34,
+      "parameters": [],
+      "middleware": [
+        "auth"
+      ],
       "auth": {
         "required": true
       }
@@ -5743,62 +5817,6 @@
     {
       "path": "/login",
       "method": "POST",
-      "handler": "async",
-      "file": "demos\\isl-demo\\src\\auth\\login.ts",
-      "line": 14,
-      "parameters": [],
-      "middleware": [
-        "auth"
-      ],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "/reset-password",
-      "method": "POST",
-      "handler": "async",
-      "file": "demos\\isl-demo\\src\\auth\\login.ts",
-      "line": 34,
-      "parameters": [],
-      "middleware": [
-        "auth"
-      ],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "/login",
-      "method": "POST",
-      "handler": "async",
-      "file": "demos\\isl-demo\\src\\auth\\login.ts",
-      "line": 14,
-      "parameters": [],
-      "middleware": [
-        "auth"
-      ],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "/reset-password",
-      "method": "POST",
-      "handler": "async",
-      "file": "demos\\isl-demo\\src\\auth\\login.ts",
-      "line": 34,
-      "parameters": [],
-      "middleware": [
-        "auth"
-      ],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "/login",
-      "method": "POST",
       "handler": "loginLimiter",
       "file": "demos\\isl-demo\\src-fixed\\auth\\login.ts",
       "line": 25,
@@ -5835,52 +5853,6 @@
       "line": 54,
       "parameters": [],
       "middleware": []
-    },
-    {
-      "path": "/users",
-      "method": "POST",
-      "handler": "async",
-      "file": "demos\\repo-isl-violation\\src\\users\\create.ts",
-      "line": 34,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/users",
-      "method": "POST",
-      "handler": "async",
-      "file": "demos\\repo-isl-violation\\src\\users\\create.ts",
-      "line": 34,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/auth/login",
-      "method": "POST",
-      "handler": "async",
-      "file": "demos\\repo-isl-violation\\src\\auth\\login.ts",
-      "line": 39,
-      "parameters": [],
-      "middleware": [
-        "auth"
-      ],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "/auth/login",
-      "method": "POST",
-      "handler": "async",
-      "file": "demos\\repo-isl-violation\\src\\auth\\login.ts",
-      "line": 39,
-      "parameters": [],
-      "middleware": [
-        "auth"
-      ],
-      "auth": {
-        "required": true
-      }
     },
     {
       "path": "/auth/login",
@@ -5925,6 +5897,52 @@
       "handler": "async",
       "file": "demos\\repo-isl-violation\\fixed\\users\\create.ts",
       "line": 31,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/auth/login",
+      "method": "POST",
+      "handler": "async",
+      "file": "demos\\repo-isl-violation\\src\\auth\\login.ts",
+      "line": 39,
+      "parameters": [],
+      "middleware": [
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/auth/login",
+      "method": "POST",
+      "handler": "async",
+      "file": "demos\\repo-isl-violation\\src\\auth\\login.ts",
+      "line": 39,
+      "parameters": [],
+      "middleware": [
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/users",
+      "method": "POST",
+      "handler": "async",
+      "file": "demos\\repo-isl-violation\\src\\users\\create.ts",
+      "line": 34,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/users",
+      "method": "POST",
+      "handler": "async",
+      "file": "demos\\repo-isl-violation\\src\\users\\create.ts",
+      "line": 34,
       "parameters": [],
       "middleware": []
     },
@@ -6256,6 +6274,15 @@
       "middleware": []
     },
     {
+      "path": "/health",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\codegen-python\\src\\templates\\fastapi.ts",
+      "line": 370,
+      "parameters": [],
+      "middleware": []
+    },
+    {
       "path": "items",
       "method": "GET",
       "handler": "anonymous",
@@ -6297,15 +6324,6 @@
       "handler": "False",
       "file": "packages\\codegen-sdk\\src\\languages\\python.ts",
       "line": 273,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/health",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\codegen-python\\src\\templates\\fastapi.ts",
-      "line": 370,
       "parameters": [],
       "middleware": []
     },
@@ -6770,8 +6788,26 @@
       "path": "/",
       "method": "POST",
       "handler": "validateBody",
+      "file": "packages\\dashboard-api\\src\\routes\\proof-bundles.ts",
+      "line": 126,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/",
+      "method": "POST",
+      "handler": "validateBody",
+      "file": "packages\\dashboard-api\\src\\routes\\proof-bundles.ts",
+      "line": 126,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/",
+      "method": "POST",
+      "handler": "validateBody",
       "file": "packages\\dashboard-api\\src\\routes\\reports.ts",
-      "line": 16,
+      "line": 17,
       "parameters": [],
       "middleware": [
         "validate",
@@ -6783,7 +6819,7 @@
       "method": "GET",
       "handler": "validateQuery",
       "file": "packages\\dashboard-api\\src\\routes\\reports.ts",
-      "line": 27,
+      "line": 28,
       "parameters": [],
       "middleware": [
         "validate",
@@ -6795,7 +6831,23 @@
       "method": "GET",
       "handler": "res",
       "file": "packages\\dashboard-api\\src\\routes\\reports.ts",
-      "line": 67,
+      "line": 74,
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "in": "path"
+        }
+      ],
+      "middleware": []
+    },
+    {
+      "path": "/:id/diff",
+      "method": "GET",
+      "handler": "res",
+      "file": "packages\\dashboard-api\\src\\routes\\reports.ts",
+      "line": 90,
       "parameters": [
         {
           "name": "id",
@@ -6811,7 +6863,7 @@
       "method": "POST",
       "handler": "validateBody",
       "file": "packages\\dashboard-api\\src\\routes\\reports.ts",
-      "line": 16,
+      "line": 17,
       "parameters": [],
       "middleware": [
         "validate",
@@ -6823,7 +6875,7 @@
       "method": "GET",
       "handler": "validateQuery",
       "file": "packages\\dashboard-api\\src\\routes\\reports.ts",
-      "line": 27,
+      "line": 28,
       "parameters": [],
       "middleware": [
         "validate",
@@ -6835,7 +6887,23 @@
       "method": "GET",
       "handler": "res",
       "file": "packages\\dashboard-api\\src\\routes\\reports.ts",
-      "line": 67,
+      "line": 74,
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "in": "path"
+        }
+      ],
+      "middleware": []
+    },
+    {
+      "path": "/:id/diff",
+      "method": "GET",
+      "handler": "res",
+      "file": "packages\\dashboard-api\\src\\routes\\reports.ts",
+      "line": 90,
       "parameters": [
         {
           "name": "id",
@@ -7069,134 +7137,6 @@
       "middleware": []
     },
     {
-      "path": "/login",
-      "method": "POST",
-      "handler": "async",
-      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
-      "line": 57,
-      "parameters": [],
-      "middleware": [
-        "auth",
-        "protect"
-      ],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "/dashboard",
-      "method": "GET",
-      "handler": "res",
-      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
-      "line": 83,
-      "parameters": [],
-      "middleware": [],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "/users/:id",
-      "method": "DELETE",
-      "handler": "res",
-      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
-      "line": 91,
-      "parameters": [
-        {
-          "name": "id",
-          "type": "string",
-          "required": true,
-          "in": "path"
-        }
-      ],
-      "middleware": [],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "/me",
-      "method": "GET",
-      "handler": "res",
-      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
-      "line": 114,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/me",
-      "method": "PUT",
-      "handler": "res",
-      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
-      "line": 127,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/login",
-      "method": "POST",
-      "handler": "async",
-      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
-      "line": 57,
-      "parameters": [],
-      "middleware": [
-        "auth",
-        "protect"
-      ],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "/dashboard",
-      "method": "GET",
-      "handler": "res",
-      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
-      "line": 83,
-      "parameters": [],
-      "middleware": [],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "/users/:id",
-      "method": "DELETE",
-      "handler": "res",
-      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
-      "line": 91,
-      "parameters": [
-        {
-          "name": "id",
-          "type": "string",
-          "required": true,
-          "in": "path"
-        }
-      ],
-      "middleware": [],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "/me",
-      "method": "GET",
-      "handler": "res",
-      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
-      "line": 114,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/me",
-      "method": "PUT",
-      "handler": "res",
-      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
-      "line": 127,
-      "parameters": [],
-      "middleware": []
-    },
-    {
       "path": "User",
       "method": "GET",
       "handler": "data",
@@ -7219,6 +7159,134 @@
       "auth": {
         "required": true
       }
+    },
+    {
+      "path": "/login",
+      "method": "POST",
+      "handler": "async",
+      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
+      "line": 57,
+      "parameters": [],
+      "middleware": [
+        "auth",
+        "protect"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/dashboard",
+      "method": "GET",
+      "handler": "res",
+      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
+      "line": 83,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/users/:id",
+      "method": "DELETE",
+      "handler": "res",
+      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
+      "line": 91,
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "in": "path"
+        }
+      ],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/me",
+      "method": "GET",
+      "handler": "res",
+      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
+      "line": 114,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/me",
+      "method": "PUT",
+      "handler": "res",
+      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
+      "line": 127,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/login",
+      "method": "POST",
+      "handler": "async",
+      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
+      "line": 57,
+      "parameters": [],
+      "middleware": [
+        "auth",
+        "protect"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/dashboard",
+      "method": "GET",
+      "handler": "res",
+      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
+      "line": 83,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/users/:id",
+      "method": "DELETE",
+      "handler": "res",
+      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
+      "line": 91,
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "in": "path"
+        }
+      ],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/me",
+      "method": "GET",
+      "handler": "res",
+      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
+      "line": 114,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/me",
+      "method": "PUT",
+      "handler": "res",
+      "file": "packages\\isl-adapters\\src\\cli\\demo-command.ts",
+      "line": 127,
+      "parameters": [],
+      "middleware": []
     },
     {
       "path": "/api/login",
@@ -7253,7 +7321,7 @@
       "method": "GET",
       "handler": "undefined",
       "file": "packages\\isl-expression-evaluator\\src\\v1\\evaluator.ts",
-      "line": 403,
+      "line": 415,
       "parameters": [],
       "middleware": []
     },
@@ -7262,43 +7330,7 @@
       "method": "GET",
       "handler": "anonymous",
       "file": "packages\\isl-expression-evaluator\\src\\v1\\evaluator.ts",
-      "line": 2099,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\isl-healer\\tests\\rules\\ast-semantic-rules.test.ts",
-      "line": 211,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "app/api/users/route.ts",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\isl-healer\\tests\\rules\\ast-semantic-rules.test.ts",
-      "line": 624,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "id",
-      "method": "GET",
-      "handler": "expectedHealedCode",
-      "file": "packages\\isl-healer\\tests\\fixtures\\heal-test-fixtures.ts",
-      "line": 184,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "id",
-      "method": "GET",
-      "handler": "10",
-      "file": "packages\\isl-healer\\tests\\fixtures\\heal-test-fixtures.ts",
-      "line": 191,
+      "line": 2115,
       "parameters": [],
       "middleware": []
     },
@@ -7353,6 +7385,42 @@
       "handler": "ip",
       "file": "packages\\isl-healer\\src\\rules\\deterministic-recipes.ts",
       "line": 1335,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "id",
+      "method": "GET",
+      "handler": "expectedHealedCode",
+      "file": "packages\\isl-healer\\tests\\fixtures\\heal-test-fixtures.ts",
+      "line": 184,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "id",
+      "method": "GET",
+      "handler": "10",
+      "file": "packages\\isl-healer\\tests\\fixtures\\heal-test-fixtures.ts",
+      "line": 191,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\isl-healer\\tests\\rules\\ast-semantic-rules.test.ts",
+      "line": 211,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "app/api/users/route.ts",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\isl-healer\\tests\\rules\\ast-semantic-rules.test.ts",
+      "line": 624,
       "parameters": [],
       "middleware": []
     },
@@ -7766,7 +7834,7 @@
       "method": "GET",
       "handler": "10",
       "file": "packages\\sdk-react-native\\src\\client\\ISLClient.ts",
-      "line": 222,
+      "line": 230,
       "parameters": [],
       "middleware": [
         "auth"
@@ -7780,7 +7848,7 @@
       "method": "GET",
       "handler": "10",
       "file": "packages\\sdk-typescript\\src\\services\\user-service.ts",
-      "line": 346,
+      "line": 339,
       "parameters": [],
       "middleware": []
     },
@@ -7789,7 +7857,7 @@
       "method": "GET",
       "handler": "10",
       "file": "packages\\sdk-typescript\\src\\services\\user-service.ts",
-      "line": 377,
+      "line": 370,
       "parameters": [],
       "middleware": []
     },
@@ -7810,49 +7878,6 @@
       "line": 311,
       "parameters": [],
       "middleware": []
-    },
-    {
-      "path": "/api/protected",
-      "method": "GET",
-      "handler": "authenticate",
-      "file": "packages\\stdlib-auth\\examples\\express-app\\server.ts",
-      "line": 55,
-      "parameters": [],
-      "middleware": [
-        "auth",
-        "protect"
-      ],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "/api/admin",
-      "method": "GET",
-      "handler": "authenticate",
-      "file": "packages\\stdlib-auth\\examples\\express-app\\server.ts",
-      "line": 65,
-      "parameters": [],
-      "middleware": [
-        "authenticate",
-        "auth",
-        "protect"
-      ],
-      "auth": {
-        "required": true
-      }
-    },
-    {
-      "path": "/health",
-      "method": "GET",
-      "handler": "res",
-      "file": "packages\\stdlib-auth\\examples\\express-app\\server.ts",
-      "line": 81,
-      "parameters": [],
-      "middleware": [
-        "authenticate",
-        "auth"
-      ]
     },
     {
       "path": "/auth/login",
@@ -7980,6 +8005,49 @@
     {
       "path": "/api/protected",
       "method": "GET",
+      "handler": "authenticate",
+      "file": "packages\\stdlib-auth\\examples\\express-app\\server.ts",
+      "line": 55,
+      "parameters": [],
+      "middleware": [
+        "auth",
+        "protect"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/api/admin",
+      "method": "GET",
+      "handler": "authenticate",
+      "file": "packages\\stdlib-auth\\examples\\express-app\\server.ts",
+      "line": 65,
+      "parameters": [],
+      "middleware": [
+        "authenticate",
+        "auth",
+        "protect"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/health",
+      "method": "GET",
+      "handler": "res",
+      "file": "packages\\stdlib-auth\\examples\\express-app\\server.ts",
+      "line": 81,
+      "parameters": [],
+      "middleware": [
+        "authenticate",
+        "auth"
+      ]
+    },
+    {
+      "path": "/api/protected",
+      "method": "GET",
       "handler": "reply",
       "file": "packages\\stdlib-auth\\examples\\fastify-app\\server.ts",
       "line": 52,
@@ -8056,6 +8124,15 @@
       "middleware": []
     },
     {
+      "path": "Content-Type",
+      "method": "GET",
+      "handler": "req",
+      "file": "packages\\stdlib-idempotency\\src\\middleware\\http.ts",
+      "line": 99,
+      "parameters": [],
+      "middleware": []
+    },
+    {
       "path": "${config.topic}:${config.idempotencyKey}",
       "method": "GET",
       "handler": "anonymous",
@@ -8079,15 +8156,6 @@
       "handler": "maxMessages",
       "file": "packages\\stdlib-messaging\\implementations\\typescript\\queue.ts",
       "line": 256,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "Content-Type",
-      "method": "GET",
-      "handler": "req",
-      "file": "packages\\stdlib-idempotency\\src\\middleware\\http.ts",
-      "line": 99,
       "parameters": [],
       "middleware": []
     },
@@ -8274,7 +8342,7 @@
       ]
     },
     {
-      "path": "isl.generateSkeleton",
+      "path": "shipgate.isl.generateSkeleton",
       "method": "GET",
       "handler": "anonymous",
       "file": "packages\\vscode\\src\\__tests__\\extension-commands.test.ts",
@@ -8283,7 +8351,7 @@
       "middleware": []
     },
     {
-      "path": "isl.generateSkeleton",
+      "path": "shipgate.isl.generateSkeleton",
       "method": "GET",
       "handler": "anonymous",
       "file": "packages\\vscode\\src\\__tests__\\extension-commands.test.ts",
@@ -8297,60 +8365,6 @@
       "handler": "context",
       "file": "packages\\codegen-tests\\src\\executable\\adapters\\typescript.ts",
       "line": 353,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/path",
-      "method": "GET",
-      "handler": "handler",
-      "file": "packages\\core\\src\\audit-v2\\detectors\\routeDetector.ts",
-      "line": 32,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/path",
-      "method": "GET",
-      "handler": "framework",
-      "file": "packages\\core\\src\\audit-v2\\detectors\\routeDetector.ts",
-      "line": 38,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/users",
-      "method": "GET",
-      "handler": "res",
-      "file": "packages\\core\\src\\audit-v2\\__tests__\\audit.test.ts",
-      "line": 266,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/users",
-      "method": "POST",
-      "handler": "res",
-      "file": "packages\\core\\src\\audit-v2\\__tests__\\audit.test.ts",
-      "line": 270,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/users",
-      "method": "GET",
-      "handler": "res",
-      "file": "packages\\core\\src\\audit-v2\\__tests__\\audit.test.ts",
-      "line": 266,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/users",
-      "method": "POST",
-      "handler": "res",
-      "file": "packages\\core\\src\\audit-v2\\__tests__\\audit.test.ts",
-      "line": 270,
       "parameters": [],
       "middleware": []
     },
@@ -8378,6 +8392,60 @@
       "handler": "anonymous",
       "file": "packages\\core\\src\\audit\\detectors\\routeDetector.ts",
       "line": 40,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/users",
+      "method": "GET",
+      "handler": "res",
+      "file": "packages\\core\\src\\audit-v2\\__tests__\\audit.test.ts",
+      "line": 266,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/users",
+      "method": "POST",
+      "handler": "res",
+      "file": "packages\\core\\src\\audit-v2\\__tests__\\audit.test.ts",
+      "line": 270,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/users",
+      "method": "GET",
+      "handler": "res",
+      "file": "packages\\core\\src\\audit-v2\\__tests__\\audit.test.ts",
+      "line": 266,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/users",
+      "method": "POST",
+      "handler": "res",
+      "file": "packages\\core\\src\\audit-v2\\__tests__\\audit.test.ts",
+      "line": 270,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/path",
+      "method": "GET",
+      "handler": "handler",
+      "file": "packages\\core\\src\\audit-v2\\detectors\\routeDetector.ts",
+      "line": 32,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/path",
+      "method": "GET",
+      "handler": "framework",
+      "file": "packages\\core\\src\\audit-v2\\detectors\\routeDetector.ts",
+      "line": 38,
       "parameters": [],
       "middleware": []
     },
@@ -8593,6 +8661,67 @@
       "handler": "handler",
       "file": "packages\\stdlib-idempotency\\implementations\\typescript\\middleware\\fastify.ts",
       "line": 477,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "POST",
+      "file": "demos\\5280-remodeling-landing\\src\\app\\api\\contact\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "GET",
+      "file": "demos\\5280-remodeling-landing\\src\\app\\api\\services\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "password",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\dashboard-web\\src\\app\\api\\login\\route.ts",
+      "line": 9,
+      "parameters": [],
+      "middleware": [
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "redirect",
+      "method": "GET",
+      "handler": "error",
+      "file": "packages\\dashboard-web\\src\\app\\api\\login\\route.ts",
+      "line": 10,
+      "parameters": [],
+      "middleware": [
+        "auth"
+      ]
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "POST",
+      "file": "packages\\dashboard-web\\src\\app\\api\\login\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "GET",
+      "file": "packages\\dashboard-web\\src\\app\\api\\logout\\route.ts",
+      "line": 1,
       "parameters": [],
       "middleware": []
     },

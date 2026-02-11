@@ -95,6 +95,16 @@ export async function runSpeclessChecks(
 ): Promise<GateEvidence[]> {
   const allEvidence: GateEvidence[] = [];
 
+  if (!file || typeof file !== 'string') {
+    return [{
+      source: 'specless-scanner',
+      check: 'specless-registry',
+      result: 'skip',
+      confidence: 0,
+      details: 'Invalid file path: file was undefined or not a string',
+    }];
+  }
+
   for (const check of speclessChecks) {
     try {
       const evidence = await check.run(file, context);

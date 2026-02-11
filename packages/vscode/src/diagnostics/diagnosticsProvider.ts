@@ -36,7 +36,9 @@ export function scanResultToDiagnostics(
   const byFile = new Map<string, vscode.Diagnostic[]>();
 
   for (const file of scanResult.result.files) {
+    if (!file.file || typeof file.file !== 'string') continue;
     if (file.status === 'PASS' && file.blockers.length === 0) continue;
+    if (!workspaceRoot) continue;
 
     const absPath = resolve(workspaceRoot, file.file);
     const diags: vscode.Diagnostic[] = [];

@@ -1108,7 +1108,7 @@ ${indent}}
       kind: CodeActionKind.Source,
       command: {
         title: 'Generate Skeleton from ISL Spec',
-        command: 'isl.generateSkeleton',
+        command: 'shipgate.isl.generateSkeleton',
         arguments: [document.uri, domainName],
       },
     };

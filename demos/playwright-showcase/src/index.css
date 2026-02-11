@@ -404,3 +404,46 @@
   display: inline-block;
 }
 
+/* Hero ghost text effect — ethereal fade in */
+@keyframes hero-ghost-fade {
+  0% {
+    opacity: 0;
+    filter: blur(12px);
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-ghost-glow {
+  0% {
+    opacity: 0;
+    text-shadow: 0 0 40px rgba(16, 185, 129, 0.3);
+  }
+  70% {
+    opacity: 1;
+    text-shadow: 0 0 60px rgba(16, 185, 129, 0.15);
+  }
+  100% {
+    text-shadow: 0 0 30px rgba(16, 185, 129, 0.08);
+  }
+}
+
+.hero-ghost-title {
+  animation: hero-ghost-fade 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    hero-ghost-glow 1.8s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+.hero-ghost-subtitle {
+  animation: hero-ghost-fade 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.25s forwards;
+  opacity: 0;
+}
+
+.hero-ghost-subtitle-delay {
+  animation: hero-ghost-fade 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
+  opacity: 0;
+}

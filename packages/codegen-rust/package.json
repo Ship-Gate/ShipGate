@@ -2,10 +2,11 @@
   "name": "@isl-lang/codegen-rust",
   "version": "0.1.0",
   "description": "Generate idiomatic Rust code from ISL specifications",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
@@ -20,9 +21,7 @@
     "tsup": "^8.0.1",
     "rimraf": "^5.0.5"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "author": "mevla",
   "license": "MIT",
   "repository": {

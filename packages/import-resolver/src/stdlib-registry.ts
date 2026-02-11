@@ -67,7 +67,14 @@ export class StdlibRegistryManager {
     registryPath?: string;
   } = {}) {
     // Default to the stdlib directory relative to this package
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    // Fallback when import.meta.url is undefined (e.g. CJS bundle)
+    let __dirname: string;
+    const metaUrl = (import.meta as { url?: string }).url;
+    if (metaUrl) {
+      __dirname = path.dirname(fileURLToPath(metaUrl));
+    } else {
+      __dirname = process.cwd();
+    }
     this.stdlibRoot = options.stdlibRoot ?? path.resolve(__dirname, '../../../stdlib');
     this.registryPath = options.registryPath ?? path.resolve(__dirname, './stdlib-registry.json');
   }

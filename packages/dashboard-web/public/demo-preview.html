@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shipgate — Mission Control Preview</title>
+  <style>
+    /* ── Demo chrome ─────────────────────────────────────────── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0c0c12;
+      color: #e8eaed;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .demo-controls {
+      width: 220px;
+      padding: 24px 16px;
+      border-right: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      background: #08080d;
+      z-index: 100;
+    }
+
+    .demo-controls h3 {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(255,255,255,0.3);
+      margin: 12px 0 4px;
+    }
+
+    .demo-controls h3:first-child { margin-top: 0; }
+
+    .demo-btn {
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+
+    .demo-btn:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.15);
+      color: #fff;
+    }
+
+    .demo-btn.active {
+      background: rgba(91, 154, 255, 0.15);
+      border-color: rgba(91, 154, 255, 0.3);
+      color: #5b9aff;
+    }
+
+    .demo-sidebar-frame {
+      margin-left: 220px;
+      width: 340px;
+      min-height: 100vh;
+      border-right: 1px solid rgba(255,255,255,0.06);
+      position: relative;
+    }
+
+    .demo-label {
+      position: fixed;
+      top: 16px;
+      left: 580px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.2);
+      letter-spacing: 0.5px;
+    }
+  </style>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SHIPGATE CSS (inline for demo)
+       ═══════════════════════════════════════════════════════════ -->
+  <style>
+    :root {
+      --sg-void: #0a0a0f;
+      --sg-surface-0: #0e0e14;
+      --sg-surface-1: rgba(255, 255, 255, 0.03);
+      --sg-surface-2: rgba(255, 255, 255, 0.05);
+      --sg-surface-3: rgba(255, 255, 255, 0.07);
+      --sg-surface-hover: rgba(255, 255, 255, 0.06);
+      --sg-border: rgba(255, 255, 255, 0.06);
+      --sg-border-hover: rgba(255, 255, 255, 0.1);
+      --sg-border-focus: #4c9aff;
+      --sg-text-0: #e8eaed;
+      --sg-text-1: rgba(255, 255, 255, 0.72);
+      --sg-text-2: rgba(255, 255, 255, 0.45);
+      --sg-text-3: rgba(255, 255, 255, 0.25);
+      --sg-green: #00e68a;
+      --sg-green-mid: rgba(0, 230, 138, 0.15);
+      --sg-green-dim: rgba(0, 230, 138, 0.08);
+      --sg-green-glow: rgba(0, 230, 138, 0.35);
+      --sg-green-aura: radial-gradient(ellipse at 50% 0%, rgba(0, 230, 138, 0.06) 0%, transparent 70%);
+      --sg-amber: #ffb547;
+      --sg-amber-mid: rgba(255, 181, 71, 0.15);
+      --sg-amber-dim: rgba(255, 181, 71, 0.08);
+      --sg-amber-glow: rgba(255, 181, 71, 0.35);
+      --sg-amber-aura: radial-gradient(ellipse at 50% 0%, rgba(255, 181, 71, 0.06) 0%, transparent 70%);
+      --sg-red: #ff5c6a;
+      --sg-red-mid: rgba(255, 92, 106, 0.15);
+      --sg-red-dim: rgba(255, 92, 106, 0.08);
+      --sg-red-glow: rgba(255, 92, 106, 0.35);
+      --sg-red-aura: radial-gradient(ellipse at 50% 0%, rgba(255, 92, 106, 0.06) 0%, transparent 70%);
+      --sg-blue: #5b9aff;
+      --sg-blue-mid: rgba(91, 154, 255, 0.15);
+      --sg-blue-dim: rgba(91, 154, 255, 0.08);
+      --sg-blue-glow: rgba(91, 154, 255, 0.35);
+      --sg-teal: #00d4aa;
+      --sg-teal-dim: rgba(0, 212, 170, 0.08);
+      --sg-teal-glow: rgba(0, 212, 170, 0.3);
+      --sg-ease: cubic-bezier(0.22, 1, 0.36, 1);
+      --sg-ease-out: cubic-bezier(0, 0, 0.15, 1);
+      --sg-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --sg-dur: 300ms;
+      --sg-dur-slow: 600ms;
+      --sg-dur-fast: 150ms;
+      --sg-r: 8px;
+      --sg-r-sm: 5px;
+      --sg-r-lg: 12px;
+      --sg-r-pill: 100px;
+      --sg-font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --sg-mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+      --sg-fs-base: 12px;
+      --sg-fs-sm: 11px;
+      --sg-fs-xs: 10px;
+      --sg-fs-xxs: 9px;
+      --sg-fs-data: 22px;
+      --sg-fs-gauge: 15px;
+    }
+
+    .sg-panel { font-family: var(--sg-font); font-size: var(--sg-fs-base); color: var(--sg-text-0); background: var(--sg-surface-0); -webkit-font-smoothing: antialiased; overflow-x: hidden; overflow-y: auto; min-height: 100vh; position: relative; }
+    .sg-panel::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px); background-size: 16px 16px; pointer-events: none; z-index: 0; }
+    #sg-root { position: relative; z-index: 1; padding: 10px 12px 28px; display: flex; flex-direction: column; gap: 6px; }
+
+    @keyframes sg-materialize { 0% { opacity: 0; transform: translateY(12px) scale(0.98); filter: blur(4px); } 100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+    .sg-section { animation: sg-materialize var(--sg-dur-slow) var(--sg-ease) both; }
+    .sg-section:nth-child(1) { animation-delay: 0ms; } .sg-section:nth-child(2) { animation-delay: 50ms; } .sg-section:nth-child(3) { animation-delay: 100ms; } .sg-section:nth-child(4) { animation-delay: 150ms; } .sg-section:nth-child(5) { animation-delay: 200ms; } .sg-section:nth-child(6) { animation-delay: 250ms; } .sg-section:nth-child(7) { animation-delay: 300ms; } .sg-section:nth-child(8) { animation-delay: 350ms; } .sg-section:nth-child(9) { animation-delay: 400ms; }
+
+    .sg-welcome { font-size: var(--sg-fs-sm); color: var(--sg-text-1); padding: 12px 14px; background: var(--sg-blue-dim); border: 1px solid rgba(91,154,255,0.12); border-radius: var(--sg-r); line-height: 1.65; position: relative; overflow: hidden; }
+    .sg-welcome::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(91,154,255,0.4), transparent); }
+
+    .sg-section { position: relative; background: var(--sg-surface-1); border: 1px solid var(--sg-border); border-radius: var(--sg-r-lg); padding: 14px 14px 12px; overflow: hidden; transition: border-color var(--sg-dur) var(--sg-ease), box-shadow var(--sg-dur) var(--sg-ease); }
+    .sg-section::before { content: ''; position: absolute; top: 0; left: 12px; right: 12px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent); transition: background var(--sg-dur) var(--sg-ease); }
+    .sg-section:hover { border-color: var(--sg-border-hover); }
+    .sg-section:hover::before { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); }
+    .sg-section::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity var(--sg-dur-slow) var(--sg-ease); }
+
+    .sg-section[data-status="ship"]::after { background: var(--sg-green-aura); opacity: 1; }
+    .sg-section[data-status="ship"] { border-color: rgba(0,230,138,0.15); box-shadow: 0 0 0 1px rgba(0,230,138,0.04), 0 4px 24px -4px rgba(0,230,138,0.08); }
+    .sg-section[data-status="warn"]::after { background: var(--sg-amber-aura); opacity: 1; }
+    .sg-section[data-status="warn"] { border-color: rgba(255,181,71,0.15); box-shadow: 0 0 0 1px rgba(255,181,71,0.04), 0 4px 24px -4px rgba(255,181,71,0.08); }
+    .sg-section[data-status="noship"]::after { background: var(--sg-red-aura); opacity: 1; }
+    .sg-section[data-status="noship"] { border-color: rgba(255,92,106,0.15); box-shadow: 0 0 0 1px rgba(255,92,106,0.04), 0 4px 24px -4px rgba(255,92,106,0.08); }
+    .sg-section[data-status="running"]::after { background: radial-gradient(ellipse at 50% 0%, rgba(91,154,255,0.06) 0%, transparent 70%); opacity: 1; }
+    .sg-section[data-status="running"] { border-color: rgba(91,154,255,0.15); box-shadow: 0 0 0 1px rgba(91,154,255,0.04), 0 4px 24px -4px rgba(91,154,255,0.08); }
+
+    .sg-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; position: relative; z-index: 1; }
+    .sg-section-title { font-size: var(--sg-fs-xxs); font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--sg-text-2); }
+
+    .sg-badge { display: inline-flex; align-items: center; gap: 5px; font-size: var(--sg-fs-xxs); font-weight: 700; font-family: var(--sg-mono); letter-spacing: 0.8px; text-transform: uppercase; padding: 3px 10px; border-radius: var(--sg-r-pill); line-height: 1.4; transition: all var(--sg-dur) var(--sg-ease); }
+    .sg-badge--idle { background: var(--sg-surface-2); color: var(--sg-text-3); }
+    .sg-badge--ship { background: var(--sg-green-mid); color: var(--sg-green); box-shadow: 0 0 12px var(--sg-green-glow), inset 0 0 8px rgba(0,230,138,0.06); }
+    .sg-badge--warn { background: var(--sg-amber-mid); color: var(--sg-amber); box-shadow: 0 0 12px var(--sg-amber-glow), inset 0 0 8px rgba(255,181,71,0.06); }
+    .sg-badge--noship { background: var(--sg-red-mid); color: var(--sg-red); box-shadow: 0 0 12px var(--sg-red-glow), inset 0 0 8px rgba(255,92,106,0.06); }
+    .sg-badge--connected { background: var(--sg-teal-dim); color: var(--sg-teal); box-shadow: 0 0 8px var(--sg-teal-glow); }
+    .sg-badge--disconnected { background: var(--sg-surface-2); color: var(--sg-text-3); }
+    .sg-badge--checking { background: var(--sg-blue-dim); color: var(--sg-blue); }
+    .sg-badge--allowed { background: var(--sg-green-mid); color: var(--sg-green); box-shadow: 0 0 8px var(--sg-green-glow); }
+    .sg-badge--blocked { background: var(--sg-red-mid); color: var(--sg-red); box-shadow: 0 0 12px var(--sg-red-glow); animation: sg-badgePulse 2s ease-in-out infinite; }
+    @keyframes sg-badgePulse { 0%,100% { box-shadow: 0 0 12px var(--sg-red-glow); } 50% { box-shadow: 0 0 20px var(--sg-red-glow), 0 0 40px rgba(255,92,106,0.1); } }
+
+    @keyframes sg-spin { to { transform: rotate(360deg); } }
+    .sg-spinner { display: inline-block; width: 10px; height: 10px; border: 1.5px solid rgba(91,154,255,0.2); border-top-color: var(--sg-blue); border-radius: 50%; animation: sg-spin 0.7s linear infinite; }
+
+    .sg-summary { font-size: var(--sg-fs-sm); color: var(--sg-text-1); line-height: 1.55; position: relative; z-index: 1; }
+    .sg-summary-mono { font-family: var(--sg-mono); font-size: var(--sg-fs-xs); color: var(--sg-text-2); letter-spacing: 0.3px; }
+
+    .sg-score-row { display: flex; align-items: baseline; gap: 6px; margin: 8px 0 2px; position: relative; z-index: 1; }
+    .sg-score-value { font-family: var(--sg-mono); font-size: var(--sg-fs-data); font-weight: 800; line-height: 1; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+    .sg-score-value--ship { color: var(--sg-green); } .sg-score-value--warn { color: var(--sg-amber); } .sg-score-value--noship { color: var(--sg-red); } .sg-score-value--idle { color: var(--sg-text-3); }
+    .sg-score-unit { font-size: var(--sg-fs-sm); color: var(--sg-text-3); font-weight: 500; }
+    .sg-score-label { font-size: var(--sg-fs-xs); color: var(--sg-text-2); margin-left: auto; font-weight: 500; }
+
+    .sg-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 10px 0 2px; position: relative; z-index: 1; }
+    .sg-stat { background: var(--sg-surface-2); border: 1px solid transparent; border-radius: var(--sg-r); padding: 8px 4px 6px; text-align: center; position: relative; overflow: hidden; transition: all var(--sg-dur) var(--sg-ease); }
+    .sg-stat:hover { border-color: var(--sg-border-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .sg-stat::before { content: ''; position: absolute; top: 0; left: 20%; right: 20%; height: 1px; border-radius: 1px; opacity: 0; }
+    .sg-stat--pass::before { background: var(--sg-green); opacity: 0.5; } .sg-stat--warn::before { background: var(--sg-amber); opacity: 0.5; } .sg-stat--fail::before { background: var(--sg-red); opacity: 0.5; }
+    .sg-stat-value { font-family: var(--sg-mono); font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--sg-text-0); line-height: 1.1; }
+    .sg-stat--pass .sg-stat-value { color: var(--sg-green); } .sg-stat--warn .sg-stat-value { color: var(--sg-amber); } .sg-stat--fail .sg-stat-value { color: var(--sg-red); }
+    .sg-stat-label { font-size: var(--sg-fs-xxs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--sg-text-3); margin-top: 3px; }
+    @keyframes sg-countPop { 0% { transform: scale(1); } 40% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    .sg-stat-value[data-animate] { animation: sg-countPop 0.35s var(--sg-ease-spring); }
+
+    .sg-gauge-container { display: flex; align-items: center; gap: 14px; margin: 6px -8px 4px; cursor: pointer; padding: 8px; border-radius: var(--sg-r); transition: background var(--sg-dur) var(--sg-ease); position: relative; z-index: 1; }
+    .sg-gauge-container:hover { background: var(--sg-surface-hover); }
+    .sg-gauge-ring { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
+    .sg-gauge-svg { width: 64px; height: 64px; transform: rotate(-90deg); filter: drop-shadow(0 0 2px rgba(0,0,0,0.3)); }
+    .sg-gauge-bg { fill: none; stroke: var(--sg-surface-3); stroke-width: 4; }
+    .sg-gauge-trail { fill: none; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 163.36; stroke-dashoffset: 163.36; transition: stroke-dashoffset 1.2s var(--sg-ease); filter: blur(3px); opacity: 0.4; }
+    .sg-gauge-fill { fill: none; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 163.36; stroke-dashoffset: 163.36; transition: stroke-dashoffset 1.2s var(--sg-ease); }
+    .sg-gauge-fill[data-color="green"], .sg-gauge-trail[data-color="green"] { stroke: var(--sg-green); }
+    .sg-gauge-fill[data-color="amber"], .sg-gauge-trail[data-color="amber"] { stroke: var(--sg-amber); }
+    .sg-gauge-fill[data-color="red"], .sg-gauge-trail[data-color="red"] { stroke: var(--sg-red); }
+    .sg-gauge-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--sg-mono); font-size: var(--sg-fs-gauge); font-weight: 800; color: var(--sg-text-0); pointer-events: none; font-variant-numeric: tabular-nums; }
+    .sg-gauge-meta { flex: 1; min-width: 0; }
+    .sg-gauge-title { font-size: var(--sg-fs-base); font-weight: 600; color: var(--sg-text-0); margin-bottom: 2px; }
+    .sg-gauge-desc { font-size: var(--sg-fs-sm); color: var(--sg-text-2); line-height: 1.4; }
+    .sg-gauge-files { font-size: var(--sg-fs-xs); font-family: var(--sg-mono); color: var(--sg-text-3); margin-top: 4px; }
+
+    .sg-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px 14px; margin-top: 8px; font-family: var(--sg-font); font-size: var(--sg-fs-sm); font-weight: 600; color: var(--sg-text-1); background: var(--sg-surface-2); border: 1px solid var(--sg-border); border-radius: var(--sg-r); cursor: pointer; position: relative; overflow: hidden; outline: none; transition: background var(--sg-dur) var(--sg-ease), border-color var(--sg-dur) var(--sg-ease), box-shadow var(--sg-dur) var(--sg-ease), transform var(--sg-dur-fast) var(--sg-ease); z-index: 1; }
+    .sg-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent); transition: left 0.5s var(--sg-ease); }
+    .sg-btn:hover::before { left: 100%; }
+    .sg-btn:hover:not(:disabled) { border-color: var(--sg-border-hover); background: var(--sg-surface-3); }
+    .sg-btn:active:not(:disabled) { transform: scale(0.97); }
+    .sg-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .sg-btn--primary { background: var(--sg-blue-mid); border-color: rgba(91,154,255,0.2); color: var(--sg-blue); }
+    .sg-btn--primary:hover:not(:disabled) { background: rgba(91,154,255,0.22); border-color: rgba(91,154,255,0.35); box-shadow: 0 0 16px rgba(91,154,255,0.12); }
+    .sg-btn--ship { background: var(--sg-green-mid); border-color: rgba(0,230,138,0.2); color: var(--sg-green); }
+    .sg-btn--ship:hover:not(:disabled) { background: rgba(0,230,138,0.22); border-color: rgba(0,230,138,0.35); box-shadow: 0 0 16px rgba(0,230,138,0.12); }
+    .sg-btn-row { display: flex; gap: 6px; margin-top: 8px; }
+    .sg-btn-row .sg-btn { margin-top: 0; flex: 1; }
+
+    .sg-link { color: var(--sg-blue); text-decoration: none; cursor: pointer; position: relative; }
+    .sg-link::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 0; height: 1px; background: var(--sg-blue); transition: width var(--sg-dur) var(--sg-ease); }
+    .sg-link:hover { color: #80b5ff; }
+    .sg-link:hover::after { width: 100%; }
+
+    @keyframes sg-shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+    .sg-progress { height: 2px; background: var(--sg-surface-3); border-radius: 2px; overflow: hidden; margin: 10px 0 2px; position: relative; z-index: 1; }
+    .sg-progress-bar { height: 100%; width: 35%; background: linear-gradient(90deg, var(--sg-blue), rgba(188,140,255,0.8), var(--sg-blue)); border-radius: 2px; animation: sg-shimmer 1.8s var(--sg-ease-out) infinite; }
+
+    .sg-list-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; margin: 1px -8px; border-radius: var(--sg-r-sm); font-size: var(--sg-fs-sm); transition: background var(--sg-dur) var(--sg-ease); position: relative; z-index: 1; }
+    .sg-list-item:hover { background: var(--sg-surface-hover); }
+    .sg-run-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .sg-run-dot--success { background: var(--sg-green); box-shadow: 0 0 6px var(--sg-green-glow); }
+    .sg-run-dot--failure { background: var(--sg-red); box-shadow: 0 0 6px var(--sg-red-glow); }
+    .sg-run-dot--pending { background: var(--sg-amber); animation: sg-breathe 2s ease-in-out infinite; }
+    @keyframes sg-breathe { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    .sg-divider { height: 1px; background: linear-gradient(90deg, transparent, var(--sg-border), transparent); margin: 8px 0; position: relative; z-index: 1; }
+    .sg-sub-title { font-size: var(--sg-fs-xxs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--sg-text-3); margin: 8px 0 4px; position: relative; z-index: 1; }
+
+    .sg-findings { display: flex; flex-direction: column; gap: 1px; position: relative; z-index: 1; }
+    .sg-finding { display: flex; align-items: flex-start; gap: 10px; padding: 8px; margin: 0 -8px; border-radius: var(--sg-r); cursor: pointer; transition: background var(--sg-dur) var(--sg-ease); }
+    .sg-finding:hover { background: var(--sg-surface-hover); }
+    .sg-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; position: relative; }
+    .sg-dot::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; opacity: 0; transition: opacity var(--sg-dur) var(--sg-ease); }
+    .sg-dot--pass { background: var(--sg-green); } .sg-dot--warn { background: var(--sg-amber); } .sg-dot--fail { background: var(--sg-red); }
+    .sg-dot--pass::after { box-shadow: 0 0 8px var(--sg-green-glow); } .sg-dot--warn::after { box-shadow: 0 0 8px var(--sg-amber-glow); } .sg-dot--fail::after { box-shadow: 0 0 8px var(--sg-red-glow); }
+    .sg-finding:hover .sg-dot::after { opacity: 1; }
+    .sg-finding-body { flex: 1; min-width: 0; }
+    .sg-finding-file { font-family: var(--sg-mono); font-size: var(--sg-fs-sm); color: var(--sg-text-0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sg-finding-msg { font-size: var(--sg-fs-xs); color: var(--sg-text-3); margin-top: 2px; }
+    .sg-finding-score { font-family: var(--sg-mono); font-size: var(--sg-fs-xs); font-weight: 700; color: var(--sg-text-2); flex-shrink: 0; margin-top: 3px; }
+
+    .sg-empty { text-align: center; padding: 20px 10px; color: var(--sg-text-3); font-size: var(--sg-fs-sm); position: relative; z-index: 1; }
+    .sg-empty-icon { font-size: 20px; margin-bottom: 6px; opacity: 0.25; }
+
+    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 3px; }
+    .sg-flex-1 { flex: 1; min-width: 0; }
+  </style>
+</head>
+<body>
+  <!-- ── Demo Controls ── -->
+  <div class="demo-controls">
+    <h3>Phase</h3>
+    <button class="demo-btn active" onclick="setState('idle')">Idle</button>
+    <button class="demo-btn" onclick="setState('running')">Running</button>
+    <button class="demo-btn" onclick="setState('ship')">✅ SHIP</button>
+    <button class="demo-btn" onclick="setState('warn')">⚠️ WARN</button>
+    <button class="demo-btn" onclick="setState('noship')">🚫 NO_SHIP</button>
+
+    <h3>Firewall</h3>
+    <button class="demo-btn" onclick="setFw('idle')">Idle</button>
+    <button class="demo-btn" onclick="setFw('allowed')">Allowed</button>
+    <button class="demo-btn" onclick="setFw('blocked')">Blocked</button>
+
+    <h3>GitHub</h3>
+    <button class="demo-btn" onclick="setGh(true)">Connected</button>
+    <button class="demo-btn" onclick="setGh(false)">Disconnected</button>
+  </div>
+
+  <!-- ── Sidebar Frame ── -->
+  <div class="demo-sidebar-frame sg-panel">
+    <div id="sg-root"></div>
+  </div>
+
+  <div class="demo-label">← 340px sidebar at native scale</div>
+
+  <!-- ── Mock vscode API + sidebar.js inline ── -->
+  <script>
+    // Mock VS Code API
+    function acquireVsCodeApi() {
+      return { postMessage: function(msg) { console.log('[webview→ext]', msg); } };
+    }
+  </script>
+  <script>
+    /* ── sidebar.js (inlined) ─────────────────────────────────── */
+    (function () {
+      var vscode = acquireVsCodeApi();
+      var root = document.getElementById('sg-root');
+      var prevState = null;
+
+      function post(type, payload) { vscode.postMessage({ type: type, payload: payload }); }
+
+      function render(state) {
+        if (!root || !state) return;
+        root.innerHTML = '';
+        if (state.phase === 'idle') root.appendChild(buildWelcome());
+        root.appendChild(buildScanSection(state));
+        root.appendChild(buildDriftSection(state));
+        root.appendChild(buildShipSection(state));
+        root.appendChild(buildGitHubSection(state));
+        root.appendChild(buildWorkflowsSection(state));
+        root.appendChild(buildFirewallSection(state));
+        root.appendChild(buildCodeToIslSection(state));
+        if (state.phase === 'complete' && state.findingsPreview && state.findingsPreview.length > 0) root.appendChild(buildFindingsPreview(state));
+        requestAnimationFrame(function () { animateGauge(state); animateNumbers(); });
+        prevState = state;
+      }
+      window._sgRender = render;
+
+      function buildWelcome() { var el=h('div','sg-welcome'); el.textContent='New to Shipgate? '; var lk=h('a','sg-link'); lk.textContent='Get started'; lk.href='#'; el.appendChild(lk); el.appendChild(document.createTextNode(' — or run a scan to verify your code.')); return el; }
+
+      function buildScanSection(state) {
+        var status = state.phase==='running'?'running':state.verdict==='SHIP'?'ship':state.verdict==='WARN'?'warn':state.verdict==='NO_SHIP'?'noship':'';
+        var section = createSection('Scan', status);
+        var badgeText = state.phase==='running'?'Scanning…':state.verdict||'Idle';
+        var badgeClass = state.phase==='running'?'checking':verdictToClass(state.verdict);
+        sectionHeader(section).appendChild(createBadge(badgeText, badgeClass, state.phase==='running'));
+
+        if (state.phase==='complete' && state.score!=null) {
+          var sr=h('div','sg-score-row');
+          var sv=h('div','sg-score-value sg-score-value--'+verdictToClass(state.verdict));
+          sv.setAttribute('data-count-to',String(state.score)); sv.textContent='0'; sr.appendChild(sv);
+          var su=h('span','sg-score-unit'); su.textContent='%'; sr.appendChild(su);
+          var sl=h('span','sg-score-label'); sl.textContent=state.counts?state.counts.total+' files scanned':''; sr.appendChild(sl);
+          section.appendChild(sr);
+        }
+
+        var summary=h('div','sg-summary');
+        if (state.phase==='idle') summary.textContent='Run a scan to verify your workspace against intent specs.';
+        else if (state.phase==='running') summary.textContent='Analyzing files…';
+        else if (state.phase==='complete') { var p=[]; if(state.counts){if(state.counts.pass>0)p.push(state.counts.pass+' passed');if(state.counts.fail>0)p.push(state.counts.fail+' failed');if(state.counts.warn>0)p.push(state.counts.warn+' warnings');} summary.textContent=p.join(' · ')||'Scan complete.'; summary.classList.add('sg-summary-mono'); }
+        section.appendChild(summary);
+
+        if (state.phase==='running') { var pg=h('div','sg-progress'); pg.appendChild(h('div','sg-progress-bar')); section.appendChild(pg); }
+        if (state.phase==='complete'&&state.counts) section.appendChild(buildStats(state.counts));
+        var rb=createButton('Run Scan','sg-btn sg-btn--primary',function(){}); if(state.phase==='running')rb.disabled=true; section.appendChild(rb);
+        if (state.phase==='complete') { var br=h('div','sg-btn-row'); br.appendChild(createButton('Open Report','sg-btn',function(){})); br.appendChild(createButton('Copy Summary','sg-btn',function(){})); section.appendChild(br); }
+        return section;
+      }
+
+      function buildDriftSection(state) {
+        var section=createSection('Intent Drift');
+        var container=h('div','sg-gauge-container'); container.setAttribute('role','button'); container.setAttribute('tabindex','0');
+        var ring=h('div','sg-gauge-ring');
+        var NS='http://www.w3.org/2000/svg';
+        var svg=document.createElementNS(NS,'svg'); svg.setAttribute('class','sg-gauge-svg'); svg.setAttribute('viewBox','0 0 64 64');
+        var bg=document.createElementNS(NS,'circle'); bg.setAttribute('class','sg-gauge-bg'); bg.setAttribute('cx','32'); bg.setAttribute('cy','32'); bg.setAttribute('r','26'); svg.appendChild(bg);
+        var pct=state.drift?state.drift.pct:0; var color=state.drift?state.drift.color:'green';
+        var trail=document.createElementNS(NS,'circle'); trail.setAttribute('class','sg-gauge-trail'); trail.id='sg-gauge-trail'; trail.setAttribute('cx','32'); trail.setAttribute('cy','32'); trail.setAttribute('r','26'); trail.setAttribute('data-color',color); trail.style.strokeDasharray='163.36'; trail.style.strokeDashoffset='163.36'; svg.appendChild(trail);
+        var fill=document.createElementNS(NS,'circle'); fill.setAttribute('class','sg-gauge-fill'); fill.id='sg-gauge-fill'; fill.setAttribute('cx','32'); fill.setAttribute('cy','32'); fill.setAttribute('r','26'); fill.setAttribute('data-color',color); fill.style.strokeDasharray='163.36'; fill.style.strokeDashoffset='163.36'; svg.appendChild(fill);
+        ring.appendChild(svg);
+        var label=h('div','sg-gauge-label'); label.textContent=state.drift?pct+'%':'—'; ring.appendChild(label);
+        container.appendChild(ring);
+        var meta=h('div','sg-gauge-meta');
+        var title=h('div','sg-gauge-title'); title.textContent=state.drift?(pct>=80?'Code matches spec':pct>=50?'Some drift detected':'Significant drift'):'No data yet'; meta.appendChild(title);
+        var desc=h('div','sg-gauge-desc'); desc.textContent=state.drift?'Alignment with your ISL intent specifications.':'Run a scan to measure drift.'; meta.appendChild(desc);
+        if (state.drift&&state.drift.failedFiles&&state.drift.failedFiles.length>0) { var f=h('div','sg-gauge-files'); f.textContent=state.drift.failedFiles.map(function(x){return x.split(/[/\\]/).pop();}).join(', '); meta.appendChild(f); }
+        container.appendChild(meta); section.appendChild(container); return section;
+      }
+
+      function animateGauge(state) {
+        if(!state.drift)return; var C=163.36; var offset=C-(C*state.drift.pct/100);
+        var fill=document.getElementById('sg-gauge-fill'); var trail=document.getElementById('sg-gauge-trail');
+        if(fill) fill.style.strokeDashoffset=String(offset);
+        if(trail) trail.style.strokeDashoffset=String(offset);
+      }
+
+      function buildShipSection(state) { var s=createSection('Ship'); var sm=h('div','sg-summary'); sm.textContent='Commit, push, and open a PR — gated by scan verdict.'; s.appendChild(sm); s.appendChild(createButton('Ship to GitHub','sg-btn sg-btn--ship',function(){})); return s; }
+
+      function buildGitHubSection(state) {
+        var gh=state.github; var s=createSection('GitHub');
+        sectionHeader(s).appendChild(createBadge(gh.connected?'Connected':'Disconnected',gh.connected?'connected':'disconnected'));
+        var sm=h('div','sg-summary'); if(gh.connected&&gh.owner){sm.textContent=gh.owner+'/'+gh.repo;sm.classList.add('sg-summary-mono');}else{sm.textContent='Connect to view PRs and workflows.';} s.appendChild(sm);
+        s.appendChild(createButton(gh.connected?'Refresh':'Connect','sg-btn',function(){}));
+        if(gh.pulls&&gh.pulls.length>0){ s.appendChild(h('div','sg-divider')); var sub=h('div','sg-sub-title'); sub.textContent='Pull Requests'; s.appendChild(sub); gh.pulls.forEach(function(pr){ var it=h('div','sg-list-item'); var lk=h('a','sg-link'); lk.textContent='#'+pr.number+'  '+pr.title; lk.href='#'; it.appendChild(lk); s.appendChild(it); }); }
+        return s;
+      }
+
+      function buildWorkflowsSection(state) {
+        var s=createSection('CI / Workflows');
+        if(!state.workflows||state.workflows.length===0){ var em=h('div','sg-empty'); var ic=h('div','sg-empty-icon'); ic.textContent='⚙'; em.appendChild(ic); var ms=h('div'); ms.textContent='No workflows detected'; em.appendChild(ms); s.appendChild(em); }
+        else { state.workflows.forEach(function(w){ var it=h('div','sg-list-item'); it.textContent=w.name; s.appendChild(it); }); }
+        if(state.github&&state.github.runs&&state.github.runs.length>0){ s.appendChild(h('div','sg-divider')); var sub=h('div','sg-sub-title'); sub.textContent='Recent Runs'; s.appendChild(sub); state.github.runs.forEach(function(r){ var it=h('div','sg-list-item'); var dot=h('span','sg-run-dot'); var c=(r.conclusion||'').toLowerCase(); if(c==='success')dot.classList.add('sg-run-dot--success'); else if(c==='failure')dot.classList.add('sg-run-dot--failure'); else dot.classList.add('sg-run-dot--pending'); it.appendChild(dot); var lk=h('a','sg-link'); lk.textContent=r.name; lk.href='#'; it.appendChild(lk); s.appendChild(it); }); }
+        return s;
+      }
+
+      function buildFirewallSection(state) {
+        var fw=state.firewall; var st=fw.status||'idle'; var ss=st==='blocked'?'noship':st==='allowed'?'ship':''; var s=createSection('Live Firewall',ss);
+        var bt=st==='checking'?'…':st==='allowed'?'ALLOWED':st==='blocked'?'BLOCKED':'Idle';
+        var bc=st==='allowed'?'allowed':st==='blocked'?'blocked':st==='checking'?'checking':'idle';
+        sectionHeader(s).appendChild(createBadge(bt,bc,st==='checking'));
+        var sm=h('div','sg-summary');
+        if(st==='checking')sm.textContent='Checking…'; else if(fw.violationCount>0)sm.textContent=fw.violationCount+' violation(s) detected.'; else if(fw.lastFile){sm.textContent='Last checked: '+fw.lastFile.split(/[/\\]/).pop();sm.classList.add('sg-summary-mono');} else sm.textContent='Intercepts ghost routes, env vars, and imports on save.';
+        s.appendChild(sm); return s;
+      }
+
+      function buildCodeToIslSection(state) { var s=createSection('Code → ISL'); var sm=h('div','sg-summary'); sm.textContent=state.islGeneratePath||'Select a file or folder to generate intent specs.'; s.appendChild(sm); s.appendChild(createButton('Generate ISL','sg-btn sg-btn--primary',function(){})); return s; }
+
+      function buildFindingsPreview(state) {
+        var s=createSection('Top Issues'); var list=h('div','sg-findings');
+        state.findingsPreview.forEach(function(f){ var row=h('div','sg-finding'); row.setAttribute('tabindex','0');
+          var dc=f.status==='PASS'?'pass':f.status==='WARN'?'warn':'fail'; row.appendChild(h('span','sg-dot sg-dot--'+dc));
+          var body=h('div','sg-finding-body'); var fe=h('div','sg-finding-file'); fe.textContent=f.file; body.appendChild(fe);
+          var msgs=(f.blockers||[]).concat(f.errors||[]); if(msgs.length>0){var mg=h('div','sg-finding-msg');mg.textContent=msgs[0];body.appendChild(mg);}
+          row.appendChild(body); var sc=h('span','sg-finding-score'); sc.textContent=Math.round(f.score*100)+'%'; row.appendChild(sc); list.appendChild(row);
+        }); s.appendChild(list); return s;
+      }
+
+      function buildStats(counts) { var g=h('div','sg-stats'); g.appendChild(buildStat(counts.total,'Files','')); g.appendChild(buildStat(counts.pass,'Passed','pass')); g.appendChild(buildStat(counts.warn,'Warn','warn')); g.appendChild(buildStat(counts.fail,'Failed','fail')); return g; }
+      function buildStat(value,label,variant) { var el=h('div','sg-stat'+(variant?' sg-stat--'+variant:'')); var v=h('div','sg-stat-value'); v.setAttribute('data-count-to',String(value)); v.textContent='0'; el.appendChild(v); var l=h('div','sg-stat-label'); l.textContent=label; el.appendChild(l); return el; }
+
+      function animateNumbers() {
+        root.querySelectorAll('[data-count-to]').forEach(function(el){ var target=parseInt(el.getAttribute('data-count-to'),10); if(isNaN(target)||target===0){el.textContent=String(target||0);return;}
+          var duration=Math.min(600,Math.max(200,target*15)); var start=performance.now();
+          function tick(now){var elapsed=now-start;var progress=Math.min(elapsed/duration,1);var eased=1-(1-progress)*(1-progress);el.textContent=String(Math.round(eased*target));if(progress<1)requestAnimationFrame(tick);}
+          requestAnimationFrame(tick);
+        });
+      }
+
+      function h(tag,cn){var el=document.createElement(tag);if(cn)el.className=cn;return el;}
+      function createSection(title,ds){var s=h('div','sg-section');if(ds)s.setAttribute('data-status',ds);var hd=h('div','sg-section-header');var t=h('div','sg-section-title');t.textContent=title;hd.appendChild(t);s.appendChild(hd);return s;}
+      function sectionHeader(s){return s.querySelector('.sg-section-header');}
+      function createBadge(text,variant,spinner){var el=h('span','sg-badge sg-badge--'+variant);if(spinner){var sp=h('span','sg-spinner');el.appendChild(sp);}el.appendChild(document.createTextNode(text));return el;}
+      function createButton(text,cn,fn){var b=h('button',cn);b.textContent=text;b.type='button';b.addEventListener('click',fn);return b;}
+      function verdictToClass(v){if(v==='SHIP')return'ship';if(v==='WARN')return'warn';if(v==='NO_SHIP')return'noship';return'idle';}
+    })();
+  </script>
+
+  <!-- ── Demo state controller ── -->
+  <script>
+    var baseGh = { connected: true, owner: 'vibecheckai', repo: 'shipgate', error: '', pulls: [{ number: 42, title: 'feat: add ISL v2 parser', htmlUrl: '#' }, { number: 41, title: 'fix: firewall false positives', htmlUrl: '#' }], runs: [{ name: 'CI', conclusion: 'success', status: 'completed', htmlUrl: '#' }, { name: 'Deploy', conclusion: 'failure', status: 'completed', htmlUrl: '#' }, { name: 'Lint', conclusion: '', status: 'in_progress', htmlUrl: '#' }] };
+    var disconnectedGh = { connected: false, owner: '', repo: '', error: '', pulls: [], runs: [] };
+    var currentGh = baseGh;
+    var currentFw = { status: 'idle', violationCount: 0, lastFile: '' };
+
+    var states = {
+      idle: { phase: 'idle', verdict: null, score: null, counts: null, drift: null, github: currentGh, workflows: [{ name: 'ci.yml' }, { name: 'deploy.yml' }], firewall: currentFw, islGeneratePath: null, findingsPreview: [] },
+      running: { phase: 'running', verdict: null, score: null, counts: null, drift: null, github: currentGh, workflows: [{ name: 'ci.yml' }, { name: 'deploy.yml' }], firewall: currentFw, islGeneratePath: null, findingsPreview: [] },
+      ship: { phase: 'complete', verdict: 'SHIP', score: 94, counts: { total: 28, pass: 26, warn: 2, fail: 0 }, drift: { pct: 92, color: 'green', failedFiles: [] }, github: currentGh, workflows: [{ name: 'ci.yml' }, { name: 'deploy.yml' }], firewall: currentFw, islGeneratePath: 'src/services/', findingsPreview: [{ file: 'authService.ts', status: 'PASS', score: 0.98, blockers: [], errors: [] }, { file: 'apiRouter.ts', status: 'WARN', score: 0.72, blockers: [], errors: ['Missing rate limit guard'] }] },
+      warn: { phase: 'complete', verdict: 'WARN', score: 71, counts: { total: 28, pass: 18, warn: 7, fail: 3 }, drift: { pct: 58, color: 'amber', failedFiles: ['db.ts', 'auth.ts', 'routes.ts'] }, github: currentGh, workflows: [{ name: 'ci.yml' }, { name: 'deploy.yml' }], firewall: currentFw, islGeneratePath: 'src/', findingsPreview: [{ file: 'db.ts', status: 'FAIL', score: 0.31, blockers: ['Unguarded SQL query'], errors: ['Missing input validation'] }, { file: 'auth.ts', status: 'WARN', score: 0.62, blockers: [], errors: ['Weak token expiry'] }, { file: 'routes.ts', status: 'FAIL', score: 0.44, blockers: ['Ghost route: /admin/debug'], errors: [] }] },
+      noship: { phase: 'complete', verdict: 'NO_SHIP', score: 34, counts: { total: 28, pass: 6, warn: 4, fail: 18 }, drift: { pct: 22, color: 'red', failedFiles: ['index.ts', 'db.ts', 'auth.ts', 'routes.ts', 'config.ts'] }, github: currentGh, workflows: [{ name: 'ci.yml' }, { name: 'deploy.yml' }], firewall: currentFw, islGeneratePath: 'src/', findingsPreview: [{ file: 'index.ts', status: 'FAIL', score: 0.12, blockers: ['Exposed env secrets', 'No error boundary'], errors: ['Memory leak in event handler'] }, { file: 'db.ts', status: 'FAIL', score: 0.18, blockers: ['SQL injection vector'], errors: [] }, { file: 'config.ts', status: 'FAIL', score: 0.25, blockers: ['Hardcoded API keys'], errors: ['Missing schema validation'] }] }
+    };
+
+    var currentPhase = 'idle';
+
+    function setState(phase) {
+      currentPhase = phase;
+      document.querySelectorAll('.demo-btn').forEach(function (b) { b.classList.remove('active'); });
+      event.target.classList.add('active');
+      var s = JSON.parse(JSON.stringify(states[phase]));
+      s.github = currentGh;
+      s.firewall = currentFw;
+      window._sgRender(s);
+    }
+
+    function setFw(status) {
+      currentFw = { status: status, violationCount: status === 'blocked' ? 3 : 0, lastFile: status !== 'idle' ? 'src/routes.ts' : '' };
+      setState(currentPhase);
+    }
+
+    function setGh(connected) {
+      currentGh = connected ? baseGh : disconnectedGh;
+      setState(currentPhase);
+    }
+
+    // Initial render
+    window._sgRender(states.idle);
+  </script>
+</body>
+</html>

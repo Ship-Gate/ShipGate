@@ -16,7 +16,7 @@ export function VerificationCard({ verification, showDomain = true }: Verificati
   const behaviorCoverage = (verification.coverage.behaviors / verification.coverage.totalBehaviors) * 100
   
   return (
-    <Link href={`/verifications/${verification.id}`}>
+    <Link href={`/dashboard/verifications/${verification.id}`}>
       <Card className="transition-all hover:shadow-md hover:border-primary/50 cursor-pointer">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">

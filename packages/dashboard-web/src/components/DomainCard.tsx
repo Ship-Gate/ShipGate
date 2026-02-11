@@ -20,7 +20,7 @@ export function DomainCard({ domain }: DomainCardProps) {
   } as const
 
   return (
-    <Link href={`/domains/${domain.id}`}>
+    <Link href={`/dashboard/domains/${domain.id}`}>
       <Card className="h-full transition-all hover:shadow-md hover:border-primary/50 cursor-pointer">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">

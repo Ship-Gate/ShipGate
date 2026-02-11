@@ -35,7 +35,7 @@ export class AllowlistManager {
   private loaded: boolean = false;
 
   constructor(projectRoot: string) {
-    this.projectRoot = projectRoot;
+    this.projectRoot = projectRoot != null && typeof projectRoot === 'string' ? projectRoot : process.cwd();
     this.allowlist = { ...DEFAULT_ALLOWLIST };
   }
 

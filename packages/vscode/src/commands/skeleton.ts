@@ -27,7 +27,7 @@ export function registerGenerateSkeletonCommand(
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      'isl.generateSkeleton',
+      'shipgate.isl.generateSkeleton',
       (uri?: string, domainName?: string) =>
         generateSkeleton(outputChannel, uri, domainName)
     )

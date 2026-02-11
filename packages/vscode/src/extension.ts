@@ -18,13 +18,15 @@ import {
   getLastCoverageReport,
 } from './commands/index';
 import { registerScanCommands } from './commands/scan';
+import { getShipgateConfig } from './config/config';
 import { registerCodeLensProvider, setupDiagnosticsIntegration } from './providers/index';
 import { createShipGateStatusBar, ShipGateStatusBar } from './views/status-bar';
 import { createShipgateScanStatusBar } from './views/shipgateStatusBar';
 import { ShipgateSidebarProvider, type SidebarState } from './views/shipgateSidebar/sidebarProvider';
 import { ShipgateReportPanel } from './views/shipgateReport/reportPanel';
-import { loadGitHubState } from './commands/github';
+import { loadGitHubState, acquireGitHubToken } from './commands/github';
 import { runCodeToIsl } from './commands/codeToIsl';
+import { runIntentBuild, type IntentBuilderState } from './commands/intentBuild';
 import { join } from 'path';
 import { readdirSync, existsSync } from 'fs';
 import { FirewallService } from './services/firewallService';
@@ -96,12 +98,38 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // ── Firewall quick-fix code actions ──
   registerFirewallCodeActions(context);
 
+  const API_KEY_SECRET = 'shipgate.intentBuilder.apiKey';
+  let storedApiKey: string | undefined;
+
+  // Load stored API key on activation
+  void context.secrets.get(API_KEY_SECRET).then(
+    (key) => {
+      storedApiKey = key;
+      if (intentBuilderState.phase === 'idle') {
+        intentBuilderState.hasApiKey = !!key;
+        sidebarProvider.refresh();
+      }
+    },
+    () => { /* silent */ }
+  );
+
+  let intentBuilderState: IntentBuilderState = {
+    phase: 'idle',
+    prompt: null,
+    message: null,
+    error: null,
+    score: null,
+    verdict: null,
+    hasApiKey: false,
+  };
+
   const getState = (): SidebarState => ({
     scan: scanState.lastResult,
     github: githubState,
     workflows: getWorkflows(),
     islGeneratePath,
     firewall: firewallService.getState(),
+    intentBuilder: intentBuilderState,
   });
 
   scanStatusBar = createShipgateScanStatusBar(context, 'shipgate.runScan');
@@ -119,16 +147,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     (result) => {
       scanState.lastResult = result;
       sidebarProvider.refresh();
+      const root = (scanState.workspaceRoot || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath) ?? '';
+      const config = root ? getShipgateConfig(root) : null;
+      ShipgateReportPanel.refreshCurrent(result, root, config?.configPath ?? null);
     },
     scanStatusBar
   );
 
-  // ── GitHub commands ──
+  // ── GitHub commands (OAuth magic link via VS Code auth provider) ──
   const runGitHubConnect = async () => {
-    const token = vscode.workspace.getConfiguration('shipgate').get<string>('github.token', '');
+    const token = await acquireGitHubToken(true);
     if (!token) {
-      await vscode.commands.executeCommand('workbench.action.openSettings', 'shipgate.github.token');
-      vscode.window.showInformationMessage('Add shipgate.github.token in settings to connect.');
+      vscode.window.showWarningMessage('GitHub sign-in was cancelled or unavailable.');
       return;
     }
     const state = await loadGitHubState(workspaceRoot, token);
@@ -140,28 +170,46 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('shipgate.githubRefresh', runGitHubConnect)
   );
 
-  // ── Auto-connect GitHub on activation ──
-  const autoToken = vscode.workspace.getConfiguration('shipgate').get<string>('github.token', '');
-  if (autoToken && workspaceRoot) {
-    loadGitHubState(workspaceRoot, autoToken).then((state) => {
-      Object.assign(githubState, state);
-      sidebarProvider.refresh();
+  // ── Re-connect GitHub when auth sessions change (catches delayed magic-link redirects) ──
+  context.subscriptions.push(
+    vscode.authentication.onDidChangeSessions((e) => {
+      if (e.provider.id === 'github' && workspaceRoot) {
+        acquireGitHubToken(false).then((token) => {
+          if (token) {
+            return loadGitHubState(workspaceRoot, token);
+          }
+          return null;
+        }).then((state) => {
+          if (state) {
+            Object.assign(githubState, state);
+            sidebarProvider.refresh();
+          }
+        }).catch(() => { /* silent */ });
+      }
+    })
+  );
+
+  // ── Auto-connect GitHub on activation (non-interactive — uses cached session) ──
+  if (workspaceRoot) {
+    acquireGitHubToken(false).then((autoToken) => {
+      if (autoToken) {
+        return loadGitHubState(workspaceRoot, autoToken);
+      }
+      return null;
+    }).then((state) => {
+      if (state) {
+        Object.assign(githubState, state);
+        sidebarProvider.refresh();
+      }
     }).catch(() => { /* silent */ });
   }
 
-  // ── Ship to GitHub command ──
+  // ── Ship command ──
   context.subscriptions.push(
     vscode.commands.registerCommand('shipgate.ship', async () => {
-      const token = vscode.workspace.getConfiguration('shipgate').get<string>('github.token', '');
+      const token = await acquireGitHubToken(true);
       if (!token) {
-        const choice = await vscode.window.showWarningMessage(
-          'GitHub token required to ship. Add it now?',
-          'Open Settings',
-          'Cancel'
-        );
-        if (choice === 'Open Settings') {
-          await vscode.commands.executeCommand('workbench.action.openSettings', 'shipgate.github.token');
-        }
+        vscode.window.showWarningMessage('GitHub sign-in required to ship. Please connect first.');
         return;
       }
 
@@ -280,6 +328,32 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     })
   );
 
+  // ── Intent Builder commands ──
+  context.subscriptions.push(
+    vscode.commands.registerCommand('shipgate.intentBuild', async (prompt: string) => {
+      await runIntentBuild(prompt, workspaceRoot, {
+        onProgress: (state) => {
+          intentBuilderState = state;
+          sidebarProvider.refresh();
+        },
+      }, outputChannel, storedApiKey);
+    }),
+    vscode.commands.registerCommand('shipgate.setApiKey', async (key: string) => {
+      await context.secrets.store(API_KEY_SECRET, key);
+      storedApiKey = key;
+      intentBuilderState.hasApiKey = true;
+      sidebarProvider.refresh();
+      vscode.window.showInformationMessage('API key saved securely.');
+    }),
+    vscode.commands.registerCommand('shipgate.clearApiKey', async () => {
+      await context.secrets.delete(API_KEY_SECRET);
+      storedApiKey = undefined;
+      intentBuilderState.hasApiKey = false;
+      sidebarProvider.refresh();
+      vscode.window.showInformationMessage('API key removed.');
+    })
+  );
+
   // ── ShipGate commands ──
   registerGenerateCommand(context, outputChannel);
   registerGenerateSkeletonCommand(context, outputChannel);
@@ -296,10 +370,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // ── Diagnostics integration ──
   setupDiagnosticsIntegration(context, () => client, outputChannel);
 
-  // ── Language server ──
+  // ── Language server (start in background so activation completes immediately) ──
   const config = vscode.workspace.getConfiguration('shipgate');
   if (config.get<boolean>('languageServer.enabled', true)) {
-    await startLanguageServer(context);
+    void startLanguageServer(context);
   }
 
   // ── Watch for config changes ──

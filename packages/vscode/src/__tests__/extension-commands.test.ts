@@ -176,13 +176,13 @@ describe('Extension Command Registration', () => {
     subscriptions.length = 0;
   });
 
-  it('should register isl.generateSkeleton command', async () => {
+  it('should register shipgate.isl.generateSkeleton command', async () => {
     const { registerGenerateSkeletonCommand } = await import('../commands/skeleton');
 
     const mockContext = { subscriptions } as never;
     registerGenerateSkeletonCommand(mockContext, mockOutputChannel as never);
 
-    expect(registeredCommands.has('isl.generateSkeleton')).toBe(true);
+    expect(registeredCommands.has('shipgate.isl.generateSkeleton')).toBe(true);
   });
 
   it('should register shipgate.generateSpec command', async () => {
@@ -229,7 +229,7 @@ describe('Generate Skeleton Command', () => {
     // No active editor
     (vscode.window as { activeTextEditor: undefined }).activeTextEditor = undefined;
 
-    const handler = registeredCommands.get('isl.generateSkeleton');
+    const handler = registeredCommands.get('shipgate.isl.generateSkeleton');
     expect(handler).toBeDefined();
 
     await handler!();
@@ -244,7 +244,7 @@ describe('Generate Skeleton Command', () => {
     const mockContext = { subscriptions: [] } as never;
     registerGenerateSkeletonCommand(mockContext, mockOutputChannel as never);
 
-    const handler = registeredCommands.get('isl.generateSkeleton');
+    const handler = registeredCommands.get('shipgate.isl.generateSkeleton');
     expect(handler).toBeDefined();
 
     // Invoked with URI from code action — the handler will run but
@@ -350,7 +350,7 @@ describe('Diagnostics Integration', () => {
 });
 
 describe('Package.json Commands', () => {
-  it('should declare isl.generateSkeleton in contributes.commands', async () => {
+  it('should declare shipgate.isl.generateSkeleton in contributes.commands', async () => {
     const fs = await import('fs');
     const path = await import('path');
 
@@ -360,24 +360,24 @@ describe('Package.json Commands', () => {
     const commands: Array<{ command: string }> = (pkg as { contributes: { commands: Array<{ command: string }> } }).contributes.commands;
     const commandIds = commands.map((c) => c.command);
 
-    expect(commandIds).toContain('isl.generateSkeleton');
+    expect(commandIds).toContain('shipgate.isl.generateSkeleton');
     expect(commandIds).toContain('shipgate.verify');
     expect(commandIds).toContain('shipgate.generateSpec');
     expect(commandIds).toContain('shipgate.coverage');
     expect(commandIds).toContain('shipgate.validateISL');
-    expect(commandIds).toContain('isl.parseFile');
-    expect(commandIds).toContain('isl.typeCheck');
-    expect(commandIds).toContain('isl.restartServer');
+    expect(commandIds).toContain('shipgate.isl.parseFile');
+    expect(commandIds).toContain('shipgate.isl.typeCheck');
+    expect(commandIds).toContain('shipgate.isl.restartServer');
   });
 
-  it('should have isl.generateSkeleton in editor/context menu for ISL files', async () => {
+  it('should have shipgate.isl.generateSkeleton in editor/context menu for ISL files', async () => {
     const { default: pkg } = await import('../../package.json');
 
     const contextMenuItems: Array<{ command: string; when?: string }> =
       (pkg as { contributes: { menus: { 'editor/context': Array<{ command: string; when?: string }> } } }).contributes.menus['editor/context'];
 
     const skeletonEntry = contextMenuItems.find(
-      (m) => m.command === 'isl.generateSkeleton'
+      (m) => m.command === 'shipgate.isl.generateSkeleton'
     );
 
     expect(skeletonEntry).toBeDefined();

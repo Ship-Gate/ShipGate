@@ -85,7 +85,7 @@ export async function runHostScan(
   let totalWarnings = 0;
 
   for (const file of files) {
-    if (!existsSync(file)) continue;
+    if (!file || typeof file !== 'string' || !existsSync(file)) continue;
 
     const content = readFileSync(file, 'utf-8');
     const result = await firewall.evaluate({ filePath: file, content });
@@ -154,7 +154,7 @@ export async function runRealityGapScan(
   let totalWarnings = 0;
 
   for (const file of files) {
-    if (!existsSync(file)) continue;
+    if (!file || typeof file !== 'string' || !existsSync(file)) continue;
 
     const content = readFileSync(file, 'utf-8');
     const result = await firewall.evaluateRealityGapOnly({ filePath: file, content });

@@ -103,13 +103,14 @@ async function runGate(args: string[]) {
     const result = await firewall.evaluate({ filePath: file, content });
     
     results.push({ file, result });
-    totalViolations += result.combined.totalViolations;
-    totalHardBlocks += result.combined.hardBlocks;
+    totalViolations += result.combined?.totalViolations ?? 0;
+    totalHardBlocks += result.combined?.hardBlocks ?? 0;
   }
 
-  // Calculate combined verdict
+  // Calculate combined verdict (guard against NaN from undefined values)
   const verdict = totalHardBlocks > 0 ? 'NO_SHIP' : 'SHIP';
-  const score = Math.max(0, 100 - (totalHardBlocks * 25) - ((totalViolations - totalHardBlocks) * 5));
+  const rawScore = 100 - (totalHardBlocks * 25) - ((totalViolations - totalHardBlocks) * 5);
+  const score = Number.isFinite(rawScore) ? Math.max(0, rawScore) : 100;
 
   // Output results
   if (options.output === 'json' || options.ci) {

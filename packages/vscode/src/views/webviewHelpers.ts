@@ -6,15 +6,20 @@
  */
 
 import * as vscode from 'vscode';
-import { join } from 'path';
 
 // ============================================================================
-// Nonce
+// Nonce — prefer crypto when available
 // ============================================================================
 
-const NONCE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const NONCE_CHARS =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
 export function getNonce(): string {
+  if (typeof globalThis.crypto?.getRandomValues === 'function') {
+    const bytes = new Uint8Array(32);
+    globalThis.crypto.getRandomValues(bytes);
+    return Array.from(bytes, (b) => NONCE_CHARS[b % NONCE_CHARS.length]).join('');
+  }
   let text = '';
   for (let i = 0; i < 32; i++) {
     text += NONCE_CHARS.charAt(Math.floor(Math.random() * NONCE_CHARS.length));
@@ -40,41 +45,42 @@ export function escapeHtml(s: string): string {
 // ============================================================================
 
 export interface WebviewHtmlOptions {
-  /** CSS file name inside media/ (e.g. 'shipgate.css') */
   cssFile: string;
-  /** JS file name inside media/ (e.g. 'sidebar.js') */
   jsFile: string;
-  /** HTML <title> */
   title: string;
-  /** Extra body classes */
   bodyClass?: string;
-  /** Inline HTML to place inside <body> as the initial shell */
   bodyHtml?: string;
+  /** Additional CSS files inside media/ */
+  extraCss?: string[];
 }
 
-/**
- * Build the complete HTML document for a webview, linking external CSS/JS
- * from the extension's media/ folder with a strict CSP.
- */
 export function getWebviewHtml(
   webview: vscode.Webview,
   extensionUri: vscode.Uri,
   opts: WebviewHtmlOptions
 ): string {
   const nonce = getNonce();
-
   const mediaUri = vscode.Uri.joinPath(extensionUri, 'media');
+
   const cssUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, opts.cssFile));
   const jsUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, opts.jsFile));
+
+  const extraCssLinks = (opts.extraCss ?? [])
+    .map((f) => {
+      const uri = webview.asWebviewUri(vscode.Uri.joinPath(mediaUri, f));
+      return `  <link rel="stylesheet" href="${uri}">`;
+    })
+    .join('\n');
 
   const csp = [
     `default-src 'none'`,
     `style-src ${webview.cspSource}`,
     `script-src 'nonce-${nonce}'`,
     `font-src ${webview.cspSource}`,
+    `img-src ${webview.cspSource}`,
   ].join('; ');
 
-  const bodyClass = opts.bodyClass ?? '';
+  const bodyClass = opts.bodyClass ? ` class="${escapeHtml(opts.bodyClass)}"` : '';
   const bodyHtml = opts.bodyHtml ?? '';
 
   return `<!DOCTYPE html>
@@ -85,8 +91,9 @@ export function getWebviewHtml(
   <meta http-equiv="Content-Security-Policy" content="${csp}">
   <title>${escapeHtml(opts.title)}</title>
   <link rel="stylesheet" href="${cssUri}">
+${extraCssLinks}
 </head>
-<body class="${bodyClass}">
+<body${bodyClass}>
   ${bodyHtml}
   <script nonce="${nonce}" src="${jsUri}"></script>
 </body>

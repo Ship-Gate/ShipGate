@@ -24,7 +24,7 @@ import { join, resolve } from 'path';
  * even across different machines or directory structures.
  */
 export function generateProjectFingerprint(projectRoot: string): string {
-  const root = resolve(projectRoot);
+  const root = resolve(projectRoot ?? process.cwd());
   const hash = createHash('sha256');
 
   // Include normalized project root

@@ -433,9 +433,12 @@ export class TestRunner {
       
       // Write all generated files
       for (const file of generatedFiles) {
-        const filePath = join(workDir, file.path);
-        const dir = join(workDir, file.path.substring(0, file.path.lastIndexOf('/')));
-        
+        const relPath = file.path ?? '';
+        if (!relPath) continue;
+        const filePath = join(workDir, relPath);
+        const sepIdx = Math.max(relPath.lastIndexOf('/'), relPath.lastIndexOf('\\'));
+        const dir = sepIdx >= 0 ? join(workDir, relPath.substring(0, sepIdx)) : workDir;
+
         // Ensure directory exists
         await mkdir(dir, { recursive: true }).catch(() => {});
         
@@ -941,9 +944,10 @@ export default defineConfig({
       let stdout = '';
       let stderr = '';
 
-      const proc = spawn('npx', ['vitest', 'run', '--reporter=json'], {
+      const isWindows = process.platform === 'win32';
+      const proc = spawn(isWindows ? 'npx.cmd' : 'npx', ['vitest', 'run', '--reporter=json'], {
         cwd: workDir,
-        shell: false,
+        shell: isWindows,
         timeout: this.options.timeout,
       });
 

@@ -12,10 +12,10 @@
 
 | Package | Description | Dependencies | Estimated Effort |
 |---------|-------------|--------------|------------------|
-| `ai-copilot` | Natural language → ISL conversion | OpenAI, Anthropic SDKs | 5-7 days |
+| `ai-copilot` |  language → ISL conversion | OpenAI, Anthropic SDKs | 5-7 days |
 | `ai-generator` | Generate implementations from ISL using LLMs | OpenAI, Anthropic SDKs | 5-7 days |
 | `isl-ai` | Code completion, generation, analysis | Anthropic SDK | 4-5 days |
-| `spec-assist` | AI-assisted spec generation from existing code | Parser, Verifier | 5-7 days |
+| `spec-assist` | AI-assisNaturalted spec generation from existing code | Parser, Verifier | 5-7 days |
 
 ### Tier 2: Domain Libraries (Lower Priority)
 

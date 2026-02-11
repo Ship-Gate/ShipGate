@@ -1,6 +1,6 @@
 'use strict';
 
-var node = require('vscode-languageserver/node');
+var node_js = require('vscode-languageserver/node.js');
 var vscodeLanguageserverTextdocument = require('vscode-languageserver-textdocument');
 var lspCore = require('@isl-lang/lsp-core');
 var vscodeLanguageserver = require('vscode-languageserver');
@@ -3277,7 +3277,7 @@ ${indent}}
       kind: vscodeLanguageserver.CodeActionKind.Source,
       command: {
         title: "Generate Skeleton from ISL Spec",
-        command: "isl.generateSkeleton",
+        command: "shipgate.isl.generateSkeleton",
         arguments: [document.uri, domainName]
       }
     };
@@ -3567,8 +3567,8 @@ var ISLServer = class {
   lastScannerDiagnostics = /* @__PURE__ */ new Map();
   scannerVersions = /* @__PURE__ */ new Map();
   constructor() {
-    this.connection = node.createConnection(node.ProposedFeatures.all);
-    this.documents = new node.TextDocuments(vscodeLanguageserverTextdocument.TextDocument);
+    this.connection = node_js.createConnection(node_js.ProposedFeatures.all);
+    this.documents = new node_js.TextDocuments(vscodeLanguageserverTextdocument.TextDocument);
     this.documentManager = new ISLDocumentManager();
     this.completionProvider = new ISLCompletionProvider(this.documentManager);
     this.hoverProvider = new ISLHoverProvider(this.documentManager);
@@ -3585,7 +3585,7 @@ var ISLServer = class {
     this.connection.onInitialize((params) => {
       return {
         capabilities: {
-          textDocumentSync: node.TextDocumentSyncKind.Incremental,
+          textDocumentSync: node_js.TextDocumentSyncKind.Incremental,
           completionProvider: {
             triggerCharacters: [".", ":", "@", "{", "<"],
             resolveProvider: true
@@ -3596,9 +3596,9 @@ var ISLServer = class {
           documentFormattingProvider: true,
           codeActionProvider: {
             codeActionKinds: [
-              node.CodeActionKind.QuickFix,
-              node.CodeActionKind.Refactor,
-              node.CodeActionKind.Source
+              node_js.CodeActionKind.QuickFix,
+              node_js.CodeActionKind.Refactor,
+              node_js.CodeActionKind.Source
             ]
           },
           semanticTokensProvider: {
@@ -3689,12 +3689,12 @@ var ISLServer = class {
         const suppressComment = diag.source === SOURCE_HOST ? `// shipgate-ignore` : `// islstudio-ignore ${diag.code}`;
         actions.push({
           title: `Suppress ${diag.code} for this line`,
-          kind: node.CodeActionKind.QuickFix,
+          kind: node_js.CodeActionKind.QuickFix,
           diagnostics: [diag],
           edit: {
             changes: {
               [document.uri]: [
-                node.TextEdit.insert(
+                node_js.TextEdit.insert(
                   { line: diag.range.start.line, character: 0 },
                   suppressComment + "\n"
                 )
@@ -3706,12 +3706,12 @@ var ISLServer = class {
           for (const fix of data.quickFixes) {
             actions.push({
               title: fix.title,
-              kind: node.CodeActionKind.QuickFix,
+              kind: node_js.CodeActionKind.QuickFix,
               diagnostics: [diag],
               edit: {
                 changes: {
                   [document.uri]: [
-                    node.TextEdit.replace(diag.range, fix.edit)
+                    node_js.TextEdit.replace(diag.range, fix.edit)
                   ]
                 }
               }
@@ -3730,7 +3730,7 @@ var ISLServer = class {
       const document = this.documents.get(params.textDocument.uri);
       if (!document) return { data: [] };
       const tokens = this.semanticTokensProvider.provideTokens(document);
-      const builder = new node.SemanticTokensBuilder();
+      const builder = new node_js.SemanticTokensBuilder();
       for (const token of tokens) {
         builder.push(
           token.line,
@@ -3883,27 +3883,27 @@ var ISLServer = class {
   mapCompletionKind(kind) {
     switch (kind) {
       case "keyword":
-        return node.CompletionItemKind.Keyword;
+        return node_js.CompletionItemKind.Keyword;
       case "type":
-        return node.CompletionItemKind.TypeParameter;
+        return node_js.CompletionItemKind.TypeParameter;
       case "entity":
-        return node.CompletionItemKind.Class;
+        return node_js.CompletionItemKind.Class;
       case "behavior":
-        return node.CompletionItemKind.Function;
+        return node_js.CompletionItemKind.Function;
       case "field":
-        return node.CompletionItemKind.Field;
+        return node_js.CompletionItemKind.Field;
       case "snippet":
-        return node.CompletionItemKind.Snippet;
+        return node_js.CompletionItemKind.Snippet;
       case "function":
-        return node.CompletionItemKind.Function;
+        return node_js.CompletionItemKind.Function;
       case "variable":
-        return node.CompletionItemKind.Variable;
+        return node_js.CompletionItemKind.Variable;
       case "enum":
-        return node.CompletionItemKind.Enum;
+        return node_js.CompletionItemKind.Enum;
       case "property":
-        return node.CompletionItemKind.Property;
+        return node_js.CompletionItemKind.Property;
       default:
-        return node.CompletionItemKind.Text;
+        return node_js.CompletionItemKind.Text;
     }
   }
   mapSymbol(sym) {
@@ -3919,39 +3919,39 @@ var ISLServer = class {
   mapSymbolKind(kind) {
     switch (kind) {
       case "domain":
-        return node.SymbolKind.Namespace;
+        return node_js.SymbolKind.Namespace;
       case "entity":
-        return node.SymbolKind.Class;
+        return node_js.SymbolKind.Class;
       case "behavior":
-        return node.SymbolKind.Function;
+        return node_js.SymbolKind.Function;
       case "type":
-        return node.SymbolKind.TypeParameter;
+        return node_js.SymbolKind.TypeParameter;
       case "enum":
-        return node.SymbolKind.Enum;
+        return node_js.SymbolKind.Enum;
       case "invariant":
-        return node.SymbolKind.Interface;
+        return node_js.SymbolKind.Interface;
       case "policy":
-        return node.SymbolKind.Interface;
+        return node_js.SymbolKind.Interface;
       case "view":
-        return node.SymbolKind.Struct;
+        return node_js.SymbolKind.Struct;
       case "field":
-        return node.SymbolKind.Field;
+        return node_js.SymbolKind.Field;
       case "input":
-        return node.SymbolKind.Variable;
+        return node_js.SymbolKind.Variable;
       case "output":
-        return node.SymbolKind.Variable;
+        return node_js.SymbolKind.Variable;
       case "error":
-        return node.SymbolKind.EnumMember;
+        return node_js.SymbolKind.EnumMember;
       case "lifecycle-state":
-        return node.SymbolKind.EnumMember;
+        return node_js.SymbolKind.EnumMember;
       case "scenario":
-        return node.SymbolKind.Event;
+        return node_js.SymbolKind.Event;
       case "chaos":
-        return node.SymbolKind.Event;
+        return node_js.SymbolKind.Event;
       case "variant":
-        return node.SymbolKind.EnumMember;
+        return node_js.SymbolKind.EnumMember;
       default:
-        return node.SymbolKind.Variable;
+        return node_js.SymbolKind.Variable;
     }
   }
   encodeModifiers(modifiers) {

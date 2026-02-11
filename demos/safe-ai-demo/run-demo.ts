@@ -18,7 +18,9 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = typeof import.meta.url === 'string'
+  ? path.dirname(fileURLToPath(import.meta.url))
+  : process.cwd();
 const ROOT = path.resolve(__dirname, '../..');
 const DEMO_DIR = path.join(ROOT, '.demo-output');
 

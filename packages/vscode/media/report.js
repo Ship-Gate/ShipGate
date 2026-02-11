@@ -1,318 +1,211 @@
-/* ============================================================================
- * Shipgate Report — Webview Script
- *
- * Renders full scan report from normalized ReportUiState via postMessage.
- * Supports: severity filters, search, keyboard nav, export, copy.
- * ============================================================================ */
-
 (function () {
-  // @ts-ignore
-  var vscode = acquireVsCodeApi();
-  var root = document.getElementById('sg-root');
-  var currentState = null;
-  var activeFilter = 'all';
-  var searchQuery = '';
-  var selectedIndex = -1;
+  const vs = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : null;
+  const root = document.getElementById('root');
+  if (!root) return;
 
-  function post(type, payload) {
-    vscode.postMessage({ type: type, payload: payload });
+  let state = null;
+  let filter = 'all';
+  let groupBy = 'file';
+  let selectedIndex = -1;
+  let filteredFindings = [];
+
+  function escapeText(s) {
+    const div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
   }
 
-  // ── Main render ───────────────────────────────────────────────
+  function escapeAttr(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
 
-  function render(state) {
-    if (!root || !state) return;
-    currentState = state;
-    root.innerHTML = '';
+  function getVerdictBadgeClass(verdict) {
+    if (!verdict) return 'idle';
+    if (verdict === 'SHIP') return 'ship';
+    if (verdict === 'WARN') return 'warn';
+    return 'noship';
+  }
 
-    if (!state.verdict) {
-      root.appendChild(buildEmpty());
+  function getStatusDotClass(status) {
+    if (status === 'PASS') return 'sg-dot--info';
+    if (status === 'WARN') return 'sg-dot--warning';
+    return 'sg-dot--error';
+  }
+
+  function applyFilter() {
+    const s = state;
+    if (!s?.findings?.length) {
+      filteredFindings = [];
       return;
     }
-
-    root.appendChild(buildHeader(state));
-    root.appendChild(buildFilters(state));
-    root.appendChild(buildFindingsList(state));
+    if (filter === 'all') {
+      filteredFindings = s.findings;
+    } else {
+      filteredFindings = s.findings.filter(f => f.status === filter);
+    }
   }
 
-  // ── Header ────────────────────────────────────────────────────
+  function renderHeader() {
+    const s = state;
+    const hasData = s && (s.verdict || s.findings?.length);
+    const verdictLabel = s?.verdict ?? 'No data';
+    const meta = hasData
+      ? `Score: ${s.score ?? 0}% | Coverage: ${s.coverage?.total ? Math.round((s.coverage.specced / s.coverage.total) * 100) : 0}% | ${s.counts?.total ?? 0} files | ${s.metadata?.timestamp ?? ''}`
+      : 'Run a scan to see results.';
 
-  function buildHeader(state) {
-    var header = createElement('div', 'sg-report-header');
-
-    // Row: badge + score
-    var top = createElement('div', 'sg-flex sg-items-center sg-gap-16');
-    top.appendChild(createBadge(state.verdict, verdictClass(state.verdict)));
-    if (state.score !== null) {
-      var scoreEl = createElement('span', '');
-      scoreEl.style.fontSize = '20px';
-      scoreEl.style.fontWeight = '700';
-      scoreEl.textContent = state.score + '%';
-      top.appendChild(scoreEl);
-    }
-    header.appendChild(top);
-
-    // Meta row
-    var meta = createElement('div', 'sg-report-meta');
-    if (state.metadata.workspaceRoot) {
-      meta.appendChild(metaItem(state.metadata.workspaceRoot.split(/[/\\]/).pop()));
-    }
-    if (state.metadata.timestamp) {
-      var d = new Date(state.metadata.timestamp);
-      meta.appendChild(metaItem(d.toLocaleString()));
-    }
-    if (state.metadata.duration) {
-      meta.appendChild(metaItem(state.metadata.duration + 'ms'));
-    }
-    if (state.coverage) {
-      var cov = state.coverage.total > 0
-        ? Math.round((state.coverage.specced / state.coverage.total) * 100)
-        : 0;
-      meta.appendChild(metaItem('Coverage: ' + cov + '%'));
-    }
-    header.appendChild(meta);
-
-    // Stat cards
-    header.appendChild(buildStats(state.counts));
-
-    // Action buttons
-    var actions = createElement('div', 'sg-report-actions');
-    actions.appendChild(createSmallBtn('Run Again', function () { post('runScan'); }));
-    actions.appendChild(createSmallBtn('Export JSON', function () { post('exportJson'); }));
-    actions.appendChild(createSmallBtn('Copy Markdown', function () { post('copySummary'); }));
-    header.appendChild(actions);
-
-    return header;
+    return `
+      <div class="sg-header">
+        <div class="sg-badge sg-badge-${getVerdictBadgeClass(s?.verdict)}" id="verdict">${escapeText(verdictLabel)}</div>
+        <div class="sg-meta" id="meta">${escapeText(meta)}</div>
+        <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="sg-btn" id="run-scan" style="width: auto;">Run Scan</button>
+          <button class="sg-btn" id="copy-summary" style="width: auto;">Copy Summary</button>
+          <button class="sg-btn" id="export-json" style="width: auto;">Export JSON</button>
+        </div>
+      </div>
+    `;
   }
 
-  function metaItem(text) {
-    var el = createElement('span', 'sg-report-meta-item');
-    el.textContent = text;
-    return el;
+  function renderFilters() {
+    if (!state?.findings?.length) return '';
+    return `
+      <div class="sg-mb-16" style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <button class="sg-filter-chip ${filter === 'all' ? 'active' : ''}" data-filter="all" aria-label="Show all">All</button>
+        <button class="sg-filter-chip ${filter === 'FAIL' ? 'active' : ''}" data-filter="FAIL" aria-label="Show failures">Failures</button>
+        <button class="sg-filter-chip ${filter === 'WARN' ? 'active' : ''}" data-filter="WARN" aria-label="Show warnings">Warnings</button>
+        <button class="sg-filter-chip ${filter === 'PASS' ? 'active' : ''}" data-filter="PASS" aria-label="Show passes">Passed</button>
+      </div>
+    `;
   }
 
-  // ── Filters ───────────────────────────────────────────────────
+  function renderFindings() {
+    if (!filteredFindings.length) {
+      return '<div class="sg-p-32" style="text-align: center; color: var(--vscode-descriptionForeground);">' +
+        (state?.findings?.length ? 'No findings match the current filter.' : 'Run a scan to see results.') +
+        '</div>';
+    }
 
-  function buildFilters(state) {
-    var wrap = createElement('div', 'sg-mb-16');
+    return `
+      <div class="sg-card" id="findings-list" role="list">
+        ${filteredFindings.map((f, i) => {
+          const statusClass = f.status === 'PASS' ? 'pass' : f.status === 'WARN' ? 'warn' : 'fail';
+          const msgs = [...(f.blockers || []), ...(f.errors || [])];
+          const msgHtml = msgs.length > 0
+            ? '<div class="sg-finding-msg">' + msgs.map(m => escapeText(m)).join('<br>') + '</div>'
+            : '';
+          const selected = i === selectedIndex ? ' style="background: var(--vscode-list-hoverBackground);"' : '';
+          return `
+            <div class="sg-finding sg-row" data-index="${i}" data-file="${escapeAttr(f.file)}" tabindex="0" role="listitem"${selected}>
+              <span class="sg-dot ${getStatusDotClass(f.status)}"></span>
+              <span class="sg-finding-status ${statusClass}">${escapeText(f.status)}</span>
+              <div class="sg-finding-body">
+                <a class="sg-finding-file" href="#" data-file="${escapeAttr(f.file)}" data-line="1" role="button" tabindex="-1">${escapeText(f.file)}</a>
+                ${msgHtml}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
 
-    // Search
-    var search = createElement('input', 'sg-search');
-    search.type = 'text';
-    search.placeholder = 'Search files, messages...';
-    search.setAttribute('aria-label', 'Search findings');
-    search.value = searchQuery;
-    search.addEventListener('input', function () {
-      searchQuery = search.value.toLowerCase();
-      refilter();
-    });
-    wrap.appendChild(search);
+  function render() {
+    applyFilter();
+    root.innerHTML = `
+      <div style="padding: 16px;">
+        ${renderHeader()}
+        ${renderFilters()}
+        ${renderFindings()}
+      </div>
+    `;
+    attachEventListeners();
+  }
 
-    // Chips
-    var chips = createElement('div', 'sg-filters');
-    var filters = [
-      { id: 'all', label: 'All', count: state.counts.total },
-      { id: 'FAIL', label: 'Failed', count: state.counts.fail },
-      { id: 'WARN', label: 'Warn', count: state.counts.warn },
-      { id: 'PASS', label: 'Passed', count: state.counts.pass },
-    ];
-    filters.forEach(function (f) {
-      var chip = createElement('button', 'sg-chip');
-      chip.setAttribute('type', 'button');
-      chip.setAttribute('role', 'switch');
-      chip.setAttribute('aria-pressed', activeFilter === f.id ? 'true' : 'false');
-      chip.setAttribute('data-filter', f.id);
+  function attachEventListeners() {
+    const runScan = document.getElementById('run-scan');
+    const copySummary = document.getElementById('copy-summary');
+    const exportJson = document.getElementById('export-json');
 
-      var label = document.createTextNode(f.label + ' ');
-      chip.appendChild(label);
+    if (runScan) runScan.addEventListener('click', () => vs && vs.postMessage({ type: 'runScan' }));
+    if (copySummary) copySummary.addEventListener('click', () => vs && vs.postMessage({ type: 'copySummary' }));
+    if (exportJson) exportJson.addEventListener('click', () => vs && vs.postMessage({ type: 'exportJson' }));
 
-      var count = createElement('span', 'sg-chip-count');
-      count.textContent = String(f.count);
-      chip.appendChild(count);
-
-      if (activeFilter === f.id) chip.classList.add('sg-chip--active');
-
-      chip.addEventListener('click', function () {
-        activeFilter = f.id;
-        render(currentState);
+    document.querySelectorAll('.sg-filter-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        filter = btn.dataset.filter || 'all';
+        selectedIndex = -1;
+        render();
       });
-      chips.appendChild(chip);
-    });
-    wrap.appendChild(chips);
-
-    return wrap;
-  }
-
-  // ── Findings list ─────────────────────────────────────────────
-
-  function buildFindingsList(state) {
-    var filtered = state.findings.filter(function (f) {
-      if (activeFilter !== 'all' && f.status !== activeFilter) return false;
-      if (searchQuery) {
-        var haystack = (f.file + ' ' + f.blockers.join(' ') + ' ' + f.errors.join(' ')).toLowerCase();
-        if (haystack.indexOf(searchQuery) === -1) return false;
-      }
-      return true;
     });
 
-    if (filtered.length === 0) {
-      var empty = createElement('div', 'sg-empty');
-      empty.textContent = searchQuery ? 'No matches for "' + searchQuery + '".' : 'No findings in this category.';
-      return empty;
-    }
-
-    var list = createElement('div', 'sg-findings');
-    list.setAttribute('role', 'list');
-    list.setAttribute('aria-label', 'Scan findings');
-
-    filtered.forEach(function (f, idx) {
-      var row = createElement('div', 'sg-finding');
-      row.setAttribute('tabindex', '0');
-      row.setAttribute('role', 'listitem');
-      row.setAttribute('aria-label', f.status + ' ' + f.file);
-      row.setAttribute('data-idx', String(idx));
-      row.setAttribute('data-file', f.file);
-
-      // Click opens file
-      row.addEventListener('click', function () {
-        post('openFile', { file: f.file, line: 1 });
-      });
-
-      // Keyboard: Enter opens, Up/Down navigates
-      row.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') {
-          post('openFile', { file: f.file, line: 1 });
-        } else if (e.key === 'ArrowDown') {
+    const list = document.getElementById('findings-list');
+    if (list) {
+      list.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') {
           e.preventDefault();
-          var next = row.nextElementSibling;
-          if (next) next.focus();
+          selectedIndex = Math.min(selectedIndex + 1, filteredFindings.length - 1);
+          render();
+          const item = list.querySelector(`[data-index="${selectedIndex}"]`);
+          if (item) item.focus();
         } else if (e.key === 'ArrowUp') {
           e.preventDefault();
-          var prev = row.previousElementSibling;
-          if (prev) prev.focus();
+          selectedIndex = Math.max(selectedIndex - 1, -1);
+          render();
+          if (selectedIndex >= 0) {
+            const item = list.querySelector(`[data-index="${selectedIndex}"]`);
+            if (item) item.focus();
+          }
+        } else if (e.key === 'Enter' && selectedIndex >= 0 && filteredFindings[selectedIndex]) {
+          e.preventDefault();
+          const f = filteredFindings[selectedIndex];
+          vs && vs.postMessage({ type: 'openFile', file: f.file, line: 1 });
         }
       });
+    }
 
-      // Dot
-      var dotClass = f.status === 'PASS' ? 'pass' : f.status === 'WARN' ? 'warn' : 'fail';
-      row.appendChild(createElement('span', 'sg-dot sg-dot--' + dotClass));
-
-      // Body
-      var body = createElement('div', 'sg-flex-1');
-
-      var fileEl = createElement('div', 'sg-finding-file');
-      fileEl.textContent = f.file;
-      body.appendChild(fileEl);
-
-      var msgs = f.blockers.concat(f.errors);
-      if (msgs.length > 0) {
-        msgs.forEach(function (m) {
-          var msgEl = createElement('div', 'sg-finding-msg');
-          msgEl.textContent = m;
-          body.appendChild(msgEl);
-        });
-      }
-
-      var modeEl = createElement('div', 'sg-finding-msg');
-      modeEl.textContent = f.mode;
-      body.appendChild(modeEl);
-
-      row.appendChild(body);
-
-      // Score
-      var score = createElement('span', 'sg-finding-score');
-      score.textContent = Math.round(f.score * 100) + '%';
-      row.appendChild(score);
-
-      list.appendChild(row);
+    document.querySelectorAll('.sg-finding-file').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const file = a.dataset.file;
+        const line = a.dataset.line ? parseInt(a.dataset.line, 10) : undefined;
+        if (file && vs) vs.postMessage({ type: 'openFile', file, line });
+      });
+      a.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          a.click();
+        }
+      });
     });
 
-    return list;
+    document.querySelectorAll('.sg-finding.sg-row').forEach((row, i) => {
+      row.addEventListener('click', () => {
+        selectedIndex = i;
+        const f = filteredFindings[i];
+        if (f && vs) vs.postMessage({ type: 'openFile', file: f.file, line: 1 });
+      });
+      row.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          row.click();
+        }
+      });
+    });
   }
 
-  // ── Stat cards ────────────────────────────────────────────────
-
-  function buildStats(counts) {
-    var grid = createElement('div', 'sg-stats');
-    grid.appendChild(buildStat(counts.total, 'Files'));
-    grid.appendChild(buildStat(counts.pass, 'Passed'));
-    grid.appendChild(buildStat(counts.warn, 'Warn'));
-    grid.appendChild(buildStat(counts.fail, 'Failed'));
-    return grid;
-  }
-
-  function buildStat(value, label) {
-    var el = createElement('div', 'sg-stat');
-    var v = createElement('div', 'sg-stat-value');
-    v.textContent = String(value);
-    var l = createElement('div', 'sg-stat-label');
-    l.textContent = label;
-    el.appendChild(v);
-    el.appendChild(l);
-    return el;
-  }
-
-  // ── Empty state ───────────────────────────────────────────────
-
-  function buildEmpty() {
-    var el = createElement('div', 'sg-empty');
-    var icon = createElement('div', 'sg-empty-icon');
-    icon.textContent = '\u{1F50D}';
-    el.appendChild(icon);
-    var text = createElement('div', '');
-    text.textContent = 'Run a scan to see results.';
-    el.appendChild(text);
-    var btn = createElement('button', 'sg-btn sg-btn--primary sg-btn--sm sg-mt-16');
-    btn.textContent = 'Run Scan';
-    btn.addEventListener('click', function () { post('runScan'); });
-    el.appendChild(btn);
-    return el;
-  }
-
-  // ── Refilter (search only — avoid full re-render) ─────────────
-
-  function refilter() {
-    if (currentState) render(currentState);
-  }
-
-  // ── Helpers ───────────────────────────────────────────────────
-
-  function createElement(tag, className) {
-    var el = document.createElement(tag);
-    if (className) el.className = className;
-    return el;
-  }
-
-  function createBadge(text, variant) {
-    var el = createElement('span', 'sg-badge sg-badge--' + variant);
-    el.textContent = text;
-    return el;
-  }
-
-  function createSmallBtn(text, onClick) {
-    var btn = createElement('button', 'sg-btn sg-btn--sm');
-    btn.textContent = text;
-    btn.setAttribute('type', 'button');
-    btn.addEventListener('click', onClick);
-    return btn;
-  }
-
-  function verdictClass(v) {
-    if (v === 'SHIP') return 'ship';
-    if (v === 'WARN') return 'warn';
-    if (v === 'NO_SHIP') return 'noship';
-    return 'idle';
-  }
-
-  // ── Message handling ──────────────────────────────────────────
-
-  window.addEventListener('message', function (event) {
-    var msg = event.data;
-    if (msg.type === 'state') {
-      render(msg.payload);
+  window.addEventListener('message', (e) => {
+    const msg = e.data;
+    if (msg.type === 'state' || msg.type === 'update') {
+      state = msg.payload ?? null;
+      selectedIndex = -1;
+      render();
     }
   });
 
-  // Request state on load
-  post('requestState');
+  if (vs) vs.postMessage({ type: 'requestState' });
 })();

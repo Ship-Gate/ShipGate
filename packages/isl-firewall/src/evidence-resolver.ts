@@ -47,7 +47,13 @@ export class EvidenceResolver {
   private goModCache: { modulePath: string; require: Map<string, string> } | null | undefined = undefined;
 
   constructor(config: Partial<ResolverConfig> = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
+    const projectRoot = config.projectRoot ?? DEFAULT_CONFIG.projectRoot;
+    this.config = {
+      ...DEFAULT_CONFIG,
+      ...config,
+      projectRoot: projectRoot != null && typeof projectRoot === 'string' ? projectRoot : process.cwd(),
+      truthpackPath: config.truthpackPath ?? DEFAULT_CONFIG.truthpackPath,
+    };
   }
 
   /**
@@ -124,11 +130,17 @@ export class EvidenceResolver {
   /**
    * Load a truthpack file
    */
+  private getProjectRoot(): string {
+    const r = this.config.projectRoot;
+    return r != null && typeof r === 'string' ? r : process.cwd();
+  }
+
   private async loadTruthpack<T>(name: string): Promise<T | null> {
     const cached = this.truthpackCache.get(name);
     if (cached) return cached as T;
 
-    const filePath = path.join(this.config.projectRoot, this.config.truthpackPath, `${name}.json`);
+    const root = this.getProjectRoot();
+    const filePath = path.join(root, this.config.truthpackPath ?? '.shipgate/truthpack', `${name}.json`);
     
     try {
       const content = await fs.readFile(filePath, 'utf-8');
@@ -223,8 +235,9 @@ export class EvidenceResolver {
     const envFiles = ['.env', '.env.local', '.env.development', '.env.production', '.env.example'];
     const varName = claim.value.replace(/^process\.env\./, '');
 
+    const root = this.getProjectRoot();
     for (const envFile of envFiles) {
-      const filePath = path.join(this.config.projectRoot, envFile);
+      const filePath = path.join(root, envFile);
       
       try {
         const content = await fs.readFile(filePath, 'utf-8');
@@ -257,7 +270,12 @@ export class EvidenceResolver {
    * Resolve from filesystem
    */
   private async resolveFromFilesystem(claim: Claim): Promise<Evidence> {
-    const filePath = path.resolve(this.config.projectRoot, claim.value);
+    const value = claim.value;
+    if (value == null || typeof value !== 'string') {
+      return this.createNotFoundEvidence(claim);
+    }
+    const root = this.getProjectRoot();
+    const filePath = path.resolve(root, value);
 
     if (await this.fileExists(filePath)) {
       return {
@@ -298,7 +316,7 @@ export class EvidenceResolver {
     if (!this.packageJsonCache) {
       try {
         const content = await fs.readFile(
-          path.join(this.config.projectRoot, 'package.json'),
+          path.join(this.getProjectRoot(), 'package.json'),
           'utf-8'
         );
         this.packageJsonCache = JSON.parse(content);
@@ -465,7 +483,7 @@ export class EvidenceResolver {
   private async loadGoMod(): Promise<{ modulePath: string; require: Map<string, string> } | null> {
     if (this.goModCache !== undefined) return this.goModCache;
 
-    const goModPath = path.join(this.config.projectRoot, 'go.mod');
+    const goModPath = path.join(this.getProjectRoot(), 'go.mod');
     try {
       const content = await fs.readFile(goModPath, 'utf-8');
       const dir = path.dirname(goModPath);

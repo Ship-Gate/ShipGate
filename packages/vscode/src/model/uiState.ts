@@ -1,18 +1,14 @@
 /**
- * Normalized UI State Types + Builders
+ * Normalized webview state types for Shipgate sidebar and report.
  *
- * JSON-safe types consumed by sidebar.js and report.js via postMessage.
- * Builders transform raw ScanResult / FirewallState / GitHubConnectionState
- * into these stable shapes — webviews never see raw CLI output.
+ * Both webviews consume these JSON-safe types via postMessage.
  */
 
-import type { ScanResult, FileFinding, Verdict } from './types';
-import type { FirewallState } from '../services/firewallService';
+import type { ScanResult } from './types';
 import type { GitHubConnectionState } from '../services/githubService';
+import type { FirewallState } from '../services/firewallService';
 
-// ============================================================================
-// Shared row types
-// ============================================================================
+export type VerdictType = 'SHIP' | 'WARN' | 'NO_SHIP';
 
 export interface FindingRow {
   file: string;
@@ -31,23 +27,20 @@ export interface PrRow {
 
 export interface RunRow {
   name: string;
-  status: string;
   conclusion: string | null;
+  status: string;
   htmlUrl: string;
 }
 
-// ============================================================================
-// Sidebar state
-// ============================================================================
-
 export interface SidebarUiState {
   phase: 'idle' | 'running' | 'complete';
-  verdict: Verdict | null;
+  verdict: VerdictType | null;
   score: number | null;
   drift: { pct: number; color: string; failedFiles: string[] } | null;
   counts: { total: number; pass: number; warn: number; fail: number };
   findingsPreview: FindingRow[];
   firewall: {
+    enabled: boolean;
     status: string;
     violationCount: number;
     lastFile: string | null;
@@ -59,28 +52,32 @@ export interface SidebarUiState {
     prCount: number;
     pulls: PrRow[];
     runs: RunRow[];
-    error: string | null;
   };
   workflows: { name: string }[];
-  islGeneratePath: string | null;
   metadata: {
     timestamp: string | null;
     duration: number | null;
     workspaceRoot: string;
   };
+  islGeneratePath: string | null;
+  intentBuilder: {
+    phase: 'idle' | 'generating' | 'scanning' | 'codegen' | 'done';
+    prompt: string | null;
+    message: string | null;
+    error: string | null;
+    score: number | null;
+    verdict: string | null;
+    hasApiKey: boolean;
+  };
 }
 
-// ============================================================================
-// Report state
-// ============================================================================
-
 export interface ReportUiState {
-  verdict: Verdict | null;
+  verdict: VerdictType | null;
   score: number | null;
   coverage: { specced: number; total: number };
   metadata: {
-    timestamp: string | null;
-    duration: number | null;
+    timestamp: string;
+    duration: number;
     workspaceRoot: string;
     configPath: string | null;
   };
@@ -90,74 +87,102 @@ export interface ReportUiState {
   recommendations: string[];
 }
 
-// ============================================================================
-// Builders
-// ============================================================================
-
-function fileToRow(f: FileFinding): FindingRow {
-  return {
-    file: f.file,
-    status: f.status,
-    mode: f.mode,
-    score: f.score,
-    blockers: f.blockers,
-    errors: f.errors,
-  };
-}
-
-function buildCounts(files: FileFinding[]): { total: number; pass: number; warn: number; fail: number } {
-  let pass = 0;
-  let warn = 0;
-  let fail = 0;
-  for (const f of files) {
-    if (f.status === 'PASS') pass++;
-    else if (f.status === 'WARN') warn++;
-    else fail++;
-  }
-  return { total: files.length, pass, warn, fail };
-}
-
-function buildDrift(scan: ScanResult): { pct: number; color: string; failedFiles: string[] } {
-  const pct = Math.round(scan.result.score * 100);
-  const failedFiles = scan.result.files
-    .filter((f) => f.status === 'FAIL' || (f.status === 'WARN' && f.blockers.length > 0))
-    .map((f) => f.file)
-    .slice(0, 8);
-  const color =
-    pct >= 80
-      ? 'var(--vscode-testing-iconPassed, #238636)'
-      : pct >= 50
-        ? 'var(--vscode-editorWarning-foreground, #9e6a03)'
-        : 'var(--vscode-editorError-foreground, #da3633)';
-  return { pct, color, failedFiles };
-}
-
-export function buildSidebarState(opts: {
+export interface SidebarInput {
   scan: ScanResult | null;
-  firewall: FirewallState;
   github: GitHubConnectionState;
   workflows: { name: string; path?: string }[];
   islGeneratePath: string | null;
-  workspaceRoot: string;
-}): SidebarUiState {
-  const { scan, firewall, github, workflows, islGeneratePath, workspaceRoot } = opts;
+  firewall: FirewallState;
+  firewallEnabled?: boolean;
+  intentBuilder?: {
+    phase: 'idle' | 'generating' | 'scanning' | 'codegen' | 'done';
+    prompt: string | null;
+    message: string | null;
+    error: string | null;
+    score: number | null;
+    verdict: string | null;
+    hasApiKey: boolean;
+  };
+  phase?: 'idle' | 'running' | 'complete';
+  workspaceRoot?: string;
+}
 
-  const files = scan?.result.files ?? [];
-  const counts = buildCounts(files);
+/**
+ * Build normalized sidebar state from extension state.
+ */
+export function buildSidebarState(input: SidebarInput): SidebarUiState {
+  const {
+    scan,
+    github,
+    workflows,
+    islGeneratePath,
+    firewall,
+    phase: inputPhase = scan ? 'complete' : 'idle',
+    workspaceRoot: inputWorkspaceRoot = '',
+  } = input;
 
-  const failAndWarn = files
-    .filter((f) => f.status !== 'PASS')
-    .sort((a, b) => a.score - b.score);
-  const preview = failAndWarn.slice(0, 5).map(fileToRow);
+  const phase = inputPhase;
+
+  const z = scan?.result;
+  const counts = z
+    ? {
+        total: z.files.length,
+        pass: z.files.filter((f) => f.status === 'PASS').length,
+        warn: z.files.filter((f) => f.status === 'WARN').length,
+        fail: z.files.filter((f) => f.status === 'FAIL').length,
+      }
+    : { total: 0, pass: 0, warn: 0, fail: 0 };
+
+  const drift = z
+    ? (() => {
+        const pct = Math.round(z.score * 100);
+        const failedFiles = z.files
+          .filter((f) => f.status === 'FAIL' || (f.status === 'WARN' && f.blockers.length > 0))
+          .map((f) => f.file)
+          .slice(0, 8);
+        const color =
+          pct >= 80
+            ? '#238636'
+            : pct >= 50
+              ? '#9e6a03'
+              : '#da3633';
+        return { pct, color, failedFiles };
+      })()
+    : null;
+
+  const findingsPreview: FindingRow[] = z
+    ? z.files.slice(0, 5).map((f) => ({
+        file: f.file,
+        status: f.status,
+        mode: f.mode,
+        score: f.score,
+        blockers: f.blockers,
+        errors: f.errors,
+      }))
+    : [];
+
+  const pulls: PrRow[] = (github.pulls ?? []).map((p) => ({
+    number: p.number,
+    title: p.title,
+    htmlUrl: p.htmlUrl,
+  }));
+
+  const runs: RunRow[] = (github.workflowRuns ?? []).map((r) => ({
+    name: r.name,
+    conclusion: r.conclusion,
+    status: r.status,
+    htmlUrl: r.htmlUrl,
+  }));
 
   return {
-    phase: scan ? 'complete' : 'idle',
-    verdict: scan?.result.verdict ?? null,
-    score: scan ? Math.round(scan.result.score * 100) : null,
-    drift: scan ? buildDrift(scan) : null,
+    phase,
+    verdict: z?.verdict ?? null,
+    score: z ? Math.round(z.score * 100) : null,
+    drift,
     counts,
-    findingsPreview: preview,
+    findingsPreview,
     firewall: {
+      enabled: input.firewallEnabled !== false,
       status: firewall.status,
       violationCount: firewall.violationCount,
       lastFile: firewall.lastFile,
@@ -166,41 +191,48 @@ export function buildSidebarState(opts: {
       connected: github.connected,
       owner: github.repo?.owner ?? null,
       repo: github.repo?.repo ?? null,
-      prCount: github.pulls.length,
-      pulls: github.pulls.slice(0, 5).map((p) => ({
-        number: p.number,
-        title: p.title,
-        htmlUrl: p.htmlUrl,
-      })),
-      runs: (github.workflowRuns ?? []).slice(0, 5).map((r) => ({
-        name: r.name,
-        status: r.status,
-        conclusion: r.conclusion,
-        htmlUrl: r.htmlUrl,
-      })),
-      error: github.error,
+      prCount: pulls.length,
+      pulls,
+      runs,
     },
     workflows: workflows.map((w) => ({ name: w.name })),
-    islGeneratePath,
     metadata: {
-      timestamp: scan?.metadata.timestamp ?? null,
-      duration: scan?.result.duration ?? null,
-      workspaceRoot,
+      timestamp: scan?.metadata?.timestamp ?? null,
+      duration: z?.duration ?? null,
+      workspaceRoot: scan?.metadata?.workspaceRoot ?? inputWorkspaceRoot,
+    },
+    islGeneratePath,
+    intentBuilder: input.intentBuilder ?? {
+      phase: 'idle',
+      prompt: null,
+      message: null,
+      error: null,
+      score: null,
+      verdict: null,
+      hasApiKey: false,
     },
   };
 }
 
+/**
+ * Build normalized report state from scan result.
+ */
 export function buildReportState(
-  scan: ScanResult | null,
+  scanResult: ScanResult | null,
   workspaceRoot: string,
   configPath: string | null
 ): ReportUiState {
-  if (!scan) {
+  if (!scanResult) {
     return {
       verdict: null,
       score: null,
       coverage: { specced: 0, total: 0 },
-      metadata: { timestamp: null, duration: null, workspaceRoot, configPath },
+      metadata: {
+        timestamp: '',
+        duration: 0,
+        workspaceRoot,
+        configPath,
+      },
       counts: { total: 0, pass: 0, warn: 0, fail: 0 },
       findings: [],
       blockers: [],
@@ -208,19 +240,32 @@ export function buildReportState(
     };
   }
 
-  const z = scan.result;
+  const z = scanResult.result;
+
   return {
     verdict: z.verdict,
     score: Math.round(z.score * 100),
     coverage: z.coverage,
     metadata: {
-      timestamp: scan.metadata.timestamp,
+      timestamp: scanResult.metadata.timestamp,
       duration: z.duration,
-      workspaceRoot,
+      workspaceRoot: scanResult.metadata.workspaceRoot,
       configPath,
     },
-    counts: buildCounts(z.files),
-    findings: z.files.map(fileToRow),
+    counts: {
+      total: z.files.length,
+      pass: z.files.filter((f) => f.status === 'PASS').length,
+      warn: z.files.filter((f) => f.status === 'WARN').length,
+      fail: z.files.filter((f) => f.status === 'FAIL').length,
+    },
+    findings: z.files.map((f) => ({
+      file: f.file,
+      status: f.status,
+      mode: f.mode,
+      score: f.score,
+      blockers: f.blockers,
+      errors: f.errors,
+    })),
     blockers: z.blockers,
     recommendations: z.recommendations,
   };

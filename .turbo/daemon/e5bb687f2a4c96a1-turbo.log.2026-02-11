@@ -4,3 +4,8 @@
 2026-02-11T02:11:44.545068Z  WARN turborepo_filewatch::package_watcher: lagged behind 167 processing file watching events
 2026-02-11T06:26:27.091553Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
 2026-02-11T06:26:27.364276Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2026-02-11T16:56:34.149540Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2026-02-11T17:13:57.377281Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 3
+2026-02-11T17:13:57.519975Z  WARN turborepo_filewatch::globwatcher: encountered filewatching error, flushing all globs: channel lagged by 175
+2026-02-11T19:45:30.350824Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2026-02-11T19:45:31.049179Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running

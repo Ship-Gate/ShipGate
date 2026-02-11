@@ -1,5 +1,8 @@
 /**
  * GitHub connection commands
+ *
+ * Uses VS Code's built-in GitHub authentication provider (OAuth magic link).
+ * Falls back to manual token from settings if the auth provider is unavailable.
  */
 
 import * as vscode from 'vscode';
@@ -11,6 +14,28 @@ import {
   fetchWorkflowRuns,
   type GitHubConnectionState,
 } from '../services/githubService';
+
+/**
+ * Acquire a GitHub token via VS Code's built-in OAuth (magic link).
+ * Falls back to the manual `shipgate.github.token` setting.
+ */
+export async function acquireGitHubToken(interactive: boolean = true): Promise<string | null> {
+  // 1. Try VS Code built-in GitHub auth provider (magic link / OAuth)
+  try {
+    const session = await vscode.authentication.getSession('github', ['repo', 'read:org'], {
+      createIfNone: interactive,
+    });
+    if (session) {
+      return session.accessToken;
+    }
+  } catch {
+    // Auth provider unavailable or user cancelled — fall through
+  }
+
+  // 2. Fallback: manual token from settings
+  const manualToken = vscode.workspace.getConfiguration('shipgate').get<string>('github.token', '');
+  return manualToken || null;
+}
 
 export async function getGitRemoteUrl(workspaceRoot: string): Promise<string | null> {
   try {
@@ -36,7 +61,7 @@ export async function loadGitHubState(
       repo: null,
       pulls: [],
       workflowRuns: [],
-      error: !parsed ? 'Not a GitHub repo' : 'Token required',
+      error: !parsed ? 'Not a GitHub repo' : 'Sign in to GitHub to connect.',
     };
   }
 

@@ -39,26 +39,26 @@ export function TrustScoreChart({ data }: TrustScoreChartProps) {
             <AreaChart data={formattedData}>
               <defs>
                 <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(221.2, 83.2%, 53.3%)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(221.2, 83.2%, 53.3%)" stopOpacity={0} />
+                  <stop offset="5%" stopColor="hsl(217.2, 91.2%, 59.8%)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(217.2, 91.2%, 59.8%)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis 
                 dataKey="date" 
                 className="text-xs"
-                tick={{ fill: 'hsl(215.4, 16.3%, 46.9%)' }}
+                tick={{ fill: 'hsl(215, 20.2%, 65.1%)' }}
               />
               <YAxis 
                 domain={[0, 100]} 
                 className="text-xs"
-                tick={{ fill: 'hsl(215.4, 16.3%, 46.9%)' }}
+                tick={{ fill: 'hsl(215, 20.2%, 65.1%)' }}
                 tickFormatter={(value) => `${value}%`}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'hsl(0, 0%, 100%)',
-                  border: '1px solid hsl(214.3, 31.8%, 91.4%)',
+                  backgroundColor: 'hsl(222.2, 84%, 4.9%)',
+                  border: '1px solid hsl(217.2, 32.6%, 17.5%)',
                   borderRadius: '6px',
                 }}
                 formatter={(value: number) => [`${value.toFixed(1)}%`, 'Trust Score']}
@@ -66,7 +66,7 @@ export function TrustScoreChart({ data }: TrustScoreChartProps) {
               <Area
                 type="monotone"
                 dataKey="score"
-                stroke="hsl(221.2, 83.2%, 53.3%)"
+                stroke="hsl(217.2, 91.2%, 59.8%)"
                 fillOpacity={1}
                 fill="url(#colorScore)"
                 strokeWidth={2}
@@ -125,19 +125,19 @@ export function CoverageBreakdown({ coverage }: CoverageBreakdownProps) {
               <XAxis 
                 type="number" 
                 domain={[0, 100]} 
-                tick={{ fill: 'hsl(215.4, 16.3%, 46.9%)' }}
+                tick={{ fill: 'hsl(215, 20.2%, 65.1%)' }}
                 tickFormatter={(value) => `${value}%`}
               />
               <YAxis 
                 dataKey="name" 
                 type="category" 
                 width={100}
-                tick={{ fill: 'hsl(215.4, 16.3%, 46.9%)' }}
+                tick={{ fill: 'hsl(215, 20.2%, 65.1%)' }}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'hsl(0, 0%, 100%)',
-                  border: '1px solid hsl(214.3, 31.8%, 91.4%)',
+                  backgroundColor: 'hsl(222.2, 84%, 4.9%)',
+                  border: '1px solid hsl(217.2, 32.6%, 17.5%)',
                   borderRadius: '6px',
                 }}
                 formatter={(value: number, name: string, entry) => {
@@ -147,7 +147,7 @@ export function CoverageBreakdown({ coverage }: CoverageBreakdownProps) {
               />
               <Bar 
                 dataKey="percentage" 
-                fill="hsl(221.2, 83.2%, 53.3%)" 
+                fill="hsl(217.2, 91.2%, 59.8%)" 
                 radius={[0, 4, 4, 0]}
               />
             </BarChart>
@@ -166,9 +166,9 @@ interface DomainStatusChartProps {
 
 export function DomainStatusChart({ passing, failing, pending }: DomainStatusChartProps) {
   const data = [
-    { name: 'Passing', value: passing, color: 'hsl(142.1, 76.2%, 36.3%)' },
-    { name: 'Failing', value: failing, color: 'hsl(0, 84.2%, 60.2%)' },
-    { name: 'Pending', value: pending, color: 'hsl(221.2, 83.2%, 53.3%)' },
+    { name: 'Passing', value: passing, color: 'hsl(142.1, 70.6%, 45.3%)' },
+    { name: 'Failing', value: failing, color: 'hsl(0, 62.8%, 50%)' },
+    { name: 'Pending', value: pending, color: 'hsl(217.2, 91.2%, 59.8%)' },
   ].filter(d => d.value > 0)
 
   return (
@@ -195,8 +195,8 @@ export function DomainStatusChart({ passing, failing, pending }: DomainStatusCha
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'hsl(0, 0%, 100%)',
-                  border: '1px solid hsl(214.3, 31.8%, 91.4%)',
+                  backgroundColor: 'hsl(222.2, 84%, 4.9%)',
+                  border: '1px solid hsl(217.2, 32.6%, 17.5%)',
                   borderRadius: '6px',
                 }}
               />

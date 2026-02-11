@@ -18,14 +18,14 @@ export function registerCommands(
   outputChannel: vscode.OutputChannel
 ): void {
   context.subscriptions.push(
-    vscode.commands.registerCommand('isl.parseFile', () => parseCurrentFile(getClient(), outputChannel)),
-    vscode.commands.registerCommand('isl.typeCheck', () => typeCheckCurrentFile(getClient(), outputChannel)),
-    vscode.commands.registerCommand('isl.generateTypeScript', () => generateCode('typescript', getClient(), outputChannel)),
-    vscode.commands.registerCommand('isl.generateRust', () => generateCode('rust', getClient(), outputChannel)),
-    vscode.commands.registerCommand('isl.openRepl', () => openRepl()),
-    vscode.commands.registerCommand('isl.initProject', () => initializeProject()),
-    vscode.commands.registerCommand('isl.verifySpec', () => verifySpec(getClient(), outputChannel)),
-    vscode.commands.registerCommand('isl.restartServer', () => restartServer(context, getClient, outputChannel))
+    vscode.commands.registerCommand('shipgate.isl.parseFile', () => parseCurrentFile(getClient(), outputChannel)),
+    vscode.commands.registerCommand('shipgate.isl.typeCheck', () => typeCheckCurrentFile(getClient(), outputChannel)),
+    vscode.commands.registerCommand('shipgate.isl.generateTypeScript', () => generateCode('typescript', getClient(), outputChannel)),
+    vscode.commands.registerCommand('shipgate.isl.generateRust', () => generateCode('rust', getClient(), outputChannel)),
+    vscode.commands.registerCommand('shipgate.isl.openRepl', () => openRepl()),
+    vscode.commands.registerCommand('shipgate.isl.initProject', () => initializeProject()),
+    vscode.commands.registerCommand('shipgate.isl.verifySpec', () => verifySpec(getClient(), outputChannel)),
+    vscode.commands.registerCommand('shipgate.isl.restartServer', () => restartServer(context, getClient, outputChannel))
   );
 }
 

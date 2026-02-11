@@ -133,7 +133,8 @@ export function parseGoModContent(content: string, dir: string): GoModFile | GoM
  * Find go.mod path by walking up from directory.
  */
 export async function findGoModPath(fromDir: string): Promise<string | null> {
-  let current = path.resolve(fromDir);
+  const dir = fromDir != null && typeof fromDir === 'string' ? fromDir : process.cwd();
+  let current = path.resolve(dir);
   const root = path.parse(current).root;
 
   while (current !== root) {

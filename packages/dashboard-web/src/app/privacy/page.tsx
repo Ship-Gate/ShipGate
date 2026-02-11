@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy - IntentOS',
-  description: 'Privacy policy for IntentOS Dashboard',
+  title: 'Privacy Policy - ShipGate',
+  description: 'Privacy policy for ShipGate Dashboard',
 };
 
 export default function PrivacyPage() {

@@ -6,9 +6,12 @@
  * Publishes ISL packages to npm in the correct dependency order.
  *
  * Usage:
- *   tsx scripts/publish.ts          # Full publish
- *   tsx scripts/publish.ts --check  # Dry run to verify readiness
- *   tsx scripts/publish.ts --dry-run # Publish dry run
+ *   tsx scripts/publish.ts                # Full publish
+ *   tsx scripts/publish.ts --check       # Dry run to verify readiness
+ *   tsx scripts/publish.ts --dry-run     # Publish dry run
+ *   tsx scripts/publish.ts --otp=123456  # With 2FA one-time password
+ *   tsx scripts/publish.ts --from=@isl-lang/isl-stdlib  # Resume from a package
+ * (npmjs.com → Access Tokens → Generate → Automation) to bypass 2FA prompts.
  */
 
 import { execSync, exec } from 'child_process';
@@ -122,7 +125,7 @@ const PUBLISH_ORDER = [
   '@isl-lang/evidence-schema',
   // Optional
   '@isl-lang/language-server',
-  '@isl-lang/expression-evaluator',
+  '@isl-lang/static-analyzer',
   '@isl-lang/trace-format',
   '@isl-lang/codegen',
   '@isl-lang/codegen-core',
@@ -132,6 +135,7 @@ const PUBLISH_ORDER = [
   '@isl-lang/lsp-server',
   '@isl-lang/repl',
   // Shipgate (user-facing)
+  '@shipgate/sdk',
   'shipgate',
 ];
 
@@ -146,6 +150,7 @@ const PACKAGE_NAME_TO_DIR: Record<string, string> = {
   '@isl-lang/evidence-schema': 'evidence',
   '@isl-lang/static-analyzer': 'isl-expression-evaluator',
   '@isl-lang/trace-format': 'isl-trace-format',
+  '@shipgate/sdk': 'sdk',
   shipgate: 'cli',
 };
 
@@ -220,14 +225,26 @@ function runTests(): boolean {
   return true;
 }
 
-function publishPackages(dryRun: boolean): boolean {
+function publishPackages(dryRun: boolean, otp?: string, fromPackage?: string): boolean {
   logStep(4, 5, dryRun ? 'Publishing packages (dry run)...' : 'Publishing packages...');
 
   const publishedPackages: string[] = [];
   const skippedPackages: string[] = [];
   const failedPackages: string[] = [];
 
-  for (const packageName of PUBLISH_ORDER) {
+  const otpFlag = otp ? ` --otp=${otp}` : '';
+
+  const startIdx = fromPackage
+    ? PUBLISH_ORDER.indexOf(fromPackage)
+    : 0;
+  const packagesToPublish =
+    startIdx >= 0 ? PUBLISH_ORDER.slice(startIdx) : PUBLISH_ORDER;
+
+  if (fromPackage) {
+    log(`Resuming from ${fromPackage} (${packagesToPublish.length} packages)`, 'yellow');
+  }
+
+  for (const packageName of packagesToPublish) {
     const packageDir = getPackageDir(packageName);
     const packageJson = readPackageJson(packageDir);
 
@@ -248,7 +265,7 @@ function publishPackages(dryRun: boolean): boolean {
     try {
       const publishCmd = dryRun
         ? `pnpm --filter ${packageName} publish --access public --no-git-checks --dry-run`
-        : `pnpm --filter ${packageName} publish --access public --no-git-checks`;
+        : `pnpm --filter ${packageName} publish --access public --no-git-checks${otpFlag}`;
 
       execCommand(publishCmd, { silent: true });
       logSuccess(`Published ${packageName}@${packageJson.version}`);
@@ -316,6 +333,10 @@ async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const isCheck = args.includes('--check');
   const isDryRun = args.includes('--dry-run');
+  const otpArg = args.find((a) => a.startsWith('--otp='));
+  const otp = otpArg?.replace('--otp=', '');
+  const fromArg = args.find((a) => a.startsWith('--from='));
+  const fromPackage = fromArg?.replace('--from=', '');
 
   log('\n🚀 ISL Package Publisher\n', 'cyan');
 
@@ -323,6 +344,10 @@ async function main(): Promise<void> {
     log('Running in check mode (no publish)', 'yellow');
   } else if (isDryRun) {
     log('Running in dry-run mode', 'yellow');
+  } else if (otp) {
+    log('Using OTP for 2FA', 'yellow');
+  } else if (fromPackage) {
+    log(`Resuming from ${fromPackage}`, 'yellow');
   }
 
   // Step 1: Check npm login
@@ -348,7 +373,7 @@ async function main(): Promise<void> {
   }
 
   // Step 4: Publish packages
-  if (!publishPackages(isDryRun)) {
+  if (!publishPackages(isDryRun, otp, fromPackage)) {
     process.exit(1);
   }
 

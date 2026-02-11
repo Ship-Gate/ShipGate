@@ -25,7 +25,8 @@
   "categories": [
     "Programming Languages",
     "Linters",
-    "Testing"
+    "Testing",
+    "Machine Learning"
   ],
   "keywords": [
     "isl",
@@ -104,55 +105,55 @@
         "icon": "$(check)"
       },
       {
-        "command": "isl.parseFile",
+        "command": "shipgate.isl.parseFile",
         "title": "ISL: Parse Current File",
         "category": "ISL",
         "icon": "$(symbol-structure)"
       },
       {
-        "command": "isl.typeCheck",
+        "command": "shipgate.isl.typeCheck",
         "title": "ISL: Type Check Current File",
         "category": "ISL",
         "icon": "$(checklist)"
       },
       {
-        "command": "isl.generateTypeScript",
+        "command": "shipgate.isl.generateTypeScript",
         "title": "ISL: Generate TypeScript",
         "category": "ISL",
         "icon": "$(file-code)"
       },
       {
-        "command": "isl.generateRust",
+        "command": "shipgate.isl.generateRust",
         "title": "ISL: Generate Rust",
         "category": "ISL",
         "icon": "$(file-code)"
       },
       {
-        "command": "isl.openRepl",
+        "command": "shipgate.isl.openRepl",
         "title": "ISL: Open REPL",
         "category": "ISL",
         "icon": "$(terminal)"
       },
       {
-        "command": "isl.initProject",
+        "command": "shipgate.isl.initProject",
         "title": "ISL: Initialize Project",
         "category": "ISL",
         "icon": "$(new-folder)"
       },
       {
-        "command": "isl.verifySpec",
+        "command": "shipgate.isl.verifySpec",
         "title": "ISL: Verify Spec",
         "category": "ISL",
         "icon": "$(verified)"
       },
       {
-        "command": "isl.restartServer",
+        "command": "shipgate.isl.restartServer",
         "title": "ISL: Restart Language Server",
         "category": "ISL",
         "icon": "$(refresh)"
       },
       {
-        "command": "isl.generateSkeleton",
+        "command": "shipgate.isl.generateSkeleton",
         "title": "ISL: Generate Skeleton from Spec",
         "category": "ISL",
         "icon": "$(file-code)"
@@ -223,7 +224,7 @@
         {
           "id": "shipgate-container",
           "title": "Shipgate",
-          "icon": "icons/isl-dark.svg"
+          "icon": "./icons/isl-dark.svg"
         }
       ]
     },
@@ -245,43 +246,28 @@
           {
             "id": "overview",
             "title": "Welcome to Shipgate",
-            "description": "Behavioral verification for AI-generated code. Catch violations before they ship.\n\nOpen the **Shipgate** panel in the Explorer sidebar to get started.",
-            "media": {
-              "markdown": "media/walkthrough/step1-overview.md"
-            }
+            "description": "Behavioral verification for AI-generated code. Catch violations before they ship.\n\nOpen the **Shipgate** panel in the activity bar to get started."
           },
           {
             "id": "run-scan",
             "title": "Run Your First Scan",
             "description": "The Intent Drift gauge shows how well your code matches your specs. Click Run Scan to verify your workspace.\n\n[Run Scan](command:shipgate.runScan)",
-            "media": {
-              "markdown": "media/walkthrough/step2-scan.md"
-            },
             "completionEvents": ["onCommand:shipgate.runScan"]
           },
           {
             "id": "live-firewall",
             "title": "Live Firewall",
-            "description": "Runs automatically on save for .ts and .js files. Blocks ghost routes, env vars, and imports.\n\n[Open Settings](command:workbench.action.openSettings?%5B%22shipgate%22%5D)",
-            "media": {
-              "markdown": "media/walkthrough/step3-firewall.md"
-            }
+            "description": "Runs automatically on save for .ts and .js files. Blocks ghost routes, env vars, and imports.\n\n[Open Settings](command:workbench.action.openSettings?%5B%22shipgate%22%5D)"
           },
           {
             "id": "github",
             "title": "Connect GitHub",
-            "description": "Link your repo to see PRs and workflow runs. Add shipgate.github.token in settings.\n\n[Configure](command:workbench.action.openSettings?%5B%22shipgate.github.token%22%5D)",
-            "media": {
-              "markdown": "media/walkthrough/step4-github.md"
-            }
+            "description": "Link your repo to see PRs and workflow runs. Click Connect in the Shipgate panel to sign in with GitHub (no token needed)."
           },
           {
             "id": "code-to-isl",
             "title": "Code to ISL",
-            "description": "Generate intent specs from existing code. Select a file or folder, then click Generate ISL from Code.\n\n[Try It](command:shipgate.codeToIsl)",
-            "media": {
-              "markdown": "media/walkthrough/step5-code-to-isl.md"
-            }
+            "description": "Generate intent specs from existing code. Click Generate ISL from Code in the Shipgate panel to scan your workspace.\n\n[Try It](command:shipgate.codeToIsl)"
           }
         ]
       }
@@ -310,27 +296,27 @@
         },
         {
           "when": "resourceLangId == isl",
-          "command": "isl.parseFile",
+          "command": "shipgate.isl.parseFile",
           "group": "isl@1"
         },
         {
           "when": "resourceLangId == isl",
-          "command": "isl.typeCheck",
+          "command": "shipgate.isl.typeCheck",
           "group": "isl@2"
         },
         {
           "when": "resourceLangId == isl",
-          "command": "isl.generateTypeScript",
+          "command": "shipgate.isl.generateTypeScript",
           "group": "isl@3"
         },
         {
           "when": "resourceLangId == isl",
-          "command": "isl.verifySpec",
+          "command": "shipgate.isl.verifySpec",
           "group": "isl@4"
         },
         {
           "when": "resourceLangId == isl",
-          "command": "isl.generateSkeleton",
+          "command": "shipgate.isl.generateSkeleton",
           "group": "isl@5"
         }
       ],
@@ -359,36 +345,36 @@
           "when": "resourceLangId == isl"
         },
         {
-          "command": "isl.parseFile",
+          "command": "shipgate.isl.parseFile",
           "when": "resourceLangId == isl"
         },
         {
-          "command": "isl.typeCheck",
+          "command": "shipgate.isl.typeCheck",
           "when": "resourceLangId == isl"
         },
         {
-          "command": "isl.generateTypeScript",
+          "command": "shipgate.isl.generateTypeScript",
           "when": "resourceLangId == isl"
         },
         {
-          "command": "isl.generateRust",
+          "command": "shipgate.isl.generateRust",
           "when": "resourceLangId == isl"
         },
         {
-          "command": "isl.verifySpec",
+          "command": "shipgate.isl.verifySpec",
           "when": "resourceLangId == isl"
         },
         {
-          "command": "isl.openRepl"
+          "command": "shipgate.isl.openRepl"
         },
         {
-          "command": "isl.initProject"
+          "command": "shipgate.isl.initProject"
         },
         {
-          "command": "isl.restartServer"
+          "command": "shipgate.isl.restartServer"
         },
         {
-          "command": "isl.generateSkeleton",
+          "command": "shipgate.isl.generateSkeleton",
           "when": "resourceLangId == isl"
         },
         {
@@ -501,7 +487,7 @@
         "shipgate.scan.scanOnSave": {
           "type": "boolean",
           "default": false,
-          "description": "Run scan automatically on file save"
+          "description": "Gate on save: run full gate (spec + firewall) when you save. Use for small projects; may be slow on large codebases."
         },
         "shipgate.github.token": {
           "type": "string",
@@ -516,7 +502,7 @@
         "shipgate.firewall.runOnSave": {
           "type": "boolean",
           "default": true,
-          "description": "Run firewall automatically when files are saved"
+          "description": "Gate on save (firewall): run lightweight checks on .ts/.js save. Catches ghost routes, hardcoded secrets, policy violations. Fast and recommended."
         }
       }
     },

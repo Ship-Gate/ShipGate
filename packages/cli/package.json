@@ -1,6 +1,6 @@
 {
   "name": "shipgate",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "ShipGate — Stop AI from shipping fake features. Define what your code should do. We enforce it.",
   "author": "ISL Team",
   "license": "MIT",

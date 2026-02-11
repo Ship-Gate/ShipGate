@@ -44,6 +44,9 @@ export class AgentFirewall {
       enableCaching: true,
       ...config,
     };
+    if (this.config.projectRoot == null) {
+      this.config.projectRoot = process.cwd();
+    }
     this.mode = this.config.mode;
     
     this.claimExtractor = new ClaimExtractor();

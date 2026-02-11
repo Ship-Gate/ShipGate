@@ -68,7 +68,7 @@ describe('ISLCodeActionProvider', () => {
       expect(skeletonAction).toBeDefined();
       expect(skeletonAction?.title).toContain('Payments');
       expect(skeletonAction?.kind).toBe(CodeActionKind.Source);
-      expect(skeletonAction?.command?.command).toBe('isl.generateSkeleton');
+      expect(skeletonAction?.command?.command).toBe('shipgate.isl.generateSkeleton');
     });
 
     it('should pass document URI and domain name as command arguments', () => {

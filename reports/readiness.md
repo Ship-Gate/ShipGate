@@ -1,6 +1,6 @@
 # Package Readiness Report
 
-**Generated:** 2026-02-11T07:41:54.977Z
+**Generated:** 2026-02-11T15:47:15.177Z
 **Threshold:** 75%
 **Total:** 226 | **Ready:** 202 | **Not Ready:** 24
 

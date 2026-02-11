@@ -8,8 +8,8 @@ describe('additional tests 7', () => {
   })
   
   it('should have realistic input/output 7', () => {
-    const input = { value: 'test-7', count: i }
-    const expected = { processed: true, items: i }
+    const input = { value: 'test-7', count: 7 }
+    const expected = { processed: true, items: 7 }
     
     // Mock processing logic
     const result = { processed: true, items: input.count }

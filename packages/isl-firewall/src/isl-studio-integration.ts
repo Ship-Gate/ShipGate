@@ -323,12 +323,16 @@ export class IntegratedFirewall {
     // Run ISL Studio policies
     const islResult = this.runISLPolicies(request);
 
-    // Combine results
-    const totalHardBlocks = shipgateResult.stats.hardBlocks + 
+    // Combine results (guard against undefined stats)
+    const stats = shipgateResult.stats ?? {
+      hardBlocks: 0, softBlocks: 0, warnings: 0,
+      claimsExtracted: 0, evidenceFound: 0, evidenceMissing: 0, violationsTotal: 0,
+    };
+    const totalHardBlocks = (stats.hardBlocks ?? 0) +
       islResult.violations.filter(v => v.tier === 'hard_block').length;
-    const totalSoftBlocks = shipgateResult.stats.softBlocks +
+    const totalSoftBlocks = (stats.softBlocks ?? 0) +
       islResult.violations.filter(v => v.tier === 'soft_block').length;
-    const totalWarnings = shipgateResult.stats.warnings +
+    const totalWarnings = (stats.warnings ?? 0) +
       islResult.violations.filter(v => v.tier === 'warn').length;
 
     const combinedVerdict = (totalHardBlocks > 0 || !shipgateResult.allowed) 

@@ -6,6 +6,15 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Unreleased]
+
+### Changed
+
+- **Gate on save** — Clarified configuration descriptions for `shipgate.firewall.runOnSave` (lightweight checks on save) and `shipgate.scan.scanOnSave` (full gate on save). Firewall on save is enabled by default.
+- **Marketplace** — Added "Machine Learning" category for better discovery among AI coding tools.
+
+---
+
 ## [0.1.0] — 2026-02-08
 
 ### Added

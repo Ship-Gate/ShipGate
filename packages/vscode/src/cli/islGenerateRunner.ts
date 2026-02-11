@@ -61,7 +61,7 @@ export async function runIslGenerate(
 
   const { executable, args } = await resolveIslExecutable(workspaceRoot);
 
-  const fullArgs = [...args.slice(0, -1), targetPath, '-f', 'json'];
+  const fullArgs = [...args.slice(0, -2), targetPath, '-f', 'json'];
   if (output) fullArgs.push('--output', output);
   if (dryRun) fullArgs.push('--dry-run');
   if (overwrite) fullArgs.push('--overwrite');

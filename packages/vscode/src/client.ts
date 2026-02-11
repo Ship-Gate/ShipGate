@@ -133,22 +133,25 @@ export async function stopClient(client: LanguageClient): Promise<void> {
  * Find the server module in common locations.
  *
  * Priority:
- *   1. Bundled with extension (server/index.js — copied by esbuild plugin)
- *   2. Monorepo sibling (../lsp-server/dist/index.js)
+ *   1. Monorepo sibling (../lsp-server/dist/index.js) — preferred in dev so server
+ *      runs in lsp-server package context and resolves @isl-lang/lsp-core correctly
+ *   2. Bundled with extension (server/index.js — copied by esbuild plugin)
  *   3. Workspace node_modules (@isl-lang/lsp-server)
  *   4. Global npm installation
  */
 function findServerModule(context: vscode.ExtensionContext): string | undefined {
+  const monorepoSibling = path.join(context.extensionPath, '..', 'lsp-server', 'dist', 'index.js');
+
   const candidates = [
+    // Monorepo sibling (first in dev — server has its own deps)
+    monorepoSibling,
+
     // Bundled with extension
     context.asAbsolutePath(path.join('server', 'index.js')),
     context.asAbsolutePath(path.join('server', 'cli.js')),
 
     // Alternative bundle location
     context.asAbsolutePath(path.join('dist', 'server', 'index.js')),
-
-    // Monorepo sibling
-    path.join(context.extensionPath, '..', 'lsp-server', 'dist', 'index.js'),
 
     // node_modules (@isl-lang scope)
     context.asAbsolutePath(

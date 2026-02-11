@@ -44,7 +44,7 @@ export async function resolveShipgateExecutable(
     return { executable: customPath.trim(), args: CLI_VERIFY_JSON_PAYLOAD };
   }
 
-  const root = resolve(workspaceRoot);
+  const root = resolve(workspaceRoot ?? process.cwd());
 
   // 1. Workspace local CLI package (node-run .cjs/.js only)
   const localCliPaths = [
@@ -83,9 +83,10 @@ export async function runShipgateScan(
     executablePath
   );
 
+  const cwd = workspaceRoot && typeof workspaceRoot === 'string' ? workspaceRoot : process.cwd();
   return new Promise((resolvePromise) => {
     const proc: ChildProcess = spawn(executable, args, {
-      cwd: workspaceRoot,
+      cwd,
       shell: true,
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env, FORCE_COLOR: '0' },
@@ -119,6 +120,7 @@ export async function runShipgateScan(
         token.onCancellationRequested(() => {});
       }
 
+      const parseInput = stdout.trim() || stderr.trim();
       const parsed = safeParseJSON<{
         verdict?: string;
         score?: number;
@@ -138,12 +140,17 @@ export async function runShipgateScan(
         recommendations?: string[];
         duration?: number;
         exitCode?: number;
-      }>(stdout.trim());
+      }>(parseInput);
 
       if (!parsed.ok) {
+        const errMsg =
+          stderr?.trim() ||
+          (code !== 0 && code != null ? `Process exited with code ${code}` : null) ||
+          parsed.error ||
+          'No JSON output from CLI';
         resolvePromise({
           success: false,
-          error: parsed.error,
+          error: errMsg,
           stderr: stderr || undefined,
         });
         return;
@@ -155,7 +162,9 @@ export async function runShipgateScan(
         score: typeof raw.score === 'number' ? raw.score : 0,
         coverage: raw.coverage ?? { specced: 0, total: 0 },
         mode: (raw.mode as ScanRunResult['mode']) ?? 'specless',
-        files: (raw.files ?? []).map((f) => ({
+        files: (raw.files ?? [])
+          .filter((f) => f && typeof f.file === 'string')
+          .map((f) => ({
           file: f.file,
           status: (f.status === 'PASS' ? 'PASS' : f.status === 'FAIL' ? 'FAIL' : 'WARN') as 'PASS' | 'WARN' | 'FAIL',
           mode: f.mode,
@@ -175,14 +184,19 @@ export async function runShipgateScan(
         result,
         metadata: {
           timestamp: new Date().toISOString(),
-          workspaceRoot,
+          workspaceRoot: cwd,
           executable: args.length > 0 ? `${executable} ${args[0]}` : executable,
         },
       };
 
+      const success = code === 0;
+      const errorWhenFailed =
+        !success && (result.blockers?.[0] || stderr?.trim() || `Exit code ${code ?? 1}`);
+
       resolvePromise({
-        success: code === 0,
+        success,
         result: scanResult,
+        error: success ? undefined : errorWhenFailed,
         stderr: stderr || undefined,
       });
     });

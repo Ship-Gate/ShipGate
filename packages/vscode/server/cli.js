@@ -12,7 +12,7 @@ import {
   SemanticTokensBuilder,
   CodeActionKind as CodeActionKind2,
   TextEdit as TextEdit3
-} from "vscode-languageserver/node";
+} from "vscode-languageserver/node.js";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
 // src/documents.ts
@@ -3282,7 +3282,7 @@ ${indent}}
       kind: CodeActionKind.Source,
       command: {
         title: "Generate Skeleton from ISL Spec",
-        command: "isl.generateSkeleton",
+        command: "shipgate.isl.generateSkeleton",
         arguments: [document.uri, domainName]
       }
     };
