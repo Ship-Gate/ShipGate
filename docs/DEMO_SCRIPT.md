@@ -1,16 +1,16 @@
-# ISL Studio - 60 Second Demo Script
+# Shipgate - 60 Second Demo Script
 
 ## Setup (before recording)
 
 1. Clone the demo repo:
    ```bash
-   git clone https://github.com/ISL-Studio/islstudio-hello-gate
-   cd islstudio-hello-gate
+   git clone https://github.com/ISL-Studio/shipgate-hello-gate
+   cd shipgate-hello-gate
    ```
 
 2. Have two browser tabs ready:
-   - PR #1 (NO_SHIP): https://github.com/ISL-Studio/islstudio-hello-gate/pull/1
-   - PR #2 (SHIP): https://github.com/ISL-Studio/islstudio-hello-gate/pull/2
+   - PR #1 (NO_SHIP): https://github.com/ISL-Studio/shipgate-hello-gate/pull/1
+   - PR #2 (SHIP): https://github.com/ISL-Studio/shipgate-hello-gate/pull/2
 
 ---
 
@@ -18,7 +18,7 @@
 
 ### Opening (5 sec)
 
-"ISL Studio blocks risky code before it ships. Let me show you."
+"Shipgate blocks risky code before it ships. Let me show you."
 
 ### Show Bad PR (15 sec)
 
@@ -28,7 +28,7 @@
 
 *Scroll to comment showing NO_SHIP*
 
-"ISL Studio blocked it. Score: 0/100. Here are the violations."
+"Shipgate blocked it. Score: 0/100. Here are the violations."
 
 *Point to violations list*
 
@@ -49,7 +49,7 @@
 "Setting this up? One command."
 
 ```bash
-npx islstudio init
+npx shipgate init
 ```
 
 *Show output*
@@ -95,7 +95,7 @@ Add these segments:
 ### Local Run (30 sec)
 
 ```bash
-npx islstudio gate --explain
+npx shipgate gate --explain
 ```
 
 Show violations with fix guidance.
@@ -103,14 +103,14 @@ Show violations with fix guidance.
 ### Rules Exploration (30 sec)
 
 ```bash
-npx islstudio rules list
-npx islstudio rules explain auth/bypass-detected
+npx shipgate rules list
+npx shipgate rules explain auth/bypass-detected
 ```
 
 ### Baseline (30 sec)
 
 ```bash
-npx islstudio baseline create
+npx shipgate baseline create
 ```
 
 "Captures existing issues. New PRs only fail on new violations."
@@ -128,11 +128,11 @@ npx islstudio baseline create
 ## Thumbnail Ideas
 
 - Split screen: 🛑 NO_SHIP vs ✅ SHIP
-- Terminal showing `npx islstudio init`
+- Terminal showing `npx shipgate init`
 - PR comment with violations
 
 ## Title Options
 
 - "Block Risky PRs in 60 Seconds"
 - "Zero-Config Security Gate for GitHub"
-- "ISL Studio: Ship with Receipts"
+- "Shipgate: Ship with Receipts"

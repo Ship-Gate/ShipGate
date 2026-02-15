@@ -148,6 +148,11 @@ export interface TestCaseResult {
     passed: boolean;
     message?: string;
   }>;
+  /**
+   * If true, this test was synthetically generated (not actually executed).
+   * Synthetic tests are labeled NON_EVIDENCE and contribute 0 execution credit.
+   */
+  synthetic?: boolean;
 }
 
 /**
@@ -183,6 +188,10 @@ export interface TestRunnerOutput {
     functions: number;
     statements: number;
   };
+  /** True when test execution itself failed (Vitest import errors, TS config issues, runtime crashes) */
+  executionFailed?: boolean;
+  /** Human-readable reason why test execution could not complete */
+  executionFailureReason?: string;
 }
 
 // ============================================================================

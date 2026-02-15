@@ -3,7 +3,7 @@
 // Translates ISL types to SMT-LIB sort and function declarations
 // ============================================================================
 
-import type * as AST from '../../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 
 // ============================================================================
 // SORT ENCODING

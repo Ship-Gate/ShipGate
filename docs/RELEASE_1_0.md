@@ -236,7 +236,7 @@ npx tsx packages/isl-stdlib/demo.ts
 npx tsx packages/test-generator/demo.ts
 
 # Full verification
-npx islstudio gate --explain
+npx shipgate gate --explain
 ```
 
 ---

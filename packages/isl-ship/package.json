@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/isl-ship",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ISL full-stack application generator — one spec, one command, running app",
   "type": "module",
   "main": "dist/index.cjs",

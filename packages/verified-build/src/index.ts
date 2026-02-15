@@ -245,7 +245,7 @@ export async function verifyBuild(options: VerifyOptions): Promise<BuildResult> 
   let signature: EvidenceSignature | undefined;
   
   if (options.writeEvidence) {
-    const evidenceDir = options.evidenceDir ?? `${options.projectRoot}/.islstudio/evidence`;
+    const evidenceDir = options.evidenceDir ?? `${options.projectRoot}/.shipgate/evidence`;
     evidencePath = await writeEvidenceBundle(gateResult, findings, {
       outputDir: evidenceDir,
       projectRoot: options.projectRoot,

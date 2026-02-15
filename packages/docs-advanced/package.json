@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/docs-advanced",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Advanced documentation generation with interactive examples for ISL",
   "type": "module",
   "main": "./dist/index.js",

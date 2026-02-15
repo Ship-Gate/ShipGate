@@ -250,8 +250,25 @@ function extractResultPath(expr: AST.Expression): string | null {
     if (objPath) {
       return `${objPath}.${expr.property.name}`;
     }
+    // Handle Entity.lookup(result.id).field patterns
+    if (expr.object.kind === 'CallExpr') {
+      const callResult = extractResultPathFromCall(expr.object);
+      if (callResult) {
+        return `result.data.${expr.property.name}`;
+      }
+    }
   }
   return null;
+}
+
+function extractResultPathFromCall(expr: AST.Expression): boolean {
+  if (expr.kind !== 'CallExpr') return false;
+  // Check if any argument references result
+  for (const arg of expr.arguments) {
+    if (arg.kind === 'ResultExpr') return true;
+    if (arg.kind === 'MemberExpr' && arg.object.kind === 'ResultExpr') return true;
+  }
+  return false;
 }
 
 function extractInputReference(expr: AST.Expression): string | null {
@@ -260,6 +277,10 @@ function extractInputReference(expr: AST.Expression): string | null {
   }
   if (expr.kind === 'MemberExpr' && expr.object.kind === 'InputExpr') {
     return `${expr.object.property.name}.${expr.property.name}`;
+  }
+  // Handle input.field parsed as MemberExpr(Identifier("input"), property)
+  if (expr.kind === 'MemberExpr' && expr.object.kind === 'Identifier' && expr.object.name === 'input') {
+    return expr.property.name;
   }
   return null;
 }

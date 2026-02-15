@@ -1,5 +1,6 @@
 {
   "name": "@isl-lang/stdlib-distributed",
+  "private": true,
   "version": "1.0.0",
   "description": "ISL Standard Library - Distributed Computing Primitives (Actors, Consensus, CRDTs, Sagas, Service Mesh)",
   "license": "MIT",

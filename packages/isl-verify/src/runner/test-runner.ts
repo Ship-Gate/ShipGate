@@ -11,6 +11,7 @@ import { tmpdir } from 'os';
 import type { Domain } from '@isl-lang/parser';
 import { generate, type GeneratedFile } from '@isl-lang/codegen-tests';
 import { createSandboxRunner, type SandboxOptions } from '@isl-lang/verifier-sandbox';
+import { runExecutionProof } from './execution-proof';
 
 export interface TestResult {
   passed: number;
@@ -26,6 +27,13 @@ export interface TestResult {
     temporal: TestDetail[];
     chaos: TestDetail[];
   };
+  /** True when test execution itself failed (imports, vitest crash, etc.) */
+  verificationFailed?: boolean;
+  /** Human-readable reason why verification could not complete */
+  verificationFailureReason?: string;
+  /** True when results come from the execution-proof fallback, not full unit tests.
+   *  Trust score must be capped at WARN — never SHIP. */
+  fallbackEvidence?: boolean;
 }
 
 export interface TestDetail {
@@ -37,6 +45,11 @@ export interface TestDetail {
   category?: 'postcondition' | 'invariant' | 'scenario' | 'temporal' | 'chaos' | 'precondition';
   /** Impact level for trust scoring */
   impact?: 'critical' | 'high' | 'medium' | 'low';
+  /**
+   * If true, this test was synthetically generated (not actually executed).
+   * Synthetic tests are labeled NON_EVIDENCE and contribute 0 execution credit.
+   */
+  synthetic?: boolean;
 }
 
 export interface RunnerOptions {
@@ -515,9 +528,73 @@ export default defineConfig({
       // Run tests based on language
       let result = await this.executeTestsForLanguage(workDir, language);
       
-      // BUG-005 FIX: If no tests were executed, generate synthetic tests from postconditions
+      // If no tests were executed, this is a verification failure — not a pass.
+      // Before giving up, attempt the execution-proof fallback for real evidence.
       if (result.details.length === 0) {
-        result = this.generateSyntheticTests(domain);
+        if (this.options.verbose) {
+          console.log('Vitest produced no results — attempting execution-proof fallback…');
+        }
+        try {
+          const fallback = await runExecutionProof(
+            implementationCode,
+            domain,
+            'Vitest produced no results; falling back to execution proof.',
+            {
+              verbose: this.options.verbose,
+              workDir: this.options.workDir,
+              maxSamples: 8,
+              invocationTimeout: Math.min(this.options.timeout, 5000),
+              stubEffects: true,
+            }
+          );
+          result = fallback.testResult;
+          // Attach the full evidence report for downstream consumers
+          (result as TestResult & { _evidenceReport?: unknown })._evidenceReport = fallback.report;
+        } catch {
+          // Fallback itself failed — generate hard failures
+          result = this.generateVerificationFailureTests(domain,
+            'Test execution produced no results and execution-proof fallback failed.');
+        }
+      } else if (result.verificationFailed && result.passed === 0) {
+        // Vitest ran but every test failed due to infrastructure issues — try fallback
+        if (this.options.verbose) {
+          console.log('All tests failed (possible infra issue) — attempting execution-proof fallback…');
+        }
+        try {
+          const fallback = await runExecutionProof(
+            implementationCode,
+            domain,
+            result.verificationFailureReason ?? 'All tests failed; falling back to execution proof.',
+            {
+              verbose: this.options.verbose,
+              workDir: this.options.workDir,
+              maxSamples: 8,
+              invocationTimeout: Math.min(this.options.timeout, 5000),
+              stubEffects: true,
+            }
+          );
+          // Only replace if fallback produced something useful
+          if (fallback.testResult.details.length > 0) {
+            result = fallback.testResult;
+            (result as TestResult & { _evidenceReport?: unknown })._evidenceReport = fallback.report;
+          }
+        } catch {
+          // Keep original failure result
+        }
+      } else if (result.passed === 0 && result.skipped > 0 && result.failed === 0) {
+        // All tests skipped = no real verification occurred
+        result.verificationFailed = true;
+        result.verificationFailureReason =
+          'All tests were skipped. Intent not verified — no assertions executed.';
+        // Re-mark skipped as failed so score reflects reality
+        for (const d of result.details) {
+          if (d.status === 'skipped') {
+            d.status = 'failed';
+            d.error = d.error || 'Skipped: intent not verified';
+          }
+        }
+        result.failed = result.details.filter(d => d.status === 'failed').length;
+        result.skipped = 0;
       }
       
       // Categorize test results for trust scoring
@@ -546,8 +623,13 @@ export default defineConfig({
       const funcName = firstChar ? firstChar.toLowerCase() + behaviorName.slice(1) : 'unknown';
       
       // Replace behavior imports with implementation imports
+      // Handle both ../src/Login and ./Login (after patchTestImports)
       patched = patched.replace(
         new RegExp(`from '\\.\\.?\\/src\\/${behaviorName}'`, 'g'),
+        `from './src/${domainName}.impl'`
+      );
+      patched = patched.replace(
+        new RegExp(`from '\\.\\/${behaviorName}'`, 'g'),
         `from './src/${domainName}.impl'`
       );
       patched = patched.replace(
@@ -605,17 +687,18 @@ export default defineConfig({
   }
 
   /**
-   * BUG-005 FIX: Generate synthetic tests from domain postconditions and invariants
-   * This is used as a fallback when vitest subprocess fails or returns 0 tests
+   * Generate explicit FAILURE entries when test execution could not complete.
+   * These are NOT skipped — they are hard failures that tank the trust score.
+   * This is the only honest response to "we couldn't verify your intent".
    */
-  private generateSyntheticTests(domain: Domain): TestResult {
+  private generateVerificationFailureTests(domain: Domain, reason: string): TestResult {
     const details: TestDetail[] = [];
     const startTime = Date.now();
 
     for (const behavior of domain.behaviors) {
       const behaviorName = behavior.name.name;
 
-      // Generate tests for postconditions
+      // Postconditions — each is an unverified intent = FAIL
       if (behavior.postconditions && Array.isArray(behavior.postconditions)) {
         for (let i = 0; i < behavior.postconditions.length; i++) {
           const post = behavior.postconditions[i];
@@ -623,16 +706,16 @@ export default defineConfig({
                           (post as { expression?: string })?.expression ?? `postcondition_${i}`;
           details.push({
             name: `${behaviorName}: postcondition - ${postText}`,
-            status: 'skipped',
+            status: 'failed',
             duration: 0,
             category: 'postcondition',
             impact: 'high',
-            error: 'Synthetic test - implementation verification pending',
+            error: `UNVERIFIED: ${reason}`,
           });
         }
       }
 
-      // Generate tests for invariants
+      // Invariants — each is an unverified intent = FAIL
       if (behavior.invariants && Array.isArray(behavior.invariants)) {
         for (let i = 0; i < behavior.invariants.length; i++) {
           const inv = behavior.invariants[i];
@@ -640,44 +723,46 @@ export default defineConfig({
                          (inv as { expression?: string })?.expression ?? `invariant_${i}`;
           details.push({
             name: `${behaviorName}: invariant - ${invText}`,
-            status: 'skipped',
+            status: 'failed',
             duration: 0,
             category: 'invariant',
             impact: 'high',
-            error: 'Synthetic test - implementation verification pending',
+            error: `UNVERIFIED: ${reason}`,
           });
         }
       }
 
-      // Generate a basic behavior test
+      // Behavior execution — cannot verify = FAIL
       details.push({
         name: `${behaviorName}: behavior execution`,
-        status: 'skipped',
+        status: 'failed',
         duration: 0,
         category: 'scenario',
         impact: 'medium',
-        error: 'Synthetic test - behavior verification pending',
+        error: `UNVERIFIED: ${reason}`,
       });
     }
 
-    // If no behaviors found, add a domain-level test
+    // If no behaviors, still fail the domain
     if (details.length === 0) {
       details.push({
         name: `${domain.name.name}: domain validation`,
-        status: 'skipped',
+        status: 'failed',
         duration: 0,
         category: 'scenario',
-        impact: 'low',
-        error: 'No behaviors defined in domain',
+        impact: 'high',
+        error: `UNVERIFIED: ${reason}`,
       });
     }
 
     return {
       passed: 0,
-      failed: 0,
-      skipped: details.length,
+      failed: details.length,
+      skipped: 0,
       duration: Date.now() - startTime,
       details,
+      verificationFailed: true,
+      verificationFailureReason: reason,
     };
   }
 

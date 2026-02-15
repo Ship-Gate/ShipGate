@@ -1,0 +1,60 @@
+{
+  "version": "0.1.0",
+  "timestamp": "2026-02-12T00:17:25.192Z",
+  "verdict": "SHIP",
+  "score": 1,
+  "summary": "SHIP (score: 1.00) | 5 passed",
+  "files": [
+    {
+      "file": "vitest.config.ts",
+      "status": "PASS",
+      "method": "Specless",
+      "score": 1,
+      "blockers": [],
+      "duration": 28
+    },
+    {
+      "file": "src\\verify.ts",
+      "status": "PASS",
+      "method": "Specless",
+      "score": 1,
+      "blockers": [],
+      "duration": 15
+    },
+    {
+      "file": "src\\types.ts",
+      "status": "PASS",
+      "method": "Specless",
+      "score": 1,
+      "blockers": [],
+      "duration": 20
+    },
+    {
+      "file": "src\\index.ts",
+      "status": "PASS",
+      "method": "Specless",
+      "score": 1,
+      "blockers": [],
+      "duration": 8
+    },
+    {
+      "file": "src\\comment.ts",
+      "status": "PASS",
+      "method": "Specless",
+      "score": 1,
+      "blockers": [],
+      "duration": 13
+    }
+  ],
+  "blockers": [],
+  "recommendations": [
+    "Generate ISL specs: shipgate isl generate ./",
+    "Generate ISL specs: shipgate isl generate src/",
+    "ISL coverage is 0% — aim for at least 80% spec coverage"
+  ],
+  "coverage": {
+    "specced": 0,
+    "total": 5
+  },
+  "duration": 11469
+}

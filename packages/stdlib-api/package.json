@@ -1,5 +1,6 @@
 {
   "name": "@isl-lang/stdlib-api",
+  "private": true,
   "version": "0.1.0",
   "description": "API definition standard library - REST, GraphQL, and RPC patterns",
   "license": "MIT",

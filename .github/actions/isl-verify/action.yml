@@ -1,0 +1,40 @@
+name: 'isl-verify'
+description: 'Run ISL verification on pull requests and post results as a PR comment'
+author: 'ISL Team'
+
+branding:
+  icon: 'shield'
+  color: 'green'
+
+inputs:
+  isl-spec-path:
+    description: 'Path to ISL specification file'
+    required: false
+    default: './spec.isl'
+  threshold:
+    description: 'Minimum trust score to pass (0-100)'
+    required: false
+    default: '70'
+  fail-on-no-ship:
+    description: 'Fail the workflow if verification results in NO_SHIP'
+    required: false
+    default: 'true'
+  api-key:
+    description: 'API key for ISL verification (use secrets.ISL_API_KEY or similar)'
+    required: true
+  working-directory:
+    description: 'Working directory for running verification'
+    required: false
+    default: '.'
+
+outputs:
+  verdict:
+    description: 'Verification verdict: SHIP or NO_SHIP'
+  score:
+    description: 'Trust score (0-100)'
+  passed:
+    description: 'Whether verification passed (true/false)'
+
+runs:
+  using: 'node20'
+  main: '../../packages/isl-verify-action/dist/index.js'

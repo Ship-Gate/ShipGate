@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/codegen-runtime",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generate self-verifying code with runtime pre/post condition checks from ISL specifications",
   "type": "module",
   "main": "./dist/index.js",

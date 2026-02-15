@@ -133,6 +133,19 @@ export type {
   MarkdownOptions,
 } from './reporters';
 
+// Verification pipeline security scanner
+export {
+  VerificationSecurityScanner,
+  runVerificationSecurityScan,
+} from './verification/index.js';
+export type {
+  VerificationSecurityScanOptions,
+  VerificationSecurityScanResult,
+  SecurityCheckResult,
+  SecurityFinding,
+  SecuritySeverity,
+} from './verification/index.js';
+
 // ============================================================================
 // Default Export
 // ============================================================================

@@ -615,3 +615,233 @@ describe('Specless Check Registry', () => {
     expect(evidence[0].details).toContain('threw an error');
   });
 });
+
+// ============================================================================
+// 12. Verification Blocked — Synthetic Skipped Tests Loophole
+// ============================================================================
+
+describe('verification_blocked is a critical failure', () => {
+  it('is included in CRITICAL_FAILURES', () => {
+    expect(CRITICAL_FAILURES).toContain('verification_blocked');
+  });
+
+  it('verification_blocked forces NO_SHIP even with high-scoring evidence', () => {
+    const evidence = [
+      islPass('precondition', 1.0),
+      islPass('postcondition', 1.0),
+      islPass('invariant', 1.0),
+      createGateEvidence('test-execution', 'verification_blocked', 'fail', 1.0,
+        'Verification blocked: tests did not run — Vitest import error'),
+    ];
+    const v = produceVerdict(evidence);
+
+    expect(v.decision).toBe('NO_SHIP');
+    expect(v.blockers.some(b => b.includes('verification_blocked'))).toBe(true);
+    expect(v.summary).toContain('Critical failure');
+  });
+
+  it('all-skipped tests producing verification_blocked → NO_SHIP', () => {
+    const evidence = [
+      islPass('spec_check', 0.95),
+      createGateEvidence('test-execution', 'verification_blocked', 'fail', 1.0,
+        'Verification blocked: all 5 test(s) were skipped — no assertions executed'),
+    ];
+    const v = produceVerdict(evidence);
+
+    expect(v.decision).toBe('NO_SHIP');
+    expect(v.blockers.some(b => b.includes('verification_blocked'))).toBe(true);
+  });
+
+  it('TS config failure producing verification_blocked → NO_SHIP', () => {
+    const evidence = [
+      islPass('parse', 1.0),
+      createGateEvidence('test-execution', 'verification_blocked', 'fail', 1.0,
+        'Verification blocked: tests did not run — Cannot find module vitest'),
+    ];
+    const v = produceVerdict(evidence);
+
+    expect(v.decision).toBe('NO_SHIP');
+  });
+
+  it('verification_blocked never produces SHIP even with perfect other evidence', () => {
+    const evidence = [
+      islPass('a', 1.0),
+      islPass('b', 1.0),
+      islPass('c', 1.0),
+      islPass('d', 1.0),
+      islPass('e', 1.0),
+      createGateEvidence('test-execution', 'verification_blocked', 'fail', 1.0,
+        'Verification blocked: tests did not run'),
+    ];
+    const v = produceVerdict(evidence);
+
+    // Must NEVER be SHIP
+    expect(v.decision).not.toBe('SHIP');
+    expect(v.decision).toBe('NO_SHIP');
+  });
+});
+
+// ============================================================================
+// 13. warn-on-exec-failure Config Option
+// ============================================================================
+
+describe('warn-on-exec-failure option', () => {
+  it('downgrades verification_blocked to WARN when conditions met', () => {
+    const evidence = [
+      // High-confidence typed spec
+      createGateEvidence('isl-spec', 'typed_spec', 'pass', 0.95, 'fully typed'),
+      // At least one runtime sanity check passed
+      createGateEvidence('static-analysis', 'static_check', 'pass', 0.8, 'proven'),
+      // Tests didn't run
+      createGateEvidence('test-execution', 'verification_blocked', 'fail', 1.0,
+        'Verification blocked: tests did not run'),
+    ];
+    const v = produceVerdict(evidence, { warnOnExecFailure: true });
+
+    expect(v.decision).toBe('WARN');
+    expect(v.summary).toContain('warn-on-exec-failure');
+  });
+
+  it('does NOT downgrade when no high-confidence spec exists', () => {
+    const evidence = [
+      // Low-confidence spec
+      createGateEvidence('isl-spec', 'typed_spec', 'pass', 0.5, 'partial'),
+      createGateEvidence('static-analysis', 'static_check', 'pass', 0.8, 'proven'),
+      createGateEvidence('test-execution', 'verification_blocked', 'fail', 1.0,
+        'Verification blocked: tests did not run'),
+    ];
+    const v = produceVerdict(evidence, { warnOnExecFailure: true });
+
+    expect(v.decision).toBe('NO_SHIP');
+  });
+
+  it('does NOT downgrade when no runtime check passed', () => {
+    const evidence = [
+      createGateEvidence('isl-spec', 'typed_spec', 'pass', 0.95, 'fully typed'),
+      // No runtime-eval or static-analysis pass
+      createGateEvidence('test-execution', 'verification_blocked', 'fail', 1.0,
+        'Verification blocked: tests did not run'),
+    ];
+    const v = produceVerdict(evidence, { warnOnExecFailure: true });
+
+    expect(v.decision).toBe('NO_SHIP');
+  });
+
+  it('does NOT downgrade without the option being set', () => {
+    const evidence = [
+      createGateEvidence('isl-spec', 'typed_spec', 'pass', 0.95, 'fully typed'),
+      createGateEvidence('static-analysis', 'static_check', 'pass', 0.8, 'proven'),
+      createGateEvidence('test-execution', 'verification_blocked', 'fail', 1.0,
+        'Verification blocked: tests did not run'),
+    ];
+    // Default: no warnOnExecFailure
+    const v = produceVerdict(evidence);
+
+    expect(v.decision).toBe('NO_SHIP');
+  });
+
+  it('does NOT downgrade when mixed critical failures (verification_blocked + other)', () => {
+    const evidence = [
+      createGateEvidence('isl-spec', 'typed_spec', 'pass', 0.95, 'fully typed'),
+      createGateEvidence('static-analysis', 'static_check', 'pass', 0.8, 'proven'),
+      createGateEvidence('test-execution', 'verification_blocked', 'fail', 1.0,
+        'Verification blocked: tests did not run'),
+      islFail('security_violation: auth bypass', 0.99, 'no auth'),
+    ];
+    const v = produceVerdict(evidence, { warnOnExecFailure: true });
+
+    expect(v.decision).toBe('NO_SHIP');
+  });
+});
+
+// ============================================================================
+// 14. Backward Compatibility — Old Threshold Signature
+// ============================================================================
+
+describe('produceVerdict backward compatibility', () => {
+  it('still accepts ScoringThresholds directly (old signature)', () => {
+    const evidence = [islPass('check', 1.0)];
+    const v = produceVerdict(evidence, SCORING_THRESHOLDS);
+
+    expect(v.decision).toBe('SHIP');
+    expect(v.score).toBeCloseTo(1.0, 5);
+  });
+
+  it('accepts VerdictOptions with custom thresholds', () => {
+    const evidence = [islPass('check', 0.90)];
+    const v = produceVerdict(evidence, {
+      thresholds: { ...SCORING_THRESHOLDS, SHIP: 0.95 },
+    });
+
+    // 0.90 < 0.95 → WARN, not SHIP
+    expect(v.decision).toBe('WARN');
+  });
+});
+
+// ============================================================================
+// 15. Truth Mode — Never Claim Safety Without Evidence
+// ============================================================================
+
+describe('Truth Mode: empty evidence = NO_SHIP', () => {
+  it('returns NO_SHIP with score 0 when evidence array is empty', () => {
+    const v = produceVerdict([]);
+
+    expect(v.decision).toBe('NO_SHIP');
+    expect(v.score).toBe(0);
+    expect(v.summary).toContain('No scoreable evidence');
+    expect(v.blockers.length).toBeGreaterThan(0);
+  });
+
+  it('returns NO_SHIP when all evidence is skip (no scoreable results)', () => {
+    const evidence = [
+      createGateEvidence('isl-spec', 'synthetic_check_1', 'skip', 0, 'NON_EVIDENCE'),
+      createGateEvidence('isl-spec', 'synthetic_check_2', 'skip', 0, 'NON_EVIDENCE'),
+    ];
+    const v = produceVerdict(evidence);
+
+    expect(v.decision).toBe('NO_SHIP');
+    expect(v.score).toBe(0);
+    expect(v.summary).toContain('No scoreable evidence');
+  });
+
+  it('caps to WARN when score is high but no checks actually passed', () => {
+    // Only warn evidence → resultFactor = 0.5 → score = 0.5 × confidence
+    // With high confidence warns, score could be above WARN threshold
+    // but if nothing "passed", the system should not claim SHIP
+    const evidence = [
+      createGateEvidence('isl-spec', 'check_1', 'warn', 1.0, 'uncertain'),
+      createGateEvidence('isl-spec', 'check_2', 'warn', 1.0, 'uncertain'),
+      createGateEvidence('static-analysis', 'check_3', 'warn', 1.0, 'uncertain'),
+    ];
+    const v = produceVerdict(evidence);
+
+    // Warn result factor = 0.5, so score = 0.5 which is below SHIP threshold
+    // but this test proves the invariant: no pass → no SHIP
+    expect(v.decision).not.toBe('SHIP');
+  });
+
+  it('allows SHIP when at least one check passes and score is high', () => {
+    const evidence = [
+      islPass('postcondition_verified', 1.0),
+      islPass('invariant_checked', 0.95),
+      islPass('error_case_handled', 0.9),
+    ];
+    const v = produceVerdict(evidence);
+
+    expect(v.decision).toBe('SHIP');
+    expect(v.score).toBeGreaterThanOrEqual(0.85);
+  });
+
+  it('never SHIPs with only specless-scanner evidence at any score', () => {
+    // Specless evidence gets lower weight and should not reach SHIP threshold alone
+    const evidence = [
+      speclessPass('file_exists', 0.3),
+      speclessPass('has_exports', 0.3),
+    ];
+    const v = produceVerdict(evidence);
+
+    // Score should be well below SHIP threshold with low confidence
+    expect(v.score).toBeLessThan(0.85);
+    expect(v.decision).not.toBe('SHIP');
+  });
+});

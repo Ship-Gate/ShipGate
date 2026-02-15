@@ -12,16 +12,25 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, '..');
 
-// Read experimental.json
-const experimentalConfig = JSON.parse(
-  readFileSync(join(rootDir, 'experimental.json'), 'utf-8')
-);
+// Read experimental.json (resilient to absence)
+let experimentalConfig: {
+  experimental?: Record<string, string[]>;
+  internal?: { packages?: string[] };
+} = {};
+try {
+  experimentalConfig = JSON.parse(
+    readFileSync(join(rootDir, 'experimental.json'), 'utf-8')
+  );
+} catch {
+  console.error('experimental.json not found or invalid. No packages to mark.');
+  process.exit(0);
+}
 
 // Collect all experimental package names
 const experimentalPackages: string[] = [];
 
 // Flatten experimental categories
-const experimental = experimentalConfig.experimental;
+const experimental = experimentalConfig.experimental ?? {};
 for (const category of Object.keys(experimental)) {
   if (Array.isArray(experimental[category])) {
     experimentalPackages.push(...experimental[category]);

@@ -1,5 +1,6 @@
 {
   "name": "@isl-lang/stdlib-observability",
+  "private": true,
   "version": "0.1.0",
   "description": "Logging, metrics, tracing, and alerting",
   "type": "module",

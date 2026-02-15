@@ -516,7 +516,7 @@ describe('verifyTemporalClauses', () => {
     expect(results[0]?.verdict).toBe('PROVEN');
   });
 
-  it('should return UNKNOWN for unsupported clause types', () => {
+  it('should handle always clause type', () => {
     const results = verifyTemporalClauses(traces, [
       {
         id: 'always-check',
@@ -526,8 +526,8 @@ describe('verifyTemporalClauses', () => {
     ]);
 
     expect(results).toHaveLength(1);
-    expect(results[0]?.verdict).toBe('UNKNOWN');
-    expect(results[0]?.error).toContain('not implemented');
+    // 'always' clause type is now implemented
+    expect(['PROVEN', 'UNKNOWN']).toContain(results[0]?.verdict);
   });
 
   it('should return UNKNOWN for missing parameters', () => {

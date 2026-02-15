@@ -1,17 +1,17 @@
-# ISL Studio - API Reference
+# Shipgate - API Reference
 
 ## Programmatic Usage
 
 Install:
 
 ```bash
-npm install islstudio
+npm install shipgate
 ```
 
 ### Basic Gate Run
 
 ```typescript
-import { runGate, loadConfig } from 'islstudio';
+import { runGate, loadConfig } from 'shipgate';
 
 const config = await loadConfig(process.cwd());
 const files = ['src/auth.ts', 'src/users.ts'];
@@ -49,9 +49,9 @@ interface Violation {
 ### Configuration
 
 ```typescript
-import { loadConfig, getPreset } from 'islstudio';
+import { loadConfig, getPreset } from 'shipgate';
 
-// Load from .islstudio/config.json
+// Load from .shipgate/config.json
 const config = await loadConfig('/path/to/repo');
 
 // Or use a preset
@@ -76,7 +76,7 @@ import {
   formatJsonOutput,
   formatSarifOutput,
   formatWithExplanations,
-} from 'islstudio';
+} from 'shipgate';
 
 const result = await runGate(files, config);
 
@@ -97,7 +97,7 @@ console.log(formatWithExplanations(result));
 ### HTML Report
 
 ```typescript
-import { generateHtmlReport } from 'islstudio';
+import { generateHtmlReport } from 'shipgate';
 
 const html = generateHtmlReport(result, 'my-project');
 fs.writeFileSync('report.html', html);
@@ -110,13 +110,13 @@ import {
   loadBaseline, 
   saveBaseline, 
   filterNewViolations 
-} from 'islstudio';
+} from 'shipgate';
 
 // Create baseline from current violations
-await saveBaseline('.islstudio/baseline.json', result.violations);
+await saveBaseline('.shipgate/baseline.json', result.violations);
 
 // Load baseline
-const baseline = await loadBaseline('.islstudio/baseline.json');
+const baseline = await loadBaseline('.shipgate/baseline.json');
 
 // Filter to only new violations
 const { newViolations, baselineViolations } = filterNewViolations(
@@ -128,7 +128,7 @@ const { newViolations, baselineViolations } = filterNewViolations(
 ### Suppressions
 
 ```typescript
-import { parseSuppressions, isSuppressed } from 'islstudio';
+import { parseSuppressions, isSuppressed } from 'shipgate';
 
 const content = fs.readFileSync('src/auth.ts', 'utf-8');
 const suppressions = parseSuppressions(content, 'src/auth.ts');
@@ -165,7 +165,7 @@ console.log(explanation.fixes);
 ### Scoring
 
 ```typescript
-import { calculateScore, getVerdict, explainScore } from 'islstudio';
+import { calculateScore, getVerdict, explainScore } from 'shipgate';
 
 const violations = {
   hardBlocks: 2,
@@ -256,8 +256,8 @@ registry.registerPack(myPack);
 
 | Variable | Description |
 |----------|-------------|
-| `ISLSTUDIO_CONFIG` | Path to config file |
-| `ISLSTUDIO_THRESHOLD` | Override threshold |
+| `SHIPGATE_CONFIG` | Path to config file |
+| `SHIPGATE_THRESHOLD` | Override threshold |
 | `CI` | Enables CI mode automatically |
 
 ## Types Export
@@ -267,5 +267,5 @@ import type {
   GateResult,
   GateConfig,
   Violation,
-} from 'islstudio';
+} from 'shipgate';
 ```

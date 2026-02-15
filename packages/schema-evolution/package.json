@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/schema-evolution",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Safe schema evolution and migration tools for ISL specifications",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

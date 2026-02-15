@@ -17,13 +17,21 @@ export interface TrustScore {
   };
   recommendation: Recommendation;
   details: TrustDetail[];
+  /** True when score was capped because results came from execution-proof fallback */
+  fallbackCapped?: boolean;
 }
 
 export interface CategoryScore {
-  score: number;             // 0-100
+  score: number;             // 0-100, composite from coverage/execution/pass
+  coverage_score: number;    // 0-100, % of required checks present
+  execution_score: number;   // 0-100, % of checks that actually executed
+  pass_score: number;        // 0-100, % passed among executed
   passed: number;
   failed: number;
+  unknown: number;           // tracked separately from fail (skipped/unverified)
   total: number;
+  gaps: string[];            // missing postconditions, no error cases, etc.
+  confidence: number;        // 0-1, derived from inference + execution coverage
 }
 
 export type Recommendation = 
@@ -93,16 +101,16 @@ export class TrustCalculator {
       : this.categorizeTests(testResult.details);
 
     // Calculate category scores
-    const postconditions = this.calculateCategoryScore(categories.postconditions);
-    const invariants = this.calculateCategoryScore(categories.invariants);
-    const scenarios = this.calculateCategoryScore(categories.scenarios);
-    const temporal = this.calculateCategoryScore(categories.temporal);
+    const postconditions = this.calculateCategoryScore(categories.postconditions, 'postconditions');
+    const invariants = this.calculateCategoryScore(categories.invariants, 'invariants');
+    const scenarios = this.calculateCategoryScore(categories.scenarios, 'scenarios');
+    const temporal = this.calculateCategoryScore(categories.temporal, 'temporal');
 
     // Calculate weighted overall score
     const totalWeight = this.weights.postconditions + this.weights.invariants + 
                        this.weights.scenarios + this.weights.temporal;
     
-    const overall = Math.round(
+    let overall = Math.round(
       (postconditions.score * this.weights.postconditions +
        invariants.score * this.weights.invariants +
        scenarios.score * this.weights.scenarios +
@@ -110,11 +118,64 @@ export class TrustCalculator {
     );
 
     // Calculate confidence based on test coverage
+    // Synthetic tests contribute 0 execution credit
+    const syntheticCount = testResult.details.filter(d => d.synthetic).length;
     const totalTests = testResult.passed + testResult.failed + testResult.skipped;
-    const confidence = this.calculateConfidence(totalTests, testResult.skipped);
+    const confidence = this.calculateConfidence(totalTests, testResult.skipped, syntheticCount);
 
-    // Determine recommendation
-    const recommendation = this.determineRecommendation(overall, testResult.failed);
+    // ──────────────────────────────────────────────────────────────────────
+    // VERIFICATION BLOCKED: If test execution itself failed, force NO_SHIP.
+    // Trust score tanks. Output explains why.
+    // ──────────────────────────────────────────────────────────────────────
+    if (testResult.verificationFailed) {
+      const reason = testResult.verificationFailureReason ?? 'Verification blocked: tests did not run';
+      return {
+        overall: 0,
+        confidence: 0,
+        breakdown: { postconditions, invariants, scenarios, temporal },
+        recommendation: 'critical_issues',
+        details: [{
+          category: 'verification',
+          name: 'execution_blocked',
+          status: 'failed',
+          impact: 'critical',
+          message: reason,
+        }],
+      };
+    }
+
+    // Aggregate gaps and detect critical missing categories
+    const allGaps = [
+      ...postconditions.gaps.map(g => `postconditions: ${g}`),
+      ...invariants.gaps.map(g => `invariants: ${g}`),
+      ...scenarios.gaps.map(g => `scenarios: ${g}`),
+      ...temporal.gaps.map(g => `temporal: ${g}`),
+    ];
+    const hasCriticalGaps = postconditions.total === 0 || invariants.total === 0;
+
+    // Determine recommendation using honest verdict mapping
+    let recommendation = this.determineRecommendation(overall, testResult.failed, confidence, allGaps, hasCriticalGaps);
+
+    // ──────────────────────────────────────────────────────────────────────
+    // CRITICAL INVARIANT: Execution-proof fallback evidence can NEVER
+    // produce a SHIP-worthy verdict.  Cap score at 69 (below shadow
+    // threshold) and clamp recommendation to at-best 'not_ready'.
+    // Full unit tests are required for anything higher.
+    // ──────────────────────────────────────────────────────────────────────
+    const FALLBACK_SCORE_CAP = 69;
+    const FALLBACK_BEST_RECOMMENDATION: Recommendation = 'not_ready';
+    let cappedByFallback = false;
+
+    if (testResult.fallbackEvidence) {
+      cappedByFallback = true;
+      if (overall > FALLBACK_SCORE_CAP) {
+        overall = FALLBACK_SCORE_CAP;
+      }
+      const allowedRecs: Recommendation[] = ['not_ready', 'critical_issues'];
+      if (!allowedRecs.includes(recommendation)) {
+        recommendation = FALLBACK_BEST_RECOMMENDATION;
+      }
+    }
 
     // Build details
     const details = this.buildDetails(testResult.details);
@@ -130,6 +191,7 @@ export class TrustCalculator {
       },
       recommendation,
       details,
+      ...(cappedByFallback ? { fallbackCapped: true } : {}),
     };
   }
 
@@ -167,57 +229,123 @@ export class TrustCalculator {
   }
 
   /**
-   * Calculate score for a category
+   * Honest category scoring model.
+   *
+   * Per category:
+   *   coverage_score:  % of required checks present (0-100)
+   *   execution_score: % of checks that actually executed (0-100)
+   *   pass_score:      % passed among executed (0-100)
+   *
+   *   score = floor( 0.45*coverage + 0.35*execution + 0.20*pass )
+   *
+   * Why: Missing coverage and non-execution are punished harder than failures.
+   * A failing test is useful information. A missing test is blindness.
+   * "unknown" (skipped) is tracked separately from "fail".
+   * Synthetic tests are NON_EVIDENCE and contribute 0 execution credit.
    */
-  private calculateCategoryScore(tests: TestDetail[]): CategoryScore {
-    if (tests.length === 0) {
-      return { score: 100, passed: 0, failed: 0, total: 0 };
+  private calculateCategoryScore(tests: TestDetail[], categoryName?: string): CategoryScore {
+    // Filter out synthetic tests — they are NON_EVIDENCE
+    const realTests = tests.filter(t => !t.synthetic);
+
+    if (realTests.length === 0) {
+      return {
+        score: 0, coverage_score: 0, execution_score: 0, pass_score: 0,
+        passed: 0, failed: 0, unknown: 0, total: 0,
+        gaps: [`no ${categoryName ?? 'checks'} defined`], confidence: 0,
+      };
     }
 
-    const passed = tests.filter(t => t.status === 'passed').length;
-    const failed = tests.filter(t => t.status === 'failed').length;
-    const total = tests.length;
+    const passed = realTests.filter(t => t.status === 'passed').length;
+    const failed = realTests.filter(t => t.status === 'failed').length;
+    const skipped = realTests.filter(t => t.status === 'skipped').length;
+    const total = realTests.length;
+    const executed = passed + failed; // skipped did NOT execute
 
-    const score = Math.round((passed / total) * 100);
+    // coverage_score: tests exist → full coverage credit for this category
+    const coverage_score = 100;
 
-    return { score, passed, failed, total };
+    // execution_score: % of declared checks that actually ran
+    const execution_score = total > 0 ? Math.round((executed / total) * 100) : 0;
+
+    // pass_score: % passed among those that executed
+    const pass_score = executed > 0 ? Math.round((passed / executed) * 100) : 0;
+
+    // Composite: punish missing coverage & non-execution harder than failures
+    const score = Math.floor(
+      0.45 * coverage_score + 0.35 * execution_score + 0.20 * pass_score
+    );
+
+    // Detect gaps
+    const gaps: string[] = [];
+    if (skipped > 0) gaps.push(`${skipped} skipped (unverified intent)`);
+    if (failed > 0) gaps.push(`${failed} failing checks`);
+    if (executed === 0) gaps.push('no checks executed');
+
+    // Confidence: execution rate × volume factor
+    const executionRate = total > 0 ? executed / total : 0;
+    const volumeFactor = Math.min(total / 5, 1); // max confidence at 5+ tests
+    const confidence = Math.round(executionRate * volumeFactor * 100) / 100;
+
+    return {
+      score, coverage_score, execution_score, pass_score,
+      passed, failed, unknown: skipped, total, gaps, confidence,
+    };
   }
 
   /**
-   * Calculate confidence based on test coverage
+   * Calculate confidence based on test coverage.
+   * 0 tests = 0 confidence. All skipped = 0 confidence.
+   * Confidence requires actually-passed tests.
+   * Synthetic tests do not count toward confidence.
    */
-  private calculateConfidence(totalTests: number, skippedTests: number): number {
-    if (totalTests === 0) return 0;
+  private calculateConfidence(totalTests: number, skippedTests: number, syntheticCount = 0): number {
+    const realTotal = totalTests - syntheticCount;
+    if (realTotal <= 0) return 0;
     
-    // Base confidence on number of tests and skip rate
-    const skipRate = skippedTests / totalTests;
-    const coverageFactor = Math.min(totalTests / 10, 1); // Max confidence at 10+ tests
+    const actuallyRan = realTotal - skippedTests;
+    if (actuallyRan <= 0) return 0; // All skipped = no verification occurred
     
-    return Math.round((1 - skipRate) * coverageFactor * 100);
+    const runRate = actuallyRan / realTotal;
+    const coverageFactor = Math.min(actuallyRan / 10, 1); // Max confidence at 10+ real tests
+    
+    return Math.round(runRate * coverageFactor * 100);
   }
 
   /**
-   * Determine recommendation based on score and failures
+   * Verdict mapping (brutally honest):
+   *   score >= 85 AND no critical gaps → SHIP (production_ready)
+   *   score 60–84 OR gaps but mitigated → WARN (staging_recommended / shadow_mode)
+   *   < 60 OR execution failed OR missing required categories → NO_SHIP (not_ready / critical_issues)
    */
-  private determineRecommendation(overall: number, failures: number): Recommendation {
-    // Critical failures override score
-    if (failures > 0 && overall < this.thresholds.shadow) {
-      return 'critical_issues';
+  private determineRecommendation(
+    overall: number,
+    failures: number,
+    confidence: number,
+    gaps: string[] = [],
+    hasCriticalGaps = false,
+  ): Recommendation {
+    // Zero confidence means nothing was verified — cannot recommend anything
+    if (confidence === 0) {
+      return failures > 0 ? 'critical_issues' : 'not_ready';
     }
 
-    if (overall >= this.thresholds.production) {
-      return 'production_ready';
+    // Missing required categories (postconditions or invariants) → NO_SHIP
+    if (hasCriticalGaps) {
+      return overall >= 60 ? 'shadow_mode' : 'not_ready';
     }
-    
-    if (overall >= this.thresholds.staging) {
-      return 'staging_recommended';
+
+    // < 60 → NO_SHIP
+    if (overall < 60) {
+      return failures > 0 ? 'critical_issues' : 'not_ready';
     }
-    
-    if (overall >= this.thresholds.shadow) {
-      return 'shadow_mode';
+
+    // 60-84 or has gaps → WARN
+    if (overall < 85 || gaps.length > 0) {
+      return overall >= 70 ? 'staging_recommended' : 'shadow_mode';
     }
-    
-    return 'not_ready';
+
+    // >= 85 and no critical gaps → SHIP
+    return 'production_ready';
   }
 
   /**
@@ -290,28 +418,21 @@ export function formatTrustReport(score: TrustScore): string {
     trust_score: score.overall,
     confidence: score.confidence,
     recommendation: score.recommendation,
-    breakdown: {
-      postconditions: {
-        score: score.breakdown.postconditions.score,
-        passed: score.breakdown.postconditions.passed,
-        failed: score.breakdown.postconditions.failed,
-      },
-      invariants: {
-        score: score.breakdown.invariants.score,
-        passed: score.breakdown.invariants.passed,
-        failed: score.breakdown.invariants.failed,
-      },
-      scenarios: {
-        score: score.breakdown.scenarios.score,
-        passed: score.breakdown.scenarios.passed,
-        failed: score.breakdown.scenarios.failed,
-      },
-      temporal: {
-        score: score.breakdown.temporal.score,
-        passed: score.breakdown.temporal.passed,
-        failed: score.breakdown.temporal.failed,
-      },
-    },
+    ...(score.fallbackCapped ? { fallback_evidence: true, fallback_capped: true } : {}),
+    breakdown: Object.fromEntries(
+      Object.entries(score.breakdown).map(([key, cat]) => [key, {
+        score: cat.score,
+        coverage_score: cat.coverage_score,
+        execution_score: cat.execution_score,
+        pass_score: cat.pass_score,
+        passed: cat.passed,
+        failed: cat.failed,
+        unknown: cat.unknown,
+        total: cat.total,
+        gaps: cat.gaps,
+        confidence: cat.confidence,
+      }])
+    ),
     failures: score.details
       .filter(d => d.status === 'failed')
       .map(d => ({

@@ -33,7 +33,7 @@ const createValidManifest = (): Omit<ProofBundleManifest, 'bundleId'> => ({
   },
   policyVersion: {
     bundleVersion: '1.0.0',
-    islStudioVersion: '0.1.0',
+    shipgateVersion: '0.1.0',
     packs: [{ id: 'auth', version: '1.0.0', rulesCount: 5 }],
   },
   gateResult: {

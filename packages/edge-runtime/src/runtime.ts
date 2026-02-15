@@ -248,13 +248,9 @@ export class ISLEdgeRuntime {
     context: Record<string, unknown>
   ): Promise<{ passed: boolean; error?: string }> {
     try {
-      // Simple expression evaluation
-      // In production, this would use a proper expression parser
-      const fn = new Function(
-        ...Object.keys(context),
-        `return ${expression}`
-      );
-      const result = fn(...Object.values(context));
+      // Safe expression evaluation — supports property access, comparisons, and logical operators
+      // without using new Function() or eval()
+      const result = this.safeEvaluateExpression(expression, context);
       return { passed: Boolean(result) };
     } catch (error) {
       return {
@@ -262,6 +258,99 @@ export class ISLEdgeRuntime {
         error: error instanceof Error ? error.message : 'Expression evaluation failed',
       };
     }
+  }
+
+  /**
+   * Safe expression evaluator — no eval/new Function.
+   * Supports: property access (a.b.c), comparisons (===, !==, >, <, >=, <=),
+   * logical operators (&&, ||, !), boolean/number/string literals.
+   */
+  private safeEvaluateExpression(
+    expression: string,
+    context: Record<string, unknown>
+  ): unknown {
+    const expr = expression.trim();
+
+    // Boolean literals
+    if (expr === 'true') return true;
+    if (expr === 'false') return false;
+
+    // Number literal
+    if (/^-?\d+(\.\d+)?$/.test(expr)) return Number(expr);
+
+    // String literal (single or double quoted)
+    const strMatch = expr.match(/^(['"])(.*)\1$/);
+    if (strMatch) return strMatch[2];
+
+    // Logical NOT
+    if (expr.startsWith('!')) {
+      return !this.safeEvaluateExpression(expr.slice(1), context);
+    }
+
+    // Logical OR (lowest precedence)
+    const orIdx = this.findLogicalOperator(expr, '||');
+    if (orIdx !== -1) {
+      return (
+        this.safeEvaluateExpression(expr.slice(0, orIdx), context) ||
+        this.safeEvaluateExpression(expr.slice(orIdx + 2), context)
+      );
+    }
+
+    // Logical AND
+    const andIdx = this.findLogicalOperator(expr, '&&');
+    if (andIdx !== -1) {
+      return (
+        this.safeEvaluateExpression(expr.slice(0, andIdx), context) &&
+        this.safeEvaluateExpression(expr.slice(andIdx + 2), context)
+      );
+    }
+
+    // Comparison operators
+    for (const op of ['===', '!==', '>=', '<=', '>', '<'] as const) {
+      const cmpIdx = expr.indexOf(op);
+      if (cmpIdx !== -1) {
+        const left = this.safeEvaluateExpression(expr.slice(0, cmpIdx), context);
+        const right = this.safeEvaluateExpression(expr.slice(cmpIdx + op.length), context);
+        switch (op) {
+          case '===': return left === right;
+          case '!==': return left !== right;
+          case '>=':  return (left as number) >= (right as number);
+          case '<=':  return (left as number) <= (right as number);
+          case '>':   return (left as number) > (right as number);
+          case '<':   return (left as number) < (right as number);
+        }
+      }
+    }
+
+    // Parenthesized expression
+    if (expr.startsWith('(') && expr.endsWith(')')) {
+      return this.safeEvaluateExpression(expr.slice(1, -1), context);
+    }
+
+    // Property access (e.g. "user.role", "count")
+    return this.resolveProperty(expr, context);
+  }
+
+  private findLogicalOperator(expr: string, op: string): number {
+    let depth = 0;
+    for (let i = 0; i < expr.length - op.length + 1; i++) {
+      if (expr[i] === '(') depth++;
+      else if (expr[i] === ')') depth--;
+      else if (depth === 0 && expr.slice(i, i + op.length) === op) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  private resolveProperty(path: string, context: Record<string, unknown>): unknown {
+    const parts = path.trim().split('.');
+    let current: unknown = context;
+    for (const part of parts) {
+      if (current == null || typeof current !== 'object') return undefined;
+      current = (current as Record<string, unknown>)[part];
+    }
+    return current;
   }
 
   /**

@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/stdlib-notifications",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ISL Standard Library - Notifications (email, SMS, push)",
   "type": "module",
   "main": "./dist/index.js",

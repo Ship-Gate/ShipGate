@@ -1,0 +1,4328 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Generator Output Snapshots > should generate stable output for e2e-collection.isl 1`] = `
+"// ============================================================================
+// Generated Tests for CreateProduct
+// Domain: CollectionFixture
+// Seed: 1558974470
+// ============================================================================
+
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+// Behavior implementation
+import { createProduct } from '../src/CreateProduct';
+import type { CreateProductInput, CreateProductResult } from '../src/types';
+
+// Entity mocks
+import { Product, Cart } from './fixtures';
+
+// Test context
+let testContext: {
+  reset: () => void;
+  captureState: () => Record<string, unknown>;
+};
+
+beforeEach(() => {
+  testContext = {
+    reset: () => {
+      // Reset entity state
+      Product.reset?.();
+      Cart.reset?.();
+    },
+    captureState: () => ({
+      timestamp: Date.now(),
+    }),
+  };
+  testContext.reset();
+});
+
+afterEach(() => {
+  // Cleanup
+});
+
+describe('CreateProduct', () => {
+
+  describe('Valid Inputs', () => {
+
+    it('Valid input with typical values within constraints', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558974470
+       * Strategy: typical_midpoint
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - name (String): none
+       *   - tags (ListType): none
+       *   - related_products (ListType): none
+       */
+      // Arrange
+      const input: CreateProductInput = {
+        name: "test_zwdvlt",
+        tags: [
+        "test_cx81pz",
+        "test_k7pxtx",
+        "test_zdos2p",
+        "test_827oxe",
+        "test_f4tw9f"
+      ],
+        related_products: [
+        '965cf56d-f641-43d0-9b1b-192feeac8533'
+      ],
+      };
+      
+      // Act
+      const result = await createProduct(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Product.exists({ id: result.data.id })).toBe(true);
+      expect(await Product.lookup({ id: result.data.id }).name).toBe(input.name);
+      expect(result.data.name).toEqual("test_zwdvlt");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Seeded random valid input within constraints', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558974470
+       * Strategy: seeded_random
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - name (String): none
+       *   - tags (ListType): none
+       *   - related_products (ListType): none
+       */
+      // Arrange
+      const input: CreateProductInput = {
+        name: "yuqokrerhjan890p",
+        tags: [
+        "test_lbcert"
+      ],
+        related_products: [
+        'b9ebb4f2-f29a-4c8d-945d-097ac5ddc68d',
+        'aec1867f-6101-447d-9d5e-477b5d58c13e'
+      ],
+      };
+      
+      // Act
+      const result = await createProduct(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Product.exists({ id: result.data.id })).toBe(true);
+      expect(await Product.lookup({ id: result.data.id }).name).toBe(input.name);
+      expect(result.data.name).toEqual("yuqokrerhjan890p");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+  });
+
+  describe('Boundary Cases', () => {
+
+    it('Boundary: name at empty string', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558974470
+       * Strategy: boundary_name_empty
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - name (String): none
+       *   - tags (ListType): none
+       *   - related_products (ListType): none
+       */
+      // Arrange
+      const input: CreateProductInput = {
+        name: "",
+        tags: [
+        "test_klom70",
+        "test_o4279v",
+        "test_v89rud"
+      ],
+        related_products: [
+        '12e92323-fbe0-4d96-9454-069e8d6e69ae',
+        'ee820dd4-1675-4c17-8e99-9e9b83fc8360',
+        '8d83b52e-d33d-47ed-9c2f-583b7806ab1a',
+        '80d29f5c-e0e3-467f-8216-82e210e9234b'
+      ],
+      };
+      
+      // Act
+      const result = await createProduct(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Product.exists({ id: result.data.id })).toBe(true);
+      expect(await Product.lookup({ id: result.data.id }).name).toBe(input.name);
+      expect(result.data.name).toEqual("");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: tags at empty array', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558974470
+       * Strategy: boundary_tags_empty_array
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - name (String): none
+       *   - tags (ListType): none
+       *   - related_products (ListType): none
+       */
+      // Arrange
+      const input: CreateProductInput = {
+        name: "test_11qmqz",
+        tags: [],
+        related_products: [
+        '68b7295d-6dde-454d-937f-4be7aa6d94e2'
+      ],
+      };
+      
+      // Act
+      const result = await createProduct(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Product.exists({ id: result.data.id })).toBe(true);
+      expect(await Product.lookup({ id: result.data.id }).name).toBe(input.name);
+      expect(result.data.name).toEqual("test_11qmqz");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: tags at maximum items (10)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558974470
+       * Strategy: boundary_tags_at_max_items
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - name (String): none
+       *   - tags (ListType): none
+       *   - related_products (ListType): none
+       */
+      // Arrange
+      const input: CreateProductInput = {
+        name: "test_p1f44y",
+        tags: [],
+        related_products: [
+        'acf3f51e-fc1e-4f2f-bab6-8b6f45251ea1'
+      ],
+      };
+      
+      // Act
+      const result = await createProduct(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Product.exists({ id: result.data.id })).toBe(true);
+      expect(await Product.lookup({ id: result.data.id }).name).toBe(input.name);
+      expect(result.data.name).toEqual("test_p1f44y");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: tags at single item array', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558974470
+       * Strategy: boundary_tags_single_item
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - name (String): none
+       *   - tags (ListType): none
+       *   - related_products (ListType): none
+       */
+      // Arrange
+      const input: CreateProductInput = {
+        name: "test_v0197h",
+        tags: [
+        "test_hfs70c"
+      ],
+        related_products: [
+        'bbf41112-b572-4180-a61d-2241d1ba36b6'
+      ],
+      };
+      
+      // Act
+      const result = await createProduct(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Product.exists({ id: result.data.id })).toBe(true);
+      expect(await Product.lookup({ id: result.data.id }).name).toBe(input.name);
+      expect(result.data.name).toEqual("test_v0197h");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: related_products at empty array', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558974470
+       * Strategy: boundary_related_products_empty_array
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - name (String): none
+       *   - tags (ListType): none
+       *   - related_products (ListType): none
+       */
+      // Arrange
+      const input: CreateProductInput = {
+        name: "test_tlfk5r",
+        tags: [
+        "test_80d8eg",
+        "test_14ykts",
+        "test_257buv",
+        "test_xqgxnt",
+        "test_cptgwt"
+      ],
+        related_products: [],
+      };
+      
+      // Act
+      const result = await createProduct(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Product.exists({ id: result.data.id })).toBe(true);
+      expect(await Product.lookup({ id: result.data.id }).name).toBe(input.name);
+      expect(result.data.name).toEqual("test_tlfk5r");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: related_products at maximum items (10)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558974470
+       * Strategy: boundary_related_products_at_max_items
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - name (String): none
+       *   - tags (ListType): none
+       *   - related_products (ListType): none
+       */
+      // Arrange
+      const input: CreateProductInput = {
+        name: "test_4lkhxb",
+        tags: [
+        "test_64s3nm",
+        "test_4da10h",
+        "test_cqgtdf"
+      ],
+        related_products: [
+        '7e4b50c6-3621-4ade-85e6-646509f4f2d7',
+        'a34e2d07-6052-40ba-9d36-e8e0917b7373',
+        '456dcff8-4b2f-41ba-a801-846e1f84f01e'
+      ],
+      };
+      
+      // Act
+      const result = await createProduct(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Product.exists({ id: result.data.id })).toBe(true);
+      expect(await Product.lookup({ id: result.data.id }).name).toBe(input.name);
+      expect(result.data.name).toEqual("test_4lkhxb");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: related_products at single item array', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558974470
+       * Strategy: boundary_related_products_single_item
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - name (String): none
+       *   - tags (ListType): none
+       *   - related_products (ListType): none
+       */
+      // Arrange
+      const input: CreateProductInput = {
+        name: "test_25438a",
+        tags: [
+        "test_9kuyx8"
+      ],
+        related_products: [
+        'd47b1652-fe21-4d15-96c3-b353ecfa7f7b'
+      ],
+      };
+      
+      // Act
+      const result = await createProduct(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Product.exists({ id: result.data.id })).toBe(true);
+      expect(await Product.lookup({ id: result.data.id }).name).toBe(input.name);
+      expect(result.data.name).toEqual("test_25438a");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+  });
+
+  describe('Invalid Inputs (Negative Tests)', () => {
+
+    it('Invalid: name - null value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558974470
+       * Strategy: constraint_violation_null_value
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - name (String): none
+       *   - tags (ListType): none
+       *   - related_products (ListType): none
+       */
+      // Arrange
+      const input: CreateProductInput = {
+        name: null,
+        tags: [],
+        related_products: [
+        'efcc1589-1e53-4b52-942b-6ddedbcc3133'
+      ],
+      };
+      
+      // Act
+      const result = await createProduct(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_NAME');
+      
+    });
+
+    it('Missing required field: name', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558974470
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - name (String): none
+       *   - tags (ListType): none
+       *   - related_products (ListType): none
+       */
+      // Arrange
+      const input: CreateProductInput = {
+        tags: [],
+        related_products: [
+        '69871393-7cd4-40a7-ace0-9e4652a513e3',
+        'd9aab7da-dd8c-4145-8a2b-a86e92874179',
+        'a7bd4383-590f-446f-b46e-c258956ae361',
+        '5c2dc7f9-0bc8-4d60-bf08-89ccaccc13a9',
+        'a39728b4-9100-4c93-9cbe-3281234d3ad3'
+      ],
+      };
+      
+      // Act
+      const result = await createProduct(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Missing required field: tags', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558974470
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - name (String): none
+       *   - tags (ListType): none
+       *   - related_products (ListType): none
+       */
+      // Arrange
+      const input: CreateProductInput = {
+        name: "test_qfdt2l",
+        related_products: [
+        'bffd3034-6a95-48d5-aa42-a68ad0caeb4a',
+        '36c3d693-cdef-4739-ac1c-15ec738cb52c',
+        '3ade1e40-22fd-48e3-9307-9af8c2cb9df1',
+        'b6ac59fc-7423-468b-b8a6-5f8629d5d666'
+      ],
+      };
+      
+      // Act
+      const result = await createProduct(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Missing required field: related_products', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558974470
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - name (String): none
+       *   - tags (ListType): none
+       *   - related_products (ListType): none
+       */
+      // Arrange
+      const input: CreateProductInput = {
+        name: "test_w5isb4",
+        tags: [
+        "test_0xc8ki",
+        "test_cu2c36"
+      ],
+      };
+      
+      // Act
+      const result = await createProduct(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+  });
+
+  describe('Precondition Violations', () => {
+
+    it('Violates precondition: input.name.length > 0', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558974470
+       * Strategy: precondition_violation_>_violation
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - name (String): none
+       *   - tags (ListType): none
+       *   - related_products (ListType): none
+       */
+      // Arrange
+      const input: CreateProductInput = {
+        name: 0,
+        tags: [
+        "test_v2lyng",
+        "test_4hby0s"
+      ],
+        related_products: [],
+      };
+      
+      // Act
+      const result = await createProduct(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Violates precondition: input.tags.length <= 10', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558974470
+       * Strategy: precondition_violation_<=_violation
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - name (String): none
+       *   - tags (ListType): none
+       *   - related_products (ListType): none
+       */
+      // Arrange
+      const input: CreateProductInput = {
+        name: "test_3mmdo4",
+        tags: 11,
+        related_products: [
+        '7df1ed2d-38a6-4a6c-9a35-fe40d02000d7'
+      ],
+      };
+      
+      // Act
+      const result = await createProduct(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+  });
+});
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+async function captureState(path: string): Promise<unknown> {
+  // Implement state capture for old() expressions
+  return undefined;
+}"
+`;
+
+exports[`Generator Output Snapshots > should generate stable output for e2e-cross-field.isl 1`] = `
+"// ============================================================================
+// Generated Tests for CreateBooking
+// Domain: CrossFieldFixture
+// Seed: 1184814236
+// ============================================================================
+
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+// Behavior implementation
+import { createBooking } from '../src/CreateBooking';
+import type { CreateBookingInput, CreateBookingResult } from '../src/types';
+
+// Entity mocks
+import { Booking, PriceFilter } from './fixtures';
+
+// Test context
+let testContext: {
+  reset: () => void;
+  captureState: () => Record<string, unknown>;
+};
+
+beforeEach(() => {
+  testContext = {
+    reset: () => {
+      // Reset entity state
+      Booking.reset?.();
+      PriceFilter.reset?.();
+    },
+    captureState: () => ({
+      timestamp: Date.now(),
+    }),
+  };
+  testContext.reset();
+});
+
+afterEach(() => {
+  // Cleanup
+});
+
+describe('CreateBooking', () => {
+
+  describe('Valid Inputs', () => {
+
+    it('Valid input with typical values within constraints', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: typical_midpoint
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: '3ef62dd4-3b03-4925-83fb-1eb298d6d5e7',
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: 50,
+        price_per_night: 50.5,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Booking.exists({ id: result.data.id })).toBe(true);
+      expect(await Booking.lookup({ id: result.data.id }).room_id).toBe(input.room_id);
+      expect(await Booking.lookup({ id: result.data.id }).check_in).toBe(input.check_in);
+      expect(await Booking.lookup({ id: result.data.id }).check_out).toBe(input.check_out);
+      expect(await Booking.lookup({ id: result.data.id }).total_price).toBeGreaterThan(0);
+      expect(result.data.room_id).toEqual("3ef62dd4-3b03-4925-83fb-1eb298d6d5e7");
+      expect(result.data.check_in).toEqual("[TIMESTAMP]");
+      expect(result.data.check_out).toEqual("[TIMESTAMP]");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Seeded random valid input within constraints', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: seeded_random
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: 'b25d7d27-4067-4618-95f1-413091332023',
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: 9,
+        price_per_night: 51.74,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Booking.exists({ id: result.data.id })).toBe(true);
+      expect(await Booking.lookup({ id: result.data.id }).room_id).toBe(input.room_id);
+      expect(await Booking.lookup({ id: result.data.id }).check_in).toBe(input.check_in);
+      expect(await Booking.lookup({ id: result.data.id }).check_out).toBe(input.check_out);
+      expect(await Booking.lookup({ id: result.data.id }).total_price).toBeGreaterThan(0);
+      expect(result.data.room_id).toEqual("b25d7d27-4067-4618-95f1-413091332023");
+      expect(result.data.check_in).toEqual("[TIMESTAMP]");
+      expect(result.data.check_out).toEqual("[TIMESTAMP]");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+  });
+
+  describe('Boundary Cases', () => {
+
+    it('Boundary: guests at zero value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: boundary_guests_zero
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: '3cccf0fa-61b0-4fe2-b6b9-ed15928ad614',
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: 0,
+        price_per_night: 50.5,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Booking.exists({ id: result.data.id })).toBe(true);
+      expect(await Booking.lookup({ id: result.data.id }).room_id).toBe(input.room_id);
+      expect(await Booking.lookup({ id: result.data.id }).check_in).toBe(input.check_in);
+      expect(await Booking.lookup({ id: result.data.id }).check_out).toBe(input.check_out);
+      expect(await Booking.lookup({ id: result.data.id }).total_price).toBeGreaterThan(0);
+      expect(result.data.room_id).toEqual("3cccf0fa-61b0-4fe2-b6b9-ed15928ad614");
+      expect(result.data.check_in).toEqual("[TIMESTAMP]");
+      expect(result.data.check_out).toEqual("[TIMESTAMP]");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: price_per_night at zero value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: boundary_price_per_night_zero
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: 'e9a949d0-7ba6-4f4f-bf74-678535887c69',
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: 50,
+        price_per_night: 0,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Booking.exists({ id: result.data.id })).toBe(true);
+      expect(await Booking.lookup({ id: result.data.id }).room_id).toBe(input.room_id);
+      expect(await Booking.lookup({ id: result.data.id }).check_in).toBe(input.check_in);
+      expect(await Booking.lookup({ id: result.data.id }).check_out).toBe(input.check_out);
+      expect(await Booking.lookup({ id: result.data.id }).total_price).toBeGreaterThan(0);
+      expect(result.data.room_id).toEqual("e9a949d0-7ba6-4f4f-bf74-678535887c69");
+      expect(result.data.check_in).toEqual("[TIMESTAMP]");
+      expect(result.data.check_out).toEqual("[TIMESTAMP]");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+  });
+
+  describe('Invalid Inputs (Negative Tests)', () => {
+
+    it('Invalid: room_id - invalid UUID format', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: constraint_violation_invalid_uuid
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: "not-a-valid-uuid",
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: 50,
+        price_per_night: 50.5,
+      };
+      
+      // Capture state before execution
+      const __old__: Record<string, unknown> = {};
+      __old__['Booking_count'] = await captureState('Booking_count');
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Capture state before execution
+      const __old__ = {
+        Booking_count: await Booking_count,
+      };
+      
+      // Primary assertions
+      expect(Booking.count).toBe(__old__.Booking_count);
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_DATE_RANGE');
+      
+    });
+
+    it('Invalid: room_id - null value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: constraint_violation_null_value
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: null,
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: 50,
+        price_per_night: 50.5,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Invalid: guests - null value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: constraint_violation_null_value
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: '49d0c50d-120a-4644-a810-da6687713347',
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: null,
+        price_per_night: 50.5,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Invalid: guests - wrong type (string)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: constraint_violation_wrong_type_string
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: '3ae4a2e9-7bfd-4c9a-97ff-192997440ced',
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: "not_a_number",
+        price_per_night: 50.5,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Invalid: price_per_night - null value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: constraint_violation_null_value
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: 'dbb012fb-b7f4-4347-89e5-6d8816ad001a',
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: 50,
+        price_per_night: null,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Invalid: price_per_night - wrong type (string)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: constraint_violation_wrong_type_string
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: 'f553fb8d-252d-4329-b759-2366cad262f2',
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: 50,
+        price_per_night: "not_a_number",
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Invalid: price_per_night - extremely out-of-range decimal', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: constraint_violation_invalid_decimal
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: '2880bd7b-2947-4638-9a94-d83b4b0b8c20',
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: 50,
+        price_per_night: -999999.99,
+      };
+      
+      // Capture state before execution
+      const __old__: Record<string, unknown> = {};
+      __old__['Booking_count'] = await captureState('Booking_count');
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Capture state before execution
+      const __old__ = {
+        Booking_count: await Booking_count,
+      };
+      
+      // Primary assertions
+      expect(Booking.count).toBe(__old__.Booking_count);
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_DATE_RANGE');
+      
+    });
+
+    it('Missing required field: room_id', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: 50,
+        price_per_night: 50.5,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Missing required field: check_in', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: 'b6dd82b6-6c28-4c1b-b7d9-2e49dd41dc6e',
+        check_out: "[TIMESTAMP]",
+        guests: 50,
+        price_per_night: 50.5,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Missing required field: check_out', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: '7d36f84a-da24-49b3-8216-1e9c2dcd786a',
+        check_in: "[TIMESTAMP]",
+        guests: 50,
+        price_per_night: 50.5,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Missing required field: guests', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: '446084f1-2d95-4552-8574-1374b69f05c9',
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        price_per_night: 50.5,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Missing required field: price_per_night', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: '620436ec-1087-4b51-b759-23d3f094fc72',
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: 50,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+  });
+
+  describe('Precondition Violations', () => {
+
+    it('Violates precondition: input.guests >= 1', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: precondition_violation_>=_violation
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: '79b66449-b585-4f4d-8cc6-c4bf9bbf51f4',
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: 0,
+        price_per_night: 50.5,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Violates precondition: input.guests <= 10', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: precondition_violation_<=_violation
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: '3cd9d11b-b45b-49ac-850d-4a4902934997',
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: 11,
+        price_per_night: 50.5,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Violates precondition: input.price_per_night > 0', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1184814236
+       * Strategy: precondition_violation_>_violation
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - room_id (UUID): none
+       *   - check_in (Timestamp): none
+       *   - check_out (Timestamp): none
+       *   - guests (Int): none
+       *   - price_per_night (Decimal): none
+       */
+      // Arrange
+      const input: CreateBookingInput = {
+        room_id: '18ed8cde-8f4d-44cf-aec7-ae415af05486',
+        check_in: "[TIMESTAMP]",
+        check_out: "[TIMESTAMP]",
+        guests: 50,
+        price_per_night: 0,
+      };
+      
+      // Act
+      const result = await createBooking(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+  });
+});
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+async function captureState(path: string): Promise<unknown> {
+  // Implement state capture for old() expressions
+  return undefined;
+}"
+`;
+
+exports[`Generator Output Snapshots > should generate stable output for e2e-expected-outcomes.isl 1`] = `
+"// ============================================================================
+// Generated Tests for CreateInvoice
+// Domain: ExpectedOutcomeFixture
+// Seed: 710723242
+// ============================================================================
+
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+// Behavior implementation
+import { createInvoice } from '../src/CreateInvoice';
+import type { CreateInvoiceInput, CreateInvoiceResult } from '../src/types';
+
+// Entity mocks
+import { Invoice } from './fixtures';
+
+// Test context
+let testContext: {
+  reset: () => void;
+  captureState: () => Record<string, unknown>;
+};
+
+beforeEach(() => {
+  testContext = {
+    reset: () => {
+      // Reset entity state
+      Invoice.reset?.();
+    },
+    captureState: () => ({
+      timestamp: Date.now(),
+    }),
+  };
+  testContext.reset();
+});
+
+afterEach(() => {
+  // Cleanup
+});
+
+describe('CreateInvoice', () => {
+
+  describe('Valid Inputs', () => {
+
+    it('Valid input with typical values within constraints', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: typical_midpoint
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: 'dd491eb7-f170-43e2-a7ba-e706976f28f1',
+        subtotal: 50,
+        tax_rate: 50,
+        discount_amount: 50.5,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Invoice.exists({ id: result.data.id })).toBe(true);
+      expect(await Invoice.lookup({ id: result.data.id }).customer_id).toBe(input.customer_id);
+      expect(await Invoice.lookup({ id: result.data.id }).subtotal).toBe(input.subtotal);
+      expect(await Invoice.lookup({ id: result.data.id }).tax_rate).toBe(input.tax_rate);
+      expect(await Invoice.lookup({ id: result.data.id }).status).toBe(DRAFT);
+      expect(result.data.customer_id).toEqual("dd491eb7-f170-43e2-a7ba-e706976f28f1");
+      expect(result.data.subtotal).toEqual(50);
+      expect(result.data.tax_rate).toEqual(50);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Valid input with only required fields', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: minimal_required
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: '6381685c-fbbb-46b7-9e64-20f5ece5798c',
+        subtotal: 50,
+        tax_rate: 50,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Invoice.exists({ id: result.data.id })).toBe(true);
+      expect(await Invoice.lookup({ id: result.data.id }).customer_id).toBe(input.customer_id);
+      expect(await Invoice.lookup({ id: result.data.id }).subtotal).toBe(input.subtotal);
+      expect(await Invoice.lookup({ id: result.data.id }).tax_rate).toBe(input.tax_rate);
+      expect(await Invoice.lookup({ id: result.data.id }).status).toBe(DRAFT);
+      expect(result.data.customer_id).toEqual("6381685c-fbbb-46b7-9e64-20f5ece5798c");
+      expect(result.data.subtotal).toEqual(50);
+      expect(result.data.tax_rate).toEqual(50);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Seeded random valid input within constraints', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: seeded_random
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: 'bb6de9ee-f60d-43b2-a62a-45b8b53bcf55',
+        subtotal: 41.79,
+        tax_rate: 78.72,
+        discount_amount: 49.12,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Invoice.exists({ id: result.data.id })).toBe(true);
+      expect(await Invoice.lookup({ id: result.data.id }).customer_id).toBe(input.customer_id);
+      expect(await Invoice.lookup({ id: result.data.id }).subtotal).toBe(input.subtotal);
+      expect(await Invoice.lookup({ id: result.data.id }).tax_rate).toBe(input.tax_rate);
+      expect(await Invoice.lookup({ id: result.data.id }).status).toBe(DRAFT);
+      expect(result.data.customer_id).toEqual("bb6de9ee-f60d-43b2-a62a-45b8b53bcf55");
+      expect(result.data.subtotal).toEqual(41.79);
+      expect(result.data.tax_rate).toEqual(78.72);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+  });
+
+  describe('Boundary Cases', () => {
+
+    it('Boundary: subtotal at minimum value (0)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: boundary_subtotal_at_min
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: 'ff268e40-217a-405a-9710-e9b9fe767380',
+        subtotal: 0,
+        tax_rate: 50,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Invoice.exists({ id: result.data.id })).toBe(true);
+      expect(await Invoice.lookup({ id: result.data.id }).customer_id).toBe(input.customer_id);
+      expect(await Invoice.lookup({ id: result.data.id }).subtotal).toBe(input.subtotal);
+      expect(await Invoice.lookup({ id: result.data.id }).tax_rate).toBe(input.tax_rate);
+      expect(await Invoice.lookup({ id: result.data.id }).status).toBe(DRAFT);
+      expect(result.data.customer_id).toEqual("ff268e40-217a-405a-9710-e9b9fe767380");
+      expect(result.data.subtotal).toEqual(0);
+      expect(result.data.tax_rate).toEqual(50);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: subtotal at minimum + 0.01', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: boundary_subtotal_min_plus_one
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: 'c67ca2f0-2795-4666-8f71-9057a0aabb8f',
+        subtotal: 0.01,
+        tax_rate: 50,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Invoice.exists({ id: result.data.id })).toBe(true);
+      expect(await Invoice.lookup({ id: result.data.id }).customer_id).toBe(input.customer_id);
+      expect(await Invoice.lookup({ id: result.data.id }).subtotal).toBe(input.subtotal);
+      expect(await Invoice.lookup({ id: result.data.id }).tax_rate).toBe(input.tax_rate);
+      expect(await Invoice.lookup({ id: result.data.id }).status).toBe(DRAFT);
+      expect(result.data.customer_id).toEqual("c67ca2f0-2795-4666-8f71-9057a0aabb8f");
+      expect(result.data.subtotal).toEqual(0.01);
+      expect(result.data.tax_rate).toEqual(50);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: subtotal at zero value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: boundary_subtotal_zero
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: '5fe57765-fc70-4b3c-9f31-6771b2040e28',
+        subtotal: 0,
+        tax_rate: 50,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Invoice.exists({ id: result.data.id })).toBe(true);
+      expect(await Invoice.lookup({ id: result.data.id }).customer_id).toBe(input.customer_id);
+      expect(await Invoice.lookup({ id: result.data.id }).subtotal).toBe(input.subtotal);
+      expect(await Invoice.lookup({ id: result.data.id }).tax_rate).toBe(input.tax_rate);
+      expect(await Invoice.lookup({ id: result.data.id }).status).toBe(DRAFT);
+      expect(result.data.customer_id).toEqual("5fe57765-fc70-4b3c-9f31-6771b2040e28");
+      expect(result.data.subtotal).toEqual(0);
+      expect(result.data.tax_rate).toEqual(50);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: tax_rate at minimum value (0)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: boundary_tax_rate_at_min
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: 'f2ee80c7-e23e-4149-8969-306f106fc18d',
+        subtotal: 50,
+        tax_rate: 0,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Invoice.exists({ id: result.data.id })).toBe(true);
+      expect(await Invoice.lookup({ id: result.data.id }).customer_id).toBe(input.customer_id);
+      expect(await Invoice.lookup({ id: result.data.id }).subtotal).toBe(input.subtotal);
+      expect(await Invoice.lookup({ id: result.data.id }).tax_rate).toBe(input.tax_rate);
+      expect(await Invoice.lookup({ id: result.data.id }).status).toBe(DRAFT);
+      expect(result.data.customer_id).toEqual("f2ee80c7-e23e-4149-8969-306f106fc18d");
+      expect(result.data.subtotal).toEqual(50);
+      expect(result.data.tax_rate).toEqual(0);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: tax_rate at minimum + 0.01', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: boundary_tax_rate_min_plus_one
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: 'ea25575a-7564-49e9-ae79-99fc468f2ad7',
+        subtotal: 50,
+        tax_rate: 0.01,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Invoice.exists({ id: result.data.id })).toBe(true);
+      expect(await Invoice.lookup({ id: result.data.id }).customer_id).toBe(input.customer_id);
+      expect(await Invoice.lookup({ id: result.data.id }).subtotal).toBe(input.subtotal);
+      expect(await Invoice.lookup({ id: result.data.id }).tax_rate).toBe(input.tax_rate);
+      expect(await Invoice.lookup({ id: result.data.id }).status).toBe(DRAFT);
+      expect(result.data.customer_id).toEqual("ea25575a-7564-49e9-ae79-99fc468f2ad7");
+      expect(result.data.subtotal).toEqual(50);
+      expect(result.data.tax_rate).toEqual(0.01);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: tax_rate at maximum value (100)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: boundary_tax_rate_at_max
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: '62160370-125d-4e06-a0c9-5d1545a771c2',
+        subtotal: 50,
+        tax_rate: 100,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Invoice.exists({ id: result.data.id })).toBe(true);
+      expect(await Invoice.lookup({ id: result.data.id }).customer_id).toBe(input.customer_id);
+      expect(await Invoice.lookup({ id: result.data.id }).subtotal).toBe(input.subtotal);
+      expect(await Invoice.lookup({ id: result.data.id }).tax_rate).toBe(input.tax_rate);
+      expect(await Invoice.lookup({ id: result.data.id }).status).toBe(DRAFT);
+      expect(result.data.customer_id).toEqual("62160370-125d-4e06-a0c9-5d1545a771c2");
+      expect(result.data.subtotal).toEqual(50);
+      expect(result.data.tax_rate).toEqual(100);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: tax_rate at maximum - 0.01', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: boundary_tax_rate_max_minus_one
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: '3f6beecd-b52b-4c0c-87cc-e65288de8813',
+        subtotal: 50,
+        tax_rate: 99.99,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Invoice.exists({ id: result.data.id })).toBe(true);
+      expect(await Invoice.lookup({ id: result.data.id }).customer_id).toBe(input.customer_id);
+      expect(await Invoice.lookup({ id: result.data.id }).subtotal).toBe(input.subtotal);
+      expect(await Invoice.lookup({ id: result.data.id }).tax_rate).toBe(input.tax_rate);
+      expect(await Invoice.lookup({ id: result.data.id }).status).toBe(DRAFT);
+      expect(result.data.customer_id).toEqual("3f6beecd-b52b-4c0c-87cc-e65288de8813");
+      expect(result.data.subtotal).toEqual(50);
+      expect(result.data.tax_rate).toEqual(99.99);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: tax_rate at zero value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: boundary_tax_rate_zero
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: 'f8742c78-09e6-4886-aaed-226fd3983787',
+        subtotal: 50,
+        tax_rate: 0,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Invoice.exists({ id: result.data.id })).toBe(true);
+      expect(await Invoice.lookup({ id: result.data.id }).customer_id).toBe(input.customer_id);
+      expect(await Invoice.lookup({ id: result.data.id }).subtotal).toBe(input.subtotal);
+      expect(await Invoice.lookup({ id: result.data.id }).tax_rate).toBe(input.tax_rate);
+      expect(await Invoice.lookup({ id: result.data.id }).status).toBe(DRAFT);
+      expect(result.data.customer_id).toEqual("f8742c78-09e6-4886-aaed-226fd3983787");
+      expect(result.data.subtotal).toEqual(50);
+      expect(result.data.tax_rate).toEqual(0);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: discount_amount at zero value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: boundary_discount_amount_zero
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: '9e8ce8aa-a3b7-45b6-b567-23c4a81681d5',
+        subtotal: 50,
+        tax_rate: 50,
+        discount_amount: 0,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Invoice.exists({ id: result.data.id })).toBe(true);
+      expect(await Invoice.lookup({ id: result.data.id }).customer_id).toBe(input.customer_id);
+      expect(await Invoice.lookup({ id: result.data.id }).subtotal).toBe(input.subtotal);
+      expect(await Invoice.lookup({ id: result.data.id }).tax_rate).toBe(input.tax_rate);
+      expect(await Invoice.lookup({ id: result.data.id }).status).toBe(DRAFT);
+      expect(result.data.customer_id).toEqual("9e8ce8aa-a3b7-45b6-b567-23c4a81681d5");
+      expect(result.data.subtotal).toEqual(50);
+      expect(result.data.tax_rate).toEqual(50);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+  });
+
+  describe('Invalid Inputs (Negative Tests)', () => {
+
+    it('Invalid: customer_id - invalid UUID format', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: constraint_violation_invalid_uuid
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: "not-a-valid-uuid",
+        subtotal: 50,
+        tax_rate: 50,
+      };
+      
+      // Capture state before execution
+      const __old__: Record<string, unknown> = {};
+      __old__['Invoice_count'] = await captureState('Invoice_count');
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Capture state before execution
+      const __old__ = {
+        Invoice_count: await Invoice_count,
+      };
+      
+      // Primary assertions
+      expect(Invoice.count).toBe(__old__.Invoice_count);
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_CUSTOMER');
+      
+    });
+
+    it('Invalid: customer_id - null value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: constraint_violation_null_value
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: null,
+        subtotal: 50,
+        tax_rate: 50,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Invalid: subtotal - below minimum (-1)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: constraint_violation_below_min
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: '685e72b5-d336-4138-b365-edaa453bdc39',
+        subtotal: -1,
+        tax_rate: 50,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_SUBTOTAL');
+      
+    });
+
+    it('Invalid: subtotal - null value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: constraint_violation_null_value
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: '5b226ab7-ad14-4503-b86b-356feeaf252a',
+        subtotal: null,
+        tax_rate: 50,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_SUBTOTAL');
+      
+    });
+
+    it('Invalid: subtotal - wrong type (string)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: constraint_violation_wrong_type_string
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: 'f1866895-aac6-4594-a503-5e76ddb1cfc7',
+        subtotal: "not_a_number",
+        tax_rate: 50,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_SUBTOTAL');
+      
+    });
+
+    it('Invalid: subtotal - extremely out-of-range decimal', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: constraint_violation_invalid_decimal
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: 'd59d4738-4179-4583-84fb-3056c763b741',
+        subtotal: -999999.99,
+        tax_rate: 50,
+      };
+      
+      // Capture state before execution
+      const __old__: Record<string, unknown> = {};
+      __old__['Invoice_count'] = await captureState('Invoice_count');
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Capture state before execution
+      const __old__ = {
+        Invoice_count: await Invoice_count,
+      };
+      
+      // Primary assertions
+      expect(Invoice.count).toBe(__old__.Invoice_count);
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_CUSTOMER');
+      
+    });
+
+    it('Invalid: tax_rate - below minimum (-1)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: constraint_violation_below_min
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: '0ef39571-0839-4b2c-898c-fa9820b72ced',
+        subtotal: 50,
+        tax_rate: -1,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Invalid: tax_rate - above maximum (101)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: constraint_violation_above_max
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: '55a5924b-3394-4e1f-a159-f0222cdfb6cd',
+        subtotal: 50,
+        tax_rate: 101,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Invalid: tax_rate - null value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: constraint_violation_null_value
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: '42ca11b9-3dd5-4255-ab76-027bb6bc71ec',
+        subtotal: 50,
+        tax_rate: null,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Invalid: tax_rate - wrong type (string)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: constraint_violation_wrong_type_string
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: '2910efc7-6f58-4fc5-a082-1a6cb0686d47',
+        subtotal: 50,
+        tax_rate: "not_a_number",
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Invalid: tax_rate - extremely out-of-range decimal', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: constraint_violation_invalid_decimal
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: '67e546f4-905b-4b1d-be6b-e2558481cb4f',
+        subtotal: 50,
+        tax_rate: -999999.99,
+      };
+      
+      // Capture state before execution
+      const __old__: Record<string, unknown> = {};
+      __old__['Invoice_count'] = await captureState('Invoice_count');
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Capture state before execution
+      const __old__ = {
+        Invoice_count: await Invoice_count,
+      };
+      
+      // Primary assertions
+      expect(Invoice.count).toBe(__old__.Invoice_count);
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_CUSTOMER');
+      
+    });
+
+    it('Missing required field: customer_id', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        subtotal: 50,
+        tax_rate: 50,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Missing required field: subtotal', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: '718eca4b-126d-4a1a-9203-0dafd3f28737',
+        tax_rate: 50,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Missing required field: tax_rate', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: '90e3e4a3-b7dc-4c58-a7d9-4195cf1985d5',
+        subtotal: 50,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+  });
+
+  describe('Precondition Violations', () => {
+
+    it('Violates precondition: input.subtotal > 0', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: precondition_violation_>_violation
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: '1c936d2f-dca8-4584-b7b6-f8f284ccd07f',
+        subtotal: 0,
+        tax_rate: 50,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Violates precondition: input.tax_rate >= 0', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: precondition_violation_>=_violation
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: 'ed6e9e3d-29ab-47f7-9bdf-a6e6e5876b20',
+        subtotal: 50,
+        tax_rate: -1,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Violates precondition: input.tax_rate <= 100', async () => {
+      /**
+       * @dataTrace
+       * Seed: 710723242
+       * Strategy: precondition_violation_<=_violation
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - customer_id (UUID): none
+       *   - subtotal (Money): min: 0, precision: 2
+       *   - tax_rate (Percentage): min: 0, max: 100, precision: 2
+       *   - discount_amount (Money): none
+       */
+      // Arrange
+      const input: CreateInvoiceInput = {
+        customer_id: 'f658297a-73b8-4727-8779-f3a746abed98',
+        subtotal: 50,
+        tax_rate: 101,
+      };
+      
+      // Act
+      const result = await createInvoice(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+  });
+});
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+async function captureState(path: string): Promise<unknown> {
+  // Implement state capture for old() expressions
+  return undefined;
+}"
+`;
+
+exports[`Generator Output Snapshots > should generate stable output for e2e-numeric.isl 1`] = `
+"// ============================================================================
+// Generated Tests for CreateOrder
+// Domain: NumericFixture
+// Seed: 1159465931
+// ============================================================================
+
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+// Behavior implementation
+import { createOrder } from '../src/CreateOrder';
+import type { CreateOrderInput, CreateOrderResult } from '../src/types';
+
+// Entity mocks
+import { Order } from './fixtures';
+
+// Test context
+let testContext: {
+  reset: () => void;
+  captureState: () => Record<string, unknown>;
+};
+
+beforeEach(() => {
+  testContext = {
+    reset: () => {
+      // Reset entity state
+      Order.reset?.();
+    },
+    captureState: () => ({
+      timestamp: Date.now(),
+    }),
+  };
+  testContext.reset();
+});
+
+afterEach(() => {
+  // Cleanup
+});
+
+describe('CreateOrder', () => {
+
+  describe('Valid Inputs', () => {
+
+    it('Valid input with typical values within constraints', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: typical_midpoint
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 5000.01,
+        quantity: 50,
+        discount_percentage: 50.5,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Order.exists({ id: result.data.id })).toBe(true);
+      expect(await Order.lookup({ id: result.data.id }).amount).toBe(input.amount);
+      expect(await Order.lookup({ id: result.data.id }).quantity).toBe(input.quantity);
+      expect(result.data.amount).toEqual(5000.01);
+      expect(result.data.quantity).toEqual(50);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Valid input with only required fields', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: minimal_required
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 5000.01,
+        quantity: 50,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Order.exists({ id: result.data.id })).toBe(true);
+      expect(await Order.lookup({ id: result.data.id }).amount).toBe(input.amount);
+      expect(await Order.lookup({ id: result.data.id }).quantity).toBe(input.quantity);
+      expect(result.data.amount).toEqual(5000.01);
+      expect(result.data.quantity).toEqual(50);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Seeded random valid input within constraints', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: seeded_random
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 7055.38,
+        quantity: 48,
+        discount_percentage: 64.48,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Order.exists({ id: result.data.id })).toBe(true);
+      expect(await Order.lookup({ id: result.data.id }).amount).toBe(input.amount);
+      expect(await Order.lookup({ id: result.data.id }).quantity).toBe(input.quantity);
+      expect(result.data.amount).toEqual(7055.38);
+      expect(result.data.quantity).toEqual(48);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+  });
+
+  describe('Boundary Cases', () => {
+
+    it('Boundary: amount at minimum value (0.01)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: boundary_amount_at_min
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 0.01,
+        quantity: 50,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Order.exists({ id: result.data.id })).toBe(true);
+      expect(await Order.lookup({ id: result.data.id }).amount).toBe(input.amount);
+      expect(await Order.lookup({ id: result.data.id }).quantity).toBe(input.quantity);
+      expect(result.data.amount).toEqual(0.01);
+      expect(result.data.quantity).toEqual(50);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: amount at minimum + 0.01', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: boundary_amount_min_plus_one
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 0.02,
+        quantity: 50,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Order.exists({ id: result.data.id })).toBe(true);
+      expect(await Order.lookup({ id: result.data.id }).amount).toBe(input.amount);
+      expect(await Order.lookup({ id: result.data.id }).quantity).toBe(input.quantity);
+      expect(result.data.amount).toEqual(0.02);
+      expect(result.data.quantity).toEqual(50);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: amount at maximum value (10000)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: boundary_amount_at_max
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 10000,
+        quantity: 50,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Order.exists({ id: result.data.id })).toBe(true);
+      expect(await Order.lookup({ id: result.data.id }).amount).toBe(input.amount);
+      expect(await Order.lookup({ id: result.data.id }).quantity).toBe(input.quantity);
+      expect(result.data.amount).toEqual(10000);
+      expect(result.data.quantity).toEqual(50);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: amount at maximum - 0.01', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: boundary_amount_max_minus_one
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 9999.99,
+        quantity: 50,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Order.exists({ id: result.data.id })).toBe(true);
+      expect(await Order.lookup({ id: result.data.id }).amount).toBe(input.amount);
+      expect(await Order.lookup({ id: result.data.id }).quantity).toBe(input.quantity);
+      expect(result.data.amount).toEqual(9999.99);
+      expect(result.data.quantity).toEqual(50);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: quantity at minimum value (1)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: boundary_quantity_at_min
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 5000.01,
+        quantity: 1,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Order.exists({ id: result.data.id })).toBe(true);
+      expect(await Order.lookup({ id: result.data.id }).amount).toBe(input.amount);
+      expect(await Order.lookup({ id: result.data.id }).quantity).toBe(input.quantity);
+      expect(result.data.amount).toEqual(5000.01);
+      expect(result.data.quantity).toEqual(1);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: quantity at minimum + 1', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: boundary_quantity_min_plus_one
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 5000.01,
+        quantity: 2,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Order.exists({ id: result.data.id })).toBe(true);
+      expect(await Order.lookup({ id: result.data.id }).amount).toBe(input.amount);
+      expect(await Order.lookup({ id: result.data.id }).quantity).toBe(input.quantity);
+      expect(result.data.amount).toEqual(5000.01);
+      expect(result.data.quantity).toEqual(2);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: quantity at maximum value (100)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: boundary_quantity_at_max
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 5000.01,
+        quantity: 100,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Order.exists({ id: result.data.id })).toBe(true);
+      expect(await Order.lookup({ id: result.data.id }).amount).toBe(input.amount);
+      expect(await Order.lookup({ id: result.data.id }).quantity).toBe(input.quantity);
+      expect(result.data.amount).toEqual(5000.01);
+      expect(result.data.quantity).toEqual(100);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: quantity at maximum - 1', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: boundary_quantity_max_minus_one
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 5000.01,
+        quantity: 99,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Order.exists({ id: result.data.id })).toBe(true);
+      expect(await Order.lookup({ id: result.data.id }).amount).toBe(input.amount);
+      expect(await Order.lookup({ id: result.data.id }).quantity).toBe(input.quantity);
+      expect(result.data.amount).toEqual(5000.01);
+      expect(result.data.quantity).toEqual(99);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+
+    it('Boundary: discount_percentage at zero value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: boundary_discount_percentage_zero
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 5000.01,
+        quantity: 50,
+        discount_percentage: 0,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Order.exists({ id: result.data.id })).toBe(true);
+      expect(await Order.lookup({ id: result.data.id }).amount).toBe(input.amount);
+      expect(await Order.lookup({ id: result.data.id }).quantity).toBe(input.quantity);
+      expect(result.data.amount).toEqual(5000.01);
+      expect(result.data.quantity).toEqual(50);
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+    });
+  });
+
+  describe('Invalid Inputs (Negative Tests)', () => {
+
+    it('Invalid: amount - below minimum (-0.99)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: constraint_violation_below_min
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: -0.99,
+        quantity: 50,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_AMOUNT');
+      
+    });
+
+    it('Invalid: amount - above maximum (10001)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: constraint_violation_above_max
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 10001,
+        quantity: 50,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_AMOUNT');
+      
+    });
+
+    it('Invalid: amount - null value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: constraint_violation_null_value
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: null,
+        quantity: 50,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_AMOUNT');
+      
+    });
+
+    it('Invalid: amount - wrong type (string)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: constraint_violation_wrong_type_string
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: "not_a_number",
+        quantity: 50,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_AMOUNT');
+      
+    });
+
+    it('Invalid: amount - extremely out-of-range decimal', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: constraint_violation_invalid_decimal
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: -999999.99,
+        quantity: 50,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_AMOUNT');
+      
+    });
+
+    it('Invalid: quantity - below minimum (0)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: constraint_violation_below_min
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 5000.01,
+        quantity: 0,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_QUANTITY');
+      
+    });
+
+    it('Invalid: quantity - above maximum (101)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: constraint_violation_above_max
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 5000.01,
+        quantity: 101,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_QUANTITY');
+      
+    });
+
+    it('Invalid: quantity - null value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: constraint_violation_null_value
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 5000.01,
+        quantity: null,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_QUANTITY');
+      
+    });
+
+    it('Invalid: quantity - wrong type (string)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: constraint_violation_wrong_type_string
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 5000.01,
+        quantity: "not_a_number",
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('INVALID_QUANTITY');
+      
+    });
+
+    it('Missing required field: amount', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        quantity: 50,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Missing required field: quantity', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 5000.01,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+  });
+
+  describe('Precondition Violations', () => {
+
+    it('Violates precondition: input.amount >= 0.01', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: precondition_violation_>=_violation
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: -0.99,
+        quantity: 50,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Violates precondition: input.amount <= 10000', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: precondition_violation_<=_violation
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 10001,
+        quantity: 50,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Violates precondition: input.quantity >= 1', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: precondition_violation_>=_violation
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 5000.01,
+        quantity: 0,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Violates precondition: input.quantity <= 100', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1159465931
+       * Strategy: precondition_violation_<=_violation
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - amount (Amount): min: 0.01, max: 10000, precision: 2
+       *   - quantity (Quantity): min: 1, max: 100
+       *   - discount_percentage (Percentage): none
+       */
+      // Arrange
+      const input: CreateOrderInput = {
+        amount: 5000.01,
+        quantity: 101,
+      };
+      
+      // Act
+      const result = await createOrder(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+  });
+});
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+async function captureState(path: string): Promise<unknown> {
+  // Implement state capture for old() expressions
+  return undefined;
+}"
+`;
+
+exports[`Generator Output Snapshots > should generate stable output for e2e-string.isl 1`] = `
+"// ============================================================================
+// Generated Tests for CreateProfile
+// Domain: StringFixture
+// Seed: 1558926156
+// ============================================================================
+
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+// Behavior implementation
+import { createProfile } from '../src/CreateProfile';
+import type { CreateProfileInput, CreateProfileResult } from '../src/types';
+
+// Entity mocks
+import { Profile } from './fixtures';
+
+// Test context
+let testContext: {
+  reset: () => void;
+  captureState: () => Record<string, unknown>;
+};
+
+beforeEach(() => {
+  testContext = {
+    reset: () => {
+      // Reset entity state
+      Profile.reset?.();
+    },
+    captureState: () => ({
+      timestamp: Date.now(),
+    }),
+  };
+  testContext.reset();
+});
+
+afterEach(() => {
+  // Cleanup
+});
+
+describe('CreateProfile', () => {
+
+  describe('Valid Inputs', () => {
+
+    it('Valid input with typical values within constraints', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: typical_midpoint
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "sp3dda@example.com",
+        username: "by9qigoibo",
+        password: "test_bx1dgofpti2jh",
+        phone: "test_ztca67",
+        bio: "test_m3zwix",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Profile.exists({ id: result.data.id })).toBe(true);
+      expect(await Profile.lookup({ id: result.data.id }).email).toBe(input.email);
+      expect(await Profile.lookup({ id: result.data.id }).username).toBe(input.username);
+      expect(result.data.email).toEqual("sp3dda@example.com");
+      expect(result.data.username).toEqual("by9qigoibo");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+      // Invariant checks (may require manual verification)
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: logs
+            // Verify this holds before and after the operation
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: result
+            // Verify this holds before and after the operation
+    });
+
+    it('Valid input with only required fields', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: minimal_required
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "bvbeyog@test.org",
+        username: "wugv9pyr9c",
+        password: "test_b5ty5etl1a7cb",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Profile.exists({ id: result.data.id })).toBe(true);
+      expect(await Profile.lookup({ id: result.data.id }).email).toBe(input.email);
+      expect(await Profile.lookup({ id: result.data.id }).username).toBe(input.username);
+      expect(result.data.email).toEqual("bvbeyog@test.org");
+      expect(result.data.username).toEqual("wugv9pyr9c");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+      // Invariant checks (may require manual verification)
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: logs
+            // Verify this holds before and after the operation
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: result
+            // Verify this holds before and after the operation
+    });
+
+    it('Seeded random valid input within constraints', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: seeded_random
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "3holjigqaokv@test.org",
+        username: "14f678qht5ys8xj",
+        password: "fcaw1uih",
+        phone: "ku66acg3hc11c",
+        bio: "h217s9bojn80g3nuf",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Profile.exists({ id: result.data.id })).toBe(true);
+      expect(await Profile.lookup({ id: result.data.id }).email).toBe(input.email);
+      expect(await Profile.lookup({ id: result.data.id }).username).toBe(input.username);
+      expect(result.data.email).toEqual("3holjigqaokv@test.org");
+      expect(result.data.username).toEqual("14f678qht5ys8xj");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+      // Invariant checks (may require manual verification)
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: logs
+            // Verify this holds before and after the operation
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: result
+            // Verify this holds before and after the operation
+    });
+  });
+
+  describe('Boundary Cases', () => {
+
+    it('Boundary: email at maximum length (254 chars)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: boundary_email_at_max_length
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com",
+        username: "n1beviyhpf",
+        password: "test_2737z74zgojin",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Profile.exists({ id: result.data.id })).toBe(true);
+      expect(await Profile.lookup({ id: result.data.id }).email).toBe(input.email);
+      expect(await Profile.lookup({ id: result.data.id }).username).toBe(input.username);
+      expect(result.data.email).toEqual("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com");
+      expect(result.data.username).toEqual("n1beviyhpf");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+      // Invariant checks (may require manual verification)
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: logs
+            // Verify this holds before and after the operation
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: result
+            // Verify this holds before and after the operation
+    });
+
+    it('Boundary: email at empty string', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: boundary_email_empty
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "",
+        username: "s0w4l24xxq",
+        password: "test_zar8y712o7rew",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Profile.exists({ id: result.data.id })).toBe(true);
+      expect(await Profile.lookup({ id: result.data.id }).email).toBe(input.email);
+      expect(await Profile.lookup({ id: result.data.id }).username).toBe(input.username);
+      expect(result.data.email).toEqual("");
+      expect(result.data.username).toEqual("s0w4l24xxq");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+      // Invariant checks (may require manual verification)
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: logs
+            // Verify this holds before and after the operation
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: result
+            // Verify this holds before and after the operation
+    });
+
+    it('Boundary: username at minimum length (3 chars)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: boundary_username_at_min_length
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "ubqrvh@test.org",
+        username: "aaa",
+        password: "test_my592ggk6v9wn",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Profile.exists({ id: result.data.id })).toBe(true);
+      expect(await Profile.lookup({ id: result.data.id }).email).toBe(input.email);
+      expect(await Profile.lookup({ id: result.data.id }).username).toBe(input.username);
+      expect(result.data.email).toEqual("ubqrvh@test.org");
+      expect(result.data.username).toEqual("aaa");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+      // Invariant checks (may require manual verification)
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: logs
+            // Verify this holds before and after the operation
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: result
+            // Verify this holds before and after the operation
+    });
+
+    it('Boundary: username at maximum length (30 chars)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: boundary_username_at_max_length
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "cprzu3@demo.io",
+        username: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        password: "test_am1ptgf0c4za3",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Profile.exists({ id: result.data.id })).toBe(true);
+      expect(await Profile.lookup({ id: result.data.id }).email).toBe(input.email);
+      expect(await Profile.lookup({ id: result.data.id }).username).toBe(input.username);
+      expect(result.data.email).toEqual("cprzu3@demo.io");
+      expect(result.data.username).toEqual("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+      // Invariant checks (may require manual verification)
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: logs
+            // Verify this holds before and after the operation
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: result
+            // Verify this holds before and after the operation
+    });
+
+    it('Boundary: password at minimum length (8 chars)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: boundary_password_at_min_length
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "63di0@mail.net",
+        username: "75ocgaogqd",
+        password: "aaaaaaaa",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Profile.exists({ id: result.data.id })).toBe(true);
+      expect(await Profile.lookup({ id: result.data.id }).email).toBe(input.email);
+      expect(await Profile.lookup({ id: result.data.id }).username).toBe(input.username);
+      expect(result.data.email).toEqual("63di0@mail.net");
+      expect(result.data.username).toEqual("75ocgaogqd");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+      // Invariant checks (may require manual verification)
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: logs
+            // Verify this holds before and after the operation
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: result
+            // Verify this holds before and after the operation
+    });
+
+    it('Boundary: password at maximum length (128 chars)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: boundary_password_at_max_length
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "kqalpdse48t@demo.io",
+        username: "shv0m7pwf4",
+        password: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Profile.exists({ id: result.data.id })).toBe(true);
+      expect(await Profile.lookup({ id: result.data.id }).email).toBe(input.email);
+      expect(await Profile.lookup({ id: result.data.id }).username).toBe(input.username);
+      expect(result.data.email).toEqual("kqalpdse48t@demo.io");
+      expect(result.data.username).toEqual("shv0m7pwf4");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+      // Invariant checks (may require manual verification)
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: logs
+            // Verify this holds before and after the operation
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: result
+            // Verify this holds before and after the operation
+    });
+
+    it('Boundary: phone at empty string', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: boundary_phone_empty
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "ovd4ikwue2q@example.com",
+        username: "6nl6syjt4y",
+        password: "test_gt6o0k3g86a8r",
+        phone: "",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Profile.exists({ id: result.data.id })).toBe(true);
+      expect(await Profile.lookup({ id: result.data.id }).email).toBe(input.email);
+      expect(await Profile.lookup({ id: result.data.id }).username).toBe(input.username);
+      expect(result.data.email).toEqual("ovd4ikwue2q@example.com");
+      expect(result.data.username).toEqual("6nl6syjt4y");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+      // Invariant checks (may require manual verification)
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: logs
+            // Verify this holds before and after the operation
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: result
+            // Verify this holds before and after the operation
+    });
+
+    it('Boundary: bio at empty string', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: boundary_bio_empty
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "rrb6c9lmmnh@example.com",
+        username: "8neo7az5zs",
+        password: "test_pllxgm2sh2d7u",
+        bio: "",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(await Profile.exists({ id: result.data.id })).toBe(true);
+      expect(await Profile.lookup({ id: result.data.id }).email).toBe(input.email);
+      expect(await Profile.lookup({ id: result.data.id }).username).toBe(input.username);
+      expect(result.data.email).toEqual("rrb6c9lmmnh@example.com");
+      expect(result.data.username).toEqual("8neo7az5zs");
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      
+      // Secondary assertions
+      expect(result.data.id).toBeDefined();
+      
+      // Invariant checks (may require manual verification)
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: logs
+            // Verify this holds before and after the operation
+      // Invariant: input.password
+            // Verify this holds before and after the operation
+      // Invariant: never_appears_in
+            // Verify this holds before and after the operation
+      // Invariant: result
+            // Verify this holds before and after the operation
+    });
+  });
+
+  describe('Invalid Inputs (Negative Tests)', () => {
+
+    it('Invalid: email - too long (264 chars)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: constraint_violation_too_long
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        username: "lsfg8991dh",
+        password: "test_61caq2buj6qky",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('EMAIL_EXISTS');
+      
+    });
+
+    it('Invalid: email - invalid email format', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: constraint_violation_invalid_email
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "not-an-email",
+        username: "t3r91swqtg",
+        password: "test_ovcbtzxsn0wfi",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('EMAIL_EXISTS');
+      
+    });
+
+    it('Invalid: email - null value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: constraint_violation_null_value
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: null,
+        username: "bxqavkavhg",
+        password: "test_ndqhp6zbnhbkx",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('EMAIL_EXISTS');
+      
+    });
+
+    it('Invalid: username - too short (2 chars)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: constraint_violation_too_short
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "5tb9qmimh2dn@example.com",
+        username: "aa",
+        password: "test_fz8gxeq5q5df8",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('USERNAME_EXISTS');
+      
+    });
+
+    it('Invalid: username - too long (40 chars)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: constraint_violation_too_long
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "fozsj1@example.com",
+        username: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        password: "test_hfcgwkdy0111l",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('USERNAME_EXISTS');
+      
+    });
+
+    it('Invalid: username - null value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: constraint_violation_null_value
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "po8hn5@demo.io",
+        username: null,
+        password: "test_sd9q56hytd1ec",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('USERNAME_EXISTS');
+      
+    });
+
+    it('Invalid: password - too short (7 chars)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: constraint_violation_too_short
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "ike737cwn1@example.com",
+        username: "j20wwxisfp",
+        password: "aaaaaaa",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('WEAK_PASSWORD');
+      
+    });
+
+    it('Invalid: password - too long (138 chars)', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: constraint_violation_too_long
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "ojipi5h25@mail.net",
+        username: "ni98rjbxel",
+        password: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('WEAK_PASSWORD');
+      
+    });
+
+    it('Invalid: password - null value', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: constraint_violation_null_value
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "xmwfghj@mail.net",
+        username: "pap74jqmoo",
+        password: null,
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      expect(result.error?.code ?? result.error).toBe('WEAK_PASSWORD');
+      
+    });
+
+    it('Missing required field: email', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        username: "18lluy1w5z",
+        password: "test_xf1bn78ivc829",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Missing required field: username', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "01zl5t3tnv@mail.net",
+        password: "test_xgsw8dwuajm4l",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Missing required field: password', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: missing_required_field
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "rf0m0n5pwv@demo.io",
+        username: "qpa5a92hkj",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+  });
+
+  describe('Precondition Violations', () => {
+
+    it('Violates precondition: input.email.length > 0', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: precondition_violation_>_violation
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: 0,
+        username: "0afrx1mhuj",
+        password: "test_b2im166pp9zcv",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Violates precondition: input.username.length >= 3', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: precondition_violation_>=_violation
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "nuaivfoay1@mail.net",
+        username: 2,
+        password: "test_g8xkr50ybevjp",
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+
+    it('Violates precondition: input.password.length >= 8', async () => {
+      /**
+       * @dataTrace
+       * Seed: 1558926156
+       * Strategy: precondition_violation_>=_violation
+       * Generated: [TIMESTAMP]
+       * Constraints:
+       *   - email (Email): maxLength: 254, format: email
+       *   - username (Username): minLength: 3, maxLength: 30
+       *   - password (Password): minLength: 8, maxLength: 128
+       *   - phone (PhoneNumber): none
+       *   - bio (String): none
+       */
+      // Arrange
+      const input: CreateProfileInput = {
+        email: "wxh5ya@test.org",
+        username: "8re28krl32",
+        password: 7,
+      };
+      
+      // Act
+      const result = await createProfile(input);
+      
+      // Assert
+      // Primary assertions
+      expect(result.success).toBe(false);
+      
+    });
+  });
+});
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+async function captureState(path: string): Promise<unknown> {
+  // Implement state capture for old() expressions
+  return undefined;
+}"
+`;

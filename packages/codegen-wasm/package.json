@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/codegen-wasm",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "WebAssembly code generator for ISL - compile intents to portable WASM modules",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

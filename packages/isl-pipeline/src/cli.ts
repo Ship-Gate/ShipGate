@@ -15,6 +15,7 @@ import { createGenerator } from '@isl-lang/generator';
 import { healSemantically } from './semantic-healer.js';
 import { runSemanticRules, checkProofCompleteness } from './semantic-rules.js';
 import { generateNextJSRoute, generateTests, type TemplateContext } from './code-templates.js';
+import { NextJSAdapter, ExpressAdapter, FastifyAdapter, type CodegenFrameworkAdapter } from './adapters/index.js';
 import { formatProofBundle } from '@isl-lang/proof';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -56,7 +57,7 @@ Usage:
   isl-pipeline demo                  Run the demo pipeline
 
 Options:
-  --framework <name>   Target framework (nextjs, express, fastify)
+  --framework <name>   Target framework (nextjs [default], express, fastify)
   --output <dir>       Output directory (default: ./generated)
   --dry-run            Don't write files, just show what would be generated
   --verbose            Show detailed output
@@ -64,6 +65,7 @@ Options:
 Examples:
   isl-pipeline generate "Write me a login with rate limiting"
   isl-pipeline generate "Create user registration" --framework nextjs
+  isl-pipeline generate "Auth API" --framework express
   isl-pipeline verify ./src/app/api
   isl-pipeline heal ./src/app/api --verbose
 `);
@@ -86,12 +88,14 @@ async function handleGenerate(args: string[]) {
     process.exit(1);
   }
 
+  const adapter = getCodegenAdapter(framework);
+
   console.log('═'.repeat(60));
   console.log(' ISL Pipeline: Generate');
   console.log('═'.repeat(60));
   console.log();
   console.log(`Prompt: "${prompt}"`);
-  console.log(`Framework: ${framework}`);
+  console.log(`Framework: ${framework} (${adapter.name})`);
   console.log(`Output: ${outputDir}`);
   console.log();
 
@@ -129,36 +133,18 @@ async function handleGenerate(args: string[]) {
   }
   console.log();
 
-  // Step 2: Generate production-ready code
+  // Step 2: Generate production-ready code via FrameworkAdapter
   console.log('─'.repeat(60));
   console.log(' Step 2: ISL → Code (Production Templates)');
   console.log('─'.repeat(60));
 
+  const fileMap = adapter.generateProjectStructure(translation.ast);
   const filesToWrite: Array<{ path: string; content: string }> = [];
 
-  for (const behavior of translation.ast.behaviors) {
-    const ctx: TemplateContext = {
-      ast: translation.ast,
-      behavior,
-      repoContext,
-    };
-
-    const behaviorKebab = behavior.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-    
-    // Generate route handler
-    const routePath = framework === 'nextjs'
-      ? `${outputDir}/app/api/${behaviorKebab}/route.ts`
-      : `${outputDir}/routes/${behaviorKebab}.ts`;
-    
-    const routeCode = generateNextJSRoute(ctx);
-    filesToWrite.push({ path: routePath, content: routeCode });
-    console.log(`✓ Generated: ${routePath}`);
-
-    // Generate tests
-    const testPath = routePath.replace('.ts', '.test.ts');
-    const testCode = generateTests(ctx);
-    filesToWrite.push({ path: testPath, content: testCode });
-    console.log(`✓ Generated: ${testPath}`);
+  for (const [relPath, content] of fileMap) {
+    const fullPath = `${outputDir}/${relPath}`;
+    filesToWrite.push({ path: fullPath, content });
+    console.log(`✓ Generated: ${fullPath}`);
   }
 
   // Generate ISL spec file
@@ -351,6 +337,18 @@ async function handleDemo() {
 // ============================================================================
 // Utilities
 // ============================================================================
+
+function getCodegenAdapter(framework: string): CodegenFrameworkAdapter {
+  switch (framework) {
+    case 'express':
+      return ExpressAdapter;
+    case 'fastify':
+      return FastifyAdapter;
+    case 'nextjs':
+    default:
+      return NextJSAdapter;
+  }
+}
 
 function getFlag(args: string[], flag: string): string | undefined {
   const idx = args.indexOf(flag);

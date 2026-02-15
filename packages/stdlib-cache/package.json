@@ -1,6 +1,7 @@
 {
   "name": "@isl-lang/stdlib-cache",
-  "version": "0.1.0",
+  "private": true,
+  "version": "0.1.1",
   "description": "ISL standard library for caching with multiple backend support",
   "type": "module",
   "main": "dist/index.js",

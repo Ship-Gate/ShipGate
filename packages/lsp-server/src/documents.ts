@@ -273,8 +273,14 @@ export class ISLDocumentManager {
       } else if (trimmed.match(/^chaos\s+\w+/)) {
         currentBlock = 'chaos';
         currentSection = '';
+      } else if (trimmed.match(/^type\s+\w+\s*=\s*\w+\s*\{/)) {
+        currentBlock = 'type-constraint';
+        currentSection = 'constraint';
       }
 
+      // Track actor/endpoint blocks
+      if (trimmed === 'actors {') currentSection = 'actors';
+      else if (trimmed.startsWith('api {') || trimmed === 'endpoint {') currentSection = 'endpoint';
       // Track sections within blocks
       if (trimmed === 'input {') currentSection = 'input';
       else if (trimmed === 'output {') currentSection = 'output';
@@ -311,6 +317,8 @@ export class ISLDocumentManager {
           case 'invariant': return 'behavior-invariant';
           case 'temporal': return 'behavior-temporal';
           case 'security': return 'behavior-security';
+          case 'actors': return 'actor-block';
+          case 'endpoint': return 'endpoint-block';
           default: return 'behavior';
         }
       case 'invariant':
@@ -323,6 +331,8 @@ export class ISLDocumentManager {
         return 'scenario';
       case 'chaos':
         return 'chaos';
+      case 'type-constraint':
+        return currentSection === 'constraint' ? 'constraint-block' : 'domain';
       default:
         return 'domain';
     }

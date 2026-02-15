@@ -357,6 +357,38 @@ export async function runPipeline(
       );
     }
 
+    // Write ISL certificate if enabled
+    if (state.options.writeCertificate && !state.options.dryRun && state.generatedFiles?.length) {
+      try {
+        const { buildCertificateInputFromPipeline, generateAndSaveCertificate } = await import(
+          '@isl-lang/isl-certificate'
+        );
+        const pipelineResult = {
+          status,
+          report,
+          steps: state.stepResults,
+          totalDurationMs: Math.round(performance.now() - state.startTime),
+        };
+        const certInput = await buildCertificateInputFromPipeline(
+          pipelineResult,
+          state.options.workspacePath,
+          state.options.certificateOverrides ?? {}
+        );
+        if (certInput) {
+          await generateAndSaveCertificate(certInput, {
+            projectRoot: state.options.workspacePath,
+          });
+          if (state.options.verbose) {
+            console.log('[Pipeline] Wrote .isl-certificate.json');
+          }
+        }
+      } catch (certErr) {
+        state.warnings.push(
+          `Certificate generation failed: ${certErr instanceof Error ? certErr.message : String(certErr)}`
+        );
+      }
+    }
+
     // Enforce D2: no skipped/stubbed steps in strict mode
     if (state.options.strictSteps) {
       assertNoSkippedSteps(

@@ -221,9 +221,13 @@ function checkUnusedBehaviorSymbols(
   collectIdentifiers(behavior.temporal, usedIdentifiers);
   collectIdentifiers(behavior.security, usedIdentifiers);
 
-  // Check inputs (input may be single object or array)
-  const inputs = Array.isArray(behavior.input) ? behavior.input : (behavior.input ? [behavior.input] : []);
-  for (const input of inputs) {
+  // Check inputs — normalize InputBlock { fields: [...] } vs flat Field[]
+  const inputBlock = behavior.input as unknown as { fields?: Array<{ name: { name: string }; span?: unknown; location?: unknown }> } | Array<{ name: { name: string }; span?: unknown; location?: unknown }> | undefined;
+  const inputFields = inputBlock
+    ? (Array.isArray(inputBlock) ? inputBlock : (inputBlock.fields || []))
+    : [];
+  for (const input of inputFields) {
+    if (!input?.name?.name) continue;
     const name = input.name.name;
     if (!usedIdentifiers.has(name)) {
       diagnostics.push({
@@ -231,7 +235,7 @@ function checkUnusedBehaviorSymbols(
         category: 'semantic',
         severity: 'warning',
         message: `Input parameter '${name}' is never used in behavior '${behavior.name.name}'`,
-        location: spanToLocation(input.span || input.location || input.name?.span, filePath),
+        location: spanToLocation((input as { span?: unknown }).span || (input as { location?: unknown }).location || (input.name as unknown as { span?: unknown })?.span, filePath),
         source: 'verifier',
         tags: ['unnecessary'],
         help: [
@@ -247,9 +251,13 @@ function checkUnusedBehaviorSymbols(
     }
   }
 
-  // Check outputs (output may be single object or array)
-  const outputs = Array.isArray(behavior.output) ? behavior.output : (behavior.output ? [behavior.output] : []);
-  for (const output of outputs) {
+  // Check outputs — normalize OutputBlock { success, errors } vs flat Field[]
+  const outputBlock = behavior.output as unknown as { fields?: Array<{ name: { name: string } }>; success?: unknown; errors?: unknown[] } | Array<{ name: { name: string } }> | undefined;
+  const outputFields = outputBlock
+    ? (Array.isArray(outputBlock) ? outputBlock : (outputBlock.fields || []))
+    : [];
+  for (const output of outputFields) {
+    if (!output?.name?.name) continue;
     const name = output.name.name;
     if (!usedIdentifiers.has(name)) {
       diagnostics.push({
@@ -257,7 +265,7 @@ function checkUnusedBehaviorSymbols(
         category: 'semantic',
         severity: 'warning',
         message: `Output '${name}' is declared but never constrained in behavior '${behavior.name.name}'`,
-        location: spanToLocation(output.span || output.location || output.name?.span, filePath),
+        location: spanToLocation((output as { span?: unknown }).span || (output as { location?: unknown }).location || (output.name as unknown as { span?: unknown })?.span, filePath),
         source: 'verifier',
         notes: ['Outputs should typically be constrained in postconditions'],
         help: [

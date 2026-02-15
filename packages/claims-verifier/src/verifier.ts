@@ -55,7 +55,7 @@ export class ClaimVerifier {
   constructor(options: VerifierOptions) {
     this.facts = new Map();
     this.tolerance = options.tolerance ?? 0.05;
-    this.minSimilarity = options.minSimilarity ?? 0.6;
+    this.minSimilarity = options.minSimilarity ?? 0.3;
     
     for (const fact of options.knownFacts) {
       this.facts.set(fact.id, fact);
@@ -186,11 +186,15 @@ export class ClaimVerifier {
         ? stringSimilarity(claim.location.context, fact.description)
         : 0;
       
-      // Calculate overall similarity
-      const valueSimilarity = valuesMatch(claim.value, fact.value, this.tolerance) ? 1 : 0;
-      const unitSimilarity = claim.unit === fact.unit ? 0.2 : 0;
+      // Unit match bonus (strong signal when units align)
+      const unitBonus = (claim.unit && claim.unit === fact.unit) ? 0.3 : 0;
       
-      const similarity = contextSimilarity * 0.5 + valueSimilarity * 0.3 + unitSimilarity;
+      // Value proximity bonus (helps pick the right fact among candidates)
+      const valueBonus = valuesMatch(claim.value, fact.value, this.tolerance) ? 0.2 : 0;
+      
+      // Matching score: context relevance + unit match + value proximity
+      // Value is a bonus, not required — enables mismatch detection
+      const similarity = contextSimilarity * 0.5 + unitBonus + valueBonus;
       
       if (similarity >= this.minSimilarity) {
         if (!bestMatch || similarity > bestMatch.similarity) {
@@ -210,7 +214,7 @@ export function createDefaultFacts(): KnownFact[] {
   return [
     {
       id: 'builtin-rules-count',
-      description: 'Number of built-in rules in ISL Studio',
+      description: 'Number of built-in rules in ShipGate',
       value: 25,
       unit: 'rules',
       source: {

@@ -27,6 +27,7 @@ interface ProcessorResult {
   error_message?: string;
 }
 
+/** @stub — Intentional demo mock; not production payment processing */
 async function processPaymentWithMockProcessor(
   amount: number,
   card_last4?: string

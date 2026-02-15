@@ -43,7 +43,7 @@ describe('Golden Output Tests', () => {
 
   for (const sample of GOLDEN_SAMPLE_DOMAINS) {
     describe(`Domain: ${sample.name}`, () => {
-      let parsedDomain: ReturnType<typeof parse>['ast'];
+      let parsedDomain: ReturnType<typeof parse>['domain'];
 
       beforeAll(() => {
         if (!existsSync(sample.path)) {
@@ -54,13 +54,13 @@ describe('Golden Output Tests', () => {
         const source = readFileSync(sample.path, 'utf-8');
         const parsed = parse(source, sample.path);
 
-        if (!parsed.success || !parsed.ast) {
+        if (!parsed.success || !parsed.domain) {
           throw new Error(
             `Failed to parse ${sample.name}: ${parsed.errors?.map(e => e.message).join(', ')}`
           );
         }
 
-        parsedDomain = parsed.ast;
+        parsedDomain = parsed.domain;
       });
 
       it('should produce stable output matching golden file', () => {

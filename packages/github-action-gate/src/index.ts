@@ -81,7 +81,7 @@ async function run(): Promise<void> {
     setOutput('verdict', report.verdict);
     setOutput('score', report.score.toString());
     setOutput('violations', report.totalFindings.toString());
-    setOutput('evidence-path', '.islstudio/evidence');
+    setOutput('evidence-path', '.shipgate/evidence');
     
     // Generate step summary
     await summary.addRaw(generateStepSummary(report));

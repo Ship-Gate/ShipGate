@@ -801,6 +801,30 @@ export async function runPipeline(
     const evidence: GateEvidence[] = [];
     const { summary } = testOutput;
 
+    // ── Execution failure gate ──────────────────────────────────────
+    // If the runner could not execute tests (Vitest import errors,
+    // TS config issues, runtime crashes, all-skipped), this is a
+    // verification_blocked critical failure → forces NO_SHIP.
+    if (testOutput.executionFailed || (summary.totalTests === 0 && generatedTestPaths.length > 0)) {
+      const reason = testOutput.executionFailureReason
+        ?? 'Verification blocked: tests did not run';
+      evidence.push({
+        source: 'test-execution',
+        check: 'verification_blocked',
+        result: 'fail',
+        confidence: 1,
+        details: reason,
+        metadata: {
+          executionFailed: true,
+          reason,
+          total: summary.totalTests,
+          skipped: summary.skippedTests,
+        },
+      });
+      return { evidence, output: testOutput };
+    }
+
+    // ── Normal results ──────────────────────────────────────────────
     if (summary.failedTests > 0) {
       evidence.push({
         source: 'test-execution',
@@ -811,15 +835,44 @@ export async function runPipeline(
         metadata: { total: summary.totalTests, passed: summary.passedTests, failed: summary.failedTests },
       });
     } else if (summary.totalTests > 0) {
+      // Count actually-executed tests (exclude skipped)
+      const executed = summary.totalTests - summary.skippedTests;
+      if (executed === 0) {
+        // All tests skipped = no verification occurred
+        evidence.push({
+          source: 'test-execution',
+          check: 'verification_blocked',
+          result: 'fail',
+          confidence: 1,
+          details: `Verification blocked: all ${summary.totalTests} test(s) were skipped — no assertions executed`,
+          metadata: { executionFailed: true, total: summary.totalTests, skipped: summary.skippedTests },
+        });
+        return { evidence, output: testOutput };
+      }
+
       evidence.push({
         source: 'test-execution',
         check: 'test_results',
         result: 'pass',
         confidence: 1,
-        details: `All ${summary.totalTests} test(s) passed`,
-        metadata: { total: summary.totalTests, passed: summary.passedTests },
+        details: `All ${executed} executed test(s) passed` +
+          (summary.skippedTests > 0 ? ` (${summary.skippedTests} skipped — execution_score reduced)` : ''),
+        metadata: { total: summary.totalTests, passed: summary.passedTests, skipped: summary.skippedTests },
       });
+
+      // Skipped tests decrease execution_score — emit separate evidence
+      if (summary.skippedTests > 0) {
+        evidence.push({
+          source: 'test-execution',
+          check: 'skipped_tests_penalty',
+          result: 'warn',
+          confidence: summary.skippedTests / summary.totalTests,
+          details: `${summary.skippedTests}/${summary.totalTests} test(s) skipped — counts as not executed`,
+          metadata: { skipped: summary.skippedTests, total: summary.totalTests },
+        });
+      }
     } else {
+      // No generated tests to run (different from execution failure)
       evidence.push({
         source: 'test-execution',
         check: 'test_results',
@@ -831,17 +884,26 @@ export async function runPipeline(
 
     // Per-suite evidence
     for (const suite of testOutput.suites) {
-      if (suite.failedTests > 0) {
-        for (const test of suite.tests) {
-          if (test.status === 'failed') {
-            evidence.push({
-              source: 'test-execution',
-              check: `test_${test.id}`,
-              result: 'fail',
-              confidence: 1,
-              details: `Test failed: ${test.name} — ${test.error?.message ?? 'unknown error'}`,
-            });
-          }
+      for (const test of suite.tests) {
+        if (test.status === 'failed') {
+          evidence.push({
+            source: 'test-execution',
+            check: `test_${test.id}`,
+            result: 'fail',
+            confidence: 1,
+            details: `Test failed: ${test.name} — ${test.error?.message ?? 'unknown error'}`,
+          });
+        }
+        // Synthetic tests contribute 0 execution credit
+        if (test.synthetic) {
+          evidence.push({
+            source: 'test-execution',
+            check: `synthetic_${test.id}`,
+            result: 'skip',
+            confidence: 0,
+            details: `NON_EVIDENCE: synthetic test "${test.name}" — contributes 0 execution credit`,
+            metadata: { synthetic: true, nonEvidence: true },
+          });
         }
       }
     }
@@ -905,6 +967,68 @@ export async function runPipeline(
     metadata: summary,
   });
 
+  // ═══════════════════════════════════════════════════════════════════
+  // SECURITY SCAN (Stage 4 verification - integrated into evidence)
+  // ═══════════════════════════════════════════════════════════════════
+  let securityBlocking = false;
+  try {
+    const securityScanner = await tryImport('@isl-lang/security-scanner');
+    if (securityScanner && typeof (securityScanner as { runVerificationSecurityScan: unknown }).runVerificationSecurityScan === 'function') {
+      const { runVerificationSecurityScan } = securityScanner as {
+        runVerificationSecurityScan: (opts?: {
+          rootDir?: string;
+          islSource?: string;
+          islSpecPath?: string;
+          skipDependencyAudit?: boolean;
+        }) => Promise<{
+          hasBlockingFindings: boolean;
+          hasWarnings: boolean;
+          checks: Array<{ check: string; passed: boolean; findings: unknown[] }>;
+          summary: { critical: number; high: number; medium: number; low: number };
+        }>;
+      };
+      const securityResult = await runVerificationSecurityScan({
+        rootDir: config?.cwd ?? process.cwd(),
+        islSource,
+        islSpecPath: config?.specPath,
+        skipDependencyAudit: true, // npm audit can be slow; enable explicitly if needed
+      });
+      securityBlocking = securityResult.hasBlockingFindings;
+
+      allEvidence.push({
+        source: 'runtime-eval',
+        check: 'security_scan',
+        result: securityBlocking ? 'fail' : securityResult.hasWarnings ? 'warn' : 'pass',
+        confidence: 0.95,
+        details: securityBlocking
+          ? `Security scan FAILED: ${securityResult.summary.critical} critical, ${securityResult.summary.high} high findings → NO_SHIP`
+          : securityResult.hasWarnings
+            ? `Security scan passed with warnings: ${securityResult.summary.medium} medium, ${securityResult.summary.low} low`
+            : 'Security scan passed: no critical/high findings',
+        metadata: {
+          securityScan: true,
+          hasBlockingFindings: securityResult.hasBlockingFindings,
+          hasWarnings: securityResult.hasWarnings,
+          summary: securityResult.summary,
+          checks: securityResult.checks.map((c) => ({
+            check: c.check,
+            passed: c.passed,
+            findingCount: c.findings.length,
+          })),
+        },
+      });
+    }
+  } catch (_err) {
+    // Security scanner unavailable — don't block
+    allEvidence.push({
+      source: 'runtime-eval',
+      check: 'security_scan',
+      result: 'skip',
+      confidence: 0,
+      details: '@isl-lang/security-scanner not available — security scan skipped',
+    });
+  }
+
   timing.evidenceMs = Date.now() - evidenceStart;
 
   stages.push({
@@ -929,6 +1053,12 @@ export async function runPipeline(
       const gateVerdict = gate.produceVerdict(allEvidence);
       verdict = gateVerdict.decision;
       score = gateVerdict.score;
+
+      // Security scan critical/high → force NO_SHIP regardless of gate
+      if (securityBlocking) {
+        verdict = 'NO_SHIP';
+        score = Math.min(score, 49);
+      }
 
       allEvidence.push({
         source: 'scoring',
@@ -956,17 +1086,39 @@ export async function runPipeline(
 
   // Local fallback scoring if gate is unavailable or failed
   if (score === 0 && !gate) {
-    score = computeLocalScore(allEvidence, summary);
-    verdict = score >= 85 ? 'SHIP' : score >= 50 ? 'WARN' : 'NO_SHIP';
+    // Check for verification_blocked — forces NO_SHIP in local scoring too
+    const hasVerificationBlocked = allEvidence.some(
+      e => e.result === 'fail' && e.check.includes('verification_blocked'),
+    );
+    // Security scan blocking findings → NO_SHIP
+    const hasSecurityBlocking = allEvidence.some(
+      e => e.check === 'security_scan' && e.result === 'fail',
+    );
 
-    allEvidence.push({
-      source: 'scoring',
-      check: 'local_verdict',
-      result: verdict === 'SHIP' ? 'pass' : verdict === 'WARN' ? 'warn' : 'fail',
-      confidence: 0.8,
-      details: `Local scoring: ${verdict} (score=${score})`,
-      metadata: { score, verdict },
-    });
+    if (hasVerificationBlocked || hasSecurityBlocking) {
+      score = 0;
+      verdict = 'NO_SHIP';
+      allEvidence.push({
+        source: 'scoring',
+        check: 'local_verdict',
+        result: 'fail',
+        confidence: 1,
+        details: `Local scoring: NO_SHIP — verification blocked (tests did not run)`,
+        metadata: { score: 0, verdict: 'NO_SHIP', verificationBlocked: true },
+      });
+    } else {
+      score = computeLocalScore(allEvidence, summary);
+      verdict = score >= 85 ? 'SHIP' : score >= 50 ? 'WARN' : 'NO_SHIP';
+
+      allEvidence.push({
+        source: 'scoring',
+        check: 'local_verdict',
+        result: verdict === 'SHIP' ? 'pass' : verdict === 'WARN' ? 'warn' : 'fail',
+        confidence: 0.8,
+        details: `Local scoring: ${verdict} (score=${score})`,
+        metadata: { score, verdict },
+      });
+    }
   }
 
   timing.scoringMs = Date.now() - scoringStart;

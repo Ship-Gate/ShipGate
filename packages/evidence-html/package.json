@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/evidence-html",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "HTML renderer for ISL verification evidence reports - readable, embeddable reports",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -63,6 +63,27 @@ export const LINT_RULES: Record<string, LintRule> = {
     severity: DiagnosticSeverity.Error,
     category: 'correctness',
   },
+  'ISL1005': {
+    id: 'ISL1005',
+    name: 'duplicate-entity-name',
+    description: 'Duplicate entity name - entities must have unique names',
+    severity: DiagnosticSeverity.Error,
+    category: 'correctness',
+  },
+  'ISL1006': {
+    id: 'ISL1006',
+    name: 'undefined-entity-reference',
+    description: 'Behavior references entity not defined in domain',
+    severity: DiagnosticSeverity.Error,
+    category: 'correctness',
+  },
+  'ISL1007': {
+    id: 'ISL1007',
+    name: 'type-constraint-mismatch',
+    description: 'Constraint not valid for field type (e.g. min on string without length context)',
+    severity: DiagnosticSeverity.Warning,
+    category: 'correctness',
+  },
 
   // Best practice rules
   'ISL1010': {
@@ -153,6 +174,7 @@ export class ISLSemanticLinter {
     const diagnostics: ISLDiagnostic[] = [];
 
     // Run all lint checks
+    diagnostics.push(...this.lintDuplicateEntities(domain, filePath));
     diagnostics.push(...this.lintBehaviors(domain, filePath));
     diagnostics.push(...this.lintEntities(domain, filePath));
     diagnostics.push(...this.lintTypes(domain, filePath));
@@ -161,6 +183,32 @@ export class ISLSemanticLinter {
 
     // Filter by enabled rules
     return diagnostics.filter(d => this.enabledRules.has(d.code || ''));
+  }
+
+  private lintDuplicateEntities(domain: Domain, _filePath: string): ISLDiagnostic[] {
+    const diagnostics: ISLDiagnostic[] = [];
+    const seen = new Map<string, Entity>();
+
+    for (const entity of domain.entities) {
+      const name = entity.name.name;
+      const existing = seen.get(name);
+      if (existing) {
+        diagnostics.push(this.createDiagnostic(
+          LINT_RULES['ISL1005']!,
+          `Duplicate entity name '${name}' - entities must have unique names`,
+          entity.name.location,
+          {
+            type: 'duplicate-entity-name',
+            entityName: name,
+            firstLocation: existing.name.location,
+          },
+        ));
+      } else {
+        seen.set(name, entity);
+      }
+    }
+
+    return diagnostics;
   }
 
   // ============================================================================

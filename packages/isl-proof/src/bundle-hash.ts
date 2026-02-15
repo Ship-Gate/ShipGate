@@ -157,6 +157,31 @@ export interface ProofBundleV1 {
 
   /** HMAC-SHA256 signature (excluded from hash computation) */
   signature?: string;
+
+  /** Optional SOC2 CC-series control mapping for auditor consumption */
+  soc2Controls?: SOC2ControlEntry[];
+}
+
+/**
+ * SOC2 control entry — maps proof bundle evidence to SOC2 Trust Services Criteria.
+ * Used when proof pack is run with --include-soc2.
+ */
+export interface SOC2ControlEntry {
+  controlId: string;
+  controlName: string;
+  description: string;
+  status: 'pass' | 'warn' | 'fail';
+  contributingChecks: Array<{
+    checkId: string;
+    checkName: string;
+    passed: boolean;
+    impact: 'positive' | 'negative';
+  }>;
+  evidenceRefs: Array<{
+    type: string;
+    ref: string;
+    description?: string;
+  }>;
 }
 
 // ============================================================================
@@ -173,6 +198,8 @@ export interface CreateBundleInput {
   createdAt: string;
   /** Optional HMAC secret to sign the bundle */
   signSecret?: string;
+  /** Optional SOC2 control mapping (included when provided) */
+  soc2Controls?: SOC2ControlEntry[];
 }
 
 // ============================================================================
@@ -217,6 +244,7 @@ export function createBundle(input: CreateBundleInput): ProofBundleV1 {
     verdict,
     verdictReason: reason,
     createdAt: input.createdAt,
+    ...(input.soc2Controls && { soc2Controls: input.soc2Controls }),
   };
 
   // Compute deterministic hash

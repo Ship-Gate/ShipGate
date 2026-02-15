@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/github-app",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "GitHub App for org-wide ISL policy enforcement",
   "main": "dist/index.js",
   "type": "module",

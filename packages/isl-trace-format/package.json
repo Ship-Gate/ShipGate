@@ -1,6 +1,7 @@
 {
   "name": "@isl-lang/trace-format",
-  "version": "0.1.0",
+  "private": true,
+  "version": "0.1.1",
   "description": "Stable trace event schema for ISL generated tests, healer iterations, verification engine, and proof bundles",
   "type": "module",
   "main": "./dist/index.js",

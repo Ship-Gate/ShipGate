@@ -13,7 +13,7 @@ AI-generated code included `skipAuth: true` on a sensitive admin endpoint. The f
 
 - **Scenario:** Developer asked AI to "add a quick admin endpoint to list users for internal use"
 - **File(s):** `packages/dashboard-api/src/routes/admin.ts`
-- **Gate:** firewall (ISL Studio policy pack: auth)
+- **Gate:** firewall (Shipgate policy pack: auth)
 
 ## What Was Caught
 

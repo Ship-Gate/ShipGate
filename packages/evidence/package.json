@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/evidence-schema",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Evidence schema with zod validation and stable canonical serialization for ISL verification reports",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

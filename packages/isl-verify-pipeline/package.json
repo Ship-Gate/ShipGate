@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/verify-pipeline",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Verification orchestrator pipeline for ISL - runs tests, captures traces, evaluates postconditions/invariants, and produces proof bundles",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

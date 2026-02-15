@@ -1,0 +1,22 @@
+{
+  "/_not-found": "app/_not-found.js",
+  "/api/invoices/[id]/route": "app/api/invoices/[id]/route.js",
+  "/api/posts/route": "app/api/posts/route.js",
+  "/api/products/[id]/route": "app/api/products/[id]/route.js",
+  "/api/invoices/route": "app/api/invoices/route.js",
+  "/api/posts/[id]/route": "app/api/posts/[id]/route.js",
+  "/api/products/route": "app/api/products/route.js",
+  "/invoices/[id]/edit/page": "app/invoices/[id]/edit/page.js",
+  "/invoices/[id]/page": "app/invoices/[id]/page.js",
+  "/invoices/create/page": "app/invoices/create/page.js",
+  "/invoices/page": "app/invoices/page.js",
+  "/page": "app/page.js",
+  "/posts/[id]/page": "app/posts/[id]/page.js",
+  "/posts/[id]/edit/page": "app/posts/[id]/edit/page.js",
+  "/posts/create/page": "app/posts/create/page.js",
+  "/posts/page": "app/posts/page.js",
+  "/products/[id]/page": "app/products/[id]/page.js",
+  "/products/[id]/edit/page": "app/products/[id]/edit/page.js",
+  "/products/page": "app/products/page.js",
+  "/products/create/page": "app/products/create/page.js"
+}

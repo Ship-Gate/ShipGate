@@ -1,8 +1,8 @@
 /**
- * Intent Pack - The ISL Studio Moat
+ * Intent Pack - The ShipGate Moat
  * 
  * Rules that enforce declared behavior (ISL specs) vs actual code patterns.
- * This is what makes ISL Studio different from ESLint/Bandit.
+ * This is what makes ShipGate different from ESLint/Bandit.
  * 
  * Example: if ISL says "no PII in logs", then code logging email triggers violation.
  * Example: "auth endpoints must be rate-limited" becomes enforceable from intent.

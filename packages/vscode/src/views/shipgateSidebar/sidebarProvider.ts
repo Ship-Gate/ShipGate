@@ -1,16 +1,20 @@
 /**
  * Shipgate Sidebar — WebviewView Provider
  *
- * Thin shell: builds the HTML via shared helpers, delegates rendering
- * to media/sidebar.js, and pushes normalized SidebarUiState via postMessage.
+ * Renders self-contained HTML (Overview, Claims, Files tabs) and pushes
+ * normalized results via postMessage. Also supports legacy state format.
  */
 
 import * as vscode from 'vscode';
-import { getWebviewHtml } from '../webviewHelpers';
 import type { ScanResult } from '../../model/types';
 import type { FirewallState } from '../../services/firewallService';
 import type { GitHubConnectionState } from '../../services/githubService';
 import { buildSidebarState, type SidebarUiState } from '../../model/uiState';
+import {
+  getWebviewContent,
+  stateToResults,
+  type SidebarResultsData,
+} from './sidebarContent';
 
 // ============================================================================
 // State shape consumed by getState()
@@ -30,6 +34,22 @@ export interface SidebarState {
     score: number | null;
     verdict: string | null;
     hasApiKey: boolean;
+  };
+  heal?: {
+    phase: 'idle' | 'running' | 'done';
+    message: string | null;
+    error: string | null;
+    iterations: number;
+    finalScore: number | null;
+    finalVerdict: string | null;
+    patchedFiles: string[];
+  };
+  pro?: {
+    active: boolean;
+    email: string | null;
+    plan: 'free' | 'pro';
+    checking: boolean;
+    error: string | null;
   };
 }
 
@@ -64,37 +84,7 @@ export class ShipgateSidebarProvider implements vscode.WebviewViewProvider {
       localResourceRoots: [this.extensionUri],
     };
 
-    webviewView.webview.html = getWebviewHtml(
-      webviewView.webview,
-      this.extensionUri,
-      {
-        cssFile: 'shipgate.css',
-        jsFile: 'sidebar.js',
-        title: 'Shipgate',
-        bodyClass: 'sg-panel',
-        bodyHtml: [
-            '<canvas id="sg-bg-canvas"></canvas>',
-            '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="sg-svg-hidden">',
-            '  <defs>',
-            '    <filter id="shadowed-goo">',
-            '      <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="10" />',
-            '      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />',
-            '      <feGaussianBlur in="goo" stdDeviation="3" result="shadow" />',
-            '      <feColorMatrix in="shadow" mode="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 -0.2" result="shadow" />',
-            '      <feOffset in="shadow" dx="1" dy="1" result="shadow" />',
-            '      <feBlend in2="shadow" in="goo" result="goo" />',
-            '      <feBlend in2="goo" in="SourceGraphic" result="mix" />',
-            '    </filter>',
-            '  </defs>',
-            '</svg>',
-            '<div class="sg-content">',
-            '  <div class="sg-logo-header"><span class="sg-brand">Shipgate</span><button class="sg-help-btn" id="sg-help-btn" title="Help &amp; onboarding" aria-label="Help">?</button></div>',
-            '  <div id="sg-onboarding" class="sg-onboarding sg-hidden"></div>',
-            '  <div id="sg-root"></div>',
-            '</div>',
-          ].join('\n'),
-      }
-    );
+    webviewView.webview.html = getWebviewContent(webviewView.webview);
 
     // Messages from webview
     this.disposables.push(
@@ -126,6 +116,11 @@ export class ShipgateSidebarProvider implements vscode.WebviewViewProvider {
     this.pushState();
   }
 
+  /** Public: push scan results directly (e.g. after a scan completes). */
+  updateResults(data: SidebarResultsData | null): void {
+    this.webviewRef?.webview.postMessage({ type: 'results', data });
+  }
+
   // ── Private ─────────────────────────────────────────────────
 
   private pushState(): void {
@@ -148,9 +143,25 @@ export class ShipgateSidebarProvider implements vscode.WebviewViewProvider {
       workflows: raw.workflows,
       islGeneratePath: raw.islGeneratePath,
       intentBuilder: raw.intentBuilder,
+      heal: raw.heal,
+      pro: raw.pro,
       workspaceRoot: this.workspaceRoot,
     });
-    this.webviewRef.webview.postMessage({ type: 'state', payload: uiState });
+    const hasScan = raw.scan?.result && uiState.phase === 'complete';
+    const scanning = uiState.phase === 'running';
+    const results: SidebarResultsData | null = hasScan
+      ? stateToResults(uiState, {
+          fullFiles: raw.scan?.result?.files?.map((f) => ({
+            file: f.file,
+            status: f.status,
+            score: f.score,
+          })),
+          workspaceRoot: this.workspaceRoot,
+        })
+      : scanning
+        ? stateToResults(uiState, { workspaceRoot: this.workspaceRoot })
+        : null;
+    this.webviewRef.webview.postMessage({ type: 'results', data: results, scanning });
   }
 
   private handleMessage(msg: { type: string; payload?: unknown }): void {
@@ -224,6 +235,52 @@ export class ShipgateSidebarProvider implements vscode.WebviewViewProvider {
         vscode.window.showInformationMessage('Summary copied to clipboard.');
         break;
       }
+      case 'healAll':
+        vscode.commands.executeCommand('shipgate.heal');
+        break;
+      case 'healFile':
+        if (msg.payload && typeof msg.payload === 'object' && 'file' in msg.payload) {
+          const { file, intent } = msg.payload as { file: string; intent?: string };
+          vscode.commands.executeCommand('shipgate.healFile', file, intent || '');
+        }
+        break;
+      case 'openFile': {
+        const path = typeof msg.payload === 'string' ? msg.payload : (msg.payload as { file?: string })?.file;
+        const line = (msg.payload as { line?: number })?.line ?? 1;
+        if (path) {
+          const fileUri = vscode.Uri.file(
+            require('path').resolve(this.workspaceRoot, path)
+          );
+          vscode.window.showTextDocument(fileUri, {
+            preview: true,
+            selection: new vscode.Range(line - 1, 0, line - 1, 0),
+          });
+        }
+        break;
+      }
+      case 'rerun':
+        vscode.commands.executeCommand('shipgate.runScan');
+        break;
+      case 'autofix':
+        vscode.commands.executeCommand('shipgate.heal');
+        break;
+      case 'openPR':
+        if (typeof msg.payload === 'string') {
+          vscode.env.openExternal(vscode.Uri.parse(msg.payload));
+        }
+        break;
+      case 'viewLogs':
+        vscode.commands.executeCommand('shipgate.openReport');
+        break;
+      case 'upgradePro':
+        vscode.commands.executeCommand('shipgate.upgradePro');
+        break;
+      case 'activatePro':
+        vscode.commands.executeCommand('shipgate.activatePro');
+        break;
+      case 'signOut':
+        vscode.commands.executeCommand('shipgate.signOut');
+        break;
     }
   }
 

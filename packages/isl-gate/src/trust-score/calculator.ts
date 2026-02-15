@@ -57,7 +57,7 @@ export function resolveConfig(config?: TrustScoreConfig): ResolvedTrustConfig {
     weights,
     normalizedWeights,
     unknownPenalty: clamp(config?.unknownPenalty ?? 0.5, 0, 1),
-    shipThreshold: config?.shipThreshold ?? 80,
+    shipThreshold: config?.shipThreshold ?? 85,
     warnThreshold: config?.warnThreshold ?? 60,
     criticalFailsBlock: config?.criticalFailsBlock ?? true,
     historyPath: config?.historyPath ?? '.isl-gate/trust-history.json',
@@ -142,15 +142,19 @@ function scoreSingleCategory(
   const weight = config.normalizedWeights[category];
 
   if (clauses.length === 0) {
-    // No clauses for this category: treat as unknown
-    const unknownScore = Math.round((1 - config.unknownPenalty) * 100);
+    // Empty category = score 0. Missing coverage is risk, not success.
     return {
       category,
-      score: unknownScore,
+      score: 0,
+      coverage_score: 0,
+      execution_score: 0,
+      pass_score: 0,
       weight,
-      weightedScore: unknownScore * weight,
+      weightedScore: 0,
       clauseCount: 0,
       counts: { pass: 0, fail: 0, partial: 0, unknown: 0 },
+      gaps: [`no ${category} defined`],
+      confidence: 0,
     };
   }
 
@@ -188,19 +192,49 @@ function scoreSingleCategory(
     totalWeight += clauseWeight;
   }
 
-  // Average weighted score
-  const rawScore = totalWeight > 0
+  // Honest sub-scores
+  const total = clauses.length;
+  const executed = counts.pass + counts.fail + counts.partial; // unknown did NOT execute
+  const coverage_score = 100; // clauses exist → coverage credit
+  const execution_score = total > 0 ? Math.round((executed / total) * 100) : 0;
+  const pass_score = executed > 0 ? Math.round((counts.pass / executed) * 100) : 0;
+
+  // Composite: floor(0.45*coverage + 0.35*execution + 0.20*pass)
+  const compositeScore = Math.floor(
+    0.45 * coverage_score + 0.35 * execution_score + 0.20 * pass_score
+  );
+
+  // Also factor in evidence-weighted score for finer granularity
+  const evidenceScore = totalWeight > 0
     ? Math.round(weightedScoreSum / totalWeight)
     : 0;
-  const score = clamp(rawScore, 0, 100);
+
+  // Final score: blend composite model with evidence-weighted score
+  const score = clamp(Math.round((compositeScore + evidenceScore) / 2), 0, 100);
+
+  // Detect gaps
+  const gaps: string[] = [];
+  if (counts.unknown > 0) gaps.push(`${counts.unknown} unknown (unverified)`);
+  if (counts.fail > 0) gaps.push(`${counts.fail} failing clauses`);
+  if (executed === 0) gaps.push('no clauses executed');
+
+  // Confidence: execution rate × volume factor
+  const executionRate = total > 0 ? executed / total : 0;
+  const volumeFactor = Math.min(total / 5, 1);
+  const confidence = Math.round(executionRate * volumeFactor * 100) / 100;
 
   return {
     category,
     score,
+    coverage_score,
+    execution_score,
+    pass_score,
     weight,
     weightedScore: score * weight,
     clauseCount: clauses.length,
     counts,
+    gaps,
+    confidence,
   };
 }
 
@@ -284,11 +318,18 @@ function buildReasons(
     reasons.push(`${wc.category}: ${wc.score}/100 (${wc.counts.fail} failed, ${wc.counts.unknown} unknown)`);
   }
 
-  // Flag empty categories subject to unknown penalty
-  const emptyCategories = categories.filter(c => c.clauseCount === 0 && config.unknownPenalty > 0);
+  // Flag empty categories — missing coverage is risk, not success
+  const emptyCategories = categories.filter(c => c.clauseCount === 0);
   if (emptyCategories.length > 0) {
     const names = emptyCategories.map(c => c.category).join(', ');
-    reasons.push(`Unknown penalty applied to uncovered categories: ${names}`);
+    reasons.push(`No coverage for categories: ${names} (score 0 applied)`);
+  }
+
+  // Surface category-level gaps
+  for (const cat of categories) {
+    if (cat.gaps.length > 0) {
+      reasons.push(`${cat.category} gaps: ${cat.gaps.join('; ')}`);
+    }
   }
 
   return reasons;

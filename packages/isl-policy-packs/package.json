@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/policy-packs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ISL Policy Packs - Pre-built policy rules for common security patterns",
   "type": "module",
   "main": "./dist/index.js",

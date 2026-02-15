@@ -186,12 +186,12 @@ export class SpecReviewer {
     const issues: Issue[] = [];
     const suggestions: Suggestion[] = [];
     const categoryResults: ReviewResult['categories'] = {
-      completeness: { score: 100, issues: 0, suggestions: 0 },
-      consistency: { score: 100, issues: 0, suggestions: 0 },
-      security: { score: 100, issues: 0, suggestions: 0 },
-      performance: { score: 100, issues: 0, suggestions: 0 },
-      naming: { score: 100, issues: 0, suggestions: 0 },
-      bestPractices: { score: 100, issues: 0, suggestions: 0 },
+      completeness: { score: 0, issues: 0, suggestions: 0 },
+      consistency: { score: 0, issues: 0, suggestions: 0 },
+      security: { score: 0, issues: 0, suggestions: 0 },
+      performance: { score: 0, issues: 0, suggestions: 0 },
+      naming: { score: 0, issues: 0, suggestions: 0 },
+      bestPractices: { score: 0, issues: 0, suggestions: 0 },
     };
 
     // Run analyzers

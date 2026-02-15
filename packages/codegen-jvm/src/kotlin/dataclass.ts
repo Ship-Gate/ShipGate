@@ -5,7 +5,7 @@
 import type {
   Entity,
   Field,
-} from '../../../../master_contracts/ast';
+} from '@isl-lang/parser';
 import type { GeneratorOptions } from '../generator';
 import { kotlinTypeFromDef } from './types';
 

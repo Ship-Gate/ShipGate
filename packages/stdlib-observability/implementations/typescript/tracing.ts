@@ -28,6 +28,10 @@ import {
   success,
   failure,
 } from './types';
+import { getCorrelationContext } from './correlation';
+
+export { SpanKind, SpanStatus, PropagationFormat };
+export type { Span, SpanContext, SpanExporter };
 
 // ============================================================================
 // ID Generation
@@ -255,11 +259,11 @@ export class Tracer {
   private currentContext: SpanContext | null = null;
 
   constructor(
-    config: Partial<TracerConfig> = {},
-    exporters: SpanExporter[] = []
+    config: Partial<TracerConfig> & { exporter?: SpanExporter; exporters?: SpanExporter[] } = {},
+    exporters?: SpanExporter[]
   ) {
     this.config = { ...DEFAULT_TRACER_CONFIG, ...config };
-    this.exporters = exporters;
+    this.exporters = exporters ?? config.exporters ?? (config.exporter ? [config.exporter] : []);
   }
 
   // ==========================================================================
@@ -287,7 +291,9 @@ export class Tracer {
         traceId = this.currentContext.traceId;
         parentSpanId = this.currentContext.spanId;
       } else {
-        traceId = generateTraceId();
+        // Fall back to correlation context if available
+        const corrCtx = getCorrelationContext();
+        traceId = (corrCtx.traceId as TraceId) || generateTraceId();
       }
 
       // Check sampler

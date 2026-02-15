@@ -1030,7 +1030,7 @@ export interface WeakeningPattern {
  * Categories of forbidden weakening
  */
 export type WeakeningCategory =
-  | 'suppression'      // @ts-ignore, eslint-disable, islstudio-ignore, etc.
+  | 'suppression'      // @ts-ignore, eslint-disable, shipgate-ignore, etc.
   | 'severity'         // Severity downgrade
   | 'auth_bypass'      // skipAuth, noAuth, etc.
   | 'allowlist'        // allowAll, permitAll, broad redirects
@@ -1062,7 +1062,7 @@ export interface WeakeningCheckResult {
  */
 export type ForbiddenEditType =
   | 'isl_spec_modification'      // Editing ISL spec files (removing intents)
-  | 'suppression_insertion'      // Adding islstudio-ignore, @ts-ignore, etc.
+  | 'suppression_insertion'      // Adding shipgate-ignore, @ts-ignore, etc.
   | 'pack_disable'               // Disabling policy packs in config
   | 'severity_downgrade'         // Lowering severity levels
   | 'allowlist_weaken'           // Broadening allowlists (e.g., redirect: '*')

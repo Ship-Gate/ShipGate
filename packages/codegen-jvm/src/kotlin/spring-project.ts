@@ -8,7 +8,7 @@ import type {
   Entity,
   Behavior,
   Field,
-} from '../../../../master_contracts/ast';
+} from '@isl-lang/parser';
 import type { GeneratorOptions, GeneratedFile } from '../generator';
 import { kotlinTypeFromDef } from './types';
 
@@ -381,7 +381,7 @@ function kotlinEntityFieldType(field: Field): string {
   return field.optional ? `${base}?` : base;
 }
 
-function kotlinEntityTypeFromDef(def: import('../../../../master_contracts/ast').TypeDefinition): string {
+function kotlinEntityTypeFromDef(def: import('@isl-lang/parser').TypeDefinition): string {
   switch (def.kind) {
     case 'PrimitiveType':
       switch (def.name) {
@@ -429,7 +429,7 @@ function getFieldDefault(field: Field): string {
 // ============================================================================
 
 function generateEnumFile(
-  type: import('../../../../master_contracts/ast').TypeDeclaration,
+  type: import('@isl-lang/parser').TypeDeclaration,
   pkg: string
 ): string {
   const def = type.definition;
@@ -453,7 +453,7 @@ function generateEnumFile(
 }
 
 function generateValueTypeFile(
-  type: import('../../../../master_contracts/ast').TypeDeclaration,
+  type: import('@isl-lang/parser').TypeDeclaration,
   pkg: string
 ): string {
   const name = type.name.name;

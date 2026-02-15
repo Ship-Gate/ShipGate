@@ -40,7 +40,7 @@ describe('Metrics', () => {
       await registry.collect();
 
       const samples = memoryExporter.getSamples();
-      expect(samples).toHaveLength(3); // One for each label combination
+      expect(samples).toHaveLength(2); // One for each label combination
       
       const baseCounter = samples.find(s => !s.labels);
       expect(baseCounter?.value).toBe(6);
@@ -279,17 +279,17 @@ describe('Metrics', () => {
         description: 'Precision test',
       });
 
-      await gauge.set(0.1 + 0.2); // Should be 0.30000000000000004
+      // Gauge is last-write-wins per labelset.
+      // Three set() calls with no labels → one sample with last value.
+      await gauge.set(0.1 + 0.2); // 0.30000000000000004
       await gauge.set(Number.MAX_SAFE_INTEGER);
       await gauge.set(Number.MIN_VALUE);
 
       await registry.collect();
 
       const samples = memoryExporter.getSamples();
-      expect(samples).toHaveLength(3);
-      expect(samples[0].value).toBeCloseTo(0.3, 10);
-      expect(samples[1].value).toBe(Number.MAX_SAFE_INTEGER);
-      expect(samples[2].value).toBe(Number.MIN_VALUE);
+      expect(samples).toHaveLength(1);
+      expect(samples[0].value).toBe(Number.MIN_VALUE);
     });
   });
 });

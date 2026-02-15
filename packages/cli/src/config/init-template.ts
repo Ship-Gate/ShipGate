@@ -15,6 +15,7 @@ ci:
   # require_isl:
   #   - src/auth/**
   #   - src/payments/**
+  # ignore: extends defaults (node_modules, dist, .next, etc.); add patterns below:
   ignore:
     - "**/*.test.ts"
     - "**/*.spec.ts"

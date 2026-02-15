@@ -664,16 +664,19 @@ export async function gen(target: string, file: string, options: GenOptions = {}
           generated = generateGo(ast);
           break;
         case 'openapi':
-          // Use the enhanced OpenAPI generator from codegen-openapi package
+          // Use OpenAPIGenerator for parser AST (entities, endpoints, constraints, actors)
           try {
-            const { generate: generateOpenAPISpec } = await import('@isl-lang/codegen-openapi');
-            const files = generateOpenAPISpec(ast as unknown as Parameters<typeof generateOpenAPISpec>[0], {
+            const { OpenAPIGenerator } = await import('@isl-lang/codegen-openapi');
+            const generator = new OpenAPIGenerator({
               version: '3.1',
               format: 'yaml',
+              defaultServers: true,
+              addBearerAuth: true,
+              addPaginationParams: true,
             });
-            generated = files[0]?.content || generateOpenAPI(ast); // Fallback to simple generator
+            const files = generator.generate(ast);
+            generated = files[0]?.content ?? generateOpenAPI(ast);
           } catch {
-            // Fallback to simple generator if package not available
             generated = generateOpenAPI(ast);
           }
           break;

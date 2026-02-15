@@ -70,33 +70,23 @@ npx shipgate verify src/
 ### Expected Output
 
 ```
-  ShipGate — ISL Verification
-
-  src/auth/login.isl
-    ✓ Login: preconditions validated
-    ✓ Login: postconditions verified
-    ✓ Login: password never appears in logs
-    ✓ Login: password never appears in response
-    ✓ Login: identical error for unknown email and wrong password
-    ✓ Login: rate limit 10/min/ip configured
-    ✓ Login: JWT expires in 3600s
-
-  src/users/create.isl
-    ✓ CreateUser: preconditions validated
-    ✓ CreateUser: postconditions verified
-    ✓ CreateUser: password hashed before storage
-    ✓ CreateUser: email uniqueness enforced
-    ✓ CreateUser: duplicate email preserves user count
-
-  src/users/get.isl
-    ✓ GetUser: authentication required
-    ✓ GetUser: postconditions verified
-    ✓ GetUser: password_hash excluded from response
-    ✓ GetUser: returns 404 for unknown ID
-    ✓ GetUser: returns 401 for unauthenticated request
-
-  3 specs, 17 checks — all passed
+ShipGate ISL Verify v0.1.0
+─────────────────────────────────────────────────────────────────
+  src/store.ts                        ✓ PASS           Specless               1.00
+  src/middleware.ts                   ✓ PASS           Specless               1.00
+  src/index.ts                        ✓ PASS           Specless               1.00
+  src/config.ts                       ✓ PASS           Specless               1.00
+  src/users/get.ts                    ...              ISL verified           ...
+  src/users/create.ts                 ...              ISL verified           ...
+  src/auth/login.isl                  ...              ISL verified           ...
+─────────────────────────────────────────────────────────────────
+Coverage: 3/7 files have ISL specs (43%)
+Verdict:  SHIP or NO_SHIP
+Score:    0.70+
+Mode:     mixed (auto-detected)
 ```
+
+The command runs verification and reports pass/fail per file. Specless files (no .isl spec) get automatic checks. Files with .isl specs are verified against their behaviors.
 
 ---
 
@@ -114,7 +104,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: shipgate/isl-verify@v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      - run: npx shipgate verify src/
 ```
 
 ---

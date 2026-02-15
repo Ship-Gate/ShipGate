@@ -1,4 +1,4 @@
-# ISL Studio Demo
+# ShipGate Demo
 
 > See ISL Gate in action with three demo scenarios.
 
@@ -52,8 +52,8 @@ isl-demo/
 │   │   └── admin.ts       # Admin API
 │   └── utils/
 │       └── logger.ts      # Logging utility
-├── .islstudio/
-│   └── config.json        # ISL config
+├── .shipgate/
+│   └── config.json        # ShipGate config
 └── package.json
 ```
 
@@ -65,7 +65,7 @@ isl gate
 
 # See detailed report
 isl gate --output html
-open .islstudio/evidence/report.html
+open .shipgate/evidence/report.html
 
 # Verify evidence integrity
 isl evidence verify
@@ -73,5 +73,5 @@ isl evidence verify
 
 ## Learn More
 
-- [ISL Studio Docs](https://github.com/isl-lang/isl)
-- [Policy Packs Reference](https://github.com/isl-lang/isl/tree/main/packages/isl-policy-packs)
+- [ShipGate Docs](https://github.com/Ship-Gate/ShipGate)
+- [Policy Packs Reference](https://github.com/Ship-Gate/ShipGate/tree/main/packages/isl-policy-packs)

@@ -55,8 +55,8 @@
 ### Phase A: Rebrand & Package (Week 1)
 
 1. **Rename product references**
-   - ISL Studio → Shipgate in all user-facing docs
-   - `islstudio` package → `shipgate` (or keep as internal, expose `shipgate` CLI)
+   - ISL Studio → Shipgate in all user-facing docs (DONE)
+   - CLI package published as `shipgate`
    - Update README, PRICING, OUTREACH, etc.
 
 2. **Publish `shipgate` CLI to npm**
@@ -129,9 +129,9 @@ Files/areas to update for "Shipgate" branding:
 | Location | Change |
 |----------|--------|
 | `package.json` (root) | `"name": "shipgate"` or keep monorepo name |
-| `packages/islstudio/` | Consider rename to `packages/shipgate` |
-| `docs/PRICING.md` | ISL Studio → Shipgate |
-| `docs/OUTREACH.md` | ISL Studio → Shipgate, `islstudio` → `shipgate` |
+| `packages/cli/` | CLI package (internal name, publishes as `shipgate`) |
+| `docs/PRICING.md` | ISL Studio → Shipgate (DONE) |
+| `docs/OUTREACH.md` | ISL Studio → Shipgate (DONE) |
 | `README.md` | Add Shipgate as product name, ISL as language |
 | `packages/cli/` | Binary: `shipgate` or `sg` |
 | npm publish | `shipgate` or `@shipgate/cli` |

@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/isl-federation",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Federated ISL specification management for microservices architectures",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

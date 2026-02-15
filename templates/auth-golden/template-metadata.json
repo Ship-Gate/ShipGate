@@ -1,0 +1,91 @@
+{
+  "id": "auth-golden",
+  "name": "Golden Auth Template",
+  "description": "Hand-crafted, verified, production-quality auth implementation for Next.js App Router with Prisma, JWT (jose), bcrypt, and Zod.",
+  "version": "1.0.0",
+  "stack": {
+    "framework": "nextjs-app-router",
+    "orm": "prisma",
+    "language": "typescript",
+    "validation": "zod",
+    "passwordHashing": "bcrypt",
+    "jwt": "jose"
+  },
+  "supportedFrameworks": ["nextjs"],
+  "whenToUse": {
+    "triggers": [
+      "User requests auth implementation",
+      "Spec includes Register, Login, Logout, Refresh behaviors",
+      "Project uses Next.js App Router + Prisma"
+    ],
+    "conditions": {
+      "mustHave": ["Next.js 14+", "Prisma", "PostgreSQL or SQLite"],
+      "optional": ["TypeScript strict mode"]
+    }
+  },
+  "customizable": {
+    "entityName": {
+      "default": "User",
+      "description": "Primary user entity name",
+      "allowed": ["User", "Account", "Member"]
+    },
+    "fields": {
+      "optional": [
+        { "name": "username", "type": "string", "unique": true },
+        { "name": "avatarUrl", "type": "string" },
+        { "name": "phone", "type": "string" }
+      ],
+      "description": "Additional User fields beyond id, email, passwordHash, name, role, createdAt, updatedAt"
+    },
+    "roleTypes": {
+      "default": ["USER", "ADMIN"],
+      "description": "Role enum values for RBAC",
+      "examples": [["USER", "ADMIN"], ["VIEWER", "EDITOR", "ADMIN"], ["MEMBER", "OWNER"]]
+    },
+    "passwordPolicy": {
+      "minLength": { "default": 8, "min": 8, "max": 128 },
+      "requireUppercase": { "default": true },
+      "requireLowercase": { "default": true },
+      "requireDigit": { "default": true },
+      "requireSpecial": { "default": false }
+    }
+  },
+  "fixed": {
+    "securityPatterns": [
+      "httpOnly cookies for tokens",
+      "access token TTL 15 minutes",
+      "refresh token TTL 7 days",
+      "bcrypt cost 12",
+      "refresh token rotation on every refresh",
+      "refresh tokens stored hashed in DB"
+    ],
+    "errorHandling": [
+      "Typed error responses with code field",
+      "Proper HTTP status codes (400, 401, 403, 409, 500)",
+      "Validation errors via Zod flatten()"
+    ],
+    "structure": [
+      "lib/auth.ts — JWT sign/verify, token pair, cookie helpers",
+      "lib/middleware/auth.ts — withAuth HOF, role-based access",
+      "lib/validators/auth.ts — Zod schemas",
+      "types/auth.ts — AuthUser, TokenPair, JWTPayload"
+    ]
+  },
+  "files": [
+    "prisma/schema.prisma",
+    "src/app/api/auth/register/route.ts",
+    "src/app/api/auth/login/route.ts",
+    "src/app/api/auth/logout/route.ts",
+    "src/app/api/auth/refresh/route.ts",
+    "src/lib/auth.ts",
+    "src/lib/db.ts",
+    "src/lib/middleware/auth.ts",
+    "src/lib/validators/auth.ts",
+    "src/types/auth.ts"
+  ],
+  "envRequired": ["DATABASE_URL", "JWT_SECRET"],
+  "dependencies": {
+    "production": ["next", "prisma", "@prisma/client", "zod", "bcrypt", "jose"],
+    "dev": ["typescript", "@types/bcrypt", "@types/node"]
+  }
+}

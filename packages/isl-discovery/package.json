@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/isl-discovery",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ISL Discovery Engine - Automatic implementation discovery and binding generation",
   "type": "module",
   "main": "./dist/index.js",

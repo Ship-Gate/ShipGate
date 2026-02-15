@@ -20,7 +20,7 @@ describe('parseInputs', () => {
   it('should parse valid inputs', () => {
     process.env.INPUT_MODE = 'enforce';
     process.env.INPUT_THRESHOLD = '80';
-    process.env.INPUT_CONFIG_PATH = '.islstudio/config.json';
+    process.env.INPUT_CONFIG_PATH = '.shipgate/config.json';
     process.env.INPUT_FAIL_ON = 'blocker';
     process.env.GITHUB_TOKEN = 'test-token';
     process.env.GITHUB_WORKSPACE = '/github/workspace';
@@ -30,7 +30,7 @@ describe('parseInputs', () => {
 
     expect(inputs.mode).toBe('enforce');
     expect(inputs.threshold).toBe(80);
-    expect(inputs.configPath).toBe('.islstudio/config.json');
+    expect(inputs.configPath).toBe('.shipgate/config.json');
     expect(inputs.failOn).toBe('blocker');
     expect(inputs.token).toBe('test-token');
     expect(inputs.repositoryPath).toBe('/github/workspace');
@@ -94,7 +94,7 @@ describe('validateInputs', () => {
     const inputs = {
       mode: 'enforce' as const,
       threshold: 80,
-      configPath: '.islstudio/config.json',
+      configPath: '.shipgate/config.json',
       failOn: 'blocker' as const,
       token: 'test-token',
       repositoryPath: '/github/workspace',
@@ -110,7 +110,7 @@ describe('validateInputs', () => {
     const inputs = {
       mode: 'enforce' as const,
       threshold: 80,
-      configPath: '.islstudio/config.json',
+      configPath: '.shipgate/config.json',
       failOn: 'blocker' as const,
       token: '',
       repositoryPath: '/github/workspace',

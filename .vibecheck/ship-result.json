@@ -1,0 +1,76 @@
+{
+  "checks": [
+    {
+      "name": "Security scan",
+      "status": "failed",
+      "message": "100 critical issues"
+    },
+    {
+      "name": "No hardcoded secrets",
+      "status": "failed",
+      "message": "64 secrets found"
+    },
+    {
+      "name": "Environment variables",
+      "status": "warning",
+      "message": "35 missing: CI, ISL_AI_ENABLED, ISL_AI_PROVIDER..."
+    },
+    {
+      "name": "Build check",
+      "status": "failed",
+      "message": "TypeScript compilation errors"
+    },
+    {
+      "name": "No console.logs",
+      "status": "passed"
+    },
+    {
+      "name": "Git status",
+      "status": "warning",
+      "message": "4022 uncommitted files"
+    },
+    {
+      "name": "Tests pass",
+      "status": "failed",
+      "message": "Test suite failed"
+    },
+    {
+      "name": "Lint check",
+      "status": "failed",
+      "message": "5 lint errors"
+    },
+    {
+      "name": "Dependency audit",
+      "status": "passed"
+    },
+    {
+      "name": "Lockfile integrity",
+      "status": "passed"
+    },
+    {
+      "name": "No hallucinations",
+      "status": "passed"
+    },
+    {
+      "name": "TODO/FIXME count",
+      "status": "passed"
+    },
+    {
+      "name": "License file",
+      "status": "passed"
+    },
+    {
+      "name": "README exists",
+      "status": "passed"
+    },
+    {
+      "name": ".gitignore check",
+      "status": "passed"
+    },
+    {
+      "name": "No localhost URLs",
+      "status": "passed"
+    }
+  ],
+  "timestamp": "2026-02-14T06:28:28.859Z"
+}

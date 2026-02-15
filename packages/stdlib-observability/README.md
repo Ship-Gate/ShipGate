@@ -41,8 +41,9 @@ const tracer = new Tracer({
   serviceVersion: '1.0.0',
 });
 
-// Use with correlation
-await withCorrelationContext({ traceId: 'abc123' }, async () => {
+// Use with correlation (AsyncLocalStorage-based)
+await withCorrelationContext({ traceId: 'abc123', userId: 'u1' }, async () => {
+  // Logger automatically picks up correlation context
   await logger.info('Processing request');
   
   const counter = metrics.registerCounter({
@@ -51,10 +52,16 @@ await withCorrelationContext({ traceId: 'abc123' }, async () => {
   });
   await counter.increment();
   
-  const { span } = await tracer.startSpan({ name: 'operation' });
-  await tracer.endSpan({ spanId: span.spanId });
+  const result = tracer.startSpan({ name: 'operation' });
+  if (result.success) {
+    const { span } = result.value;
+    tracer.endSpan({ spanId: span.spanId });
+  }
 });
 ```
+
+> **Note:** Correlation context propagation uses Node.js `AsyncLocalStorage`.
+> Context flows automatically through `async/await`, `setTimeout`, and `Promise` chains.
 
 ## API
 

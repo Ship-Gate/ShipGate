@@ -1,0 +1,13 @@
+# @tier 3 — Auto-generated utility spec (export-only verification)
+# exports: Meter
+# dependencies: 
+
+domain Meter {
+  version: "1.0.0"
+
+  type Meter = String
+
+  invariants exports_present {
+    - true
+  }
+}

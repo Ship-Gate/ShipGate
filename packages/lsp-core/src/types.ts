@@ -167,7 +167,10 @@ export type ContextType =
   | 'scenario'
   | 'chaos'
   | 'expression'
-  | 'type-annotation';
+  | 'type-annotation'
+  | 'actor-block'
+  | 'endpoint-block'
+  | 'constraint-block';
 
 export interface CompletionContext {
   contextType: ContextType;

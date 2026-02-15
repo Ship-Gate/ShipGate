@@ -1,5 +1,6 @@
 {
   "name": "checkout-api",
+  "private": true,
   "version": "1.2.0",
   "license": "MIT",
   "description": "Payment processing API for checkout flow",

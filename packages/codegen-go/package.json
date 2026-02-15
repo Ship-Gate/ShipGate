@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/codegen-go",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generate idiomatic Go code from ISL specifications",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -15,7 +15,13 @@
     "test:unit": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage"
   },
-  "keywords": ["isl", "codegen", "go", "golang", "generator"],
+  "keywords": [
+    "isl",
+    "codegen",
+    "go",
+    "golang",
+    "generator"
+  ],
   "license": "MIT",
   "dependencies": {
     "@isl-lang/parser": "workspace:*"
@@ -27,7 +33,10 @@
     "tsup": "^8.0.1",
     "rimraf": "^5.0.5"
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

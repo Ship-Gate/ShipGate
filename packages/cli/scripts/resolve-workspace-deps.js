@@ -28,6 +28,7 @@ const PKG_MAP = {
   '@isl-lang/proof': 'isl-proof',
   '@isl-lang/truthpack-v2': 'truthpack-v2',
   '@isl-lang/firewall': 'isl-firewall',
+  '@isl-lang/shipgate-compliance': 'shipgate-compliance',
 };
 
 const aliases = {};

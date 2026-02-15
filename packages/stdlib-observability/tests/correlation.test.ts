@@ -216,7 +216,7 @@ describe('Correlation', () => {
       expect(isValidUUID('550e8400-e29b-41d4-a716-446655440000')).toBe(true);
       expect(isValidUUID('550E8400-E29B-41D4-A716-446655440000')).toBe(true);
       expect(isValidUUID('550e8400-e29b-41d4-a716-44665544')).toBe(false); // Too short
-      expect(isValidUUID('550e8400-e29b-41d4-a716-446655440001')).toBe(false); // Invalid version
+      expect(isValidUUID('550e8400-e29b-11d4-a716-446655440001')).toBe(false); // Invalid version (v1, not v4)
       expect(isValidUUID('')).toBe(false);
     });
   });

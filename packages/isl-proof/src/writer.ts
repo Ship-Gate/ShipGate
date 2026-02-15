@@ -53,6 +53,7 @@ import type {
   SMTSolverTranscript,
   RunMetadata,
 } from './manifest.js';
+import { loadProvenance, type AIProvenance } from './provenance.js';
 import type { CoverageReport } from '@isl-lang/isl-coverage';
 import {
   calculateVerdictV2,
@@ -75,7 +76,7 @@ export interface WriterOptions {
   /** Key ID for signature */
   signKeyId?: string;
   /** ISL Studio version */
-  islStudioVersion?: string;
+  shipgateVersion?: string;
 }
 
 export interface SpecInput {
@@ -192,6 +193,9 @@ export class ProofBundleWriter {
   // V2.2 fields - coverage analytics
   private coverage: CoverageReport | null = null;
 
+  // AI provenance (optional)
+  private provenance: AIProvenance | null = null;
+
   constructor(options: WriterOptions) {
     this.options = options;
     this.projectContext.root = options.projectRoot;
@@ -279,6 +283,14 @@ export class ProofBundleWriter {
    */
   setCoverage(coverage: CoverageReport): this {
     this.coverage = coverage;
+    return this;
+  }
+
+  /**
+   * Set AI provenance (optional). When not set, loads from env or .shipgate/provenance.json during write().
+   */
+  setProvenance(provenance: AIProvenance | null): this {
+    this.provenance = provenance;
     return this;
   }
 
@@ -497,6 +509,14 @@ export class ProofBundleWriter {
       stdlibVersions: this.stdlibVersions.length > 0 ? this.stdlibVersions : undefined,
     });
 
+    // Load provenance if not set (from env or .shipgate/provenance.json)
+    if (!this.provenance) {
+      const loaded = await loadProvenance(this.options.projectRoot);
+      if (loaded) {
+        this.provenance = loaded;
+      }
+    }
+
     // Collect tool versions
     const toolVersions: ProofBundleManifest['toolVersions'] = {
       nodeVersion: process.version,
@@ -520,7 +540,7 @@ export class ProofBundleWriter {
       },
       policyVersion: {
         bundleVersion: this.gateResult.policyBundleVersion,
-        islStudioVersion: this.options.islStudioVersion || '1.0.0',
+        shipgateVersion: this.options.shipgateVersion || '1.0.0',
         packs: this.gateResult.rulepackVersions,
       },
       toolVersions,
@@ -537,6 +557,8 @@ export class ProofBundleWriter {
       runMetadata: this.runMetadata || undefined,
       // V2.2 fields - coverage analytics
       coverage: this.coverage || undefined,
+      // AI provenance (optional)
+      provenance: this.provenance || undefined,
       // Original fields
       gateResult: this.gateResult,
       buildResult: this.buildResult,
@@ -925,7 +947,7 @@ export class ProofBundleWriter {
     <div class="card">
       <p>
         Policy Bundle: <code>${manifest.policyVersion.bundleVersion}</code><br>
-        ISL Studio: <code>${manifest.policyVersion.islStudioVersion}</code>
+        ShipGate: <code>${manifest.policyVersion.shipgateVersion}</code>
       </p>
       ${manifest.gateResult.violations.length > 0 ? `
       <table>

@@ -3,7 +3,7 @@
 // Handles universal and existential quantification
 // ============================================================================
 
-import type * as AST from '../../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 import { encodeExpression, EncodingContext } from './expressions';
 import { typeDefToSmt } from './types';
 

@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/github-action-gate",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shipgate - GitHub Action to block unsafe AI-generated code",
   "private": true,
   "repository": {

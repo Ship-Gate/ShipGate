@@ -1,8 +1,9 @@
 {
   "name": "shipgate-isl",
-  "displayName": "Shipgate ISL — Behavioral Verification",
+  "private": true,
+  "displayName": "Shipgate — Behavioral Verification",
   "description": "Behavioral verification for AI-generated code. Write intent specs, catch violations before they ship.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "shipgate",
   "license": "MIT",
   "author": "Shipgate Team",
@@ -40,9 +41,27 @@
   "activationEvents": [
     "onLanguage:isl",
     "workspaceContains:**/*.isl",
+    "workspaceContains:.shipgate.yml",
+    "workspaceContains:.shipgate",
+    "onCommand:shipgate.verify",
+    "onCommand:shipgate.init",
     "onStartupFinished"
   ],
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [{
+        "id": "shipgate",
+        "title": "ShipGate",
+        "icon": "media/shipgate-icon.svg"
+      }]
+    },
+    "views": {
+      "shipgate": [{
+        "type": "webview",
+        "id": "shipgate.sidebar",
+        "name": "ShipGate"
+      }]
+    },
     "languages": [
       {
         "id": "isl",
@@ -82,9 +101,75 @@
       },
       {
         "command": "shipgate.verify",
+        "title": "ShipGate: Verify Current Project",
+        "category": "ShipGate",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "shipgate.verifyFile",
         "title": "ShipGate: Verify Current File",
         "category": "ShipGate",
         "icon": "$(verified)"
+      },
+      {
+        "command": "shipgate.init",
+        "title": "ShipGate: Initialize Project",
+        "category": "ShipGate",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "shipgate.ship",
+        "title": "ShipGate: Ship Check (Full)",
+        "category": "ShipGate",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "shipgate.autofix",
+        "title": "ShipGate: Auto-fix Current File",
+        "category": "ShipGate",
+        "icon": "$(wrench)"
+      },
+      {
+        "command": "shipgate.autofixAll",
+        "title": "ShipGate: Auto-fix All Findings",
+        "category": "ShipGate",
+        "icon": "$(wand)"
+      },
+      {
+        "command": "shipgate.openDashboard",
+        "title": "ShipGate: Open Web Dashboard",
+        "category": "ShipGate",
+        "icon": "$(browser)"
+      },
+      {
+        "command": "shipgate.viewProofBundle",
+        "title": "ShipGate: View Latest Proof Bundle",
+        "category": "ShipGate",
+        "icon": "$(book)"
+      },
+      {
+        "command": "shipgate.showFindings",
+        "title": "ShipGate: Show All Findings",
+        "category": "ShipGate",
+        "icon": "$(search)"
+      },
+      {
+        "command": "shipgate.clearFindings",
+        "title": "ShipGate: Clear Findings",
+        "category": "ShipGate",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "shipgate.toggleWatch",
+        "title": "ShipGate: Toggle Watch Mode",
+        "category": "ShipGate",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "shipgate.exportReport",
+        "title": "ShipGate: Export Compliance Report",
+        "category": "ShipGate",
+        "icon": "$(save)"
       },
       {
         "command": "shipgate.verifyAll",
@@ -165,6 +250,30 @@
         "icon": "$(search)"
       },
       {
+        "command": "shipgate.heal",
+        "title": "Shipgate: Heal (AI Autofix)",
+        "category": "Shipgate",
+        "icon": "$(wand)"
+      },
+      {
+        "command": "shipgate.healFile",
+        "title": "Shipgate: Heal File (AI Autofix)",
+        "category": "Shipgate",
+        "icon": "$(wrench)"
+      },
+      {
+        "command": "shipgate.vibe",
+        "title": "ISL: Safe Vibe Coding",
+        "category": "ISL",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "shipgate.openVibePanel",
+        "title": "ISL: Open Vibe Panel",
+        "category": "ISL",
+        "icon": "$(sparkle)"
+      },
+      {
         "command": "shipgate.openReport",
         "title": "Shipgate: Open Report",
         "category": "Shipgate",
@@ -185,6 +294,12 @@
       {
         "command": "shipgate.codeToIsl",
         "title": "Shipgate: Code to ISL",
+        "category": "Shipgate",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "shipgate.codeToIslFromFile",
+        "title": "Shipgate: Generate ISL from this file",
         "category": "Shipgate",
         "icon": "$(file-code)"
       },
@@ -217,26 +332,26 @@
         "title": "Shipgate: Ship to GitHub",
         "category": "Shipgate",
         "icon": "$(rocket)"
+      },
+      {
+        "command": "shipgate.upgradePro",
+        "title": "Shipgate: Upgrade to Pro",
+        "category": "Shipgate",
+        "icon": "$(star-full)"
+      },
+      {
+        "command": "shipgate.activatePro",
+        "title": "Shipgate: Activate Pro License",
+        "category": "Shipgate",
+        "icon": "$(key)"
+      },
+      {
+        "command": "shipgate.signOut",
+        "title": "Shipgate: Sign Out of Pro",
+        "category": "Shipgate",
+        "icon": "$(sign-out)"
       }
     ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "shipgate-container",
-          "title": "Shipgate",
-          "icon": "./icons/isl-dark.svg"
-        }
-      ]
-    },
-    "views": {
-      "shipgate-container": [
-        {
-          "type": "webview",
-          "id": "shipgate.sidebar",
-          "name": "Shipgate"
-        }
-      ]
-    },
     "walkthroughs": [
       {
         "id": "shipgate-walkthrough",
@@ -252,7 +367,9 @@
             "id": "run-scan",
             "title": "Run Your First Scan",
             "description": "The Intent Drift gauge shows how well your code matches your specs. Click Run Scan to verify your workspace.\n\n[Run Scan](command:shipgate.runScan)",
-            "completionEvents": ["onCommand:shipgate.runScan"]
+            "completionEvents": [
+              "onCommand:shipgate.runScan"
+            ]
           },
           {
             "id": "live-firewall",
@@ -272,6 +389,155 @@
         ]
       }
     ],
+    "keybindings": [
+      {
+        "command": "shipgate.verify",
+        "key": "ctrl+shift+g",
+        "mac": "cmd+shift+g"
+      },
+      {
+        "command": "shipgate.verifyFile",
+        "key": "ctrl+shift+f5",
+        "mac": "cmd+shift+f5"
+      },
+      {
+        "command": "shipgate.autofix",
+        "key": "ctrl+shift+.",
+        "mac": "cmd+shift+."
+      }
+    ],
+    "configuration": {
+      "title": "ShipGate",
+      "properties": {
+        "shipgate.scanOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run verification on file save"
+        },
+        "shipgate.watchMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Continuously watch for changes"
+        },
+        "shipgate.showInlineHints": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show inline verification hints"
+        },
+        "shipgate.showCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show ShipGate CodeLens above functions"
+        },
+        "shipgate.severity.minimum": {
+          "type": "string",
+          "default": "medium",
+          "enum": ["low","medium","high","critical"],
+          "description": "Minimum severity to display"
+        },
+        "shipgate.compliance.frameworks": {
+          "type": "array",
+          "default": ["soc2"],
+          "description": "Active compliance frameworks"
+        },
+        "shipgate.github.autoSync": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-sync CI/CD status from GitHub"
+        },
+        "shipgate.server.path": {
+          "type": "string",
+          "default": "",
+          "description": "Custom path to the ISL language server executable. Leave empty to use bundled server."
+        },
+        "shipgate.defaultTarget": {
+          "type": "string",
+          "enum": [
+            "typescript",
+            "rust",
+            "go",
+            "python"
+          ],
+          "default": "typescript",
+          "description": "Default code generation target language"
+        },
+        "shipgate.formatOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically format ISL files on save"
+        },
+        "shipgate.lintOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically lint ISL files on save"
+        },
+        "shipgate.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Trace communication between VS Code and the ISL language server"
+        },
+        "shipgate.languageServer.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the ISL language server for advanced features"
+        },
+        "shipgate.codegen.outputDir": {
+          "type": "string",
+          "default": "generated",
+          "description": "Output directory for generated code"
+        },
+        "shipgate.validation.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable real-time validation of ISL files"
+        },
+        "shipgate.coverage.autoRefresh": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically refresh coverage decorations on save"
+        },
+        "shipgate.scan.executablePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to shipgate/isl CLI executable. Empty = auto-detect (workspace local, pnpm, npx)"
+        },
+        "shipgate.scan.configPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to .shipgate.yml. Empty = auto-detect in workspace root"
+        },
+        "shipgate.scan.projectRoot": {
+          "type": "string",
+          "default": "",
+          "description": "Project root for scan. Empty = workspace root"
+        },
+        "shipgate.scan.scanOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Gate on save: run full gate (spec + firewall) when you save. Use for small projects; may be slow on large codebases."
+        },
+        "shipgate.github.token": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub token for API access (repo, PRs, workflow runs). Use a fine-grained token with repo scope."
+        },
+        "shipgate.firewall.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable live firewall checks on file save"
+        },
+        "shipgate.firewall.runOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Gate on save (firewall): run lightweight checks on .ts/.js save. Catches ghost routes, hardcoded secrets, policy violations. Fast and recommended."
+        }
+      }
+    },
     "menus": {
       "editor/context": [
         {
@@ -293,6 +559,16 @@
           "when": "resourceLangId == typescript || resourceLangId == javascript",
           "command": "shipgate.generateSpec",
           "group": "shipgate@1"
+        },
+        {
+          "when": "resourceLangId == typescript || resourceLangId == javascript || resourceLangId == typescriptreact || resourceLangId == javascriptreact || resourceLangId == python",
+          "command": "shipgate.verifyFile",
+          "group": "shipgate@1"
+        },
+        {
+          "when": "resourceLangId == typescript || resourceLangId == javascript || resourceLangId == typescriptreact || resourceLangId == javascriptreact || resourceLangId == python",
+          "command": "shipgate.autofix",
+          "group": "shipgate@2"
         },
         {
           "when": "resourceLangId == isl",
@@ -406,105 +682,11 @@
         },
         {
           "command": "shipgate.ship"
+        },
+        {
+          "command": "shipgate.openVibePanel"
         }
-      ]
-    },
-    "configuration": {
-      "type": "object",
-      "title": "ShipGate ISL Configuration",
-      "properties": {
-        "shipgate.server.path": {
-          "type": "string",
-          "default": "",
-          "description": "Custom path to the ISL language server executable. Leave empty to use bundled server."
-        },
-        "shipgate.defaultTarget": {
-          "type": "string",
-          "enum": [
-            "typescript",
-            "rust",
-            "go",
-            "python"
-          ],
-          "default": "typescript",
-          "description": "Default code generation target language"
-        },
-        "shipgate.formatOnSave": {
-          "type": "boolean",
-          "default": true,
-          "description": "Automatically format ISL files on save"
-        },
-        "shipgate.lintOnSave": {
-          "type": "boolean",
-          "default": true,
-          "description": "Run linter on save"
-        },
-        "shipgate.trace.server": {
-          "type": "string",
-          "enum": [
-            "off",
-            "messages",
-            "verbose"
-          ],
-          "default": "off",
-          "description": "Trace communication between VS Code and the ISL language server"
-        },
-        "shipgate.languageServer.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable the ISL language server for advanced features"
-        },
-        "shipgate.codegen.outputDir": {
-          "type": "string",
-          "default": "generated",
-          "description": "Output directory for generated code"
-        },
-        "shipgate.validation.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable real-time validation of ISL files"
-        },
-        "shipgate.coverage.autoRefresh": {
-          "type": "boolean",
-          "default": true,
-          "description": "Automatically refresh coverage decorations on save"
-        },
-        "shipgate.scan.executablePath": {
-          "type": "string",
-          "default": "",
-          "description": "Path to shipgate/isl CLI executable. Empty = auto-detect (workspace local, pnpm, npx)"
-        },
-        "shipgate.scan.configPath": {
-          "type": "string",
-          "default": "",
-          "description": "Path to .shipgate.yml. Empty = auto-detect in workspace root"
-        },
-        "shipgate.scan.projectRoot": {
-          "type": "string",
-          "default": "",
-          "description": "Project root for scan. Empty = workspace root"
-        },
-        "shipgate.scan.scanOnSave": {
-          "type": "boolean",
-          "default": false,
-          "description": "Gate on save: run full gate (spec + firewall) when you save. Use for small projects; may be slow on large codebases."
-        },
-        "shipgate.github.token": {
-          "type": "string",
-          "default": "",
-          "description": "GitHub token for API access (repo, PRs, workflow runs). Use a fine-grained token with repo scope."
-        },
-        "shipgate.firewall.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable live firewall checks on file save"
-        },
-        "shipgate.firewall.runOnSave": {
-          "type": "boolean",
-          "default": true,
-          "description": "Gate on save (firewall): run lightweight checks on .ts/.js save. Catches ghost routes, hardcoded secrets, policy violations. Fast and recommended."
-        }
-      }
+      ]}
     },
     "configurationDefaults": {
       "[isl]": {
@@ -513,7 +695,6 @@
         "editor.formatOnSave": true,
         "editor.semanticHighlighting.enabled": true
       }
-    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run build",
@@ -525,6 +706,7 @@
     "clean": "rimraf dist out",
     "package": "vsce package --no-dependencies",
     "publish": "vsce publish --no-dependencies",
+    "publish:openvsx": "pnpm run build && pnpm run package && npx ovsx publish --no-dependencies",
     "prepublishOnly": "pnpm run build",
     "test:unit": "vitest run",
     "test:coverage": "vitest run --coverage"
@@ -553,15 +735,5 @@
     }
   },
   "types": "./dist/index.d.ts",
-  "sideEffects": false,
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE",
-    "media",
-    "icons",
-    "syntaxes",
-    "snippets",
-    "language-configuration.json"
-  ]
+  "sideEffects": false
 }

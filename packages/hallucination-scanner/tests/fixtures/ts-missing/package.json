@@ -1,0 +1,10 @@
+{
+  "name": "ts-missing-fixture",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "^4.18.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

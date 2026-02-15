@@ -94,11 +94,11 @@ Keep these **private** so they are only used inside the monorepo.
 - `@isl-lang/dashboard-web`, `@isl-lang/dashboard-api`
 - `@isl-lang/marketplace-web`, `@isl-lang/marketplace-api`
 - `@isl-lang/playground`, `@isl-lang/visual-editor`
-- `@isl-lang/islstudio`, `@isl-lang/trace-viewer`, `@isl-lang/audit-viewer`
+- `@isl-lang/shipgate`, `@isl-lang/trace-viewer`, `@isl-lang/audit-viewer`
 - `@isl-lang/docs`, `@isl-lang/docs-advanced`
 
 ### IDE extensions
-- `@isl-lang/vscode`, `@isl-lang/vscode-islstudio`, `@isl-lang/jetbrains`  
+- `@isl-lang/vscode`, `@isl-lang/jetbrains`  
   (Publish later from separate release flow if desired.)
 
 ### CI / DevOps / integrations

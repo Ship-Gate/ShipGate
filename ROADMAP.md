@@ -1,273 +1,250 @@
-# Shipgate Official Roadmap
+# ISL: Safe Vibe Coding Roadmap
 
-> **Mission:** Make AI-generated code verifiably safe.
-> **Vision:** The world's first platform where you describe what you want in natural language, and get code that's verified safe before it ships.
-
----
-
-## Where We Are (February 2026)
-
-**ISL 1.0 Core: Complete.**
-
-- 226 packages, 200 ready (88%)
-- ISL parser, typechecker, evaluator (95%+ coverage)
-- SHIP/NO_SHIP gate (spec + firewall)
-- 25 security/policy rules
-- Proof bundles, trust scores, evidence
-- GitHub Action, Cursor MCP, pre-push hooks
-- Healer (gate → fix → re-gate)
-- CLI: `gate`, `verify`, `pbt`, `chaos`, `trust-score`, `heal`
-
-**No direct competitor combines:** intent specs + behavioral verification + security firewall + AI-native workflow + single gate verdict.
+> **Mission:** Be the first product to safely ship AI-generated code from natural human language — using ISL (Intent Specification Language) as the verification layer — for complete, production-quality full-stack applications.
 
 ---
 
-## The Roadmap
+## Current State (What We Have)
 
-### Phase 1: Ship the Gate (Weeks 1–4)
-*Goal: Shipgate is publicly available and anyone can use it in 5 minutes.*
+| Layer | Status | Quality |
+|-------|--------|---------|
+| ISL Parser | ✅ 8 full-stack constructs | Grammar gaps on edge cases |
+| AI Copilot | ✅ Anthropic + OpenAI | Working |
+| `isl vibe` CLI | ✅ 5-stage pipeline | Scaffold-depth codegen |
+| VS Code Extension | ✅ Command + progress | Basic UX |
+| Verification Pipeline | ✅ Trust scoring + verdicts | Overly strict on utility files |
+| Heal Loop | ✅ verify→fix→re-verify | 3 iterations, partial fixes |
+| Pro Subscription | ✅ Stripe + JWT | Working |
+| Portal | ✅ Next.js landing + checkout | Basic |
 
-#### 1.1 — Fix & Stabilize
-- [ ] Fix `shipgate-metrics` build blocker (TS type error)
-- [ ] Fix `semantics` and `stdlib-auth` build failures
-- [ ] Green build: `pnpm build` exits 0
-- [ ] Green tests: `pnpm test` with >95% pass rate
-
-#### 1.2 — Publish to npm
-- [x] shipgate CLI builds and packs ready (`pnpm --filter shipgate build`)
-- [ ] Publish `shipgate` CLI to npm (`npx shipgate init`)
-- [ ] Publish `@shipgate/sdk` for programmatic use (blocked by @isl-lang deps)
-- [ ] Publish `shipgate/gate-action@v1` GitHub Action (see docs/PUBLISH_NPM.md)
-
-#### 1.3 — Brand & Landing
-- [ ] Register domain (`shipgate.dev`)
-- [ ] Landing page: problem, solution, 5-minute quickstart
-- [ ] Record "Three Big Lies" demo (2-min video)
-- [ ] README rewrite with Shipgate branding
-
-#### 1.4 — Quickstart
-- [ ] `npx shipgate init` — auto-generates truthpack + config
-- [ ] `npx shipgate gate` — runs gate on current project
-- [ ] 5-minute quickstart guide in docs
-- [ ] Example repos: one that passes, one that fails
-
-**Milestone:** Anyone can `npx shipgate init && npx shipgate gate` on their project.
+**Gap:** Pipeline runs end-to-end but generated code is scaffold-depth (comment stubs, thin route handlers). Verification scores low because utility files lack ISL coverage. Parser rejects some AI-generated ISL syntax.
 
 ---
 
-### Phase 2: Win the Gate Market (Weeks 5–12)
-*Goal: Shipgate is the default AI code safety gate. First users, first proof.*
+## Phase 1: Fix Pipeline Foundation
+**Goal:** Make the pipeline reliable — every run produces parseable ISL and real code.
+**Timeline:** 1–2 weeks
 
-#### 2.1 — Distribution
-- [ ] Launch on Hacker News: "I built Shipgate to stop AI from shipping fake features"
-- [ ] Post on X, Reddit (r/programming, r/typescript), Dev.to
-- [ ] GitHub topics: `ai-safety`, `code-verification`, `behavioral-contracts`
-- [ ] Product Hunt launch
+### 1.1 ISL Parser Tolerance
+- [ ] **Fuzzy parser mode** — Accept common AI-generated patterns the strict parser rejects (inline annotations like `[format: email]`, union type shorthands, missing `version:` field)
+- [ ] **Parser error recovery** — Continue parsing after errors instead of aborting; collect partial AST
+- [ ] **ISL grammar reference prompt** — Feed the AI copilot the exact ISL grammar spec as system prompt context so it generates valid ISL on first try
+- [ ] **Round-trip test suite** — 20+ ISL specs that must parse→unparse→re-parse identically
 
-#### 2.2 — VS Code Extension
-- [ ] Polish existing VS Code extension
-- [ ] Publish to VS Code Marketplace as "Shipgate"
-- [ ] Gate on save (configurable)
-- [ ] Inline violation markers with fix suggestions
+### 1.2 Deep Code Generation
+- [ ] **Replace stub comments with real implementations** — Route handlers must contain actual Prisma queries, validation logic, error handling, JWT auth
+- [ ] **Multi-file coherence** — Generated imports must resolve; types must be consistent across files
+- [ ] **Structured codegen prompts** — Instead of one mega-prompt, use per-file prompts with full context (ISL spec + already-generated files)
+- [ ] **Code quality gate** — Run TypeScript compiler on generated code before writing; if it fails, re-prompt
 
-#### 2.3 — Shipgate Benchmark
-- [ ] Create public dataset: 50+ examples of unsafe AI-generated code
-- [ ] Run Shipgate, SonarQube, Snyk, Semgrep on same dataset
-- [ ] Publish results: "Shipgate catches X% of behavioral issues; alternatives catch Y%"
-- [ ] Focus on what only Shipgate catches: ghost routes, intent mismatch, fake features
-
-#### 2.4 — Case Studies & Evidence
-- [ ] Publish case studies 001–003 publicly
-- [ ] Add 3 more real-world case studies
-- [ ] `shipgate evidence export` command for anonymized metrics
-- [ ] Track: blocked PRs, NO_SHIP reasons, fix rate
-
-#### 2.5 — Rule Calibration
-- [ ] Track false positive rate per rule
-- [ ] Auto-suggest disabling noisy rules
-- [ ] User feedback loop: "Was this NO_SHIP correct?"
-
-**Milestone:** 500+ GitHub stars, 1,000+ npm weekly downloads, 50+ repos using Shipgate.
+### 1.3 Verification Coverage
+- [ ] **Auto-spec utility files** — Generate ISL specs for db.ts, validators.ts, errors.ts based on their exports
+- [ ] **Tiered verification** — Core behavior files (routes, services) are strict; utility/config files use relaxed thresholds
+- [ ] **Spec coverage metric** — Track % of files with ISL specs; target 80%+ for SHIP verdict
+- [ ] **Verify the generated ISL spec itself** — Check that every entity, behavior, and endpoint in the spec has a corresponding generated file
 
 ---
 
-### Phase 3: Natural Language → ISL (Weeks 13–24)
-*Goal: You describe what you want. Shipgate verifies it before code is generated.*
+## Phase 2: Production-Quality Code Generation
+**Goal:** Generated code is runnable out of the box — `npm install && npm run dev` works.
+**Timeline:** 2–3 weeks
 
-#### 3.1 — AI-Powered NL → ISL
-- [ ] Upgrade `isl-translator` with LLM-powered translation
-- [ ] Pattern library expansion (auth, CRUD, payments, webhooks, etc.)
-- [ ] Confidence scoring: high-confidence specs auto-accepted; low-confidence → clarification
-- [ ] Confirmation step: "Here's the spec I inferred. Does this match your intent?"
+### 2.1 App Templates
+- [ ] **Golden templates** — Hand-crafted, verified reference implementations for common patterns:
+  - Auth (register/login/logout/JWT refresh)
+  - CRUD entity (create/read/update/delete with pagination)
+  - File upload
+  - Real-time (WebSocket/SSE)
+  - Payment integration (Stripe)
+  - Email notifications
+- [ ] **Template selection** — AI picks relevant templates based on ISL spec, then customizes
 
-#### 3.2 — Code → ISL Engine
-- [ ] Ship `shipgate engine <path>` command
-- [ ] TypeScript: full AST extraction (routes, validations, types, handlers)
-- [ ] Python: Flask/FastAPI/Django route → behavior mapping
-- [ ] Auto-generate bindings (which file implements which behavior)
-- [ ] One-command CI: `shipgate engine . && shipgate gate specs/ --impl src/`
+### 2.2 Code Quality Standards
+- [ ] **Type safety** — All generated code must pass `tsc --noEmit` with strict mode
+- [ ] **Error handling** — Every route has try/catch, every Prisma call handles errors, ISL error types map to HTTP status codes
+- [ ] **Validation** — Zod schemas generated from ISL entity constraints; applied at API boundary
+- [ ] **Auth middleware** — JWT verification middleware generated from ISL `actors { must: authenticated }` blocks
+- [ ] **Database seeds** — Generate seed data from ISL scenarios
 
-#### 3.3 — Spec Inference from Tests
-- [ ] Extract pre/postconditions from existing test suites
-- [ ] Map test assertions to ISL postconditions
-- [ ] Use test coverage to estimate spec confidence
+### 2.3 Frontend Quality
+- [ ] **Tailwind + shadcn/ui** — Generated React components use modern UI primitives, not bare divs
+- [ ] **Forms from ISL** — ISL `form` declarations generate real form components with validation
+- [ ] **API client** — Generated typed fetch wrapper matching ISL API endpoints
+- [ ] **Auth flow** — Login/register/logout pages with JWT token management
+- [ ] **Dashboard layout** — Responsive sidebar + main content from ISL `screen` declarations
 
-#### 3.4 — Interactive Spec Builder
-- [ ] Chat-based flow in Cursor/VS Code: "What should this endpoint do?"
-- [ ] AI proposes ISL spec → user confirms → spec saved
-- [ ] Spec evolves with the codebase (re-infer on change)
-
-**Milestone:** Any project can run `shipgate engine .` and get useful ISL specs without writing any by hand.
-
----
-
-### Phase 4: Safe Vibe Coding (Weeks 25–40)
-*Goal: Describe an app in natural language. Get verified, safe, full-stack code.*
-
-#### 4.1 — End-to-End Pipeline
-- [ ] Wire: NL prompt → ISL spec → verify spec → generate code → verify code → SHIP/NO_SHIP
-- [ ] Start with backend: API + auth + DB schema
-- [ ] Add frontend: React/Next.js from ISL entity + behavior definitions
-- [ ] Deployment artifacts: Docker, Vercel config
-
-#### 4.2 — Full-Stack Codegen
-- [ ] Backend: Express/Fastify/Next.js API routes from ISL behaviors
-- [ ] Database: Prisma/Drizzle schema from ISL entities
-- [ ] Auth: Session/JWT from ISL auth behaviors (using stdlib-auth)
-- [ ] Frontend: CRUD pages from ISL entities + behaviors
-- [ ] Tests: Generated test suite that validates the spec
-
-#### 4.3 — Iterative Build Loop
-- [ ] User describes feature in NL → ISL generated → code generated → gate runs
-- [ ] If NO_SHIP: show violations, suggest fixes, regenerate
-- [ ] If SHIP: apply code, show proof bundle
-- [ ] Loop until all features pass
-
-#### 4.4 — Cursor/VS Code Integration
-- [ ] "Describe a feature" command in Cursor
-- [ ] Flow: chat → ISL → codegen → gate → apply (all in editor)
-- [ ] Show ISL spec alongside generated code
-- [ ] One-click accept or modify spec
-
-**Milestone:** Demo: "Build me a todo app with auth" → working, verified full-stack app in under 10 minutes.
+### 2.4 Test Quality
+- [ ] **Generated tests must pass** — Run `vitest run` on generated tests; all must pass before SHIP
+- [ ] **Contract tests** — Tests verify ISL preconditions, postconditions, and error conditions
+- [ ] **API integration tests** — Test each endpoint with valid/invalid/edge-case payloads
+- [ ] **Minimum test coverage** — At least 1 test per ISL behavior
 
 ---
 
-### Phase 5: Standard & Partnerships (Weeks 40–52)
-*Goal: Shipgate becomes the industry standard for AI code safety.*
+## Phase 3: Reliability & Determinism
+**Goal:** Same prompt → same quality output. Pipeline never hangs or crashes.
+**Timeline:** 2 weeks
 
-#### 5.1 — Partnerships
-- [ ] Cursor: pitch as official AI safety partner
-- [ ] GitHub: propose Copilot verification add-on
-- [ ] Vercel: "Deploy with Shipgate" integration
-- [ ] At least one partnership announced
+### 3.1 Pipeline Robustness
+- [ ] **Timeout per stage** — Each stage has a max duration; graceful abort with partial results
+- [ ] **Token budget management** — Track token usage across stages; warn before hitting limits
+- [ ] **Retry with backoff** — API failures retry 3x with exponential backoff
+- [ ] **Streaming progress** — Real-time stage updates via CLI spinners and VS Code progress
 
-#### 5.2 — "Shipgate Certified" Standard
-- [ ] Publish open spec: "What a safe AI code gate must check"
-- [ ] Create certification badge for repos that pass
-- [ ] Propose to OWASP or similar for AI code safety standard
-- [ ] Public certification registry
+### 3.2 Caching & Speed
+- [ ] **ISL spec cache** — Same NL prompt → cached ISL spec (skip Stage 1 on re-run)
+- [ ] **Template cache** — Pre-compiled golden templates loaded from disk, not regenerated
+- [ ] **Incremental codegen** — On re-run, only regenerate files that changed in the spec
+- [ ] **Parallel codegen** — Generate backend, frontend, tests in parallel (3 concurrent AI calls)
 
-#### 5.3 — Enterprise
-- [ ] Multi-repo dashboard
-- [ ] SSO/SAML integration
-- [ ] Compliance packs (SOC2, HIPAA, PCI-DSS)
-- [ ] On-prem deployment option
-- [ ] First 10 enterprise customers
+### 3.3 Determinism
+- [ ] **Seed-based generation** — Optional `--seed` flag for reproducible output
+- [ ] **Snapshot testing** — Golden output snapshots for 5 reference prompts; CI checks for regressions
+- [ ] **Temperature control** — Low temperature (0.1) for codegen, higher (0.5) for NL→ISL creativity
 
-#### 5.4 — Marketplace
-- [ ] ISL spec marketplace (share/sell domain specs)
-- [ ] Community policy packs
-- [ ] Verified codegen templates
+---
 
-**Milestone:** Partnership with Cursor or GitHub announced. "Shipgate Certified" standard published.
+## Phase 4: Multi-Framework & Multi-DB
+**Goal:** Support the frameworks and databases developers actually use.
+**Timeline:** 2–3 weeks
+
+### 4.1 Backend Frameworks
+- [ ] **Next.js App Router** (current) — API routes in `app/api/`, React Server Components
+- [ ] **Express.js** — Traditional MVC with controllers, middleware, routes
+- [ ] **Fastify** — Schema-based validation, plugin architecture
+- [ ] **Hono** — Edge-ready, Cloudflare Workers compatible
+
+### 4.2 Databases
+- [ ] **SQLite** (current) — Local dev, Prisma ORM
+- [ ] **PostgreSQL** — Production-ready, Prisma + connection pooling
+- [ ] **MongoDB** — Document model, Mongoose ODM
+- [ ] **Drizzle ORM** — Alternative to Prisma, type-safe SQL
+
+### 4.3 Deployment Targets
+- [ ] **Vercel** — `vercel.json` + deployment config
+- [ ] **Docker** — `Dockerfile` + `docker-compose.yml` for self-hosted
+- [ ] **Railway / Render** — One-click deploy configs
+
+### 4.4 Frontend Options
+- [ ] **Next.js + React** (current)
+- [ ] **SvelteKit** — Alternative full-stack framework
+- [ ] **API-only mode** — `--no-frontend` generates pure backend + OpenAPI spec
+
+---
+
+## Phase 5: Developer Experience
+**Goal:** Developers love using this — it's faster than writing code manually.
+**Timeline:** 2 weeks
+
+### 5.1 VS Code Integration
+- [ ] **Vibe panel** — Dedicated sidebar section: prompt input, framework picker, live stage progress, file tree preview
+- [ ] **Generated file preview** — Show generated code in diff view before writing to disk
+- [ ] **One-click iterate** — "Improve this file" button sends file + ISL spec + feedback to AI
+- [ ] **ISL spec editor** — Syntax highlighting, validation, autocomplete for ISL files
+- [ ] **Inline annotations** — CodeLens showing ISL coverage per file
+
+### 5.2 CLI Polish
+- [ ] **Interactive mode** — `isl vibe` with no args enters interactive wizard
+- [ ] **`--watch` mode** — Edit ISL spec → auto-regenerate changed files
+- [ ] **`--diff` mode** — Show what would change before writing
+- [ ] **Progress bars** — Per-stage progress with ETA
+- [ ] **Cost estimate** — Show estimated API cost before running
+
+### 5.3 Documentation
+- [ ] **ISL Language Reference** — Complete grammar, every construct, examples
+- [ ] **Vibe Tutorial** — "Build a todo app in 2 minutes" walkthrough
+- [ ] **Architecture Guide** — How the pipeline works, how to extend it
+- [ ] **Prompt Engineering Guide** — How to write prompts that produce better apps
+- [ ] **Video demo** — 3-minute screencast for landing page
+
+---
+
+## Phase 6: Trust & Safety
+**Goal:** Proof that AI-generated code is safe to ship — not just "it compiles."
+**Timeline:** 2–3 weeks
+
+### 6.1 Proof Bundles
+- [ ] **ISL Certificate** — JSON document proving: ISL spec hash, generated file hashes, verification score, all evidence entries, timestamp, AI model used
+- [ ] **Audit trail** — Every AI prompt/response logged (opt-in) for reproducibility
+- [ ] **Diff-against-spec** — Show exactly which ISL contracts each file satisfies
+
+### 6.2 Security
+- [ ] **SQL injection check** — Verify all DB queries use parameterized queries (Prisma handles this)
+- [ ] **Auth bypass check** — Verify all protected routes have auth middleware
+- [ ] **Secret exposure check** — No API keys, passwords, or secrets in generated code
+- [ ] **Dependency audit** — Generated `package.json` deps checked against known vulnerabilities
+- [ ] **OWASP Top 10 scan** — Static analysis for common web vulnerabilities
+
+### 6.3 Supply Chain
+- [ ] **SBOM generation** — Software Bill of Materials for generated project
+- [ ] **License compliance** — All generated deps have compatible licenses
+- [ ] **Reproducible builds** — Lockfile generated, pinned versions
+
+### 6.4 Continuous Verification
+- [ ] **CI/CD integration** — `isl verify .` in GitHub Actions / GitLab CI
+- [ ] **Pre-commit hook** — Block commits that break ISL contracts
+- [ ] **PR gate** — GitHub App that comments SHIP/NO_SHIP on pull requests
+
+---
+
+## Phase 7: Launch
+**Goal:** Ship the product. Get users.
+**Timeline:** 2–3 weeks
+
+### 7.1 Dogfooding
+- [ ] **Build 5 real apps with vibe** — Todo, blog, e-commerce, chat, dashboard
+- [ ] **Each must reach SHIP verdict** — Fix pipeline issues discovered during dogfooding
+- [ ] **Measure: prompt → running app time** — Target: under 5 minutes
+- [ ] **Measure: generated code quality** — Target: passes ESLint, tsc, tests
+
+### 7.2 Beta Program
+- [ ] **Invite 20 developers** — Mix of junior/senior, different frameworks
+- [ ] **Feedback form** — What worked, what broke, what's missing
+- [ ] **Bug bash** — Fix top 10 issues from beta
+
+### 7.3 Landing Page
+- [ ] **Hero demo** — Animated terminal showing `vibe` → generated app
+- [ ] **"Before/After"** — Traditional coding vs. vibe coding comparison
+- [ ] **Trust section** — "Every line verified against ISL contracts"
+- [ ] **Pricing** — Free (3 vibes/month) / Pro ($29 lifetime) / Team (TBD)
+
+### 7.4 Launch Channels
+- [ ] **Show HN** — Post with demo GIF + link to try
+- [ ] **Product Hunt** — Launch with video
+- [ ] **Dev.to / Hashnode** — "How I built a full-stack app in 2 minutes" article
+- [ ] **Twitter/X thread** — Pipeline architecture breakdown
+- [ ] **VS Code Marketplace** — Extension published with vibe feature highlighted
+- [ ] **npm publish** — `npx isl vibe "..."` works for anyone
 
 ---
 
 ## Success Metrics
 
-| Metric | Phase 1 | Phase 2 | Phase 3 | Phase 4 | Phase 5 |
-|--------|---------|---------|---------|---------|---------|
-| npm weekly downloads | 100 | 1,000 | 5,000 | 20,000 | 50,000+ |
-| GitHub stars | 50 | 500 | 2,000 | 5,000 | 10,000+ |
-| Repos using Shipgate | 10 | 50 | 500 | 2,000 | 10,000+ |
-| ARR | $0 | $0 | $100K | $1M | $5M+ |
-| Enterprise customers | 0 | 0 | 2 | 10 | 50+ |
-| Partnerships | 0 | 0 | 0 | 1 | 2+ |
+| Metric | Current | Target (Launch) |
+|--------|---------|-----------------|
+| Prompt → runnable app | ~2 min, scaffold | < 5 min, production |
+| Generated code passes tsc | No | Yes, 100% |
+| Generated tests pass | No | Yes, 80%+ |
+| SHIP verdict rate | 0% (NO_SHIP) | 60%+ on first run |
+| ISL spec coverage | ~30% | 80%+ |
+| Frameworks supported | Next.js only | Next.js + Express + Fastify |
+| Databases supported | SQLite only | SQLite + Postgres |
+| Time to first value | Install + API key + prompt | `npx isl vibe "..."` |
 
 ---
 
-## Revenue Model
-
-| Tier | Price | Target |
-|------|-------|--------|
-| **Free** | $0 | Solo devs, OSS, startups — distribution |
-| **Team** | $29/user/month | Engineering teams, compliance-aware orgs |
-| **Enterprise** | Custom | Regulated industries, multi-team setups |
-| **Safe Vibe Coding** (Phase 4+) | TBD | Premium: NL→verified code platform |
-
----
-
-## Technical Dependencies
-
-| Phase | Depends On |
-|-------|------------|
-| Phase 1 | Fix build blockers, npm publish |
-| Phase 2 | VS Code extension polish, benchmark dataset |
-| Phase 3 | LLM integration for NL→ISL, inference engine improvements |
-| Phase 4 | Full-stack codegen, iterative build loop |
-| Phase 5 | Adoption, enterprise features, partnership outreach |
-
----
-
-## Risk Register
-
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| GitHub/Copilot builds similar feature | High | Move fast; own the standard; build network effects |
-| NL→ISL accuracy too low | Medium | Confirmation loop; start with patterns; improve with usage |
-| Adoption friction (specs feel heavy) | Medium | Specless mode; auto-inference; truthpack is zero-config |
-| False positives kill trust | High | Rule calibration; user feedback; allowlists |
-| Funding gap | Medium | Revenue from Team tier; seek seed if needed |
-
----
-
-## The Claim
-
-**Phase 1–2:** "Shipgate blocks AI from shipping unsafe code."
-
-**Phase 3–4:** "Shipgate makes vibe coding safe. Describe what you want. Get verified code."
-
-**Phase 5:** "With Shipgate, AI can no longer ship unsafe code."
-
----
-
-## Timeline Summary
+## Execution Priority
 
 ```
-Feb 2026                                                          Feb 2027
-  │                                                                    │
-  ├── Phase 1: Ship the Gate ──────────┐                               │
-  │   (Weeks 1–4)                      │                               │
-  │                                    ├── Phase 2: Win the Market ────┐
-  │                                    │   (Weeks 5–12)                │
-  │                                    │                               │
-  │                                    ├── Phase 3: NL → ISL ──────────┤
-  │                                    │   (Weeks 13–24)               │
-  │                                    │                               │
-  │                                    ├── Phase 4: Safe Vibe Coding ──┤
-  │                                    │   (Weeks 25–40)               │
-  │                                    │                               │
-  │                                    └── Phase 5: Standard ──────────┤
-  │                                        (Weeks 40–52)               │
-  │                                                                    │
-  ▼                                                                    ▼
- Gate ships                                              "AI can no longer
- on npm                                                 ship unsafe code"
+Week 1-2:  Phase 1 — Fix foundation (parser, deep codegen, verify coverage)
+Week 3-4:  Phase 2 — Production code quality (templates, real implementations)
+Week 5-6:  Phase 3 — Reliability + Phase 6.1 (proof bundles)
+Week 7-8:  Phase 4 — Multi-framework (Express, Postgres)
+Week 9-10: Phase 5 — DX polish (VS Code, docs, tutorial)
+Week 11:   Phase 6.2-6.4 — Security + CI/CD
+Week 12:   Phase 7 — Dogfood, beta, launch
 ```
 
----
+**Critical path:** Phase 1 → Phase 2 → Phase 7.1 (dogfood). Everything else is parallelizable.
 
-*Roadmap created: 2026-02-10*
-*Owner: Shipgate Team*
-*Status: Active*
+The single most important thing: **generated code must be runnable.** If `npm install && npm run dev` works after `isl vibe`, everything else follows.

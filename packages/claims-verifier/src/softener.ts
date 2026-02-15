@@ -153,20 +153,21 @@ export class AutoSoftener {
   softenClaim(claim: Claim): string {
     const { text, unit } = claim;
     
-    // Determine claim type from unit
+    // Determine claim type — text-based checks first (more specific),
+    // then unit-based checks (more general)
     let claimType = 'percentage';
-    if (unit === '%' || unit === 'percent') {
-      claimType = 'percentage';
-    } else if (unit?.match(/rules?|features?|tests?/i)) {
-      claimType = 'count';
-    } else if (unit?.match(/ms|seconds?|minutes?/i)) {
-      claimType = 'time';
-    } else if (text.toLowerCase().includes('trust score')) {
+    if (text.toLowerCase().includes('trust score')) {
       claimType = 'trust_score';
     } else if (text.toLowerCase().includes('average')) {
       claimType = 'average';
     } else if (text.match(/\dx/i)) {
       claimType = 'multiplier';
+    } else if (unit === '%' || unit === 'percent') {
+      claimType = 'percentage';
+    } else if (unit?.match(/rules?|features?|tests?/i)) {
+      claimType = 'count';
+    } else if (unit?.match(/ms|seconds?|minutes?/i)) {
+      claimType = 'time';
     }
     
     // Find matching template

@@ -5,5 +5,6 @@
  */
 
 export { ISLCopilot } from './copilot';
+export { getISLGrammarPrompt, clearISLGrammarCache } from './grammar-prompt';
 export * from './types';
 export * from './providers';

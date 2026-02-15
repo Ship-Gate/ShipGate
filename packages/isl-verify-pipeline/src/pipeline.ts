@@ -323,15 +323,17 @@ export class VerificationPipeline {
             `verify-${runId}`
           );
           
+          const projectRoot = this.getProjectRoot();
           await writeToProofBundle(result, {
             bundleDir,
+            projectRoot,
             domain: this.domain!.name.value,
             specVersion: this.domain!.version?.value || '0.0.0',
             specContent: this.specContent,
             includeFullTraces: this.config.proofBundle?.includeFullTraces,
           });
-          
-          await updateManifest(bundleDir, result);
+
+          await updateManifest(bundleDir, result, { projectRoot });
           
           return {
             bundleId: runId,

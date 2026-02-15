@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/migrations",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generate database migrations from ISL entity changes with safety checks and rollback support",
   "type": "module",
   "main": "dist/index.js",

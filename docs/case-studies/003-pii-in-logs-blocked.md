@@ -13,7 +13,7 @@ AI-generated code used `console.log` to output user email for debugging. The fir
 
 - **Scenario:** Developer asked AI to "add error logging for the login handler"
 - **File(s):** `packages/auth-api/src/handlers/login.ts`
-- **Gate:** firewall (ISL Studio policy pack: pii)
+- **Gate:** firewall (Shipgate policy pack: pii)
 
 ## What Was Caught
 

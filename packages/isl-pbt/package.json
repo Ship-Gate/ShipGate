@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/pbt",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Property-Based Testing for ISL - Generate random inputs satisfying preconditions and verify postconditions",
   "type": "module",
   "main": "./dist/index.js",

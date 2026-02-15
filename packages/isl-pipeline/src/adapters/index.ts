@@ -1,10 +1,24 @@
 /**
  * Framework Adapters
- * 
+ *
  * Adapters for detecting and patching different web frameworks.
- * 
+ * Includes codegen adapters for Next.js and Express.
+ *
  * @module @isl-lang/pipeline/adapters
  */
+
+// Codegen framework adapters
+export { NextJSAdapter } from './nextjs-adapter.js';
+export { ExpressAdapter } from './express-adapter.js';
+export { FastifyAdapter } from './fastify-adapter.js';
+export type {
+  FrameworkAdapter as CodegenFrameworkAdapter,
+  ISLSpec,
+  ISLEndpoint,
+  FileMap,
+  GeneratedFile as CodegenGeneratedFile,
+  CodegenContext,
+} from './codegen-framework-adapter.js';
 
 export {
   NextJSAppRouterAdapter,

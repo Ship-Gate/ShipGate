@@ -294,7 +294,7 @@ export class ChaosEngine {
     return {
       success: true,
       verdict: 'verified',
-      score: 100,
+      score: 0,
       scenarios: [],
       timeline: timelineReport,
       report,

@@ -1,17 +1,17 @@
 /**
  * CLI Command Definitions
- * 
- * Defines all ISL CLI commands using commander.
- * 
+ *
+ * ShipGate CLI — primary command: shipgate. Alias: isl.
+ *
  * Commands:
- *   isl parse <file>           # Parse and show AST
- *   isl check <file>           # Type check
- *   isl gen <target> <file>    # Generate code (ts, rust, go, openapi)
- *   isl verify <file>          # Verify spec against target
- *   isl repl                   # Start REPL
- *   isl init                   # Create .isl config and example spec
- *   isl fmt <file>             # Format ISL file
- *   isl lint <file>            # Lint ISL file for best practices
+ *   shipgate parse <file>      # Parse and show AST
+ *   shipgate check <file>      # Type check
+ *   shipgate gen <target> <file>  # Generate code (ts, rust, go, openapi)
+ *   shipgate verify <file>     # Verify spec against target
+ *   shipgate repl             # Start REPL
+ *   shipgate init             # Create .isl config and example spec
+ *   shipgate fmt <file>       # Format ISL file
+ *   shipgate lint <file>      # Lint ISL file for best practices
  */
 
 /** Injected at build time from package.json */
@@ -50,7 +50,7 @@ import {
   gate, printGateResult, getGateExitCode,
   trustScore, printTrustScoreResult, printTrustScoreHistory, getTrustScoreExitCode,
   trustScoreExplain, printTrustScoreExplain,
-  heal, printHealResult, getHealExitCode,
+  heal, aiHeal, printHealResult, getHealExitCode,
   verifyProof, printProofVerifyResult, getProofVerifyExitCode,
   proofPack, printProofPackResult, getProofPackExitCode,
   generateBadge, printBadgeResult, getBadgeExitCode,
@@ -63,6 +63,7 @@ import {
   chaos, printChaosResult, getChaosExitCode,
   islGenerate, printIslGenerateResult, getIslGenerateExitCode,
   specQuality, printSpecQualityResult, getSpecQualityExitCode,
+  securityReport, printSecurityReportResult, getSecurityReportExitCode,
   policyCheck, printPolicyCheckResult, getPolicyCheckExitCode,
   policyInit, printPolicyInitResult,
   shipgateChaosRun, printShipGateChaosResult, getShipGateChaosExitCode,
@@ -75,12 +76,23 @@ import {
   domainInit, printDomainInitResult,
   domainValidate, printDomainValidateResult, getDomainValidateExitCode,
   coverage, printCoverageResult, getCoverageExitCode,
+  complianceSOC2, printComplianceSOC2Result, getComplianceSOC2ExitCode,
   demo, printDemoResult, getDemoExitCode,
   migrate, printMigrateResult, getMigrateExitCode,
   bind, printBindResult, getBindExitCode,
   truthpackBuild, printTruthpackBuildResult, getTruthpackBuildExitCode,
   truthpackDiff, printTruthpackDiffResult, getTruthpackDiffExitCode,
+  provenanceInit, printProvenanceInitResult,
   shipCommand,
+  vibe, printVibeResult, getVibeExitCode,
+  verifyCert, printVerifyCertResult, getVerifyCertExitCode,
+  seedGenerate, seedRun, seedReset,
+  printSeedGenerateResult, printSeedRunResult, printSeedResetResult,
+  getSeedGenerateExitCode, getSeedRunExitCode, getSeedResetExitCode,
+  openapiGenerate, openapiValidate,
+  printOpenAPIGenerateResult, printOpenAPIValidateResult,
+  getOpenAPIGenerateExitCode, getOpenAPIValidateExitCode,
+  diffOpenAPI, printDiffOpenAPIResult, getDiffOpenAPIExitCode,
 } from './commands/index.js';
 import type { FailOnLevel } from './commands/verify.js';
 import { TeamConfigError } from '@isl-lang/core';
@@ -100,6 +112,7 @@ const COMMANDS = [
   'parse', 'check', 'gen', 'verify', 'repl', 'init', 'fmt', 'lint',
   'generate', 'build', // aliases
   'gate', // SHIP/NO-SHIP gate
+  'verify-cert', // Verify ISL certificate integrity
   'gate:trust-score', 'trust-score', // Trust score engine
   'heal', // Auto-fix violations
   'proof', // Proof verification
@@ -108,6 +121,7 @@ const COMMANDS = [
   'chaos', // Chaos testing
   'isl-generate', // Generate ISL specs from source code
   'spec-quality', // Score ISL spec quality
+  'security-report', // Standalone security scan
   'shipgate', // ShipGate config management
   'shipgate truthpack build', 'shipgate truthpack diff', // Truthpack v2
   'shipgate simulate', // Behavior simulation
@@ -116,6 +130,8 @@ const COMMANDS = [
   'policy', 'policy check', 'policy team-init', // Team policy enforcement
   'verify evolution', // API evolution verification
   'drift', // Drift detection between code and specs
+  'vibe', // Safe Vibe Coding: NL → ISL → codegen → verify → SHIP
+  'seed generate', 'seed run', 'seed reset', // Prisma seed from ISL
 ];
 
 
@@ -126,9 +142,10 @@ const COMMANDS = [
 const program = new Command();
 
 program
-  .name('isl')
-  .description(chalk.bold('Shipgate CLI') + '\n' + 
-    chalk.gray('Define what your code should do. We enforce it.'))
+  .name('shipgate')
+  .description(chalk.bold('ShipGate CLI') + '\n' +
+    chalk.gray('Define what your code should do. We enforce it.') + '\n' +
+    chalk.gray("('isl' is an alias — use 'shipgate' for the canonical CLI.)"))
   .version(VERSION, '-V, --version', 'Show version number')
   .option('-v, --verbose', 'Enable verbose output')
   .option('-q, --quiet', 'Suppress non-error output')
@@ -202,11 +219,13 @@ program
 program
   .command('parse <file>')
   .description('Parse an ISL file and display the AST')
-  .action(async (file: string) => {
+  .option('--fuzzy', 'Use fuzzy parser mode (normalizes AI-generated patterns, error recovery)')
+  .action(async (file: string, options: { fuzzy?: boolean }) => {
     const opts = program.opts();
-    const result = await parse(file, { 
+    const result = await parse(file, {
       verbose: opts.verbose,
       format: opts.format,
+      fuzzy: options.fuzzy,
     });
     
     printParseResult(result, { format: opts.format });
@@ -260,7 +279,7 @@ program
 
 program
   .command('gen <target> <file>')
-  .description(`Generate code from ISL spec\n  Targets: ${VALID_TARGETS.join(', ')}\n  Examples:\n    isl gen python auth.isl    # Generate Python Pydantic models\n    isl gen graphql api.isl    # Generate GraphQL schema and resolvers\n    isl gen ts auth.isl --ai   # AI-powered implementation generation`)
+  .description(`Generate code from ISL spec\n  Targets: ${VALID_TARGETS.join(', ')}\n  Examples:\n    shipgate gen python auth.isl    # Generate Python Pydantic models\n    shipgate gen graphql api.isl    # Generate GraphQL schema and resolvers\n    shipgate gen ts auth.isl --ai   # AI-powered implementation generation`)
   .option('-o, --output <dir>', 'Output directory')
   .option('--force', 'Overwrite existing files')
   .option('--ai', 'Use AI (LLM) to generate real implementations instead of type stubs')
@@ -330,7 +349,7 @@ program
 
 const configCmd = program
   .command('config')
-  .description('Manage ISL CLI configuration (API keys, AI settings)\n  Examples:\n    isl config set ai.provider anthropic\n    isl config set ai.apiKey ${ANTHROPIC_API_KEY}\n    isl config list');
+  .description('Manage ShipGate CLI configuration (API keys, AI settings)\n  Examples:\n    shipgate config set ai.provider anthropic\n    shipgate config set ai.apiKey ${ANTHROPIC_API_KEY}\n    shipgate config list');
 
 configCmd
   .command('set <key> <value>')
@@ -370,6 +389,53 @@ configCmd
     const result = await configPath();
     printConfigResult(result, { format: opts.format });
     process.exit(getConfigExitCode(result));
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OpenAPI Command (generate, validate, diff)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const openapiCmd = program
+  .command('openapi')
+  .description('OpenAPI spec generation and validation');
+
+openapiCmd
+  .command('generate <file>')
+  .description('Generate OpenAPI 3.1 spec from ISL file')
+  .option('-o, --output <path>', 'Output path (default: openapi.json)')
+  .option('-f, --format <format>', 'Output format: json or yaml', 'json')
+  .action(async (file: string, options) => {
+    const opts = program.opts();
+    const result = await openapiGenerate(file, {
+      output: options.output,
+      format: options.format === 'yaml' ? 'yaml' : 'json',
+    });
+    printOpenAPIGenerateResult(result, { format: opts.format });
+    process.exit(getOpenAPIGenerateExitCode(result));
+  });
+
+openapiCmd
+  .command('validate <file>')
+  .description('Validate OpenAPI spec with @apidevtools/swagger-parser')
+  .action(async (file: string) => {
+    const opts = program.opts();
+    const result = await openapiValidate(file);
+    printOpenAPIValidateResult(result, { format: opts.format });
+    process.exit(getOpenAPIValidateExitCode(result));
+  });
+
+openapiCmd
+  .command('diff <old> <new>')
+  .description('Show changes between two OpenAPI specs')
+  .option('--breaking-only', 'Show only breaking changes')
+  .action(async (oldFile: string, newFile: string, options) => {
+    const opts = program.opts();
+    const result = await diffOpenAPI(oldFile, newFile, {
+      format: opts.format,
+      breakingOnly: options.breakingOnly,
+    });
+    printDiffOpenAPIResult(result, { format: opts.format });
+    process.exit(getDiffOpenAPIExitCode(result));
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -460,6 +526,8 @@ program
   .option('-r, --report <format>', 'Generate formatted report: md, pdf, json, html (or legacy: path to write evidence report)')
   .option('-o, --report-output <path>', 'Output path for formatted report file (default: stdout for text formats)')
   .option('--explain', 'Generate detailed explanation reports (verdict-explain.json and .md)')
+  .option('--spec-coverage', 'Report spec coverage: files with specs, auto-specced, unspecced')
+  .option('--tiered-scoring', 'Use tiered trust score (Tier 1=3x, Tier 2=2x, Tier 3=1x)')
   .action(async (path: string | undefined, options) => {
     await withSpan('cli.verify', { attributes: { [ISL_ATTR.COMMAND]: 'verify' } }, async (cliSpan: TracedSpan) => {
     const opts = program.opts();
@@ -497,9 +565,11 @@ program
 
     // ── Load ShipGate config ─────────────────────────────────────────
     let vibeConfig: ShipGateConfig | undefined;
+    let vibeConfigPath: string | null = null;
     try {
       const vcResult = await loadShipGateConfig(path ?? '.');
       vibeConfig = vcResult.config;
+      vibeConfigPath = vcResult.configPath ?? null;
       if (opts.verbose && vcResult.source === 'file') {
         console.error(chalk.gray(`[shipgate] Loaded config from ${vcResult.configPath}`));
       }
@@ -600,12 +670,16 @@ program
       quiet: isJsonMode,
       failOn,
       shipgateConfig: vibeConfig,
+      guardrails: vibeConfig?.guardrails,
+      guardrailConfigSource: vibeConfigPath,
       verbose: opts.verbose,
       minScore: parseInt(options.minScore),
       detailed: options.detailed,
       report: options.report,
       timeout: parseInt(options.timeout),
       explain: options.explain,
+      specCoverage: options.specCoverage,
+      useTieredScoring: options.tieredScoring,
     });
 
     // ── Apply ShipGate config enforcement ───────────────────────────────
@@ -856,10 +930,11 @@ chaosCommandGroup
 
 program
   .command('init [name]')
-  .description('Set up ShipGate for your project (interactive), or create a new ISL project')
+  .description('Set up ShipGate for your project. No args: init in current dir. With name: create ./name and init.')
   .option('-t, --template <template>', 'Project template (minimal, full, api)', 'minimal')
   .option('-d, --directory <dir>', 'Target directory')
-  .option('--force', 'Overwrite existing files')
+  .option('--force', 'Overwrite existing ShipGate files (isl.config.json, .shipgate.yml)')
+  .option('-y, --yes', 'Skip prompts (use defaults)')
   .option('--no-git', 'Skip git initialization')
   .option('-e, --examples', 'Include example files')
   .option('--interactive', 'Run interactive setup (default when no name provided and TTY available)')
@@ -870,15 +945,18 @@ program
   .action(async (name: string | undefined, options) => {
     const opts = program.opts();
 
-    // When called without a name: run interactive onboarding if TTY and --interactive, else create minimal project
-    if (!name && !options.fromCode && !options.fromPrompt) {
-      // Use interactive mode only if explicitly requested or TTY is available
-      const shouldUseInteractive = options.interactive || (isTTY() && !isCI());
+    // When called without a name or with ".": init in current directory
+    const isInPlace = !name || name === '.';
+    if (isInPlace && !options.fromCode && !options.fromPrompt) {
+      // Use interactive mode only if explicitly requested or TTY is available (unless --yes)
+      // In CI/non-TTY: use simple in-place init (no prompts)
+      const shouldUseInteractive = options.yes ? false : (options.interactive || (isTTY() && !isCI()));
       
       if (shouldUseInteractive) {
         const result = await interactiveInit({
-          root: options.directory,
+          root: options.directory ?? process.cwd(),
           force: options.force,
+          yes: options.yes,
           format: opts.format,
         });
 
@@ -900,14 +978,16 @@ program
       }
       
       // Non-interactive: create minimal project in current directory
-      const targetDir = options.directory || process.cwd();
+      const targetDir = options.directory ? path.resolve(options.directory) : process.cwd();
       const projectName = path.basename(targetDir) || 'my-project';
       const result = await init(projectName, {
         template: 'minimal',
         directory: targetDir,
         force: options.force,
+        yes: options.yes,
         skipGit: !options.git,
         examples: options.examples,
+        inPlace: true,
       });
 
       if (opts.format === 'json') {
@@ -925,12 +1005,13 @@ program
       return;
     }
 
-    // When called with a name: create a new ISL project (original behavior)
-    const projectName = name ?? 'my-isl-project';
+    // When called with a name (not "."): create ./name and init inside it
+    const projectName = name === '.' ? path.basename(process.cwd()) || 'my-project' : (name ?? 'my-isl-project');
+    const targetDir = name === '.' ? process.cwd() : (options.directory ? path.resolve(options.directory) : undefined);
 
     const result = await init(projectName, {
       template: options.template as 'minimal' | 'full' | 'api',
-      directory: options.directory,
+      directory: targetDir,
       force: options.force,
       skipGit: !options.git,
       examples: options.examples,
@@ -1027,6 +1108,26 @@ program
 // ─────────────────────────────────────────────────────────────────────────────
 
 program
+  .command('security-report [path]')
+  .description('Run security scan on a project (SQL injection, auth bypass, secrets, XSS, SSRF, deps, OWASP headers)')
+  .option('--include-audit', 'Include npm audit (can be slow)')
+  .option('--spec <file>', 'ISL spec path for auth-bypass check')
+  .action(async (path?: string, options) => {
+    const opts = program.opts();
+    const result = await securityReport(path, {
+      format: opts.format,
+      includeAudit: options.includeAudit,
+      spec: options.spec,
+      verbose: opts.verbose,
+    });
+    printSecurityReportResult(result, {
+      format: opts.format,
+      verbose: opts.verbose,
+    });
+    process.exit(getSecurityReportExitCode(result));
+  });
+
+program
   .command('spec-quality <file>')
   .description('Score an ISL spec on quality dimensions (completeness, specificity, security, testability, consistency)')
   .option('-s, --min-score <score>', 'Minimum score to pass (fail if below)', '0')
@@ -1058,7 +1159,8 @@ program
   .command('build <pattern>')
   .description('Full ISL build pipeline: parse → check → codegen → testgen → verify → evidence\n  Supports glob patterns: specs/**/*.isl')
   .option('-o, --output <dir>', 'Output directory', './generated')
-  .option('-t, --target <target>', 'Code generation target (typescript)', 'typescript')
+  .option('-t, --target <target>', 'Code generation target (typescript, openapi)', 'typescript')
+  .option('--api-only', 'Generate OpenAPI spec + backend only, no frontend')
   .option('--test-framework <framework>', 'Test framework (vitest, jest)', 'vitest')
   .option('--no-verify', 'Skip verification stage')
   .option('--no-html', 'Skip HTML report generation')
@@ -1076,7 +1178,7 @@ program
       const error = `No ISL files found matching pattern: ${pattern}`;
       if (!isJson) {
         console.error(chalk.red(`Error: ${error}`));
-        console.log(chalk.gray('Try: isl build specs/**/*.isl'));
+        console.log(chalk.gray('Try: shipgate build specs/**/*.isl'));
       } else {
         console.log(JSON.stringify({ success: false, error }, null, 2));
       }
@@ -1121,12 +1223,14 @@ program
         const result = await buildRunner.run({
           specPath: spec,
           outDir: options.output,
-          target: options.target as 'typescript',
+          target: (options.apiOnly ? 'openapi' : options.target) as 'typescript' | 'openapi',
           testFramework: options.testFramework as 'vitest' | 'jest',
           verify: options.verify,
           htmlReport: options.html,
           includeChaosTests: options.chaos,
           includeHelpers: options.helpers,
+          apiOnly: options.apiOnly,
+          generateFrontend: options.apiOnly ? false : undefined,
         });
         
         results.push({ spec, result });
@@ -1430,6 +1534,8 @@ program
   .requiredOption('-i, --impl <file>', 'Implementation file or directory to verify')
   .option('-t, --threshold <score>', 'Minimum trust score to SHIP (default: 95)', '95')
   .option('-o, --output <dir>', 'Output directory for evidence bundle')
+  .option('--proof-output <path>', 'Write proof bundle to path (e.g. .shipgate/proof.json). Deterministic, optionally signed via SHIPGATE_SIGNING_KEY.')
+  .option('--proof-format <fmt>', 'Proof bundle format when --proof-output is set: json or md', 'json')
   .option('--ci', 'CI mode: minimal output, just the decision')
   .action(async (spec: string, options) => {
     const opts = program.opts();
@@ -1438,7 +1544,7 @@ program
     
     if (!isCi && !isJson) {
       console.log('');
-      console.log(chalk.bold.cyan('Shipgate'));
+      console.log(chalk.bold.cyan('ShipGate'));
       console.log(chalk.gray(`   Spec: ${spec}`));
       console.log(chalk.gray(`   Impl: ${options.impl}`));
       console.log(chalk.gray(`   Threshold: ${options.threshold}%`));
@@ -1449,6 +1555,9 @@ program
       impl: options.impl,
       threshold: parseInt(options.threshold),
       output: options.output ?? process.cwd(),
+      proofOutput: options.proofOutput,
+      proofFormat: options.proofFormat === 'md' ? 'md' : 'json',
+      toolVersion: VERSION,
       verbose: opts.verbose,
       format: opts.format,
       ci: isCi,
@@ -1580,6 +1689,29 @@ program
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Verify Certificate Command
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('verify-cert')
+  .description('Verify ISL certificate integrity: re-hash files, verify signature, print report')
+  .option('-c, --cert <path>', `Certificate file path (default: .isl-certificate.json)`)
+  .option('-p, --project-root <path>', 'Project root for resolving file paths (default: cwd)')
+  .option('--api-key <key>', 'API key for signature verification (or ISL_API_KEY env)')
+  .action(async (options) => {
+    const opts = program.opts();
+    const result = await verifyCert({
+      cert: options.cert,
+      projectRoot: options.projectRoot,
+      apiKey: options.apiKey,
+      format: opts.format,
+    });
+
+    printVerifyCertResult(result, { format: opts.format });
+    process.exit(getVerifyCertExitCode(result));
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Heal Command
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1592,21 +1724,107 @@ program
   .option('--dry-run', 'Preview patches without applying them')
   .option('--interactive', 'Ask for confirmation before applying each patch')
   .option('-o, --output <dir>', 'Output directory for dry-run patches (default: .isl-heal-patches)')
+  .option('--ai', 'Use AI (LLM) to generate fixes — verify→fix→re-verify loop')
+  .option('--provider <provider>', 'AI provider: anthropic or openai')
+  .option('--model <model>', 'AI model override')
   .action(async (pattern: string, options) => {
     const opts = program.opts();
-    const result = await heal(pattern, {
-      spec: options.spec,
+
+    if (options.ai) {
+      // AI-powered heal: verify → AI fix → re-verify loop
+      const result = await aiHeal(pattern, {
+        maxIterations: parseInt(options.maxIterations),
+        format: opts.format,
+        verbose: opts.verbose,
+        dryRun: options.dryRun,
+        ai: true,
+        provider: options.provider,
+        model: options.model,
+      });
+      printHealResult(result, { format: opts.format });
+      process.exit(getHealExitCode(result));
+    } else {
+      // Pattern-based semantic heal
+      const result = await heal(pattern, {
+        spec: options.spec,
+        maxIterations: parseInt(options.maxIterations),
+        stopOnRepeat: parseInt(options.stopOnRepeat),
+        format: opts.format,
+        verbose: opts.verbose,
+        dryRun: options.dryRun,
+        interactive: options.interactive,
+        outputDir: options.output,
+      });
+      printHealResult(result, { format: opts.format });
+      process.exit(getHealExitCode(result));
+    }
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Vibe Command (Safe Vibe Coding)
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('vibe [prompt]')
+  .description('Safe Vibe Coding: describe what you want → get verified code\n  Examples:\n    shipgate vibe "Build me a todo app with auth"\n    shipgate vibe "REST API for blog posts" --framework express\n    shipgate vibe --from-spec specs/auth.isl')
+  .option('-o, --output <dir>', 'Output directory for generated project')
+  .option('--framework <fw>', 'Backend framework: nextjs, express, fastify (default: nextjs)')
+  .option('--db <db>', 'Database: postgres, sqlite, none (default: sqlite)')
+  .option('--database <db>', 'Database: postgres, sqlite, none (default: sqlite)')
+  .option('--db-url <url>', 'Override DATABASE_URL connection string')
+  .option('--provider <provider>', 'AI provider: anthropic or openai')
+  .option('--model <model>', 'AI model override')
+  .option('--from-spec <file>', 'Skip NL→ISL — use existing spec file')
+  .option('--max-iterations <n>', 'Max heal iterations if code fails verification (default: 3)', '3')
+  .option('--dry-run', 'Generate plan and spec without writing project files')
+  .option('--no-frontend', 'Skip frontend generation')
+  .option('--no-tests', 'Skip test generation')
+  .option('--no-cache', 'Force fresh generation, skip cache lookup')
+  .option('--clear-cache', 'Wipe .isl-cache/ and exit')
+  .option('--max-tokens <n>', 'Max token budget (default: 100k). At 80% warns; at 95% skips heal loop', '100000')
+  .option('--resume', 'Resume from last successful stage (uses checkpoint in output dir)')
+  .option('--no-parallel', 'Disable parallel codegen, use sequential (default: parallel enabled)')
+  .option('--max-concurrent <n>', 'Max concurrent AI calls for parallel codegen (default: 3)', '3')
+  .action(async (prompt: string | undefined, options) => {
+    const opts = program.opts();
+
+    if (options.clearCache) {
+      const { CacheManager } = await import('@isl-lang/isl-cache');
+      const cache = new CacheManager({ projectRoot: process.cwd() });
+      await cache.clearCache();
+      console.log(chalk.green('Cache cleared: .isl-cache/ removed'));
+      process.exit(0);
+    }
+
+    if (!prompt && !options.fromSpec) {
+      console.error(chalk.red('Error: provide a prompt or --from-spec'));
+      console.error(chalk.gray('  Example: shipgate vibe "Build me a todo app with auth"'));
+      process.exit(ExitCode.USAGE_ERROR);
+    }
+
+    const result = await vibe(prompt ?? '', {
+      output: options.output,
+      framework: options.framework,
+      database: (options.db ?? options.database) as 'postgres' | 'sqlite' | 'none' | undefined,
+      dbUrl: options.dbUrl,
+      provider: options.provider,
+      model: options.model,
+      fromSpec: options.fromSpec,
       maxIterations: parseInt(options.maxIterations),
-      stopOnRepeat: parseInt(options.stopOnRepeat),
-      format: opts.format,
-      verbose: opts.verbose,
       dryRun: options.dryRun,
-      interactive: options.interactive,
-      outputDir: options.output,
+      verbose: opts.verbose,
+      format: opts.format,
+      frontend: options.frontend,
+      tests: options.tests,
+      noCache: options.noCache,
+      maxTokens: parseInt(options.maxTokens),
+      resume: options.resume,
+      parallel: options.parallel,
+      maxConcurrent: parseInt(options.maxConcurrent ?? '3'),
     });
-    
-    printHealResult(result, { format: opts.format });
-    process.exit(getHealExitCode(result));
+
+    printVibeResult(result, { format: opts.format });
+    process.exit(getVibeExitCode(result));
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1645,6 +1863,7 @@ proofCommand
   .option('-o, --output <dir>', 'Output directory for the proof bundle', '.proof-bundle')
   .option('--sign-secret <secret>', 'HMAC secret for signing the bundle')
   .option('--timestamp <iso>', 'Fixed ISO 8601 timestamp (for deterministic builds)')
+  .option('--include-soc2', 'Include SOC2 CC-series control mapping for auditors')
   .action(async (options) => {
     const opts = program.opts();
     const result = await proofPack({
@@ -1653,6 +1872,7 @@ proofCommand
       output: options.output,
       signSecret: options.signSecret,
       timestamp: options.timestamp,
+      includeSoc2: options.includeSoc2,
       format: opts.format,
       verbose: opts.verbose,
     });
@@ -1900,11 +2120,14 @@ program
   .description('Generate a complete, runnable full-stack application from an ISL spec\n\n' +
     '  One spec → one command → running app.\n' +
     '  Generates API routes, Prisma schema, runtime contracts, Docker, and more.\n\n' +
-    '  Example: isl ship specs/fullstack-example.isl --stack express+prisma+postgres')
+    '  Example: shipgate ship specs/fullstack-example.isl --stack express+prisma+postgres')
   .argument('<file>', 'ISL specification file')
   .option('-o, --output <dir>', 'Output directory')
   .option('-s, --stack <stack>', 'Technology stack (e.g. express+prisma+postgres)', 'express+prisma+postgres')
+  .option('--db <db>', 'Database: sqlite, postgres, mysql, mongodb (default from stack)')
+  .option('--db-url <url>', 'Override DATABASE_URL connection string')
   .option('-n, --name <name>', 'Project name (default: domain name)')
+  .option('--deploy <platform>', 'Add deployment config (vercel, docker, railway, fly)')
   .option('--force', 'Overwrite existing files')
   .option('--no-docker', 'Skip Docker file generation')
   .option('--no-contracts', 'Skip runtime contract enforcement')
@@ -1913,6 +2136,9 @@ program
     const result = await shipCommand(file, {
       output: options.output as string | undefined,
       stack: options.stack as string | undefined,
+      db: options.db as string | undefined,
+      dbUrl: options.dbUrl as string | undefined,
+      deploy: options.deploy as string | undefined,
       name: options.name as string | undefined,
       force: options.force as boolean | undefined,
       noDocker: options.docker === false,
@@ -1923,6 +2149,52 @@ program
     process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
   });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Seed Command — Generate and run Prisma seed from ISL
+// ─────────────────────────────────────────────────────────────────────────────
+
+const seedCommand = program
+  .command('seed')
+  .description('Generate and run Prisma seed from ISL spec');
+
+seedCommand
+  .command('generate <spec>')
+  .description('Generate prisma/seed.ts from ISL entities and scenarios')
+  .option('-o, --output <dir>', 'Output directory (default: cwd)')
+  .option('--records <n>', 'Records per entity (default: 10)', '10')
+  .action(async (spec: string, options) => {
+    const opts = program.opts();
+    const result = await seedGenerate(spec, {
+      output: options.output,
+      recordsPerEntity: parseInt(options.records || '10', 10),
+      format: opts.format,
+    });
+    printSeedGenerateResult(result, opts.format);
+    process.exit(getSeedGenerateExitCode(result));
+  });
+
+seedCommand
+  .command('run')
+  .description('Execute seed (prisma db seed)')
+  .option('-C, --cwd <dir>', 'Working directory (default: cwd)')
+  .action(async (options) => {
+    const opts = program.opts();
+    const result = await seedRun({ cwd: options.cwd, format: opts.format });
+    printSeedRunResult(result, opts.format);
+    process.exit(getSeedRunExitCode(result));
+  });
+
+seedCommand
+  .command('reset')
+  .description('Wipe DB and re-seed (prisma migrate reset --force)')
+  .option('-C, --cwd <dir>', 'Working directory (default: cwd)')
+  .action(async (options) => {
+    const opts = program.opts();
+    const result = await seedReset({ cwd: options.cwd, format: opts.format });
+    printSeedResetResult(result, opts.format);
+    process.exit(getSeedResetExitCode(result));
+  });
+
 const shipgateCommand = program
   .command('shipgate')
   .description('ShipGate configuration management');
@@ -1930,7 +2202,8 @@ const shipgateCommand = program
 shipgateCommand
   .command('init')
   .description('Interactive project setup — generates .shipgate.yml, ISL specs, and CI workflow')
-  .option('--force', 'Overwrite existing files')
+  .option('--force', 'Overwrite existing ShipGate files')
+  .option('-y, --yes', 'Skip prompts (use defaults)')
   .option('-d, --directory <dir>', 'Project root directory (default: cwd)')
   .action(async (options) => {
     const opts = program.opts();
@@ -1939,6 +2212,7 @@ shipgateCommand
     const result = await interactiveInit({
       root: options.directory,
       force: options.force,
+      yes: options.yes,
       format: opts.format,
     });
 
@@ -1955,6 +2229,25 @@ shipgateCommand
       printInteractiveInitResult(result);
     }
 
+    process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
+  });
+
+const provenanceCommand = shipgateCommand
+  .command('provenance')
+  .description('AI provenance metadata for proof bundles (vendor-agnostic)');
+
+provenanceCommand
+  .command('init')
+  .description('Create .shipgate/provenance.json template')
+  .option('-d, --directory <dir>', 'Project root (default: cwd)')
+  .option('--force', 'Overwrite existing provenance.json')
+  .action(async (options) => {
+    const opts = program.opts();
+    const result = await provenanceInit({
+      directory: options.directory,
+      force: options.force,
+    });
+    printProvenanceInitResult(result, { format: opts.format });
     process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
   });
 
@@ -2016,6 +2309,28 @@ truthpackCommand
     process.exit(getTruthpackDiffExitCode(result));
   });
 
+const complianceCommand = shipgateCommand
+  .command('compliance')
+  .description('Compliance mapping — translate proof bundles to auditor-friendly controls');
+
+complianceCommand
+  .command('soc2')
+  .description('SOC2 CC-series mapping: control → pass/warn/fail, contributing checks, evidence refs')
+  .option('-b, --bundle <path>', 'Proof bundle path (proof-bundle.json or directory)')
+  .option('-e, --evidence <dir>', 'Evidence directory (results.json, manifest.json)')
+  .option('-f, --format <format>', 'Output format: pretty | json', 'pretty')
+  .action(async (options) => {
+    const opts = program.opts();
+    const result = await complianceSOC2({
+      bundle: options.bundle,
+      evidence: options.evidence,
+      format: options.format || opts.format,
+    });
+
+    printComplianceSOC2Result(result, { format: opts.format || options.format });
+    process.exit(getComplianceSOC2ExitCode(result));
+  });
+
 shipgateCommand
   .command('migrate <file>')
   .description('Migrate ISL spec to newer version')
@@ -2057,7 +2372,7 @@ shipgateCommand
 
 shipgateCommand
   .command('fix')
-  .description('Auto-fix Shipgate findings with safe, minimal diffs')
+  .description('Auto-fix ShipGate findings with safe, minimal diffs')
   .option('--dry-run', 'Preview fixes without applying (default)')
   .option('--apply', 'Apply fixes to files')
   .option('--only <rule>', 'Only apply fixes for specific rule (can be used multiple times)', (val: string, prev: string[] | undefined) => {
@@ -2374,11 +2689,11 @@ program.on('command:*', ([cmd]) => {
   console.error(chalk.red(`Unknown command: ${cmd}`));
   
   if (suggestion) {
-    console.error(chalk.gray(`Did you mean: isl ${suggestion}?`));
+    console.error(chalk.gray(`Did you mean: shipgate ${suggestion}?`));
   }
   
   console.error('');
-  console.error(chalk.gray('Run `isl --help` to see available commands.'));
+  console.error(chalk.gray('Run `shipgate --help` to see available commands.'));
   process.exit(ExitCode.USAGE_ERROR);
 });
 
@@ -2388,74 +2703,86 @@ program.on('command:*', ([cmd]) => {
 
 program.addHelpText('after', `
 ${chalk.bold('Examples:')}
-  ${chalk.gray('# Initialize a new ISL project')}
-  $ isl init
+  ${chalk.gray('# Initialize a new ShipGate project')}
+  $ shipgate init
 
   ${chalk.gray('# Build ISL spec (parse → check → codegen → verify)')}
-  $ isl build specs/**/*.isl
+  $ shipgate build specs/**/*.isl
 
   ${chalk.gray('# Heal code to fix violations automatically')}
-  $ isl heal src/**/*.ts
+  $ shipgate heal src/**/*.ts
 
   ${chalk.gray('# Verify a directory (auto-detect mode)')}
-  $ isl verify src/
+  $ shipgate verify src/
 
   ${chalk.gray('# Verify with JSON output for CI')}
-  $ isl verify src/ --json
+  $ shipgate verify src/ --json
 
   ${chalk.gray('# Verify with strictness control')}
-  $ isl verify src/ --fail-on unspecced
+  $ shipgate verify src/ --fail-on unspecced
 
   ${chalk.gray('# Verify implementation against specific spec (legacy)')}
-  $ isl verify src/auth.isl --impl src/auth.ts
+  $ shipgate verify src/auth.isl --impl src/auth.ts
 
   ${chalk.gray('# Verify with --spec and --impl flags')}
-  $ isl verify --spec src/auth.isl --impl src/auth.ts
+  $ shipgate verify --spec src/auth.isl --impl src/auth.ts
 
   ${chalk.gray('# Verify proof bundle')}
-  $ isl proof verify ./proof-bundles/auth-bundle
+  $ shipgate proof verify ./proof-bundles/auth-bundle
 
   ${chalk.gray('# SHIP/NO-SHIP gate (the main workflow)')}
-  $ isl gate src/auth.isl --impl src/auth.ts
+  $ shipgate gate src/auth.isl --impl src/auth.ts
+
+  ${chalk.gray('# Verify ISL certificate integrity')}
+  $ shipgate verify-cert
 
   ${chalk.gray('# Parse and show AST')}
-  $ isl parse src/auth.isl
+  $ shipgate parse src/auth.isl
 
   ${chalk.gray('# Check all ISL files')}
-  $ isl check
+  $ shipgate check
 
   ${chalk.gray('# Generate TypeScript code')}
-  $ isl gen ts src/auth.isl
+  $ shipgate gen ts src/auth.isl
 
   ${chalk.gray('# Format ISL file')}
-  $ isl fmt src/auth.isl
+  $ shipgate fmt src/auth.isl
 
   ${chalk.gray('# Start REPL')}
-  $ isl repl
+  $ shipgate repl
 
   ${chalk.gray('# Watch ISL files for changes')}
-  $ isl watch
+  $ shipgate watch
 
   ${chalk.gray('# Watch with gate on changes')}
-  $ isl watch --gate --impl src/
+  $ shipgate watch --gate --impl src/
 
   ${chalk.gray('# Watch only changed files')}
-  $ isl watch --changed-only
+  $ shipgate watch --changed-only
+
+  ${chalk.gray('# Safe Vibe Coding: describe what you want, get verified code')}
+  $ shipgate vibe "Build me a todo app with auth"
+
+  ${chalk.gray('# Vibe with framework + database options')}
+  $ shipgate vibe "REST API for blog posts" --framework express --database postgres
+
+  ${chalk.gray('# Vibe from an existing ISL spec (skip NL→ISL)')}
+  $ shipgate vibe --from-spec specs/auth.isl
 
   ${chalk.gray('# Generate ISL specs from existing source code')}
-  $ isl isl-generate src/auth/
+  $ shipgate isl-generate src/auth/
 
   ${chalk.gray('# Dry-run: preview specs without writing files')}
-  $ isl isl-generate src/ --dry-run
+  $ shipgate isl-generate src/ --dry-run
 
   ${chalk.gray('# Generate with interactive confirmation')}
-  $ isl isl-generate src/ --interactive
+  $ shipgate isl-generate src/ --interactive
 
 ${chalk.bold('JSON Output:')}
   All commands support --json or --format json for machine-readable output:
-  $ isl build specs/**/*.isl --json
-  $ isl heal src/**/*.ts --json
-  $ isl verify src/auth.isl --impl src/auth.ts --json
+  $ shipgate build specs/**/*.isl --json
+  $ shipgate heal src/**/*.ts --json
+  $ shipgate verify src/auth.isl --impl src/auth.ts --json
 
 ${chalk.bold('Exit Codes:')}
   ${chalk.gray('0')}  Success (SHIP)

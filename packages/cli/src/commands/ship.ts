@@ -19,6 +19,12 @@ import { ExitCode } from '../exit-codes.js';
 export interface ShipCommandOptions {
   output?: string;
   stack?: string;
+  /** Database override: sqlite, postgres, mysql, mongodb (default from stack) */
+  db?: string;
+  /** Override DATABASE_URL connection string */
+  dbUrl?: string;
+  /** Deployment platform: vercel, docker, railway, fly */
+  deploy?: string;
   name?: string;
   force?: boolean;
   noDocker?: boolean;
@@ -64,6 +70,9 @@ export async function shipCommand(
       else if (['react', 'none'].includes(lower)) stackConfig.frontend = lower;
       else if (['tailwind', 'css-modules'].includes(lower)) stackConfig.css = lower;
     }
+    if (options.db && ['postgres', 'mysql', 'sqlite', 'mongodb'].includes(options.db.toLowerCase())) {
+      stackConfig.database = options.db.toLowerCase();
+    }
 
     // ── Dynamic import of isl-ship ────────────────────────────────────────
     if (spinner) spinner.text = 'Loading generators...';
@@ -74,6 +83,7 @@ export async function shipCommand(
         outputDir: string;
         stack: Record<string, unknown>;
         projectName?: string;
+        deploy?: string;
         force?: boolean;
         contracts?: boolean;
         verbose?: boolean;
@@ -128,6 +138,8 @@ export async function shipCommand(
         runtime: !options.noContracts,
       },
       projectName: options.name,
+      deploy: options.deploy,
+      dbUrl: options.dbUrl,
       force: options.force,
       contracts: !options.noContracts,
       verbose: options.verbose,

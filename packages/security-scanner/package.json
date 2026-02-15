@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/security-scanner",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Security vulnerability scanner for ISL specs and implementations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,7 +8,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "lint": "eslint src",

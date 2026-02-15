@@ -629,7 +629,7 @@ describe('verify', () => {
     
     expect(result.success).toBe(true);
     expect(result.verdict).toBe('verified');
-    expect(result.score).toBe(100);
+    expect(result.score).toBe(0); // No temporal specs = no coverage = score 0
   });
 });
 

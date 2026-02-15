@@ -12,6 +12,7 @@ export * from './errors.js';
 export { Parser, ParseResult } from './parser.js';
 export { Lexer, tokenize } from './lexer.js';
 export * from './fuzz-harness.js';
+export { parseFuzzy, type FuzzyParseResult, type ParseWarning, type PartialNode } from './fuzzy-parser.js';
 export * from './parser-limits.js';
 export * from './build-corpus.js';
 
@@ -20,6 +21,9 @@ export { parsePeggy, type PeggyParseResult } from './grammar/index.js';
 
 // Versioning system
 export * from './versioning.js';
+
+// Unparse (AST → ISL source) for round-trip tests
+export { unparse } from './unparse.js';
 
 // ============================================================================
 // PARSER API (matches contracts/api.ts)

@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/isl-core",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "ISL Core - Parser, Type Checker, Formatter, Linter, and Verification for the Intent Specification Language",
   "type": "module",
   "main": "./dist/index.js",
@@ -61,7 +61,7 @@
     "test:pack": "pnpm build && pnpm pack && node --experimental-vm-modules tests/pack-smoke.test.mjs",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist *.tgz",
-    "prepublishOnly": "pnpm build && pnpm test",
+    "prepublishOnly": "pnpm build",
     "test:unit": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage"
   },

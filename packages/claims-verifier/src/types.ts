@@ -13,7 +13,7 @@ export type ClaimSource =
   | ComputedSource;
 
 /**
- * Claim derived from command output (e.g., `npx islstudio rules list`)
+ * Claim derived from command output (e.g., `npx shipgate rules list`)
  */
 export interface CommandOutputSource {
   type: 'command_output';

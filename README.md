@@ -1,43 +1,69 @@
-# ReleaseTestInit
+# ShipGate
 
-An ISL (Intent Specification Language) project.
+**ShipGate verifies implementation against ISL specs and produces tamper-proof evidence bundles for every decision.**
 
-## Getting Started
+## What It Proves
+
+- **Spec compliance** — Implementation satisfies preconditions, postconditions, and invariants defined in your ISL spec
+- **Security & policy** — Auth bypass, hardcoded secrets, PII in logs, ghost routes/imports, and 25+ policy rules
+- **One verdict** — SHIP or NO_SHIP, with evidence you can audit and attach to PRs
+
+---
+
+## 60-Second Quickstart
 
 ```bash
-# Check ISL files for errors
-npm run check
+# Clone and install
+git clone https://github.com/guardiavault-oss/ISL-LANG.git
+cd ISL-LANG
+pnpm install
+pnpm --filter shipgate build
 
-# Generate TypeScript types and tests
-npm run generate
+# Initialize (creates .shipgate.yml, specs, CI workflow)
+pnpm exec shipgate init
 
-# Verify implementation against spec
-npm run verify
+# Verify implementation against specs
+pnpm exec shipgate verify src/
+
+# Gate: SHIP/NO_SHIP (exit 0 = SHIP, 1 = NO_SHIP) — use your spec path
+pnpm exec shipgate gate specs/auth.isl -i src/ --ci
 ```
 
-## Project Structure
+**From another project** (with ShipGate published):
 
-```
--release-test-init/
-├── src/
-│   └── -release-test-init.isl    # ISL specification
-├── generated/                 # Generated TypeScript files
-│   ├── types/                 # Generated types
-│   ├── tests/                 # Generated tests
-│   └── docs/                  # Generated documentation
-├── isl.config.json           # ISL configuration
-└── package.json
+```bash
+npm install -g shipgate
+shipgate init
+shipgate verify src/
+shipgate gate specs/auth.isl -i src/ --ci
 ```
 
-## Commands
+---
 
-- `isl check` - Validate ISL syntax and semantics
-- `isl generate --types` - Generate TypeScript types
-- `isl generate --tests` - Generate test files
-- `isl generate --docs` - Generate documentation
-- `isl verify --impl <file>` - Verify implementation
+## Files ShipGate Creates
 
-## Learn More
+| File / Directory | Purpose |
+|------------------|---------|
+| `.shipgate.yml` | Config: CI behavior, ignore patterns, specless mode |
+| `.shipgate/specs/` | ISL specs (from `shipgate init` or hand-written) |
+| `.shipgate/evidence/` | Evidence bundles and reports per run |
+| `.shipgate/truthpack/` | Routes, env vars, contracts (for firewall) |
+| `.github/workflows/shipgate.yml` | CI workflow (from init) |
 
-- [ISL Documentation](https://intentos.dev/docs)
-- [ISL GitHub](https://github.com/intentos/isl)
+---
+
+## Verify vs Gate
+
+| Command | What it does |
+|---------|--------------|
+| **`shipgate verify`** | Runs full verification: parses spec, generates tests, checks implementation. Outputs detailed results and evidence. Use for debugging and local checks. |
+| **`shipgate gate`** | Single SHIP/NO_SHIP decision. Uses verify + firewall. Exit 0 = SHIP, 1 = NO_SHIP. Use in CI to block merges. Add `--ci` for CI mode. |
+
+---
+
+## Links
+
+- [Quickstart](docs/QUICKSTART.md) — 5-minute setup
+- [ShipGate without specs](docs/guides/shipgate-without-specs.md) — Firewall-only (no ISL)
+- [CI setup](docs/SHIPGATE_CI_SETUP.md) — GitHub Actions and other CI
+- [Demo: repo-isl-verified](demos/repo-isl-verified) — Example with ISL spec + workflow

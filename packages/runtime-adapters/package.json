@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/runtime-adapters",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Runtime adapters for Fastify, Express, and Fetch to capture traces for verification",
   "type": "module",
   "main": "./dist/index.js",

@@ -8,7 +8,7 @@ import type {
   ConstrainedType,
   Constraint,
   Field,
-} from '../../../../master_contracts/ast';
+} from '@isl-lang/parser';
 import type { GeneratorOptions } from '../generator';
 
 // ============================================================================

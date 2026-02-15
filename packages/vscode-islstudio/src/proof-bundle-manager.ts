@@ -25,7 +25,7 @@ export async function findProofBundles(): Promise<ProofBundle[]> {
     return [];
   }
 
-  const proofDir = path.join(workspaceFolder.uri.fsPath, '.islstudio', 'proofs');
+  const proofDir = path.join(workspaceFolder.uri.fsPath, '.shipgate', 'proofs');
   
   try {
     await fs.access(proofDir);

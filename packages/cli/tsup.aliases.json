@@ -12,5 +12,6 @@
   "@isl-lang/isl-policy-engine": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\isl-policy-engine\\dist\\index.js",
   "@isl-lang/proof": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\isl-proof\\dist\\index.js",
   "@isl-lang/truthpack-v2": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\truthpack-v2\\dist\\index.js",
-  "@isl-lang/firewall": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\isl-firewall\\dist\\index.js"
+  "@isl-lang/firewall": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\isl-firewall\\dist\\index.js",
+  "@isl-lang/shipgate-compliance": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\shipgate-compliance\\dist\\index.js"
 }

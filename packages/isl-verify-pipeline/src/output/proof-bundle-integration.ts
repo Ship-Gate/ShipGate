@@ -9,6 +9,7 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { loadProvenance } from '@isl-lang/proof';
 import type {
   PipelineResult,
   EvaluationTable,
@@ -24,6 +25,8 @@ import { generateEvaluationTable, formatTableAsHTML, formatTableAsJSON } from '.
 export interface ProofBundleIntegrationConfig {
   /** Proof bundle directory */
   bundleDir: string;
+  /** Project root (for provenance sidecar; default: cwd) */
+  projectRoot?: string;
   /** Domain name */
   domain: string;
   /** Spec version */
@@ -188,21 +191,27 @@ export function generateVerificationResult(
 }
 
 /**
- * Update existing proof bundle manifest with verification results
+ * Update existing proof bundle manifest with verification results.
+ * Optionally includes AI provenance from env vars or .shipgate/provenance.json.
  */
 export async function updateManifest(
   bundleDir: string,
-  result: PipelineResult
+  result: PipelineResult,
+  options?: { projectRoot?: string }
 ): Promise<void> {
   const manifestPath = path.join(bundleDir, 'manifest.json');
-  
+  const projectRoot = options?.projectRoot ?? process.cwd();
+
+  // Load provenance (optional; never blocks)
+  const provenance = await loadProvenance(projectRoot);
+
   try {
     const content = await fs.readFile(manifestPath, 'utf-8');
     const manifest = JSON.parse(content);
-    
+
     // Update verification fields
     manifest.postconditionVerification = generateVerificationResult(result);
-    
+
     // Update verdict if needed
     if (result.verdict === 'FAILED' && manifest.verdict !== 'VIOLATED') {
       manifest.verdict = 'VIOLATED';
@@ -211,16 +220,21 @@ export async function updateManifest(
       manifest.verdict = 'INCOMPLETE_PROOF';
       manifest.verdictReason = 'Some conditions could not be verified';
     }
-    
+
     // Add verification timestamp
     manifest.verificationTimestamp = new Date().toISOString();
-    
+
+    // Add provenance when present
+    if (provenance) {
+      manifest.provenance = provenance;
+    }
+
     // Write updated manifest
     await fs.writeFile(manifestPath, JSON.stringify(manifest, null, 2));
-  } catch (error) {
+  } catch {
     // Manifest doesn't exist or can't be read - create new one
     const verification = generateVerificationResult(result);
-    const newManifest = {
+    const newManifest: Record<string, unknown> = {
       schemaVersion: '2.0.0',
       bundleId: result.runId,
       generatedAt: new Date().toISOString(),
@@ -230,6 +244,9 @@ export async function updateManifest(
       postconditionVerification: verification,
       verificationTimestamp: new Date().toISOString(),
     };
+    if (provenance) {
+      newManifest.provenance = provenance;
+    }
     await fs.writeFile(manifestPath, JSON.stringify(newManifest, null, 2));
   }
 }

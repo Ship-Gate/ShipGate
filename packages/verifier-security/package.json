@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/verifier-security",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Security verifier - verify cryptographic invariants like session token entropy",
   "type": "module",
   "main": "./dist/index.js",

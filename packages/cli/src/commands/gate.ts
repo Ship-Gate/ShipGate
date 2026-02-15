@@ -13,14 +13,29 @@ import { readFile, stat } from 'fs/promises';
 import { existsSync } from 'fs';
 import { resolve, join } from 'path';
 import chalk from 'chalk';
+import { createHash } from 'crypto';
 import { withSpan, ISL_ATTR } from '@isl-lang/observability';
 import { checkPolicyAgainstGate } from './policy-check.js';
+import {
+  createProofBundleGateWithHash,
+  writeProofBundleGate,
+  formatProofBundleGateMarkdown,
+  mapClauseStatusToResultStatus,
+  mapSeverity,
+  type ProofBundleGateResult,
+} from '@isl-lang/proof';
 
 // Types
 export interface GateOptions {
   impl: string;
   threshold?: number;
   output?: string;
+  /** Path for proof bundle (e.g. .shipgate/proof.json). Writes versioned, deterministic proof artifact. */
+  proofOutput?: string;
+  /** Format for proof bundle: json or md */
+  proofFormat?: 'json' | 'md';
+  /** Tool version for proof bundle (default from package) */
+  toolVersion?: string;
   ci?: boolean;
   verbose?: boolean;
   format?: 'pretty' | 'json' | 'quiet';
@@ -64,6 +79,75 @@ export interface GateResult {
   };
   error?: string;
   suggestion?: string;
+}
+
+/**
+ * Build and write proof bundle from gate result
+ */
+async function writeProofBundleFromGateResult(
+  result: GateResult,
+  opts: { outputPath: string; format: 'json' | 'md'; toolVersion: string }
+): Promise<void> {
+  const { writeFile, mkdir } = await import('fs/promises');
+  const { dirname } = await import('path');
+
+  const results: ProofBundleGateResult[] = [];
+
+  if (result.results?.clauses) {
+    for (const c of result.results.clauses) {
+      const category = c.type?.split('/')[0] ?? c.id?.split('-')[0] ?? 'gate';
+      results.push({
+        category,
+        checkId: c.id ?? `${category}-${c.type ?? 'unknown'}`,
+        severity: mapSeverity('medium'),
+        status: mapClauseStatusToResultStatus(c.status),
+        evidenceRefs: c.error ? [c.error] : undefined,
+      });
+    }
+  }
+  if (result.results?.blockers) {
+    for (const b of result.results.blockers) {
+      const category = b.clause?.split('/')[0] ?? 'policy';
+      results.push({
+        category,
+        checkId: b.clause ?? 'blocker',
+        severity: mapSeverity(b.severity),
+        status: 'fail',
+        evidenceRefs: [b.reason],
+      });
+    }
+  }
+
+  const configDigest = result.manifest
+    ? createHash('sha256')
+        .update(
+          `${result.manifest.fingerprint}:${result.manifest.specHash}:${result.manifest.implHash}`
+        )
+        .digest('hex')
+    : createHash('sha256').update(JSON.stringify(result.results ?? {})).digest('hex');
+
+  const raw = createProofBundleGateWithHash({
+    toolVersion: opts.toolVersion,
+    timestamp: result.manifest?.timestamp ?? new Date().toISOString(),
+    configDigest,
+    results,
+    verdict: result.decision,
+    score: result.trustScore,
+  });
+
+  const ext = opts.format === 'md' ? '.md' : '.json';
+  const outPath = opts.outputPath.endsWith('.json') || opts.outputPath.endsWith('.md')
+    ? opts.outputPath
+    : opts.outputPath + ext;
+
+  await mkdir(dirname(outPath), { recursive: true });
+
+  if (opts.format === 'md') {
+    const md = formatProofBundleGateMarkdown(raw);
+    await writeFile(outPath, md, 'utf-8');
+  } else {
+    await writeProofBundleGate(outPath, raw);
+  }
 }
 
 /**
@@ -190,6 +274,15 @@ export async function gate(specPath: string, options: GateOptions): Promise<Gate
       gateSpan.setAttribute(ISL_ATTR.EXIT_CODE, result.exitCode);
       if (result.error) {
         gateSpan.setAttribute(ISL_ATTR.ERROR_TYPE, result.error);
+      }
+
+      // Write proof bundle if requested
+      if (options.proofOutput) {
+        await writeProofBundleFromGateResult(result, {
+          outputPath: resolve(options.proofOutput),
+          format: options.proofFormat ?? 'json',
+          toolVersion: options.toolVersion ?? '2.0.0',
+        });
       }
       
       return result;

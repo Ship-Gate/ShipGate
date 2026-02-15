@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/stdlib-messaging",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ISL Standard Library - Messaging (queues, events, pub/sub)",
   "type": "module",
   "main": "./dist/index.js",

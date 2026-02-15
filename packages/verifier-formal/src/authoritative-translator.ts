@@ -3,7 +3,7 @@
 // Produces authoritative verdicts with proper degradation
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 import { encodeSorts, typeDefToSmt } from './encoding/types';
 import { encodeExpression } from './encoding/expressions';
 import { AuthoritativeSolver, AuthoritativeSolverOptions, SolverResult } from './authoritative-solver';

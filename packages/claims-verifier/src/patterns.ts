@@ -21,7 +21,7 @@ export const DEFAULT_CLAIM_PATTERNS: ClaimPattern[] = [
   // Count claims: "25 rules", "100+ features", "over 50 tests"
   {
     name: 'count',
-    pattern: /(?:over |more than |up to |approximately |about |around )?(\d+)(?:\+)?\s+(rules?|features?|tests?|users?|customers?|downloads?|integrations?|languages?|frameworks?)/gi,
+    pattern: /(?:over |more than |up to |approximately |about |around )?(\d+)(?:\+)?\s+(?:[a-zA-Z][\w-]*\s+)*?(rules?|features?|tests?|users?|customers?|downloads?|integrations?|languages?|frameworks?)/gi,
     valueGroup: 1,
     unitGroup: 2,
     requiresVerification: true,

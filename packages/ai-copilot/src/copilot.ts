@@ -1,6 +1,7 @@
 /**
  * AI Copilot - Main orchestrator for ISL AI assistance
  */
+import { getISLGrammarPrompt } from './grammar-prompt.js';
 import type {
   CopilotConfig,
   ConversationContext,
@@ -224,15 +225,24 @@ export class ISLCopilot {
 
   // Prompt builders
   private buildNLToISLPrompt(request: NLToISLRequest): string {
-    let prompt = `Convert the following natural language description into a valid ISL specification:
+    let prompt = `You are an ISL (Intent Specification Language) expert. Convert the following natural language description into a valid ISL specification.
+
+${getISLGrammarPrompt()}
+
+---
+
+Now convert the following natural language description into a valid ISL specification:
 
 "${request.naturalLanguage}"
 
-Requirements:
-- Generate complete, valid ISL syntax
-- Include appropriate entities, behaviors, types, and invariants
-- Add meaningful preconditions and postconditions
-- Define clear error types`;
+Additional requirements:
+- Generate a COMPLETE specification using ALL relevant constructs above
+- Include entities with fields, types, annotations, and invariants
+- Include behaviors with input, output, errors, preconditions, postconditions
+- Include API endpoints matching the behaviors
+- Include storage definitions
+- Include config block with environment variables
+- Include at least one scenario`;
 
     if (request.domainHint) {
       prompt += `\n- Domain context: ${request.domainHint}`;
@@ -248,6 +258,8 @@ Requirements:
         prompt += `\n\nInput: "${example.input}"\nOutput:\n\`\`\`isl\n${example.output}\n\`\`\``;
       }
     }
+
+    prompt += '\n\nReturn ONLY the ISL spec inside a ```isl code fence.';
 
     return prompt;
   }
@@ -271,7 +283,13 @@ ${request.options?.includeValidation ? '- Include input validation' : ''}
   }
 
   private buildCodeToISLPrompt(request: CodeToISLRequest): string {
-    return `Analyze the following ${request.language} code and generate an ISL specification that captures its intent, behaviors, and contracts:
+    return `Analyze the following ${request.language} code and generate an ISL specification that captures its intent, behaviors, and contracts.
+
+${getISLGrammarPrompt()}
+
+---
+
+Source code:
 
 \`\`\`${request.language}
 ${request.code}

@@ -148,6 +148,9 @@ declare class ISLCompletionProvider {
     private getEntityCompletions;
     private getBehaviorCompletions;
     private getMemberCompletions;
+    private getCrudBehaviorCompletions;
+    private getEntityNameCompletions;
+    private getConstraintCompletions;
     private getAnnotationCompletions;
 }
 
@@ -272,6 +275,7 @@ declare class ISLSemanticLinter {
      * Lint a domain and return all diagnostics
      */
     lint(domain: Domain$1, filePath: string): ISLDiagnostic[];
+    private lintDuplicateEntities;
     private lintBehaviors;
     private lintEntities;
     private lintTypes;

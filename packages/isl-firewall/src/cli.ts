@@ -2,7 +2,7 @@
 /**
  * ISL Firewall CLI
  * 
- * Unified gate command for ShipGate + ISL Studio integration.
+ * Unified gate command for ShipGate integrated firewall.
  * 
  * Usage:
  *   npx @isl-lang/firewall gate [file]     # Check a file
@@ -140,7 +140,7 @@ async function runGate(args: string[]) {
     // Text output
     console.log();
     console.log(`┌${'─'.repeat(50)}┐`);
-    console.log(`│ ShipGate + ISL Studio Gate${' '.repeat(21)}│`);
+    console.log(`│ ShipGate Gate${' '.repeat(34)}│`);
     console.log(`├${'─'.repeat(50)}┤`);
     console.log(`│ Verdict: ${verdict === 'SHIP' ? '✓ SHIP' : '✗ NO_SHIP'}${' '.repeat(verdict === 'SHIP' ? 32 : 30)}│`);
     console.log(`│ Score:   ${score}/100${' '.repeat(36)}│`);
@@ -221,7 +221,7 @@ function showStatus() {
   const status = firewall.getStatus();
 
   console.log();
-  console.log('ShipGate + ISL Studio Firewall Status');
+  console.log('ShipGate Firewall Status');
   console.log('─'.repeat(40));
   console.log(`Mode: ${status.mode}`);
   console.log();
@@ -230,8 +230,8 @@ function showStatus() {
     console.log(`  • ${p}`);
   }
   console.log();
-  console.log('ISL Studio Rules:');
-  for (const r of status.islStudioRules) {
+  console.log('ShipGate Rules:');
+  for (const r of status.shipgateRules) {
     console.log(`  • ${r}`);
   }
   console.log();
@@ -239,7 +239,7 @@ function showStatus() {
 
 function showHelp() {
   console.log(`
-ShipGate + ISL Studio Firewall CLI
+ShipGate Firewall CLI
 
 Usage:
   firewall gate [files...]      Check files for violations
@@ -258,8 +258,8 @@ Examples:
   firewall gate --ci            Run in CI with JSON output
   firewall status               Show active rules
 
-ShipGate validates against truthpack (routes, env, contracts).
-ISL Studio enforces policy packs (auth, pii, payments, rate-limit, intent).
+ShipGate validates against truthpack (routes, env, contracts)
+and enforces policy packs (auth, pii, payments, rate-limit, intent).
 
 Combined verdict: SHIP (safe to merge) or NO_SHIP (blocked).
 `);
@@ -283,9 +283,9 @@ function generateSARIF(results: Array<{ file: string; result: IntegratedGateResu
     runs: [{
       tool: {
         driver: {
-          name: 'ShipGate + ISL Studio',
+          name: 'ShipGate',
           version: '0.1.0',
-          informationUri: 'https://islstudio.dev',
+          informationUri: 'https://shipgate.dev',
           rules: [
             { id: 'auth/bypass-detected', shortDescription: { text: 'Auth bypass pattern detected' } },
             { id: 'auth/hardcoded-credentials', shortDescription: { text: 'Hardcoded credentials' } },

@@ -331,13 +331,13 @@ export interface SemanticViolation {
 
 ```bash
 # Run all semantic rules (gate)
-islstudio gate ./src --policy intent-pack
+shipgate gate ./src --policy intent-pack
 
 # Run specific rules
-islstudio gate ./src --rules intent/audit-required,intent/rate-limit-required
+shipgate gate ./src --rules intent/audit-required,intent/rate-limit-required
 
 # Verbose output
-islstudio gate ./src -v
+shipgate gate ./src -v
 ```
 
 ### Via API

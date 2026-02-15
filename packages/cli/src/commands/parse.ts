@@ -9,7 +9,7 @@ import { readFile, access } from 'fs/promises';
 import { resolve, relative } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
-import { parse as parseISL, type Domain as DomainDeclaration } from '@isl-lang/parser';
+import { parse as parseISL, parseFuzzy, type Domain as DomainDeclaration } from '@isl-lang/parser';
 import { output, type DiagnosticError } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
 import { findSimilarFiles, formatCodeSnippet } from '../utils.js';
@@ -24,6 +24,8 @@ export interface ParseOptions {
   verbose?: boolean;
   /** Output format */
   format?: 'pretty' | 'json' | 'quiet';
+  /** Use fuzzy parser mode (normalizes AI-generated patterns, error recovery) */
+  fuzzy?: boolean;
 }
 
 export interface ParseResult {
@@ -192,15 +194,43 @@ export async function parse(file: string, options: ParseOptions = {}): Promise<P
     
     try {
       const source = await readFile(filePath, 'utf-8');
-      spinner && (spinner.text = 'Parsing...');
-      
-      const { domain: ast, errors: parseErrors } = parseISL(source, filePath);
-      
-      // Convert parse errors to diagnostics
+      spinner && (spinner.text = options.fuzzy ? 'Parsing (fuzzy mode)...' : 'Parsing...');
+
+      let ast: DomainDeclaration | null = null;
+      let parseErrors: Array<{ message: string; location?: { line: number; column: number } }> = [];
+
+      if (options.fuzzy) {
+        const fuzzyResult = parseFuzzy(source, filePath);
+        ast = fuzzyResult.ast;
+        parseErrors = fuzzyResult.errors;
+        for (const p of fuzzyResult.partialNodes) {
+          parseErrors.push({
+            message: `[partial ${p.blockKind ?? 'block'}] ${p.error.message}`,
+            location: p.error.location,
+          });
+        }
+        if (fuzzyResult.warnings.length > 0 && options.format !== 'quiet') {
+          for (const w of fuzzyResult.warnings) {
+            errors.push({
+              file: filePath,
+              line: w.location.line,
+              column: w.location.column,
+              message: `[fuzzy] ${w.message}`,
+              severity: 'warning',
+            });
+          }
+        }
+      } else {
+        const result = parseISL(source, filePath);
+        ast = result.domain ?? null;
+        parseErrors = result.errors;
+      }
+
       for (const error of parseErrors) {
-        const line = 'span' in error ? error.span.start.line : error.line;
-        const column = 'span' in error ? error.span.start.column : error.column;
-        
+        const loc = 'location' in error ? error.location : undefined;
+        const line = loc?.line ?? (error as { line?: number }).line ?? 1;
+        const column = loc?.column ?? (error as { column?: number }).column ?? 1;
+
         errors.push({
           file: filePath,
           line,

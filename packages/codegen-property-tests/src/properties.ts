@@ -3,7 +3,7 @@
 // Converts ISL invariants and postconditions to property tests
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast.js';
+import type * as AST from '@isl-lang/parser';
 import type { PropertyDefinition } from './types.js';
 
 /**

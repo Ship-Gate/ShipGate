@@ -485,6 +485,8 @@ function extractConstraintValue(expr: AST.Expression): unknown {
       return expr.value;
     case 'BooleanLiteral':
       return expr.value;
+    case 'Identifier':
+      return expr.name;
     case 'RegexLiteral':
       return new RegExp(expr.pattern, expr.flags);
     default:
@@ -650,7 +652,7 @@ function generateBoundaryInputs(
           seed,
           constraints: constraintSummaries,
           generatedAt: new Date().toISOString(),
-          strategy: `boundary_${boundary.name}`,
+          strategy: `boundary_${field.name.name}_${boundary.name}`,
         },
         expectedOutcome: {
           type: 'success',
@@ -672,11 +674,11 @@ interface BoundaryValue {
 function generateBoundaryValuesForField(
   type: AST.TypeDefinition,
   constraints: TypeConstraints,
-  _domain: AST.Domain
+  domain: AST.Domain
 ): BoundaryValue[] {
   const values: BoundaryValue[] = [];
 
-  const baseType = getBaseTypeName(type);
+  const baseType = getBaseTypeName(type, domain);
 
   switch (baseType) {
     case 'Int':
@@ -775,7 +777,7 @@ function generateInvalidInputs(
     if (field.optional) continue;
 
     const constraints = constraintMap.get(field.name.name) || {};
-    const invalidValues = generateInvalidValuesForField(field.type, constraints);
+    const invalidValues = generateInvalidValuesForField(field.type, constraints, domain);
 
     for (const invalid of invalidValues) {
       const values: Record<string, unknown> = {};
@@ -862,10 +864,11 @@ interface InvalidValue {
 
 function generateInvalidValuesForField(
   type: AST.TypeDefinition,
-  constraints: TypeConstraints
+  constraints: TypeConstraints,
+  domain?: AST.Domain
 ): InvalidValue[] {
   const values: InvalidValue[] = [];
-  const baseType = getBaseTypeName(type);
+  const baseType = getBaseTypeName(type, domain);
 
   switch (baseType) {
     case 'Int':
@@ -904,9 +907,9 @@ function generateInvalidValuesForField(
 
       if (baseType === 'Decimal') {
         values.push({
-          name: 'nan_value',
-          value: NaN,
-          description: 'NaN value',
+          name: 'invalid_decimal',
+          value: -999999.99,
+          description: 'extremely out-of-range decimal',
           reason: 'invalid_number',
         });
       }
@@ -1094,7 +1097,7 @@ function generatePreconditionViolation(
   }
 
   // Then, analyze the precondition and create a violating value
-  const violation = analyzeAndViolate(precondition, values, inputSpec);
+  const violation = analyzeAndViolate(precondition, values, inputSpec, domain);
 
   if (violation) {
     return { values: violation.values, strategy: violation.strategy };
@@ -1106,7 +1109,8 @@ function generatePreconditionViolation(
 function analyzeAndViolate(
   expr: AST.Expression,
   baseValues: Record<string, unknown>,
-  inputSpec: AST.InputSpec
+  inputSpec: AST.InputSpec,
+  domain?: AST.Domain
 ): ViolationResult | null {
   switch (expr.kind) {
     case 'BinaryExpr': {
@@ -1143,7 +1147,7 @@ function analyzeAndViolate(
       // Create an invalid value for the field
       const field = inputSpec.fields.find(f => f.name.name === fieldName);
       if (field) {
-        values[fieldName] = createInvalidValue(field.type);
+        values[fieldName] = createInvalidValue(field.type, domain);
       }
 
       return {
@@ -1158,7 +1162,7 @@ function analyzeAndViolate(
       const values = { ...baseValues };
       const field = inputSpec.fields.find(f => f.name.name === fieldName);
       if (field) {
-        values[fieldName] = createInvalidValue(field.type);
+        values[fieldName] = createInvalidValue(field.type, domain);
       }
 
       return {
@@ -1267,8 +1271,8 @@ function createViolatingValue(
   return undefined;
 }
 
-function createInvalidValue(type: AST.TypeDefinition): unknown {
-  const baseType = getBaseTypeName(type);
+function createInvalidValue(type: AST.TypeDefinition, domain?: AST.Domain): unknown {
+  const baseType = getBaseTypeName(type, domain);
 
   switch (baseType) {
     case 'String':
@@ -1298,7 +1302,7 @@ function generateTypicalValue(
   domain: AST.Domain,
   rng: SeededRandom
 ): unknown {
-  const baseType = getBaseTypeName(type);
+  const baseType = getBaseTypeName(type, domain);
 
   switch (baseType) {
     case 'String':
@@ -1370,7 +1374,7 @@ function generateRandomValidValue(
   domain: AST.Domain,
   rng: SeededRandom
 ): unknown {
-  const baseType = getBaseTypeName(type);
+  const baseType = getBaseTypeName(type, domain);
 
   switch (baseType) {
     case 'String':
@@ -1702,16 +1706,25 @@ function generateDeterministicUUID(rng: SeededRandom): string {
   return uuid;
 }
 
-function getBaseTypeName(type: AST.TypeDefinition): string {
+function getBaseTypeName(type: AST.TypeDefinition, domain?: AST.Domain): string {
   switch (type.kind) {
     case 'PrimitiveType':
       return type.name;
     case 'ConstrainedType':
-      return getBaseTypeName(type.base);
-    case 'ReferenceType':
+      return getBaseTypeName(type.base, domain);
+    case 'ReferenceType': {
+      // Resolve through domain type definitions to find the underlying primitive
+      if (domain) {
+        const refName = type.name.parts.map(p => p.name).join('.');
+        const typeDef = domain.types.find(t => t.name.name === refName);
+        if (typeDef) {
+          return getBaseTypeName(typeDef.definition, domain);
+        }
+      }
       return type.name.parts.map(p => p.name).join('.');
+    }
     case 'OptionalType':
-      return getBaseTypeName(type.inner);
+      return getBaseTypeName(type.inner, domain);
     default:
       return type.kind;
   }
@@ -1740,7 +1753,7 @@ function buildConstraintSummaries(
 
     summaries.push({
       field: field.name.name,
-      type: getBaseTypeName(field.type),
+      type: getBaseTypeName(field.type, undefined),
       constraints: constraintStrs,
     });
   }

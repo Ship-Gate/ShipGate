@@ -31,7 +31,7 @@ export function parseInputs(): ActionInputs {
   inputs.threshold = threshold;
 
   // Config path
-  inputs.configPath = process.env.INPUT_CONFIG_PATH || '.islstudio/config.json';
+  inputs.configPath = process.env.INPUT_CONFIG_PATH || '.shipgate/config.json';
 
   // Fail on
   const failOn = process.env.INPUT_FAIL_ON?.toLowerCase();

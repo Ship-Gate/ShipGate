@@ -28,12 +28,12 @@ The VS Code extension has been transformed into a comprehensive control surface 
 - Auto-refresh every 30 seconds
 
 **Commands Added:**
-- `islstudio.runGate` - Run gate on all files
-- `islstudio.runGateChangedOnly` - Run gate on changed files only
-- `islstudio.healUntilShip` - Heal until SHIP
-- `islstudio.setIntentBlocks` - Scan and display intent blocks
-- `islstudio.viewProofBundle` - View proof bundle
-- `islstudio.refreshSidebar` - Manual refresh
+- `shipgate.runGate` - Run gate on all files
+- `shipgate.runGateChangedOnly` - Run gate on changed files only
+- `shipgate.healUntilShip` - Heal until SHIP
+- `shipgate.setIntentBlocks` - Scan and display intent blocks
+- `shipgate.viewProofBundle` - View proof bundle
+- `shipgate.refreshSidebar` - Manual refresh
 
 ### ✅ 2. Diagnostics Provider Wired to Gate Results
 
@@ -124,7 +124,7 @@ src/
 ### ISL Pipeline Integration
 
 The extension integrates with ISL pipeline via:
-- CLI commands (`islstudio gate`, `islstudio heal`)
+- CLI commands (`shipgate gate`, `shipgate heal`)
 - JSON output parsing
 - Proof bundle file system access
 - ISL spec file discovery
@@ -150,10 +150,10 @@ The extension integrates with ISL pipeline via:
 ### Settings
 
 All settings are in `package.json` contributes.configuration:
-- `islstudio.enable`
-- `islstudio.runOnSave`
-- `islstudio.runOnOpen`
-- `islstudio.changedOnlyByDefault`
+- `shipgate.enable`
+- `shipgate.runOnSave`
+- `shipgate.runOnOpen`
+- `shipgate.changedOnlyByDefault`
 
 ## Testing Checklist
 
@@ -173,7 +173,7 @@ Before publishing, test:
 
 1. **Build and Test:**
    ```bash
-   cd packages/vscode-islstudio
+   cd packages/vscode-islstudio  # or packages/vscode
    npm install
    npm run build
    ```
@@ -198,8 +198,8 @@ Before publishing, test:
 
 1. **Heal Integration:** Currently shows placeholder - needs full ISL pipeline integration
 2. **Intent Parsing:** Basic regex-based parser - may need AST parsing for complex specs
-3. **Proof Bundles:** Requires `.islstudio/proofs/` directory structure
-4. **CLI Dependency:** Requires `islstudio` CLI to be installed or available via npx
+3. **Proof Bundles:** Requires `.shipgate/proofs/` directory structure
+4. **CLI Dependency:** Requires `shipgate` CLI to be installed or available via npx
 
 ## Future Enhancements
 

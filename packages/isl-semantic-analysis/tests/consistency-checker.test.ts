@@ -76,7 +76,9 @@ behavior Calculate {
     value: Decimal
   }
   output {
-    success: { total: Decimal }
+    success: {
+      total: Decimal
+    }
   }
   
   preconditions {
@@ -116,10 +118,13 @@ behavior Transfer {
     amount: Decimal
   }
   output {
-    success: { transferred: Decimal, fee: Decimal }
+    success: {
+      transferred: Decimal
+      fee: Decimal
+    }
   }
   
-  postconditions on success {
+  post success {
     result.ammount > 0
   }
 }
@@ -136,10 +141,13 @@ behavior CreateUser {
     name: String
   }
   output {
-    success: { id: UUID, created: Boolean }
+    success: {
+      id: UUID
+      created: Boolean
+    }
   }
   
-  postconditions on success {
+  post success {
     result.userId != null and result.wasCreated == true
   }
 }
@@ -156,7 +164,7 @@ entity Account {
   balance: Decimal
 }
 
-invariant "balance check" global {
+invariants BalanceChecks {
   undefinedEntity.balance >= 0
 }
 `;
@@ -200,20 +208,22 @@ behavior Deposit {
     amount: Decimal
   }
   output {
-    success: { newBalance: Decimal }
+    success: {
+      newBalance: Decimal
+    }
   }
   
   preconditions {
     input.amount > 0 and input.amount <= 10000
   }
   
-  postconditions on success {
+  post success {
     result.newBalance >= input.amount
   }
 }
 
-invariant "positive balances" global {
-  all a in Account: a.balance >= 0
+invariants PositiveBalances {
+  all a in Account (a.balance >= 0)
 }
 `;
 

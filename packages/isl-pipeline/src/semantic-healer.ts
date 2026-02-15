@@ -482,7 +482,7 @@ async function hashPassword(password: string): Promise<string> {
 // ============================================================================
 
 const WEAKENING_PATTERNS = [
-  { pattern: /islstudio-ignore/i, reason: 'Automatic suppression' },
+  { pattern: /shipgate-ignore/i, reason: 'Automatic suppression (legacy)' },
   { pattern: /shipgate-ignore/i, reason: 'Automatic suppression' },
   { pattern: /@ts-ignore/i, reason: 'TypeScript ignore' },
   { pattern: /eslint-disable/i, reason: 'ESLint disable' },

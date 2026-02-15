@@ -1,6 +1,7 @@
 {
   "name": "@isl-lang/stdlib-saas",
-  "version": "1.0.0",
+  "private": true,
+  "version": "2.0.0",
   "description": "ISL Standard Library for SaaS applications - complete starter with auth, billing, dashboard",
   "type": "module",
   "main": "./dist/index.js",

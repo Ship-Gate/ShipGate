@@ -312,8 +312,8 @@ describe('Behavior → Test Case List', () => {
       .map(f => f.path)
       .sort();
     
-    expect(testFiles1).toEqual(['BehaviorA.test.ts', 'BehaviorB.test.ts', 'BehaviorC.test.ts']);
-    expect(testFiles2).toEqual(['BehaviorA.test.ts', 'BehaviorB.test.ts', 'BehaviorC.test.ts']);
+    expect(testFiles1).toEqual(['./BehaviorA.test.ts', './BehaviorB.test.ts', './BehaviorC.test.ts']);
+    expect(testFiles2).toEqual(['./BehaviorA.test.ts', './BehaviorB.test.ts', './BehaviorC.test.ts']);
   });
 
   it('should include property-based test stubs', () => {

@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/static-analyzer",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "ISL static analyzer: tri-state logic (true/false/unknown) for postconditions and invariants without execution. Proves/disproves ISL conditions at compile time via type-constraint propagation.",
   "author": "ISL Team",
   "license": "MIT",

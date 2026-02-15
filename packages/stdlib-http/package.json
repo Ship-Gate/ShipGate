@@ -1,5 +1,6 @@
 {
   "name": "@isl-lang/stdlib-http",
+  "private": true,
   "version": "0.1.0",
   "description": "HTTP/REST standard library for ISL",
   "type": "module",

@@ -12,7 +12,7 @@
 
 import { writeFile, mkdir, access, readFile, readdir, stat } from 'fs/promises';
 import { existsSync } from 'fs';
-import { join, resolve, extname, dirname } from 'path';
+import { join, resolve, extname, dirname, basename } from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import { output } from '../output.js';
@@ -46,10 +46,12 @@ const LANGUAGE_EXTS: Record<string, 'typescript' | 'javascript' | 'python' | 'go
 export interface InitOptions {
   /** Project template to use */
   template?: 'minimal' | 'full' | 'api';
-  /** Target directory (defaults to project name) */
+  /** Target directory (defaults to project name or cwd when in-place) */
   directory?: string;
-  /** Force overwrite existing files */
+  /** Force overwrite existing ShipGate files */
   force?: boolean;
+  /** Skip prompts (use defaults) */
+  yes?: boolean;
   /** Skip git initialization */
   skipGit?: boolean;
   /** Include example files */
@@ -62,6 +64,8 @@ export interface InitOptions {
   ai?: boolean;
   /** API key for AI providers (or use ANTHROPIC_API_KEY env) */
   apiKey?: string;
+  /** True when initializing in current directory (no new dir to create) */
+  inPlace?: boolean;
 }
 
 export interface InitResult {
@@ -486,13 +490,13 @@ const PACKAGE_JSON_TEMPLATE = `{
   "description": "ISL project - {{name}}",
   "type": "module",
   "scripts": {
-    "check": "isl check",
-    "generate": "isl generate",
-    "generate:types": "isl generate --types",
-    "generate:tests": "isl generate --tests",
-    "generate:docs": "isl generate --docs",
-    "verify": "isl verify",
-    "build": "isl check && isl generate"
+    "check": "shipgate check",
+    "generate": "shipgate generate",
+    "generate:types": "shipgate generate --types",
+    "generate:tests": "shipgate generate --tests",
+    "generate:docs": "shipgate generate --docs",
+    "verify": "shipgate verify",
+    "build": "shipgate check && shipgate generate"
   },
   "devDependencies": {
     "@isl-lang/cli": "workspace:*",
@@ -683,17 +687,42 @@ async function generateFromPrompt(
 // Main Init Function
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** ShipGate config files that indicate an existing setup */
+const SHIPGATE_FILES = ['isl.config.json', '.shipgate.yml'];
+
+async function hasExistingShipGateFiles(dir: string): Promise<string[]> {
+  const existing: string[] = [];
+  for (const f of SHIPGATE_FILES) {
+    if (await fileExists(join(dir, f))) existing.push(f);
+  }
+  return existing;
+}
+
 /**
  * Initialize a new ISL project
+ *
+ * - No name or "." => init in current directory (or options.directory)
+ * - Name like "my-app" => create ./my-app and init inside it
+ * - Use --force to overwrite existing ShipGate files (isl.config.json, .shipgate.yml)
  */
 export async function init(name: string, options: InitOptions = {}): Promise<InitResult> {
   const spinner = ora('Initializing ISL project...').start();
   const files: string[] = [];
   const errors: string[] = [];
 
-  const projectName = toKebabCase(name);
-  const pascalName = toPascalCase(name);
-  const projectDir = resolve(options.directory ?? projectName);
+  // Resolve target directory: explicit directory wins; "." or empty => cwd; else use name as path
+  const projectDir = options.directory
+    ? resolve(options.directory)
+    : !name || name === '.'
+      ? process.cwd()
+      : resolve(name);
+
+  const projectName = toKebabCase(
+    !name || name === '.'
+      ? (basename(projectDir) || 'my-project')
+      : name,
+  );
+  const pascalName = toPascalCase(projectName);
 
   const templateVars = {
     name: projectName,
@@ -701,20 +730,70 @@ export async function init(name: string, options: InitOptions = {}): Promise<Ini
   };
 
   try {
-    // Check if directory exists
-    if (await fileExists(projectDir)) {
-      if (!options.force) {
-        spinner.fail('Directory already exists');
+    // Check for existing ShipGate files (not "directory exists")
+    const existingShipGate = await hasExistingShipGateFiles(projectDir);
+    if (existingShipGate.length > 0 && !options.force) {
+      spinner.fail('ShipGate files already exist');
+      return {
+        success: false,
+        projectPath: projectDir,
+        files: [],
+        errors: [
+          `ShipGate files already exist in this directory: ${existingShipGate.join(', ')}. Use --force to overwrite.`,
+        ],
+      };
+    }
+
+    // In-place init: projectDir is cwd — only add ShipGate config, don't overwrite package.json
+    const norm = (p: string) => resolve(p).toLowerCase().replace(/\\/g, '/');
+    const isInPlace = norm(projectDir) === norm(process.cwd());
+    if (isInPlace) {
+      // Create .shipgate/ and minimal config only; skip full project scaffold
+      try {
+        await mkdir(join(projectDir, '.shipgate'), { recursive: true });
+        const shipgateYml = join(projectDir, '.shipgate.yml');
+        if (!existsSync(shipgateYml) || options.force) {
+          const ymlContent = `# ShipGate — Generated by shipgate init
+version: 1
+
+ci:
+  fail_on: error
+  ignore:
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/.next/**"
+  specless_mode: "on"
+
+generate:
+  output: .shipgate/specs
+`;
+          await writeFile(shipgateYml, ymlContent);
+          files.push(shipgateYml);
+        }
+        spinner.succeed('ShipGate initialized in current directory');
         return {
-          success: false,
+          success: true,
           projectPath: projectDir,
-          files: [],
-          errors: [`Directory '${projectDir}' already exists. Use --force to overwrite.`],
+          files,
+          errors: [],
         };
+      } catch (inPlaceErr) {
+        const msg = inPlaceErr instanceof Error ? inPlaceErr.message : String(inPlaceErr);
+        if (msg.includes('already exists') && (msg.includes('Directory') || msg.includes('EEXIST'))) {
+          // Directory exists is fine for in-place init — treat as success
+          spinner.succeed('ShipGate initialized in current directory');
+          return {
+            success: true,
+            projectPath: projectDir,
+            files: existsSync(join(projectDir, '.shipgate.yml')) ? [join(projectDir, '.shipgate.yml')] : [],
+            errors: [],
+          };
+        }
+        throw inPlaceErr;
       }
     }
 
-    // Create project directory
+    // Create project directory only when it doesn't exist (mkdir is no-op for existing dirs)
     await mkdir(projectDir, { recursive: true });
     spinner.text = 'Creating project structure...';
 
@@ -841,11 +920,11 @@ ${projectName}/
 
 ## Commands
 
-- \`isl check\` - Validate ISL syntax and semantics
-- \`isl generate --types\` - Generate TypeScript types
-- \`isl generate --tests\` - Generate test files
-- \`isl generate --docs\` - Generate documentation
-- \`isl verify --impl <file>\` - Verify implementation
+- \`shipgate check\` - Validate ISL syntax and semantics
+- \`shipgate generate --types\` - Generate TypeScript types
+- \`shipgate generate --tests\` - Generate test files
+- \`shipgate generate --docs\` - Generate documentation
+- \`shipgate verify --impl <file>\` - Verify implementation
 
 ## Learn More
 
@@ -864,9 +943,51 @@ ${projectName}/
       errors,
     };
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const norm = (p: string) => resolve(p).toLowerCase().replace(/\\/g, '/');
+    const isInPlaceDir =
+      options.inPlace === true ||
+      norm(projectDir) === norm(process.cwd()) ||
+      msg.includes(projectDir) ||
+      msg.includes(process.cwd()) ||
+      norm(msg).includes(norm(projectDir));
+    if (msg.includes('Directory') && msg.includes('already exists') && isInPlaceDir) {
+      // In-place init: "Directory already exists" is expected — ensure config exists
+      const created: string[] = [];
+      try {
+        await mkdir(join(projectDir, '.shipgate'), { recursive: true });
+        const shipgateYml = join(projectDir, '.shipgate.yml');
+        if (!existsSync(shipgateYml) || options.force) {
+          const ymlContent = `# ShipGate — Generated by shipgate init
+version: 1
+
+ci:
+  fail_on: error
+  ignore:
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/.next/**"
+  specless_mode: "on"
+
+generate:
+  output: .shipgate/specs
+`;
+          await writeFile(shipgateYml, ymlContent);
+          created.push(shipgateYml);
+        }
+      } catch {
+        // Ignore — config may already exist
+      }
+      spinner.succeed('ShipGate initialized in current directory');
+      return {
+        success: true,
+        projectPath: projectDir,
+        files: created.length > 0 ? created : (existsSync(join(projectDir, '.shipgate.yml')) ? [join(projectDir, '.shipgate.yml')] : []),
+        errors: [],
+      };
+    }
     spinner.fail('Failed to initialize project');
-    errors.push(err instanceof Error ? err.message : String(err));
-    
+    errors.push(msg);
     return {
       success: false,
       projectPath: projectDir,
@@ -899,8 +1020,8 @@ export function printInitResult(result: InitResult): void {
     output.box('Next Steps', [
       `cd ${result.projectPath}`,
       'npm install',
-      'isl check',
-      'isl generate',
+      'shipgate check',
+      'shipgate generate',
     ], 'info');
   } else {
     console.log(chalk.red('✗') + ' Failed to initialize project');
@@ -920,6 +1041,8 @@ export interface InteractiveInitOptions {
   root?: string;
   /** Force overwrite existing files */
   force?: boolean;
+  /** Skip prompts (use defaults) */
+  yes?: boolean;
   /** Output format */
   format?: string;
 }
@@ -970,6 +1093,21 @@ export async function interactiveInit(
   let configPath: string | null = null;
   let workflowPath: string | null = null;
 
+  // Check for existing ShipGate files (require --force to overwrite)
+  const existingShipGate = await hasExistingShipGateFiles(root);
+  if (existingShipGate.length > 0 && !options.force) {
+    return {
+      success: false,
+      profile: { language: 'unknown', srcDirs: ['.'], criticalDirs: [], testPattern: '*.test.*' },
+      configPath: null,
+      workflowPath: null,
+      islFiles: [],
+      errors: [
+        `ShipGate files already exist: ${existingShipGate.join(', ')}. Use --force to overwrite.`,
+      ],
+    };
+  }
+
   // ── Banner ──────────────────────────────────────────────────────────────
   process.stderr.write('\n');
   process.stderr.write(chalk.bold.cyan('  ShipGate ISL') + chalk.gray(' — Behavioral verification for AI-generated code') + '\n');
@@ -996,17 +1134,21 @@ export async function interactiveInit(
     };
   }
 
+  const skipPrompts = options.yes ?? false;
+
   // ── Step 2: Ask project type ────────────────────────────────────────────
   const langOptions = LANGUAGE_OPTIONS.map((o) => ({
     ...o,
     hint: o.value === profile.language ? 'detected' : undefined,
   }));
 
-  const selectedLang = await select(
-    'What kind of project is this?',
-    langOptions,
-    getLanguageIndex(profile.language),
-  );
+  const selectedLang = skipPrompts
+    ? (profile.language ?? 'typescript')
+    : await select(
+        'What kind of project is this?',
+        langOptions,
+        getLanguageIndex(profile.language),
+      );
   profile.language = selectedLang as ProjectProfile['language'];
 
   // ── Step 3: Ask source directory ────────────────────────────────────────
@@ -1022,15 +1164,21 @@ export async function interactiveInit(
   }
   srcOptions.push({ label: 'Custom path...', value: '__custom__' });
 
-  let selectedSrc = await select(
-    'Where is your source code?',
-    srcOptions,
-    0,
-  );
+  let selectedSrc = skipPrompts
+    ? (profile.srcDirs[0] ?? 'src')
+    : await select(
+        'Where is your source code?',
+        srcOptions,
+        0,
+      );
 
   if (selectedSrc === '__custom__') {
-    const { input: promptInput } = await import('./init/prompts.js');
-    selectedSrc = await promptInput('Enter source directory:', 'src');
+    if (skipPrompts) {
+      selectedSrc = 'src';
+    } else {
+      const { input: promptInput } = await import('./init/prompts.js');
+      selectedSrc = await promptInput('Enter source directory:', 'src');
+    }
   }
 
   // Update profile with selected source dir
@@ -1051,11 +1199,13 @@ export async function interactiveInit(
       };
     });
 
-    const selectedCritical = await multiSelect(
-      'Which directories are most critical?',
-      criticalOptions,
-      profile.criticalDirs.filter((d) => allSubDirs.includes(d)),
-    );
+    const selectedCritical = skipPrompts
+      ? profile.criticalDirs.filter((d) => allSubDirs.includes(d))
+      : await multiSelect(
+          'Which directories are most critical?',
+          criticalOptions,
+          profile.criticalDirs.filter((d) => allSubDirs.includes(d)),
+        );
 
     profile.criticalDirs = selectedCritical;
   }
@@ -1093,16 +1243,17 @@ export async function interactiveInit(
   let genChoice: GenChoice = 'config-only';
 
   if (allPatterns.length > 0) {
-    const genAnswer = await select(
-      'Generate ISL specs for detected patterns?',
-      [
-        { label: 'Yes, generate and review', value: 'generate' },
-        { label: 'No, I\'ll write them manually', value: 'manual' },
-        { label: 'Just create .shipgate.yml for now', value: 'config-only' },
-      ],
-      0,
-    );
-    genChoice = genAnswer as GenChoice;
+    genChoice = skipPrompts
+      ? 'config-only'
+      : ((await select(
+          'Generate ISL specs for detected patterns?',
+          [
+            { label: 'Yes, generate and review', value: 'generate' },
+            { label: 'No, I\'ll write them manually', value: 'manual' },
+            { label: 'Just create .shipgate.yml for now', value: 'config-only' },
+          ],
+          0,
+        )) as GenChoice);
   }
 
   // ── Step 7: Generate files ──────────────────────────────────────────────
@@ -1178,9 +1329,24 @@ export async function interactiveInit(
 
     writeSpinner.succeed('Configuration generated');
   } catch (err) {
-    writeSpinner.fail('Failed to generate files');
     const msg = err instanceof Error ? err.message : String(err);
-    errors.push(msg);
+    if (msg.includes('Directory') && msg.includes('already exists')) {
+      // In-place init: "Directory already exists" is expected — ensure config exists
+      writeSpinner.succeed('Configuration generated');
+      if (!configPath) {
+        const shipGateYml = generateShipGateYml({
+          criticalDirs: profile.criticalDirs,
+          testPattern: profile.testPattern,
+          language: profile.language,
+        });
+        await writeFile(join(root, '.shipgate.yml'), shipGateYml, 'utf-8');
+        configPath = '.shipgate.yml';
+      }
+      // Don't push to errors — treat as success
+    } else {
+      writeSpinner.fail('Failed to generate files');
+      errors.push(msg);
+    }
   }
 
   // ── Clean up readline ───────────────────────────────────────────────────

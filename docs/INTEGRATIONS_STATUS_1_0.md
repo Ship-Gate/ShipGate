@@ -45,13 +45,13 @@
 
 ---
 
-### 1.4 Package: `@isl-lang/github-action-gate` (ISL Studio Gate)
+### 1.4 Package: `@isl-lang/github-action-gate` (Shipgate Gate)
 
 | Check | Status | Details |
 |-------|--------|--------|
-| CLI | 🔴 Different product | Uses `npx islstudio gate --ci --output json`. Targets **ISL Studio**, not the shipgate CLI. |
+| CLI | 🔴 Different product | Uses `npx shipgate gate --ci --output json`. Targets **Shipgate**, not the shipgate CLI. |
 
-**Classification:** **Not included 🔴** in Shipgate 1.0. This is an ISL Studio–specific integration.
+**Classification:** **Not included 🔴** in Shipgate 1.0. This is an legacy ISL Studio–specific integration.
 
 ---
 
@@ -91,7 +91,7 @@ Uses **`packages/verified-build`** (`run-unified-gate.mjs`), not the composite a
 | `.github/actions/isl-gate` (composite) | ✅ Supported | Use install `shipgate`; outputs/verdicts match CLI. |
 | `@isl-lang/isl-gate-action` | ✅ Supported | CLI discovery and verify JSON match shipgate 1.0. |
 | `@isl-lang/github-action` (ISL Verify) | 🔴 Not included | CLI args and output shape don’t match shipgate 1.0. |
-| `@isl-lang/github-action-gate` (ISL Studio) | 🔴 Not included | Uses islstudio, not shipgate. |
+| `@isl-lang/github-action-gate` (Shipgate legacy) | 🔴 Not included | Uses old CLI interface, not shipgate 1.0. |
 | VS Code extension (`packages/vscode`) | ✅ Supported | LSP only; no CLI. |
 | MCP server (`packages/mcp-server`) | 🟡 Experimental | Stdio handshake + tools verified; build required; experimental for 1.0. |
 

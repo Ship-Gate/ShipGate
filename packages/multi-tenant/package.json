@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/multi-tenant",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Multi-tenancy support module for ISL domains",
   "type": "module",
   "main": "./dist/index.js",

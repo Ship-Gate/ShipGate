@@ -69,7 +69,7 @@ So: **logic bugs** (e.g. “forgot to check balance”) are caught by the **spec
 
 ## How to use it so it actually stops bad code
 
-1. **Add the gate to CI** (e.g. `.github/workflows/isl-gate.yml` or use the Shipgate/ISL Studio GitHub Action). Set `mode: enforce` and `fail-on: blocker` (or `any` if you want any violation to block).
+1. **Add the gate to CI** (e.g. `.github/workflows/isl-gate.yml` or use the Shipgate GitHub Action). Set `mode: enforce` and `fail-on: blocker` (or `any` if you want any violation to block).
 2. **Optionally use an ISL spec** for critical domains (e.g. auth, payments, transfers). Write behaviors with preconditions and postconditions; the gate will generate tests and fail if the implementation doesn’t satisfy them.
 3. **Point the unified gate at changed files** (or the whole repo) so the firewall runs on the code that could go to production.
 4. **In the IDE**, use the Cursor rule + firewall so the AI doesn’t leave NO_SHIP code in place.

@@ -4,3 +4,4 @@
 
 export { ISLCodeLensProvider, registerCodeLensProvider } from './codelens';
 export { setupDiagnosticsIntegration, countIslDiagnostics } from './diagnostics';
+export { registerCodeToIslCodeAction } from './codeToIslCodeAction';

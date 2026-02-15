@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/verifier-temporal",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Temporal property verification for ISL - eventually, within, always",
   "type": "module",
   "main": "./dist/index.js",

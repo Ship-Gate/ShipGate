@@ -34,11 +34,11 @@ export class DefaultChannelAuthorizer implements ChannelAuthorizer {
   async authorize(request: AuthorizationRequest): Promise<AuthorizationResult> {
     const { action, channelId, context } = request;
 
-    // Check if user is admin
+    // Check if user is admin — use explicit permission set, not wildcard
     if (this.isAdmin(context)) {
       return {
         allowed: true,
-        permissions: ['*'], // All permissions
+        permissions: this.options.adminPermissions || ['read', 'write', 'subscribe', 'publish', 'manage'],
       };
     }
 

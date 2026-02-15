@@ -217,8 +217,14 @@ export interface ResolvedTrustConfig {
 export interface CategoryScore {
   /** The category */
   category: TrustCategory;
-  /** Raw score for this category (0-100) */
+  /** Composite score for this category (0-100) */
   score: number;
+  /** % of required checks present (0-100) */
+  coverage_score: number;
+  /** % of checks that actually executed (0-100) */
+  execution_score: number;
+  /** % passed among executed (0-100) */
+  pass_score: number;
   /** Weight applied to this category (normalized, 0-1) */
   weight: number;
   /** Weighted contribution to overall score */
@@ -232,6 +238,10 @@ export interface CategoryScore {
     partial: number;
     unknown: number;
   };
+  /** Detected gaps (missing postconditions, no error cases, etc.) */
+  gaps: string[];
+  /** Confidence 0-1 derived from inference + execution coverage */
+  confidence: number;
 }
 
 /**

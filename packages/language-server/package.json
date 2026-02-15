@@ -1,6 +1,7 @@
 {
   "name": "@isl-lang/language-server",
-  "version": "1.0.0",
+  "private": true,
+  "version": "1.0.1",
   "description": "Language Server Protocol implementation for ISL",
   "type": "module",
   "main": "./dist/index.js",

@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/build-runner",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ISL build runner - end-to-end compilation pipeline with deterministic output",
   "author": "ISL Team",
   "license": "MIT",
@@ -58,10 +58,12 @@
     "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@isl-lang/codegen-openapi": "workspace:*",
+    "@isl-lang/codegen-tests": "workspace:*",
+    "@isl-lang/frontend-generator": "workspace:^",
+    "@isl-lang/isl-compiler": "workspace:*",
     "@isl-lang/parser": "workspace:*",
     "@isl-lang/typechecker": "workspace:*",
-    "@isl-lang/isl-compiler": "workspace:*",
-    "@isl-lang/codegen-tests": "workspace:*",
     "@isl-lang/verifier-runtime": "workspace:*",
     "@isl-lang/verifier-temporal": "workspace:*"
   },

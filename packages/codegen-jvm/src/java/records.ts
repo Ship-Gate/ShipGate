@@ -6,7 +6,7 @@ import type {
   Entity,
   Field,
   TypeDefinition,
-} from '../../../../master_contracts/ast';
+} from '@isl-lang/parser';
 import type { GeneratorOptions } from '../generator';
 
 // ============================================================================

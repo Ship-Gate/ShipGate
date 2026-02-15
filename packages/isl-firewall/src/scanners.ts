@@ -3,7 +3,7 @@
  *
  * Exposes standalone scanner functions for CLI and programmatic use.
  * - Host: ShipGate truthpack validation (routes, env, imports, files)
- * - Reality-Gap: ISL Studio policy packs (auth, pii, payments, rate-limit, intent)
+ * - Reality-Gap: ShipGate policy packs (auth, pii, payments, rate-limit, intent)
  *
  * @module @isl-lang/firewall/scanners
  */
@@ -134,7 +134,7 @@ export async function runHostScan(
 }
 
 /**
- * Run Reality-Gap scanner: ISL Studio policy packs (auth, pii, payments, rate-limit, intent).
+ * Run Reality-Gap scanner: ShipGate policy packs (auth, pii, payments, rate-limit, intent).
  * Detects gaps between implementation and security/intent standards.
  */
 export async function runRealityGapScan(

@@ -34,6 +34,7 @@ export {
   applyDefaults,
   DEFAULT_SHIPGATE_CONFIG,
   DEFAULT_CI_CONFIG,
+  DEFAULT_IGNORE,
   DEFAULT_SCANNING_CONFIG,
   DEFAULT_GENERATE_CONFIG,
 } from './schema.js';
@@ -42,6 +43,10 @@ export type {
   ShipGateCIConfig,
   ShipGateScanningConfig,
   ShipGateGenerateConfig,
+  ShipGateSpecsConfig,
+  ShipGateVerifyConfig,
+  ShipGateEvidenceConfig,
+  ShipGatePolicyToggle,
   FailOnLevel,
   SpeclessMode,
 } from './schema.js';

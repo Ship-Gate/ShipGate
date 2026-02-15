@@ -102,6 +102,7 @@ export type {
 export {
   generateNextJSRoute,
   generateTests,
+  getFrameworkInstructions,
 } from './code-templates.js';
 
 export type {
@@ -130,7 +131,7 @@ export type {
   PatchPreview,
 } from './fix-recipes.js';
 
-// Framework Adapters
+// Framework Adapters (healer/patching)
 export {
   NextJSAppRouterAdapter,
   detectNextJSAppRouter,
@@ -151,6 +152,10 @@ export {
   generateHandlerPatches,
   createFixPatches,
 } from './adapters/index.js';
+
+// Codegen Framework Adapters
+export { NextJSAdapter, ExpressAdapter, FastifyAdapter } from './adapters/index.js';
+export type { CodegenFrameworkAdapter, ISLSpec, ISLEndpoint, FileMap, CodegenGeneratedFile, CodegenContext } from './adapters/index.js';
 
 export type {
   HttpMethod,

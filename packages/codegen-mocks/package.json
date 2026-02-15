@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/codegen-mocks",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generate mock API servers from ISL specifications",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -45,5 +45,9 @@
     }
   },
   "sideEffects": false,
-  "files": ["dist", "README.md", "LICENSE"]
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
 }

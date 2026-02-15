@@ -54,9 +54,9 @@ Shipgate 1.0.0 is the first stable release of **Shipgate** — stop AI from ship
 The following are **excluded from the default production build** (see `experimental.json` and `scripts/run-production.ts`). They are **not** part of the 1.0 promise:
 
 - **Experimental / quarantined packages** — Effect handlers, effect system, formal-verification, mutation-testing, fuzzer; codegen shells (Terraform, WASM, Kubernetes, edge, pipelines, migrations, mocks, loadtest, docs, db, SDK, validators, property-tests, gRPC, UI, Python-advanced, graphql-codegen, db-generator, api-generator); SDK shells (TypeScript, web, React Native, generator-sdk, runtime-sdk); platform shells (marketplace, dashboard, agent-os, ai-copilot, spec-assist, intent-translator, inference, etc.); infrastructure, observability, and integration shells.
-- **Internal / next** — Not published as part of 1.0: visual-editor, trace-viewer, playground, marketplace-web, dashboard-web, docs apps, diff-viewer, audit-viewer, vscode/vscode-islstudio (internal build), islstudio, lsp (legacy), isl-cli, isl-compiler, isl-runtime, isl-generator, isl-evidence, contracts, core, runtime, verifier (legacy).
+- **Internal / next** — Not published as part of 1.0: visual-editor, trace-viewer, playground, marketplace-web, dashboard-web, docs apps, diff-viewer, audit-viewer, vscode/vscode-shipgate (internal build), shipgate (legacy), lsp (legacy), isl-cli, isl-compiler, isl-runtime, isl-generator, isl-evidence, contracts, core, runtime, verifier (legacy).
 
-The **VS Code extension** (vscode-islstudio) may be available separately; it is maintained in-repo but is in the internal set and not part of the 1.0 core guarantee.
+The **VS Code extension** (vscode-shipgate) may be available separately; it is maintained in-repo but is in the internal set and not part of the 1.0 core guarantee.
 
 ---
 

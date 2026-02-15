@@ -23,7 +23,7 @@ import { existsSync } from 'fs';
 import { parseArgs } from 'node:util';
 
 // Gate function references (loaded in main)
-let runGate: typeof import('../../packages/islstudio/src/gate.js').runGate | undefined;
+let runGate: typeof import('../../packages/isl-gate/src/gate.js').runGate | undefined;
 let gate: typeof import('../../packages/cli/src/commands/gate.js').gate | undefined;
 
 // ============================================================================
@@ -52,7 +52,7 @@ interface FixtureMetadata {
 
 interface BenchmarkResult {
   fixture: CorpusFixture;
-  gateResult: any; // GateResult from islstudio
+  gateResult: any; // GateResult from isl-gate
   cliGateResult?: any; // CliGateResult
   verifyResult?: any; // VerifyResult
   actualVerdict: 'SHIP' | 'NO_SHIP';
@@ -210,7 +210,7 @@ async function runBenchmark(
       const specContent = await readFile(fixture.specPath, 'utf-8');
       const implContent = await readFile(fixture.implPath, 'utf-8');
       
-      // Run gate (islstudio version)
+      // Run gate (isl-gate version)
       let gateResult: GateResult;
       if (runGate) {
         gateResult = await runGate(
@@ -547,10 +547,10 @@ async function tuneThresholds(
 async function loadGateFunctions(): Promise<void> {
   // Try to load gate functions
   try {
-    const islstudioGate = await import('../../packages/islstudio/src/gate.js');
-    runGate = islstudioGate.runGate;
+    const islGate = await import('../../packages/isl-gate/src/gate.js');
+    runGate = islGate.runGate;
   } catch (error) {
-    console.warn('Warning: islstudio gate not available, using fallback');
+    console.warn('Warning: isl-gate not available, using fallback');
   }
 
   try {

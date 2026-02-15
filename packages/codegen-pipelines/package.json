@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/codegen-pipelines",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generate CI/CD pipeline configs from ISL domains",
   "type": "module",
   "main": "./dist/index.js",

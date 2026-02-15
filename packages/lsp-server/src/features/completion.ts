@@ -39,6 +39,7 @@ const ENTITY_KEYWORDS = [
 const BEHAVIOR_KEYWORDS = [
   { label: 'description', doc: 'Behavior description' },
   { label: 'actors', doc: 'Authorized actors' },
+  { label: 'endpoint', doc: 'HTTP endpoint mapping' },
   { label: 'input', doc: 'Input parameters' },
   { label: 'output', doc: 'Output specification' },
   { label: 'preconditions', doc: 'Preconditions' },
@@ -49,6 +50,49 @@ const BEHAVIOR_KEYWORDS = [
   { label: 'compliance', doc: 'Compliance requirements' },
   { label: 'observability', doc: 'Observability settings' },
 ];
+
+const ACTOR_KEYWORDS = [
+  { label: 'must', doc: 'Required capability (e.g. authenticated)' },
+  { label: 'can', doc: 'Allowed capability' },
+  { label: 'cannot', doc: 'Forbidden capability' },
+  { label: 'owns', doc: 'Resource ownership requirement' },
+];
+
+const HTTP_METHODS = [
+  { label: 'GET', doc: 'Retrieve resource', insertText: 'GET "${1:/path}"', insertTextFormat: 'snippet' as const },
+  { label: 'POST', doc: 'Create resource', insertText: 'POST "${1:/path}"', insertTextFormat: 'snippet' as const },
+  { label: 'PUT', doc: 'Replace resource', insertText: 'PUT "${1:/path}"', insertTextFormat: 'snippet' as const },
+  { label: 'PATCH', doc: 'Partial update', insertText: 'PATCH "${1:/path}"', insertTextFormat: 'snippet' as const },
+  { label: 'DELETE', doc: 'Delete resource', insertText: 'DELETE "${1:/path}"', insertTextFormat: 'snippet' as const },
+];
+
+const CRUD_VERBS = ['Create', 'Get', 'Read', 'Update', 'Delete', 'List', 'Search'];
+
+const CONSTRAINT_KEYS: Record<string, Array<{ label: string; doc: string; insertText?: string }>> = {
+  String: [
+    { label: 'min_length', doc: 'Minimum string length', insertText: 'min_length: ${1:0}' },
+    { label: 'max_length', doc: 'Maximum string length', insertText: 'max_length: ${1:255}' },
+    { label: 'format', doc: 'Format pattern (email, url, uuid)', insertText: 'format: "${1:email}"' },
+    { label: 'pattern', doc: 'Regex pattern', insertText: 'pattern: "${1:^[a-z]+$}"' },
+  ],
+  Int: [
+    { label: 'min', doc: 'Minimum value', insertText: 'min: ${1:0}' },
+    { label: 'max', doc: 'Maximum value', insertText: 'max: ${1:100}' },
+  ],
+  Decimal: [
+    { label: 'min', doc: 'Minimum value', insertText: 'min: ${1:0}' },
+    { label: 'max', doc: 'Maximum value', insertText: 'max: ${1:999999}' },
+    { label: 'precision', doc: 'Decimal precision', insertText: 'precision: ${1:2}' },
+  ],
+  default: [
+    { label: 'min', doc: 'Minimum value' },
+    { label: 'max', doc: 'Maximum value' },
+    { label: 'format', doc: 'Format constraint' },
+    { label: 'unique', doc: 'Unique constraint' },
+    { label: 'optional', doc: 'Optional field' },
+    { label: 'default', doc: 'Default value', insertText: 'default: ${1:value}' },
+  ],
+};
 
 const OUTPUT_KEYWORDS = [
   { label: 'success', doc: 'Success return type' },
@@ -301,6 +345,28 @@ export class ISLCompletionProvider {
         })));
         break;
 
+      case 'actor-block':
+        items.push(...ACTOR_KEYWORDS.map(k => ({ 
+          label: k.label, 
+          kind: 'keyword' as const, 
+          detail: k.doc 
+        })));
+        break;
+
+      case 'endpoint-block':
+        items.push(...HTTP_METHODS.map(m => ({ 
+          label: m.label, 
+          kind: 'keyword' as const, 
+          detail: m.doc,
+          insertText: m.insertText,
+          insertTextFormat: m.insertTextFormat 
+        })));
+        break;
+
+      case 'constraint-block':
+        items.push(...this.getConstraintCompletions(context));
+        break;
+
       case 'entity':
       case 'entity-field':
         items.push(...ENTITY_KEYWORDS.map(k => ({ 
@@ -308,6 +374,7 @@ export class ISLCompletionProvider {
           kind: 'keyword' as const, 
           detail: k.doc 
         })));
+        items.push(...this.getEntityNameCompletions());
         break;
 
       case 'behavior':
@@ -495,9 +562,61 @@ export class ISLCompletionProvider {
     return items;
   }
 
+  private getCrudBehaviorCompletions(): ISLCompletionInfo[] {
+    const entities = this.documentManager.getEntityNames();
+    const items: ISLCompletionInfo[] = [];
+
+    for (const verb of CRUD_VERBS) {
+      for (const entity of entities) {
+        items.push({
+          label: `${verb}${entity}`,
+          kind: 'snippet',
+          detail: `${verb} ${entity} behavior`,
+          insertText: `behavior ${verb}${entity} {\n  description: "${verb} ${entity}"\n\n  input {\n    $0\n  }\n\n  output {\n    success: ${entity}\n  }\n}`,
+          insertTextFormat: 'snippet',
+        });
+      }
+      if (entities.length === 0) {
+        items.push({
+          label: `${verb}Entity`,
+          kind: 'snippet',
+          detail: `${verb} entity behavior`,
+          insertText: `behavior ${verb}\${1:Entity} {\n  description: "${verb} \${1:Entity}"\n\n  input {\n    $0\n  }\n\n  output {\n    success: \${1:Entity}\n  }\n}`,
+          insertTextFormat: 'snippet',
+        });
+      }
+    }
+    return items;
+  }
+
+  private getEntityNameCompletions(): ISLCompletionInfo[] {
+    return this.documentManager.getEntityNames().map(name => ({
+      label: name,
+      kind: 'entity' as const,
+      detail: 'Entity name (PascalCase)',
+    }));
+  }
+
+  private getConstraintCompletions(context: { parentSymbol?: string; prefix?: string }): ISLCompletionInfo[] {
+    const fieldType = context.parentSymbol || 'default';
+    const keys = CONSTRAINT_KEYS[fieldType] || CONSTRAINT_KEYS.default;
+    return keys.map(k => ({
+      label: k.label,
+      kind: 'property' as const,
+      detail: k.doc,
+      insertText: k.insertText,
+      insertTextFormat: k.insertText ? 'snippet' as const : undefined,
+    }));
+  }
+
   private getAnnotationCompletions(): ISLCompletionInfo[] {
     return [
+      { label: 'min', kind: 'keyword', detail: 'Minimum value', insertText: 'min: ${1:N}', insertTextFormat: 'snippet' as const },
+      { label: 'max', kind: 'keyword', detail: 'Maximum value', insertText: 'max: ${1:N}', insertTextFormat: 'snippet' as const },
+      { label: 'format', kind: 'keyword', detail: 'Format (email, url, uuid)', insertText: 'format: "${1:email}"', insertTextFormat: 'snippet' as const },
       { label: 'unique', kind: 'keyword', detail: 'Field must be unique' },
+      { label: 'optional', kind: 'keyword', detail: 'Field is optional' },
+      { label: 'default', kind: 'keyword', detail: 'Default value', insertText: 'default: ${1:X}', insertTextFormat: 'snippet' as const },
       { label: 'immutable', kind: 'keyword', detail: 'Field cannot be changed' },
       { label: 'indexed', kind: 'keyword', detail: 'Field is indexed' },
       { label: 'sensitive', kind: 'keyword', detail: 'Contains sensitive data' },

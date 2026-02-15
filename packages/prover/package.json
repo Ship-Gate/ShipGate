@@ -1,5 +1,6 @@
 {
   "name": "@isl-lang/prover",
+  "private": true,
   "version": "0.1.0",
   "description": "Formal verification for ISL - SMT-based proving, property verification, and counterexample generation",
   "main": "dist/index.js",

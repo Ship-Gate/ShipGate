@@ -1,5 +1,6 @@
 {
   "name": "@isl-lang/stdlib-search",
+  "private": true,
   "version": "0.1.0",
   "description": "Full-text search, filtering, and query DSL",
   "type": "module",

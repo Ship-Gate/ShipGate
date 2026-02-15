@@ -44,12 +44,12 @@ vsce create-publisher <publisher-name>
 
 ### 4. Package Extension
 ```bash
-cd packages/vscode-islstudio
+cd packages/vscode-islstudio  # or packages/vscode
 npm run build
 vsce package
 ```
 
-This creates `vscode-islstudio-<version>.vsix`
+This creates `shipgate-isl-<version>.vsix`
 
 ### 5. Publish to Marketplace
 ```bash

@@ -35,6 +35,10 @@ export interface ShipOptions {
   stack: ShipStack;
   /** Project name override */
   projectName?: string;
+  /** Deployment platform (vercel, docker, railway, fly) */
+  deploy?: string;
+  /** Override DATABASE_URL (from --db-url) */
+  dbUrl?: string;
   /** Overwrite existing files */
   force?: boolean;
   /** Include runtime contract enforcement */
@@ -140,6 +144,7 @@ export function islTypeToPrisma(typeName: string): string {
     Timestamp: 'DateTime',
     UUID: 'String',
     Duration: 'Int',
+    Json: 'Json',
   };
   return map[typeName] ?? typeName;
 }

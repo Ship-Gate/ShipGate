@@ -117,6 +117,14 @@
         {
           "id": "islstudioSidebar",
           "name": "ISL Studio",
+          "icon": "$(shield)",
+          "when": "islstudio.enable"
+        },
+        {
+          "id": "shipgate.sidebar",
+          "name": "ShipGate",
+          "icon": "$(dashboard)",
+          "type": "webview",
           "when": "islstudio.enable"
         }
       ]

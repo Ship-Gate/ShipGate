@@ -1,11 +1,18 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import { useEffect } from 'react';
 
-const LandingContent = dynamic(() => import('@/components/landing/LandingContent'), {
-  ssr: false,
-});
+const LANDING_URL =
+  process.env.NEXT_PUBLIC_LANDING_URL || 'http://localhost:5173';
 
 export default function LandingPage() {
-  return <LandingContent />;
+  useEffect(() => {
+    window.location.href = LANDING_URL;
+  }, []);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <p className="text-muted-foreground">Redirecting to Shipgate...</p>
+    </div>
+  );
 }

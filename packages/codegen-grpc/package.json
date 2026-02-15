@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/codegen-grpc",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ISL to Protobuf/gRPC code generator - generates .proto files, buf configuration, and client/server stubs",
   "author": "mevla",
   "license": "MIT",

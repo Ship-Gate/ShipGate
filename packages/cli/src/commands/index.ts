@@ -14,7 +14,7 @@ export { check, printCheckResult, type CheckOptions, type CheckResult, type File
 
 export { generate, printGenerateResult, type GenerateOptions, type GenerateResult, type GeneratedFile } from './generate.js';
 
-export { verify, verifyWithDiscovery, printVerifyResult, getVerifyExitCode, unifiedVerify, printUnifiedVerifyResult, getUnifiedExitCode, type VerifyOptions, type VerifyResult, type EvidenceScore, type UnifiedVerifyOptions, type UnifiedVerifyResult, type FileVerifyResultEntry, type VerificationMode, type FailOnLevel, type UnifiedVerdict } from './verify.js';
+export { verify, verifyWithDiscovery, printVerifyResult, getVerifyExitCode, unifiedVerify, printUnifiedVerifyResult, getUnifiedExitCode, type VerifyOptions, type VerifyResult, type EvidenceScore, type UnifiedVerifyOptions, type UnifiedVerifyResult, type FileVerifyResultEntry, type VerificationMode, type FailOnLevel, type UnifiedVerdict, type SpecSource, type VerificationTier, type SpecCoverageReport } from './verify.js';
 
 export { init, printInitResult, interactiveInit, printInteractiveInitResult, type InitOptions, type InitResult, type InteractiveInitOptions, type InteractiveInitResult } from './init.js';
 
@@ -40,7 +40,7 @@ export { trustScore, printTrustScoreResult, printTrustScoreHistory, getTrustScor
 
 export { trustScoreExplain, printTrustScoreExplain, type TrustScoreExplainOptions, type TrustScoreExplainResult } from './trust-score-explain.js';
 
-export { heal, printHealResult, getHealExitCode, type HealOptions, type HealResult } from './heal.js';
+export { heal, aiHeal, printHealResult, getHealExitCode, type HealOptions, type HealResult } from './heal.js';
 
 export { verifyProof, printProofVerifyResult, getProofVerifyExitCode, type ProofVerifyCommandOptions, type ProofVerifyResult } from './proof.js';
 
@@ -57,6 +57,8 @@ export { chaos, printChaosResult, getChaosExitCode, type ChaosOptions, type Chao
 export { islGenerate, printIslGenerateResult, getIslGenerateExitCode, type IslGenerateOptions, type IslGenerateResult, type GeneratedFileEntry } from './isl-generate.js';
 
 export { specQuality, printSpecQualityResult, getSpecQualityExitCode, type SpecQualityCommandOptions, type SpecQualityCommandResult } from './spec-quality.js';
+
+export { securityReport, printSecurityReportResult, getSecurityReportExitCode, type SecurityReportOptions, type SecurityReportResult } from './security-report.js';
 
 export { policyCheck, printPolicyCheckResult, getPolicyCheckExitCode, policyInit, printPolicyInitResult, type PolicyCheckOptions, type PolicyCheckResult, type PolicyInitOptions, type PolicyInitResult } from './policy-team.js';
 
@@ -96,8 +98,52 @@ export { importOpenAPI, printImportOpenAPIResult, getImportOpenAPIExitCode, type
 
 export { diffOpenAPI, printDiffOpenAPIResult, getDiffOpenAPIExitCode, type DiffOpenAPIOptions, type DiffOpenAPIResult, type DiffChange } from './diff-openapi.js';
 
+export {
+  openapiGenerate,
+  openapiValidate,
+  printOpenAPIGenerateResult,
+  printOpenAPIValidateResult,
+  getOpenAPIGenerateExitCode,
+  getOpenAPIValidateExitCode,
+  type OpenAPIGenerateOptions,
+  type OpenAPIGenerateResult,
+  type OpenAPIValidateOptions,
+  type OpenAPIValidateResult,
+} from './openapi.js';
+
 export { coverage, printCoverageResult, getCoverageExitCode, type CoverageCommandOptions, type CoverageCommandResult } from './coverage.js';
+
+export {
+  complianceSOC2,
+  printComplianceSOC2Result,
+  getComplianceSOC2ExitCode,
+  type ComplianceSOC2Options,
+  type ComplianceSOC2Result,
+} from './compliance-soc2.js';
 
 export { demo, printDemoResult, getDemoExitCode, type DemoOptions, type DemoResult } from './demo.js';
 
 export { shipCommand, type ShipCommandOptions, type ShipCommandResult } from './ship.js';
+
+export {
+  provenanceInit,
+  printProvenanceInitResult,
+  type ProvenanceInitOptions,
+  type ProvenanceInitResult,
+} from './provenance.js';
+
+export { vibe, printVibeResult, getVibeExitCode, type VibeOptions, type VibeResult, type VibeGeneratedFile } from './vibe.js';
+
+export { verifyCert, printVerifyCertResult, getVerifyCertExitCode, type VerifyCertOptions, type VerifyCertResult } from './verify-cert.js';
+
+export {
+  seedGenerate,
+  seedRun,
+  seedReset,
+  printSeedGenerateResult,
+  printSeedRunResult,
+  printSeedResetResult,
+  getSeedGenerateExitCode,
+  getSeedRunExitCode,
+  getSeedResetExitCode,
+} from './seed.js';

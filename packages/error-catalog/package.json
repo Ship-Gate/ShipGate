@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/error-catalog",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Error catalog generator from ISL error definitions",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

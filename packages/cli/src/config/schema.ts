@@ -46,6 +46,46 @@ export interface ShipGateGenerateConfig {
   minConfidence?: number;
 }
 
+/**
+ * Guardrails configuration — overrides strict defaults for AI safety.
+ * Every override leaves a paper trail in CLI output and proof bundle metadata.
+ */
+export interface ShipGateGuardrailsConfig {
+  /** Allow auto-generated specs to reach SHIP (default: false) */
+  allowAutoSpecShip?: boolean;
+  /** Allow shipping when no tests were executed (default: false) */
+  allowNoTestExecution?: boolean;
+  /** Allow empty verification categories without penalty (default: false) */
+  allowEmptyCategories?: boolean;
+  /** Allow AI-generated rules without evidence (default: false) */
+  allowUnvalidatedAiRules?: boolean;
+}
+
+/** Spec discovery configuration (demo/ISL verified schema) */
+export interface ShipGateSpecsConfig {
+  /** Glob patterns for ISL spec files to include */
+  include?: string[];
+}
+
+/** Policy toggle (demo schema: verify.policies.*) */
+export interface ShipGatePolicyToggle {
+  enabled?: boolean;
+}
+
+/** Verification configuration (demo/ISL verified schema) */
+export interface ShipGateVerifyConfig {
+  /** Strict mode: fail on any verification failure */
+  strict?: boolean;
+  /** Policy toggles by name (e.g. auth, rate-limit, pii) */
+  policies?: Record<string, ShipGatePolicyToggle>;
+}
+
+/** Evidence output configuration (demo schema) */
+export interface ShipGateEvidenceConfig {
+  /** Output directory for evidence artifacts */
+  output_dir?: string;
+}
+
 /** Root ShipGate configuration */
 export interface ShipGateConfig {
   /** Config schema version (must be 1) */
@@ -56,17 +96,81 @@ export interface ShipGateConfig {
   scanning?: ShipGateScanningConfig;
   /** Generation configuration */
   generate?: ShipGateGenerateConfig;
+  /** AI safety guardrails overrides (strict by default) */
+  guardrails?: ShipGateGuardrailsConfig;
+  /** Spec discovery (demo schema: specs.include) */
+  specs?: ShipGateSpecsConfig;
+  /** Verification options (demo schema: verify.strict, verify.policies) */
+  verify?: ShipGateVerifyConfig;
+  /** Evidence output (demo schema: evidence.output_dir) */
+  evidence?: ShipGateEvidenceConfig;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Defaults
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Sane default ignore patterns — applied even when user has no config.
+ * User ci.ignore extends these (never replaces); use dot:true in glob matching
+ * so .next/.turbo are matchable.
+ */
+export const DEFAULT_IGNORE: readonly string[] = [
+  '**/node_modules/**',
+  '**/dist/**',
+  '**/build/**',
+  '**/.next/**',
+  '**/coverage/**',
+  '**/.turbo/**',
+  '**/.git/**',
+  '**/*.map',
+  '**/*.min.*',
+  '**/*.min.js',
+  '**/*.bundle.js',
+  '**/*.generated.*',
+  '**/*.snap',
+  '**/vibe-test/**',
+  '**/vibe-test*/**',
+  '**/.shipgate/**',
+  '**/*.test.ts',
+  '**/*.test.tsx',
+  '**/*.test.js',
+  '**/*.spec.ts',
+  '**/*.spec.tsx',
+  '**/*.spec.js',
+  '**/tests/**',
+  '**/__tests__/**',
+  '**/test/**',
+  '**/bench/**',
+  '**/benchmarks/**',
+  '**/scripts/**',
+  '**/templates/**',
+  '**/examples/**',
+  '**/demos/**',
+  '**/fixtures/**',
+  '**/*.config.ts',
+  '**/*.config.js',
+  '**/*.config.mjs',
+  '**/vitest.*.ts',
+  '**/jest.config.*',
+  '**/tsup.config.*',
+  '**/tailwind.config.*',
+  '**/postcss.config.*',
+  '**/next.config.*',
+  '**/.eslintrc.*',
+  '**/generated/**',
+  '**/proof/**',
+  '**/samples/**',
+];
+
+/** @deprecated Use DEFAULT_IGNORE */
+export const DEFAULT_CI_IGNORE = [...DEFAULT_IGNORE];
+
 /** Default CI configuration values */
 export const DEFAULT_CI_CONFIG: Required<ShipGateCIConfig> = {
   failOn: 'error',
   requireIsl: [],
-  ignore: [],
+  ignore: [...DEFAULT_CI_IGNORE],
   speclessMode: 'on',
 };
 
@@ -84,12 +188,21 @@ export const DEFAULT_GENERATE_CONFIG: Required<ShipGateGenerateConfig> = {
   minConfidence: 0.3,
 };
 
+/** Default guardrails: all guardrails enforced (strict) */
+export const DEFAULT_GUARDRAILS_CONFIG: Required<ShipGateGuardrailsConfig> = {
+  allowAutoSpecShip: false,
+  allowNoTestExecution: false,
+  allowEmptyCategories: false,
+  allowUnvalidatedAiRules: false,
+};
+
 /** Full default config returned when no .shipgate.yml is found */
 export const DEFAULT_SHIPGATE_CONFIG: ShipGateConfig = {
   version: 1,
   ci: { ...DEFAULT_CI_CONFIG },
   scanning: { ...DEFAULT_SCANNING_CONFIG },
   generate: { ...DEFAULT_GENERATE_CONFIG },
+  guardrails: { ...DEFAULT_GUARDRAILS_CONFIG },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -98,13 +211,18 @@ export const DEFAULT_SHIPGATE_CONFIG: ShipGateConfig = {
 
 /**
  * Merge a partial config with defaults, producing a fully-resolved config.
+ * User ci.ignore extends defaults (never replaces).
  */
 export function applyDefaults(partial: Partial<ShipGateConfig>): ShipGateConfig {
+  const userIgnore = partial.ci?.ignore ?? [];
+  const mergedIgnore = [...DEFAULT_IGNORE, ...userIgnore];
+
   return {
     version: 1,
     ci: {
       ...DEFAULT_CI_CONFIG,
       ...partial.ci,
+      ignore: mergedIgnore,
     },
     scanning: {
       ...DEFAULT_SCANNING_CONFIG,
@@ -114,5 +232,12 @@ export function applyDefaults(partial: Partial<ShipGateConfig>): ShipGateConfig 
       ...DEFAULT_GENERATE_CONFIG,
       ...partial.generate,
     },
+    guardrails: {
+      ...DEFAULT_GUARDRAILS_CONFIG,
+      ...partial.guardrails,
+    },
+    ...(partial.specs != null && { specs: partial.specs }),
+    ...(partial.verify != null && { verify: partial.verify }),
+    ...(partial.evidence != null && { evidence: partial.evidence }),
   };
 }

@@ -2,25 +2,37 @@
  * Project Scaffold Generator
  *
  * Generates package.json, tsconfig, docker-compose, README, .env, etc.
+ * Uses DatabaseAdapter for database-specific config.
  */
 
 import type { Domain } from '@isl-lang/parser';
 import type { GeneratedFile, ShipStack } from '../types.js';
 import { toKebabCase } from '../types.js';
+import { getDatabaseAdapter } from '../adapters/index.js';
 
-export function generateScaffold(domain: Domain, stack: ShipStack, projectName: string): GeneratedFile[] {
+export interface ScaffoldOptions {
+  /** Override DATABASE_URL (from --db-url) */
+  dbUrl?: string;
+}
+
+export function generateScaffold(domain: Domain, stack: ShipStack, projectName: string, options?: ScaffoldOptions): GeneratedFile[] {
   const files: GeneratedFile[] = [];
+  const dbName = toKebabCase(domain.name.name);
+  const useAdapter = stack.database === 'postgres' || stack.database === 'sqlite';
+  const adapter = useAdapter ? getDatabaseAdapter(stack.database) : null;
 
-  files.push(generatePackageJson(domain, stack, projectName));
+  files.push(generatePackageJson(domain, stack, projectName, adapter));
   files.push(generateTsConfig());
-  files.push(generateEnvFile(domain));
-  files.push(generateEnvExample(domain));
-  files.push(generateGitignore());
+  files.push(generateEnvFile(domain, stack, adapter, options?.dbUrl));
+  files.push(generateEnvExample(domain, stack, adapter, options?.dbUrl));
+  files.push(generateGitignore(stack));
   files.push(generateReadme(domain, stack, projectName));
 
   if (stack.docker) {
     files.push(generateDockerfile(projectName));
-    files.push(generateDockerCompose(domain, stack, projectName));
+    if (stack.database === 'postgres' || stack.database === 'mysql') {
+      files.push(generateDockerCompose(domain, stack, projectName, stack.database === 'postgres' ? (adapter ?? undefined) : undefined));
+    }
   }
 
   return files;
@@ -28,7 +40,9 @@ export function generateScaffold(domain: Domain, stack: ShipStack, projectName: 
 
 // ─── package.json ─────────────────────────────────────────────────────────────
 
-function generatePackageJson(domain: Domain, stack: ShipStack, projectName: string): GeneratedFile {
+function generatePackageJson(domain: Domain, stack: ShipStack, projectName: string, adapter: ReturnType<typeof getDatabaseAdapter> | null): GeneratedFile {
+  const [migrateDev, migrateDeploy] = adapter?.getMigrationCommands() ?? ['prisma migrate dev', 'prisma migrate deploy'];
+  const seedCmd = adapter?.getSeedCommand() ?? 'prisma db seed';
   const pkg = {
     name: toKebabCase(projectName),
     version: domain.version?.value ?? '0.1.0',
@@ -36,12 +50,15 @@ function generatePackageJson(domain: Domain, stack: ShipStack, projectName: stri
     type: 'module',
     scripts: {
       dev: 'tsx watch src/server.ts',
+      'dev:first': 'prisma db push && prisma db seed && tsx watch src/server.ts',
       build: 'tsc',
       start: 'node dist/server.js',
       'db:generate': 'prisma generate',
       'db:push': 'prisma db push',
-      'db:migrate': 'prisma migrate dev',
-      'db:seed': 'prisma db seed',
+      'db:prepare': 'prisma db push && prisma db seed',
+      'db:migrate': migrateDev,
+      'db:migrate:deploy': migrateDeploy,
+      'db:seed': seedCmd,
       'db:studio': 'prisma studio',
       lint: 'eslint src/',
       test: 'vitest run',
@@ -50,9 +67,12 @@ function generatePackageJson(domain: Domain, stack: ShipStack, projectName: stri
       express: '^4.21.0',
       cors: '^2.8.5',
       '@prisma/client': '^5.22.0',
+      '@faker-js/faker': '^8.4.0',
+      bcrypt: '^5.1.0',
       dotenv: '^16.4.0',
     },
     devDependencies: {
+      '@types/bcrypt': '^5.0.0',
       '@types/express': '^5.0.0',
       '@types/cors': '^2.8.17',
       '@types/node': '^22.0.0',
@@ -61,6 +81,9 @@ function generatePackageJson(domain: Domain, stack: ShipStack, projectName: stri
       prisma: '^5.22.0',
       vitest: '^2.1.0',
       eslint: '^9.0.0',
+    },
+    prisma: {
+      seed: 'tsx prisma/seed.ts',
     },
   };
 
@@ -102,15 +125,28 @@ function generateTsConfig(): GeneratedFile {
 
 // ─── .env ─────────────────────────────────────────────────────────────────────
 
-function generateEnvFile(domain: Domain): GeneratedFile {
-  const lines: string[] = [];
+function generateEnvFile(domain: Domain, stack: ShipStack, adapter: ReturnType<typeof getDatabaseAdapter> | null, dbUrl?: string): GeneratedFile {
+  const dbName = toKebabCase(domain.name.name);
+  let envVars: Record<string, string>;
+  if (adapter) {
+    envVars = adapter.generateEnvVars({ dbName, dbUrl });
+  } else {
+    envVars = {
+      NODE_ENV: 'development',
+      PORT: '3000',
+      DATABASE_URL: stack.database === 'mysql'
+        ? `mysql://root:root@localhost:3306/${dbName}`
+        : `postgresql://postgres:postgres@localhost:5432/${dbName}?schema=public`,
+    };
+  }
 
+  const lines: string[] = [];
   lines.push(`# ${domain.name.name} — Environment Variables`);
   lines.push('# Generated by isl ship');
   lines.push('');
-  lines.push('NODE_ENV=development');
-  lines.push('PORT=3000');
-  lines.push('DATABASE_URL="postgresql://postgres:postgres@localhost:5432/' + toKebabCase(domain.name.name) + '?schema=public"');
+  for (const [key, value] of Object.entries(envVars)) {
+    if (key !== 'DATABASE_URL_DOCKER') lines.push(`${key}=${value.startsWith('"') ? value : `"${value}"`}`);
+  }
 
   if (domain.config) {
     lines.push('');
@@ -140,15 +176,39 @@ function generateEnvFile(domain: Domain): GeneratedFile {
   };
 }
 
-function generateEnvExample(domain: Domain): GeneratedFile {
-  const lines: string[] = [];
+function generateEnvExample(domain: Domain, stack: ShipStack, adapter: ReturnType<typeof getDatabaseAdapter> | null, dbUrl?: string): GeneratedFile {
+  const dbName = toKebabCase(domain.name.name);
+  let envVars: Record<string, string>;
+  if (adapter) {
+    envVars = adapter.generateEnvVars({ dbName, dbUrl });
+  } else {
+    envVars = {
+      NODE_ENV: 'development',
+      PORT: '3000',
+      DATABASE_URL: stack.database === 'mysql'
+        ? `mysql://root:root@localhost:3306/${dbName}`
+        : `postgresql://postgres:postgres@localhost:5432/${dbName}?schema=public`,
+    };
+  }
 
+  const lines: string[] = [];
   lines.push(`# ${domain.name.name} — Environment Variables Template`);
   lines.push('# Copy to .env and fill in values');
   lines.push('');
-  lines.push('NODE_ENV=development');
-  lines.push('PORT=3000');
-  lines.push('DATABASE_URL="postgresql://postgres:postgres@localhost:5432/mydb?schema=public"');
+  for (const [key, value] of Object.entries(envVars)) {
+    if (key === 'DATABASE_URL_DOCKER') continue;
+    if (key === 'DATABASE_URL' && adapter?.provider === 'postgresql') {
+      lines.push('# Local:');
+      lines.push(`${key}="${value}"`);
+      const dockerUrl = envVars['DATABASE_URL_DOCKER'];
+      if (dockerUrl) {
+        lines.push('# Docker:');
+        lines.push(`# ${key}="${dockerUrl}"`);
+      }
+    } else {
+      lines.push(`${key}=${value.startsWith('"') ? value : `"${value}"`}`);
+    }
+  }
 
   if (domain.config) {
     for (const entry of domain.config.entries) {
@@ -171,19 +231,14 @@ function generateEnvExample(domain: Domain): GeneratedFile {
 
 // ─── .gitignore ───────────────────────────────────────────────────────────────
 
-function generateGitignore(): GeneratedFile {
+function generateGitignore(stack: ShipStack): GeneratedFile {
+  const lines = ['node_modules/', 'dist/', '.env', '.env.local', '*.log', '.DS_Store'];
+  if (stack.database === 'sqlite' || stack.database === 'postgres') {
+    lines.push('prisma/*.db', 'prisma/migrations/');
+  }
   return {
     path: '.gitignore',
-    content: [
-      'node_modules/',
-      'dist/',
-      '.env',
-      '.env.local',
-      '*.log',
-      '.DS_Store',
-      'prisma/*.db',
-      'prisma/migrations/',
-    ].join('\n'),
+    content: lines.join('\n'),
     layer: 'scaffold',
   };
 }
@@ -224,7 +279,7 @@ function generateDockerfile(projectName: string): GeneratedFile {
 
 // ─── docker-compose.yml ───────────────────────────────────────────────────────
 
-function generateDockerCompose(domain: Domain, stack: ShipStack, projectName: string): GeneratedFile {
+function generateDockerCompose(domain: Domain, stack: ShipStack, projectName: string, adapter?: ReturnType<typeof getDatabaseAdapter>): GeneratedFile {
   const kebab = toKebabCase(projectName);
   const dbName = toKebabCase(domain.name.name);
 
@@ -239,33 +294,45 @@ function generateDockerCompose(domain: Domain, stack: ShipStack, projectName: st
   lines.push('    ports:');
   lines.push('      - "3000:3000"');
   lines.push('    environment:');
-  lines.push(`      - DATABASE_URL=postgresql://postgres:postgres@db:5432/${dbName}`);
+  if (stack.database === 'postgres' && adapter) {
+    const envVars = adapter.generateEnvVars({ dbName });
+    const dockerUrl = envVars['DATABASE_URL_DOCKER'] ?? `postgresql://postgres:postgres@db:5432/${dbName}?schema=public`;
+    lines.push(`      - DATABASE_URL=${dockerUrl}`);
+  } else if (stack.database === 'mysql') {
+    lines.push(`      - DATABASE_URL=mysql://root:root@db:3306/${dbName}`);
+  }
   lines.push('      - NODE_ENV=development');
   lines.push('      - ISL_CONTRACT_MODE=warn');
-  lines.push('    depends_on:');
-  lines.push('      db:');
-  lines.push('        condition: service_healthy');
+  if (stack.database === 'postgres' || stack.database === 'mysql') {
+    lines.push('    depends_on:');
+    lines.push('      db:');
+    lines.push('        condition: service_healthy');
+  }
   lines.push('    volumes:');
   lines.push('      - ./src:/app/src');
   lines.push('');
 
-  // Database service
-  if (stack.database === 'postgres') {
+  // Database service (Postgres 16 + healthcheck)
+  if (stack.database === 'postgres' && adapter?.getDockerComposeService) {
+    const dbService = adapter.getDockerComposeService({ dbName });
     lines.push('  db:');
-    lines.push('    image: postgres:16-alpine');
+    lines.push(`    image: ${(dbService as { image?: string }).image ?? 'postgres:16-alpine'}`);
     lines.push('    environment:');
-    lines.push('      POSTGRES_USER: postgres');
-    lines.push('      POSTGRES_PASSWORD: postgres');
-    lines.push(`      POSTGRES_DB: ${dbName}`);
+    for (const [k, v] of Object.entries((dbService as { environment?: Record<string, string> }).environment ?? {})) {
+      lines.push(`      ${k}: ${v}`);
+    }
     lines.push('    ports:');
     lines.push('      - "5432:5432"');
     lines.push('    volumes:');
     lines.push('      - pgdata:/var/lib/postgresql/data');
     lines.push('    healthcheck:');
-    lines.push('      test: ["CMD-SHELL", "pg_isready -U postgres"]');
-    lines.push('      interval: 5s');
-    lines.push('      timeout: 5s');
-    lines.push('      retries: 5');
+    const hc = (dbService as { healthcheck?: Record<string, unknown> }).healthcheck;
+    if (hc) {
+      lines.push('      test: ["CMD-SHELL", "pg_isready -U postgres"]');
+      lines.push('      interval: 5s');
+      lines.push('      timeout: 5s');
+      lines.push('      retries: 5');
+    }
   } else if (stack.database === 'mysql') {
     lines.push('  db:');
     lines.push('    image: mysql:8');
@@ -320,9 +387,8 @@ function generateReadme(domain: Domain, stack: ShipStack, projectName: string): 
   lines.push('# Start database');
   lines.push('docker compose up -d db');
   lines.push('');
-  lines.push('# Generate Prisma client & push schema');
-  lines.push('npm run db:generate');
-  lines.push('npm run db:push');
+  lines.push('# First run: push schema + seed (or use npm run dev:first)');
+  lines.push('npm run db:prepare');
   lines.push('');
   lines.push('# Start dev server');
   lines.push('npm run dev');

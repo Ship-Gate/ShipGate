@@ -1,7 +1,7 @@
 /**
- * ISL Studio Integration for ShipGate
+ * ShipGate Integrated Firewall
  * 
- * Combines ShipGate's truthpack validation with ISL Studio's policy packs
+ * Combines ShipGate's truthpack validation with ShipGate policy packs
  * for comprehensive code governance.
  * 
  * @module @isl-lang/firewall/isl-studio
@@ -17,7 +17,7 @@ import type {
 import { AgentFirewall } from './agent-firewall.js';
 
 /**
- * ISL Studio policy rule context
+ * Policy rule context
  */
 interface ISLRuleContext {
   filePath: string;
@@ -27,7 +27,7 @@ interface ISLRuleContext {
 }
 
 /**
- * ISL Studio violation
+ * Policy violation
  */
 interface ISLViolation {
   ruleId: string;
@@ -38,7 +38,7 @@ interface ISLViolation {
 }
 
 /**
- * ISL Studio gate result
+ * Policy gate result
  */
 interface ISLGateResult {
   verdict: 'SHIP' | 'NO_SHIP';
@@ -47,10 +47,10 @@ interface ISLGateResult {
 }
 
 /**
- * Combined ShipGate + ISL Studio result
+ * Combined ShipGate gate result
  */
 export interface IntegratedGateResult extends FirewallResult {
-  islStudio: {
+  policyGate: {
     verdict: 'SHIP' | 'NO_SHIP';
     score: number;
     violations: ISLViolation[];
@@ -65,9 +65,9 @@ export interface IntegratedGateResult extends FirewallResult {
 }
 
 /**
- * Integrated ISL Studio + ShipGate Firewall
+ * Integrated ShipGate Firewall
  * 
- * Runs both ShipGate's truthpack validation AND ISL Studio's policy packs
+ * Runs both ShipGate's truthpack validation AND ShipGate policy packs
  */
 export class IntegratedFirewall {
   private shipgate: AgentFirewall;
@@ -80,7 +80,7 @@ export class IntegratedFirewall {
   }
 
   /**
-   * Load ISL Studio policy packs (25 rules across 5 packs)
+   * Load ShipGate policy packs (25 rules across 5 packs)
    */
   private loadISLPolicies(): void {
     // ========================================================================
@@ -314,13 +314,13 @@ export class IntegratedFirewall {
   }
 
   /**
-   * Evaluate content with both ShipGate and ISL Studio
+   * Evaluate content with ShipGate truthpack + policy packs
    */
   async evaluate(request: FirewallRequest): Promise<IntegratedGateResult> {
     // Run ShipGate (truthpack validation)
     const shipgateResult = await this.shipgate.evaluate(request);
 
-    // Run ISL Studio policies
+    // Run ShipGate policy packs
     const islResult = this.runISLPolicies(request);
 
     // Combine results (guard against undefined stats)
@@ -353,8 +353,8 @@ export class IntegratedFirewall {
       ...shipgateResult,
       // Add ISL violations to main violations array
       violations: [...shipgateResult.violations, ...islPolicyViolations],
-      // ISL Studio specific results
-      islStudio: {
+      // Policy gate results
+      policyGate: {
         verdict: islResult.verdict,
         score: islResult.score,
         violations: islResult.violations,
@@ -373,7 +373,7 @@ export class IntegratedFirewall {
   }
 
   /**
-   * Run ISL Studio policies
+   * Run ShipGate policy packs
    */
   private runISLPolicies(request: FirewallRequest): ISLGateResult {
     const violations: ISLViolation[] = [];
@@ -390,7 +390,7 @@ export class IntegratedFirewall {
         const lineNum = i + 1;
 
         // Skip suppressed lines
-        if (line.includes('islstudio-ignore') && line.includes(policy.id)) {
+        if (line.includes('shipgate-ignore') && line.includes(policy.id)) {
           continue;
         }
         if (line.includes('shipgate-ignore')) {
@@ -429,8 +429,8 @@ export class IntegratedFirewall {
   }
 
   /**
-   * Run Reality-Gap scanner only (ISL Studio policies).
-   * Does not run ShipGate/truthpack validation.
+   * Run Reality-Gap scanner only (policy packs).
+   * Does not run truthpack validation.
    */
   async evaluateRealityGapOnly(request: FirewallRequest): Promise<ISLGateResult> {
     return this.runISLPolicies(request);
@@ -448,7 +448,7 @@ export class IntegratedFirewall {
     const result = await this.evaluate(request);
     return {
       verdict: result.combined.verdict,
-      score: result.islStudio.score,
+      score: result.policyGate.score,
       reason: result.combined.totalViolations > 0
         ? `${result.combined.hardBlocks} hard blocks, ${result.combined.softBlocks} soft blocks, ${result.combined.warnings} warnings`
         : 'All checks passed',
@@ -462,12 +462,12 @@ export class IntegratedFirewall {
   getStatus(): {
     mode: string;
     shipgatePolicies: string[];
-    islStudioRules: string[];
+    shipgateRules: string[];
   } {
     return {
       mode: this.shipgate.getMode(),
       shipgatePolicies: this.shipgate.getStatus().policies,
-      islStudioRules: Array.from(this.islPolicies.keys()),
+      shipgateRules: Array.from(this.islPolicies.keys()),
     };
   }
 
@@ -515,13 +515,13 @@ export function createIntegratedFirewall(config?: Partial<FirewallConfig>): Inte
  */
 export const integratedGate = {
   /**
-   * Run the integrated gate (ShipGate + ISL Studio)
+   * Run the integrated gate (ShipGate truthpack + policy packs)
    */
   async run(filePath: string, content: string, projectRoot?: string): Promise<{
     verdict: 'SHIP' | 'NO_SHIP';
     score: number;
     shipgate: { allowed: boolean; violations: number };
-    islStudio: { violations: number };
+    policyGate: { violations: number };
     total: { violations: number; hardBlocks: number };
   }> {
     const firewall = createIntegratedFirewall({ projectRoot });
@@ -529,13 +529,13 @@ export const integratedGate = {
     
     return {
       verdict: result.combined.verdict,
-      score: result.islStudio.score,
+      score: result.policyGate.score,
       shipgate: {
         allowed: result.allowed,
         violations: result.violations.filter(v => !v.policyId.startsWith('isl-')).length,
       },
-      islStudio: {
-        violations: result.islStudio.violations.length,
+      policyGate: {
+        violations: result.policyGate.violations.length,
       },
       total: {
         violations: result.combined.totalViolations,

@@ -72,6 +72,18 @@ export {
   getSpeclessChecks,
   clearSpeclessChecks,
   runSpeclessChecks,
+  // Verified Intent — 3-pillar contract
+  evaluateVerifiedIntent,
+  evaluateVerifiedIntentFromInputs,
+  applyVerifiedIntentCap,
+  formatVerifiedIntentReport,
+  evaluateSpecFidelity,
+  evaluateCoverage,
+  evaluateExecution,
+  buildProvenanceReport,
+  formatProvenanceReport,
+  DEFAULT_VERIFIED_INTENT_CONFIG,
+  DEV_VERIFIED_INTENT_CONFIG,
 } from './authoritative/index.js';
 
 export type {
@@ -98,6 +110,21 @@ export type {
   // Specless registry types
   GateContext,
   SpeclessCheck,
+  // Verified Intent types
+  PillarStatus,
+  PillarName,
+  ProvenanceOrigin,
+  ExecutionStatus,
+  ProvenanceRecord,
+  ProvenanceReport,
+  PillarResult,
+  PillarDetail,
+  VerifiedIntentResult,
+  MissingPillarPolicy,
+  VerifiedIntentConfig,
+  SpecFidelityInput,
+  CoverageInput,
+  ExecutionInput,
 } from './authoritative/index.js';
 
 // ============================================================================

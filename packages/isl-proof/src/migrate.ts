@@ -46,8 +46,8 @@ export interface MigrationOptions {
   signSecret?: string;
   /** Key ID for signature */
   signKeyId?: string;
-  /** ISL Studio version */
-  islStudioVersion?: string;
+  /** ShipGate version */
+  shipgateVersion?: string;
   /** Mark as incomplete proof (v1 bundles lack v2 verification data) */
   markIncomplete?: boolean;
   /** Include placeholder v2 fields */
@@ -322,7 +322,7 @@ export async function migrateV1ToV2(
       },
       policyVersion: {
         bundleVersion: '1.0.0',
-        islStudioVersion: options.islStudioVersion || '0.1.0',
+        shipgateVersion: options.shipgateVersion || '0.1.0',
         packs: [],
       },
       // V2 fields

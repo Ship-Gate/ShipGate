@@ -1,6 +1,7 @@
 {
   "name": "@isl-lang/stdlib-email",
-  "version": "0.1.0",
+  "private": true,
+  "version": "0.1.1",
   "description": "ISL standard library for email templating, validation, and delivery",
   "type": "module",
   "main": "dist/index.js",

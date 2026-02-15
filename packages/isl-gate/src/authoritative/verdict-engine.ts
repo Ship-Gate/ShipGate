@@ -46,6 +46,8 @@ export const CRITICAL_FAILURES = [
   'critical_vulnerability',
   /** Code compiles but doesn't work */
   'fake_feature_detected',
+  /** Tests did not execute (import errors, TS config, runtime crash, all-skipped) */
+  'verification_blocked',
 ] as const;
 
 export type CriticalFailureKind = typeof CRITICAL_FAILURES[number];
@@ -63,6 +65,7 @@ export type GateEvidenceSource =
   | 'isl-spec'
   | 'static-analysis'
   | 'runtime-eval'
+  | 'test-execution'
   | 'specless-scanner';
 
 /**
@@ -203,18 +206,42 @@ export function hasCriticalFailure(evidence: readonly GateEvidence[]): boolean {
 // ============================================================================
 
 /**
+ * Options for verdict production.
+ */
+export interface VerdictOptions {
+  /** Custom thresholds */
+  thresholds?: ScoringThresholds;
+  /**
+   * If true, verification_blocked downgrades to WARN instead of NO_SHIP,
+   * but ONLY when specs are fully typed (high-confidence) and at least
+   * one minimal runtime sanity check ran.
+   * Default: false (NO_SHIP on execution failure).
+   */
+  warnOnExecFailure?: boolean;
+}
+
+/**
  * Produce a complete, explainable verdict from collected evidence.
  *
  * Decision algorithm:
  * 1. If any critical failure → NO_SHIP (regardless of score)
+ *    - verification_blocked can be downgraded to WARN if warnOnExecFailure is set
+ *      AND specs are high-confidence AND at least one runtime check passed
  * 2. If score ≥ 0.85 → SHIP
  * 3. If score ≥ 0.50 → WARN
  * 4. Otherwise → NO_SHIP
+ *
+ * But **never** SHIP when verification_blocked is present.
  */
 export function produceVerdict(
   evidence: readonly GateEvidence[],
-  thresholds: ScoringThresholds = SCORING_THRESHOLDS,
+  thresholdsOrOptions?: ScoringThresholds | VerdictOptions,
 ): GateVerdict {
+  // Support both old (thresholds-only) and new (options object) signatures
+  const options: VerdictOptions = thresholdsOrOptions && 'SHIP' in thresholdsOrOptions
+    ? { thresholds: thresholdsOrOptions as ScoringThresholds }
+    : (thresholdsOrOptions as VerdictOptions) ?? {};
+  const thresholds = options.thresholds ?? SCORING_THRESHOLDS;
   // Defensively copy to avoid mutation
   const evidenceList = [...evidence];
 
@@ -226,6 +253,34 @@ export function produceVerdict(
     const recommendations = criticalFailures.map(
       e => `Fix critical issue in "${e.check}": ${e.details}`,
     );
+
+    // Check if ALL critical failures are verification_blocked and
+    // warnOnExecFailure is enabled with qualifying conditions
+    const allBlockedOnly = criticalFailures.every(e => e.check.includes('verification_blocked'));
+    if (allBlockedOnly && options.warnOnExecFailure) {
+      // Only allow WARN downgrade if:
+      // 1. At least one ISL spec check passed (high-confidence typed specs)
+      // 2. At least one runtime-eval or static-analysis check passed
+      const hasHighConfidenceSpec = evidenceList.some(
+        e => e.source === 'isl-spec' && e.result === 'pass' && e.confidence >= 0.85,
+      );
+      const hasMinimalRuntimeCheck = evidenceList.some(
+        e => (e.source === 'runtime-eval' || e.source === 'static-analysis') && e.result === 'pass',
+      );
+      if (hasHighConfidenceSpec && hasMinimalRuntimeCheck) {
+        return {
+          decision: 'WARN',
+          score,
+          evidence: evidenceList,
+          summary: `WARN: Verification blocked (tests did not run) but specs are high-confidence — warn-on-exec-failure enabled`,
+          blockers: [],
+          recommendations: [
+            ...recommendations,
+            'Fix test execution to achieve full verification',
+          ],
+        };
+      }
+    }
 
     return {
       decision: 'NO_SHIP',
@@ -242,6 +297,34 @@ export function produceVerdict(
   const score = computeScore(evidenceList);
   const failingEvidence = evidenceList.filter(e => e.result === 'fail');
   const warningEvidence = evidenceList.filter(e => e.result === 'warn');
+
+  // ── TRUTH MODE: Empty evidence = NO_SHIP ───────────────────────────
+  // Never claim safety without executed evidence.
+  const scoreableEvidence = evidenceList.filter(e => e.result !== 'skip');
+  if (scoreableEvidence.length === 0) {
+    return {
+      decision: 'NO_SHIP',
+      score: 0,
+      evidence: evidenceList,
+      summary: 'NO_SHIP: No scoreable evidence — cannot verify intent',
+      blockers: ['No evidence collected: verification produced no actionable results'],
+      recommendations: ['Add ISL specs with behaviors, postconditions, and error cases'],
+    };
+  }
+
+  // ── TRUTH MODE: No passing evidence = cannot SHIP ──────────────────
+  const passingEvidence = evidenceList.filter(e => e.result === 'pass');
+  if (passingEvidence.length === 0 && score >= thresholds.SHIP) {
+    // Score is high but nothing actually passed — cap to WARN
+    return {
+      decision: 'WARN',
+      score,
+      evidence: evidenceList,
+      summary: `WARN: Score ${formatPct(score)} but no checks passed — insufficient evidence for SHIP`,
+      blockers: [],
+      recommendations: ['Add executable checks that produce pass/fail evidence'],
+    };
+  }
 
   // ── Step 3: Apply thresholds ─────────────────────────────────────────
   if (score >= thresholds.SHIP) {

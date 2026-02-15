@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/agent-os",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Agent orchestration system for IntentOS - triage, plan, execute, verify",
   "type": "module",
   "main": "./dist/index.js",
@@ -30,7 +30,9 @@
     "@isl-lang/intent-translator": "workspace:*",
     "@isl-lang/isl-compiler": "workspace:*",
     "@isl-lang/isl-verify": "workspace:*",
-    "@isl-lang/codegen-types": "workspace:*"
+    "@isl-lang/codegen-types": "workspace:*",
+    "@isl-lang/ai-generator": "workspace:*",
+    "@isl-lang/ai-copilot": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.1.0",

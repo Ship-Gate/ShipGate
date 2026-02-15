@@ -18,7 +18,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import type { PackageReadiness, ReadinessReport } from './readiness-schema.js';
 import { REQUIRED_GATES, PROMOTION_THRESHOLD } from './readiness-schema.js';
 
@@ -75,9 +75,10 @@ console.log('');
 
 console.log('\ud83d\udd0d Running readiness assessment...');
 try {
-  execSync(`npx tsx scripts/readiness.ts --filter ${dirName} --quiet`, {
+  execFileSync('npx', ['tsx', 'scripts/readiness.ts', '--filter', dirName, '--quiet'], {
     cwd: rootDir,
     stdio: 'pipe',
+    shell: true,
   });
 } catch {
   // Non-fatal — we'll check the report
@@ -146,8 +147,14 @@ console.log(`\n\u2705 All required gates satisfied. Promoting ${actualName} (${a
 // ---------------------------------------------------------------------------
 
 const expPath = join(rootDir, 'experimental.json');
-const expRaw = readFileSync(expPath, 'utf-8');
-const expCfg = JSON.parse(expRaw);
+let expCfg: Record<string, unknown>;
+try {
+  const expRaw = readFileSync(expPath, 'utf-8');
+  expCfg = JSON.parse(expRaw);
+} catch {
+  console.error('experimental.json not found or invalid. Create it from docs/EXPERIMENTAL.md template.');
+  process.exit(1);
+}
 
 // Remove from current tier
 let removedFrom: string | null = null;

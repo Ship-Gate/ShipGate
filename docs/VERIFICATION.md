@@ -255,7 +255,7 @@ export interface ProofBundleManifest {
   
   policyVersion: {
     bundleVersion: string;
-    islStudioVersion: string;
+    shipgateVersion: string;
     packs: RulepackVersion[];
   };
   
@@ -313,7 +313,7 @@ proof-bundle/
 ### Create Proof Bundle
 
 ```bash
-islstudio proof create \
+shipgate proof create \
   --spec auth.isl \
   --output ./proof-bundle \
   --sign-secret $ISL_SIGN_SECRET
@@ -322,7 +322,7 @@ islstudio proof create \
 ### Verify Proof Bundle
 
 ```bash
-islstudio proof verify ./proof-bundle \
+shipgate proof verify ./proof-bundle \
   --sign-secret $ISL_SIGN_SECRET
 ```
 
@@ -378,7 +378,7 @@ console.log(result);
 ### Level 1: Gate Check (Static Analysis)
 
 ```bash
-islstudio gate ./src --policy intent-pack
+shipgate gate ./src --policy intent-pack
 ```
 
 Checks:

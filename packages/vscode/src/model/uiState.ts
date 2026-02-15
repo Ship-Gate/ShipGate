@@ -69,6 +69,23 @@ export interface SidebarUiState {
     verdict: string | null;
     hasApiKey: boolean;
   };
+  heal: {
+    phase: 'idle' | 'running' | 'done';
+    message: string | null;
+    error: string | null;
+    iterations: number;
+    finalScore: number | null;
+    finalVerdict: string | null;
+    patchedFiles: string[];
+    failedFiles: { file: string; score: number; blockers: string[] }[];
+  };
+  pro: {
+    active: boolean;
+    email: string | null;
+    plan: 'free' | 'pro';
+    checking: boolean;
+    error: string | null;
+  };
 }
 
 export interface ReportUiState {
@@ -105,6 +122,22 @@ export interface SidebarInput {
   };
   phase?: 'idle' | 'running' | 'complete';
   workspaceRoot?: string;
+  heal?: {
+    phase: 'idle' | 'running' | 'done';
+    message: string | null;
+    error: string | null;
+    iterations: number;
+    finalScore: number | null;
+    finalVerdict: string | null;
+    patchedFiles: string[];
+  };
+  pro?: {
+    active: boolean;
+    email: string | null;
+    plan: 'free' | 'pro';
+    checking: boolean;
+    error: string | null;
+  };
 }
 
 /**
@@ -210,6 +243,27 @@ export function buildSidebarState(input: SidebarInput): SidebarUiState {
       score: null,
       verdict: null,
       hasApiKey: false,
+    },
+    heal: {
+      phase: input.heal?.phase ?? 'idle',
+      message: input.heal?.message ?? null,
+      error: input.heal?.error ?? null,
+      iterations: input.heal?.iterations ?? 0,
+      finalScore: input.heal?.finalScore ?? null,
+      finalVerdict: input.heal?.finalVerdict ?? null,
+      patchedFiles: input.heal?.patchedFiles ?? [],
+      failedFiles: z
+        ? z.files
+            .filter((f) => f.status === 'FAIL' || f.status === 'WARN')
+            .map((f) => ({ file: f.file, score: f.score, blockers: f.blockers }))
+        : [],
+    },
+    pro: {
+      active: input.pro?.active ?? false,
+      email: input.pro?.email ?? null,
+      plan: input.pro?.plan ?? 'free',
+      checking: input.pro?.checking ?? false,
+      error: input.pro?.error ?? null,
     },
   };
 }

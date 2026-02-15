@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/isl-runtime",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Runtime for executing ISL behaviors with contract enforcement",
   "type": "module",
   "main": "./dist/index.js",

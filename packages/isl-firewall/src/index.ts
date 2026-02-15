@@ -40,7 +40,7 @@ export { PolicyEngine, createPolicyEngine, getAvailablePolicies } from './policy
 // Allowlist
 export { AllowlistManager, createAllowlistManager } from './allowlist.js';
 
-// ISL Studio Integration (ShipGate + ISL Studio combined)
+// Integrated Firewall (ShipGate truthpack + policy packs)
 export { 
   IntegratedFirewall, 
   createIntegratedFirewall, 

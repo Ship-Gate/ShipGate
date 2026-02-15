@@ -1,578 +1,193 @@
-/**
- * ShipGate ISL — VS Code Extension
- *
- * Entry point. Wires up the LSP client, ShipGate commands,
- * CodeLens provider, status bar, diagnostics, and Shipgate scan features.
- */
-
 import * as vscode from 'vscode';
-import { LanguageClient } from 'vscode-languageclient/node';
-import { createLanguageClient, startClient, stopClient } from './client';
-import { registerCommands } from './commands-legacy';
-import {
-  registerGenerateCommand,
-  registerGenerateSkeletonCommand,
-  registerVerifyCommands,
-  registerCoverageCommand,
-  registerValidateCommand,
-  getLastCoverageReport,
-} from './commands/index';
-import { registerScanCommands } from './commands/scan';
-import { getShipgateConfig } from './config/config';
-import { registerCodeLensProvider, setupDiagnosticsIntegration } from './providers/index';
-import { createShipGateStatusBar, ShipGateStatusBar } from './views/status-bar';
-import { createShipgateScanStatusBar } from './views/shipgateStatusBar';
-import { ShipgateSidebarProvider, type SidebarState } from './views/shipgateSidebar/sidebarProvider';
-import { ShipgateReportPanel } from './views/shipgateReport/reportPanel';
-import { loadGitHubState, acquireGitHubToken } from './commands/github';
-import { runCodeToIsl } from './commands/codeToIsl';
-import { runIntentBuild, type IntentBuilderState } from './commands/intentBuild';
-import { join } from 'path';
-import { readdirSync, existsSync } from 'fs';
-import { FirewallService } from './services/firewallService';
-import { firewallResultToDiagnostics, registerFirewallCodeActions } from './diagnostics/firewallDiagnostics';
-import { ship } from './services/shipService';
+import { ShipGateSidebarProvider } from './sidebar-provider';
+import { ShipGateDiagnostics } from './diagnostics';
+import { ShipGateCodeLens } from './codelens';
+import { ShipGateStatusBar } from './statusbar';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
-let client: LanguageClient | undefined;
-let statusBar: ShipGateStatusBar | undefined;
-let scanStatusBar: ReturnType<typeof createShipgateScanStatusBar> | undefined;
-let outputChannel: vscode.OutputChannel;
+const execAsync = promisify(exec);
 
-// ============================================================================
-// Activation
-// ============================================================================
+let sidebarProvider: ShipGateSidebarProvider;
+let diagnostics: ShipGateDiagnostics;
+let statusBar: ShipGateStatusBar;
+let codeLens: ShipGateCodeLens;
 
-export async function activate(context: vscode.ExtensionContext): Promise<void> {
-  const startTime = Date.now();
+export function activate(context: vscode.ExtensionContext) {
+  console.log('ShipGate extension activating...');
 
-  outputChannel = vscode.window.createOutputChannel('ShipGate ISL');
-  outputChannel.appendLine('[ShipGate] Extension activating...');
-
-  // ── Status bar (renders immediately for perceived speed) ──
-  statusBar = createShipGateStatusBar(context);
-
-  // ── Shipgate scan: status bar, diagnostics, sidebar, report, commands ──
-  const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
-  const scanState = { lastResult: null as import('./model/types').ScanResult | null, workspaceRoot };
-  const scanDiagnosticCollection = vscode.languages.createDiagnosticCollection('shipgate-scan');
-  context.subscriptions.push(scanDiagnosticCollection);
-
-  const githubState = {
-    connected: false,
-    repo: null as import('./services/githubService').GitHubRepoInfo | null,
-    pulls: [] as import('./services/githubService').GitHubPullRequest[],
-    workflowRuns: [] as import('./services/githubService').GitHubWorkflowRun[],
-    error: null as string | null,
-  };
-
-  function getWorkflows(): { name: string; path: string }[] {
-    const wfDir = join(workspaceRoot, '.github', 'workflows');
-    if (!existsSync(wfDir)) return [];
-    try {
-      return readdirSync(wfDir)
-        .filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'))
-        .map((f) => ({ name: f.replace(/\.(yml|yaml)$/, ''), path: join(wfDir, f) }));
-    } catch {
-      return [];
-    }
-  }
-
-  let islGeneratePath: string | null = null;
-  const updateIslPath = () => {
-    const uri = vscode.window.activeTextEditor?.document.uri;
-    islGeneratePath = uri?.scheme === 'file' ? vscode.workspace.asRelativePath(uri) : null;
-  };
+  // Sidebar
+  sidebarProvider = new ShipGateSidebarProvider(context.extensionUri, context);
   context.subscriptions.push(
-    vscode.window.onDidChangeActiveTextEditor(updateIslPath)
-  );
-  updateIslPath();
-
-  const firewallService = new FirewallService();
-  if (workspaceRoot) {
-    firewallService.configure(workspaceRoot);
-  }
-
-  const firewallDiagnosticCollection = vscode.languages.createDiagnosticCollection('shipgate-firewall');
-  context.subscriptions.push(firewallDiagnosticCollection);
-
-  // ── Firewall quick-fix code actions ──
-  registerFirewallCodeActions(context);
-
-  const API_KEY_SECRET = 'shipgate.intentBuilder.apiKey';
-  let storedApiKey: string | undefined;
-
-  // Load stored API key on activation
-  void context.secrets.get(API_KEY_SECRET).then(
-    (key) => {
-      storedApiKey = key;
-      if (intentBuilderState.phase === 'idle') {
-        intentBuilderState.hasApiKey = !!key;
-        sidebarProvider.refresh();
-      }
-    },
-    () => { /* silent */ }
-  );
-
-  let intentBuilderState: IntentBuilderState = {
-    phase: 'idle',
-    prompt: null,
-    message: null,
-    error: null,
-    score: null,
-    verdict: null,
-    hasApiKey: false,
-  };
-
-  const getState = (): SidebarState => ({
-    scan: scanState.lastResult,
-    github: githubState,
-    workflows: getWorkflows(),
-    islGeneratePath,
-    firewall: firewallService.getState(),
-    intentBuilder: intentBuilderState,
-  });
-
-  scanStatusBar = createShipgateScanStatusBar(context, 'shipgate.runScan');
-  scanStatusBar.setVerdict('Idle');
-
-  const sidebarProvider = new ShipgateSidebarProvider(context.extensionUri, getState, workspaceRoot);
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider('shipgate.sidebar', sidebarProvider)
-  );
-
-  registerScanCommands(
-    context,
-    scanState,
-    scanDiagnosticCollection,
-    (result) => {
-      scanState.lastResult = result;
-      sidebarProvider.refresh();
-      const root = (scanState.workspaceRoot || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath) ?? '';
-      const config = root ? getShipgateConfig(root) : null;
-      ShipgateReportPanel.refreshCurrent(result, root, config?.configPath ?? null);
-    },
-    scanStatusBar
-  );
-
-  // ── GitHub commands (OAuth magic link via VS Code auth provider) ──
-  const runGitHubConnect = async () => {
-    const token = await acquireGitHubToken(true);
-    if (!token) {
-      vscode.window.showWarningMessage('GitHub sign-in was cancelled or unavailable.');
-      return;
-    }
-    const state = await loadGitHubState(workspaceRoot, token);
-    Object.assign(githubState, state);
-    sidebarProvider.refresh();
-  };
-  context.subscriptions.push(
-    vscode.commands.registerCommand('shipgate.githubConnect', runGitHubConnect),
-    vscode.commands.registerCommand('shipgate.githubRefresh', runGitHubConnect)
-  );
-
-  // ── Re-connect GitHub when auth sessions change (catches delayed magic-link redirects) ──
-  context.subscriptions.push(
-    vscode.authentication.onDidChangeSessions((e) => {
-      if (e.provider.id === 'github' && workspaceRoot) {
-        acquireGitHubToken(false).then((token) => {
-          if (token) {
-            return loadGitHubState(workspaceRoot, token);
-          }
-          return null;
-        }).then((state) => {
-          if (state) {
-            Object.assign(githubState, state);
-            sidebarProvider.refresh();
-          }
-        }).catch(() => { /* silent */ });
-      }
+    vscode.window.registerWebviewViewProvider('shipgate.sidebar', sidebarProvider, {
+      webviewOptions: { retainContextWhenHidden: true }
     })
   );
 
-  // ── Auto-connect GitHub on activation (non-interactive — uses cached session) ──
-  if (workspaceRoot) {
-    acquireGitHubToken(false).then((autoToken) => {
-      if (autoToken) {
-        return loadGitHubState(workspaceRoot, autoToken);
-      }
-      return null;
-    }).then((state) => {
-      if (state) {
-        Object.assign(githubState, state);
-        sidebarProvider.refresh();
-      }
-    }).catch(() => { /* silent */ });
-  }
+  // Diagnostics
+  diagnostics = new ShipGateDiagnostics();
+  context.subscriptions.push(diagnostics);
 
-  // ── Ship command ──
+  // CodeLens
+  codeLens = new ShipGateCodeLens();
   context.subscriptions.push(
-    vscode.commands.registerCommand('shipgate.ship', async () => {
-      const token = await acquireGitHubToken(true);
-      if (!token) {
-        vscode.window.showWarningMessage('GitHub sign-in required to ship. Please connect first.');
-        return;
-      }
-
-      // Gate on scan verdict
-      const lastVerdict = scanState.lastResult?.result?.verdict;
-      if (lastVerdict === 'NO_SHIP') {
-        const force = await vscode.window.showWarningMessage(
-          'Scan verdict is NO_SHIP. Fix violations before shipping.',
-          'Ship Anyway',
-          'Run Scan',
-          'Cancel'
-        );
-        if (force === 'Run Scan') {
-          await vscode.commands.executeCommand('shipgate.runScan');
-          return;
-        }
-        if (force !== 'Ship Anyway') return;
-      }
-
-      // Collect options via quick input
-      const message = await vscode.window.showInputBox({
-        prompt: 'Commit message',
-        value: 'shipgate: verified ship',
-        placeHolder: 'Describe your changes',
-      });
-      if (!message) return;
-
-      const prTitle = await vscode.window.showInputBox({
-        prompt: 'PR title',
-        value: message,
-        placeHolder: 'Pull request title',
-      });
-      if (!prTitle) return;
-
-      const draftChoice = await vscode.window.showQuickPick(
-        [
-          { label: 'Ready for review', value: false },
-          { label: 'Draft PR', value: true },
-        ],
-        { placeHolder: 'PR type' }
-      );
-      if (!draftChoice) return;
-
-      // Execute ship
-      await vscode.window.withProgress(
-        {
-          location: vscode.ProgressLocation.Notification,
-          title: 'Shipgate: Shipping to GitHub...',
-          cancellable: false,
-        },
-        async (progress) => {
-          progress.report({ message: 'Committing changes...' });
-          try {
-            const result = await ship({
-              cwd: workspaceRoot,
-              token,
-              message,
-              prTitle,
-              draft: draftChoice.value,
-            });
-
-            if (result.prUrl) {
-              const open = await vscode.window.showInformationMessage(
-                `Shipped! PR #${result.prNumber} created on ${result.branch}`,
-                'Open PR',
-                'Close'
-              );
-              if (open === 'Open PR') {
-                vscode.env.openExternal(vscode.Uri.parse(result.prUrl));
-              }
-            } else {
-              vscode.window.showInformationMessage(
-                `Pushed to ${result.branch} (${result.commitSha})${result.error ? ` — ${result.error}` : ''}`
-              );
-            }
-
-            // Refresh GitHub state
-            const newState = await loadGitHubState(workspaceRoot, token);
-            Object.assign(githubState, newState);
-            sidebarProvider.refresh();
-          } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            vscode.window.showErrorMessage(`Ship failed: ${msg}`);
-          }
-        }
-      );
-    })
+    vscode.languages.registerCodeLensProvider(
+      [
+        { language: 'typescript' }, 
+        { language: 'typescriptreact' }, 
+        { language: 'javascript' }, 
+        { language: 'javascriptreact' }, 
+        { language: 'python' }
+      ],
+      codeLens
+    )
   );
 
-  // ── Open Walkthrough command ──
-  context.subscriptions.push(
-    vscode.commands.registerCommand('shipgate.openWalkthrough', () => {
-      vscode.commands.executeCommand('workbench.action.openWalkthrough', 'shipgate.shipgate-isl#shipgate-walkthrough');
-    })
-  );
+  // Status bar
+  statusBar = new ShipGateStatusBar();
+  context.subscriptions.push(statusBar);
 
-  // ── Code to ISL command ──
+  // Commands
   context.subscriptions.push(
-    vscode.commands.registerCommand('shipgate.codeToIsl', async () => {
-      const editor = vscode.window.activeTextEditor;
-      let targetPath = workspaceRoot;
-      if (editor?.document.uri?.scheme === 'file') {
-        const folder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
-        if (folder) targetPath = editor.document.uri.fsPath;
-      }
-
-      const result = await runCodeToIsl(workspaceRoot, targetPath);
-      if (result.success) {
-        vscode.window.showInformationMessage(
-          `Generated ${result.generatedCount ?? 0} ISL spec(s) from code.`
-        );
-        sidebarProvider.refresh();
-      } else {
-        vscode.window.showErrorMessage(`Code to ISL failed: ${result.error}`);
-      }
-    })
-  );
-
-  // ── Intent Builder commands ──
-  context.subscriptions.push(
-    vscode.commands.registerCommand('shipgate.intentBuild', async (prompt: string) => {
-      await runIntentBuild(prompt, workspaceRoot, {
-        onProgress: (state) => {
-          intentBuilderState = state;
-          sidebarProvider.refresh();
-        },
-      }, outputChannel, storedApiKey);
+    vscode.commands.registerCommand('shipgate.verify', () => runVerification('full')),
+    vscode.commands.registerCommand('shipgate.verifyFile', () => runVerification('file')),
+    vscode.commands.registerCommand('shipgate.init', () => runInit()),
+    vscode.commands.registerCommand('shipgate.ship', () => runShipCheck()),
+    vscode.commands.registerCommand('shipgate.autofix', () => runAutofix('file')),
+    vscode.commands.registerCommand('shipgate.autofixAll', () => runAutofix('all')),
+    vscode.commands.registerCommand('shipgate.toggleWatch', () => toggleWatch()),
+    vscode.commands.registerCommand('shipgate.viewProofBundle', () => viewProofBundle()),
+    vscode.commands.registerCommand('shipgate.exportReport', () => exportReport()),
+    vscode.commands.registerCommand('shipgate.openDashboard', () => {
+      vscode.env.openExternal(vscode.Uri.parse('http://localhost:3000'));
     }),
-    vscode.commands.registerCommand('shipgate.setApiKey', async (key: string) => {
-      await context.secrets.store(API_KEY_SECRET, key);
-      storedApiKey = key;
-      intentBuilderState.hasApiKey = true;
-      sidebarProvider.refresh();
-      vscode.window.showInformationMessage('API key saved securely.');
-    }),
-    vscode.commands.registerCommand('shipgate.clearApiKey', async () => {
-      await context.secrets.delete(API_KEY_SECRET);
-      storedApiKey = undefined;
-      intentBuilderState.hasApiKey = false;
-      sidebarProvider.refresh();
-      vscode.window.showInformationMessage('API key removed.');
-    })
+    vscode.commands.registerCommand('shipgate.showFindings', () => showFindings()),
+    vscode.commands.registerCommand('shipgate.clearFindings', () => clearFindings()),
   );
 
-  // ── ShipGate commands ──
-  registerGenerateCommand(context, outputChannel);
-  registerGenerateSkeletonCommand(context, outputChannel);
-  const diagnosticCollection = registerVerifyCommands(context, outputChannel);
-  registerCoverageCommand(context, outputChannel);
-  registerValidateCommand(context, () => client, outputChannel);
-
-  // ── Legacy ISL commands (parse, typecheck, codegen, etc.) ──
-  registerCommands(context, () => client, outputChannel);
-
-  // ── CodeLens provider ──
-  const codeLensProvider = registerCodeLensProvider(context);
-
-  // ── Diagnostics integration ──
-  setupDiagnosticsIntegration(context, () => client, outputChannel);
-
-  // ── Language server (start in background so activation completes immediately) ──
-  const config = vscode.workspace.getConfiguration('shipgate');
-  if (config.get<boolean>('languageServer.enabled', true)) {
-    void startLanguageServer(context);
-  }
-
-  // ── Watch for config changes ──
+  // Scan on save
   context.subscriptions.push(
-    vscode.workspace.onDidChangeConfiguration(async (e) => {
-      if (e.affectsConfiguration('shipgate.languageServer.enabled')) {
-        const enabled = vscode.workspace
-          .getConfiguration('shipgate')
-          .get<boolean>('languageServer.enabled', true);
-
-        if (enabled && !client) {
-          await startLanguageServer(context);
-        } else if (!enabled && client) {
-          await stopClient(client);
-          client = undefined;
-          statusBar?.setReady();
-        }
+    vscode.workspace.onDidSaveTextDocument((doc) => {
+      if (vscode.workspace.getConfiguration('shipgate').get('scanOnSave')) {
+        runVerification('file', doc.uri);
       }
     })
   );
 
-  // ── Refresh CodeLens on diagnostics change ──
-  context.subscriptions.push(
-    vscode.languages.onDidChangeDiagnostics(() => {
-      codeLensProvider.refresh();
-    })
-  );
-
-  // ── Refresh status bar on coverage data ──
-  context.subscriptions.push(
-    vscode.workspace.onDidSaveTextDocument(() => {
-      const report = getLastCoverageReport();
-      if (report) {
-        statusBar?.updateCoverage(report);
-      }
-    })
-  );
-
-  // ── Live Firewall on save ──
-  const firewallEnabled = () =>
-    vscode.workspace.getConfiguration('shipgate').get<boolean>('firewall.enabled', true);
-  const firewallRunOnSave = () =>
-    vscode.workspace.getConfiguration('shipgate').get<boolean>('firewall.runOnSave', true);
-
-  context.subscriptions.push(
-    firewallService.onStateChange(() => sidebarProvider.refresh())
-  );
-
-  context.subscriptions.push(
-    vscode.workspace.onDidSaveTextDocument(async (doc) => {
-      if (!firewallEnabled() || !firewallRunOnSave()) return;
-      if (doc.uri.scheme !== 'file') return;
-      const filePath = doc.uri.fsPath;
-      const folder = vscode.workspace.getWorkspaceFolder(doc.uri);
-      const root = folder?.uri.fsPath ?? workspaceRoot;
-      if (!firewallService.isSupported(filePath)) return;
-
-      firewallService.configure(root);
-      try {
-        const result = await firewallService.evaluate(filePath, doc.getText());
-        const diags = firewallResultToDiagnostics(doc.uri, result, doc);
-        firewallDiagnosticCollection.set(doc.uri, diags);
-      } catch {
-        firewallDiagnosticCollection.delete(doc.uri);
-      }
-    })
-  );
-
-  // Clear firewall diagnostics when document is closed
-  context.subscriptions.push(
-    vscode.workspace.onDidCloseTextDocument((doc) => {
-      firewallDiagnosticCollection.delete(doc.uri);
-    })
-  );
-
-  // ── Manual Run Firewall command ──
-  context.subscriptions.push(
-    vscode.commands.registerCommand('shipgate.runFirewall', async () => {
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
-        vscode.window.showInformationMessage('Open a file to run the firewall.');
-        return;
-      }
-      const doc = editor.document;
-      if (doc.uri.scheme !== 'file') return;
-      const filePath = doc.uri.fsPath;
-      const folder = vscode.workspace.getWorkspaceFolder(doc.uri);
-      const root = folder?.uri.fsPath ?? workspaceRoot;
-      if (!firewallService.isSupported(filePath)) {
-        vscode.window.showWarningMessage('Firewall supports .ts, .tsx, .js, .jsx files only.');
-        return;
-      }
-      firewallService.configure(root);
-      try {
-        const result = await firewallService.evaluate(filePath, doc.getText());
-        const diags = firewallResultToDiagnostics(doc.uri, result, doc);
-        firewallDiagnosticCollection.set(doc.uri, diags);
-        const msg = result.allowed
-          ? `Firewall: allowed (${result.violations.length} warning(s))`
-          : `Firewall: blocked (${result.violations.length} violation(s))`;
-        vscode.window.showInformationMessage(msg);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        vscode.window.showErrorMessage(`Firewall failed: ${message}`);
-        firewallDiagnosticCollection.delete(doc.uri);
-      }
-    })
-  );
-
-  const activationTime = Date.now() - startTime;
-  outputChannel.appendLine(`[ShipGate] Extension activated in ${activationTime}ms`);
-
-  if (activationTime > 500) {
-    outputChannel.appendLine(
-      `[ShipGate] Warning: Activation took ${activationTime}ms (target: <500ms)`
-    );
-  }
+  console.log('ShipGate extension activated');
 }
 
-// ============================================================================
-// Deactivation
-// ============================================================================
+async function runVerification(scope: 'full' | 'file', uri?: vscode.Uri) {
+  statusBar.setScanning();
+  sidebarProvider.sendMessage({ type: 'scanning', scope });
 
-export async function deactivate(): Promise<void> {
-  if (client) {
-    await stopClient(client);
-    client = undefined;
-  }
-  if (statusBar) {
-    statusBar.dispose();
-    statusBar = undefined;
-  }
-  if (scanStatusBar) {
-    scanStatusBar.dispose();
-    scanStatusBar = undefined;
-  }
-}
-
-// ============================================================================
-// Language Server Lifecycle
-// ============================================================================
-
-async function startLanguageServer(context: vscode.ExtensionContext): Promise<void> {
   try {
-    statusBar?.setChecking();
-
-    client = createLanguageClient(context, outputChannel);
-    await startClient(client);
-    context.subscriptions.push(client);
-
-    setupClientNotifications(client);
-
-    // Fetch server version
-    try {
-      const versionResult = await client.sendRequest<{ version: string }>('isl/version');
-      if (versionResult?.version) {
-        statusBar?.setVersion(versionResult.version);
-      }
-    } catch {
-      // Version request not supported — continue
+    const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!cwd) {
+      throw new Error('No workspace folder found');
     }
 
-    statusBar?.setReady();
-    outputChannel.appendLine('[ShipGate] Language server started');
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    outputChannel.appendLine(`[ShipGate] Failed to start language server: ${message}`);
-    statusBar?.setError();
+    const target = scope === 'file' && uri ? uri.fsPath : '.';
+    
+    // Execute shipgate CLI
+    const { stdout } = await execAsync(`npx shipgate verify ${target} --json`, { 
+      cwd, 
+      timeout: 60000 
+    });
 
-    vscode.window.showWarningMessage(
-      `ShipGate: Language server failed to start: ${message}. Syntax highlighting will still work.`
-    );
+    const data = JSON.parse(stdout);
+    sidebarProvider.sendMessage({ type: 'results', data });
+    
+    if (data.findings) {
+      diagnostics.update(data.findings, cwd);
+      codeLens.updateFindings(data.findings);
+    }
+    
+    statusBar.setVerdict(data.verdict || 'SHIP', data.score || 100);
+  } catch (err: any) {
+    const errorMsg = err.message || 'Verification failed';
+    sidebarProvider.sendMessage({ type: 'error', message: errorMsg });
+    statusBar.setError();
+    vscode.window.showErrorMessage(`ShipGate: ${errorMsg}`);
   }
 }
 
-function setupClientNotifications(languageClient: LanguageClient): void {
-  // Server status updates
-  languageClient.onNotification(
-    'isl/status',
-    (params: { status: string; message?: string; errorCount?: number }) => {
-      switch (params.status) {
-        case 'ready':
-          statusBar?.setReady();
-          break;
-        case 'checking':
-          statusBar?.setChecking();
-          break;
-        case 'error':
-          statusBar?.setError(params.errorCount);
-          if (params.message) {
-            vscode.window.showErrorMessage(`ShipGate: ${params.message}`);
-          }
-          break;
-      }
-    }
-  );
+async function runInit() {
+  const terminal = vscode.window.createTerminal('ShipGate Init');
+  terminal.show();
+  terminal.sendText('npx shipgate init');
+}
 
-  // Server version updates
-  languageClient.onNotification('isl/version', (params: { version: string }) => {
-    statusBar?.setVersion(params.version);
-  });
+async function runShipCheck() {
+  statusBar.setScanning();
+  sidebarProvider.sendMessage({ type: 'scanning', scope: 'full' });
+
+  try {
+    const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!cwd) throw new Error('No workspace folder found');
+
+    const { stdout } = await execAsync('npx shipgate ship --ci --json', { cwd, timeout: 120000 });
+    const data = JSON.parse(stdout);
+    
+    sidebarProvider.sendMessage({ type: 'results', data });
+    statusBar.setVerdict(data.verdict || 'SHIP', data.score || 100);
+    
+    vscode.window.showInformationMessage(`ShipGate: ${data.verdict} (${data.score}/100)`);
+  } catch (err: any) {
+    sidebarProvider.sendMessage({ type: 'error', message: err.message });
+    statusBar.setError();
+  }
+}
+
+async function runAutofix(scope: 'file' | 'all') {
+  const terminal = vscode.window.createTerminal('ShipGate Fix');
+  terminal.show();
+  
+  if (scope === 'file') {
+    const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
+    if (activeFile) {
+      terminal.sendText(`npx shipgate fix ${activeFile}`);
+    }
+  } else {
+    terminal.sendText('npx shipgate fix --all');
+  }
+}
+
+async function toggleWatch() {
+  const config = vscode.workspace.getConfiguration('shipgate');
+  const current = config.get('watchMode');
+  await config.update('watchMode', !current, vscode.ConfigurationTarget.Workspace);
+  vscode.window.showInformationMessage(`ShipGate watch mode: ${!current ? 'enabled' : 'disabled'}`);
+}
+
+async function viewProofBundle() {
+  const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  if (!cwd) return;
+  
+  const bundlePath = vscode.Uri.file(`${cwd}/.shipgate/proof-bundle.json`);
+  try {
+    const doc = await vscode.workspace.openTextDocument(bundlePath);
+    await vscode.window.showTextDocument(doc);
+  } catch {
+    vscode.window.showWarningMessage('No proof bundle found');
+  }
+}
+
+async function exportReport() {
+  const terminal = vscode.window.createTerminal('ShipGate Export');
+  terminal.show();
+  terminal.sendText('npx shipgate export --format pdf');
+}
+
+async function showFindings() {
+  vscode.commands.executeCommand('workbench.actions.view.problems');
+}
+
+async function clearFindings() {
+  diagnostics.update([], '');
+  vscode.window.showInformationMessage('ShipGate findings cleared');
+}
+
+export function deactivate() {
+  console.log('ShipGate extension deactivated');
 }

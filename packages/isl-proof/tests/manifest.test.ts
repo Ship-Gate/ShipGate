@@ -160,7 +160,7 @@ describe('calculateBundleId', () => {
     },
     policyVersion: {
       bundleVersion: '1.0.0',
-      islStudioVersion: '0.1.0',
+      shipgateVersion: '0.1.0',
       packs: [],
     },
     gateResult: createGateResult(),
@@ -241,7 +241,7 @@ describe('signManifest and verifyManifestSignature', () => {
     },
     policyVersion: {
       bundleVersion: '1.0.0',
-      islStudioVersion: '0.1.0',
+      shipgateVersion: '0.1.0',
       packs: [],
     },
     gateResult: createGateResult(),

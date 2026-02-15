@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/stdlib-payments",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "ISL Payments Standard Library - PCI-compliant payment processing behaviors",
   "author": "mevla",
   "license": "MIT",

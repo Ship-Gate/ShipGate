@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/env-reality-checker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Agent 29 - Detect invented env vars and missing env definitions with precision",
   "type": "module",
   "main": "./dist/index.js",

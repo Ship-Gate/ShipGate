@@ -1,0 +1,12 @@
+{
+  "good": {
+    "verdictOneOf": ["SHIP", "WARN"],
+    "scoreAbove": 0.5,
+    "description": "Rich exports produce a meaningful auto-spec with decent coverage"
+  },
+  "bad": {
+    "verdictOneOf": ["WARN", "NO_SHIP"],
+    "scoreBelow": 0.8,
+    "description": "Trivial single-function file produces a shallow spec with low coverage"
+  }
+}

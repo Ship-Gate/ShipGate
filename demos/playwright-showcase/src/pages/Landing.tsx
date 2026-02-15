@@ -8,7 +8,6 @@ import ProblemBox from '../components/ProblemBox';
 import SolutionSection from '../components/SolutionSection';
 import TerminalDemo from '../components/TerminalDemo';
 import SocialProof from '../components/SocialProof';
-import ShipgateFooter from '../components/ShipgateFooter';
 import '../components/ContentCard.css';
 import { PRICING_PLANS, PRICING_FAQ as FAQ_ITEMS } from '../data/pricing';
 
@@ -402,9 +401,7 @@ export default function Landing() {
         {/* FAQ */}
         <FAQSection />
 
-        {/* Footer */}
-        <ShipgateFooter />
-      </div>
+              </div>
     </div>
   );
 }

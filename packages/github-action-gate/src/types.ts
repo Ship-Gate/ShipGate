@@ -7,7 +7,7 @@ export interface ActionInputs {
   mode: 'check' | 'enforce';
   /** Minimum score to pass (0-100) */
   threshold: number;
-  /** Path to .islstudio/config.json */
+  /** Path to .shipgate/config.json */
   configPath: string;
   /** Fail on: any, blocker, none */
   failOn: 'any' | 'blocker' | 'none';

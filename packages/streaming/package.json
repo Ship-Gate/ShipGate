@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/streaming",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ISL Stream Processing for reactive data flows and event processing",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

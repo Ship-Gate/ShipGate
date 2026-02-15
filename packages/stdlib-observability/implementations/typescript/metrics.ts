@@ -33,19 +33,19 @@ export type { MetricSample, MetricExporter };
 
 interface CounterData {
   value: number;
-  labels: Record<LabelName, LabelValue>;
+  labels?: Record<LabelName, LabelValue>;
 }
 
 interface GaugeData {
   value: number;
-  labels: Record<LabelName, LabelValue>;
+  labels?: Record<LabelName, LabelValue>;
 }
 
 interface HistogramData {
   sum: number;
   count: number;
   buckets: Map<number, number>;
-  labels: Record<LabelName, LabelValue>;
+  labels?: Record<LabelName, LabelValue>;
 }
 
 function labelsKey(labels?: Record<LabelName, LabelValue>): string {
@@ -116,8 +116,15 @@ export class InMemoryMetricExporter implements MetricExporter {
 
 export class CounterHandle {
   constructor(private readonly registry: MetricsRegistry, private readonly metricName: MetricName) {}
-  async increment(value = 1, labels?: Record<string, string>): Promise<void> {
-    const result = this.registry.incrementCounter({ name: this.metricName, value, labels });
+  async increment(valueOrLabels?: number | Record<string, string>, labels?: Record<string, string>): Promise<void> {
+    let value = 1;
+    let resolvedLabels = labels;
+    if (typeof valueOrLabels === 'object') {
+      resolvedLabels = valueOrLabels;
+    } else if (typeof valueOrLabels === 'number') {
+      value = valueOrLabels;
+    }
+    const result = this.registry.incrementCounter({ name: this.metricName, value, labels: resolvedLabels });
     if (!result.success) throw (result as { success: false; error: Error }).error;
   }
 }
@@ -144,16 +151,15 @@ export class HistogramHandle {
     const result = this.registry.observeHistogram({ name: this.metricName, value, labels });
     if (!result.success) throw (result as { success: false; error: Error }).error;
   }
-  async recordTiming(startTime: Date, endTime?: Date): Promise<{ durationMs: number }> {
+  async recordTiming(startTime: Date, endTime?: Date, labels?: Record<string, string>): Promise<{ durationMs: number }> {
     const end = endTime ?? new Date();
     const durationMs = end.getTime() - startTime.getTime();
-    await this.observe(durationMs / 1000);
+    await this.observe(durationMs / 1000, labels);
     return { durationMs };
   }
 }
 
 export class SummaryHandle {
-  private readonly values: number[] = [];
   constructor(
     private readonly registry: MetricsRegistry,
     private readonly metricName: MetricName,
@@ -161,10 +167,7 @@ export class SummaryHandle {
     private readonly maxAge?: number
   ) {}
   async observe(value: number): Promise<void> {
-    this.values.push(value);
-    // Store in histogram for collection
-    const result = this.registry.observeHistogram({ name: this.metricName, value });
-    if (!result.success) throw (result as { success: false; error: Error }).error;
+    this.registry.observeSummary(this.metricName, value);
   }
 }
 
@@ -258,15 +261,14 @@ export class MetricsRegistry {
     if (this.definitions.has(config.name)) {
       throw new Error(`Metric "${config.name}" already registered`);
     }
-    // Register as histogram for simplicity
     this.definitions.set(config.name, {
       name: config.name,
-      type: MetricType.HISTOGRAM,
+      type: MetricType.SUMMARY,
       description: config.description,
       unit: config.unit,
       labels: config.labels,
     });
-    this.histograms.set(config.name, new Map());
+    this.summaries.set(config.name, { values: [], objectives: config.objectives });
     const handle = new SummaryHandle(this, config.name, config.objectives, config.maxAge);
     this.handles.set(config.name, handle);
     return handle;
@@ -295,7 +297,8 @@ export class MetricsRegistry {
 
   incrementCounter(input: CounterInput): Result<void> {
     try {
-      const { name, value = 1, labels = {} } = input;
+      const { name, value = 1 } = input;
+      const labels = input.labels && Object.keys(input.labels).length > 0 ? input.labels : undefined;
 
       if (value < 0) {
         return failure(new Error('Counter value must be non-negative'));
@@ -340,7 +343,8 @@ export class MetricsRegistry {
 
   setGauge(input: GaugeInput): Result<void> {
     try {
-      const { name, value, labels = {} } = input;
+      const { name, value } = input;
+      const labels = input.labels && Object.keys(input.labels).length > 0 ? input.labels : undefined;
 
       let gaugeMap = this.gauges.get(name);
       if (!gaugeMap) {
@@ -393,7 +397,8 @@ export class MetricsRegistry {
 
   observeHistogram(input: HistogramInput): Result<void> {
     try {
-      const { name, value, labels = {} } = input;
+      const { name, value } = input;
+      const labels = input.labels && Object.keys(input.labels).length > 0 ? input.labels : undefined;
 
       let histogramMap = this.histograms.get(name);
       if (!histogramMap) {
@@ -443,6 +448,17 @@ export class MetricsRegistry {
 
     const key = labelsKey(labels);
     return histogramMap.get(key);
+  }
+
+  // ==========================================================================
+  // Summary Operations
+  // ==========================================================================
+
+  observeSummary(name: MetricName, value: number): void {
+    const summaryData = this.summaries.get(name);
+    if (summaryData) {
+      summaryData.values.push(value);
+    }
   }
 
   // ==========================================================================
@@ -520,8 +536,9 @@ export class MetricsRegistry {
       }
     }
 
-    // Collect histograms
+    // Collect histograms (but not summaries - handled separately)
     for (const [name, histogramMap] of this.histograms) {
+      if (this.summaries.has(name)) continue;
       for (const [, data] of histogramMap) {
         // Sum
         samples.push({
@@ -539,11 +556,12 @@ export class MetricsRegistry {
         });
         // Buckets
         for (const [bucket, count] of data.buckets) {
+          const leStr = Number.isInteger(bucket) ? bucket.toFixed(1) : String(bucket);
           samples.push({
             name: `${name}_bucket`,
             timestamp: now,
             value: count,
-            labels: { ...data.labels, le: String(bucket) },
+            labels: { ...(data.labels ?? {}), le: leStr },
           });
         }
         // +Inf bucket
@@ -551,25 +569,32 @@ export class MetricsRegistry {
           name: `${name}_bucket`,
           timestamp: now,
           value: data.count,
-          labels: { ...data.labels, le: '+Inf' },
+          labels: { ...(data.labels ?? {}), le: '+Inf' },
         });
       }
     }
 
-    // Add summary quantiles (simplified)
-    for (const [name, def] of this.definitions) {
-      if (name.includes('_') || def.type !== MetricType.HISTOGRAM) continue;
-      const objectives = new Map([[0.5, 0.05], [0.9, 0.01], [0.99, 0.001]]);
+    // Collect summaries with real quantile calculation
+    for (const [name, summaryData] of this.summaries) {
+      const { values, objectives } = summaryData;
+      if (values.length === 0) continue;
+
+      const sorted = [...values].sort((a, b) => a - b);
+      const count = sorted.length;
+      const sum = sorted.reduce((a, b) => a + b, 0);
+
       for (const [quantile] of objectives) {
+        const idx = Math.ceil(quantile * count) - 1;
+        const val = sorted[Math.max(0, Math.min(idx, count - 1))]!;
         samples.push({
           name,
           timestamp: now,
-          value: Math.random() * 100, // Simplified
-          labels: { quantile: String(quantile) }
+          value: val,
+          labels: { quantile: String(quantile) },
         });
       }
-      samples.push({ name: `${name}_count`, timestamp: now, value: 100 });
-      samples.push({ name: `${name}_sum`, timestamp: now, value: 4950 });
+      samples.push({ name: `${name}_count`, timestamp: now, value: count });
+      samples.push({ name: `${name}_sum`, timestamp: now, value: sum });
     }
     return samples;
   }

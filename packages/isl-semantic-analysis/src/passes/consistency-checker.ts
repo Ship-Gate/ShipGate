@@ -424,6 +424,31 @@ function checkBoundsSatisfiability(bounds: BoundInfo[]): { satisfiable: boolean;
   return { satisfiable: true };
 }
 
+/**
+ * Check if a variable name is bound in an expression via an 'in' operator.
+ * When the parser doesn't fully recognize quantifiers in domain invariant blocks,
+ * it may parse `all a in Account (pred)` as separate expressions where `a` appears
+ * as the left operand of an `in` BinaryExpr. In that case, `a` is a bound variable.
+ */
+function isVariableBoundInExpression(expr: Expression, varName: string): boolean {
+  if (expr.kind === 'BinaryExpr') {
+    const bin = expr as BinaryExpr;
+    if (bin.operator === 'in') {
+      // Left side of 'in' is a bound variable
+      if (bin.left.kind === 'Identifier' && (bin.left as Identifier).name === varName) {
+        return true;
+      }
+    }
+    // Check sub-expressions
+    return isVariableBoundInExpression(bin.left, varName) || isVariableBoundInExpression(bin.right, varName);
+  }
+  if (expr.kind === 'QuantifierExpr') {
+    const q = expr as QuantifierExpr;
+    if (q.variable.name === varName) return true;
+  }
+  return false;
+}
+
 // ============================================================================
 // Result Field Extraction
 // ============================================================================
@@ -436,6 +461,14 @@ function extractResultFields(expr: Expression): Set<string> {
   
   function walk(e: Expression): void {
     switch (e.kind) {
+      case 'ResultExpr': {
+        // Parser represents result.field as ResultExpr { property: Identifier { name: 'field' } }
+        const res = e as ResultExpr;
+        if (res.property) {
+          fields.add(res.property.name);
+        }
+        break;
+      }
       case 'MemberExpr': {
         const mem = e as MemberExpr;
         // Check if this is result.field or result.nested.field
@@ -664,9 +697,15 @@ function checkInvariantVariables(
           }
         }
         
-        // Check for common built-in functions/variables
-        const builtins = new Set(['true', 'false', 'null', 'this', 'self', 'now', 'today']);
+        // Check for common built-in functions/variables and quantifier keywords
+        const builtins = new Set(['true', 'false', 'null', 'this', 'self', 'now', 'today',
+          'all', 'any', 'none', 'count', 'sum', 'filter', 'exists', 'forall']);
         if (builtins.has(varName)) {
+          continue;
+        }
+        
+        // Check if this variable is bound via an 'in' operator (pseudo-quantifier)
+        if (isVariableBoundInExpression(predicate, varName)) {
           continue;
         }
         

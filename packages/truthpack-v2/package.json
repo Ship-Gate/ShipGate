@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/truthpack-v2",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Truthpack v2 - Canonical project reality snapshot with drift detection",
   "type": "module",
   "main": "./dist/index.js",

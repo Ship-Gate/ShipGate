@@ -1,0 +1,21 @@
+{
+  "name": "@isl-lang/shipgate-e2e-intent",
+  "version": "1.0.1",
+  "private": true,
+  "type": "module",
+  "description": "E2E integration tests proving Shipgate catches real code violations against ISL specs",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:update-snapshots": "vitest run --update",
+    "test:ci": "vitest run --reporter=json --outputFile=./results.json"
+  },
+  "dependencies": {
+    "@isl-lang/parser": "workspace:*",
+    "@isl-lang/isl-verify": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "^1.6.0",
+    "typescript": "^5.4.0"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/reality-probe",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Reality Prober - Probe real routes, env vars, and critical dependencies to detect ghost features",
   "type": "module",
   "main": "./dist/index.js",

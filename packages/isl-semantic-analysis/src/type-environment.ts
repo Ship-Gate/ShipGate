@@ -100,9 +100,13 @@ class TypeEnvironmentImpl implements TypeEnvironment {
   private indexType(type: TypeDeclaration): void {
     const name = type.name.name;
     
+    // Support both 'definition' (parser AST) and 'type' (isl-core/test mock) properties
+    const typeAny = type as unknown as Record<string, unknown>;
+    const typeDef = type.definition || (typeAny.type as TypeDefinition | undefined);
+    
     // Check if this is an enum type
-    if (type.definition && type.definition.kind === 'EnumType') {
-      const enumDef = type.definition as { variants: Array<{ name: { name: string } }> };
+    if (typeDef && typeDef.kind === 'EnumType') {
+      const enumDef = typeDef as unknown as { variants: Array<{ name: { name: string } }> };
       const entry: SymbolEntry = {
         name,
         kind: 'enum',
@@ -129,8 +133,8 @@ class TypeEnvironmentImpl implements TypeEnvironment {
     const entry: SymbolEntry = {
       name,
       kind: 'type',
-      type: type.definition 
-        ? this.resolveTypeDefinition(type.definition)
+      type: typeDef 
+        ? this.resolveTypeDefinition(typeDef)
         : { typeName: name, nullable: false, isArray: false, declaredAt: type.location },
       exported: true,
       doc: this.extractDoc(type),
@@ -273,12 +277,21 @@ class TypeEnvironmentImpl implements TypeEnvironment {
           declaredAt: typeDef.location,
         };
 
-      default:
+      default: {
+        // Handle SimpleType and other shapes where name may be a string or Identifier
+        const anyDef = typeDef as unknown as Record<string, unknown>;
+        if (typeof anyDef.name === 'string') {
+          return { typeName: anyDef.name, nullable: false, isArray: false, declaredAt: undefined };
+        }
+        if (anyDef.name && typeof anyDef.name === 'object' && 'name' in (anyDef.name as Record<string, unknown>)) {
+          return { typeName: (anyDef.name as { name: string }).name, nullable: false, isArray: false, declaredAt: undefined };
+        }
         return {
           typeName: 'unknown',
           nullable: false,
           isArray: false,
         };
+      }
     }
   }
 

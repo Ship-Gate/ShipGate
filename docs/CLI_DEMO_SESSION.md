@@ -30,8 +30,8 @@ Created:
   + my-auth-service/
   + my-auth-service/specs/
   + my-auth-service/specs/auth.isl
-  + my-auth-service/.islstudio/
-  + my-auth-service/.islstudio/config.json
+  + my-auth-service/.shipgate/
+  + my-auth-service/.shipgate/config.json
 
 Next steps:
   cd my-auth-service

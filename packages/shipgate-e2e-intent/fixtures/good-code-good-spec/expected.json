@@ -1,0 +1,13 @@
+{
+  "good": {
+    "verdictOneOf": ["SHIP", "WARN"],
+    "scoreAbove": 0.6,
+    "description": "Fully compliant code with a typed spec should SHIP or at minimum WARN"
+  },
+  "bad": {
+    "verdictOneOf": ["NO_SHIP"],
+    "scoreBelow": 0.5,
+    "mustContainMessagePatterns": ["postcondition|fail|violation"],
+    "description": "Bad code with good spec MUST fail — postcondition violations detected"
+  }
+}

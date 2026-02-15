@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/security-verifier-enhancer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Security Verifier Enhancer - Detects auth drift between ISL specs and implementations",
   "license": "MIT",
   "author": "ISL Team",

@@ -9,7 +9,7 @@
  * The Claims Verification Agent ensures that any numeric claim in documentation
  * or landing content can be traced to a verifiable source:
  * 
- * - Command output (e.g., `npx islstudio rules list`)
+ * - Command output (e.g., `npx shipgate rules list`)
  * - Repository metadata (package.json, file counts)
  * - Explicitly provided user facts
  * 

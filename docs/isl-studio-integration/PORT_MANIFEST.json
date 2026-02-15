@@ -409,7 +409,7 @@
         "packages/vscode-extension/*",
         "apps/vscode-extension/*"
       ],
-      "reason": "ISL Studio has its own VSCode extension"
+      "reason": "Shipgate has its own VSCode extension"
     },
     {
       "category": "API Server",
@@ -423,7 +423,7 @@
       "paths": [
         "packages/core/src/truthpack/*"
       ],
-      "reason": "ISL Studio has its own validation system"
+      "reason": "Shipgate has its own validation system"
     },
     {
       "category": "Most CLI Commands",

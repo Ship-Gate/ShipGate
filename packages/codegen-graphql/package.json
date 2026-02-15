@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/codegen-graphql",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "GraphQL schema and resolver generator for ISL",
   "author": "ISL Team",
   "license": "MIT",

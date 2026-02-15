@@ -1,18 +1,16 @@
 #!/usr/bin/env node
 
 /**
- * ISL CLI
- * 
- * Command-line interface for the Intent Specification Language.
- * 
+ * ShipGate CLI
+ *
+ * Command-line interface for ShipGate — define what your code should do, we enforce it.
+ *
  * Commands:
- *   isl check <files>          - Parse and type check ISL files
- *   isl generate --types       - Generate TypeScript types
- *   isl generate --tests       - Generate test files
- *   isl generate --docs        - Generate documentation
- *   isl verify --impl <file>   - Verify implementation against spec
- *   isl init <name>            - Initialize new ISL project
- *   isl build                  - Full pipeline: check + generate
+ *   shipgate check <files>     - Parse and type check ISL files
+ *   shipgate generate --types  - Generate TypeScript types
+ *   shipgate verify --impl     - Verify implementation against spec
+ *   shipgate init <name>       - Initialize new ShipGate project
+ *   shipgate build             - Full pipeline: check + generate
  */
 
 import { program } from './cli.js';

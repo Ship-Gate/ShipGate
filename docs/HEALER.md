@@ -44,7 +44,7 @@ The Honesty Guard is the final line of defense.
 🚫 **Add suppression directives**
 ```typescript
 // FORBIDDEN: Any of these
-// islstudio-ignore rate-limit
+// shipgate-ignore rate-limit
 // @ts-ignore
 // @ts-nocheck
 // eslint-disable
@@ -184,7 +184,7 @@ const DEFAULT_HONESTY_CONFIG = {
   // Patterns for config files (monitored)
   configPatterns: [
     '**/.islrc*',
-    '**/islstudio.config.*',
+    '**/shipgate.config.*',
     '**/gate.config.*'
   ],
   
@@ -207,7 +207,7 @@ In rare cases (legacy code migration), you may need to allow specific suppressio
 const config = {
   allowedSuppressions: [
     {
-      pattern: 'islstudio-ignore no-console',
+      pattern: 'shipgate-ignore no-console',
       justification: 'Legacy code being refactored - TECH-123',
       expires: '2024-06-01'  // Suppression expires after this date
     }
@@ -251,7 +251,7 @@ One or more forbidden edits were detected.
 ╠════════════════════════════════════════════════════════════════╣
 ║ 🚫 SUPPRESSION DIRECTIVE (1)
 ║   • src/api/auth.ts:15
-║     Suppression directive detected: ISL Studio suppression
+║     Suppression directive detected: Shipgate suppression
 ║ ...
 ╚════════════════════════════════════════════════════════════════╝
 `
@@ -286,7 +286,7 @@ import { HonestyGuard, parseDiff } from '@isl-lang/healer';
 describe('Honesty Guard', () => {
   it('should reject suppression insertion', () => {
     const diff = `diff --git a/src/api.ts b/src/api.ts
-+  // islstudio-ignore rate-limit`;
++  // shipgate-ignore rate-limit`;
     
     const result = HonestyGuard.checkDiff(diff);
     
@@ -358,5 +358,5 @@ The guard catches all these scenarios by inspecting the actual bytes being commi
 
 - [ISL Syntax Reference](./SYNTAX.md)
 - [Policy Packs](./packages/isl-policy-packs/README.md)
-- [Gate System](./packages/islstudio/README.md)
+- [Gate System](./packages/shipgate/README.md)
 - [Proof Bundle Format](./packages/isl-healer/ARCHITECTURE.md)

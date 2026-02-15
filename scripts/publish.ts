@@ -134,6 +134,8 @@ const PUBLISH_ORDER = [
   '@isl-lang/lsp-core',
   '@isl-lang/lsp-server',
   '@isl-lang/repl',
+  // MCP Server
+  '@isl-lang/mcp-server',
   // Shipgate (user-facing)
   '@shipgate/sdk',
   'shipgate',

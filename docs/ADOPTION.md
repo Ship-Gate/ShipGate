@@ -1,22 +1,22 @@
-# ISL Studio - Adoption Guide
+# Shipgate - Adoption Guide
 
 ## 2-Minute Setup for Any Repo
 
 ### Option 1: One Command (Recommended)
 
 ```bash
-npx islstudio init
+npx shipgate init
 ```
 
 This creates:
-- `.islstudio/config.json` - Policy configuration
+- `.shipgate/config.json` - Policy configuration
 - `.github/workflows/isl-gate.yml` - CI workflow
 - Optional baseline for existing violations
 
 Then commit and push:
 ```bash
-git add .islstudio .github/workflows/isl-gate.yml
-git commit -m "Add ISL Studio gate"
+git add .shipgate .github/workflows/isl-gate.yml
+git commit -m "Add Shipgate gate"
 git push
 ```
 
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ISL-Studio/islstudio-gate-action@v1
+      - uses: shipgate/gate-action@v1
 ```
 
 ## What Gets Blocked?
@@ -49,7 +49,7 @@ jobs:
 | **PII** | Logged sensitive data, unmasked responses, missing encryption |
 | **Payments** | Payment bypass, client-side prices, unsigned webhooks |
 | **Rate Limit** | Missing limits on auth/API endpoints |
-| **Intent** | Code that violates declared ISL specifications |
+| **Intent** | Code that violates declared Shipgate specifications |
 
 ## Not Breaking Existing Code
 
@@ -58,9 +58,9 @@ jobs:
 Don't want to fix 200 existing issues? Baseline them:
 
 ```bash
-npx islstudio baseline create
-git add .islstudio/baseline.json
-git commit -m "Add ISL baseline"
+npx shipgate baseline create
+git add .shipgate/baseline.json
+git commit -m "Add Shipgate baseline"
 ```
 
 Now only **new** violations block PRs.
@@ -68,13 +68,13 @@ Now only **new** violations block PRs.
 ### Suppress Specific Violations
 
 ```typescript
-// islstudio-ignore pii/console-in-production: Debug logging, removed before release
+// shipgate-ignore pii/console-in-production: Debug logging, removed before release
 console.log(userData);
 ```
 
 ### Configure Packs
 
-`.islstudio/config.json`:
+`.shipgate/config.json`:
 ```json
 {
   "preset": "startup-default",
@@ -100,21 +100,21 @@ console.log(userData);
 
 ```bash
 # Check all files
-npx islstudio gate
+npx shipgate gate
 
 # Check with detailed fix guidance
-npx islstudio gate --explain
+npx shipgate gate --explain
 
 # Only changed files
-npx islstudio gate --changed-only
+npx shipgate gate --changed-only
 
 # JSON output for CI
-npx islstudio gate --ci --output json
+npx shipgate gate --ci --output json
 ```
 
 ## Target Repos
 
-ISL Studio works best with:
+Shipgate works best with:
 
 - **Express/Fastify/Nest APIs** - Auth, rate limiting, PII
 - **Next.js apps** - API routes, auth, data handling
@@ -132,6 +132,6 @@ ISL Studio works best with:
 
 ## Links
 
-- [GitHub Action](https://github.com/ISL-Studio/islstudio-gate-action)
-- [Demo Repo](https://github.com/ISL-Studio/islstudio-hello-gate)
-- [npm Package](https://npmjs.com/package/islstudio)
+- [GitHub Action](https://github.com/shipgate/gate-action)
+- [Demo Repo](https://github.com/shipgate/shipgate-hello-gate)
+- [npm Package](https://npmjs.com/package/shipgate)

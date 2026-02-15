@@ -1,5 +1,6 @@
 {
   "name": "@isl-lang/observability",
+  "private": true,
   "version": "0.1.0",
   "description": "OpenTelemetry-based observability for ISL CLI and pipeline instrumentation",
   "type": "module",

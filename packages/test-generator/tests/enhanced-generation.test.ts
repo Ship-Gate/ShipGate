@@ -20,13 +20,14 @@ function createDomain(
   name: string,
   behaviors: AST.Behavior[],
   entities: AST.Entity[] = [],
-  types: AST.TypeAlias[] = []
+  types: AST.TypeDeclaration[] = []
 ): AST.Domain {
   return {
     kind: 'Domain',
     name: { kind: 'Identifier', name, location: mockLocation() },
     version: { kind: 'StringLiteral', value: '1.0.0', location: mockLocation() },
     imports: [],
+    uses: [],
     types,
     entities,
     behaviors,
@@ -35,6 +36,12 @@ function createDomain(
     views: [],
     scenarios: [],
     chaos: [],
+    apis: [],
+    storage: [],
+    workflows: [],
+    events: [],
+    handlers: [],
+    screens: [],
     location: mockLocation(),
   };
 }
@@ -109,8 +116,10 @@ function constrainedType(
     kind: 'ConstrainedType',
     base,
     constraints: constraints.map(c => ({
+      kind: 'Constraint' as const,
       name: c.name,
       value: c.value,
+      location: mockLocation(),
     })),
     location: mockLocation(),
   };
@@ -490,8 +499,10 @@ describe('Representative Specs', () => {
     // Should have meaningful email values
     expect(testFile!.content).toMatch(/@.*\./);
 
-    // Should have password of correct length
-    const passwordMatches = testFile!.content.match(/password:\s*["']([^"']+)["']/g);
+    // Should have password of correct length in valid test section
+    // (invalid/boundary tests intentionally produce short passwords)
+    const validSection = testFile!.content.split("Invalid Inputs")[0] ?? testFile!.content;
+    const passwordMatches = validSection.match(/password:\s*["']([^"']+)["']/g);
     if (passwordMatches) {
       for (const match of passwordMatches) {
         const value = match.match(/["']([^"']+)["']/)?.[1];
@@ -668,8 +679,10 @@ describe('Representative Specs', () => {
     const testFile = result.files.find(f => f.path.includes('CreateUser.test.ts'));
     expect(testFile).toBeDefined();
 
-    // Usernames should be at least 3 chars
-    const usernameMatches = testFile!.content.match(/username:\s*["']([^"']+)["']/g);
+    // Usernames should be at least 3 chars in valid section
+    // (invalid/boundary tests intentionally produce short usernames)
+    const validSection = testFile!.content.split("Invalid Inputs")[0] ?? testFile!.content;
+    const usernameMatches = validSection.match(/username:\s*["']([^"']+)["']/g);
     if (usernameMatches) {
       for (const match of usernameMatches) {
         const value = match.match(/["']([^"']+)["']/)?.[1];

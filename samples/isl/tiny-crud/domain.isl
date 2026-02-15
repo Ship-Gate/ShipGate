@@ -13,7 +13,7 @@ domain TinyCrud {
 
   entity Todo {
     id: UUID [immutable, unique]
-    title: String { min_length: 1, max_length: 255 }
+    title: String { min_length: 1 max_length: 255 }
     status: TodoStatus [default: OPEN, indexed]
     created_at: Timestamp [immutable]
     updated_at: Timestamp
@@ -124,7 +124,7 @@ domain TinyCrud {
     }
 
     invariants {
-      - ARCHIVED status is terminal: no transition from ARCHIVED to OPEN
+      - "ARCHIVED status is terminal; no transition from ARCHIVED to OPEN"
     }
   }
 
@@ -178,25 +178,27 @@ domain TinyCrud {
 
     post success {
       - result.items.length <= input.limit
-      - input.status != null implies result.items.all(t => t.status == input.status)
+      - input.status != null implies all(result.items, t => t.status == input.status)
     }
   }
 
   scenario "Full CRUD lifecycle" {
-    step create = CreateTodo({ title: "Buy milk" })
-    assert create.success
-    assert create.result.status == OPEN
-
-    step read = GetTodo({ id: create.result.id })
-    assert read.result.title == "Buy milk"
-
-    step update = UpdateTodo({ id: create.result.id, status: DONE })
-    assert update.result.status == DONE
-
-    step delete = DeleteTodo({ id: create.result.id })
-    assert delete.success
-
-    step verify = GetTodo({ id: create.result.id })
-    assert verify.error == NOT_FOUND
+    given {
+      create = CreateTodo(title: "Buy milk")
+    }
+    when {
+      read = GetTodo(id: create.result.id)
+      update = UpdateTodo(id: create.result.id, status: DONE)
+      delete = DeleteTodo(id: create.result.id)
+      verify = GetTodo(id: create.result.id)
+    }
+    then {
+      create.success
+      create.result.status == OPEN
+      read.result.title == "Buy milk"
+      update.result.status == DONE
+      delete.success
+      verify.error == NOT_FOUND
+    }
   }
 }

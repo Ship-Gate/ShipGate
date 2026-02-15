@@ -14,6 +14,27 @@ import type {
 } from '@isl-lang/parser';
 import type { SemanticPass, PassContext } from '../types.js';
 
+// ============================================================================
+// AST Normalization
+// ============================================================================
+
+function normalizeConditions(input: unknown): Expression[] {
+  if (!input) return [];
+  if (Array.isArray(input)) return input as Expression[];
+  const obj = input as Record<string, unknown>;
+  if (Array.isArray(obj.conditions)) {
+    return (obj.conditions as Array<Record<string, unknown>>)
+      .map(c => (c.expression || c) as Expression);
+  }
+  return [];
+}
+
+function normalizeExprKind(expr: Expression): string {
+  const kind = expr.kind as string;
+  if (kind === 'ComparisonExpression') return 'BinaryExpr';
+  return kind;
+}
+
 export const UnsatisfiablePreconditionsPass: SemanticPass = {
   id: 'unsatisfiable-preconditions',
   name: 'Unsatisfiable Preconditions',
@@ -27,10 +48,11 @@ export const UnsatisfiablePreconditionsPass: SemanticPass = {
     const { ast, filePath, typeEnv } = ctx;
 
     for (const behavior of ast.behaviors || []) {
-      if (behavior.preconditions && behavior.preconditions.length > 0) {
+      const preconditions = normalizeConditions(behavior.preconditions);
+      if (preconditions.length > 0) {
         diagnostics.push(...analyzePreconditions(
           behavior,
-          behavior.preconditions,
+          preconditions,
           filePath,
           typeEnv
         ));
@@ -147,7 +169,7 @@ interface ConstraintInfo {
 }
 
 function extractConstraint(expr: Expression): Omit<ConstraintInfo, 'location'> | null {
-  if (expr.kind === 'BinaryExpr') {
+  if (normalizeExprKind(expr) === 'BinaryExpr') {
     const binary = expr as { 
       left?: Expression; 
       operator?: string; 
@@ -313,7 +335,7 @@ interface AlwaysFalseResult {
 
 function checkAlwaysFalse(expr: Expression): AlwaysFalseResult | null {
   // x != x is always false
-  if (expr.kind === 'BinaryExpr') {
+  if (normalizeExprKind(expr) === 'BinaryExpr') {
     const binary = expr as { left?: Expression; operator?: string; right?: Expression };
     
     if (binary.operator === '!=' || binary.operator === '!==') {
@@ -335,7 +357,7 @@ function checkAlwaysFalse(expr: Expression): AlwaysFalseResult | null {
   }
 
   // Literal false
-  if (expr.kind === 'BooleanLiteral' && (expr as { value: boolean }).value === false) {
+  if (normalizeExprKind(expr) === 'BooleanLiteral' && (expr as { value: boolean }).value === false) {
     return { reason: "Precondition is literally 'false'" };
   }
 

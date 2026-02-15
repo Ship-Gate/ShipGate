@@ -1,7 +1,7 @@
 /**
  * Policy Packs Index
  * 
- * All available policy packs for ISL Studio
+ * All available policy packs for ShipGate
  */
 
 // Policy packs (full objects with metadata)

@@ -32,6 +32,7 @@
 
     root.appendChild(buildDriftSection(state));
     root.appendChild(buildScanSection(state));
+    root.appendChild(buildHealSection(state));
     root.appendChild(buildShipSection(state));
     root.appendChild(buildGitHubSection(state));
     root.appendChild(buildWorkflowsSection(state));
@@ -120,7 +121,7 @@
     // Buttons
     var runBtn = createButton('Run Scan', 'sg-btn sg-btn--primary', function () { post('runScan'); });
     runBtn.setAttribute('aria-label', 'Run verification scan');
-    if (state.phase === 'running') runBtn.disabled = true;
+    if (state.phase === 'running') setButtonLoading(runBtn, 'Scanning…');
     section.appendChild(runBtn);
 
     if (state.phase === 'complete') {
@@ -128,6 +129,208 @@
       btnRow.appendChild(createButton('Open Report', 'sg-btn', function () { post('openReport'); }));
       btnRow.appendChild(createButton('Copy Summary', 'sg-btn', function () { post('copySummary'); }));
       section.appendChild(btnRow);
+    }
+
+    return section;
+  }
+
+  // ── Heal ─────────────────────────────────────────────────────
+
+  function buildHealSection(state) {
+    var heal = state.heal || {};
+    var phase = heal.phase || 'idle';
+    var hasFailures = heal.failedFiles && heal.failedFiles.length > 0;
+    var scanDone = state.phase === 'complete';
+
+    var status = phase === 'running' ? 'running'
+      : phase === 'done' && heal.finalVerdict === 'SHIP' ? 'ship'
+      : phase === 'done' ? 'noship'
+      : hasFailures ? 'noship'
+      : '';
+
+    var section = createSection('Heal', status);
+
+    // Badge
+    var badgeText = phase === 'running' ? 'Healing…'
+      : phase === 'done' ? (heal.finalVerdict || 'Done')
+      : hasFailures ? heal.failedFiles.length + ' issue(s)'
+      : 'Ready';
+    var badgeClass = phase === 'running' ? 'checking'
+      : phase === 'done' && heal.finalVerdict === 'SHIP' ? 'ship'
+      : hasFailures ? 'blocked'
+      : 'idle';
+    sectionHeader(section).appendChild(createBadge(badgeText, badgeClass, phase === 'running'));
+
+    // Summary
+    var summary = h('div', 'sg-summary');
+    if (phase === 'running') {
+      summary.textContent = heal.message || 'AI is analyzing and fixing code…';
+    } else if (phase === 'done') {
+      var scoreText = heal.finalScore != null ? Math.round(heal.finalScore * 100) + '%' : '—';
+      summary.textContent = heal.finalVerdict === 'SHIP'
+        ? 'All issues resolved! Score: ' + scoreText
+        : 'Healed ' + (heal.patchedFiles || []).length + ' file(s). Score: ' + scoreText;
+    } else if (!scanDone) {
+      summary.textContent = 'Run a scan first, then heal any failures with AI.';
+    } else if (hasFailures) {
+      summary.textContent = 'AI can automatically fix ' + heal.failedFiles.length + ' failing file(s), or choose a file to heal manually.';
+    } else {
+      summary.textContent = 'All files passing — nothing to heal.';
+    }
+    section.appendChild(summary);
+
+    // Progress shimmer while healing
+    if (phase === 'running') {
+      var progress = h('div', 'sg-progress');
+      progress.appendChild(h('div', 'sg-progress-bar'));
+      section.appendChild(progress);
+    }
+
+    // Error
+    if (heal.error) {
+      var err = h('div', 'sg-summary sg-mt-4');
+      err.style.color = 'var(--sg-red)';
+      err.textContent = heal.error;
+      section.appendChild(err);
+    }
+
+    // Patched files result
+    if (phase === 'done' && heal.patchedFiles && heal.patchedFiles.length > 0) {
+      var patchList = h('div', 'sg-heal-patches sg-mt-4');
+      var patchTitle = h('div', 'sg-sub-title');
+      patchTitle.textContent = 'Patched Files';
+      patchList.appendChild(patchTitle);
+      heal.patchedFiles.forEach(function (f) {
+        var item = h('div', 'sg-list-item sg-list-item--clickable');
+        var dot = h('span', 'sg-dot sg-dot--pass');
+        item.appendChild(dot);
+        var name = h('span', 'sg-finding-file');
+        name.textContent = f.split(/[/\\]/).pop();
+        name.setAttribute('title', f);
+        item.appendChild(name);
+        item.addEventListener('click', function () { post('openFile', f); });
+        patchList.appendChild(item);
+      });
+      section.appendChild(patchList);
+    }
+
+    // ── Auto Heal button ──
+    if (scanDone && hasFailures) {
+      var healBtn = createButton('', 'sg-btn sg-btn--primary sg-mt-4', function () { post('healAll'); });
+      if (phase === 'running') {
+        setButtonLoading(healBtn, 'Healing…');
+      } else {
+        healBtn.innerHTML = '\u26a1 Heal All (' + heal.failedFiles.length + ' files)';
+      }
+      healBtn.setAttribute('aria-label', 'AI auto-fix all failing files');
+      section.appendChild(healBtn);
+    }
+
+    // ── Manual Heal: file picker + intent ──
+    if (scanDone && hasFailures && phase !== 'running') {
+      section.appendChild(h('div', 'sg-divider sg-mt-4'));
+
+      var manualTitle = h('div', 'sg-sub-title');
+      manualTitle.textContent = 'Manual Heal';
+      section.appendChild(manualTitle);
+
+      var manualDesc = h('div', 'sg-summary');
+      manualDesc.textContent = 'Pick a file, describe your correct intent, and heal it.';
+      section.appendChild(manualDesc);
+
+      // File selector
+      var selectWrap = h('div', 'sg-select-wrap sg-mt-4');
+      var selectLabel = h('label', 'sg-select-label');
+      selectLabel.textContent = 'File';
+      selectLabel.setAttribute('for', 'sg-heal-file-select');
+      selectWrap.appendChild(selectLabel);
+
+      var select = h('select', 'sg-select');
+      select.setAttribute('id', 'sg-heal-file-select');
+      var defaultOpt = h('option', '');
+      defaultOpt.textContent = 'Choose a file…';
+      defaultOpt.setAttribute('value', '');
+      select.appendChild(defaultOpt);
+
+      heal.failedFiles.forEach(function (f) {
+        var opt = h('option', '');
+        opt.setAttribute('value', f.file);
+        var shortName = f.file.split(/[/\\]/).pop();
+        var scorePct = Math.round(f.score * 100);
+        opt.textContent = shortName + ' (' + scorePct + '% — ' + (f.blockers[0] || 'failing') + ')';
+        select.appendChild(opt);
+      });
+      selectWrap.appendChild(select);
+      section.appendChild(selectWrap);
+
+      // Blockers preview for selected file
+      var blockersDiv = h('div', 'sg-heal-blockers sg-mt-4');
+      blockersDiv.setAttribute('id', 'sg-heal-blockers');
+      blockersDiv.style.display = 'none';
+      section.appendChild(blockersDiv);
+
+      // Intent textarea
+      var intentWrap = h('div', 'sg-input-wrap sg-mt-4');
+      var intentLabel = h('label', 'sg-select-label');
+      intentLabel.textContent = 'Your Intent (optional)';
+      intentLabel.setAttribute('for', 'sg-heal-intent');
+      intentWrap.appendChild(intentLabel);
+
+      var intentArea = h('textarea', 'sg-textarea');
+      intentArea.setAttribute('id', 'sg-heal-intent');
+      intentArea.setAttribute('rows', '3');
+      intentArea.setAttribute('placeholder', 'Describe what this file should do, e.g. "Transfer money between accounts, validate balance before debit, return transaction ID on success"');
+      intentWrap.appendChild(intentArea);
+      section.appendChild(intentWrap);
+
+      // Update blockers when file selection changes
+      select.addEventListener('change', function () {
+        var selectedFile = select.value;
+        var bd = document.getElementById('sg-heal-blockers');
+        if (!bd) return;
+        if (!selectedFile) {
+          bd.style.display = 'none';
+          bd.innerHTML = '';
+          return;
+        }
+        var entry = null;
+        for (var i = 0; i < heal.failedFiles.length; i++) {
+          if (heal.failedFiles[i].file === selectedFile) {
+            entry = heal.failedFiles[i];
+            break;
+          }
+        }
+        if (!entry || !entry.blockers || entry.blockers.length === 0) {
+          bd.style.display = 'none';
+          bd.innerHTML = '';
+          return;
+        }
+        bd.style.display = 'block';
+        bd.innerHTML = '';
+        var bt = h('div', 'sg-sub-title');
+        bt.textContent = 'Current Blockers';
+        bd.appendChild(bt);
+        entry.blockers.forEach(function (b) {
+          var bItem = h('div', 'sg-heal-blocker-item');
+          bItem.textContent = '• ' + b;
+          bd.appendChild(bItem);
+        });
+      });
+
+      // Heal File button
+      var healFileBtn = createButton('', 'sg-btn sg-btn--primary sg-mt-4', function () {
+        var selEl = document.getElementById('sg-heal-file-select');
+        var intentEl = document.getElementById('sg-heal-intent');
+        var file = selEl ? selEl.value : '';
+        var intent = intentEl ? intentEl.value : '';
+        if (!file) {
+          return;
+        }
+        post('healFile', { file: file, intent: intent.trim() });
+      });
+      healFileBtn.innerHTML = '🔧 Heal Selected File';
+      healFileBtn.setAttribute('aria-label', 'Heal selected file with AI');
+      section.appendChild(healFileBtn);
     }
 
     return section;
@@ -251,6 +454,11 @@
     pullBtn.setAttribute('aria-label', 'Create pull request');
     btnRow.appendChild(pullBtn);
 
+    if (state.shipping) {
+      setButtonLoading(shipBtn, 'Shipping…');
+      setButtonLoading(pullBtn, 'Shipping…');
+    }
+
     section.appendChild(btnRow);
     return section;
   }
@@ -277,6 +485,7 @@
     var ghBtn = createButton('', 'sg-btn', function () { post('githubConnect'); });
     ghBtn.innerHTML = ghIcon(16) + ' ' + (gh.connected ? 'Refresh' : 'Connect');
     ghBtn.setAttribute('aria-label', gh.connected ? 'Refresh GitHub connection' : 'Connect to GitHub');
+    if (gh.connecting) setButtonLoading(ghBtn, 'Connecting…');
     section.appendChild(ghBtn);
 
     // Pull requests
@@ -434,7 +643,7 @@
 
       // Still show Code→ISL button (doesn't need API key)
       var codeBtnRow = h('div', 'sg-btn-row sg-mt-4');
-      codeBtnRow.appendChild(createButton('Code → ISL', 'sg-btn', function () { post('codeToIsl'); }));
+      codeBtnRow.appendChild(createButton('Code \u2192 ISL', 'sg-btn', function () { post('codeToIsl'); }));
       section.appendChild(codeBtnRow);
 
       return section;
@@ -525,16 +734,19 @@
 
     // Buttons
     var btnRow = h('div', 'sg-btn-row sg-mt-4');
-    if (phase === 'idle' || phase === 'done' || ib.error) {
-      var buildBtn = createButton('Build', 'sg-btn sg-btn--primary', function () {
-        var promptEl = document.getElementById('sg-intent-prompt');
-        var promptText = promptEl ? promptEl.value : '';
-        if (promptText.trim()) {
-          post('intentBuild', { prompt: promptText.trim() });
-        }
-      });
-      btnRow.appendChild(buildBtn);
+    var isBuilding = phase !== 'idle' && phase !== 'done' && !ib.error;
+    var buildBtn = createButton('Build', 'sg-btn sg-btn--primary', function () {
+      var promptEl = document.getElementById('sg-intent-prompt');
+      var promptText = promptEl ? promptEl.value : '';
+      if (promptText.trim()) {
+        post('intentBuild', { prompt: promptText.trim() });
+      }
+    });
+    if (isBuilding) {
+      var phaseLabel = phase === 'generating' ? 'Generating\u2026' : phase === 'scanning' ? 'Verifying\u2026' : phase === 'codegen' ? 'Writing Code\u2026' : 'Building\u2026';
+      setButtonLoading(buildBtn, phaseLabel);
     }
+    btnRow.appendChild(buildBtn);
 
     // Code→ISL button + clear key
     btnRow.appendChild(createButton('Code → ISL', 'sg-btn', function () { post('codeToIsl'); }));
@@ -687,6 +899,15 @@
     btn.setAttribute('type', 'button');
     btn.addEventListener('click', onClick);
     return btn;
+  }
+
+  function setButtonLoading(btn, loadingText) {
+    btn.classList.add('sg-btn--loading');
+    btn.disabled = true;
+    btn.innerHTML = '';
+    var spinner = h('span', 'sg-btn-spinner');
+    btn.appendChild(spinner);
+    btn.appendChild(document.createTextNode(' ' + loadingText));
   }
 
   function verdictToClass(verdict) {

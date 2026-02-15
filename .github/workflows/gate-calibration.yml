@@ -5,13 +5,13 @@ on:
     branches: [main]
     paths:
       - 'bench/corpus/**'
-      - 'packages/islstudio/**'
+      - 'packages/cli/**'
       - 'packages/isl-gate/**'
       - 'packages/cli/**'
   pull_request:
     paths:
       - 'bench/corpus/**'
-      - 'packages/islstudio/**'
+      - 'packages/cli/**'
       - 'packages/isl-gate/**'
       - 'packages/cli/**'
   schedule:

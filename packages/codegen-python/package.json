@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/codegen-python",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Python code generator for ISL - generates Pydantic models and FastAPI endpoints",
   "author": "ISL Team",
   "license": "MIT",

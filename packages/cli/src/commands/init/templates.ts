@@ -45,9 +45,8 @@ export function generateShipGateYml(options: ShipGateYmlOptions): string {
     ignorePatterns.push(`    - "**/${testPattern}"`);
   }
 
-  // Common ignores
+  // Common ignores (defaults include node_modules, dist, .next, etc.)
   ignorePatterns.push('    - src/generated/**');
-  ignorePatterns.push('    - node_modules/**');
 
   const requireSection = criticalDirs.length > 0
     ? `  require_isl:\n${requireIslLines}`

@@ -1,5 +1,6 @@
 {
   "name": "@isl-lang/stdlib-actors",
+  "private": true,
   "version": "0.1.0",
   "description": "Actor model for ISL - distributed systems, message passing, and supervision",
   "main": "dist/index.js",

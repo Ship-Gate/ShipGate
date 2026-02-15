@@ -1,6 +1,6 @@
 name: 'ISL Gate'
 description: 'Run ISL Gate to verify code quality and produce SHIP/NO_SHIP verdicts'
-author: 'ISL Studio'
+author: 'ShipGate'
 
 branding:
   icon: 'shield'

@@ -1,0 +1,19 @@
+{
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "description": "Health check endpoint"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "description": "Login endpoint"
+    },
+    {
+      "method": "GET",
+      "path": "/api/user/:id",
+      "description": "Get user by ID"
+    }
+  ]
+}

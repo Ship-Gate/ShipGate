@@ -301,8 +301,8 @@ export function generateHtmlViewer(manifest: ProofBundleManifest): string {
           <div style="margin-top: 0.25rem;"><code>${escapeHtml(manifest.policyVersion.bundleVersion)}</code></div>
         </div>
         <div>
-          <div class="meta"><strong>ISL Studio:</strong></div>
-          <div style="margin-top: 0.25rem;"><code>${escapeHtml(manifest.policyVersion.islStudioVersion)}</code></div>
+          <div class="meta"><strong>ShipGate:</strong></div>
+          <div style="margin-top: 0.25rem;"><code>${escapeHtml(manifest.policyVersion.shipgateVersion)}</code></div>
         </div>
       </div>
       ${manifest.policyVersion.packs.length > 0 ? `

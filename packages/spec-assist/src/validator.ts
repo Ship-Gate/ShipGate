@@ -322,9 +322,10 @@ async function runQuickVerify(isl: string): Promise<VerifyStageResult> {
       success: true, // Quick verify is advisory
       issues,
     };
-  } catch {
-    // Verifier not available - pass
-    return { success: true, issues: [] };
+  } catch (err) {
+    // Verifier not available — report as unsuccessful rather than silently passing
+    const message = err instanceof Error ? err.message : String(err);
+    return { success: false, issues: [{ message: `Verifier unavailable: ${message}`, severity: 'warning' }] };
   }
 }
 

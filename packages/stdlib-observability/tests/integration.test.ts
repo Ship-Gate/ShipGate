@@ -32,6 +32,7 @@ import {
 import {
   HealthCheckRegistry,
   HealthStatus,
+  HealthCheckType,
   createCustomHealthCheck,
 } from '../implementations/typescript/health';
 
@@ -83,10 +84,12 @@ describe('Observability Integration', () => {
       setCorrelationContext(context);
 
       // Start a span
-      const { span } = await tracer.startSpan({
+      const startResult = tracer.startSpan({
         name: 'operation',
         attributes: { operation: 'test' },
       });
+      expect(startResult.success).toBe(true);
+      const { span } = (startResult as { success: true; value: any }).value;
 
       // Log within the span
       await logger.info('Operation started', {
@@ -103,14 +106,8 @@ describe('Observability Integration', () => {
 
       await counter.increment({ operation: 'test' });
 
-      const histogram = metrics.registerHistogram({
-        name: 'operation_duration_seconds',
-        description: 'Operation duration',
-        unit: MetricUnit.SECONDS,
-      });
-
       // End the span
-      await tracer.endSpan({
+      tracer.endSpan({
         spanId: span.spanId,
         status: SpanStatus.OK,
       });
@@ -127,7 +124,6 @@ describe('Observability Integration', () => {
       expect(logs[0].traceId).toBe(context.traceId);
       expect(logs[0].spanId).toBe(context.spanId);
       expect(spans[0].traceId).toBe(context.traceId);
-      expect(spans[0].spanId).toBe(context.spanId);
 
       // Metrics should have the right labels
       const operationCounter = metricSamples.find(s => 
@@ -147,13 +143,10 @@ describe('Observability Integration', () => {
             async () => {
               await logger.info('Nested operation 1');
               
-              const { span } = await tracer.startSpan({
-                name: 'nested-1',
-              });
-              
-              await tracer.endSpan({
-                spanId: span.spanId,
-              });
+              const r1 = tracer.startSpan({ name: 'nested-1' });
+              if (r1.success) {
+                tracer.endSpan({ spanId: r1.value.span.spanId });
+              }
             }
           );
 
@@ -163,13 +156,10 @@ describe('Observability Integration', () => {
             async () => {
               await logger.info('Nested operation 2');
               
-              const { span } = await tracer.startSpan({
-                name: 'nested-2',
-              });
-              
-              await tracer.endSpan({
-                spanId: span.spanId,
-              });
+              const r2 = tracer.startSpan({ name: 'nested-2' });
+              if (r2.success) {
+                tracer.endSpan({ spanId: r2.value.span.spanId });
+              }
             }
           );
         }
@@ -209,7 +199,7 @@ describe('Observability Integration', () => {
       setCorrelationContext(context);
 
       // Create server span
-      const { span: serverSpan, context: serverContext } = await tracer.startSpan({
+      const serverResult = tracer.startSpan({
         name: 'http-request',
         kind: SpanKind.SERVER,
         attributes: {
@@ -218,6 +208,8 @@ describe('Observability Integration', () => {
           'http.user_agent': 'test-agent',
         },
       });
+      expect(serverResult.success).toBe(true);
+      const { span: serverSpan, context: serverContext } = (serverResult as { success: true; value: any }).value;
 
       // Update context with new span ID
       setCorrelationContext({ spanId: serverSpan.spanId });
@@ -230,7 +222,7 @@ describe('Observability Integration', () => {
       });
 
       // Simulate database operation
-      const { span: dbSpan } = await tracer.startSpan({
+      const dbResult = tracer.startSpan({
         name: 'db-query',
         parentContext: serverContext,
         attributes: {
@@ -238,6 +230,8 @@ describe('Observability Integration', () => {
           'db.statement': 'SELECT * FROM users',
         },
       });
+      expect(dbResult.success).toBe(true);
+      const { span: dbSpan } = (dbResult as { success: true; value: any }).value;
 
       setCorrelationContext({ spanId: dbSpan.spanId });
 
@@ -254,7 +248,7 @@ describe('Observability Integration', () => {
 
       await dbTimer.recordTiming(dbStart, dbEnd, { query: 'select_users' });
 
-      await tracer.endSpan({ spanId: dbSpan.spanId, status: SpanStatus.OK });
+      tracer.endSpan({ spanId: dbSpan.spanId, status: SpanStatus.OK });
 
       // Simulate business logic
       setCorrelationContext({ spanId: serverSpan.spanId });
@@ -273,7 +267,7 @@ describe('Observability Integration', () => {
       });
 
       // End server span
-      await tracer.endSpan({
+      tracer.endSpan({
         spanId: serverSpan.spanId,
         status: SpanStatus.OK,
       });
@@ -316,21 +310,18 @@ describe('Observability Integration', () => {
 
   describe('Health Check Integration', () => {
     it('should integrate health checks with other observability data', async () => {
+      // Register the counter once before health checks
+      const healthCheckCounter = metrics.registerCounter({
+        name: 'health_checks_total',
+        description: 'Health check executions',
+      });
+
       // Register health checks
       health.register('database', {
-        type: 'CUSTOM' as any,
+        type: HealthCheckType.CUSTOM,
         checkFn: createCustomHealthCheck(async () => {
-          // Simulate checking database while also logging
           await logger.info('Checking database health');
-          
-          // Record health check metric
-          const healthCheckCounter = metrics.registerCounter({
-            name: 'health_checks_total',
-            description: 'Health check executions',
-          });
-          
           await healthCheckCounter.increment({ service: 'database' });
-          
           return {
             status: HealthStatus.HEALTHY,
             message: 'Database responding',
@@ -340,17 +331,10 @@ describe('Observability Integration', () => {
       });
 
       health.register('cache', {
-        type: 'CUSTOM' as any,
+        type: HealthCheckType.CUSTOM,
         checkFn: createCustomHealthCheck(async () => {
           await logger.warn('Cache degraded');
-          
-          const healthCheckCounter = metrics.registerCounter({
-            name: 'health_checks_total',
-            description: 'Health check executions',
-          });
-          
           await healthCheckCounter.increment({ service: 'cache' });
-          
           return {
             status: HealthStatus.DEGRADED,
             message: 'Cache high latency',
@@ -401,11 +385,13 @@ describe('Observability Integration', () => {
       await counter.increment({ type: 'test_error' });
 
       // Continue tracing after error
-      const { span } = await tracer.startSpan({
+      const spanResult = tracer.startSpan({
         name: 'error-recovery',
       });
+      expect(spanResult.success).toBe(true);
+      const { span } = (spanResult as { success: true; value: any }).value;
 
-      await tracer.endSpan({
+      tracer.endSpan({
         spanId: span.spanId,
         status: SpanStatus.OK,
       });

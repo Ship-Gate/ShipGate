@@ -30,7 +30,7 @@ export async function runGate(options: GateRunnerOptions): Promise<GateRunnerRes
     }
 
     // Load and validate configuration
-    const config = loadGateConfig(options.configPath || '.islstudio/config.json', options.projectRoot);
+    const config = loadGateConfig(options.configPath || '.shipgate/config.json', options.projectRoot);
     validateGateConfig(config);
 
     // Prepare gate input

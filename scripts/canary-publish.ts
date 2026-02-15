@@ -49,7 +49,13 @@ function loadCanaryPackages(): string[] {
     process.exit(1);
   }
 
-  const config: ExperimentalConfig = JSON.parse(readFileSync(configPath, 'utf-8'));
+  let config: ExperimentalConfig;
+  try {
+    config = JSON.parse(readFileSync(configPath, 'utf-8'));
+  } catch (err) {
+    console.error('experimental.json invalid:', err);
+    process.exit(1);
+  }
   const packages: string[] = [];
 
   // Collect experimental packages

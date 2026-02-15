@@ -1,6 +1,6 @@
 // ============================================================================
 // Host & Reality-Gap Scanner Diagnostics
-// Maps firewall (ShipGate + ISL Studio) verdicts to LSP diagnostics.
+// Maps firewall (ShipGate) verdicts to LSP diagnostics.
 // Severity, codes, and messages match CLI output; suppressions/allowlists
 // are applied inside the firewall.
 // ============================================================================
@@ -64,7 +64,7 @@ function claimLocationToRange(claim: { location: { line: number; column: number;
   };
 }
 
-/** Line-only violation (e.g. ISL Studio): claimId is "line-<num>". */
+/** Line-only violation (e.g. policy packs): claimId is "line-<num>". */
 function lineOnlyRange(document: TextDocument, claimId: string): Range {
   const match = /^line-(\d+)$/.exec(claimId);
   const line = match ? parseInt(match[1], 10) : 1;
@@ -191,7 +191,7 @@ export class ScannerDiagnosticsProvider {
   }
 }
 
-/** Ghost-* rules come from truthpack validation = Host scanner; everything else = Reality-Gap (ISL Studio). */
+/** Ghost-* rules come from truthpack validation = Host scanner; everything else = Reality-Gap (ShipGate policy packs). */
 function isHostViolation(policyId: string): boolean {
   return (
     policyId === 'ghost-route' ||

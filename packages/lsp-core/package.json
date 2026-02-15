@@ -1,6 +1,7 @@
 {
   "name": "@isl-lang/lsp-core",
-  "version": "0.1.0",
+  "private": true,
+  "version": "0.1.1",
   "description": "Core language intelligence for ISL LSP - shared analysis and diagnostics",
   "author": "ISL Team",
   "license": "MIT",

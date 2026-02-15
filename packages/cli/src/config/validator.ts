@@ -54,12 +54,14 @@ export function validateConfig(raw: unknown): ValidationResult {
   const obj = raw as Record<string, unknown>;
 
   // ── version (required) ──────────────────────────────────────────────────
+  // Accept: 1, "1", "1.0" (unified v1 / demo schema)
+  const validVersions = [1, '1', '1.0'];
   if (obj.version === undefined) {
-    errors.push({ path: 'version', message: 'version is required and must be 1' });
-  } else if (obj.version !== 1) {
+    errors.push({ path: 'version', message: 'version is required and must be 1 or "1.0"' });
+  } else if (!validVersions.includes(obj.version as number | string)) {
     errors.push({
       path: 'version',
-      message: 'version must be 1',
+      message: 'version must be 1, "1", or "1.0"',
       got: obj.version,
     });
   }
@@ -181,6 +183,108 @@ export function validateConfig(raw: unknown): ValidationResult {
     }
   }
 
+  // ── guardrails (optional object) ──────────────────────────────────────
+  if (obj.guardrails !== undefined) {
+    if (typeof obj.guardrails !== 'object' || obj.guardrails === null || Array.isArray(obj.guardrails)) {
+      errors.push({ path: 'guardrails', message: 'guardrails must be a mapping (object)' });
+    } else {
+      const gr = obj.guardrails as Record<string, unknown>;
+      const boolFields = [
+        ['allowAutoSpecShip', 'allow_auto_spec_ship'],
+        ['allowNoTestExecution', 'allow_no_test_execution'],
+        ['allowEmptyCategories', 'allow_empty_categories'],
+        ['allowUnvalidatedAiRules', 'allow_unvalidated_ai_rules'],
+      ] as const;
+
+      for (const [camel, snake] of boolFields) {
+        const val = gr[camel] ?? gr[snake];
+        if (val !== undefined && typeof val !== 'boolean') {
+          errors.push({
+            path: `guardrails.${camel}`,
+            message: `guardrails.${camel} must be a boolean`,
+            got: val,
+          });
+        }
+      }
+    }
+  }
+
+  // ── specs (optional object, demo schema) ───────────────────────────────
+  if (obj.specs !== undefined) {
+    if (typeof obj.specs !== 'object' || obj.specs === null || Array.isArray(obj.specs)) {
+      errors.push({ path: 'specs', message: 'specs must be a mapping (object)' });
+    } else {
+      const specs = obj.specs as Record<string, unknown>;
+      if (specs.include !== undefined) {
+        if (!Array.isArray(specs.include)) {
+          errors.push({ path: 'specs.include', message: 'specs.include must be an array of glob patterns' });
+        } else {
+          for (let i = 0; i < specs.include.length; i++) {
+            if (typeof specs.include[i] !== 'string') {
+              errors.push({
+                path: `specs.include[${i}]`,
+                message: `specs.include[${i}] must be a string`,
+                got: specs.include[i],
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // ── verify (optional object, demo schema) ───────────────────────────────
+  if (obj.verify !== undefined) {
+    if (typeof obj.verify !== 'object' || obj.verify === null || Array.isArray(obj.verify)) {
+      errors.push({ path: 'verify', message: 'verify must be a mapping (object)' });
+    } else {
+      const verify = obj.verify as Record<string, unknown>;
+      if (verify.strict !== undefined && typeof verify.strict !== 'boolean') {
+        errors.push({
+          path: 'verify.strict',
+          message: 'verify.strict must be a boolean',
+          got: verify.strict,
+        });
+      }
+      if (verify.policies !== undefined) {
+        if (typeof verify.policies !== 'object' || verify.policies === null || Array.isArray(verify.policies)) {
+          errors.push({ path: 'verify.policies', message: 'verify.policies must be a mapping (object)' });
+        } else {
+          const policies = verify.policies as Record<string, unknown>;
+          for (const [key, val] of Object.entries(policies)) {
+            if (val !== undefined && val !== null && typeof val === 'object' && !Array.isArray(val)) {
+              const policy = val as Record<string, unknown>;
+              if (policy.enabled !== undefined && typeof policy.enabled !== 'boolean') {
+                errors.push({
+                  path: `verify.policies.${key}.enabled`,
+                  message: `verify.policies.${key}.enabled must be a boolean`,
+                  got: policy.enabled,
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // ── evidence (optional object, demo schema) ─────────────────────────────
+  if (obj.evidence !== undefined) {
+    if (typeof obj.evidence !== 'object' || obj.evidence === null || Array.isArray(obj.evidence)) {
+      errors.push({ path: 'evidence', message: 'evidence must be a mapping (object)' });
+    } else {
+      const evidence = obj.evidence as Record<string, unknown>;
+      const outputDir = evidence.output_dir ?? evidence.outputDir;
+      if (outputDir !== undefined && typeof outputDir !== 'string') {
+        errors.push({
+          path: 'evidence.output_dir',
+          message: 'evidence.output_dir must be a string',
+          got: outputDir,
+        });
+      }
+    }
+  }
+
   if (errors.length > 0) {
     return { valid: false, errors };
   }
@@ -231,6 +335,53 @@ function normalizeConfig(obj: Record<string, unknown>): ShipGateConfig {
       output: generate.output as string | undefined,
       minConfidence: (generate.minConfidence ?? generate.min_confidence) as number | undefined,
     });
+  }
+
+  const guardrails = obj.guardrails as Record<string, unknown> | undefined;
+  if (guardrails) {
+    config.guardrails = stripUndefined({
+      allowAutoSpecShip: (guardrails.allowAutoSpecShip ?? guardrails.allow_auto_spec_ship) as boolean | undefined,
+      allowNoTestExecution: (guardrails.allowNoTestExecution ?? guardrails.allow_no_test_execution) as boolean | undefined,
+      allowEmptyCategories: (guardrails.allowEmptyCategories ?? guardrails.allow_empty_categories) as boolean | undefined,
+      allowUnvalidatedAiRules: (guardrails.allowUnvalidatedAiRules ?? guardrails.allow_unvalidated_ai_rules) as boolean | undefined,
+    });
+  }
+
+  // ── specs (demo schema: specs.include → internal spec include globs) ─────
+  const specs = obj.specs as Record<string, unknown> | undefined;
+  if (specs?.include) {
+    config.specs = stripUndefined({
+      include: specs.include as string[],
+    });
+  }
+
+  // ── verify (demo schema: verify.strict, verify.policies → internal) ──────
+  const verify = obj.verify as Record<string, unknown> | undefined;
+  if (verify) {
+    const policies = verify.policies as Record<string, Record<string, unknown>> | undefined;
+    const policyToggles: Record<string, { enabled?: boolean }> = {};
+    if (policies && typeof policies === 'object' && !Array.isArray(policies)) {
+      for (const [key, val] of Object.entries(policies)) {
+        if (val && typeof val === 'object' && !Array.isArray(val)) {
+          policyToggles[key] = { enabled: val.enabled as boolean | undefined };
+        }
+      }
+    }
+    config.verify = stripUndefined({
+      strict: verify.strict as boolean | undefined,
+      ...(Object.keys(policyToggles).length > 0 ? { policies: policyToggles } : {}),
+    });
+  }
+
+  // ── evidence (demo schema: evidence.output_dir → internal) ──────────────
+  const evidence = obj.evidence as Record<string, unknown> | undefined;
+  if (evidence) {
+    const outputDir = evidence.output_dir ?? evidence.outputDir;
+    if (outputDir !== undefined) {
+      config.evidence = stripUndefined({
+        output_dir: outputDir as string,
+      });
+    }
   }
 
   return config;

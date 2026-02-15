@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/codegen-tests",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generate executable Jest/Vitest tests from ISL behaviors and scenarios",
   "type": "module",
   "main": "dist/index.cjs",
@@ -16,7 +16,13 @@
     "test:unit": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage"
   },
-  "keywords": ["isl", "test-generation", "jest", "vitest", "codegen"],
+  "keywords": [
+    "isl",
+    "test-generation",
+    "jest",
+    "vitest",
+    "codegen"
+  ],
   "author": "mevla",
   "license": "MIT",
   "dependencies": {
@@ -49,5 +55,9 @@
     }
   },
   "sideEffects": false,
-  "files": ["dist", "README.md", "LICENSE"]
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
 }

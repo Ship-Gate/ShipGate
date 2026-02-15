@@ -1,0 +1,36 @@
+{
+  "name": "@isl-lang/spec-implementation-verifier",
+  "version": "0.1.0",
+  "description": "Verification engine that checks whether code actually implements what the inferred spec says",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "typescript": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "rimraf": "^5.0.5"
+  },
+  "keywords": ["isl", "verification", "spec", "implementation", "hallucination", "code-check"],
+  "license": "MIT",
+  "private": true,
+  "experimental": true,
+  "sideEffects": false,
+  "files": ["dist"]
+}

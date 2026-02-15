@@ -7,7 +7,7 @@
  *
  * Forbidden operations:
  * - Removing intents from ISL spec files
- * - Adding islstudio-ignore or similar suppression directives
+ * - Adding shipgate-ignore or similar suppression directives
  * - Lowering severity levels or disabling policy packs
  * - Weakening redirect allowlists or auth hardening
  *
@@ -42,7 +42,7 @@ import {
  */
 export const DEFAULT_HONESTY_CONFIG: HonestyGuardConfig = {
   islSpecPatterns: ['**/*.isl', '**/specs/**', '**/intent/**', '**/contracts/**'],
-  configPatterns: ['**/.islrc*', '**/islstudio.config.*', '**/gate.config.*'],
+  configPatterns: ['**/.islrc*', '**/shipgate.config.*', '**/gate.config.*'],
   strictMode: true, // In strict mode, ANY edit to ISL specs is forbidden
   customPatterns: [],
   allowedSuppressions: [],

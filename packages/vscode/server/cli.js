@@ -209,7 +209,12 @@ var ISLDocumentManager = class {
       } else if (trimmed.match(/^chaos\s+\w+/)) {
         currentBlock = "chaos";
         currentSection = "";
+      } else if (trimmed.match(/^type\s+\w+\s*=\s*\w+\s*\{/)) {
+        currentBlock = "type-constraint";
+        currentSection = "constraint";
       }
+      if (trimmed === "actors {") currentSection = "actors";
+      else if (trimmed.startsWith("api {") || trimmed === "endpoint {") currentSection = "endpoint";
       if (trimmed === "input {") currentSection = "input";
       else if (trimmed === "output {") currentSection = "output";
       else if (trimmed.startsWith("preconditions {") || trimmed === "pre {") currentSection = "pre";
@@ -247,6 +252,10 @@ var ISLDocumentManager = class {
             return "behavior-temporal";
           case "security":
             return "behavior-security";
+          case "actors":
+            return "actor-block";
+          case "endpoint":
+            return "endpoint-block";
           default:
             return "behavior";
         }
@@ -260,6 +269,8 @@ var ISLDocumentManager = class {
         return "scenario";
       case "chaos":
         return "chaos";
+      case "type-constraint":
+        return currentSection === "constraint" ? "constraint-block" : "domain";
       default:
         return "domain";
     }
@@ -383,6 +394,7 @@ var ENTITY_KEYWORDS = [
 var BEHAVIOR_KEYWORDS = [
   { label: "description", doc: "Behavior description" },
   { label: "actors", doc: "Authorized actors" },
+  { label: "endpoint", doc: "HTTP endpoint mapping" },
   { label: "input", doc: "Input parameters" },
   { label: "output", doc: "Output specification" },
   { label: "preconditions", doc: "Preconditions" },
@@ -393,6 +405,45 @@ var BEHAVIOR_KEYWORDS = [
   { label: "compliance", doc: "Compliance requirements" },
   { label: "observability", doc: "Observability settings" }
 ];
+var ACTOR_KEYWORDS = [
+  { label: "must", doc: "Required capability (e.g. authenticated)" },
+  { label: "can", doc: "Allowed capability" },
+  { label: "cannot", doc: "Forbidden capability" },
+  { label: "owns", doc: "Resource ownership requirement" }
+];
+var HTTP_METHODS = [
+  { label: "GET", doc: "Retrieve resource", insertText: 'GET "${1:/path}"', insertTextFormat: "snippet" },
+  { label: "POST", doc: "Create resource", insertText: 'POST "${1:/path}"', insertTextFormat: "snippet" },
+  { label: "PUT", doc: "Replace resource", insertText: 'PUT "${1:/path}"', insertTextFormat: "snippet" },
+  { label: "PATCH", doc: "Partial update", insertText: 'PATCH "${1:/path}"', insertTextFormat: "snippet" },
+  { label: "DELETE", doc: "Delete resource", insertText: 'DELETE "${1:/path}"', insertTextFormat: "snippet" }
+];
+var CRUD_VERBS = ["Create", "Get", "Read", "Update", "Delete", "List", "Search"];
+var CONSTRAINT_KEYS = {
+  String: [
+    { label: "min_length", doc: "Minimum string length", insertText: "min_length: ${1:0}" },
+    { label: "max_length", doc: "Maximum string length", insertText: "max_length: ${1:255}" },
+    { label: "format", doc: "Format pattern (email, url, uuid)", insertText: 'format: "${1:email}"' },
+    { label: "pattern", doc: "Regex pattern", insertText: 'pattern: "${1:^[a-z]+$}"' }
+  ],
+  Int: [
+    { label: "min", doc: "Minimum value", insertText: "min: ${1:0}" },
+    { label: "max", doc: "Maximum value", insertText: "max: ${1:100}" }
+  ],
+  Decimal: [
+    { label: "min", doc: "Minimum value", insertText: "min: ${1:0}" },
+    { label: "max", doc: "Maximum value", insertText: "max: ${1:999999}" },
+    { label: "precision", doc: "Decimal precision", insertText: "precision: ${1:2}" }
+  ],
+  default: [
+    { label: "min", doc: "Minimum value" },
+    { label: "max", doc: "Maximum value" },
+    { label: "format", doc: "Format constraint" },
+    { label: "unique", doc: "Unique constraint" },
+    { label: "optional", doc: "Optional field" },
+    { label: "default", doc: "Default value", insertText: "default: ${1:value}" }
+  ]
+};
 var TEMPORAL_KEYWORDS = [
   { label: "response", doc: "Response time constraint" },
   { label: "eventually", doc: "Eventually happens" },
@@ -599,6 +650,25 @@ var ISLCompletionProvider = class {
           detail: k.doc
         })));
         break;
+      case "actor-block":
+        items.push(...ACTOR_KEYWORDS.map((k) => ({
+          label: k.label,
+          kind: "keyword",
+          detail: k.doc
+        })));
+        break;
+      case "endpoint-block":
+        items.push(...HTTP_METHODS.map((m) => ({
+          label: m.label,
+          kind: "keyword",
+          detail: m.doc,
+          insertText: m.insertText,
+          insertTextFormat: m.insertTextFormat
+        })));
+        break;
+      case "constraint-block":
+        items.push(...this.getConstraintCompletions(context));
+        break;
       case "entity":
       case "entity-field":
         items.push(...ENTITY_KEYWORDS.map((k) => ({
@@ -606,6 +676,7 @@ var ISLCompletionProvider = class {
           kind: "keyword",
           detail: k.doc
         })));
+        items.push(...this.getEntityNameCompletions());
         break;
       case "behavior":
         items.push(...BEHAVIOR_KEYWORDS.map((k) => ({
@@ -757,9 +828,77 @@ var ISLCompletionProvider = class {
     }
     return items;
   }
+  getCrudBehaviorCompletions() {
+    const entities = this.documentManager.getEntityNames();
+    const items = [];
+    for (const verb of CRUD_VERBS) {
+      for (const entity of entities) {
+        items.push({
+          label: `${verb}${entity}`,
+          kind: "snippet",
+          detail: `${verb} ${entity} behavior`,
+          insertText: `behavior ${verb}${entity} {
+  description: "${verb} ${entity}"
+
+  input {
+    $0
+  }
+
+  output {
+    success: ${entity}
+  }
+}`,
+          insertTextFormat: "snippet"
+        });
+      }
+      if (entities.length === 0) {
+        items.push({
+          label: `${verb}Entity`,
+          kind: "snippet",
+          detail: `${verb} entity behavior`,
+          insertText: `behavior ${verb}\${1:Entity} {
+  description: "${verb} \${1:Entity}"
+
+  input {
+    $0
+  }
+
+  output {
+    success: \${1:Entity}
+  }
+}`,
+          insertTextFormat: "snippet"
+        });
+      }
+    }
+    return items;
+  }
+  getEntityNameCompletions() {
+    return this.documentManager.getEntityNames().map((name) => ({
+      label: name,
+      kind: "entity",
+      detail: "Entity name (PascalCase)"
+    }));
+  }
+  getConstraintCompletions(context) {
+    const fieldType = context.parentSymbol || "default";
+    const keys = CONSTRAINT_KEYS[fieldType] || CONSTRAINT_KEYS.default;
+    return keys.map((k) => ({
+      label: k.label,
+      kind: "property",
+      detail: k.doc,
+      insertText: k.insertText,
+      insertTextFormat: k.insertText ? "snippet" : void 0
+    }));
+  }
   getAnnotationCompletions() {
     return [
+      { label: "min", kind: "keyword", detail: "Minimum value", insertText: "min: ${1:N}", insertTextFormat: "snippet" },
+      { label: "max", kind: "keyword", detail: "Maximum value", insertText: "max: ${1:N}", insertTextFormat: "snippet" },
+      { label: "format", kind: "keyword", detail: "Format (email, url, uuid)", insertText: 'format: "${1:email}"', insertTextFormat: "snippet" },
       { label: "unique", kind: "keyword", detail: "Field must be unique" },
+      { label: "optional", kind: "keyword", detail: "Field is optional" },
+      { label: "default", kind: "keyword", detail: "Default value", insertText: "default: ${1:X}", insertTextFormat: "snippet" },
       { label: "immutable", kind: "keyword", detail: "Field cannot be changed" },
       { label: "indexed", kind: "keyword", detail: "Field is indexed" },
       { label: "sensitive", kind: "keyword", detail: "Contains sensitive data" },
@@ -1453,6 +1592,27 @@ var LINT_RULES = {
     severity: DiagnosticSeverity2.Error,
     category: "correctness"
   },
+  "ISL1005": {
+    id: "ISL1005",
+    name: "duplicate-entity-name",
+    description: "Duplicate entity name - entities must have unique names",
+    severity: DiagnosticSeverity2.Error,
+    category: "correctness"
+  },
+  "ISL1006": {
+    id: "ISL1006",
+    name: "undefined-entity-reference",
+    description: "Behavior references entity not defined in domain",
+    severity: DiagnosticSeverity2.Error,
+    category: "correctness"
+  },
+  "ISL1007": {
+    id: "ISL1007",
+    name: "type-constraint-mismatch",
+    description: "Constraint not valid for field type (e.g. min on string without length context)",
+    severity: DiagnosticSeverity2.Warning,
+    category: "correctness"
+  },
   // Best practice rules
   "ISL1010": {
     id: "ISL1010",
@@ -1531,12 +1691,36 @@ var ISLSemanticLinter = class {
    */
   lint(domain, filePath) {
     const diagnostics = [];
+    diagnostics.push(...this.lintDuplicateEntities(domain, filePath));
     diagnostics.push(...this.lintBehaviors(domain, filePath));
     diagnostics.push(...this.lintEntities(domain, filePath));
     diagnostics.push(...this.lintTypes(domain, filePath));
     diagnostics.push(...this.lintScenarios(domain, filePath));
     diagnostics.push(...this.lintSecurity(domain, filePath));
     return diagnostics.filter((d) => this.enabledRules.has(d.code || ""));
+  }
+  lintDuplicateEntities(domain, _filePath) {
+    const diagnostics = [];
+    const seen = /* @__PURE__ */ new Map();
+    for (const entity of domain.entities) {
+      const name = entity.name.name;
+      const existing = seen.get(name);
+      if (existing) {
+        diagnostics.push(this.createDiagnostic(
+          LINT_RULES["ISL1005"],
+          `Duplicate entity name '${name}' - entities must have unique names`,
+          entity.name.location,
+          {
+            type: "duplicate-entity-name",
+            entityName: name,
+            firstLocation: existing.name.location
+          }
+        ));
+      } else {
+        seen.set(name, entity);
+      }
+    }
+    return diagnostics;
   }
   // ============================================================================
   // Behavior Linting

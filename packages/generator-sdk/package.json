@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/generator-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SDK for building custom ISL code generators",
   "type": "module",
   "main": "./dist/index.js",

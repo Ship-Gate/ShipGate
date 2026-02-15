@@ -1,6 +1,6 @@
 {
   "name": "@shipgate/sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shipgate SDK — programmatic ISL parsing, verification, and gate decisions",
   "type": "module",
   "main": "dist/index.cjs",

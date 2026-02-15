@@ -35,9 +35,19 @@ interface ExperimentalConfig {
   [key: string]: unknown;
 }
 
-const expCfg: ExperimentalConfig = JSON.parse(
-  readFileSync(join(rootDir, 'experimental.json'), 'utf-8'),
-);
+let expCfg: ExperimentalConfig;
+try {
+  expCfg = JSON.parse(
+    readFileSync(join(rootDir, 'experimental.json'), 'utf-8'),
+  );
+} catch {
+  expCfg = {
+    production: {},
+    partial: {},
+    experimental: {},
+    internal: { packages: [] },
+  };
+}
 
 function flattenCategory(cat: Record<string, string[] | unknown>): string[] {
   const out: string[] = [];

@@ -113,7 +113,7 @@ Every claim has:
 
 Claims must be derived from one of:
 
-1. **Command Output** — `npx islstudio rules list`
+1. **Command Output** — `npx shipgate rules list`
 2. **Repo Metadata** — package.json, file counts
 3. **User Provided** — Explicit facts with attribution
 4. **Computed** — Derived from other verified claims
@@ -200,7 +200,7 @@ Create `known-facts.json`:
     "unit": "rules",
     "source": {
       "type": "command_output",
-      "command": "npx islstudio rules list --count"
+      "command": "npx shipgate rules list --count"
     }
   },
   {

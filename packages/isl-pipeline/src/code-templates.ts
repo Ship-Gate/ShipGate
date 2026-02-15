@@ -1,13 +1,44 @@
 /**
  * Production-Ready Code Templates
- * 
+ *
  * These templates generate code that PASSES semantic rules out of the box.
  * No healing needed for well-formed templates.
- * 
+ * Framework-aware: Next.js App Router and Express.js.
+ *
  * @module @isl-lang/pipeline
  */
 
 import type { ISLAST, BehaviorAST, RepoContext } from '@isl-lang/translator';
+
+// ============================================================================
+// Framework-Aware Prompt Instructions
+// ============================================================================
+
+/**
+ * Get framework-specific codegen instructions for prompts.
+ * Used by vibe, gen --ai, and other AI-powered codegen.
+ */
+export function getFrameworkInstructions(framework: string): string {
+  switch (framework) {
+    case 'express':
+      return `## Express
+- Structure: src/routes/, src/controllers/, src/services/, src/validators/, src/middleware/
+- Routes: const router = Router(); router.post('/', controller); export default router;
+- Controllers: (req, res, next) => { try { ... res.json(data); } catch (e) { next(e); } }
+- Services: Business logic, call Prisma, return typed results
+- Validators: Zod schemas, schema.safeParse(req.body)
+- Middleware: errorHandler, requestLogger, cors, auth (JWT), rate-limit
+- Entry: src/index.ts with app.use(express.json()), app.use(middleware), app.use('/api/...', router), app.use(errorHandler)`;
+    case 'nextjs':
+    default:
+      return `## Next.js App Router
+- Route handlers: export async function GET(request: Request), export async function POST(request: Request)
+- Parse body: await request.json()
+- Return: NextResponse.json(data, { status: code })
+- Import: import { NextResponse } from 'next/server'
+- Structure: app/api/[behavior]/route.ts`;
+  }
+}
 
 // ============================================================================
 // Template Context
@@ -76,7 +107,7 @@ ${hasRateLimit ? generateRateLimitBlock(behaviorName, hasAudit) : ''}
     // @intent input-validation - validate before use
     const validationResult = ${behaviorName}Schema.safeParse(body);
     if (!validationResult.success) {
-${hasAudit ? `      await auditAttempt({ success: false, reason: 'validation_failed', requestId, action: '${behaviorName}' });` : ''}
+${hasAudit ? `      await auditAttempt({ success: false, reason: 'validation_failed', requestId, action: '${behaviorName}', timestamp: new Date().toISOString() });` : ''}
       return NextResponse.json({ error: 'Validation failed', details: validationResult.error.flatten() }, { status: 400 });
     }
     
@@ -84,7 +115,7 @@ ${hasAudit ? `      await auditAttempt({ success: false, reason: 'validation_fai
     
     // Execute business logic
     const result = await ${camelCase(behaviorName)}(input, requestId);
-${hasAudit ? `    await auditAttempt({ success: true, requestId, action: '${behaviorName}' });` : ''}
+${hasAudit ? `    await auditAttempt({ success: true, requestId, action: '${behaviorName}', timestamp: new Date().toISOString() });` : ''}
     return NextResponse.json(result);
   } catch (error) {
 ${generateErrorHandlers(behavior, hasAudit, hasNoPII)}
@@ -121,10 +152,11 @@ async function auditAttempt(input: {
   reason?: string;
   requestId: string;
   action: string;
+  timestamp?: string;
 }) {
   await audit({
     action: input.action,
-    timestamp: new Date().toISOString(),
+    timestamp: input.timestamp ?? new Date().toISOString(),
     success: input.success,
     reason: input.reason,
     requestId: input.requestId,
@@ -155,7 +187,7 @@ function generateRateLimitBlock(behaviorName: string, hasAudit: boolean): string
   return `  // @intent rate-limit-required - MUST be before body parsing
   const rateLimitResult = await rateLimit(request);
   if (!rateLimitResult.success) {
-${hasAudit ? `    await auditAttempt({ success: false, reason: 'rate_limited', requestId, action: '${behaviorName}' });` : ''}
+${hasAudit ? `    await auditAttempt({ success: false, reason: 'rate_limited', requestId, action: '${behaviorName}', timestamp: new Date().toISOString() });` : ''}
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
   }
 `;
@@ -189,12 +221,12 @@ class ${e.name}Error extends Error {
 function generateErrorHandlers(behavior: BehaviorAST, hasAudit: boolean, hasNoPII: boolean): string {
   const handlers = behavior.output.errors.map(e => `
     if (error instanceof ${e.name}Error) {
-${hasAudit ? `      await auditAttempt({ success: false, reason: '${camelCase(e.name)}', requestId, action: '${behavior.name}' });` : ''}
+${hasAudit ? `      await auditAttempt({ success: false, reason: '${camelCase(e.name)}', requestId, action: '${behavior.name}', timestamp: new Date().toISOString() });` : ''}
       return NextResponse.json({ error: '${e.when}' }, { status: ${getErrorStatusCode(e.name)} });
     }`).join('\n');
 
   return `${handlers}
-${hasAudit ? `    await auditAttempt({ success: false, reason: 'internal_error', requestId, action: '${behavior.name}' });` : ''}
+${hasAudit ? `    await auditAttempt({ success: false, reason: 'internal_error', requestId, action: '${behavior.name}', timestamp: new Date().toISOString() });` : ''}
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });`;
 }
 

@@ -1,15 +1,15 @@
-# ISL Studio Integration - Scope Map
+# Shipgate Integration - Scope Map
 
 **Generated:** 2026-02-01  
 **Source:** ShipGate-Real (C:\Users\mevla\OneDrive\Desktop\ShipGate-Real)  
-**Target:** ISL Studio (c:\Users\mevla\OneDrive\Desktop\IntentOS)  
-**Author:** ISL Studio Integrator
+**Target:** Shipgate (c:\Users\mevla\OneDrive\Desktop\IntentOS)  
+**Author:** Shipgate Integrator
 
 ---
 
 ## Executive Summary
 
-This document maps the ShipGate codebase to identify modules for porting to ISL Studio. The filter criteria:
+This document maps the ShipGate codebase to identify modules for porting to Shipgate. The filter criteria:
 - **Gate Decision**: Blocking/allowing changes (SHIP/NO_SHIP)
 - **Evidence Artifacts**: Producing reports/bundles for audit
 - **Firewall Governance**: Agent file write interception
@@ -173,9 +173,9 @@ This document maps the ShipGate codebase to identify modules for porting to ISL 
 
 | Source Path | Reason |
 |-------------|--------|
-| `packages/core/src/truthpack/*` | ISL Studio has its own truthpack/validation system |
+| `packages/core/src/truthpack/*` | Shipgate has its own truthpack/validation system |
 
-**Rationale:** ISL Studio already has validation/truthpack in `packages/core` and `packages/isl-verify`.
+**Rationale:** Shipgate already has validation/truthpack in `packages/core` and `packages/isl-verify`.
 
 ### 6. CLI Commands (Most) ❌
 
@@ -202,11 +202,11 @@ This document maps the ShipGate codebase to identify modules for porting to ISL 
 
 | Source Path | Reason |
 |-------------|--------|
-| `packages/vscode-extension/*` | ISL Studio has its own VSCode extension |
+| `packages/vscode-extension/*` | Shipgate has its own VSCode extension |
 | `packages/vscode-extension-v1-backup/*` | Old backup |
 | `apps/vscode-extension/*` | App version |
 
-**Rationale:** ISL Studio has `packages/vscode` already.
+**Rationale:** Shipgate has `packages/vscode` already.
 
 ### 8. API Server ❌
 
@@ -272,7 +272,7 @@ This document maps the ShipGate codebase to identify modules for porting to ISL 
 | `packages/core/src/isl-translator/*` | ISL translation - may overlap with existing |
 | `packages/core/src/isl-agent/*` | ISL agent - may overlap |
 
-**Timeline:** Evaluate after understanding ISL Studio's existing ISL packages.
+**Timeline:** Evaluate after understanding Shipgate's existing ISL packages.
 
 ---
 

@@ -1,0 +1,12 @@
+{
+  "good": {
+    "verdictOneOf": ["NO_SHIP", "WARN"],
+    "scoreBelow": 0.5,
+    "description": "Empty spec produces no evidence — score must be near 0"
+  },
+  "bad": {
+    "verdictOneOf": ["NO_SHIP", "WARN"],
+    "scoreBelow": 0.5,
+    "description": "Empty spec produces no evidence — score must be near 0"
+  }
+}

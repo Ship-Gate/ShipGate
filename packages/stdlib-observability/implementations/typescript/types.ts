@@ -70,9 +70,13 @@ export interface LogEntry {
   spanId?: SpanId;
   correlationId?: UUID;
   requestId?: UUID;
+  userId?: string;
+  sessionId?: string;
+  tenantId?: string;
   attributes?: Record<string, unknown>;
   error?: LogError;
   source?: LogSource;
+  [key: string]: unknown;
 }
 
 export interface LogInput {

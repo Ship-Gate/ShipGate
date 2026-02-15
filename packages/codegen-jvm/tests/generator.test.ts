@@ -4,7 +4,7 @@
 
 import { describe, test, expect, beforeAll } from 'vitest';
 import { generate, GeneratorOptions, GeneratedFile } from '../src/generator';
-import type { Domain, Entity, Behavior, TypeDeclaration } from '../../master_contracts/ast';
+import type { Domain, Entity, Behavior, TypeDeclaration } from '@isl-lang/parser';
 
 // ============================================================================
 // TEST FIXTURES

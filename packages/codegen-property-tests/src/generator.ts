@@ -3,7 +3,7 @@
 // Generates property-based tests using fast-check from ISL domains
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast.js';
+import type * as AST from '@isl-lang/parser';
 import type { GenerateOptions, GeneratedFile, ArbitraryDefinition, PropertyDefinition } from './types.js';
 import { generateAllArbitraries, generateEntityArbitrary, generateInputArbitrary } from './arbitraries.js';
 import { generateAllProperties, generateEntityInvariantProperties, generatePostconditionProperties } from './properties.js';

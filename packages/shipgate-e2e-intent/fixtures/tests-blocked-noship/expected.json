@@ -1,0 +1,14 @@
+{
+  "good": {
+    "verdictOneOf": ["NO_SHIP", "WARN"],
+    "scoreBelow": 0.7,
+    "mustContainMessagePatterns": ["verif|fail|block|import|error"],
+    "description": "Tests blocked by import error — MUST NOT SHIP even with correct code"
+  },
+  "bad": {
+    "verdictOneOf": ["NO_SHIP"],
+    "scoreBelow": 0.5,
+    "mustContainMessagePatterns": ["verif|fail|block|import|error"],
+    "description": "Tests blocked + bad code = definite NO_SHIP"
+  }
+}

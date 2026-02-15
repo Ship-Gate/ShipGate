@@ -17,11 +17,17 @@ npx shipgate <command>
 ## Quick Start
 
 ```bash
-# Initialize a new project in the current directory
+# Initialize in the current directory (no args)
 npx shipgate init
 
-# Or create a new project directory
+# Create a new project directory and init inside it
 npx shipgate init my-project
+
+# Skip prompts (use defaults)
+npx shipgate init -y
+
+# Overwrite existing ShipGate files
+npx shipgate init --force
 
 # Parse and validate ISL files
 npx shipgate check specs/*.isl
@@ -43,12 +49,18 @@ npx shipgate --help
 Initialize a new ISL project with recommended structure.
 
 ```bash
-# Create project in current directory
+# Init in current directory (no args)
 npx shipgate init
 
-# Create a new project directory
+# Create ./my-api and init inside it
 npx shipgate init my-api
 cd my-api
+
+# Skip prompts (use defaults)
+npx shipgate init -y
+
+# Overwrite existing ShipGate files (isl.config.json, .shipgate.yml)
+npx shipgate init --force
 ```
 
 Creates:
@@ -215,7 +227,11 @@ The `init` command creates `isl.config.json` in your project root:
 ### Initialize a project
 
 ```bash
+# In current directory
 npx shipgate init
+
+# Or create a new folder
+npx shipgate init my-project
 ```
 
 This creates:

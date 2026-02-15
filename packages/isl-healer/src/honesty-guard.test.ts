@@ -3,7 +3,7 @@
  *
  * Tests that the Honesty Guard correctly detects and refuses cheating attempts:
  * - Removing intents from ISL spec
- * - Adding islstudio-ignore
+ * - Adding shipgate-ignore
  * - Lowering severity / disabling packs
  * - Weakening redirect allowlists / auth hardening
  *
@@ -49,7 +49,7 @@ index 1234567..abcdefg 100644
 `;
 
 /**
- * Unified diff that adds an islstudio-ignore suppression
+ * Unified diff that adds an shipgate-ignore suppression
  */
 const DIFF_ADD_SUPPRESSION = `diff --git a/src/api/auth.ts b/src/api/auth.ts
 index 1234567..abcdefg 100644
@@ -59,7 +59,7 @@ index 1234567..abcdefg 100644
    const body = await request.json();
    
    // Process login
-+  // islstudio-ignore rate-limit-required: will add later
++  // shipgate-ignore rate-limit-required: will add later
    const result = await authenticate(body.email, body.password);
    
    return NextResponse.json(result);
@@ -105,10 +105,10 @@ index 1234567..abcdefg 100644
 /**
  * Unified diff that lowers severity
  */
-const DIFF_LOWER_SEVERITY = `diff --git a/islstudio.config.js b/islstudio.config.js
+const DIFF_LOWER_SEVERITY = `diff --git a/shipgate.config.js b/shipgate.config.js
 index 1234567..abcdefg 100644
---- a/islstudio.config.js
-+++ b/islstudio.config.js
+--- a/shipgate.config.js
++++ b/shipgate.config.js
 @@ -10,7 +10,7 @@ module.exports = {
      {
        ruleId: 'intent/rate-limit-required',
@@ -284,7 +284,7 @@ describe('Honesty Guard', () => {
   });
 
   describe('Suppression Directives', () => {
-    it('should detect and reject islstudio-ignore insertion', () => {
+    it('should detect and reject shipgate-ignore insertion', () => {
       const result = HonestyGuard.checkDiff(DIFF_ADD_SUPPRESSION);
 
       expect(result.verdict).toBe('UNSAFE_PATCH_ATTEMPT');
@@ -293,7 +293,7 @@ describe('Honesty Guard', () => {
       )).toBe(true);
       expect(result.inspection.edits[0]).toBeDefined();
       expect(result.inspection.edits[0]!.description).toContain(
-        'ISL Studio suppression'
+        'ShipGate suppression'
       );
     });
 
@@ -366,7 +366,7 @@ describe('Honesty Guard', () => {
     });
 
     it('should detect empty packs array', () => {
-      const patchFile = createPatchFile('islstudio.config.js', [
+      const patchFile = createPatchFile('shipgate.config.js', [
         'packs: []',
       ]);
 
@@ -541,13 +541,13 @@ describe('Honesty Guard', () => {
   describe('Allowed Suppressions', () => {
     it('should allow suppressions with valid justification and expiry', () => {
       const patchFile = createPatchFile('src/legacy/handler.ts', [
-        '// islstudio-ignore no-console: legacy code, tracking in TECH-123',
+        '// shipgate-ignore no-console: legacy code, tracking in TECH-123',
       ]);
 
       const config: Partial<HonestyGuardConfig> = {
         allowedSuppressions: [
           {
-            pattern: 'islstudio-ignore no-console',
+            pattern: 'shipgate-ignore no-console',
             justification: 'Legacy code being refactored',
             expires: '2099-12-31', // Far future
           },
@@ -561,13 +561,13 @@ describe('Honesty Guard', () => {
 
     it('should reject expired allowed suppressions', () => {
       const patchFile = createPatchFile('src/legacy/handler.ts', [
-        '// islstudio-ignore no-console: legacy code',
+        '// shipgate-ignore no-console: legacy code',
       ]);
 
       const config: Partial<HonestyGuardConfig> = {
         allowedSuppressions: [
           {
-            pattern: 'islstudio-ignore no-console',
+            pattern: 'shipgate-ignore no-console',
             justification: 'Legacy code',
             expires: '2020-01-01', // Expired
           },
@@ -733,7 +733,7 @@ describe('Patch Inspector', () => {
   describe('quickScan', () => {
     it('should return true for content with forbidden patterns', () => {
       expect(quickScan('// @ts-ignore')).toBe(true);
-      expect(quickScan('islstudio-ignore')).toBe(true);
+      expect(quickScan('shipgate-ignore')).toBe(true);
       expect(quickScan('skipAuth: true')).toBe(true);
       expect(quickScan('enabled: false')).toBe(true);
     });
@@ -855,7 +855,7 @@ describe('Integration: Multiple Violations', () => {
           ['  intent rate-limit-required']
         ),
         // Suppression insertion
-        createPatchFile('src/api/login.ts', ['// islstudio-ignore auth']),
+        createPatchFile('src/api/login.ts', ['// shipgate-ignore auth']),
         // Pack disable
         createPatchFile('.islrc.json', ['  "auth": { "enabled": false }']),
         // Auth bypass

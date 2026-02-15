@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/codegen-migrations",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generate database migrations from ISL entities",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

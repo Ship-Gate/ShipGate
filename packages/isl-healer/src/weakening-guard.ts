@@ -60,11 +60,6 @@ export const WEAKENING_PATTERNS: WeakeningPattern[] = [
     category: 'suppression',
   },
   {
-    pattern: /\/\/\s*islstudio-ignore/i,
-    description: 'ISL Studio ignore comment',
-    category: 'suppression',
-  },
-  {
     pattern: /\/\/\s*shipgate-ignore/i,
     description: 'Shipgate ignore comment',
     category: 'suppression',

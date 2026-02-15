@@ -19,6 +19,36 @@ import type {
 import type { SemanticPass, PassContext } from '../types.js';
 
 // ============================================================================
+// AST Normalization
+// ============================================================================
+
+/**
+ * Normalize preconditions/postconditions from either:
+ * - Expression[] (parser AST)
+ * - { conditions: [{ expression: Expression }] } (isl-core AST / ConditionBlock)
+ * - null
+ */
+function normalizeConditions(input: unknown): Expression[] {
+  if (!input) return [];
+  if (Array.isArray(input)) return input as Expression[];
+  const obj = input as Record<string, unknown>;
+  if (Array.isArray(obj.conditions)) {
+    return (obj.conditions as Array<Record<string, unknown>>)
+      .map(c => (c.expression || c) as Expression);
+  }
+  return [];
+}
+
+/**
+ * Normalize expression kind: treat ComparisonExpression as BinaryExpr
+ */
+function normalizeExprKind(expr: Expression): string {
+  const kind = expr.kind as string;
+  if (kind === 'ComparisonExpression') return 'BinaryExpr';
+  return kind;
+}
+
+// ============================================================================
 // Pass Definition
 // ============================================================================
 
@@ -35,29 +65,40 @@ export const RedundantConditionsPass: SemanticPass = {
     const { ast, filePath } = ctx;
 
     for (const behavior of ast.behaviors || []) {
-      // Check preconditions (Expression[])
-      if (behavior.preconditions && behavior.preconditions.length > 0) {
+      // Check preconditions (Expression[] or ConditionBlock)
+      const preconditions = normalizeConditions(behavior.preconditions);
+      if (preconditions.length > 0) {
         diagnostics.push(...checkExpressionList(
-          behavior.preconditions,
+          preconditions,
           behavior,
           'precondition',
           filePath
         ));
       }
 
-      // Check postconditions (PostconditionBlock[])
-      if (behavior.postconditions && behavior.postconditions.length > 0) {
+      // Check postconditions (PostconditionBlock[] or ConditionBlock)
+      const postconditions = normalizeConditions(behavior.postconditions);
+      if (Array.isArray(behavior.postconditions) && behavior.postconditions.length > 0 &&
+          behavior.postconditions[0]?.kind === 'PostconditionBlock') {
         diagnostics.push(...checkPostconditionBlocks(
-          behavior.postconditions,
+          behavior.postconditions as PostconditionBlock[],
           behavior,
+          filePath
+        ));
+      } else if (postconditions.length > 0) {
+        diagnostics.push(...checkExpressionList(
+          postconditions,
+          behavior,
+          'postcondition',
           filePath
         ));
       }
 
       // Check invariants (Expression[])
-      if (behavior.invariants && behavior.invariants.length > 0) {
+      const invariants = normalizeConditions(behavior.invariants);
+      if (invariants.length > 0) {
         diagnostics.push(...checkExpressionList(
-          behavior.invariants,
+          invariants,
           behavior,
           'invariant',
           filePath
@@ -239,8 +280,9 @@ interface TautologyResult {
 }
 
 function checkTautology(expr: Expression): TautologyResult | null {
+  const kind = normalizeExprKind(expr);
   // true literal
-  if (expr.kind === 'BooleanLiteral') {
+  if (kind === 'BooleanLiteral') {
     const value = (expr as { value: boolean }).value;
     if (value === true) {
       return { reason: "'true' is always true" };
@@ -248,7 +290,7 @@ function checkTautology(expr: Expression): TautologyResult | null {
   }
 
   // x == x
-  if (expr.kind === 'BinaryExpr') {
+  if (kind === 'BinaryExpr') {
     const binary = expr as { left?: Expression; operator?: string; right?: Expression };
     
     if (binary.operator === '==' || binary.operator === '===') {
@@ -286,7 +328,7 @@ function checkTautology(expr: Expression): TautologyResult | null {
   }
 
   // NOT false
-  if (expr.kind === 'UnaryExpr') {
+  if (kind === 'UnaryExpr') {
     const unary = expr as { operator?: string; operand?: Expression };
     
     if (unary.operator === '!' || unary.operator === 'not') {
@@ -423,7 +465,7 @@ interface RedundantBoolResult {
 }
 
 function checkRedundantBooleanComparison(expr: Expression): RedundantBoolResult | null {
-  if (expr.kind !== 'BinaryExpr') {
+  if (normalizeExprKind(expr) !== 'BinaryExpr') {
     return null;
   }
 
@@ -522,7 +564,7 @@ interface ConstraintInfo {
 }
 
 function extractConstraintInfo(expr: Expression): ConstraintInfo | null {
-  if (expr.kind !== 'BinaryExpr') {
+  if (normalizeExprKind(expr) !== 'BinaryExpr') {
     return null;
   }
 

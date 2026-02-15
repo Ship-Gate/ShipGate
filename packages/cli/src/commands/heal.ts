@@ -9,16 +9,23 @@
  *   isl heal <pattern> --max-iterations 8 # Limit iterations
  */
 
-import { readFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { resolve, relative } from 'path';
 import { glob } from 'glob';
 import chalk from 'chalk';
+import ora from 'ora';
 import { parse as parseISL } from '@isl-lang/parser';
 import { SemanticHealer, type RepoContext } from '@isl-lang/pipeline';
+import {
+  HealPlanExecutor,
+  type VerificationFailureInput,
+} from '@isl-lang/autofix';
 import { output } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
 import { isJsonOutput, isQuietOutput } from '../output.js';
+import { unifiedVerify, type UnifiedVerifyOptions, type FileVerifyResultEntry } from './verify.js';
+import { loadConfig } from '../config.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -41,11 +48,17 @@ export interface HealOptions {
   interactive?: boolean;
   /** Output directory for dry-run patches */
   outputDir?: string;
+  /** Use AI (LLM) to generate fixes */
+  ai?: boolean;
+  /** AI provider: anthropic or openai */
+  provider?: 'anthropic' | 'openai';
+  /** AI model override */
+  model?: string;
 }
 
 export interface HealResult {
   success: boolean;
-  reason: 'ship' | 'stuck' | 'unknown_rule' | 'max_iterations' | 'weakening_detected' | 'incomplete_proof';
+  reason: 'ship' | 'stuck' | 'unknown_rule' | 'max_iterations' | 'weakening_detected' | 'incomplete_proof' | 'ai_no_key';
   iterations: number;
   finalScore: number;
   finalVerdict: 'SHIP' | 'NO_SHIP';
@@ -300,6 +313,278 @@ export async function heal(pattern: string, options: HealOptions = {}): Promise<
       errors,
     };
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI-Powered Heal
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Resolve AI API key from config or environment
+ */
+function resolveHealApiKey(provider: string, configApiKey?: string): string | null {
+  if (configApiKey) {
+    const envMatch = configApiKey.match(/^\$\{(\w+)\}$/);
+    if (envMatch) {
+      return process.env[envMatch[1]!] ?? null;
+    }
+    return configApiKey;
+  }
+  if (provider === 'anthropic') {
+    return process.env['ANTHROPIC_API_KEY'] ?? process.env['ISL_ANTHROPIC_KEY'] ?? null;
+  }
+  if (provider === 'openai') {
+    return process.env['OPENAI_API_KEY'] ?? process.env['ISL_OPENAI_KEY'] ?? null;
+  }
+  return null;
+}
+
+const HEAL_SYSTEM_PROMPT = `You are an expert TypeScript/JavaScript developer fixing code to comply with ISL (Intent Specification Language) contracts.
+
+ISL defines:
+- **Behaviors**: Functions with input/output types, preconditions, postconditions, invariants
+- **Entities**: Data structures with fields and constraints
+- **Invariants**: Rules that must always hold (e.g. never_throws_unhandled)
+
+When fixing code:
+- Match every behavior in the spec with a properly exported function
+- Add input validation matching ISL preconditions
+- Ensure return types match ISL output declarations
+- Add error handling for ISL error declarations
+- Satisfy all invariants (e.g. functions must not throw unhandled exceptions)
+- Use proper TypeScript types — no 'any'
+
+Return ONLY a surgical diff or JSON array: [{ "path": "file.ts", "content": "..." }] or [{ "path": "file.ts", "diff": "unified diff" }].
+No explanations, no markdown fences, no comments about changes.`;
+
+/**
+ * Convert FileVerifyResultEntry to VerificationFailureInput for targeted heal
+ */
+async function toVerificationFailureInput(
+  fileEntry: FileVerifyResultEntry,
+  projectRoot: string,
+): Promise<VerificationFailureInput> {
+  const absPath = resolve(projectRoot, fileEntry.file);
+  let sourceCode: string | undefined;
+  if (existsSync(absPath)) {
+    try {
+      sourceCode = await readFile(absPath, 'utf-8');
+    } catch {
+      // ignore
+    }
+  }
+  return {
+    file: fileEntry.file,
+    blockers: fileEntry.blockers,
+    errors: fileEntry.errors,
+    status: fileEntry.status,
+    score: fileEntry.score,
+    specFile: fileEntry.specFile,
+    sourceCode,
+  };
+}
+
+/**
+ * AI-powered heal: targeted fix system
+ * - Iteration 1: structural (imports, missing files)
+ * - Iteration 2: types + implementation
+ * - Iteration 3: test failures
+ */
+export async function aiHeal(targetPath: string, options: HealOptions = {}): Promise<HealResult> {
+  const isJson = options.format === 'json' || isJsonOutput();
+  const isQuiet = options.format === 'quiet' || isQuietOutput();
+  const maxIterations = Math.min(options.maxIterations ?? 5, 3); // Cap at 3 for phased approach
+  const errors: string[] = [];
+  const history: HealResult['history'] = [];
+
+  // Resolve AI config
+  const { config } = await loadConfig();
+  const configAi = config?.ai as Record<string, string> | undefined;
+  const provider: 'anthropic' | 'openai' = (options.provider ?? configAi?.provider ?? 'anthropic') as 'anthropic' | 'openai';
+  const providerDefault = provider === 'anthropic' ? 'claude-sonnet-4-20250514' : 'gpt-4o';
+  const model = options.model ?? (options.provider ? providerDefault : (configAi?.model ?? providerDefault));
+  const apiKey = resolveHealApiKey(provider, configAi?.apiKey);
+
+  if (!apiKey) {
+    const envVar = provider === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY';
+    return {
+      success: false,
+      reason: 'ai_no_key',
+      iterations: 0,
+      finalScore: 0,
+      finalVerdict: 'NO_SHIP',
+      history: [],
+      files: [],
+      errors: [`No API key for ${provider}. Set ${envVar} or add ai.apiKey to .islrc.yaml`],
+    };
+  }
+
+  const resolvedTarget = resolve(targetPath ?? '.');
+  const projectRoot = process.cwd();
+  const spinner = (!isJson && !isQuiet) ? ora('Running initial verification...').start() : null;
+
+  // Initial verify
+  spinner && (spinner.text = 'Verifying...');
+  let verifyResult = await unifiedVerify(resolvedTarget, { verbose: false, timeout: 30000 });
+
+  if (verifyResult.verdict === 'SHIP') {
+    spinner?.succeed(chalk.green(`SHIP — score ${(verifyResult.score * 100).toFixed(0)}%`));
+    return {
+      success: true,
+      reason: 'ship',
+      iterations: 0,
+      finalScore: verifyResult.score,
+      finalVerdict: 'SHIP',
+      history: [{ iteration: 0, violations: [], patchesApplied: ['SHIP'], fingerprint: 'ship', duration: 0 }],
+      files: verifyResult.files.map(f => f.file),
+    };
+  }
+
+  const failingFiles = verifyResult.files.filter(f => f.status === 'FAIL' || f.status === 'WARN');
+  if (failingFiles.length === 0) {
+    spinner?.warn(chalk.yellow(`No fixable files (score=${(verifyResult.score * 100).toFixed(0)}%)`));
+    return {
+      success: false,
+      reason: 'stuck',
+      iterations: 0,
+      finalScore: verifyResult.score,
+      finalVerdict: 'NO_SHIP',
+      history: [],
+      files: verifyResult.files.map(f => f.file),
+    };
+  }
+
+  // Build failure entries with source code
+  const entries: VerificationFailureInput[] = await Promise.all(
+    failingFiles.map(f => toVerificationFailureInput(f, projectRoot)),
+  );
+
+  // Get ISL spec content for prompts (from first file with spec)
+  let islContent: string | undefined;
+  const firstWithSpec = failingFiles.find(f => f.specFile);
+  if (firstWithSpec?.specFile) {
+    const specPath = resolve(projectRoot, firstWithSpec.specFile);
+    if (existsSync(specPath)) {
+      try {
+        islContent = await readFile(specPath, 'utf-8');
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  const callHealAI = createHealAICaller(provider, model, apiKey);
+
+  const executor = new HealPlanExecutor({
+    projectRoot,
+    maxIterations,
+    islContent,
+    invokeAI: async (prompt) => callHealAI(prompt),
+    verify: async () => {
+      const result = await unifiedVerify(resolvedTarget, { verbose: false, timeout: 30000 });
+      const failing = result.files.filter(f => f.status === 'FAIL' || f.status === 'WARN');
+      return Promise.all(failing.map(f => toVerificationFailureInput(f, projectRoot)));
+    },
+  });
+
+  if (!isJson && !isQuiet) {
+    spinner && (spinner.text = 'Healing with targeted fixes...');
+  }
+
+  if (options.dryRun) {
+    const { RootCauseAnalyzer } = await import('@isl-lang/autofix');
+    const analyzer = new RootCauseAnalyzer();
+    const analyzed = analyzer.analyzeAll(entries);
+    const byCategory = new Map<string, number>();
+    for (const a of analyzed) {
+      byCategory.set(a.category, (byCategory.get(a.category) ?? 0) + 1);
+    }
+    spinner?.info(chalk.yellow(`Dry run: would fix ${entries.length} file(s) — ${[...byCategory].map(([c, n]) => `${c}: ${n}`).join(', ')}`));
+    return {
+      success: false,
+      reason: 'stuck',
+      iterations: 0,
+      finalScore: verifyResult.score,
+      finalVerdict: 'NO_SHIP',
+      history: [{ iteration: 0, violations: entries.map(e => ({ ruleId: 'verify', file: e.file, message: e.blockers[0] ?? '', severity: 'high' })), patchesApplied: [`[dry-run] ${entries.length} file(s) would be analyzed`], fingerprint: 'dry', duration: 0 }],
+      files: verifyResult.files.map(f => f.file),
+    };
+  }
+
+  const report = await executor.execute(entries);
+
+  const { report: healReport, fixesApplied } = report;
+
+  // Map to HealResult history
+  for (const iter of healReport.iterations) {
+    history.push({
+      iteration: iter.iteration,
+      violations: entries.map(e => ({
+        ruleId: 'verify',
+        file: e.file,
+        message: e.blockers[0] ?? 'verification failed',
+        severity: 'high',
+      })),
+      patchesApplied: iter.fixesApplied,
+      fingerprint: `iter-${iter.iteration}`,
+      duration: 0,
+    });
+  }
+
+  if (healReport.verdict === 'SHIP') {
+    spinner?.succeed(chalk.green(`SHIP — ${fixesApplied.length} fix(es) applied`));
+    return {
+      success: true,
+      reason: 'ship',
+      iterations: healReport.iterations.length,
+      finalScore: 1,
+      finalVerdict: 'SHIP',
+      history,
+      files: verifyResult.files.map(f => f.file),
+    };
+  }
+
+  spinner?.fail(chalk.red(`NO_SHIP — ${healReport.failuresAfterHeal} failure(s) remain after ${healReport.iterations.length} iteration(s)`));
+  return {
+    success: false,
+    reason: healReport.iterations.length >= maxIterations ? 'max_iterations' : 'stuck',
+    iterations: healReport.iterations.length,
+    finalScore: verifyResult.score,
+    finalVerdict: 'NO_SHIP',
+    history,
+    files: verifyResult.files.map(f => f.file),
+    errors: errors.length > 0 ? errors : undefined,
+  };
+}
+
+function createHealAICaller(provider: string, model: string, apiKey: string): (prompt: string) => Promise<string> {
+  return async (prompt: string) => {
+    if (provider === 'anthropic') {
+      const Anthropic = (await import('@anthropic-ai/sdk')).default;
+      const client = new Anthropic({ apiKey });
+      const response = await client.messages.create({
+        model,
+        max_tokens: 8192,
+        temperature: 0,
+        system: HEAL_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: prompt }],
+      });
+      const content = response.content[0];
+      return content?.type === 'text' ? content.text : '';
+    }
+    const OpenAI = (await import('openai')).default;
+    const client = new OpenAI({ apiKey });
+    const response = await client.chat.completions.create({
+      model,
+      max_tokens: 8192,
+      temperature: 0,
+      messages: [
+        { role: 'system', content: HEAL_SYSTEM_PROMPT },
+        { role: 'user', content: prompt },
+      ],
+    });
+    return response.choices[0]?.message.content ?? '';
+  };
 }
 
 /**

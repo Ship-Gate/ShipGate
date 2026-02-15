@@ -470,6 +470,32 @@ export type {
 export { runShipgateFix } from './shipgate-fix-cli.js';
 export type { ShipgateFixOptions } from './shipgate-fix-cli.js';
 
+// ── Targeted Heal System ─────────────────────────────────────────────────────
+export {
+  RootCauseAnalyzer,
+  buildFixPrompt,
+  buildBatchFixPrompt,
+  HealPlanExecutor,
+  parseAIResponse,
+  applySurgicalDiff,
+  applySurgicalDiffs,
+  formatHealReportJSON,
+  formatHealReportPretty,
+  createEmptyHealReport,
+} from './heal/index.js';
+export type {
+  RootCauseCategory,
+  HealPhase,
+  VerificationFailureInput,
+  AnalyzedFailure,
+  HealPlanGroup,
+  SurgicalDiff,
+  ApplyDiffResult,
+  HealIterationResult,
+  HealReport,
+  HealPlanOptions,
+} from './heal/index.js';
+
 // ── Proof Bundle Integration ──────────────────────────────────────────────────
 export {
   createPatchesMetadata,

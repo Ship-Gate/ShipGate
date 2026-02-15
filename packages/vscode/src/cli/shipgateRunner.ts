@@ -7,7 +7,7 @@
 
 import { spawn, type ChildProcess } from 'child_process';
 import { existsSync } from 'fs';
-import { join, resolve } from 'path';
+import { join, resolve, dirname } from 'path';
 import type { CancellationToken } from 'vscode';
 import type { ScanResult, ScanRunResult } from '../model/types';
 import { createEmptyScanResult, normalizeVerdict } from '../model/types';
@@ -60,13 +60,20 @@ export async function resolveShipgateExecutable(
     }
   }
 
-  // 2. pnpm workspace - try pnpm exec
+  // 2. Extension-local CLI (sibling package in monorepo — works when scanning external projects)
+  const extensionDir = dirname(__dirname); // packages/vscode
+  const extensionLocalCli = join(extensionDir, '..', 'cli', 'dist', 'cli.cjs');
+  if (existsSync(extensionLocalCli)) {
+    return { executable: 'node', args: [resolve(extensionLocalCli), ...CLI_VERIFY_JSON_PAYLOAD] };
+  }
+
+  // 3. pnpm workspace - try pnpm exec
   const pnpmLock = join(root, 'pnpm-lock.yaml');
   if (existsSync(pnpmLock)) {
     return { executable: 'pnpm', args: ['exec', 'isl', 'verify', '.', '--json'] };
   }
 
-  // 3. npx fallback
+  // 4. npx fallback
   return { executable: 'npx', args: ['--yes', 'shipgate', 'verify', '.', '--json'] };
 }
 
@@ -189,14 +196,16 @@ export async function runShipgateScan(
         },
       };
 
-      const success = code === 0;
+      // CLI exit codes: 0=SHIP, 1=NO_SHIP, 4=WARN — all are valid results
+      const isValidResult = parsed.ok && raw.verdict != null;
+      const success = isValidResult;
       const errorWhenFailed =
-        !success && (result.blockers?.[0] || stderr?.trim() || `Exit code ${code ?? 1}`);
+        !isValidResult && (stderr?.trim() || (code !== 0 && code != null ? `Process exited with code ${code}` : null) || 'Unknown error');
 
       resolvePromise({
         success,
         result: scanResult,
-        error: success ? undefined : errorWhenFailed,
+        error: success ? undefined : (errorWhenFailed || undefined),
         stderr: stderr || undefined,
       });
     });

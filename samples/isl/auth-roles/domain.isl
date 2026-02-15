@@ -102,8 +102,8 @@ domain AuthRoles {
     }
 
     invariants {
-      - password never_logged
-      - password_hash uses bcrypt or argon2
+      - "password never_logged"
+      - "password_hash uses bcrypt or argon2"
     }
   }
 
@@ -150,13 +150,13 @@ domain AuthRoles {
       - User.lookup_by_email(input.email).failed_login_count == 0
     }
 
-    post error INVALID_CREDENTIALS {
+    post INVALID_CREDENTIALS {
       - User.lookup_by_email(input.email).failed_login_count == old(failed_login_count) + 1
     }
 
     invariants {
-      - password never_logged
-      - failed_login_count > 5 triggers ACCOUNT_LOCKED
+      - "password never_logged"
+      - "failed_login_count > 5 triggers ACCOUNT_LOCKED"
     }
 
     temporal {
@@ -210,9 +210,9 @@ domain AuthRoles {
     }
 
     invariants {
-      - actor.role >= new_role (no privilege escalation)
-      - only SUPER_ADMIN can assign ADMIN role
-      - role changes are audit-logged
+      - "actor.role >= new_role (no privilege escalation)"
+      - "only SUPER_ADMIN can assign ADMIN role"
+      - "role changes are audit-logged"
     }
   }
 
@@ -279,27 +279,34 @@ domain AuthRoles {
   }
 
   scenario "Role escalation prevention" {
-    step admin = Register({ email: "admin@test.com", password: "SecurePass123!", confirm_password: "SecurePass123!" })
-    # Assume admin is promoted to ADMIN externally
-
-    step editor = Register({ email: "editor@test.com", password: "SecurePass456!", confirm_password: "SecurePass456!" })
-
-    # ADMIN cannot assign SUPER_ADMIN
-    step escalate = AssignRole({ actor_id: admin.result.id, target_user_id: editor.result.id, new_role: SUPER_ADMIN })
-    assert escalate.error == ESCALATION_BLOCKED
+    given {
+      admin = Register(email: "admin@test.com", password: "SecurePass123!", confirm_password: "SecurePass123!")
+      editor = Register(email: "editor@test.com", password: "SecurePass456!", confirm_password: "SecurePass456!")
+    }
+    when {
+      # ADMIN cannot assign SUPER_ADMIN
+      escalate = AssignRole(actor_id: admin.result.id, target_user_id: editor.result.id, new_role: SUPER_ADMIN)
+    }
+    then {
+      escalate.error == ESCALATION_BLOCKED
+    }
   }
 
   scenario "Account lockout after failed logins" {
-    step user = Register({ email: "lock@test.com", password: "SecurePass789!", confirm_password: "SecurePass789!" })
-
-    step fail1 = Login({ email: "lock@test.com", password: "wrong" })
-    step fail2 = Login({ email: "lock@test.com", password: "wrong" })
-    step fail3 = Login({ email: "lock@test.com", password: "wrong" })
-    step fail4 = Login({ email: "lock@test.com", password: "wrong" })
-    step fail5 = Login({ email: "lock@test.com", password: "wrong" })
-    step fail6 = Login({ email: "lock@test.com", password: "wrong" })
-
-    step locked = Login({ email: "lock@test.com", password: "SecurePass789!" })
-    assert locked.error == ACCOUNT_LOCKED
+    given {
+      user = Register(email: "lock@test.com", password: "SecurePass789!", confirm_password: "SecurePass789!")
+    }
+    when {
+      fail1 = Login(email: "lock@test.com", password: "wrong")
+      fail2 = Login(email: "lock@test.com", password: "wrong")
+      fail3 = Login(email: "lock@test.com", password: "wrong")
+      fail4 = Login(email: "lock@test.com", password: "wrong")
+      fail5 = Login(email: "lock@test.com", password: "wrong")
+      fail6 = Login(email: "lock@test.com", password: "wrong")
+      locked = Login(email: "lock@test.com", password: "SecurePass789!")
+    }
+    then {
+      locked.error == ACCOUNT_LOCKED
+    }
   }
 }

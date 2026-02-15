@@ -1,5 +1,6 @@
 {
   "name": "@isl-lang/java-resolver",
+  "private": true,
   "version": "0.1.0",
   "description": "Java import resolver for hallucination detection - parses imports, resolves Maven/Gradle deps, detects fake packages",
   "type": "module",

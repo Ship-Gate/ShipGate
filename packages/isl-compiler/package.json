@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/isl-compiler",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ISL compilation targets - TypeScript types, tests, scaffolds",
   "type": "module",
   "main": "./dist/index.js",

@@ -74,6 +74,17 @@ export interface PipelineOptions {
 
   /** Strict mode: fail if any step is skipped or stubbed (D2) */
   strictSteps?: boolean;
+
+  /** Write ISL certificate to project root (.isl-certificate.json) */
+  writeCertificate?: boolean;
+
+  /** Overrides for certificate (prompt, model, specPath when pipeline lacks full context) */
+  certificateOverrides?: {
+    prompt?: string;
+    specPath?: string;
+    specContent?: string;
+    model?: { provider: string; model: string; tokensUsed: number };
+  };
 }
 
 /**
@@ -252,6 +263,8 @@ export const DEFAULT_PIPELINE_OPTIONS: Omit<Required<PipelineOptions>, 'workspac
   dryRun: false,
   enforceAssumptions: false,
   strictSteps: false,
+  writeCertificate: false,
+  certificateOverrides: {},
 };
 
 /**

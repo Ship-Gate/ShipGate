@@ -663,6 +663,207 @@ export async function islGenerate(
 // Lightweight Fallback (when @isl-lang/inference is not available)
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── Signature extraction types ───────────────────────────────────────────────
+
+interface ExtractedParam {
+  name: string;
+  type: string;
+}
+
+interface ExtractedFunction {
+  name: string;
+  isAsync: boolean;
+  params: ExtractedParam[];
+  returnType: string;
+  throws: string[];
+  effects: string[];
+}
+
+/**
+ * Map a TypeScript type annotation to the closest ISL primitive.
+ */
+function tsTypeToIsl(tsType: string): string {
+  const trimmed = tsType.trim();
+  if (!trimmed || trimmed === 'any' || trimmed === 'unknown') return 'String';
+  if (trimmed === 'string') return 'String';
+  if (trimmed === 'number' || trimmed === 'bigint') return 'Int';
+  if (trimmed === 'boolean') return 'Boolean';
+  if (trimmed === 'void' || trimmed === 'undefined' || trimmed === 'never') return 'Void';
+  if (trimmed === 'null') return 'Void';
+  if (trimmed.endsWith('[]') || trimmed.startsWith('Array<')) return 'List';
+  if (trimmed.startsWith('Promise<')) {
+    const inner = trimmed.slice(8, -1);
+    return tsTypeToIsl(inner);
+  }
+  if (trimmed.startsWith('Record<') || trimmed.startsWith('Map<') || trimmed === 'object') return 'Map';
+  if (trimmed === 'Date') return 'DateTime';
+  if (trimmed === 'Buffer' || trimmed === 'Uint8Array') return 'Bytes';
+  if (/^[A-Z]\w*$/.test(trimmed)) return trimmed;
+  return 'String';
+}
+
+/**
+ * Extract function signatures with full type information from TS/JS source.
+ */
+function extractSignaturesForGen(source: string): {
+  functions: ExtractedFunction[];
+  types: string[];
+} {
+  const functions: ExtractedFunction[] = [];
+  const types: string[] = [];
+
+  const fnFullRegex = /export\s+(async\s+)?function\s+(\w+)\s*(?:<[^>]*>)?\s*\(([^)]*)\)\s*(?::\s*([^{]+?))?\s*\{/g;
+  let match: RegExpExecArray | null;
+  const seenFns = new Set<string>();
+
+  while ((match = fnFullRegex.exec(source)) !== null) {
+    const isAsync = !!match[1];
+    const name = match[2];
+    if (seenFns.has(name)) continue;
+    seenFns.add(name);
+
+    const rawParams = match[3].trim();
+    const rawReturn = match[4]?.trim() ?? '';
+    const params = parseParamListGen(rawParams);
+    const returnType = rawReturn ? tsTypeToIsl(rawReturn) : (isAsync ? 'String' : 'Void');
+
+    const fnStart = match.index! + match[0].length - 1;
+    const fnBody = extractBracedBlockGen(source, fnStart);
+
+    const throws = detectThrowsGen(fnBody);
+    const effects = detectEffectsGen(fnBody);
+
+    functions.push({ name, isAsync, params, returnType, throws, effects });
+  }
+
+  // Fallback: non-exported functions
+  if (functions.length === 0) {
+    const anyFnRegex = /(async\s+)?function\s+(\w+)\s*(?:<[^>]*>)?\s*\(([^)]*)\)\s*(?::\s*([^{]+?))?\s*\{/g;
+    while ((match = anyFnRegex.exec(source)) !== null) {
+      const isAsync = !!match[1];
+      const name = match[2];
+      if (seenFns.has(name)) continue;
+      seenFns.add(name);
+
+      const rawParams = match[3].trim();
+      const rawReturn = match[4]?.trim() ?? '';
+      const params = parseParamListGen(rawParams);
+      const returnType = rawReturn ? tsTypeToIsl(rawReturn) : (isAsync ? 'String' : 'Void');
+
+      const fnStart = match.index! + match[0].length - 1;
+      const fnBody = extractBracedBlockGen(source, fnStart);
+      const throws = detectThrowsGen(fnBody);
+      const effects = detectEffectsGen(fnBody);
+
+      functions.push({ name, isAsync, params, returnType, throws, effects });
+    }
+  }
+
+  const typeRegex = /export\s+(?:interface|class|type)\s+(\w+)/g;
+  while ((match = typeRegex.exec(source)) !== null) {
+    types.push(match[1]);
+  }
+  if (types.length === 0) {
+    const anyTypeRegex = /(?:interface|class)\s+(\w+)/g;
+    while ((match = anyTypeRegex.exec(source)) !== null) {
+      types.push(match[1]);
+    }
+  }
+
+  return { functions, types };
+}
+
+function parseParamListGen(raw: string): ExtractedParam[] {
+  if (!raw) return [];
+  const params: ExtractedParam[] = [];
+  let depth = 0;
+  let current = '';
+  for (const ch of raw) {
+    if (ch === '<' || ch === '(' || ch === '{' || ch === '[') depth++;
+    else if (ch === '>' || ch === ')' || ch === '}' || ch === ']') depth--;
+    else if (ch === ',' && depth === 0) {
+      params.push(parseOneParamGen(current.trim()));
+      current = '';
+      continue;
+    }
+    current += ch;
+  }
+  if (current.trim()) params.push(parseOneParamGen(current.trim()));
+  return params.filter((p) => p.name && p.name !== '');
+}
+
+function parseOneParamGen(raw: string): ExtractedParam {
+  if (raw.startsWith('{')) {
+    const colonIdx = raw.lastIndexOf(':');
+    if (colonIdx > raw.indexOf('}')) {
+      return { name: 'options', type: tsTypeToIsl(raw.slice(colonIdx + 1).trim()) };
+    }
+    return { name: 'options', type: 'Map' };
+  }
+  if (raw.startsWith('...')) {
+    raw = raw.slice(3);
+  }
+  const optional = raw.includes('?:');
+  const parts = raw.split(/\??:/);
+  const name = parts[0].split('=')[0].trim();
+  let type = 'String';
+  if (parts.length > 1) {
+    type = tsTypeToIsl(parts[1].split('=')[0].trim());
+  }
+  if (optional) type += '?';
+  return { name, type };
+}
+
+function extractBracedBlockGen(source: string, startIdx: number): string {
+  if (source[startIdx] !== '{') return '';
+  let depth = 0;
+  let end = startIdx;
+  for (let i = startIdx; i < source.length && i < startIdx + 5000; i++) {
+    if (source[i] === '{') depth++;
+    else if (source[i] === '}') {
+      depth--;
+      if (depth === 0) { end = i; break; }
+    }
+  }
+  return source.slice(startIdx, end + 1);
+}
+
+function detectThrowsGen(body: string): string[] {
+  const throws: string[] = [];
+  const seen = new Set<string>();
+
+  const throwNewRegex = /throw\s+new\s+(\w+)/g;
+  let m: RegExpExecArray | null;
+  while ((m = throwNewRegex.exec(body)) !== null) {
+    const name = m[1];
+    if (!seen.has(name)) { seen.add(name); throws.push(name); }
+  }
+
+  if (throws.length === 0 && /throw\s+(?!new\b)/.test(body)) {
+    throws.push('Error');
+  }
+
+  return throws;
+}
+
+function detectEffectsGen(body: string): string[] {
+  const effects: string[] = [];
+
+  if (/\bconsole\.\w+\s*\(/.test(body)) effects.push('logging');
+  if (/\bfetch\s*\(/.test(body) || /\baxios[\s.]/.test(body) || /\.request\s*\(/.test(body)) effects.push('network');
+  if (/\bfs\b|\breadFile\b|\bwriteFile\b|\bmkdir\b|\bunlink\b/.test(body)) effects.push('filesystem');
+  if (/\b(?:query|execute|findOne|findMany|insert|update|delete|upsert)\s*\(/.test(body)) effects.push('database');
+  if (/\bprocess\.env\b/.test(body)) effects.push('env_read');
+  if (/\bprocess\.exit\b/.test(body)) effects.push('process_exit');
+  if (/\bemit\s*\(|\bdispatch\s*\(|\bpublish\s*\(/.test(body)) effects.push('event_emit');
+  if (/\bsetTimeout\s*\(|\bsetInterval\s*\(/.test(body)) effects.push('timer');
+  if (/\bMath\.random\s*\(|\bcrypto\b/.test(body)) effects.push('nondeterminism');
+
+  return effects;
+}
+
+// ── Spec generation ──────────────────────────────────────────────────────────
+
 interface MinimalSpecResult {
   isl: string;
   confidence: number;
@@ -670,8 +871,9 @@ interface MinimalSpecResult {
 }
 
 /**
- * Generate a minimal ISL spec from source code without the inference engine.
- * Uses regex-based heuristics to extract basic structure.
+ * Generate a signature-faithful ISL spec from source code without the inference engine.
+ * Extracts exact function names, param types, return types, throws, and effects.
+ * Specs with no business rules are marked INCOMPLETE with capped confidence.
  */
 function generateMinimalSpec(
   source: string,
@@ -682,24 +884,16 @@ function generateMinimalSpec(
   const patterns: DetectedPattern[] = [];
   let confidence = 0.3;
 
-  // Extract exported function names
-  const fnRegex = /export\s+(?:async\s+)?function\s+(\w+)/g;
-  const functions: Array<{ name: string }> = [];
-  let match: RegExpExecArray | null;
-  while ((match = fnRegex.exec(source)) !== null) {
-    functions.push({ name: match[1] });
-  }
+  // Extract full signatures
+  const { functions, types } = extractSignaturesForGen(source);
 
-  // Extract class/interface names
-  const typeRegex = /export\s+(?:interface|class|type)\s+(\w+)/g;
-  const types: Array<{ name: string }> = [];
-  while ((match = typeRegex.exec(source)) !== null) {
-    types.push({ name: match[1] });
-  }
-
-  // Detect patterns
+  // Detect patterns (uses name-only interface expected by inferPatterns)
   patterns.push(
-    ...inferPatterns(functions, types, basename(sourceFile)),
+    ...inferPatterns(
+      functions.map((f) => ({ name: f.name })),
+      types.map((t) => ({ name: t })),
+      basename(sourceFile),
+    ),
   );
 
   // Adjust confidence based on what we found
@@ -708,7 +902,14 @@ function generateMinimalSpec(
   if (functions.length >= 3) confidence += 0.1;
   confidence = Math.min(1, confidence);
 
+  // No business rules in auto-generated specs → INCOMPLETE, cap confidence
+  confidence = Math.min(confidence, 0.5);
+
   // Generate spec
+  lines.push('# STATUS: INCOMPLETE — auto-generated typed contract scaffold');
+  lines.push('# This spec captures exact signatures but has no business rules.');
+  lines.push('# Add invariants, preconditions, and postconditions to complete it.');
+  lines.push('');
   lines.push(`domain ${domainName} {`);
   lines.push('  version: "1.0.0"');
   lines.push('');
@@ -718,25 +919,54 @@ function generateMinimalSpec(
     lines.push('  # Entities');
     for (const t of types) {
       lines.push('');
-      lines.push(`  entity ${t.name} {`);
+      lines.push(`  entity ${t} {`);
       lines.push(`    id: String`);
       lines.push('  }');
     }
     lines.push('');
   }
 
-  // Generate behaviors from functions
+  // Generate behaviors from functions with full signature fidelity
   if (functions.length > 0) {
     lines.push('  # Behaviors');
     for (const fn of functions) {
       lines.push('');
       lines.push(`  behavior ${fn.name} {`);
+
+      // Input: exact params
       lines.push('    input {');
-      lines.push('      request: String');
+      if (fn.params.length > 0) {
+        for (const p of fn.params) {
+          lines.push(`      ${p.name}: ${p.type}`);
+        }
+      }
       lines.push('    }');
       lines.push('');
+
+      // Output: exact return type + errors from throws
       lines.push('    output {');
-      lines.push('      success: Boolean');
+      lines.push(`      success: ${fn.returnType}`);
+      if (fn.throws.length > 0) {
+        lines.push('');
+        lines.push('      errors {');
+        for (const errName of fn.throws) {
+          lines.push(`        ${errName} {`);
+          lines.push(`          when: "inferred from throw statement"`);
+          lines.push('        }');
+        }
+        lines.push('      }');
+      }
+      lines.push('    }');
+
+      // Effects as comments (not a parser keyword)
+      if (fn.effects.length > 0) {
+        lines.push('');
+        lines.push(`    # effects: ${fn.effects.join(', ')}`);
+      }
+
+      lines.push('');
+      lines.push('    invariants {');
+      lines.push(`      - ${fn.name} never_throws_unhandled`);
       lines.push('    }');
       lines.push('  }');
     }

@@ -1,0 +1,13 @@
+# @tier 3 — Auto-generated utility spec (export-only verification)
+# exports: evaluatePostconditions, PostconditionEvaluatorConfig
+# dependencies: 
+
+domain PostconditionEvaluator {
+  version: "1.0.0"
+
+  type PostconditionEvaluatorConfig = String
+
+  invariants exports_present {
+    - true
+  }
+}

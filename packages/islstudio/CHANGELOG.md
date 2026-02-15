@@ -1,10 +1,21 @@
 # Changelog
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [b67276d]
+  - @isl-lang/proof@1.0.0
+  - @isl-lang/evidence@0.1.1
+  - @isl-lang/firewall@0.2.1
+  - @isl-lang/policy-packs@0.1.1
+
 All notable changes to `islstudio` will be documented in this file.
 
 ## [0.1.1] - 2026-02-02
 
 ### Added
+
 - **SARIF output** for GitHub Security tab (`--output sarif`)
 - **Rules CLI** commands:
   - `islstudio rules list` - List all rules with severity
@@ -22,11 +33,13 @@ All notable changes to `islstudio` will be documented in this file.
 - **GitHub Check Annotations** for inline PR feedback
 
 ### Fixed
+
 - Deterministic evidence fingerprints (stable across runs)
 
 ## [0.1.0] - 2026-02-01
 
 ### Added
+
 - Initial release
 - Core gate engine with SHIP/NO_SHIP verdicts
 - 20 built-in rules across 4 policy packs:

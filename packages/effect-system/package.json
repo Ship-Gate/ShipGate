@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/effect-system",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Algebraic effect system for ISL - track and manage side effects",
   "main": "dist/index.js",
   "scripts": {

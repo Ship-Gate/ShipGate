@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/isl-verify",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "ISL verification engine with trust score calculation",
   "type": "module",
   "main": "./dist/index.js",

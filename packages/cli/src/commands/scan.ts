@@ -8,7 +8,7 @@
 
  * - Host: ShipGate truthpack validation (routes, env, imports, files)
 
- * - Reality-Gap: ISL Studio policy packs (auth, pii, payments, rate-limit, intent)
+ * - Reality-Gap: ShipGate policy packs (auth, pii, payments, rate-limit, intent)
 
  */
 
@@ -352,7 +352,7 @@ export function formatScanResultAsSarif(result: ScanCommandResult): object {
 
             version: '0.2.0',
 
-            informationUri: 'https://islstudio.dev',
+            informationUri: 'https://shipgate.dev',
 
             rules,
 

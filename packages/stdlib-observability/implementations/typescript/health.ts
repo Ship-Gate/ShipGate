@@ -18,6 +18,9 @@ import {
   failure,
 } from './types';
 
+export { HealthCheckType, HealthStatus };
+export type { HealthCheckResult, CheckHealthOutput };
+
 // Declare globals that may or may not be available
 declare const fetch: ((url: string, init?: RequestInit) => Promise<Response>) | undefined;
 declare const AbortController: (new () => {
@@ -263,83 +266,81 @@ export class HealthCheckRegistry {
   // Health Check Execution
   // ==========================================================================
 
+  async checkHealth(checks?: string[]): Promise<CheckHealthOutput> {
+    const checkNames = checks ?? Array.from(this.checks.keys());
+    const results: Record<string, HealthCheckResult> = {};
+    let overallStatus = HealthStatus.HEALTHY;
+
+    await Promise.all(
+      checkNames.map(async (name) => {
+        const entry = this.checks.get(name);
+        if (!entry) {
+          results[name] = {
+            status: HealthStatus.UNKNOWN,
+            message: 'Check not found',
+            durationMs: 0,
+          };
+          return;
+        }
+
+        const { config, fn } = entry;
+        const timeout = config.timeout ?? 5000;
+
+        let result: HealthCheckResult;
+        try {
+          result = await Promise.race([
+            fn(),
+            new Promise<HealthCheckResult>((_, reject) =>
+              setTimeout(() => reject(new Error('Health check timeout')), timeout)
+            ),
+          ]);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Health check failed';
+          result = {
+            status: HealthStatus.UNHEALTHY,
+            message: message.includes('timeout') ? `Check timed out after ${timeout}ms (timeout)` : message,
+            durationMs: timeout,
+          };
+        }
+
+        // Use the status directly from the check result
+        const effectiveStatus = result.status;
+        config.status = effectiveStatus;
+        config.lastCheckAt = new Date();
+
+        results[name] = {
+          status: effectiveStatus,
+          message: result.message,
+          durationMs: result.durationMs,
+        };
+
+        // Update overall status
+        if (effectiveStatus === HealthStatus.UNHEALTHY) {
+          overallStatus = HealthStatus.UNHEALTHY;
+        } else if (
+          effectiveStatus === HealthStatus.DEGRADED &&
+          overallStatus !== HealthStatus.UNHEALTHY
+        ) {
+          overallStatus = HealthStatus.DEGRADED;
+        } else if (
+          effectiveStatus === HealthStatus.UNKNOWN &&
+          overallStatus === HealthStatus.HEALTHY
+        ) {
+          overallStatus = HealthStatus.UNKNOWN;
+        }
+      })
+    );
+
+    return {
+      status: overallStatus,
+      checks: results,
+    };
+  }
+
   async check(input: CheckHealthInput = {}): Promise<Result<CheckHealthOutput>> {
     try {
-      const checkNames = input.checks ?? Array.from(this.checks.keys());
-      const results: Record<string, HealthCheckResult> = {};
-      let overallStatus = HealthStatus.HEALTHY;
-
-      await Promise.all(
-        checkNames.map(async (name) => {
-          const entry = this.checks.get(name);
-          if (!entry) {
-            results[name] = {
-              status: HealthStatus.UNKNOWN,
-              message: 'Check not found',
-              durationMs: 0,
-            };
-            return;
-          }
-
-          const { config, fn } = entry;
-          const result = await fn();
-
-          // Update consecutive counters
-          if (result.status === HealthStatus.HEALTHY) {
-            config.consecutiveSuccesses++;
-            config.consecutiveFailures = 0;
-            config.lastSuccessAt = new Date();
-          } else {
-            config.consecutiveFailures++;
-            config.consecutiveSuccesses = 0;
-            config.lastFailureAt = new Date();
-          }
-
-          config.lastCheckAt = new Date();
-
-          // Determine effective status based on thresholds
-          let effectiveStatus = config.status;
-
-          if (result.status === HealthStatus.HEALTHY) {
-            if (config.consecutiveSuccesses >= config.healthyThreshold) {
-              effectiveStatus = HealthStatus.HEALTHY;
-            }
-          } else {
-            if (config.consecutiveFailures >= config.unhealthyThreshold) {
-              effectiveStatus = HealthStatus.UNHEALTHY;
-            } else if (config.consecutiveFailures > 0) {
-              effectiveStatus = HealthStatus.DEGRADED;
-            }
-          }
-
-          config.status = effectiveStatus;
-          results[name] = {
-            status: effectiveStatus,
-            message: result.message,
-            durationMs: result.durationMs,
-          };
-
-          // Update overall status
-          if (effectiveStatus === HealthStatus.UNHEALTHY) {
-            overallStatus = HealthStatus.UNHEALTHY;
-          } else if (
-            effectiveStatus === HealthStatus.DEGRADED &&
-            overallStatus !== HealthStatus.UNHEALTHY
-          ) {
-            overallStatus = HealthStatus.DEGRADED;
-          } else if (
-            effectiveStatus === HealthStatus.UNKNOWN &&
-            overallStatus === HealthStatus.HEALTHY
-          ) {
-            overallStatus = HealthStatus.UNKNOWN;
-          }
-        })
-      );
-
-      return success({
-        status: overallStatus,
-        checks: results,
-      });
+      const output = await this.checkHealth(input.checks);
+      return success(output);
     } catch (err) {
       return failure(err instanceof Error ? err : new Error(String(err)));
     }

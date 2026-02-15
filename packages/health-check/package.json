@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/health-check",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Generate health check endpoints from ISL dependencies",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

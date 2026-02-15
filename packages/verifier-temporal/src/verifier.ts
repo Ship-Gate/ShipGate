@@ -166,7 +166,7 @@ export async function verify(
     return {
       success: true,
       verdict: 'verified',
-      score: 100,
+      score: 0,
       temporalResults: [],
       summary: {
         total: 0,

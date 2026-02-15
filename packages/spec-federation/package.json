@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/spec-federation",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Federated ISL specifications for cross-team and cross-service composition",
   "type": "module",
   "main": "./dist/index.js",

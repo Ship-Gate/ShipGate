@@ -57,7 +57,7 @@ export class HealUIPanel {
     // Otherwise create new panel
     const panel = vscode.window.createWebviewPanel(
       'islstudioHeal',
-      'ISL Studio: Heal',
+      'ShipGate: Heal',
       column || vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -101,7 +101,7 @@ export class HealUIPanel {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ISL Studio: Heal</title>
+    <title>ShipGate: Heal</title>
     <style>
         body {
             font-family: var(--vscode-font-family);
@@ -226,7 +226,7 @@ export class HealUIPanel {
 </head>
 <body>
     <div class="header">
-        <h1>ISL Studio: Heal</h1>
+        <h1>ShipGate: Heal</h1>
         <div id="status" class="status">
             <span class="status-icon">⏳</span>
             <span id="status-text">Initializing...</span>

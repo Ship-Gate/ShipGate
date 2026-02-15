@@ -3,6 +3,7 @@
 // @isl-lang/stdlib-observability
 // ============================================================================
 
+import { AsyncLocalStorage as NodeAsyncLocalStorage } from 'async_hooks';
 import {
   UUID,
   TraceId,
@@ -28,68 +29,14 @@ export interface CorrelationContext {
   tenantId?: string;
   version?: string;
   tags?: Record<string, string>;
+  [key: string]: unknown;
 }
 
 // ============================================================================
 // AsyncLocalStorage for context propagation
 // ============================================================================
 
-interface AsyncLocalStorage<T> {
-  getStore(): T | undefined;
-  enterWith(store: T): void;
-  run<R>(store: T, callback: (...args: unknown[]) => R, ...args: unknown[]): R;
-  exit<R>(callback: (...args: any[]) => R, ...args: any[]): R;
-}
-
-declare const AsyncLocalStorage: {
-  new <T>(): AsyncLocalStorage<T>;
-} | undefined;
-
-// Use a simple context stack for environments without AsyncLocalStorage
-class SimpleContextStack<T> {
-  private stack: T[] = [];
-
-  getStore(): T | undefined {
-    return this.stack[this.stack.length - 1];
-  }
-
-  run<R>(store: T, callback: (...args: any[]) => R, ...args: any[]): R {
-    this.stack.push(store);
-    try {
-      return callback(...args);
-    } finally {
-      this.stack.pop();
-    }
-  }
-
-  enterWith(store: T): void {
-    if (this.stack.length > 0) {
-      this.stack[this.stack.length - 1] = store;
-    } else {
-      this.stack.push(store);
-    }
-  }
-
-  exit<R>(callback: (...args: unknown[]) => R, ...args: unknown[]): R {
-    const current = this.stack.pop();
-    try {
-      return callback(...args);
-    } finally {
-      if (current !== undefined) {
-        this.stack.push(current);
-      }
-    }
-  }
-}
-
-// Create context storage
-let contextStorage: AsyncLocalStorage<CorrelationContext> | SimpleContextStack<CorrelationContext>;
-
-if (typeof AsyncLocalStorage !== 'undefined') {
-  contextStorage = new AsyncLocalStorage<CorrelationContext>();
-} else {
-  contextStorage = new SimpleContextStack<CorrelationContext>();
-}
+const contextStorage = new NodeAsyncLocalStorage<CorrelationContext>()
 
 // ============================================================================
 // Context Management
@@ -119,7 +66,7 @@ export function withCorrelationContext<T>(
 }
 
 export function withoutCorrelationContext<T>(callback: () => T): T {
-  return contextStorage.exit(callback);
+  return contextStorage.run({} as CorrelationContext, callback);
 }
 
 // ============================================================================
@@ -206,7 +153,7 @@ export function isValidSpanId(spanId: string): boolean {
 }
 
 export function isValidUUID(uuid: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uuid);
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uuid);
 }
 
 // ============================================================================

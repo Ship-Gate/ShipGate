@@ -13,6 +13,27 @@ import type {
 } from '@isl-lang/parser';
 import type { SemanticPass, PassContext } from '../types.js';
 
+// ============================================================================
+// AST Normalization
+// ============================================================================
+
+function normalizeConditions(input: unknown): Expression[] {
+  if (!input) return [];
+  if (Array.isArray(input)) return input as Expression[];
+  const obj = input as Record<string, unknown>;
+  if (Array.isArray(obj.conditions)) {
+    return (obj.conditions as Array<Record<string, unknown>>)
+      .map(c => (c.expression || c) as Expression);
+  }
+  return [];
+}
+
+function normalizeExprKind(expr: Expression): string {
+  const kind = expr.kind as string;
+  if (kind === 'ComparisonExpression') return 'BinaryExpr';
+  return kind;
+}
+
 export const UnreachableClausesPass: SemanticPass = {
   id: 'unreachable-clauses',
   name: 'Unreachable Clauses',
@@ -27,19 +48,21 @@ export const UnreachableClausesPass: SemanticPass = {
 
     // Analyze each behavior
     for (const behavior of ast.behaviors || []) {
-      // Check preconditions (Expression[])
-      if (behavior.preconditions && behavior.preconditions.length > 0) {
+      // Check preconditions (Expression[] or ConditionBlock)
+      const preconditions = normalizeConditions(behavior.preconditions);
+      if (preconditions.length > 0) {
         diagnostics.push(...analyzePreconditions(
-          behavior.preconditions,
+          preconditions,
           behavior,
           filePath
         ));
       }
 
-      // Check postconditions (PostconditionBlock[])
-      if (behavior.postconditions && behavior.postconditions.length > 0) {
+      // Check postconditions (PostconditionBlock[] or ConditionBlock)
+      if (Array.isArray(behavior.postconditions) && behavior.postconditions.length > 0 &&
+          behavior.postconditions[0]?.kind === 'PostconditionBlock') {
         diagnostics.push(...analyzePostconditions(
-          behavior.postconditions,
+          behavior.postconditions as PostconditionBlock[],
           behavior,
           filePath
         ));
@@ -204,7 +227,7 @@ function extractGuardInfo(expr: Expression): GuardInfo {
   const text = extractExpressionText(expr);
   
   // Simple comparison pattern: x == value, x != value, x > value, etc.
-  if (expr.kind === 'BinaryExpr') {
+  if (normalizeExprKind(expr) === 'BinaryExpr') {
     const binary = expr as { left?: Expression; operator?: string; right?: Expression };
     return {
       text,
@@ -215,12 +238,12 @@ function extractGuardInfo(expr: Expression): GuardInfo {
   }
 
   // Identifier (boolean variable)
-  if (expr.kind === 'Identifier') {
+  if (normalizeExprKind(expr) === 'Identifier') {
     return { text, variable: text, operator: '==', value: true };
   }
 
   // Unary not: !x or not x
-  if (expr.kind === 'UnaryExpr') {
+  if (normalizeExprKind(expr) === 'UnaryExpr') {
     const unary = expr as { operator?: string; operand?: Expression };
     if ((unary.operator === '!' || unary.operator === 'not') && unary.operand) {
       return {

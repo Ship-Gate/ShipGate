@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/typechecker",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Semantic analyzer for ISL - validates AST, resolves types, builds symbol table",
   "author": "ISL Team",
   "license": "MIT",

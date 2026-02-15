@@ -59,7 +59,7 @@ Would love feedback from [project name] - mind if I open a quick PR?
 
 Just shipped Shipgate - a free gate that blocks auth/PII issues before merge.
 
-Quick demo: https://github.com/ISL-Studio/islstudio-hello-gate
+Quick demo: https://github.com/shipgate/shipgate-hello-gate
 
 - PR #1: NO_SHIP (auth bypass, PII in logs)
 - PR #2: SHIP (fixed, 95/100)
@@ -95,7 +95,7 @@ npx shipgate init
 
 Would you be open to a quick PR adding it to [project]?
 
-Demo: https://github.com/ISL-Studio/islstudio-hello-gate
+Demo: https://github.com/shipgate/shipgate-hello-gate
 
 Best,
 [Your name]

@@ -204,19 +204,24 @@ function checkBehaviorTypeCoherence(
 ): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
 
-  // Check input types (input may be single object or array)
-  const inputs = Array.isArray(behavior.input) ? behavior.input : (behavior.input ? [behavior.input] : []);
+  // Check input types — normalize InputBlock { fields: [...] } vs flat Field[]
+  const inputBlock = behavior.input as unknown as { fields?: unknown[] } | unknown[] | undefined;
+  const inputs = inputBlock
+    ? (Array.isArray(inputBlock) ? inputBlock : ((inputBlock as { fields?: unknown[] }).fields || []))
+    : [];
   for (const input of inputs) {
-    const typeName = extractTypeName(input.type);
+    const inp = input as { name?: { name: string }; type?: unknown; span?: unknown };
+    if (!inp?.name?.name) continue;
+    const typeName = extractTypeName(inp.type);
     
     // Check for optional types in required contexts
-    if (isOptionalType(input.type) && hasRequiredAnnotation(input)) {
+    if (isOptionalType(inp.type) && hasRequiredAnnotation(inp)) {
       diagnostics.push({
         code: 'E0344',
         category: 'semantic',
         severity: 'warning',
-        message: `Input '${input.name.name}' is marked optional but has @required annotation`,
-        location: spanToLocation(input.span, filePath),
+        message: `Input '${inp.name.name}' is marked optional but has @required annotation`,
+        location: spanToLocation(inp.span, filePath),
         source: 'verifier',
         notes: [
           `In behavior '${behavior.name.name}'`,
@@ -440,13 +445,25 @@ function checkGenericTypeUsage(
 
   // Check behaviors
   for (const behavior of ast.behaviors || []) {
-    const inputs = Array.isArray(behavior.input) ? behavior.input : (behavior.input ? [behavior.input] : []);
-    const outputs = Array.isArray(behavior.output) ? behavior.output : (behavior.output ? [behavior.output] : []);
-    for (const input of inputs) {
-      checkType(input.type, `Input '${input.name.name}' in behavior '${behavior.name.name}'`);
+    const inputBlock = behavior.input as unknown as { fields?: unknown[] } | unknown[] | undefined;
+    const behaviorInputs = inputBlock
+      ? (Array.isArray(inputBlock) ? inputBlock : ((inputBlock as { fields?: unknown[] }).fields || []))
+      : [];
+    for (const input of behaviorInputs) {
+      const inp = input as { name?: { name: string }; type?: unknown };
+      if (inp?.name?.name && inp.type) {
+        checkType(inp.type, `Input '${inp.name.name}' in behavior '${behavior.name.name}'`);
+      }
     }
-    for (const output of outputs) {
-      checkType(output.type, `Output '${output.name.name}' in behavior '${behavior.name.name}'`);
+    const outputBlock = behavior.output as unknown as { fields?: unknown[] } | unknown[] | undefined;
+    const behaviorOutputs = outputBlock
+      ? (Array.isArray(outputBlock) ? outputBlock : ((outputBlock as { fields?: unknown[] }).fields || []))
+      : [];
+    for (const output of behaviorOutputs) {
+      const out = output as { name?: { name: string }; type?: unknown };
+      if (out?.name?.name && out.type) {
+        checkType(out.type, `Output '${out.name.name}' in behavior '${behavior.name.name}'`);
+      }
     }
   }
 

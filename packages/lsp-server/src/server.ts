@@ -215,7 +215,7 @@ export class ISLServer {
         // Suppress-line action: insert a comment above the offending line
         const suppressComment = diag.source === SOURCE_HOST
           ? `// shipgate-ignore`
-          : `// islstudio-ignore ${diag.code}`;
+          : `// shipgate-ignore ${diag.code}`;
 
         actions.push({
           title: `Suppress ${diag.code} for this line`,

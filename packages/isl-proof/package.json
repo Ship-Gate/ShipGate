@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/proof",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "ISL Proof Bundle - verifiable proof that spec is satisfied",
   "type": "module",
   "main": "./dist/index.js",

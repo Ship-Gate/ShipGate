@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/compliance",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generate compliance reports (SOC2, PCI-DSS, HIPAA, GDPR) from ISL specifications",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/distributed",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Distributed systems primitives for ISL - consensus, coordination, and distributed execution",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

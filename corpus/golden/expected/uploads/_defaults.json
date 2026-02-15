@@ -1,8 +1,0 @@
-{
-  "parseSuccess": true,
-  "checkSuccess": true,
-  "minDomains": 1,
-  "minEntities": 1,
-  "minBehaviors": 1,
-  "notes": "Upload specs should parse and type-check successfully"
-}

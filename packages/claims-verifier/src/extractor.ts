@@ -68,7 +68,7 @@ export function extractClaimsFromLine(
         id: generateClaimId(filePath, lineNumber, fullMatch),
         text: fullMatch,
         value: parseValue(value),
-        unit: unit?.toLowerCase(),
+        unit: pattern.name === 'money' ? 'dollars' : unit?.toLowerCase(),
         location,
         verificationMethod: inferVerificationMethod(pattern.name, unit),
         status: 'unverifiable', // Default until verified

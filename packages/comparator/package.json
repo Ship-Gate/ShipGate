@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/comparator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Compare multiple implementations of the same ISL behavior",
   "type": "module",
   "main": "./dist/index.js",

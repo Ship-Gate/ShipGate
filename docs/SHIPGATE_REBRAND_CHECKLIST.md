@@ -26,17 +26,19 @@ Execute these changes to officially launch as **Shipgate**.
 ## Phase 2: User-Facing Copy
 
 ### 2.1 Find-Replace (case-sensitive)
-| Find | Replace |
-|------|---------|
-| ISL Studio | Shipgate |
-| islstudio | shipgate |
-| islstudio.dev | shipgate.dev |
-| @islstudio | @shipgate |
+| Find | Replace | Status |
+|------|---------|--------|
+| ISL Studio | Shipgate | ✅ Done |
+| islstudio | shipgate | ✅ Done |
+| islstudio.dev | shipgate.dev | ✅ Done |
+| @islstudio | @shipgate | ✅ Done |
+| islStudioVersion | shipgateVersion | ✅ Done |
+| islstudio-ignore | shipgate-ignore | ✅ Done |
 
 ### 2.2 Package Display Names
 - [ ] `packages/islstudio`: Consider rename to `packages/shipgate` or keep internal
-- [ ] VS Code extension: Display name "Shipgate"
-- [ ] GitHub Action: `shipgate/gate-action` (new repo or rename)
+- [x] VS Code extension: Display name "Shipgate" (README updated)
+- [x] GitHub Action: `shipgate/gate-action` (action.yml + README updated)
 
 ---
 
@@ -58,7 +60,7 @@ Keep these as ISL (the language):
 - [x] Landing page (demos/playwright-showcase: hero, pricing, FAQ, /pricing, /dashboard)
 - [ ] Deploy landing (Vercel/Netlify or GitHub Pages)
 - [ ] Demo video (Three Big Lies, 2 min)
-- [ ] HN post draft
+- [x] HN post draft (`docs/HACKER_NEWS_POST.md`)
 - [ ] Twitter/X post
 - [ ] Logo (optional: gate icon + "Shipgate")
 

@@ -36,6 +36,18 @@ export {
   verifyManifestSignature,
 } from './manifest.js';
 
+export {
+  loadProvenance,
+  loadProvenanceSync,
+  PROVENANCE_TEMPLATE,
+  ENV_AI_TOOL,
+  ENV_AI_MODEL,
+  ENV_PROMPT_SHA,
+  ENV_CONTEXT_SHA,
+} from './provenance.js';
+
+export type { AIProvenance } from './provenance.js';
+
 export type {
   ProofVerdict,
   ProofBundleManifest,
@@ -155,6 +167,7 @@ export type {
   BundleVerdictArtifact,
   BundleTraceRef,
   BundleEvidence,
+  SOC2ControlEntry,
   VerifyBundleResult,
   VerifyBundleCheck,
 } from './bundle-hash.js';
@@ -225,6 +238,31 @@ export {
   extractZip,
   verifyEd25519Signature,
 } from './zip-verify.js';
+
+// Proof Bundle Gate — versioned, deterministic gate proof artifact
+export {
+  PROOF_BUNDLE_GATE_SCHEMA_VERSION,
+  createProofBundleGate,
+  createProofBundleGateWithHash,
+  proofBundleGateHash,
+  serializeProofBundleGate,
+  stableSortResults,
+  signProofBundleGateEd25519,
+  verifyProofBundleGateEd25519,
+  writeProofBundleGate,
+  formatProofBundleGateMarkdown,
+  mapClauseStatusToResultStatus,
+  mapSeverity,
+} from './proof-bundle-gate.js';
+
+export type {
+  ProofBundleGate,
+  ProofBundleGateResult,
+  ProofBundleGateResultStatus,
+  ProofBundleGateSeverity,
+  ProofBundleGateSignature,
+  CreateProofBundleGateInput,
+} from './proof-bundle-gate.js';
 
 export type {
   ZipVerifyOptions,

@@ -228,10 +228,10 @@ describe('Suppression Comments', () => {
     expect(comment).toContain('shipgate-ignore');
   });
 
-  it('should generate correct islstudio-ignore comment for Reality-Gap diagnostics', () => {
+  it('should generate correct shipgate-ignore comment for Reality-Gap diagnostics', () => {
     const ruleId = 'auth-missing';
-    const comment = `// islstudio-ignore ${ruleId}`;
-    expect(comment).toBe('// islstudio-ignore auth-missing');
+    const comment = `// shipgate-ignore ${ruleId}`;
+    expect(comment).toBe('// shipgate-ignore auth-missing');
   });
 });
 

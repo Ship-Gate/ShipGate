@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/parser",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "ISL (Intent Specification Language) recursive descent parser - transforms ISL source into AST",
   "author": "ISL Team",
   "license": "MIT",

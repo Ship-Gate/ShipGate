@@ -78,6 +78,7 @@ export async function writeOutputFiles(
     fixture: 0,
     evidence: 0,
     report: 0,
+    openapi: 0,
   };
 
   for (const file of sortedFiles) {

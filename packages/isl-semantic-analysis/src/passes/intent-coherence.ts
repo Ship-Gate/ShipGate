@@ -258,6 +258,11 @@ function checkFieldSensitivity(field: Field): 'annotation' | 'constraint' | 'typ
     return 'constraint';
   }
 
+  // Check field-level constraints array (test/mock shape)
+  if (hasFieldLevelConstraint(field, 'sensitive')) {
+    return 'constraint';
+  }
+
   // Check type name for sensitive patterns
   const typeName = getTypeName(field.type);
   if (typeName && isSensitiveTypeName(typeName)) {
@@ -287,7 +292,26 @@ function getConstraintName(c: Constraint): string {
   if (typeof c.name === 'string') {
     return c.name;
   }
+  if (c.name && typeof c.name === 'object' && 'name' in c.name) {
+    return (c.name as Identifier).name;
+  }
   return '';
+}
+
+/**
+ * Check field-level constraints array (for mock/alternate AST shapes)
+ */
+function hasFieldLevelConstraint(field: Field, name: string): boolean {
+  const fieldAny = field as unknown as Record<string, unknown>;
+  if (!Array.isArray(fieldAny.constraints)) return false;
+  return (fieldAny.constraints as Array<Record<string, unknown>>).some(c => {
+    const cName = typeof c.name === 'string' 
+      ? c.name 
+      : (c.name && typeof c.name === 'object' && 'name' in (c.name as Record<string, unknown>)) 
+        ? ((c.name as Record<string, unknown>).name as string) 
+        : '';
+    return cName.toLowerCase() === name.toLowerCase();
+  });
 }
 
 /**
@@ -332,8 +356,17 @@ function getTypeName(typeDef: TypeDefinition): string | null {
       return getTypeName(typeDef.base);
     case 'OptionalType':
       return getTypeName(typeDef.inner);
-    default:
+    default: {
+      // Handle SimpleType and other shapes where name may be a string or Identifier
+      const anyDef = typeDef as unknown as Record<string, unknown>;
+      if (typeof anyDef.name === 'string') {
+        return anyDef.name;
+      }
+      if (anyDef.name && typeof anyDef.name === 'object' && 'name' in (anyDef.name as Record<string, unknown>)) {
+        return (anyDef.name as { name: string }).name;
+      }
       return null;
+    }
   }
 }
 
@@ -487,7 +520,7 @@ function validateRateLimitRequired(
 ): IntentCoherenceResult {
   const securityConfig = extractSecurityConfig(behavior);
   
-  if (securityConfig.hasRateLimit && securityConfig.rateLimitSpecs.length > 0) {
+  if (securityConfig.hasRateLimit) {
     return {
       valid: true,
       intent,
@@ -523,6 +556,34 @@ function validateRateLimitRequired(
 // ============================================================================
 
 /**
+ * Normalize security input to a flat array of SecuritySpec-like objects.
+ * Handles both:
+ *   - SecuritySpec[] (real parser output: behavior.security)
+ *   - { kind: 'SecurityBlock', requirements: SecurityRequirement[] } (test mock shape)
+ */
+function normalizeSecuritySpecs(security: unknown): Array<{ type: string; details?: unknown; expression?: unknown; location?: unknown }> {
+  if (!security) return [];
+
+  // Already an array of SecuritySpec
+  if (Array.isArray(security)) {
+    return security;
+  }
+
+  // Object with requirements array (test mock shape: { kind: 'SecurityBlock', requirements: [...] })
+  const obj = security as Record<string, unknown>;
+  if (Array.isArray(obj.requirements)) {
+    return (obj.requirements as Array<Record<string, unknown>>).map(req => ({
+      type: (req.type as string) || '',
+      details: req.expression || req.details,
+      expression: req.expression,
+      location: req.location || req.span,
+    }));
+  }
+
+  return [];
+}
+
+/**
  * Extract security configuration from behavior
  */
 export function extractSecurityConfig(behavior: Behavior): SecurityConfig {
@@ -533,20 +594,21 @@ export function extractSecurityConfig(behavior: Behavior): SecurityConfig {
     authRequirements: [],
   };
 
-  if (!behavior.security || behavior.security.length === 0) {
+  const specs = normalizeSecuritySpecs(behavior.security);
+  if (specs.length === 0) {
     return config;
   }
 
-  for (const spec of behavior.security) {
+  for (const spec of specs) {
     // Check for audit_log
-    if (isAuditLogSpec(spec)) {
+    if (isAuditLogSpec(spec as SecuritySpec)) {
       config.hasAuditLog = true;
     }
 
     // Check for rate_limit
     if (spec.type === 'rate_limit') {
       config.hasRateLimit = true;
-      const rateLimitInfo = parseRateLimitSpec(spec, behavior.location?.file || '');
+      const rateLimitInfo = parseRateLimitSpec(spec as SecuritySpec, ((behavior as unknown as Record<string, unknown>).location as { file?: string } | undefined)?.file || '');
       if (rateLimitInfo) {
         config.rateLimitSpecs.push(rateLimitInfo);
       }
@@ -554,7 +616,7 @@ export function extractSecurityConfig(behavior: Behavior): SecurityConfig {
 
     // Check for requires (auth)
     if (spec.type === 'requires') {
-      const authReq = extractAuthRequirement(spec);
+      const authReq = extractAuthRequirement(spec as SecuritySpec);
       if (authReq) {
         config.authRequirements.push(authReq);
       }
@@ -568,8 +630,10 @@ export function extractSecurityConfig(behavior: Behavior): SecurityConfig {
  * Check if a security spec is an audit_log requirement
  */
 function isAuditLogSpec(spec: SecuritySpec): boolean {
-  // Check if the expression mentions audit_log
-  const exprStr = stringifyExpression(spec.details);
+  // Check both .details (parser shape) and .expression (test mock shape)
+  const specAny = spec as unknown as Record<string, unknown>;
+  const expr = specAny.details || specAny.expression;
+  const exprStr = stringifyExpression(expr as Expression);
   return /audit.?log/i.test(exprStr) && /required/i.test(exprStr);
 }
 
@@ -577,18 +641,19 @@ function isAuditLogSpec(spec: SecuritySpec): boolean {
  * Parse rate_limit specification
  */
 function parseRateLimitSpec(spec: SecuritySpec, filePath: string): RateLimitInfo | null {
-  // The details expression contains the rate limit configuration
-  // Format: rate_limit N per DURATION per SCOPE
-  const exprStr = stringifyExpression(spec.details);
+  // The details/expression contains the rate limit configuration
+  const specAny = spec as unknown as Record<string, unknown>;
+  const expr = specAny.details || specAny.expression;
+  const exprStr = stringifyExpression(expr as Expression);
   
-  // Parse: "10 per hour per email" or similar
-  const match = exprStr.match(/(\d+)\s*per\s*(\w+)\s*per\s*(\w+)/i);
+  // Parse: "10 per hour per email" or "5 per 15 minutes per email"
+  const match = exprStr.match(/(\d+)\s+per\s+(.+?)\s+per\s+(\w+)/i);
   if (match) {
     return {
-      limit: parseInt(match[1], 10),
-      per: match[2],
-      scope: match[3],
-      location: spec.location,
+      limit: parseInt(match[1]!, 10),
+      per: match[2]!,
+      scope: match[3]!,
+      location: (spec as unknown as { location?: SourceLocation }).location || { file: filePath, line: 1, column: 0, endLine: 1, endColumn: 0 },
     };
   }
 
@@ -599,7 +664,9 @@ function parseRateLimitSpec(spec: SecuritySpec, filePath: string): RateLimitInfo
  * Extract authentication requirement from security spec
  */
 function extractAuthRequirement(spec: SecuritySpec): string | null {
-  const exprStr = stringifyExpression(spec.details);
+  const specAny = spec as unknown as Record<string, unknown>;
+  const expr = specAny.details || specAny.expression;
+  const exprStr = stringifyExpression(expr as Expression);
   return exprStr || null;
 }
 
@@ -719,7 +786,12 @@ export function extractIntentDeclarations(
   const filePath = behavior.location?.file || '';
   
   // Get the source lines around the behavior declaration
-  const behaviorLine = behavior.location?.line || 1;
+  // Support both behavior.location.line (parser shape) and behavior.span.start.line (test mock)
+  const behaviorAny = behavior as unknown as Record<string, unknown>;
+  const behaviorLine = behavior.location?.line 
+    || (behaviorAny.span && typeof behaviorAny.span === 'object' && 'start' in (behaviorAny.span as Record<string, unknown>) 
+      ? ((behaviorAny.span as Record<string, unknown>).start as { line: number }).line 
+      : 1);
   const lines = sourceContent.split('\n');
   
   // Look for @intent annotations in comments before the behavior
@@ -730,7 +802,7 @@ export function extractIntentDeclarations(
     // Match @intent patterns
     const intentMatches = line.matchAll(/@intent\s+([\w-]+)/gi);
     for (const match of intentMatches) {
-      const intentName = match[1].toLowerCase();
+      const intentName = match[1]!.toLowerCase();
       if (COHERENCE_INTENTS.includes(intentName as typeof COHERENCE_INTENTS[number])) {
         intents.push({
           name: intentName,

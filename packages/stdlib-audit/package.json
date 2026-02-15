@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/stdlib-audit",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "ISL Standard Library - Audit Logging for Compliance",
   "license": "MIT",
   "author": "mevla",

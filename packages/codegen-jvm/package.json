@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/codegen-jvm",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ISL JVM Code Generator - Generate idiomatic Java and Kotlin code from ISL specifications",
   "license": "MIT",
   "author": "mevla",
@@ -55,7 +55,8 @@
     "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@isl-lang/isl-core": "workspace:*"
+    "@isl-lang/isl-core": "workspace:*",
+    "@isl-lang/parser": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

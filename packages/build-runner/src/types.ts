@@ -49,6 +49,21 @@ export interface BuildOptions {
   
   /** Minimum samples required for temporal verification (default: 10) */
   temporalMinSamples?: number;
+
+  /** Run tests after generation and include in verdict (default: true) */
+  runTests?: boolean;
+
+  /** Max fix iterations for failing tests (default: 2) */
+  maxTestFixIterations?: number;
+
+  /** Generate Next.js + shadcn/ui frontend (default: false) */
+  generateFrontend?: boolean;
+
+  /** Frontend output subdirectory within outDir (default: 'frontend') */
+  frontendOutDir?: string;
+
+  /** API-only mode: generate OpenAPI spec + backend, no frontend */
+  apiOnly?: boolean;
 }
 
 /**
@@ -62,7 +77,7 @@ export interface OutputFile {
   content: string;
   
   /** File type for categorization */
-  type: 'types' | 'test' | 'helper' | 'config' | 'fixture' | 'evidence' | 'report';
+  type: 'types' | 'test' | 'helper' | 'config' | 'fixture' | 'evidence' | 'report' | 'openapi';
 }
 
 /**
@@ -122,6 +137,15 @@ export interface CodegenStageData {
  */
 export interface TestgenStageData {
   files: OutputFile[];
+  testReport?: {
+    passed: number;
+    failed: number;
+    total: number;
+    passRate: number;
+    verdict: 'PASS' | 'WARN' | 'FAIL';
+    message: string;
+    failures: Array<{ file: string; name: string; error: string }>;
+  };
 }
 
 /**
@@ -162,6 +186,17 @@ export interface BuildEvidence {
   
   /** Pipeline timing breakdown */
   timing: PipelineTiming;
+
+  /** Test execution report (X/Y passing, verdict) */
+  testReport?: {
+    passed: number;
+    failed: number;
+    total: number;
+    passRate: number;
+    verdict: 'PASS' | 'WARN' | 'FAIL';
+    message: string;
+    failures: Array<{ file: string; name: string; error: string }>;
+  };
 }
 
 /**

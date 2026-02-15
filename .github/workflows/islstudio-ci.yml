@@ -38,7 +38,7 @@ jobs:
 
       - name: Run Shipgate on self
         run: |
-          cd packages/islstudio
+          cd packages/cli
           node dist/cli.js gate --ci --output json > gate-result.json || true
           
           VERDICT=$(jq -r '.verdict' gate-result.json)
@@ -99,7 +99,7 @@ jobs:
 
       - name: Pack
         run: |
-          cd packages/islstudio
+          cd packages/cli
           npm pack
           
           # Verify package contents
@@ -186,7 +186,7 @@ jobs:
 
       - name: Publish with provenance
         run: |
-          cd packages/islstudio
+          cd packages/cli
           npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -29,3 +29,18 @@ coverage/
 
 # ISL generated files (optional - uncomment to ignore)
 # generated/
+
+# ISL cache (prompt→spec, templates)
+.isl-cache/
+
+# Smoke test temp (init creates project here)
+packages/cli/tests/fixtures/smoke-init/
+
+# Packaging test temp
+packages/cli/.pack-test-consumer/
+packages/cli/*.tgz
+
+# VibeCheck
+.vibecheck/screenshots/
+.vibecheck/scan-results.json
+.vibecheck/context-engine-ledger.json

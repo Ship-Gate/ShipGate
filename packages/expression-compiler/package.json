@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/expression-compiler",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ISL Expression Compiler - Parse, normalize, and evaluate ISL expressions",
   "type": "module",
   "exports": {

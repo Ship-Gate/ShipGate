@@ -7,7 +7,7 @@
  *   npx tsx scripts/run-production.ts test
  */
 
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -15,16 +15,25 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, '..');
 
-// Read experimental.json
-const experimentalConfig = JSON.parse(
-  readFileSync(join(rootDir, 'experimental.json'), 'utf-8')
-);
+// Read experimental.json (resilient to absence)
+let experimentalConfig: {
+  experimental?: Record<string, string[]>;
+  quarantine?: { packages?: string[] };
+  internal?: { packages?: string[] };
+} = {};
+try {
+  experimentalConfig = JSON.parse(
+    readFileSync(join(rootDir, 'experimental.json'), 'utf-8')
+  );
+} catch {
+  // No experimental config — use empty defaults (all packages included in production)
+}
 
 // Collect all experimental + internal directory names (not package names)
 const excludeDirs = new Set<string>();
 
 // Flatten experimental categories - extract directory names
-const experimental = experimentalConfig.experimental;
+const experimental = experimentalConfig.experimental ?? {};
 for (const category of Object.keys(experimental)) {
   if (Array.isArray(experimental[category])) {
     for (const pkg of experimental[category]) {
@@ -74,8 +83,15 @@ for (const dirName of excludeDirs) {
   }
 }
 
+const ALLOWED_COMMANDS = ['build', 'typecheck', 'test', 'lint', 'dev', 'clean'];
 const command = process.argv[2] || 'build';
-const extraArgs = process.argv.slice(3).join(' ');
+
+if (!ALLOWED_COMMANDS.includes(command)) {
+  console.error(`❌ Unknown command '${command}'. Allowed: ${ALLOWED_COMMANDS.join(', ')}`);
+  process.exit(1);
+}
+
+const extraArgs = process.argv.slice(3);
 
 // Build the filter string - exclude experimental packages
 let excludeForCommand = existingExcludePackages;
@@ -83,17 +99,16 @@ if (command === 'typecheck') {
   // CLI (shipgate) has optional deps and type surface that fail typecheck; skip for 1.0 green
   excludeForCommand = [...excludeForCommand, 'shipgate'];
 }
-const filters = excludeForCommand
-  .map((pkg: string) => `--filter=!${pkg}`)
-  .join(' ');
+const filterArgs = excludeForCommand
+  .map((pkg: string) => `--filter=!${pkg}`);
 
-const turboCmd = `turbo ${command} ${filters} ${extraArgs}`.trim();
+const turboArgs = [command, ...filterArgs, ...extraArgs];
 
 console.log(`\n📦 Running production ${command}...\n`);
 console.log(`Excluding ${existingExcludePackages.length} experimental/quarantine/internal packages (${notFound} dirs not found)\n`);
 
 try {
-  execSync(turboCmd, {
+  execFileSync('turbo', turboArgs, {
     cwd: rootDir,
     stdio: 'inherit',
     env: { ...process.env, FORCE_COLOR: '1' }

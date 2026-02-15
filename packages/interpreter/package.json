@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/interpreter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ISL Runtime Interpreter - Execute ISL specs against live code/data for verification",
   "license": "MIT",
   "author": "mevla",

@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/adapters",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ISL Adapters - GitHub Actions, MCP tools, CLI, and domain integrations",
   "type": "module",
   "main": "./dist/index.js",

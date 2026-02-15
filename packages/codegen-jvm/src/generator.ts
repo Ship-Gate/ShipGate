@@ -9,7 +9,7 @@ import type {
   Behavior,
   Field,
   TypeDefinition,
-} from '../../../master_contracts/ast';
+} from '@isl-lang/parser';
 
 import { generateJavaTypes, generateJavaTypeImports } from './java/types';
 import { generateJavaRecords } from './java/records';

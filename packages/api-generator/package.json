@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/api-generator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generate REST and GraphQL APIs from ISL specifications",
   "type": "module",
   "main": "./dist/index.js",

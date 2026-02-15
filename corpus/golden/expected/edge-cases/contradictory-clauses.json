@@ -1,7 +1,0 @@
-{
-  "parseSuccess": true,
-  "checkSuccess": true,
-  "minDomains": 1,
-  "minBehaviors": 1,
-  "notes": "This spec intentionally has contradictory clauses - should parse but linter may warn"
-}

@@ -1,0 +1,53 @@
+{
+  "name": "@isl-lang/isl-verify-cli",
+  "version": "0.1.0",
+  "description": "ISL Verify CLI — Instant verification for any project. Infer specs from code, verify implementation, detect hallucinations.",
+  "type": "module",
+  "bin": {
+    "isl-verify": "dist/cli.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/cli.ts src/index.ts --format esm --dts --clean",
+    "dev": "tsup src/cli.ts src/index.ts --format esm --dts --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@isl-lang/firewall": "workspace:*",
+    "@isl-lang/spec-implementation-verifier": "workspace:*",
+    "@isl-lang/spec-inference": "workspace:*",
+    "chalk": "^5.3.0",
+    "chokidar": "^4.0.3",
+    "commander": "^12.0.0",
+    "glob": "^10.3.10"
+  },
+  "devDependencies": {
+    "@isl-lang/autofix": "workspace:*",
+    "@types/node": "^25.1.0",
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "keywords": ["isl", "verify", "cli", "hallucination", "spec-inference", "verification"],
+  "license": "MIT",
+  "author": "ISL Team",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/lsp-server",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Language Server Protocol implementation for ISL",
   "author": "ISL Team",
   "license": "MIT",

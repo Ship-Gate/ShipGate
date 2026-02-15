@@ -5,7 +5,7 @@
  * Respects scan verdict: blocks NO_SHIP unless forced.
  */
 
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 
 export interface ShipOptions {
   cwd: string;
@@ -37,16 +37,16 @@ export interface ShipResult {
 
 // ────────────────────────────────────────────────────────────────
 
-function git(cmd: string, cwd: string): string {
-  return execSync(`git ${cmd}`, { cwd, encoding: 'utf-8', timeout: 30_000 }).trim();
+function git(args: string[], cwd: string): string {
+  return execFileSync('git', args, { cwd, encoding: 'utf-8', timeout: 30_000 }).trim();
 }
 
 function getCurrentBranch(cwd: string): string {
-  return git('rev-parse --abbrev-ref HEAD', cwd);
+  return git(['rev-parse', '--abbrev-ref', 'HEAD'], cwd);
 }
 
 function hasChanges(cwd: string): boolean {
-  const status = git('status --porcelain', cwd);
+  const status = git(['status', '--porcelain'], cwd);
   return status.length > 0;
 }
 
@@ -68,26 +68,26 @@ export async function ship(opts: ShipOptions): Promise<ShipResult> {
 
   if (needsNewBranch) {
     branch = opts.branch ?? generateBranchName();
-    git(`checkout -b ${branch}`, cwd);
+    git(['checkout', '-b', branch], cwd);
   } else if (opts.branch && opts.branch !== branch) {
     branch = opts.branch;
-    git(`checkout -b ${branch}`, cwd);
+    git(['checkout', '-b', branch], cwd);
   }
 
   // 2. Stage + commit
   const message = opts.message ?? `shipgate: verified ship from VS Code`;
   if (hasChanges(cwd)) {
-    git('add -A', cwd);
-    git(`commit -m "${message.replace(/"/g, '\\"')}"`, cwd);
+    git(['add', '-A'], cwd);
+    git(['commit', '-m', message], cwd);
   }
 
-  const commitSha = git('rev-parse --short HEAD', cwd);
+  const commitSha = git(['rev-parse', '--short', 'HEAD'], cwd);
 
   // 3. Push
-  git(`push -u origin ${branch}`, cwd);
+  git(['push', '-u', 'origin', branch], cwd);
 
   // 4. Create PR via GitHub API
-  const remote = git('remote get-url origin', cwd);
+  const remote = git(['remote', 'get-url', 'origin'], cwd);
   const parsed = parseOwnerRepo(remote);
   if (!parsed) {
     return { success: true, branch, commitSha, prUrl: null, prNumber: null, error: 'Could not parse GitHub remote' };
@@ -111,7 +111,7 @@ export async function ship(opts: ShipOptions): Promise<ShipResult> {
     return { success: true, branch, commitSha, prUrl: pr.htmlUrl, prNumber: pr.number, error: null };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return { success: true, branch, commitSha, prUrl: null, prNumber: null, error: `Push succeeded, PR creation failed: ${msg}` };
+    return { success: false, branch, commitSha, prUrl: null, prNumber: null, error: `Push succeeded, PR creation failed: ${msg}` };
   }
 }
 
@@ -119,7 +119,7 @@ export async function ship(opts: ShipOptions): Promise<ShipResult> {
 
 function getDefaultBranch(cwd: string): string {
   try {
-    const ref = git('symbolic-ref refs/remotes/origin/HEAD --short', cwd);
+    const ref = git(['symbolic-ref', 'refs/remotes/origin/HEAD', '--short'], cwd);
     return ref.replace('origin/', '');
   } catch {
     return 'main';

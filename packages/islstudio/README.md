@@ -1,24 +1,24 @@
-# ISL Studio
+# Shipgate
 
 **Ship decisions with receipts.** Block risky PRs before merge with tamper-proof evidence.
 
-[![npm version](https://img.shields.io/npm/v/islstudio.svg)](https://www.npmjs.com/package/islstudio)
+[![npm version](https://img.shields.io/npm/v/shipgate.svg)](https://www.npmjs.com/package/shipgate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Quick Start
 
 ```bash
-npx islstudio init
+npx shipgate init
 ```
 
 This creates everything you need:
-- `.islstudio/config.json` - Policy configuration
+- `.shipgate/config.json` - Policy configuration
 - `.github/workflows/isl-gate.yml` - CI workflow
 
 Commit and push:
 ```bash
-git add .islstudio .github
-git commit -m "Add ISL Studio gate"
+git add .shipgate .github
+git commit -m "Add Shipgate gate"
 git push
 ```
 
@@ -40,27 +40,27 @@ Open a PR to see it in action. ✨
 
 ```bash
 # Run the gate
-npx islstudio gate
+npx shipgate gate
 
 # With detailed fix guidance
-npx islstudio gate --explain
+npx shipgate gate --explain
 
 # Only changed files (for PRs)
-npx islstudio gate --changed-only
+npx shipgate gate --changed-only
 
 # JSON output (healer-compatible)
-npx islstudio gate --json
-npx islstudio gate --output json
+npx shipgate gate --json
+npx shipgate gate --output json
 
 # SARIF output (GitHub Security tab)
-npx islstudio gate --output sarif
+npx shipgate gate --output sarif
 
 # Explore rules
-npx islstudio rules list
-npx islstudio rules explain auth/bypass-detected
+npx shipgate rules list
+npx shipgate rules explain auth/bypass-detected
 
 # Baseline for legacy code
-npx islstudio baseline create
+npx shipgate baseline create
 ```
 
 ## Machine-Readable Output (Healer Integration)
@@ -68,7 +68,7 @@ npx islstudio baseline create
 For automated healing systems, use `--json` to get stable machine-readable output:
 
 ```bash
-npx islstudio gate --json > gate-result.json
+npx shipgate gate --json > gate-result.json
 ```
 
 ### GateResult JSON Schema
@@ -167,12 +167,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ISL-Studio/islstudio-gate-action@v1
+      - uses: shipgate/gate-action@v1
 ```
 
 ## Configuration
 
-`.islstudio/config.json`:
+`.shipgate/config.json`:
 
 ```json
 {
@@ -198,8 +198,8 @@ jobs:
 Don't want to fix 200 existing issues?
 
 ```bash
-npx islstudio baseline create
-git add .islstudio/baseline.json
+npx shipgate baseline create
+git add .shipgate/baseline.json
 ```
 
 Now only **new** violations block PRs.
@@ -207,7 +207,7 @@ Now only **new** violations block PRs.
 ## Suppressions
 
 ```typescript
-// islstudio-ignore pii/console-in-production: Debug logging, removed before release
+// shipgate-ignore pii/console-in-production: Debug logging, removed before release
 console.log(userData);
 ```
 
@@ -227,9 +227,9 @@ Coming soon! Real-time diagnostics as you code.
 
 ## Links
 
-- [GitHub](https://github.com/ISL-Studio/ISL-Studio-)
-- [Demo Repo](https://github.com/ISL-Studio/islstudio-hello-gate)
-- [Adoption Guide](https://github.com/ISL-Studio/ISL-Studio-/blob/main/docs/ADOPTION.md)
+- [GitHub](https://github.com/shipgate/shipgate)
+- [Demo Repo](https://github.com/shipgate/shipgate-hello-gate)
+- [Adoption Guide](https://github.com/shipgate/shipgate/blob/main/docs/ADOPTION.md)
 
 ## License
 

@@ -1,5 +1,6 @@
 {
   "name": "@isl-lang/stdlib-analytics",
+  "private": true,
   "version": "1.0.0",
   "description": "Analytics event tracking standard library for ISL",
   "main": "dist/index.js",

@@ -111,9 +111,9 @@ domain PaymentsIdempotency {
     }
 
     invariants {
-      - total money in system is conserved (sum of all balances unchanged)
-      - idempotency_key replay returns same Transaction without re-executing
-      - balance never goes negative
+      - "total money in system is conserved (sum of all balances unchanged)"
+      - "idempotency_key replay returns same Transaction without re-executing"
+      - "balance never goes negative"
     }
 
     temporal {
@@ -164,8 +164,8 @@ domain PaymentsIdempotency {
     }
 
     invariants {
-      - a transaction can be refunded at most once
-      - total money conserved across refund
+      - "a transaction can be refunded at most once"
+      - "total money conserved across refund"
     }
   }
 
@@ -200,28 +200,36 @@ domain PaymentsIdempotency {
   }
 
   scenario "Idempotent transfer" {
-    step t1 = TransferFunds({ idempotency_key: "key-1", from_account_id: alice.id, to_account_id: bob.id, amount: 50.00, currency: USD })
-    assert t1.success
-    assert t1.result.status == COMPLETED
-
-    step t2 = TransferFunds({ idempotency_key: "key-1", from_account_id: alice.id, to_account_id: bob.id, amount: 50.00, currency: USD })
-    assert t2.error == DUPLICATE_REQUEST or t2.result.id == t1.result.id
-
-    # Balance should reflect only one deduction
-    step bal = GetBalance({ account_id: alice.id })
-    assert bal.result.balance == original_alice_balance - 50.00
+    given {
+      t1 = TransferFunds(idempotency_key: "key-1", from_account_id: alice.id, to_account_id: bob.id, amount: 50.00, currency: USD)
+    }
+    when {
+      t2 = TransferFunds(idempotency_key: "key-1", from_account_id: alice.id, to_account_id: bob.id, amount: 50.00, currency: USD)
+      bal = GetBalance(account_id: alice.id)
+    }
+    then {
+      t1.success
+      t1.result.status == COMPLETED
+      t2.error == DUPLICATE_REQUEST or t2.result.id == t1.result.id
+      # Balance should reflect only one deduction
+      bal.result.balance == original_alice_balance - 50.00
+    }
   }
 
   scenario "Transfer then refund conserves money" {
-    step transfer = TransferFunds({ idempotency_key: "key-2", from_account_id: alice.id, to_account_id: bob.id, amount: 100.00, currency: USD })
-    assert transfer.success
-
-    step refund = RefundTransaction({ transaction_id: transfer.result.id, reason: "Customer request" })
-    assert refund.success
-
-    step alice_bal = GetBalance({ account_id: alice.id })
-    step bob_bal = GetBalance({ account_id: bob.id })
-    assert alice_bal.result.balance == original_alice_balance
-    assert bob_bal.result.balance == original_bob_balance
+    given {
+      transfer = TransferFunds(idempotency_key: "key-2", from_account_id: alice.id, to_account_id: bob.id, amount: 100.00, currency: USD)
+    }
+    when {
+      refund = RefundTransaction(transaction_id: transfer.result.id, reason: "Customer request")
+      alice_bal = GetBalance(account_id: alice.id)
+      bob_bal = GetBalance(account_id: bob.id)
+    }
+    then {
+      transfer.success
+      refund.success
+      alice_bal.result.balance == original_alice_balance
+      bob_bal.result.balance == original_bob_balance
+    }
   }
 }

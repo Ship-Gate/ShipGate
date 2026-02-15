@@ -1,5 +1,6 @@
 {
   "name": "@isl-lang/stdlib-scheduling",
+  "private": true,
   "version": "1.0.0",
   "description": "ISL Standard Library - Job Scheduling (cron, delayed jobs, workflows)",
   "type": "module",

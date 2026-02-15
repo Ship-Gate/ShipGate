@@ -12,6 +12,8 @@
     { "include": "#domain-definition" },
     { "include": "#entity-definition" },
     { "include": "#behavior-definition" },
+    { "include": "#endpoint-definition" },
+    { "include": "#actor-definition" },
     { "include": "#type-definition" },
     { "include": "#builtin-functions" },
     { "include": "#keywords" },
@@ -130,7 +132,12 @@
           "patterns": [
             {
               "name": "keyword.other.annotation.isl",
-              "match": "\\b(immutable|unique|indexed|secret|sensitive|default|optional|required|deprecated|linear|consume|readonly|async|sync|idempotent|cacheable)\\b"
+              "match": "\\b(immutable|unique|indexed|secret|sensitive|optional|required|deprecated|linear|consume|readonly|async|sync|idempotent|cacheable)\\b"
+            },
+            {
+              "name": "meta.annotation.key-value.isl",
+              "match": "\\b(min|max|format|default)\\s*:\\s*",
+              "captures": { "1": { "name": "keyword.other.annotation-key.isl" } }
             },
             { "include": "#strings" },
             { "include": "#numbers" },
@@ -205,6 +212,32 @@
         }
       ]
     },
+    "endpoint-definition": {
+      "patterns": [
+        {
+          "match": "\\b(endpoint)\\s+([A-Z][a-zA-Z0-9_]*)\\b",
+          "captures": {
+            "1": { "name": "keyword.declaration.endpoint.isl" },
+            "2": { "name": "entity.name.function.isl" }
+          }
+        },
+        {
+          "match": "\\b(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\\b",
+          "captures": { "1": { "name": "keyword.other.http-method.isl" } }
+        }
+      ]
+    },
+    "actor-definition": {
+      "patterns": [
+        {
+          "match": "\\b(actor)\\s+([A-Z][a-zA-Z0-9_]*)\\b",
+          "captures": {
+            "1": { "name": "keyword.declaration.actor.isl" },
+            "2": { "name": "entity.name.type.isl" }
+          }
+        }
+      ]
+    },
     "type-definition": {
       "patterns": [
         {
@@ -228,7 +261,7 @@
       "patterns": [
         {
           "name": "keyword.declaration.isl",
-          "match": "\\b(domain|version|entity|behavior|type|enum|session|handler|property|function|intent)\\b"
+          "match": "\\b(domain|version|entity|behavior|endpoint|actor|screen|form|type|enum|session|handler|property|function|intent|constraint)\\b"
         },
         {
           "name": "keyword.control.section.isl",
@@ -240,7 +273,7 @@
         },
         {
           "name": "keyword.control.condition.isl",
-          "match": "\\b(success|failure|and|or|not|in|for|must|owns|is|where)\\b"
+          "match": "\\b(success|failure|and|or|not|in|for|must|can|cannot|owns|is|where|returns|throws)\\b"
         },
         {
           "name": "keyword.control.temporal.isl",
@@ -303,12 +336,16 @@
           "match": "\\b(String|Number|Boolean|Int|Float|Decimal|UUID|Timestamp|Date|DateTime|Duration|Email|URL|JSON|Any|Void|Never)\\b"
         },
         {
+          "name": "storage.type.primitive.isl",
+          "match": "\\b(string|number|boolean|date|datetime|email|url|uuid)\\b"
+        },
+        {
           "name": "storage.type.collection.isl",
-          "match": "\\b(Array|List|Set|Map|Vector|Matrix)\\b"
+          "match": "\\b(Array|List|Set|Map|Vector|Matrix|array)\\b"
         },
         {
           "name": "storage.type.generic.isl",
-          "match": "\\b(Result|Option|Maybe|Either|Success|Failure)\\b"
+          "match": "\\b(Result|Option|Maybe|Either|Success|Failure|optional)\\b"
         },
         {
           "name": "storage.type.special.isl",

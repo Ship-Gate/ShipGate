@@ -2,15 +2,19 @@
  * Prisma Schema Generator
  *
  * Generates Prisma schema from ISL entities + storage blocks.
+ * Uses DatabaseAdapter for datasource and env-specific config.
  */
 
 import type { Domain, Entity, Field, StorageDecl, IndexDecl } from '@isl-lang/parser';
 import type { GeneratedFile, ShipStack } from '../types.js';
 import { islTypeToPrisma, toSnakeCase } from '../types.js';
+import { getDatabaseAdapter } from '../adapters/index.js';
 
 export function generatePrismaSchema(domain: Domain, stack: ShipStack): GeneratedFile[] {
   const files: GeneratedFile[] = [];
   const lines: string[] = [];
+  const dbId = stack.database === 'postgres' ? 'postgres' : 'sqlite';
+  const adapter = getDatabaseAdapter(dbId);
 
   // Header
   lines.push('// =============================================================================');
@@ -20,7 +24,7 @@ export function generatePrismaSchema(domain: Domain, stack: ShipStack): Generate
   lines.push('');
 
   // Datasource
-  const provider = stack.database === 'mongodb' ? 'mongodb' : stack.database === 'mysql' ? 'mysql' : stack.database === 'sqlite' ? 'sqlite' : 'postgresql';
+  const provider = stack.database === 'mongodb' ? 'mongodb' : stack.database === 'mysql' ? 'mysql' : adapter.provider;
   lines.push('datasource db {');
   lines.push(`  provider = "${provider}"`);
   lines.push('  url      = env("DATABASE_URL")');
@@ -39,10 +43,12 @@ export function generatePrismaSchema(domain: Domain, stack: ShipStack): Generate
     storageMap.set(s.entity.name, s);
   }
 
+  const isPostgres = stack.database === 'postgres';
+
   // Generate models for each entity
   for (const entity of domain.entities) {
     const storage = storageMap.get(entity.name.name);
-    lines.push(...generateModel(entity, storage, domain));
+    lines.push(...generateModel(entity, storage, domain, isPostgres));
     lines.push('');
   }
 
@@ -55,7 +61,7 @@ export function generatePrismaSchema(domain: Domain, stack: ShipStack): Generate
   return files;
 }
 
-function generateModel(entity: Entity, storage: StorageDecl | undefined, domain: Domain): string[] {
+function generateModel(entity: Entity, storage: StorageDecl | undefined, domain: Domain, isPostgres: boolean): string[] {
   const lines: string[] = [];
   const tableName = storage?.table?.value ?? toSnakeCase(entity.name.name) + 's';
 
@@ -63,7 +69,7 @@ function generateModel(entity: Entity, storage: StorageDecl | undefined, domain:
 
   // Fields
   for (const field of entity.fields) {
-    lines.push(`  ${generatePrismaField(field, entity, domain)}`);
+    lines.push(`  ${generatePrismaField(field, entity, domain, isPostgres)}`);
   }
 
   // Table mapping
@@ -81,7 +87,7 @@ function generateModel(entity: Entity, storage: StorageDecl | undefined, domain:
   return lines;
 }
 
-function generatePrismaField(field: Field, entity: Entity, domain: Domain): string {
+function generatePrismaField(field: Field, entity: Entity, domain: Domain, isPostgres: boolean): string {
   const name = field.name.name;
   let typeName = resolveFieldType(field);
   let attrs: string[] = [];
@@ -92,6 +98,12 @@ function generatePrismaField(field: Field, entity: Entity, domain: Domain): stri
   const isUnique = annotations.some(a => a.name.name === 'unique');
   const isIndexed = annotations.some(a => a.name.name === 'indexed');
   const refAnnotation = annotations.find(a => a.name.name === 'references');
+
+  // Postgres-specific native types: @db.Text, @db.Timestamp, @db.JsonB
+  if (isPostgres) {
+    const dbAttr = getPostgresDbAttr(field, typeName);
+    if (dbAttr) attrs.push(dbAttr);
+  }
 
   // ID field detection
   if (name === 'id') {
@@ -136,6 +148,37 @@ function generatePrismaField(field: Field, entity: Entity, domain: Domain): stri
 
   const attrStr = attrs.length > 0 ? ' ' + attrs.join(' ') : '';
   return `${name} ${typeName}${optionalMark}${attrStr}`;
+}
+
+/** Map ISL types/constraints to Postgres native types */
+function getPostgresDbAttr(field: Field, typeName: string): string | null {
+  // Timestamp → @db.Timestamp(3)
+  if (typeName === 'DateTime') {
+    return '@db.Timestamp(3)';
+  }
+  // Json → @db.JsonB
+  if (typeName === 'Json') {
+    return '@db.JsonB';
+  }
+  // String with long text → @db.Text (from max_length constraint or unconstrained)
+  const maxLength = getConstraintValue(field.type, 'max_length') as number | undefined;
+  if (typeName === 'String' && (maxLength === undefined || maxLength > 255)) {
+    return '@db.Text';
+  }
+  return null;
+}
+
+function getConstraintValue(typeDef: unknown, name: string): unknown {
+  if (!typeDef || typeof typeDef !== 'object') return undefined;
+  const t = typeDef as { kind?: string; constraints?: Array<{ name?: string; value?: { value?: unknown } }>; base?: unknown };
+  if (t.kind === 'ConstrainedType' && t.constraints) {
+    const c = t.constraints.find((x) => x.name === name);
+    if (c?.value && typeof c.value === 'object' && 'value' in c.value) return (c.value as { value: unknown }).value;
+    if (c?.value) return c.value;
+  }
+  if (t.kind === 'ConstrainedType' && t.base) return getConstraintValue(t.base, name);
+  if (t.kind === 'OptionalType' && 'inner' in t) return getConstraintValue((t as { inner: unknown }).inner, name);
+  return undefined;
 }
 
 function resolveFieldType(field: Field): string {

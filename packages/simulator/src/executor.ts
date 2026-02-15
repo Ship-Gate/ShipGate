@@ -182,8 +182,8 @@ export class BehaviorExecutor {
         });
         return { success: true, data: entity };
       } catch {
-        // Entity type might not exist
-        return { success: true, data: { id: context.generateId(), ...input } };
+        // Entity type might not exist — return fallback data with success:false
+        return { success: false, data: { id: context.generateId(), ...input }, error: { code: 'ENTITY_NOT_FOUND', message: `Entity type '${capitalizedType}' not found` } };
       }
     }
 

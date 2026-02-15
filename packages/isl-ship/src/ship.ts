@@ -8,9 +8,11 @@ import { parse, type Domain } from '@isl-lang/parser';
 import type { ShipOptions, ShipResult, ShipStats, GeneratedFile } from './types.js';
 import { resolveStack, toKebabCase } from './types.js';
 import { generatePrismaSchema } from './generators/prisma.js';
+import { generateSeed } from './generators/seed.js';
 import { generateBackend } from './generators/backend.js';
 import { generateContracts } from './generators/contracts.js';
 import { generateScaffold } from './generators/scaffold.js';
+import { getDeploymentAdapter, buildDeploymentSpec } from './deployments/index.js';
 
 /**
  * Generate a complete full-stack application from an ISL specification.
@@ -55,6 +57,14 @@ export function ship(islSource: string, options: ShipOptions): ShipResult {
     errors.push(`Database generation failed: ${e instanceof Error ? e.message : String(e)}`);
   }
 
+  // ── Step 2b: Generate seed ─────────────────────────────────────────────────
+  try {
+    const seedFile = generateSeed(domain, stack);
+    allFiles.push(seedFile);
+  } catch (e) {
+    errors.push(`Seed generation failed: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
   // ── Step 3: Generate backend layer ──────────────────────────────────────────
   try {
     const backendFiles = generateBackend(domain, stack);
@@ -75,10 +85,30 @@ export function ship(islSource: string, options: ShipOptions): ShipResult {
 
   // ── Step 5: Generate project scaffold ───────────────────────────────────────
   try {
-    const scaffoldFiles = generateScaffold(domain, stack, projectName);
+    const scaffoldFiles = generateScaffold(domain, stack, projectName, { dbUrl: options.dbUrl });
     allFiles.push(...scaffoldFiles);
   } catch (e) {
     errors.push(`Scaffold generation failed: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  // ── Step 5b: Generate deployment config (if --deploy) ────────────────────────
+  if (options.deploy) {
+    const adapter = getDeploymentAdapter(options.deploy);
+    if (adapter) {
+      try {
+        const spec = buildDeploymentSpec(domain, projectName, stack.database);
+        const framework = stack.backend;
+        const db = stack.database;
+        const deployFiles = adapter.generateConfig(spec, framework, db);
+        const envTemplate = adapter.generateEnvTemplate(spec, framework, db);
+        const existingEnvIdx = allFiles.findIndex((f) => f.path === '.env.example');
+        if (existingEnvIdx >= 0) allFiles.splice(existingEnvIdx, 1);
+        allFiles.push(envTemplate);
+        allFiles.push(...deployFiles);
+      } catch (e) {
+        errors.push(`Deployment config failed: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
   }
 
   // ── Step 6: Compute stats ───────────────────────────────────────────────────
@@ -108,7 +138,12 @@ export function shipFromDomain(domain: Domain, options: Omit<ShipOptions, 'specP
   const stack = resolveStack(options.stack);
   const projectName = options.projectName ?? domain.name.name;
 
-  try { allFiles.push(...generatePrismaSchema(domain, stack)); } catch (e) {
+  try {
+    allFiles.push(...generatePrismaSchema(domain, stack));
+    if (stack.database !== 'mongodb' && stack.orm === 'prisma') {
+      allFiles.push(generateSeed(domain, stack));
+    }
+  } catch (e) {
     errors.push(`Database generation failed: ${e instanceof Error ? e.message : String(e)}`);
   }
 
@@ -122,8 +157,25 @@ export function shipFromDomain(domain: Domain, options: Omit<ShipOptions, 'specP
     }
   }
 
-  try { allFiles.push(...generateScaffold(domain, stack, projectName)); } catch (e) {
+  try { allFiles.push(...generateScaffold(domain, stack, projectName, { dbUrl: options.dbUrl })); } catch (e) {
     errors.push(`Scaffold generation failed: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  if (options.deploy) {
+    const adapter = getDeploymentAdapter(options.deploy);
+    if (adapter) {
+      try {
+        const spec = buildDeploymentSpec(domain, projectName, stack.database);
+        const deployFiles = adapter.generateConfig(spec, stack.backend, stack.database);
+        const envTemplate = adapter.generateEnvTemplate(spec, stack.backend, stack.database);
+        const existingEnvIdx = allFiles.findIndex((f) => f.path === '.env.example');
+        if (existingEnvIdx >= 0) allFiles.splice(existingEnvIdx, 1);
+        allFiles.push(envTemplate);
+        allFiles.push(...deployFiles);
+      } catch (e) {
+        errors.push(`Deployment config failed: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
   }
 
   return {

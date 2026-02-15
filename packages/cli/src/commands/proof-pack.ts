@@ -44,6 +44,8 @@ export interface ProofPackOptions {
   signSecret?: string;
   /** Fixed timestamp for determinism (ISO 8601). Defaults to now. */
   timestamp?: string;
+  /** Include SOC2 CC-series control mapping for auditors */
+  includeSoc2?: boolean;
   /** Output format */
   format?: 'pretty' | 'json' | 'quiet';
   /** Verbose output */
@@ -102,6 +104,37 @@ export async function proofPack(options: ProofPackOptions): Promise<ProofPackRes
     // Determine timestamp
     const createdAt = options.timestamp || new Date().toISOString();
 
+    // Optionally compute SOC2 control mapping
+    let soc2Controls: CreateBundleInput['soc2Controls'];
+    if (options.includeSoc2) {
+      const { evaluateSOC2 } = await import('@isl-lang/shipgate-compliance');
+      const violations: Array<{ policyId?: string; ruleId?: string }> = [];
+      const violatedRuleIds: string[] = [];
+      for (const v of verdicts) {
+        const details = v.details ?? {};
+        const blockers = (details.blockers as string[] | undefined) ?? [];
+        const viols = (details.violations as Array<{ policyId?: string; ruleId?: string }> | undefined) ?? [];
+        for (const b of blockers) violatedRuleIds.push(b);
+        for (const vv of viols) {
+          violations.push(vv);
+          if (vv.policyId) violatedRuleIds.push(vv.policyId);
+          if (vv.ruleId) violatedRuleIds.push(vv.ruleId);
+        }
+      }
+      const evalResult = evaluateSOC2({
+        verdicts: verdicts.map((x) => ({
+          phase: x.phase,
+          verdict: x.verdict,
+          score: x.score,
+          details: x.details,
+          timestamp: x.timestamp,
+        })),
+        violations,
+        violatedRuleIds: violatedRuleIds.length > 0 ? [...new Set(violatedRuleIds)] : undefined,
+      });
+      soc2Controls = evalResult.controls;
+    }
+
     // Create the bundle
     const input: CreateBundleInput = {
       spec: {
@@ -116,6 +149,7 @@ export async function proofPack(options: ProofPackOptions): Promise<ProofPackRes
       evidence,
       createdAt,
       signSecret: options.signSecret,
+      ...(soc2Controls && { soc2Controls }),
     };
 
     const bundle = createBundle(input);

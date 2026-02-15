@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ISL Core - translator and corpus testing utilities",
   "type": "module",
   "main": "./dist/index.js",
@@ -61,6 +61,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@isl-lang/isl-certificate": "workspace:*",
     "@isl-lang/parser": "workspace:*",
     "yaml": "^2.3.4",
     "zod": "^3.22.4"

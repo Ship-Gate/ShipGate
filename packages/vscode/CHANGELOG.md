@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [b67276d]
+  - @isl-lang/lsp-server@1.0.0
+  - @isl-lang/firewall@0.2.1
+
 All notable changes to the **Shipgate ISL** VS Code extension are documented here.
 
 This project follows [Semantic Versioning](https://semver.org/).

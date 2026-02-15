@@ -1,5 +1,6 @@
 {
   "name": "@isl-lang/stdlib-events",
+  "private": true,
   "version": "0.1.0",
   "description": "Event sourcing, CQRS, and event-driven architecture patterns",
   "type": "module",

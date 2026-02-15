@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/isl-stdlib",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "ISL Standard Library Registry - Central index and resolver for all stdlib modules",
   "license": "MIT",
   "author": "IntentOS Team",

@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/verifier-chaos",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Chaos engineering verifier - inject failures, execute scenarios, and produce proof bundles",
   "type": "module",
   "main": "./dist/index.js",

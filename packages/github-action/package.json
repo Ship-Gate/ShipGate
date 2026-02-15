@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/github-action",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "GitHub Action for ISL verification in CI/CD",
   "main": "dist/index.js",
   "type": "module",

@@ -62,6 +62,8 @@ const buildOptions = {
   },
   // Shebang is already in src/index.ts, esbuild will preserve it
   external: [
+    '@isl-lang/security-scanner',
+    '@isl-lang/coherence-engine',
     '@isl-lang/inference',
     '@isl-lang/intent-translator',
     '@isl-lang/spec-assist',

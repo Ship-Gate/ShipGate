@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/graphql-codegen",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "GraphQL schema and resolver generation from ISL specifications",
   "type": "module",
   "main": "./dist/index.js",

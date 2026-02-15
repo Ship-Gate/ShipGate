@@ -46,6 +46,18 @@ export {
 } from './types.js';
 
 export { generatePrismaSchema } from './generators/prisma.js';
+export { generateSeed } from './generators/seed.js';
 export { generateBackend } from './generators/backend.js';
 export { generateContracts } from './generators/contracts.js';
 export { generateScaffold } from './generators/scaffold.js';
+export type { DatabaseAdapter, DatabaseAdapterId } from './adapters/database-adapter.js';
+export { getDatabaseAdapter, getAdapterIds, SQLiteAdapter, PostgresAdapter } from './adapters/index.js';export type { DeploymentAdapter, ISLSpec, DeploymentPlatform } from './deployments/types.js';
+export {
+  getDeploymentAdapter,
+  getDeploymentPlatforms,
+  buildDeploymentSpec,
+  VercelAdapter,
+  DockerAdapter,
+  RailwayAdapter,
+  FlyAdapter,
+} from './deployments/index.js';

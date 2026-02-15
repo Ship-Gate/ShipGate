@@ -162,6 +162,7 @@ export async function writeBundle(
       blockingIssuesCount: result.aggregation.blockingIssues.length,
     },
     suggestions: result.suggestions,
+    riskAcceptances: result.riskAcceptances ?? [],
   };
   await writeFile(verdictPath, JSON.stringify(verdictJson, null, 2), 'utf-8');
 

@@ -5,7 +5,6 @@
 import { parse, type DomainDeclaration } from '@isl-lang/parser';
 import { check } from '@isl-lang/typechecker';
 import { preprocessSource, compile, type CompileResult } from '@isl-lang/isl-compiler';
-import { generate as generateTests, type GeneratedFile as TestGenFile } from '@isl-lang/codegen-tests';
 import {
   verify,
   getBehaviorNames,
@@ -30,6 +29,7 @@ import type {
   EvidenceSummary,
 } from './types.js';
 import { createDeterministicBuildId, hashContent } from './output.js';
+import { runVitest, produceTestReport, type TestReport } from './test-runner.js';
 
 /**
  * Execute the parse stage
@@ -180,41 +180,76 @@ export function importResolveStage(source: string): StageResult<ImportStageData>
 }
 
 /**
- * Execute the code generation stage (TypeScript target)
+ * Execute the code generation stage
+ * Supports TypeScript (default) and OpenAPI targets.
  * Note: Codegen errors are handled gracefully - we continue with what we can generate
  */
-export function codegenStage(domain: DomainDeclaration): StageResult<CodegenStageData> {
+export async function codegenStage(
+  domain: DomainDeclaration,
+  options?: { target?: 'typescript' | 'openapi'; apiOnly?: boolean }
+): Promise<StageResult<CodegenStageData>> {
   const start = performance.now();
   const errors: StageError[] = [];
   const files: OutputFile[] = [];
+  const target = options?.target ?? 'typescript';
+  const apiOnly = options?.apiOnly ?? false;
 
-  try {
-    const result: CompileResult = compile(domain, {
-      types: {
-        includeValidation: true,
-        includeComments: true,
-      },
-      tests: {
-        framework: 'vitest',
-      },
+  const generateOpenAPISpec = async () => {
+    const { OpenAPIGenerator } = await import('@isl-lang/codegen-openapi');
+    const generator = new OpenAPIGenerator({
+      version: '3.1',
+      format: 'json',
+      defaultServers: true,
+      addBearerAuth: true,
+      addPaginationParams: true,
     });
-
-    // Add generated types file
-    if (result.types) {
+    const generated = generator.generate(domain);
+    const openapiFile = generated[0];
+    if (openapiFile?.content) {
       files.push({
-        path: `types/${result.types.filename}`,
-        content: result.types.content,
-        type: 'types',
+        path: 'openapi.json',
+        content: openapiFile.content,
+        type: 'openapi',
       });
     }
+  };
 
-    // Add generated tests file
-    if (result.tests) {
-      files.push({
-        path: `tests/${result.tests.filename}`,
-        content: result.tests.content,
-        type: 'test',
+  try {
+    if (target === 'openapi') {
+      await generateOpenAPISpec();
+    } else {
+      const result: CompileResult = compile(domain, {
+        types: {
+          includeValidation: true,
+          includeComments: true,
+        },
+        tests: {
+          framework: 'vitest',
+        },
       });
+
+      // Add generated types file
+      if (result.types) {
+        files.push({
+          path: `types/${result.types.filename}`,
+          content: result.types.content,
+          type: 'types',
+        });
+      }
+
+      // Add generated tests file
+      if (result.tests) {
+        files.push({
+          path: `tests/${result.tests.filename}`,
+          content: result.tests.content,
+          type: 'test',
+        });
+      }
+
+      // apiOnly: also generate OpenAPI spec alongside backend
+      if (apiOnly) {
+        await generateOpenAPISpec();
+      }
     }
   } catch (error) {
     errors.push({
@@ -234,44 +269,51 @@ export function codegenStage(domain: DomainDeclaration): StageResult<CodegenStag
 }
 
 /**
- * Execute the test generation stage
+ * Execute the test generation stage.
+ * Runs AFTER codegen. Receives generated source files to resolve correct import paths.
  */
-export function testgenStage(
+export async function testgenStage(
   domain: DomainDeclaration,
-  options: Pick<BuildOptions, 'testFramework' | 'includeChaosTests' | 'includeHelpers'>
-): StageResult<TestgenStageData> {
+  options: Pick<BuildOptions, 'testFramework' | 'includeChaosTests' | 'includeHelpers'>,
+  codegenFiles?: OutputFile[]
+): Promise<StageResult<TestgenStageData>> {
   const start = performance.now();
   const errors: StageError[] = [];
 
   try {
-    // Convert domain to the expected format
-    const domainAst = {
-      name: domain.name,
-      version: domain.version,
-      entities: domain.entities || [],
-      behaviors: domain.behaviors || [],
-      scenarios: domain.scenarios || [],
-      chaos: domain.chaos || [],
-      invariants: domain.invariants || [],
-    };
+    // Build source files map from codegen output for import resolution
+    const sourceFilesMap = new Map<string, string>();
+    for (const f of codegenFiles ?? []) {
+      sourceFilesMap.set(f.path, f.content);
+    }
 
-    const generatedFiles = generateTests(domainAst as any, {
-      framework: options.testFramework || 'vitest',
-      outputDir: 'tests',
-      includeHelpers: options.includeHelpers ?? true,
-      includeChaosTests: options.includeChaosTests ?? true,
+    // Use refactored test generator v2 when we have source context
+    const { generateTestsV2 } = await import('./test-generator-v2.js');
+    const result = generateTestsV2({
+      generatedSourceFiles: sourceFilesMap,
+      domain,
+      outDir: '.',
+      srcDir: 'src',
+      testsDir: 'tests',
+      hasAuth: false,
     });
 
-    const files: OutputFile[] = generatedFiles.map((f: TestGenFile) => ({
+    if (result.errors.length > 0) {
+      for (const err of result.errors) {
+        errors.push({ stage: 'testgen', code: 'TESTGEN_ERROR', message: err });
+      }
+    }
+
+    const files: OutputFile[] = result.files.map((f) => ({
       path: f.path,
       content: f.content,
-      type: f.type === 'test' ? 'test' : f.type === 'helper' ? 'helper' : f.type === 'fixture' ? 'fixture' : 'config',
+      type: f.type,
     }));
 
     return {
-      success: true,
+      success: result.errors.length === 0,
       data: { files },
-      errors: [],
+      errors,
       durationMs: performance.now() - start,
     };
   } catch (error) {
@@ -341,6 +383,46 @@ export async function verifyStage(
       durationMs: performance.now() - start,
     };
   }
+}
+
+/**
+ * Execute the test run stage (after files are written).
+ * Runs vitest, parses results, optionally runs fix loop (max 2 iterations).
+ */
+export async function runTestsStage(
+  outDir: string,
+  options: Pick<BuildOptions, 'runTests' | 'maxTestFixIterations'>
+): Promise<{ testReport?: TestReport; errors: StageError[] }> {
+  const errors: StageError[] = [];
+  if (options.runTests === false) {
+    return { errors };
+  }
+
+  const maxIterations = options.maxTestFixIterations ?? 2;
+  let lastReport: TestReport | undefined;
+  let iteration = 0;
+
+  while (iteration <= maxIterations) {
+    const result = await runVitest(outDir);
+    lastReport = produceTestReport(result);
+
+    if (lastReport.verdict === 'PASS' || iteration >= maxIterations) {
+      break;
+    }
+
+    iteration++;
+    // Fix loop: prepare context for external AI fix. In a full implementation,
+    // this would send { failingTest, sourceFile, error } to an AI service.
+    if (lastReport.failures.length > 0) {
+      errors.push({
+        stage: 'testrun',
+        code: 'TEST_FIX_ITERATION',
+        message: `Iteration ${iteration}/${maxIterations}: ${lastReport.failures.length} failures — fix context prepared`,
+      });
+    }
+  }
+
+  return { testReport: lastReport, errors };
 }
 
 /**

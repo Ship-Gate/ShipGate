@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/dependency-analyzer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Analyze dependencies between ISL domains",
   "type": "module",
   "main": "./dist/index.js",

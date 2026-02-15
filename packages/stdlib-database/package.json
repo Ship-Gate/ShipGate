@@ -1,5 +1,6 @@
 {
   "name": "@isl-lang/stdlib-database",
+  "private": true,
   "version": "0.1.0",
   "description": "Database operations standard library for ISL",
   "type": "module",

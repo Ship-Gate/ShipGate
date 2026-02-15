@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { resolve, join } from 'path';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
 
 // ── Imports under test ──────────────────────────────────────────────────────
 
@@ -17,6 +18,7 @@ import {
   applyDefaults,
   DEFAULT_SHIPGATE_CONFIG,
   DEFAULT_CI_CONFIG,
+  DEFAULT_IGNORE,
   DEFAULT_SCANNING_CONFIG,
   DEFAULT_GENERATE_CONFIG,
 } from '../src/config/schema.js';
@@ -62,7 +64,10 @@ describe('ShipGate Schema', () => {
   it('DEFAULT_CI_CONFIG has correct defaults', () => {
     expect(DEFAULT_CI_CONFIG.failOn).toBe('error');
     expect(DEFAULT_CI_CONFIG.requireIsl).toEqual([]);
-    expect(DEFAULT_CI_CONFIG.ignore).toEqual([]);
+    expect(DEFAULT_CI_CONFIG.ignore).toEqual([...DEFAULT_IGNORE]);
+    expect(DEFAULT_CI_CONFIG.ignore).toContain('**/node_modules/**');
+    expect(DEFAULT_CI_CONFIG.ignore).toContain('**/.next/**');
+    expect(DEFAULT_CI_CONFIG.ignore).toContain('**/.turbo/**');
     expect(DEFAULT_CI_CONFIG.speclessMode).toBe('on');
   });
 
@@ -95,9 +100,18 @@ describe('ShipGate Schema', () => {
       });
       expect(config.ci?.failOn).toBe('warning');
       expect(config.ci?.requireIsl).toEqual(['src/auth/**']);
-      expect(config.ci?.ignore).toEqual([]);
+      expect(config.ci?.ignore).toEqual([...DEFAULT_IGNORE]);
       expect(config.scanning?.secrets).toBe(false);
       expect(config.scanning?.hallucinations).toBe(true);
+    });
+
+    it('merges user ci.ignore with defaults (extends, never replaces)', () => {
+      const config = applyDefaults({
+        ci: { ignore: ['**/*.test.ts'] },
+      });
+      expect(config.ci?.ignore).toContain('**/node_modules/**');
+      expect(config.ci?.ignore).toContain('**/*.test.ts');
+      expect(config.ci?.ignore?.length).toBe(DEFAULT_IGNORE.length + 1);
     });
   });
 });
@@ -169,6 +183,42 @@ describe('ShipGate Validator', () => {
         ci: { failOn: 'error' },
       });
       expect(result.valid).toBe(true);
+    });
+
+    it('accepts demo/ISL verified config (version "1.0", specs/verify/evidence)', () => {
+      const result = validateConfig({
+        version: '1.0',
+        specs: {
+          include: ['src/**/*.isl'],
+        },
+        verify: {
+          strict: true,
+          policies: {
+            auth: { enabled: true },
+            'rate-limit': { enabled: true },
+            pii: { enabled: true },
+          },
+        },
+        evidence: {
+          output_dir: '.shipgate/evidence',
+        },
+      });
+      expect(result.valid).toBe(true);
+      expect(result.config?.version).toBe(1);
+      expect(result.config?.specs?.include).toEqual(['src/**/*.isl']);
+      expect(result.config?.verify?.strict).toBe(true);
+      expect(result.config?.verify?.policies).toEqual({
+        auth: { enabled: true },
+        'rate-limit': { enabled: true },
+        pii: { enabled: true },
+      });
+      expect(result.config?.evidence?.output_dir).toBe('.shipgate/evidence');
+    });
+
+    it('accepts version "1" (string)', () => {
+      const result = validateConfig({ version: '1' });
+      expect(result.valid).toBe(true);
+      expect(result.config?.version).toBe(1);
     });
   });
 
@@ -277,6 +327,43 @@ describe('ShipGate Validator', () => {
       expect(result.valid).toBe(false);
       expect(result.errors.length).toBeGreaterThanOrEqual(3);
     });
+
+    it('rejects invalid specs.include (non-array)', () => {
+      const result = validateConfig({
+        version: 1,
+        specs: { include: 'src/**/*.isl' },
+      });
+      expect(result.valid).toBe(false);
+      expect(result.errors[0].path).toBe('specs.include');
+      expect(result.errors[0].message).toContain('array');
+    });
+
+    it('rejects invalid verify.strict (non-boolean)', () => {
+      const result = validateConfig({
+        version: 1,
+        verify: { strict: 'yes' },
+      });
+      expect(result.valid).toBe(false);
+      expect(result.errors[0].path).toBe('verify.strict');
+      expect(result.errors[0].message).toContain('boolean');
+    });
+
+    it('rejects invalid evidence.output_dir (non-string)', () => {
+      const result = validateConfig({
+        version: 1,
+        evidence: { output_dir: 123 },
+      });
+      expect(result.valid).toBe(false);
+      expect(result.errors[0].path).toBe('evidence.output_dir');
+      expect(result.errors[0].message).toContain('string');
+    });
+
+    it('rejects invalid version (e.g. 2.0)', () => {
+      const result = validateConfig({ version: '2.0' });
+      expect(result.valid).toBe(false);
+      expect(result.errors[0].path).toBe('version');
+      expect(result.errors[0].got).toBe('2.0');
+    });
   });
 
   describe('formatValidationErrors', () => {
@@ -319,7 +406,7 @@ describe('ShipGate Loader', () => {
 
   describe('loadShipGateConfig', () => {
     it('returns defaults when no config file exists', async () => {
-      const emptyDir = join(LOADER_DIR, 'empty');
+      const emptyDir = join(tmpdir(), `shipgate-no-config-${Date.now()}`);
       ensureCleanDir(emptyDir);
 
       const result = await loadShipGateConfig(emptyDir);
@@ -327,6 +414,8 @@ describe('ShipGate Loader', () => {
       expect(result.configPath).toBeNull();
       expect(result.config.version).toBe(1);
       expect(result.config.ci?.failOn).toBe('error');
+
+      rmSync(emptyDir, { recursive: true, force: true });
     });
 
     it('loads .shipgate.yml from current directory', async () => {
@@ -420,7 +509,7 @@ ci:
       const result = await loadShipGateConfig(dir);
       // CI section partially overridden
       expect(result.config.ci?.failOn).toBe('warning');
-      expect(result.config.ci?.ignore).toEqual([]);
+      expect(result.config.ci?.ignore).toEqual([...DEFAULT_IGNORE]);
       // Other sections fully defaulted
       expect(result.config.scanning?.hallucinations).toBe(true);
       expect(result.config.generate?.minConfidence).toBe(0.3);
@@ -448,7 +537,7 @@ generate:
       const result = await loadShipGateConfigFromFile(filePath);
       expect(result.config.ci?.failOn).toBe('unspecced');
       expect(result.config.ci?.requireIsl).toEqual(['src/auth/**']);
-      expect(result.config.ci?.ignore).toEqual(['**/*.test.ts']);
+      expect(result.config.ci?.ignore).toEqual([...DEFAULT_IGNORE, '**/*.test.ts']);
       expect(result.config.generate?.output).toBe('./my-specs');
       expect(result.config.generate?.minConfidence).toBe(0.5);
     });
@@ -488,6 +577,44 @@ ci:
         expect(configErr.configPath).toBe(filePath);
       }
     });
+
+    it('loads demo/ISL verified config format (version "1.0", specs/verify/evidence)', async () => {
+      const filePath = join(LOADER_DIR, 'demo-config.yml');
+      writeFileSync(filePath, `
+version: "1.0"
+
+specs:
+  include:
+    - "src/**/*.isl"
+
+verify:
+  strict: true
+  policies:
+    auth:
+      enabled: true
+    rate-limit:
+      enabled: true
+    pii:
+      enabled: true
+
+evidence:
+  output_dir: ".shipgate/evidence"
+`);
+
+      const result = await loadShipGateConfigFromFile(filePath);
+      expect(result.config.version).toBe(1);
+      expect(result.config.specs?.include).toEqual(['src/**/*.isl']);
+      expect(result.config.verify?.strict).toBe(true);
+      expect(result.config.verify?.policies).toEqual({
+        auth: { enabled: true },
+        'rate-limit': { enabled: true },
+        pii: { enabled: true },
+      });
+      expect(result.config.evidence?.output_dir).toBe('.shipgate/evidence');
+      // v1 sections get defaults when missing
+      expect(result.config.ci?.failOn).toBe('error');
+      expect(result.config.scanning?.hallucinations).toBe(true);
+    });
   });
 });
 
@@ -502,6 +629,23 @@ describe('ShipGate Glob Matcher', () => {
       const result = shouldVerify('src/auth/login.ts', config);
       expect(result.verify).toBe(true);
       expect(result.requireIsl).toBe(false);
+    });
+
+    it('ignores node_modules, .next, dist, etc. by default (fresh repo, no config)', () => {
+      const config = DEFAULT_SHIPGATE_CONFIG;
+      expect(shouldVerify('node_modules/foo/bar.ts', config).verify).toBe(false);
+      expect(shouldVerify('packages/cli/node_modules/pkg/index.js', config).verify).toBe(false);
+      expect(shouldVerify('.next/server/page.js', config).verify).toBe(false);
+      expect(shouldVerify('dist/bundle.js', config).verify).toBe(false);
+      expect(shouldVerify('build/out.js', config).verify).toBe(false);
+      expect(shouldVerify('coverage/lcov.info', config).verify).toBe(false);
+      expect(shouldVerify('.turbo/cache/abc123', config).verify).toBe(false);
+      expect(shouldVerify('.git/hooks/pre-commit', config).verify).toBe(false);
+      expect(shouldVerify('src/app.js.map', config).verify).toBe(false);
+      expect(shouldVerify('vendor.min.js', config).verify).toBe(false);
+      expect(shouldVerify('types.generated.ts', config).verify).toBe(false);
+      expect(shouldVerify('__snapshots__/Component.snap', config).verify).toBe(false);
+      expect(shouldVerify('src/auth/login.ts', config).verify).toBe(true);
     });
 
     it('ignores files matching ci.ignore patterns', () => {
@@ -600,6 +744,27 @@ describe('ShipGate Glob Matcher', () => {
       expect(result[0]).toEqual({ path: 'src/auth/login.ts', requireIsl: true });
       expect(result[1]).toEqual({ path: 'src/utils/helpers.ts', requireIsl: false });
     });
+
+    it('filters out node_modules, dist, .next when in ci.ignore', () => {
+      const config: ShipGateConfig = {
+        version: 1,
+        ci: {
+          ignore: ['node_modules/**', 'dist/**', '.next/**'],
+          requireIsl: [],
+        },
+      };
+
+      const files = [
+        'src/app.ts',
+        'node_modules/pkg/index.js',
+        'dist/bundle.js',
+        '.next/server.js',
+      ];
+
+      const result = filterVerifiableFiles(files, config);
+      expect(result).toHaveLength(1);
+      expect(result[0].path).toBe('src/app.ts');
+    });
   });
 
   describe('findMissingRequiredSpecs', () => {
@@ -636,6 +801,19 @@ describe('ShipGate Glob Matcher', () => {
 
       const missing = findMissingRequiredSpecs(codeFiles, specMap, config);
       expect(missing).toEqual([]);
+    });
+
+    it('returns src/auth/login.ts when requireIsl matches but spec missing', () => {
+      const config: ShipGateConfig = {
+        version: 1,
+        ci: { requireIsl: ['src/auth/**'] },
+      };
+
+      const codeFiles = ['src/auth/login.ts'];
+      const specMap = new Map<string, string>();
+
+      const missing = findMissingRequiredSpecs(codeFiles, specMap, config);
+      expect(missing).toEqual(['src/auth/login.ts']);
     });
   });
 });
@@ -729,5 +907,24 @@ ci:
     const utilResult = shouldVerify('src/utils/helpers.ts', config);
     expect(utilResult.verify).toBe(true);
     expect(utilResult.requireIsl).toBe(false);
+  });
+
+  it('filterVerifiableFiles skips .next, node_modules, dist with default config (fixture)', () => {
+    const config = DEFAULT_SHIPGATE_CONFIG;
+    const paths = [
+      'src/app.ts',
+      '.next/server/page.js',
+      'node_modules/pkg/index.js',
+      'dist/bundle.js',
+      'build/out.js',
+      'coverage/lcov.info',
+      '.turbo/cache/abc',
+    ];
+    const filtered = filterVerifiableFiles(paths, config);
+    const verifiedPaths = filtered.map((f) => f.path);
+    expect(verifiedPaths).toEqual(['src/app.ts']);
+    expect(verifiedPaths.some((p) => p.includes('.next'))).toBe(false);
+    expect(verifiedPaths.some((p) => p.includes('node_modules'))).toBe(false);
+    expect(verifiedPaths.some((p) => p.includes('dist'))).toBe(false);
   });
 });

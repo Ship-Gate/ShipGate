@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/test-generator",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Generate executable tests with domain-specific assertions from ISL specifications",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

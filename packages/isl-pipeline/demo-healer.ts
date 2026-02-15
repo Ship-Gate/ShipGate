@@ -28,7 +28,7 @@ async function main() {
   console.log();
   console.log(' The healer is NOT allowed to:');
   console.log('   ✗ Remove intents from the ISL spec');
-  console.log('   ✗ Add suppressions automatically (islstudio-ignore)');
+  console.log('   ✗ Add suppressions automatically (shipgate-ignore)');
   console.log('   ✗ Downgrade severity');
   console.log('   ✗ Change gate rules/packs');
   console.log('   ✗ "Make it pass" by hiding violations');

@@ -210,7 +210,7 @@ export async function runDemoCommand(options: DemoCommandOptions = {}): Promise<
       files: scenarioData.files.map(f => ({ path: f.path, content: f.content })),
       projectRoot: process.cwd(),
       writeEvidence: true,
-      evidenceDir: path.join(process.cwd(), '.islstudio', 'demo-evidence', scenarioKey),
+      evidenceDir: path.join(process.cwd(), '.shipgate', 'demo-evidence', scenarioKey),
     });
 
     const emoji = result.verdict === 'SHIP' ? '✅' : '🛑';
@@ -261,7 +261,7 @@ export function formatDemoOutput(results: DemoResult[]): string {
   
   lines.push('');
   lines.push('╔═══════════════════════════════════════════════════════════╗');
-  lines.push('║              ISL Studio Demo - SHIP/NO_SHIP               ║');
+  lines.push('║              ShipGate Demo - SHIP/NO_SHIP                  ║');
   lines.push('╚═══════════════════════════════════════════════════════════╝');
   
   for (const result of results) {
@@ -292,7 +292,7 @@ export function printDemoInfo(): string {
   const lines: string[] = [];
   
   lines.push('');
-  lines.push('ISL Studio Demo Scenarios:');
+  lines.push('ShipGate Demo Scenarios:');
   lines.push('');
   
   for (const [key, data] of Object.entries(DEMO_SCENARIOS)) {

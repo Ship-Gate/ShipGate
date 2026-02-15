@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/api-gateway",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ISL-aware API Gateway for runtime contract enforcement",
   "type": "module",
   "main": "./dist/index.js",

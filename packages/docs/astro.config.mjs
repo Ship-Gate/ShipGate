@@ -63,6 +63,10 @@ export default defineConfig({
           label: "ISL Language",
           items: [
             {
+              label: "ISL Language Reference",
+              slug: "isl-reference",
+            },
+            {
               label: "Syntax Reference",
               slug: "isl-language/syntax-reference",
             },

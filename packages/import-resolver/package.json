@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/import-resolver",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "ISL import resolution - resolves local module imports, detects cycles, and bundles multi-file specs",
   "author": "ISL Team",
   "license": "MIT",

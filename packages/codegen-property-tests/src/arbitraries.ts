@@ -3,7 +3,7 @@
 // Converts ISL types to fast-check arbitraries
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast.js';
+import type * as AST from '@isl-lang/parser';
 import type { ArbitraryDefinition, ConstraintInfo } from './types.js';
 
 /**

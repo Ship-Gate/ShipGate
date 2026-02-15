@@ -289,7 +289,7 @@ function generateAttestationJSON(manifest: ProofBundleManifest, includeManifest 
         frameworkVersion: manifest.testResult.frameworkVersion,
       },
       toolchain: {
-        islStudioVersion: manifest.policyVersion.islStudioVersion,
+        shipgateVersion: manifest.policyVersion.shipgateVersion,
         bundleVersion: manifest.policyVersion.bundleVersion,
         packs: manifest.policyVersion.packs.map(p => ({
           id: p.id,
@@ -399,9 +399,20 @@ ${manifest.verifyResults ? `| **Verify** | ${manifest.verifyResults.verdict === 
 
 ### Toolchain
 
-- **ISL Studio:** ${manifest.policyVersion.islStudioVersion}
+- **ShipGate:** ${manifest.policyVersion.shipgateVersion}
 - **Policy Bundle:** ${manifest.policyVersion.bundleVersion}
 - **Packs:** ${manifest.policyVersion.packs.map(p => `${p.id}@${p.version}`).join(', ')}
+${manifest.provenance ? `
+### AI Provenance
+
+| Field | Value |
+|-------|-------|
+| **Generator** | ${manifest.provenance.generator} |
+| **Model** | ${manifest.provenance.model} |
+| **Prompt Digest** | \`${manifest.provenance.promptDigest.slice(0, 16)}...\` |
+${manifest.provenance.contextDigest ? `| **Context Digest** | \`${manifest.provenance.contextDigest.slice(0, 16)}...\` |` : ''}
+| **Generated** | ${manifest.provenance.generatedAt} |
+` : ''}
 
 ---
 

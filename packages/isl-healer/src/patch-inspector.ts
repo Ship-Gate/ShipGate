@@ -3,7 +3,7 @@
  *
  * This module inspects code changes (patches) for cheating attempts:
  * - Removing intents from ISL specs
- * - Adding suppression directives (islstudio-ignore, @ts-ignore, etc.)
+ * - Adding suppression directives (shipgate-ignore, @ts-ignore, etc.)
  * - Disabling policy packs in configuration
  * - Weakening security (allowlists, auth bypasses)
  * - Lowering severity levels
@@ -30,8 +30,8 @@ import type {
  */
 const SUPPRESSION_PATTERNS: WeakeningPattern[] = [
   {
-    pattern: /islstudio-ignore/i,
-    description: 'ISL Studio suppression directive',
+    pattern: /shipgate-ignore/i,
+    description: 'ShipGate suppression directive',
     category: 'suppression',
   },
   {
@@ -244,7 +244,7 @@ function isISLSpecFile(path: string): boolean {
 function isConfigFile(path: string): boolean {
   const patterns = [
     /\.islrc/i,
-    /islstudio\.config/i,
+    /shipgate\.config/i,
     /\.eslintrc/i,
     /eslint\.config/i,
     /tsconfig/i,
@@ -264,7 +264,7 @@ function isGateConfigFile(path: string): boolean {
     /policy[-.]?packs/i,
     /rules\.json$/i,
     /\.islrc/i,
-    /islstudio\.config/i,
+    /shipgate\.config/i,
   ];
   return patterns.some((p) => p.test(path));
 }

@@ -269,6 +269,110 @@ export function createUser(input: { name: string; email: string }): User {
   });
 });
 
+// ============================================================================
+// Config-Driven Verify (ci.ignore + ci.require_isl)
+// Matcher logic is tested in shipgate-config.test.ts (filterVerifiableFiles,
+// findMissingRequiredSpecs). These E2E tests require full project build.
+// ============================================================================
+
+describe('Config-Driven Verify', () => {
+  const CONFIG_VERIFY_DIR = resolve(__dirname, '../../../.test-temp/config-verify');
+
+  beforeAll(() => {
+    if (existsSync(CONFIG_VERIFY_DIR)) {
+      rmSync(CONFIG_VERIFY_DIR, { recursive: true, force: true });
+    }
+    mkdirSync(CONFIG_VERIFY_DIR, { recursive: true });
+  });
+
+  afterAll(() => {
+    if (existsSync(CONFIG_VERIFY_DIR)) {
+      rmSync(CONFIG_VERIFY_DIR, { recursive: true, force: true });
+    }
+  });
+
+  describe('ci.ignore', () => {
+    it('should NOT scan node_modules, dist, .next when in ci.ignore', async () => {
+      const dir = join(CONFIG_VERIFY_DIR, 'ignore-fixture');
+      mkdirSync(join(dir, 'src'), { recursive: true });
+      mkdirSync(join(dir, 'node_modules/pkg'), { recursive: true });
+      mkdirSync(join(dir, 'dist'), { recursive: true });
+      mkdirSync(join(dir, '.next'), { recursive: true });
+
+      writeFileSync(join(dir, 'src/app.ts'), `
+export function main() {
+  return { ok: true };
+}
+`);
+
+      writeFileSync(join(dir, 'node_modules/pkg/index.js'), 'module.exports = {};');
+      writeFileSync(join(dir, 'dist/bundle.js'), '// built');
+      writeFileSync(join(dir, '.next/server.js'), '// next');
+
+      // Call unifiedVerify directly with config-driven ignore
+      const { unifiedVerify } = await import('../src/commands/verify.js');
+      const { DEFAULT_IGNORE } = await import('../src/config/schema.js');
+      const result = await unifiedVerify(dir, {
+        shipgateConfig: {
+          version: 1,
+          ci: {
+            failOn: 'error',
+            requireIsl: [],
+            ignore: [...DEFAULT_IGNORE],
+          },
+        },
+      });
+
+      // Should verify only src/app.ts, not node_modules/dist/.next
+      const filePaths = result.files.map((f) => f.file);
+      expect(filePaths.some((p) => /node_modules[\\/]pkg/.test(p))).toBe(false);
+      expect(filePaths.some((p) => /dist[\\/]bundle/.test(p))).toBe(false);
+      expect(filePaths.some((p) => /\.next[\\/]server/.test(p))).toBe(false);
+      expect(filePaths.some((p) => /src[\\/]app\.ts/.test(p))).toBe(true);
+    });
+  });
+
+  describe('ci.require_isl', () => {
+    it.skipIf(typeof process.env.CI === 'string')('should fail with clear message when require_isl files lack specs', async () => {
+      const dir = join(CONFIG_VERIFY_DIR, 'require-isl-fixture');
+      mkdirSync(join(dir, 'src/auth'), { recursive: true });
+      mkdirSync(join(dir, '.shipgate/specs'), { recursive: true });
+
+      writeFileSync(join(dir, '.shipgate.yml'), `
+version: 1
+ci:
+  require_isl:
+    - "src/auth/**"
+`);
+
+      writeFileSync(join(dir, 'src/auth/login.ts'), `
+export function login(email: string) {
+  return { id: '1', email };
+}
+`);
+
+      // Call unifiedVerify directly (bypasses CLI module loading issues)
+      const { unifiedVerify } = await import('../src/commands/verify.js');
+      const { DEFAULT_IGNORE } = await import('../src/config/schema.js');
+      const result = await unifiedVerify(dir, {
+        shipgateConfig: {
+          version: 1,
+          ci: {
+            failOn: 'error',
+            requireIsl: ['src/auth/**'],
+            ignore: [...DEFAULT_IGNORE],
+          },
+        },
+      });
+
+      expect(result.exitCode).toBe(1);
+      expect(result.verdict).toBe('NO_SHIP');
+      expect(result.blockers.some((b) => /ci\.require_isl|require.*ISL|ISL spec required/i.test(b))).toBe(true);
+      expect(result.blockers.some((b) => /src[\\/]auth[\\/]login/.test(b))).toBe(true);
+    });
+  });
+});
+
 describe('Verify Command Fixtures', () => {
   const fixturesExist = existsSync(FIXTURES_ROOT);
 

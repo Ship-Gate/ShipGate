@@ -449,6 +449,155 @@ export const CRUD_PATTERNS: Pattern[] = [
   },
 ];
 
+export const TODO_APP_PATTERNS: Pattern[] = [
+  {
+    id: 'todo-app',
+    name: 'Todo App with Auth',
+    triggers: ['todo app', 'todo list', 'todo lists', 'todos', 'task app', 'task list'],
+    template: {
+      domain: 'TodoApp',
+      entities: [
+        {
+          name: 'User',
+          fields: [
+            { name: 'id', type: 'UUID', constraints: ['unique'] },
+            { name: 'email', type: 'Email', constraints: ['unique'] },
+            { name: 'username', type: 'String', constraints: ['min length 3'] },
+            { name: 'password', type: 'String', constraints: ['hashed'] },
+          ],
+          invariants: ['email contains @', 'password never stored plain'],
+        },
+        {
+          name: 'Todo',
+          fields: [
+            { name: 'id', type: 'UUID', constraints: ['unique'] },
+            { name: 'title', type: 'String', constraints: ['required'] },
+            { name: 'description', type: 'String', optional: true },
+            { name: 'dueDate', type: 'DateTime', optional: true },
+            { name: 'priority', type: 'String', constraints: ['low|medium|high'] },
+            { name: 'completed', type: 'Boolean', constraints: ['default false'] },
+            { name: 'order', type: 'Int', optional: true },
+            { name: 'userId', type: 'UUID', constraints: ['references User'] },
+          ],
+          invariants: ['title length > 0', 'priority in [low,medium,high]'],
+        },
+      ],
+      behaviors: [
+        {
+          name: 'RegisterUser',
+          description: 'Register a new user account',
+          input: [
+            { name: 'email', type: 'Email' },
+            { name: 'username', type: 'String' },
+            { name: 'password', type: 'String' },
+          ],
+          output: {
+            success: 'User',
+            errors: [
+              { name: 'DuplicateEmail', when: 'email already registered' },
+              { name: 'InvalidUsername', when: 'username too short' },
+            ],
+          },
+          preconditions: ['email valid', 'username length >= 3'],
+          postconditions: ['user created', 'password hashed'],
+          invariants: ['password never logged'],
+          intents: ['rate-limit-required', 'audit-required', 'no-pii-logging'],
+        },
+        {
+          name: 'LoginUser',
+          description: 'Log in with email and password',
+          input: [
+            { name: 'email', type: 'Email' },
+            { name: 'password', type: 'String' },
+          ],
+          output: {
+            success: 'AuthToken',
+            errors: [
+              { name: 'InvalidCredentials', when: 'email or password wrong' },
+            ],
+          },
+          preconditions: ['rate limit not exceeded'],
+          postconditions: ['token issued', 'login recorded'],
+          invariants: ['password never logged'],
+          intents: ['rate-limit-required', 'audit-required', 'no-pii-logging'],
+        },
+        {
+          name: 'CreateTodo',
+          description: 'Create a new todo',
+          input: [
+            { name: 'title', type: 'String' },
+            { name: 'description', type: 'String', optional: true },
+            { name: 'dueDate', type: 'DateTime', optional: true },
+            { name: 'priority', type: 'String', optional: true },
+          ],
+          output: {
+            success: 'Todo',
+            errors: [{ name: 'ValidationError', when: 'invalid input' }],
+          },
+          preconditions: ['user authenticated', 'title length > 0'],
+          postconditions: ['todo created', 'todo belongs to user'],
+          invariants: [],
+          intents: ['auth-required', 'audit-required'],
+        },
+        {
+          name: 'UpdateTodo',
+          description: 'Edit an existing todo',
+          input: [
+            { name: 'id', type: 'UUID' },
+            { name: 'title', type: 'String', optional: true },
+            { name: 'description', type: 'String', optional: true },
+            { name: 'dueDate', type: 'DateTime', optional: true },
+            { name: 'priority', type: 'String', optional: true },
+            { name: 'completed', type: 'Boolean', optional: true },
+          ],
+          output: {
+            success: 'Todo',
+            errors: [
+              { name: 'NotFound', when: 'todo does not exist' },
+              { name: 'Forbidden', when: 'user does not own todo' },
+            ],
+          },
+          preconditions: ['user authenticated', 'user owns todo'],
+          postconditions: ['todo updated'],
+          invariants: [],
+          intents: ['auth-required', 'audit-required'],
+        },
+        {
+          name: 'DeleteTodo',
+          description: 'Delete a todo',
+          input: [{ name: 'id', type: 'UUID' }],
+          output: {
+            success: 'Void',
+            errors: [
+              { name: 'NotFound', when: 'todo does not exist' },
+              { name: 'Forbidden', when: 'user does not own todo' },
+            ],
+          },
+          preconditions: ['user authenticated', 'user owns todo'],
+          postconditions: ['todo deleted'],
+          invariants: [],
+          intents: ['auth-required', 'audit-required'],
+        },
+        {
+          name: 'ReorderTodos',
+          description: 'Reorder todos',
+          input: [{ name: 'todoIds', type: 'List<UUID>' }],
+          output: {
+            success: 'Void',
+            errors: [{ name: 'ValidationError', when: 'invalid order' }],
+          },
+          preconditions: ['user authenticated', 'user owns all todos'],
+          postconditions: ['order updated'],
+          invariants: [],
+          intents: ['auth-required', 'audit-required'],
+        },
+      ],
+    },
+    requiredFields: ['title'],
+    optionalFields: ['description', 'dueDate', 'priority'],
+  },
+];
+
 export const PAYMENT_PATTERNS: Pattern[] = [
   {
     id: 'process-payment',
@@ -495,8 +644,153 @@ export const PAYMENT_PATTERNS: Pattern[] = [
   },
 ];
 
+export const BLOG_PATTERNS: Pattern[] = [
+  {
+    id: 'blog-platform',
+    name: 'Blog Platform',
+    triggers: ['blog platform', 'blog', 'authors', 'posts', 'comments', 'moderate comments', 'admin panel'],
+    template: {
+      domain: 'Blog',
+      entities: [
+        {
+          name: 'Author',
+          fields: [
+            { name: 'id', type: 'UUID', constraints: ['unique'] },
+            { name: 'email', type: 'Email', constraints: ['unique'] },
+            { name: 'name', type: 'String' },
+            { name: 'passwordHash', type: 'String' },
+          ],
+          invariants: ['password never stored plain'],
+        },
+        {
+          name: 'Post',
+          fields: [
+            { name: 'id', type: 'UUID', constraints: ['unique'] },
+            { name: 'title', type: 'String', constraints: ['required'] },
+            { name: 'content', type: 'String' },
+            { name: 'status', type: 'String', constraints: ['draft|published'] },
+            { name: 'featuredImageUrl', type: 'String', optional: true },
+            { name: 'authorId', type: 'UUID', constraints: ['references Author'] },
+            { name: 'tags', type: 'String', optional: true },
+          ],
+          invariants: ['status in [draft, published]'],
+        },
+        {
+          name: 'Comment',
+          fields: [
+            { name: 'id', type: 'UUID', constraints: ['unique'] },
+            { name: 'postId', type: 'UUID', constraints: ['references Post'] },
+            { name: 'authorId', type: 'UUID', optional: true },
+            { name: 'content', type: 'String' },
+            { name: 'status', type: 'String', constraints: ['pending|approved|deleted'] },
+          ],
+          invariants: ['status in [pending, approved, deleted]'],
+        },
+      ],
+      behaviors: [
+        {
+          name: 'RegisterAuthor',
+          description: 'Author registration',
+          input: [
+            { name: 'email', type: 'Email' },
+            { name: 'password', type: 'String' },
+            { name: 'name', type: 'String' },
+          ],
+          output: {
+            success: 'Author',
+            errors: [
+              { name: 'EmailAlreadyExists', when: 'email is taken' },
+              { name: 'WeakPassword', when: 'password does not meet requirements' },
+            ],
+          },
+          preconditions: ['email valid', 'password meets complexity', 'rate limit not exceeded'],
+          postconditions: ['author created', 'password hashed', 'audit event recorded'],
+          invariants: ['password never logged'],
+          intents: ['rate-limit-required', 'audit-required', 'no-pii-logging'],
+        },
+        {
+          name: 'CreatePost',
+          description: 'Create post (draft or published)',
+          input: [
+            { name: 'title', type: 'String' },
+            { name: 'content', type: 'String' },
+            { name: 'tags', type: 'String', optional: true },
+            { name: 'featuredImageUrl', type: 'String', optional: true },
+            { name: 'status', type: 'String', optional: true },
+          ],
+          output: {
+            success: 'Post',
+            errors: [{ name: 'ValidationError', when: 'invalid input' }],
+          },
+          preconditions: ['user authenticated as author', 'title length > 0'],
+          postconditions: ['post created', 'post belongs to author'],
+          invariants: [],
+          intents: ['auth-required', 'audit-required'],
+        },
+        {
+          name: 'SearchPosts',
+          description: 'Search posts by title/content',
+          input: [
+            { name: 'query', type: 'String' },
+            { name: 'tag', type: 'String', optional: true },
+          ],
+          output: {
+            success: 'Post',
+            errors: [],
+          },
+          preconditions: [],
+          postconditions: ['returns matching published posts'],
+          invariants: [],
+          intents: [],
+        },
+        {
+          name: 'CreateComment',
+          description: 'Reader leaves comment',
+          input: [
+            { name: 'postId', type: 'UUID' },
+            { name: 'content', type: 'String' },
+          ],
+          output: {
+            success: 'Comment',
+            errors: [
+              { name: 'PostNotFound', when: 'post does not exist' },
+              { name: 'ValidationError', when: 'content empty' },
+            ],
+          },
+          preconditions: ['post exists and is published', 'rate limit not exceeded'],
+          postconditions: ['comment created with status pending'],
+          invariants: [],
+          intents: ['rate-limit-required', 'audit-required'],
+        },
+        {
+          name: 'ModerateComment',
+          description: 'Author approves or deletes comment',
+          input: [
+            { name: 'commentId', type: 'UUID' },
+            { name: 'action', type: 'String', constraints: ['approve|delete'] },
+          ],
+          output: {
+            success: 'Comment',
+            errors: [
+              { name: 'NotFound', when: 'comment does not exist' },
+              { name: 'Forbidden', when: 'user is not post author' },
+            ],
+          },
+          preconditions: ['user authenticated', 'user is author of post'],
+          postconditions: ['comment status updated'],
+          invariants: [],
+          intents: ['auth-required', 'audit-required'],
+        },
+      ],
+    },
+    requiredFields: ['title', 'content'],
+    optionalFields: ['tags', 'featuredImageUrl', 'status'],
+  },
+];
+
 export const DEFAULT_PATTERN_LIBRARY: PatternLibrary = {
-  patterns: [...AUTH_PATTERNS, ...CRUD_PATTERNS, ...PAYMENT_PATTERNS],
+  // Blog first (high trigger score for "blog platform"), then todo, auth, crud, payment
+  patterns: [...BLOG_PATTERNS, ...TODO_APP_PATTERNS, ...AUTH_PATTERNS, ...CRUD_PATTERNS, ...PAYMENT_PATTERNS],
 };
 
 // ============================================================================

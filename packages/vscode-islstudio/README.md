@@ -1,4 +1,4 @@
-# ISL Studio for VS Code
+# Shipgate for VS Code
 
 **Control surface for ISL**: Set intent blocks, run gate checks, heal until ship, and view violations and proof bundles.
 
@@ -16,18 +16,18 @@
 
 | Command | Description |
 |---------|-------------|
-| `ISL Studio: Run Gate (All Files)` | Run full gate check on all files |
-| `ISL Studio: Run Gate (Changed Files Only)` | Fast check on changed files only |
-| `ISL Studio: Heal Until Ship` | Automatically fix violations until SHIP |
-| `ISL Studio: Set Intent Blocks` | Scan and display intent blocks |
-| `ISL Studio: View Proof Bundle` | Open proof bundle viewer |
-| `ISL Studio: Explain Rule` | Get detailed explanation of a rule |
-| `ISL Studio: Create Baseline` | Capture existing violations as baseline |
-| `ISL Studio: Refresh Sidebar` | Refresh sidebar data |
+| `Shipgate: Run Gate (All Files)` | Run full gate check on all files |
+| `Shipgate: Run Gate (Changed Files Only)` | Fast check on changed files only |
+| `Shipgate: Heal Until Ship` | Automatically fix violations until SHIP |
+| `Shipgate: Set Intent Blocks` | Scan and display intent blocks |
+| `Shipgate: View Proof Bundle` | Open proof bundle viewer |
+| `Shipgate: Explain Rule` | Get detailed explanation of a rule |
+| `Shipgate: Create Baseline` | Capture existing violations as baseline |
+| `Shipgate: Refresh Sidebar` | Refresh sidebar data |
 
 ### 📊 Sidebar
 
-The ISL Studio sidebar shows:
+The Shipgate sidebar shows:
 - **Gate Status** - Current verdict and score
 - **Intent Blocks** - All intent blocks from ISL specs
 - **Violations** - Grouped by severity (critical, high, medium, low)
@@ -52,11 +52,11 @@ The Heal UI panel shows:
 ## Installation
 
 ### From VS Code Marketplace
-Search for "ISL Studio" in the VS Code extensions marketplace.
+Search for "Shipgate" in the VS Code extensions marketplace.
 
 ### From OpenVSX
 ```bash
-code --install-extension isl-studio.vscode-islstudio
+code --install-extension shipgate.shipgate-isl
 ```
 
 ### From VSIX
@@ -73,14 +73,14 @@ code --install-extension isl-studio.vscode-islstudio
 
 ## Configuration
 
-Open Settings (Ctrl+,) and search for "ISL Studio":
+Open Settings (Ctrl+,) and search for "Shipgate":
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `islstudio.enable` | `true` | Enable/disable diagnostics |
-| `islstudio.runOnSave` | `true` | Run checks on file save |
-| `islstudio.runOnOpen` | `true` | Run gate on workspace open |
-| `islstudio.changedOnlyByDefault` | `true` | Only check changed files by default |
+| `shipgate.enable` | `true` | Enable/disable diagnostics |
+| `shipgate.runOnSave` | `true` | Run checks on file save |
+| `shipgate.runOnOpen` | `true` | Run gate on workspace open |
+| `shipgate.changedOnlyByDefault` | `true` | Only check changed files by default |
 
 ## What It Checks
 
@@ -99,7 +99,7 @@ Same 25+ rules as the CLI:
 Add inline comments:
 
 ```typescript
-// islstudio-ignore pii/console-in-production: Debug only
+// shipgate-ignore pii/console-in-production: Debug only
 console.log(data);
 ```
 
@@ -118,10 +118,10 @@ console.log(data);
 
 ## Links
 
-- [CLI Package](https://npmjs.com/package/islstudio)
-- [GitHub](https://github.com/ISL-Studio/ISL-Studio-)
-- [Report Issues](https://github.com/ISL-Studio/ISL-Studio-/issues)
-- [Documentation](https://islstudio.dev)
+- [CLI Package](https://npmjs.com/package/shipgate)
+- [GitHub](https://github.com/shipgate/shipgate)
+- [Report Issues](https://github.com/shipgate/shipgate/issues)
+- [Documentation](https://shipgate.dev)
 
 ## License
 

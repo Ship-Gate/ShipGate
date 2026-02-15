@@ -1,4 +1,5 @@
 export * from './test-runner';
+export * from './execution-proof';
 
 export interface RunnerOptions {
   timeout?: number;

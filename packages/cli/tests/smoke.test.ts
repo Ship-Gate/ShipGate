@@ -24,12 +24,14 @@ const MAX_BUNDLE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 function exec(
   args: string,
+  options?: { cwd?: string },
 ): { stdout: string; stderr: string; exitCode: number } {
   try {
     const stdout = execSync(`node "${CLI_PATH}" ${args}`, {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
       timeout: 15_000,
+      cwd: options?.cwd,
     });
     return { stdout, stderr: '', exitCode: 0 };
   } catch (error: unknown) {
@@ -89,6 +91,25 @@ describe('shipgate --help', () => {
     expect(stdout).toContain('verify');
     expect(stdout).toContain('init');
     expect(stdout).toContain('gate');
+  });
+
+  it('shows ShipGate as primary product name', () => {
+    const { stdout, exitCode } = exec('--help');
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('ShipGate');
+  });
+
+  it('uses shipgate in usage examples', () => {
+    const { stdout, exitCode } = exec('--help');
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('shipgate init');
+    expect(stdout).toContain('shipgate verify');
+  });
+
+  it('indicates isl is an alias', () => {
+    const { stdout, exitCode } = exec('--help');
+    expect(exitCode).toBe(0);
+    expect(stdout).toMatch(/isl.*alias|alias.*isl/i);
   });
 });
 
@@ -159,6 +180,7 @@ describe('Error handling', () => {
     const { stderr, stdout } = exec('verifiy'); // typo
     const output = stderr || stdout;
     expect(output.toLowerCase()).toMatch(/did you mean|verify|unknown/i);
+    expect(output).toContain('shipgate');
   });
 });
 
@@ -170,28 +192,70 @@ describe('shipgate init', () => {
     expect(stdout).toContain('template');
   });
 
-  it('init creates minimal project structure', async () => {
+  it('init in-place succeeds in an existing temp dir (no args)', () => {
     const { mkdtempSync, rmSync, existsSync, readFileSync } = require('fs');
     const { join } = require('path');
     const os = require('os');
-    // Use a subdir that does not exist yet so init can create it (init refuses existing dir without --force)
-    const tmpDir = mkdtempSync(join(os.tmpdir(), 'shipgate-test-'));
-    const projectDir = join(tmpDir, 'test-project');
-    const dirArg = projectDir.replace(/\\/g, '/');
+    const tmpDir = mkdtempSync(join(os.tmpdir(), 'shipgate-init-inplace-'));
     try {
-      const { exitCode, stdout, stderr } = exec(`init test-project --directory "${dirArg}"`);
+      // Run init with no args from inside tmp dir (non-interactive in CI)
+      const { exitCode, stdout, stderr } = exec('init -y', { cwd: tmpDir });
       if (exitCode !== 0) {
         throw new Error(`init failed (exit ${exitCode}): stdout=${stdout.slice(0, 500)} stderr=${stderr.slice(0, 500)}`);
       }
       expect(exitCode).toBe(0);
-      // Init with --directory writes into that directory
-      expect(existsSync(join(projectDir, 'package.json'))).toBe(true);
-      expect(existsSync(join(projectDir, 'src', 'test-project.isl'))).toBe(true);
-      expect(existsSync(join(projectDir, 'isl.config.json'))).toBe(true);
-      const islContent = readFileSync(join(projectDir, 'src', 'test-project.isl'), 'utf-8');
+      expect(existsSync(join(tmpDir, 'package.json'))).toBe(true);
+      expect(existsSync(join(tmpDir, 'isl.config.json'))).toBe(true);
+      const basename = require('path').basename(tmpDir);
+      const islPath = join(tmpDir, 'src', `${basename}.isl`);
+      expect(existsSync(islPath)).toBe(true);
+      const islContent = readFileSync(islPath, 'utf-8');
       expect(islContent).toContain('domain');
       expect(islContent).toContain('entity');
       expect(islContent).toContain('behavior');
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it('init my-app creates folder and succeeds', () => {
+    const { mkdtempSync, rmSync, existsSync, readFileSync } = require('fs');
+    const { join } = require('path');
+    const os = require('os');
+    const tmpDir = mkdtempSync(join(os.tmpdir(), 'shipgate-init-new-'));
+    const projectDir = join(tmpDir, 'my-app');
+    try {
+      const { exitCode, stdout, stderr } = exec(`init my-app --directory "${projectDir.replace(/\\/g, '/')}"`, { cwd: tmpDir });
+      if (exitCode !== 0) {
+        throw new Error(`init failed (exit ${exitCode}): stdout=${stdout.slice(0, 500)} stderr=${stderr.slice(0, 500)}`);
+      }
+      expect(exitCode).toBe(0);
+      expect(existsSync(join(projectDir, 'package.json'))).toBe(true);
+      expect(existsSync(join(projectDir, 'src', 'my-app.isl'))).toBe(true);
+      expect(existsSync(join(projectDir, 'isl.config.json'))).toBe(true);
+      const islContent = readFileSync(join(projectDir, 'src', 'my-app.isl'), 'utf-8');
+      expect(islContent).toContain('domain');
+      expect(islContent).toContain('entity');
+      expect(islContent).toContain('behavior');
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it('init without --force does not clobber existing config', () => {
+    const { mkdtempSync, rmSync, existsSync, writeFileSync, readFileSync } = require('fs');
+    const { join } = require('path');
+    const os = require('os');
+    const tmpDir = mkdtempSync(join(os.tmpdir(), 'shipgate-init-no-clobber-'));
+    const configPath = join(tmpDir, 'isl.config.json');
+    const originalContent = '{"custom": "do not overwrite"}';
+    try {
+      writeFileSync(configPath, originalContent);
+      const { exitCode, stderr } = exec('init -y', { cwd: tmpDir });
+      expect(exitCode).not.toBe(0);
+      expect(stderr || '').toContain('ShipGate files already exist');
+      expect(stderr || '').toContain('--force');
+      expect(readFileSync(configPath, 'utf-8')).toBe(originalContent);
     } finally {
       rmSync(tmpDir, { recursive: true, force: true });
     }

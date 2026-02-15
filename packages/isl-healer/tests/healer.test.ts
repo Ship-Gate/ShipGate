@@ -380,7 +380,7 @@ describe('FixRecipeRegistry', () => {
 // ============================================================================
 
 describe('GateIngester', () => {
-  it('parses ISL Studio JSON format', () => {
+  it('parses ShipGate JSON format', () => {
     const ingester = new GateIngester();
     
     const json = {

@@ -47,7 +47,7 @@ That's it. Every PR will now:
 |-------|-------------|----------|---------|
 | `mode` | `check` (comment only) or `enforce` (block merge) | No | `enforce` |
 | `threshold` | Minimum score to pass (0-100) | No | `80` |
-| `config-path` | Path to config file | No | `.islstudio/config.json` |
+| `config-path` | Path to config file | No | `.shipgate/config.json` |
 | `fail-on` | Fail on: `any`, `blocker`, `none` | No | `blocker` |
 | `changed-only` | Only check changed files (PR only) | No | `true` |
 | `token` | GitHub token for API access | Yes | `${{ github.token }}` |
@@ -92,7 +92,7 @@ That's it. Every PR will now:
 
 ## Configuration
 
-Create `.islstudio/config.json`:
+Create `.shipgate/config.json`:
 
 ```json
 {

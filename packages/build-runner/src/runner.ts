@@ -16,7 +16,9 @@ import {
   codegenStage,
   testgenStage,
   verifyStage,
+  runTestsStage,
 } from './pipeline.js';
+import { frontendStage } from './frontend-stage.js';
 import {
   writeOutputFiles,
   generateManifestContent,
@@ -34,6 +36,8 @@ const DEFAULT_OPTIONS: Partial<BuildOptions> = {
   htmlReport: true,
   includeChaosTests: true,
   includeHelpers: true,
+  runTests: true,
+  maxTestFixIterations: 2,
 };
 
 /**
@@ -92,7 +96,10 @@ export async function run(options: BuildOptions): Promise<BuildResult> {
   errors.push(...importResult.errors);
 
   // Stage 4: Code Generation
-  const codegenResult = codegenStage(domain);
+  const codegenResult = await codegenStage(domain, {
+    target: opts.target === 'openapi' ? 'openapi' : 'typescript',
+    apiOnly: opts.apiOnly,
+  });
   timing.codegen = codegenResult.durationMs;
   errors.push(...codegenResult.errors);
 
@@ -100,17 +107,33 @@ export async function run(options: BuildOptions): Promise<BuildResult> {
     files.push(...codegenResult.data.files);
   }
 
-  // Stage 5: Test Generation
-  const testgenResult = testgenStage(domain, {
-    testFramework: opts.testFramework,
-    includeChaosTests: opts.includeChaosTests,
-    includeHelpers: opts.includeHelpers,
-  });
+  // Stage 5: Test Generation (runs AFTER codegen with source context)
+  const testgenResult = await testgenStage(
+    domain,
+    {
+      testFramework: opts.testFramework,
+      includeChaosTests: opts.includeChaosTests,
+      includeHelpers: opts.includeHelpers,
+    },
+    codegenResult.success && codegenResult.data ? codegenResult.data.files : undefined
+  );
   timing.testgen = testgenResult.durationMs;
   errors.push(...testgenResult.errors);
 
   if (testgenResult.success && testgenResult.data) {
     files.push(...testgenResult.data.files);
+  }
+
+  // Stage 5b: Frontend Generation (optional, skipped when apiOnly)
+  if (opts.generateFrontend && !opts.apiOnly) {
+    const frontendResult = frontendStage(
+      domain,
+      opts.frontendOutDir ?? 'frontend'
+    );
+    if (frontendResult.success && frontendResult.data) {
+      files.push(...frontendResult.data.files);
+    }
+    errors.push(...frontendResult.errors);
   }
 
   // Stage 6: Verification (optional)
@@ -156,8 +179,19 @@ export async function run(options: BuildOptions): Promise<BuildResult> {
   // Sort files deterministically
   const sortedFiles = sortFilesDeterministically(files);
 
-  // Write output files
+  // Write output files (must happen before test execution)
   const manifest = await writeOutputFiles(opts.outDir, sortedFiles);
+
+  // Run tests after files are written
+  const { testReport } = await runTestsStage(opts.outDir, {
+    runTests: opts.runTests ?? true,
+    maxTestFixIterations: opts.maxTestFixIterations ?? 2,
+  });
+
+  // Add test report to evidence if available
+  if (evidence && testReport) {
+    evidence.testReport = testReport;
+  }
 
   // Generate manifest content before adding to manifest
   const manifestEntry = {
@@ -180,8 +214,12 @@ export async function run(options: BuildOptions): Promise<BuildResult> {
     type: 'config',
   }]);
 
-  // Build only fails on parse errors - other errors are warnings
-  const success = errors.filter(e => e.stage === 'parse').length === 0;
+  // Build fails on: parse errors, or test verdict FAIL when runTests enabled
+  const hasParseErrors = errors.filter((e) => e.stage === 'parse').length > 0;
+  const testVerdictFail =
+    opts.runTests !== false &&
+    evidence?.testReport?.verdict === 'FAIL';
+  const success = !hasParseErrors && !testVerdictFail;
 
   return {
     success,
@@ -223,6 +261,7 @@ function createFailedResult(
         fixture: 0,
         evidence: 0,
         report: 0,
+        openapi: 0,
       },
     },
   };

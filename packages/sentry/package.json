@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/sentry",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Sentry integration for ISL error tracking and performance monitoring",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

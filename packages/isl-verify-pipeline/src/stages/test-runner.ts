@@ -141,9 +141,16 @@ async function runVitest(
   try {
     const content = await fs.readFile(outputPath, 'utf-8');
     const results = JSON.parse(content);
-    return parseVitestOutput(results, durationMs);
+    const output = parseVitestOutput(results, durationMs);
+    // If runner produced results but every test is skipped, flag as execution failure
+    if (output.summary.totalTests > 0 && output.summary.skippedTests === output.summary.totalTests) {
+      output.executionFailed = true;
+      output.executionFailureReason = 'All tests were skipped — no assertions executed';
+    }
+    return output;
   } catch (error) {
-    // If parsing fails, return empty results
+    // Parsing failed = tests did not run (import errors, TS config issues, Vitest crash)
+    const reason = error instanceof Error ? error.message : String(error);
     return {
       framework: 'vitest',
       suites: [],
@@ -155,6 +162,8 @@ async function runVitest(
         skippedTests: 0,
         durationMs,
       },
+      executionFailed: true,
+      executionFailureReason: `Verification blocked: tests did not run — ${reason}`,
     };
   }
 }
@@ -280,8 +289,14 @@ async function runJest(
   try {
     const content = await fs.readFile(outputPath, 'utf-8');
     const results = JSON.parse(content);
-    return parseJestOutput(results, durationMs);
-  } catch {
+    const output = parseJestOutput(results, durationMs);
+    if (output.summary.totalTests > 0 && output.summary.skippedTests === output.summary.totalTests) {
+      output.executionFailed = true;
+      output.executionFailureReason = 'All tests were skipped — no assertions executed';
+    }
+    return output;
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
     return {
       framework: 'jest',
       suites: [],
@@ -293,6 +308,8 @@ async function runJest(
         skippedTests: 0,
         durationMs,
       },
+      executionFailed: true,
+      executionFailureReason: `Verification blocked: tests did not run — ${reason}`,
     };
   }
 }
@@ -338,8 +355,14 @@ async function runMocha(
   try {
     const content = await fs.readFile(outputPath, 'utf-8');
     const results = JSON.parse(content);
-    return parseMochaOutput(results, durationMs);
-  } catch {
+    const output = parseMochaOutput(results, durationMs);
+    if (output.summary.totalTests > 0 && output.summary.skippedTests === output.summary.totalTests) {
+      output.executionFailed = true;
+      output.executionFailureReason = 'All tests were skipped — no assertions executed';
+    }
+    return output;
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
     return {
       framework: 'mocha',
       suites: [],
@@ -351,6 +374,8 @@ async function runMocha(
         skippedTests: 0,
         durationMs,
       },
+      executionFailed: true,
+      executionFailureReason: `Verification blocked: tests did not run — ${reason}`,
     };
   }
 }

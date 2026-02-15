@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/codegen-types",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "TypeScript/Python type and validator generator from ISL",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -36,8 +36,18 @@
   "peerDependencies": {
     "zod": "^3.22.0"
   },
-  "files": ["dist"],
-  "keywords": ["isl", "codegen", "typescript", "python", "zod", "pydantic", "validation"],
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "isl",
+    "codegen",
+    "typescript",
+    "python",
+    "zod",
+    "pydantic",
+    "validation"
+  ],
   "author": "mevla",
   "license": "MIT",
   "repository": {

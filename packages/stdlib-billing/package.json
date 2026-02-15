@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/stdlib-billing",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Billing and subscription management standard library for ISL",
   "type": "module",
   "main": "src/index.js",

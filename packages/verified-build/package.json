@@ -1,6 +1,7 @@
 {
   "name": "@isl-lang/verified-build",
-  "version": "0.1.0",
+  "private": true,
+  "version": "0.1.1",
   "description": "ISL Verified Build - Single-package SDK for code verification",
   "type": "module",
   "main": "./dist/index.js",

@@ -17,6 +17,7 @@ import Pricing from './pages/Pricing';
 import Dashboard from './pages/Dashboard';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
+import ShipgateFooter from './components/ShipgateFooter';
 import { DemoProvider, useDemoContext } from './context/DemoContext';
 
 function AppContent() {
@@ -54,6 +55,9 @@ function AppContent() {
           <Route path="/sign-up" element={<SignUp />} />
         </Routes>
       </main>
+      
+      {/* Footer - show on all pages except landing (which has its own) */}
+      {!isLanding && <ShipgateFooter />}
     </div>
   );
 }

@@ -37,9 +37,9 @@ function loadAndGenerateTests(fixtureFile: string): GeneratedTestSuite | null {
 
   const source = readFileSync(path, 'utf-8');
   const parseResult = parse(source, fixtureFile);
-  if (!parseResult.success || !parseResult.ast) return null;
+  if (!parseResult.success || !parseResult.domain) return null;
 
-  const domain = parseResult.ast;
+  const domain = parseResult.domain;
   const result = generateWithSynthesis(domain, {
     framework: 'vitest',
     useSynthesis: true,

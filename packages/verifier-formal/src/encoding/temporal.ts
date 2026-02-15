@@ -3,7 +3,7 @@
 // Translates ISL temporal specifications to bounded model checking
 // ============================================================================
 
-import type * as AST from '../../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 import { encodeExpression, EncodingContext } from './expressions';
 
 // ============================================================================

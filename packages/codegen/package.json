@@ -1,6 +1,7 @@
 {
   "name": "@isl-lang/codegen",
-  "version": "0.1.0",
+  "private": true,
+  "version": "0.1.1",
   "description": "ISL code generators - umbrella package for all code generation targets",
   "author": "ISL Team",
   "license": "MIT",

@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/verifier",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Evidence-first, deterministic verification engine for ISL specifications",
   "type": "module",
   "main": "./dist/index.js",

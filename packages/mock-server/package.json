@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/mock-server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generate mock servers from ISL specifications for testing",
   "type": "module",
   "main": "dist/index.js",

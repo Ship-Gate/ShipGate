@@ -329,4 +329,15 @@ export default defineWorkspace([
       testTimeout: 30000,
     },
   },
+  // Shipgate E2E Intent Verification (investor proof fixtures)
+  {
+    test: {
+      name: 'shipgate-e2e-intent',
+      root: './packages/shipgate-e2e-intent',
+      globals: true,
+      environment: 'node',
+      include: ['tests/**/*.test.ts'],
+      testTimeout: 60000,
+    },
+  },
 ]);

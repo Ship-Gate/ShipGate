@@ -44,6 +44,11 @@ export function registerScanCommands(
       onScanComplete(null);
       statusBar?.setRunning();
 
+      // DEBUG: log which CLI binary will be resolved
+      const { resolveShipgateExecutable } = await import('../cli/shipgateRunner');
+      const resolved = await resolveShipgateExecutable(projectRoot, config.executablePath || undefined);
+      outputChannel.appendLine(`[Shipgate DEBUG] executable=${resolved.executable} args=${resolved.args.join(' ')}`);
+
       const token = new vscode.CancellationTokenSource().token;
       const out = await runShipgateScan({
         workspaceRoot: projectRoot,
@@ -51,13 +56,23 @@ export function registerScanCommands(
         token,
       });
 
+      // DEBUG: log raw scan output
+      outputChannel.appendLine(`[Shipgate DEBUG] success=${out.success}, hasResult=${!!out.result}, error=${out.error ?? 'none'}`);
+      if (out.result) {
+        const r = out.result.result;
+        outputChannel.appendLine(`[Shipgate DEBUG] verdict=${r.verdict}, score=${r.score}, files=${r.files.length}, mode=${r.mode}`);
+      }
+      outputChannel.show(true);
+
       if (out.success && out.result) {
         state.lastResult = out.result;
         applyScanDiagnostics(diagnosticCollection, out.result, projectRoot);
         onScanComplete(out.result);
         const verdict = out.result.result.verdict;
+        const score = out.result.result.score;
         statusBar?.setVerdict(verdict, out.result.metadata.timestamp);
-        outputChannel.appendLine(`[Shipgate] Scan complete: ${verdict}`);
+        outputChannel.appendLine(`[Shipgate] Scan complete: ${verdict} score=${score}`);
+        vscode.window.showInformationMessage(`Shipgate: ${verdict} — Score: ${Math.round(score * 100)}%`);
       } else {
         const err = out.error || 'Unknown error';
         outputChannel.appendLine(`[Shipgate] Scan failed: ${err}`);

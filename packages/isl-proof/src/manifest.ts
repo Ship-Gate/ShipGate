@@ -15,6 +15,7 @@
 
 import * as crypto from 'crypto';
 import type { CoverageReport } from '@isl-lang/isl-coverage';
+import type { AIProvenance } from './provenance.js';
 
 // ============================================================================
 // Manifest Schema v2
@@ -747,8 +748,8 @@ export interface ProofBundleManifest {
   policyVersion: {
     /** Main policy bundle version */
     bundleVersion: string;
-    /** ISL Studio version */
-    islStudioVersion: string;
+    /** ShipGate version */
+    shipgateVersion: string;
     /** Individual pack versions */
     packs: RulepackVersion[];
   };
@@ -810,6 +811,9 @@ export interface ProofBundleManifest {
   
   /** Run metadata - environment and execution context */
   runMetadata?: RunMetadata;
+  
+  /** AI provenance - optional, vendor-agnostic (cursor/copilot/claude/etc) */
+  provenance?: AIProvenance;
   
   // ============================================================================
   // Original Fields

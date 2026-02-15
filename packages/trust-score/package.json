@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/trust-score",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Trust score computation from verification evidence - drives SHIP/NO-SHIP decisions",
   "type": "module",
   "main": "./dist/index.js",

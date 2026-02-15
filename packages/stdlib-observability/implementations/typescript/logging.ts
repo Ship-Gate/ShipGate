@@ -20,6 +20,7 @@ import {
   success,
   failure,
 } from './types';
+import { getCorrelationContext } from './correlation';
 
 export { LogLevel };
 export type { LogEntry, LogInput, LogOutput, LoggerConfig, LogExporter };
@@ -230,8 +231,8 @@ export class Logger {
   ) {
     this.config = { ...DEFAULT_LOGGER_CONFIG, ...config };
     this.exporters = config.exporters ?? (config.exporter ? [config.exporter] : [new ConsoleLogExporter()]);
-    this.bufferSize = config.bufferSize ?? 100;
-    this.flushInterval = config.flushInterval ?? 5000;
+    this.bufferSize = config.bufferSize ?? 1;
+    this.flushInterval = config.flushInterval ?? 0;
 
     if (this.flushInterval > 0) {
       this.flushTimer = setInterval(() => this.flush(), this.flushInterval);
@@ -264,9 +265,15 @@ export class Logger {
   }
 
   private createLogEntry(input: LogInput): LogEntry {
-    const context = getLogContext();
+    const logCtx = getLogContext();
+    const corrCtx = getCorrelationContext();
+    // Merge: explicit log context overrides correlation context
+    const traceId = logCtx.traceId ?? (corrCtx.traceId as string | undefined);
+    const spanId = logCtx.spanId ?? (corrCtx.spanId as string | undefined);
+    const correlationId = logCtx.correlationId ?? (corrCtx.correlationId as string | undefined);
+    const requestId = logCtx.requestId ?? (corrCtx.requestId as string | undefined);
 
-    return {
+    const entry: LogEntry = {
       id: generateUUID(),
       timestamp: new Date(),
       level: input.level,
@@ -274,22 +281,29 @@ export class Logger {
       service: this.config.service,
       environment: this.config.environment,
       host: this.config.host,
-      traceId: context.traceId,
-      spanId: context.spanId,
-      correlationId: context.correlationId,
-      requestId: context.requestId,
+      traceId,
+      spanId,
+      correlationId,
+      requestId,
       attributes: {
         ...this.config.defaultAttributes,
         ...input.attributes,
       },
       error: input.error
         ? {
-            type: input.error.name,
+            type: input.error.constructor.name,
             message: input.error.message,
             stackTrace: input.error.stack,
           }
         : undefined,
     };
+
+    // Copy extra correlation fields (userId, sessionId, etc.)
+    if (corrCtx.userId) entry.userId = corrCtx.userId as string;
+    if (corrCtx.sessionId) entry.sessionId = corrCtx.sessionId as string;
+    if (corrCtx.tenantId) entry.tenantId = corrCtx.tenantId as string;
+
+    return entry;
   }
 
   // ==========================================================================
@@ -326,10 +340,26 @@ export class Logger {
 
   async error(
     message: string,
-    error?: Error,
+    errorOrAttributes?: Error | Record<string, unknown>,
     attributes?: Record<string, unknown>
   ): Promise<Result<LogOutput>> {
-    return this.log({ level: LogLevel.ERROR, message, error, attributes });
+    let error: Error | undefined;
+    let attrs: Record<string, unknown> | undefined = attributes;
+
+    if (errorOrAttributes instanceof Error) {
+      error = errorOrAttributes;
+    } else if (errorOrAttributes && typeof errorOrAttributes === 'object') {
+      // Check if error is embedded in the attributes object
+      if ('error' in errorOrAttributes && errorOrAttributes.error instanceof Error) {
+        error = errorOrAttributes.error as Error;
+        const { error: _e, ...rest } = errorOrAttributes;
+        attrs = Object.keys(rest).length > 0 ? rest : attributes;
+      } else {
+        attrs = errorOrAttributes;
+      }
+    }
+
+    return this.log({ level: LogLevel.ERROR, message, error, attributes: attrs });
   }
 
   async fatal(
