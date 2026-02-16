@@ -333,6 +333,32 @@ export class ComplianceAnalyzer {
       }
     }
 
+    // EU AI Act indicators
+    if (domain.compliance?.eu_ai_act) {
+      for (const [key, value] of Object.entries(domain.compliance.eu_ai_act)) {
+        indicators.push({
+          framework: 'eu-ai-act',
+          indicator: key,
+          found: true,
+          source: 'compliance.eu_ai_act',
+          value: String(value),
+        });
+      }
+    }
+
+    // FedRAMP indicators
+    if (domain.compliance?.fedramp) {
+      for (const [key, value] of Object.entries(domain.compliance.fedramp)) {
+        indicators.push({
+          framework: 'fedramp',
+          indicator: key,
+          found: true,
+          source: 'compliance.fedramp',
+          value: String(value),
+        });
+      }
+    }
+
     // Check behavior-level compliance
     for (const behavior of domain.behaviors) {
       if (behavior.compliance) {

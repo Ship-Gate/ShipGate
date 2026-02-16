@@ -1,7 +1,7 @@
 {
   "name": "@isl-lang/compliance",
   "version": "0.1.1",
-  "description": "Generate compliance reports (SOC2, PCI-DSS, HIPAA, GDPR) from ISL specifications",
+  "description": "Generate compliance reports (SOC2, PCI-DSS, HIPAA, GDPR, EU AI Act, FedRAMP) from ISL specifications",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -29,6 +29,8 @@
     "pci-dss",
     "hipaa",
     "gdpr",
+    "eu-ai-act",
+    "fedramp",
     "isl"
   ],
   "author": "mevla",

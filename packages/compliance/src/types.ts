@@ -2,7 +2,7 @@
  * Types for compliance report generation
  */
 
-export type ComplianceFramework = 'pci-dss' | 'soc2' | 'hipaa' | 'gdpr';
+export type ComplianceFramework = 'pci-dss' | 'soc2' | 'hipaa' | 'gdpr' | 'eu-ai-act' | 'fedramp';
 
 export type ControlStatus = 'implemented' | 'partial' | 'not_implemented' | 'not_applicable';
 
@@ -87,6 +87,8 @@ export interface ComplianceSpec {
   soc2?: Record<string, string | string[]>;
   hipaa?: Record<string, string | string[]>;
   gdpr?: Record<string, string | string[]>;
+  eu_ai_act?: Record<string, string | string[]>;
+  fedramp?: Record<string, string | string[]>;
 }
 
 export interface BehaviorComplianceSpec {
