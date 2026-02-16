@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import stripe from 'stripe';
 import jwt from 'jsonwebtoken';
 
-const stripeClient = new stripe(process.env.STRIPE_SECRET_KEY!);
+function getStripeClient() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('STRIPE_SECRET_KEY is not set');
+  }
+  return new stripe(process.env.STRIPE_SECRET_KEY);
+}
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -17,6 +22,7 @@ export async function POST(request: NextRequest) {
     const { priceId, successUrl, cancelUrl } = body;
     
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const stripeClient = getStripeClient();
     
     const session = await stripeClient.checkout.sessions.create({
       mode: 'subscription',

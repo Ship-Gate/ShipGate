@@ -1,0 +1,10 @@
+{
+  "overall": 69,
+  "ghostRisk": 59,
+  "authCoverage": 48,
+  "envIntegrity": 62,
+  "runtimeProof": 41,
+  "contracts": 35,
+  "mockData": 55,
+  "lastUpdated": "2026-02-16T15:33:39.791Z"
+}

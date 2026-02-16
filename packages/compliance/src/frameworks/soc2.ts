@@ -298,7 +298,7 @@ export class SOC2Framework {
         if (mapping.type === 'behavior' && pattern.test(behavior.name)) {
           evidence.push({
             type: 'isl_spec',
-            source: `behavior ${behavior.name}`,
+            source: `behavior ${String(behavior.name)}`,
             content: mapping.description,
           });
         }
@@ -307,28 +307,28 @@ export class SOC2Framework {
           if (behavior.preconditions && pattern.test('precondition')) {
             evidence.push({
               type: 'isl_spec',
-              source: `${behavior.name}.preconditions`,
+              source: `${String(behavior.name)}.preconditions`,
               content: `${behavior.preconditions.length} preconditions defined`,
             });
           }
           if (behavior.postconditions && pattern.test('postcondition')) {
             evidence.push({
               type: 'isl_spec',
-              source: `${behavior.name}.postconditions`,
+              source: `${String(behavior.name)}.postconditions`,
               content: `${behavior.postconditions.length} postconditions defined`,
             });
           }
           if (behavior.observability && pattern.test('observability')) {
             evidence.push({
               type: 'isl_spec',
-              source: `${behavior.name}.observability`,
+              source: `${String(behavior.name)}.observability`,
               content: 'Observability spec defined',
             });
           }
           if (behavior.security?.rateLimit && pattern.test('rate')) {
             evidence.push({
               type: 'isl_spec',
-              source: `${behavior.name}.security.rateLimit`,
+              source: `${String(behavior.name)}.security.rateLimit`,
               content: `Rate limit: ${behavior.security.rateLimit.requests}/${behavior.security.rateLimit.window}`,
             });
           }

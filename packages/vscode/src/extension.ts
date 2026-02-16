@@ -12,9 +12,26 @@ let sidebarProvider: ShipGateSidebarProvider;
 let diagnostics: ShipGateDiagnostics;
 let statusBar: ShipGateStatusBar;
 let codeLens: ShipGateCodeLens;
+let extensionContext: vscode.ExtensionContext;
+
+function getCliCommand(): string {
+  const extensionPath = extensionContext.extensionUri.fsPath;
+  const cliPath = extensionPath.replace(/packages[\/\\]vscode/, 'packages/cli/dist/cli.cjs');
+  
+  // Check if CLI exists at the expected path
+  const fs = require('fs');
+  if (fs.existsSync(cliPath)) {
+    return `node "${cliPath}"`;
+  }
+  
+  // Fallback to npx
+  console.warn(`ShipGate CLI not found at ${cliPath}, falling back to npx`);
+  return 'npx shipgate';
+}
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('ShipGate extension activating...');
+  extensionContext = context;
 
   // Sidebar
   sidebarProvider = new ShipGateSidebarProvider(context.extensionUri, context);
@@ -89,10 +106,16 @@ async function runVerification(scope: 'full' | 'file', uri?: vscode.Uri) {
 
     const target = scope === 'file' && uri ? uri.fsPath : '.';
     
-    // Execute shipgate CLI
-    const { stdout } = await execAsync(`npx shipgate verify ${target} --json`, { 
+    // Execute shipgate CLI (handle exit codes properly)
+    const { stdout, stderr } = await execAsync(`${getCliCommand()} verify ${target} --json`, { 
       cwd, 
       timeout: 60000 
+    }).catch((err) => {
+      // CLI returns exit code 1 for NO_SHIP, but still outputs JSON
+      if (err.stdout) {
+        return { stdout: err.stdout, stderr: err.stderr || '' };
+      }
+      throw err;
     });
 
     const data = JSON.parse(stdout);
@@ -115,7 +138,7 @@ async function runVerification(scope: 'full' | 'file', uri?: vscode.Uri) {
 async function runInit() {
   const terminal = vscode.window.createTerminal('ShipGate Init');
   terminal.show();
-  terminal.sendText('npx shipgate init');
+  terminal.sendText(`${getCliCommand()} init`);
 }
 
 async function runShipCheck() {
@@ -126,7 +149,14 @@ async function runShipCheck() {
     const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     if (!cwd) throw new Error('No workspace folder found');
 
-    const { stdout } = await execAsync('npx shipgate ship --ci --json', { cwd, timeout: 120000 });
+    const { stdout } = await execAsync(`${getCliCommand()} ship --ci --json`, { cwd, timeout: 120000 })
+      .catch((err) => {
+        // CLI returns exit code 1 for NO_SHIP, but still outputs JSON
+        if (err.stdout) {
+          return { stdout: err.stdout, stderr: err.stderr || '' };
+        }
+        throw err;
+      });
     const data = JSON.parse(stdout);
     
     sidebarProvider.sendMessage({ type: 'results', data });
@@ -140,16 +170,16 @@ async function runShipCheck() {
 }
 
 async function runAutofix(scope: 'file' | 'all') {
-  const terminal = vscode.window.createTerminal('ShipGate Fix');
+  const terminal = vscode.window.createTerminal('ShipGate Heal');
   terminal.show();
   
   if (scope === 'file') {
     const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
     if (activeFile) {
-      terminal.sendText(`npx shipgate fix ${activeFile}`);
+      terminal.sendText(`${getCliCommand()} heal "${activeFile}"`);
     }
   } else {
-    terminal.sendText('npx shipgate fix --all');
+    terminal.sendText(`${getCliCommand()} heal .`);
   }
 }
 
@@ -176,7 +206,7 @@ async function viewProofBundle() {
 async function exportReport() {
   const terminal = vscode.window.createTerminal('ShipGate Export');
   terminal.show();
-  terminal.sendText('npx shipgate export --format pdf');
+  terminal.sendText(`${getCliCommand()} export --format pdf`);
 }
 
 async function showFindings() {

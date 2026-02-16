@@ -2680,6 +2680,35 @@ shipgateCommand
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Compliance SOC2 Command
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('compliance-soc2')
+  .description('Generate SOC2 compliance report from ISL spec')
+  .option('-s, --spec <file>', 'ISL spec file to analyze')
+  .option('-b, --bundle <path>', 'Proof bundle path')
+  .option('-e, --evidence <dir>', 'Evidence directory')
+  .option('-o, --output <dir>', 'Output directory for report')
+  .option('--json', 'Output as JSON')
+  .action(async (options) => {
+    const opts = program.opts();
+    const result = await complianceSOC2({
+      spec: options.spec,
+      bundle: options.bundle,
+      evidence: options.evidence,
+      output: options.output,
+      format: options.json || opts.format === 'json' ? 'json' : 'pretty',
+    });
+
+    printComplianceSOC2Result(result, {
+      format: options.json || opts.format === 'json' ? 'json' : 'pretty',
+    });
+
+    process.exit(getComplianceSOC2ExitCode(result));
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Unknown Command Handler
 // ─────────────────────────────────────────────────────────────────────────────
 

@@ -16,7 +16,7 @@ export class ShipGateCodeLens implements vscode.CodeLensProvider {
       const range = new vscode.Range(line, 0, line, 0);
 
       lenses.push(new vscode.CodeLens(range, {
-        title: `⚡ ShipGate: ${f.message}`,
+        title: `🚢 ShipGate: ${f.message}`,
         command: f.fixable ? 'shipgate.autofix' : '',
         tooltip: `${f.engine} — ${f.severity}`,
       }));

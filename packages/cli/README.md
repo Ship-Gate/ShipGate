@@ -1,10 +1,16 @@
-# Shipgate CLI
+# Shipgate CLI v2.1.0
 
-**ShipGate — Stop AI from shipping fake features. Define what your code should do. We enforce it.**
+[![npm version](https://badge.fury.io/js/shipgate.svg)](https://badge.fury.io/js/shipgate)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Downloads](https://img.shields.io/npm/dm/shipgate)](https://www.npmjs.com/package/shipgate)
 
-Command-line interface for ISL (Intent Specification Language).
+> **ShipGate — Stop AI from shipping fake features. Define what your code should do. We enforce it.**
 
-## Installation
+The Shipgate CLI is your command-line gateway to **Intent Specification Language (ISL)** — a formal language for specifying what your code *must* do. With ISL, you can define behavioral contracts, generate code, and verify that AI-generated implementations match your intentions.
+
+## 🚀 Quick Start
+
+### Installation
 
 ```bash
 # Install globally (recommended)
@@ -12,95 +18,130 @@ npm install -g shipgate
 
 # Or use npx (no installation required)
 npx shipgate <command>
+
+# Verify installation
+shipgate --version
 ```
 
-## Quick Start
+### Your First Project
 
 ```bash
-# Initialize in the current directory (no args)
-npx shipgate init
-
-# Create a new project directory and init inside it
-npx shipgate init my-project
-
-# Skip prompts (use defaults)
-npx shipgate init -y
-
-# Overwrite existing ShipGate files
-npx shipgate init --force
-
-# Parse and validate ISL files
-npx shipgate check specs/*.isl
-
-# Generate code from ISL specs
-npx shipgate generate --target typescript specs/
-
-# Verify implementation against spec
-npx shipgate verify specs/example.isl --impl ./src
-
-# Get help
-npx shipgate --help
-```
-
-## Commands
-
-### `shipgate init [name]`
-
-Initialize a new ISL project with recommended structure.
-
-```bash
-# Init in current directory (no args)
-npx shipgate init
-
-# Create ./my-api and init inside it
+# Initialize a new project
 npx shipgate init my-api
 cd my-api
 
+# Check the generated spec
+npx shipgate check src/*.isl
+
+# Generate TypeScript code
+npx shipgate generate --target typescript src/
+
+# Verify implementation
+npx shipgate verify src/my-api.isl --impl ./src
+```
+
+## 📋 Commands Overview
+
+| Command | Purpose | Key Features |
+|---------|---------|--------------|
+| `init` | Create new ISL project | Auto-configuration, templates |
+| `check` | Parse & validate ISL files | Type checking, syntax validation |
+| `generate` | Code from ISL specs | TypeScript, Python, Rust, Go, OpenAPI |
+| `verify` | Verify implementation | Behavioral verification, evidence |
+| `gate` | SHIP/NO-SHIP decision | CI integration, trust scoring |
+| `parse` | Inspect ISL AST | Debug specifications |
+| `repl` | Interactive ISL shell | Explore ISL interactively |
+
+## 🛠️ Detailed Command Reference
+
+### `shipgate init [name]`
+
+Initialize a new ISL project with recommended structure and configuration.
+
+```bash
+# Initialize in current directory
+npx shipgate init
+
+# Create new project directory
+npx shipgate init my-project
+cd my-project
+
 # Skip prompts (use defaults)
 npx shipgate init -y
 
-# Overwrite existing ShipGate files (isl.config.json, .shipgate.yml)
+# Overwrite existing config
 npx shipgate init --force
 ```
 
-Creates:
-- `isl.config.json` - Project configuration
-- `src/` - Directory for ISL specifications (with example `.isl` file)
-- `generated/` - Output directory for generated code
-- `package.json` - Node.js project file with scripts
+**Creates:**
+```
+my-project/
+├── src/
+│   └── my-project.isl     # Example specification
+├── generated/             # Code output directory
+├── isl.config.json        # Project configuration
+├── package.json           # Node.js project setup
+└── README.md              # Project documentation
+```
 
 ### `shipgate check <files...>`
 
-Parse and type-check ISL files.
+Parse and type-check ISL files with comprehensive error reporting.
 
 ```bash
-npx shipgate check specs/*.isl
-npx shipgate check --strict specs/
+# Check all ISL files
+npx shipgate check src/**/*.isl
+
+# Strict mode (warnings become errors)
+npx shipgate check --strict src/
+
+# JSON output for CI
+npx shipgate check --format json src/ > results.json
+
+# Quiet mode (minimal output)
+npx shipgate check --quiet src/
 ```
 
-Options:
+**Options:**
 - `--strict` - Enable strict mode (all warnings become errors)
-- `--format <format>` - Output format (pretty, json, quiet)
+- `--format <format>` - Output format: `pretty`, `json`, `quiet`
+- `--config <path>` - Custom config file path
+
+**Exit Codes:**
+- `0` - All checks passed
+- `1` - Errors found
 
 ### `shipgate generate <files...>`
 
-Generate code from ISL specifications.
+Generate production-ready code from ISL specifications.
 
 ```bash
 # Generate TypeScript
-npx shipgate generate --target typescript specs/
+npx shipgate generate --target typescript src/
 
-# Generate Python
-npx shipgate generate --target python --output src/generated specs/
+# Generate Python with custom output
+npx shipgate generate --target python --output src/generated src/
 
-# Generate OpenAPI
-npx shipgate generate --target openapi specs/api.isl
+# Generate OpenAPI spec
+npx shipgate generate --target openapi src/api.isl
+
+# Generate Rust types
+npx shipgate generate --target rust --output src/types src/
 ```
 
-Options:
-- `--target, -t` - Target language (typescript, python, rust, go, openapi, graphql)
-- `--output, -o` - Output directory
+**Supported Targets:**
+- `typescript` - TypeScript types and interfaces
+- `python` - Python dataclasses and type hints
+- `rust` - Rust structs and enums
+- `go` - Go structs and interfaces
+- `openapi` - OpenAPI 3.0 specifications
+- `graphql` - GraphQL schemas
+
+**Options:**
+- `--target, -t` - Target language (required)
+- `--output, -o` - Output directory (default: `generated/`)
 - `--config, -c` - Config file path
+- `--watch` - Watch for changes and regenerate
 
 ### `shipgate verify <files...>`
 

@@ -1,4 +1,7 @@
-export function getWebviewContent(): string {
+import * as vscode from 'vscode';
+
+export function getWebviewContent(vscodeUri: vscode.Uri): string {
+  const uri = vscodeUri.toString();
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -75,11 +78,10 @@ export function getWebviewContent(): string {
       width: 28px;
       height: 28px;
       border-radius: 6px;
-      background: linear-gradient(135deg, var(--ship), var(--accent));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
+      background-image: url('${uri}/media/shipgate-icon.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
     }
     
     .brand-text h1 {
@@ -441,7 +443,7 @@ export function getWebviewContent(): string {
           <div class="header">
             <div class="brand-bar">
               <div class="brand-left">
-                <div class="logo">⚡</div>
+                <div class="logo"></div>
                 <div class="brand-text">
                   <h1>ShipGate</h1>
                   <p>acme-api • main</p>
@@ -517,7 +519,7 @@ export function getWebviewContent(): string {
       function renderEmpty() {
         return \`
           <div class="empty-state">
-            <div class="logo">⚡</div>
+            <div class="logo"></div>
             <h2>Welcome to ShipGate</h2>
             <p>No .shipgate.yml found in this workspace.</p>
             <button class="btn btn-primary" data-command="init">Initialize Project</button>
@@ -529,7 +531,7 @@ export function getWebviewContent(): string {
       function renderScanning() {
         return \`
           <div class="empty-state">
-            <div class="logo">⚡</div>
+            <div class="logo"></div>
             <h2>Verifying...</h2>
             <p>Scanning 263 files for verification</p>
           </div>

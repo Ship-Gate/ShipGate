@@ -1,0 +1,36 @@
+---
+description: Authentication and authorization patterns
+globs: ["**/auth/**/*.ts", "**/middleware/**/*.ts"]
+alwaysApply: false
+priority: 95
+---
+
+# Authentication & Authorization
+
+## Verified Auth Rules
+- No auth rules detected yet
+
+## Security Requirements
+- NEVER commit secrets to code
+- ALWAYS validate authentication before accessing protected resources
+- Use environment variables for sensitive configuration
+- Implement proper session management
+
+## Protected Routes
+- All routes under `/api/admin/*` require authentication
+- Check authorization (roles/permissions) after authentication
+- Log security-relevant events
+
+## Common Middleware
+```typescript
+// Auth middleware pattern
+export async function authenticate(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+  // Verify token...
+}
+```
+
+---
+<!-- guardrail:auto-generated -->
+*Verified by Guardrail ✓*

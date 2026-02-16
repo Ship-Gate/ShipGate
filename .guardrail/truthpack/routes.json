@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-02-15T04:11:47.647Z",
+  "generatedAt": "2026-02-16T16:41:46.902Z",
   "routes": [
     {
       "path": "Profiler.enable",
@@ -880,24 +880,6 @@
       "middleware": []
     },
     {
-      "path": "entity",
-      "method": "GET",
-      "handler": "id",
-      "file": "packages\\codegen-runtime\\src\\expression-compiler.ts",
-      "line": 151,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "${entity}",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\codegen-runtime\\src\\expression-compiler.ts",
-      "line": 153,
-      "parameters": [],
-      "middleware": []
-    },
-    {
       "path": "/",
       "method": "GET",
       "handler": "response_model",
@@ -1025,6 +1007,24 @@
       "auth": {
         "required": true
       }
+    },
+    {
+      "path": "entity",
+      "method": "GET",
+      "handler": "id",
+      "file": "packages\\codegen-runtime\\src\\expression-compiler.ts",
+      "line": 151,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "${entity}",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\codegen-runtime\\src\\expression-compiler.ts",
+      "line": 153,
+      "parameters": [],
+      "middleware": []
     },
     {
       "path": "User",
@@ -2367,6 +2367,24 @@
       "middleware": []
     },
     {
+      "path": "*",
+      "method": "GET",
+      "handler": "allHandlers",
+      "file": "packages\\event-sourcing\\src\\event-bus.ts",
+      "line": 93,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "*",
+      "method": "GET",
+      "handler": "error",
+      "file": "packages\\event-sourcing\\src\\event-store.ts",
+      "line": 225,
+      "parameters": [],
+      "middleware": []
+    },
+    {
       "path": "nonexistent",
       "method": "GET",
       "handler": "anonymous",
@@ -2556,24 +2574,6 @@
       "middleware": []
     },
     {
-      "path": "*",
-      "method": "GET",
-      "handler": "allHandlers",
-      "file": "packages\\event-sourcing\\src\\event-bus.ts",
-      "line": 93,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "*",
-      "method": "GET",
-      "handler": "error",
-      "file": "packages\\event-sourcing\\src\\event-store.ts",
-      "line": 225,
-      "parameters": [],
-      "middleware": []
-    },
-    {
       "path": ":${behavior}",
       "method": "GET",
       "handler": "context",
@@ -2698,6 +2698,24 @@
       "middleware": []
     },
     {
+      "path": "Product",
+      "method": "GET",
+      "handler": "async",
+      "file": "packages\\inference\\tests\\inference.test.ts",
+      "line": 174,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "CreateOrder",
+      "method": "GET",
+      "handler": "async",
+      "file": "packages\\inference\\tests\\inference.test.ts",
+      "line": 224,
+      "parameters": [],
+      "middleware": []
+    },
+    {
       "path": "slow",
       "method": "GET",
       "handler": "async",
@@ -2743,22 +2761,16 @@
       "middleware": []
     },
     {
-      "path": "Product",
+      "path": "test-user",
       "method": "GET",
-      "handler": "async",
-      "file": "packages\\inference\\tests\\inference.test.ts",
-      "line": 174,
+      "handler": "anonymous",
+      "file": "packages\\isl-adapters\\tests\\auth-adapter.test.ts",
+      "line": 633,
       "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "CreateOrder",
-      "method": "GET",
-      "handler": "async",
-      "file": "packages\\inference\\tests\\inference.test.ts",
-      "line": 224,
-      "parameters": [],
-      "middleware": []
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
     },
     {
       "path": "x",
@@ -2804,18 +2816,6 @@
       "line": 151,
       "parameters": [],
       "middleware": []
-    },
-    {
-      "path": "test-user",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\isl-adapters\\tests\\auth-adapter.test.ts",
-      "line": 633,
-      "parameters": [],
-      "middleware": [],
-      "auth": {
-        "required": true
-      }
     },
     {
       "path": "/path",
@@ -2943,24 +2943,6 @@
       "auth": {
         "required": true
       }
-    },
-    {
-      "path": "/${kebabCase(behavior.name)}",
-      "method": "POST",
-      "handler": "async",
-      "file": "packages\\isl-generator\\src\\generator.ts",
-      "line": 207,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/${kebabCase(behavior.name)}",
-      "method": "POST",
-      "handler": "async",
-      "file": "packages\\isl-generator\\src\\generator.ts",
-      "line": 207,
-      "parameters": [],
-      "middleware": []
     },
     {
       "path": "Authorization",
@@ -3197,6 +3179,96 @@
       }
     },
     {
+      "path": "/${kebabCase(behavior.name)}",
+      "method": "POST",
+      "handler": "async",
+      "file": "packages\\isl-generator\\src\\generator.ts",
+      "line": 207,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/${kebabCase(behavior.name)}",
+      "method": "POST",
+      "handler": "async",
+      "file": "packages\\isl-generator\\src\\generator.ts",
+      "line": 207,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/",
+      "method": "POST",
+      "handler": "controller",
+      "file": "packages\\isl-pipeline\\src\\code-templates.ts",
+      "line": 26,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "hasAudit",
+      "file": "packages\\isl-pipeline\\src\\code-templates.ts",
+      "line": 99,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/",
+      "method": "POST",
+      "handler": "controller",
+      "file": "packages\\isl-pipeline\\src\\code-templates.ts",
+      "line": 26,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "reas",
+      "file": "packages\\isl-pipeline\\src\\fix-recipes.ts",
+      "line": 143,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "description",
+      "file": "packages\\isl-pipeline\\src\\fix-recipes.ts",
+      "line": 408,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "Idempotency-Key",
+      "method": "GET",
+      "handler": "position",
+      "file": "packages\\isl-pipeline\\src\\healer.ts",
+      "line": 395,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "Idempotency-Key",
+      "method": "GET",
+      "handler": "insertIdx",
+      "file": "packages\\isl-pipeline\\src\\self-healing.ts",
+      "line": 187,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\isl-pipeline\\src\\semantic-healer.ts",
+      "line": 110,
+      "parameters": [],
+      "middleware": []
+    },
+    {
       "path": "app/api/user-login/route.ts",
       "method": "GET",
       "handler": "anonymous",
@@ -3331,78 +3403,6 @@
       "middleware": [
         "auth"
       ]
-    },
-    {
-      "path": "/",
-      "method": "POST",
-      "handler": "controller",
-      "file": "packages\\isl-pipeline\\src\\code-templates.ts",
-      "line": 26,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "hasAudit",
-      "file": "packages\\isl-pipeline\\src\\code-templates.ts",
-      "line": 99,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/",
-      "method": "POST",
-      "handler": "controller",
-      "file": "packages\\isl-pipeline\\src\\code-templates.ts",
-      "line": 26,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "reas",
-      "file": "packages\\isl-pipeline\\src\\fix-recipes.ts",
-      "line": 143,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "description",
-      "file": "packages\\isl-pipeline\\src\\fix-recipes.ts",
-      "line": 408,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "Idempotency-Key",
-      "method": "GET",
-      "handler": "position",
-      "file": "packages\\isl-pipeline\\src\\healer.ts",
-      "line": 395,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "Idempotency-Key",
-      "method": "GET",
-      "handler": "insertIdx",
-      "file": "packages\\isl-pipeline\\src\\self-healing.ts",
-      "line": 187,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\isl-pipeline\\src\\semantic-healer.ts",
-      "line": 110,
-      "parameters": [],
-      "middleware": []
     },
     {
       "path": "/api/users",
@@ -3754,15 +3754,6 @@
       "middleware": []
     },
     {
-      "path": "__result__",
-      "method": "GET",
-      "handler": "resultSort",
-      "file": "packages\\isl-smt\\src\\encoder.ts",
-      "line": 525,
-      "parameters": [],
-      "middleware": []
-    },
-    {
       "path": "nonexistent-hash",
       "method": "GET",
       "handler": "anonymous",
@@ -3903,6 +3894,15 @@
       "handler": "constant",
       "file": "packages\\isl-smt\\tests\\encoder-features.test.ts",
       "line": 256,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "__result__",
+      "method": "GET",
+      "handler": "resultSort",
+      "file": "packages\\isl-smt\\src\\encoder.ts",
+      "line": 525,
       "parameters": [],
       "middleware": []
     },
@@ -4089,60 +4089,6 @@
       }
     },
     {
-      "path": "User",
-      "method": "GET",
-      "handler": "email",
-      "file": "packages\\mock-server\\tests\\server.test.ts",
-      "line": 127,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "User",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\mock-server\\tests\\server.test.ts",
-      "line": 134,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "User",
-      "method": "DELETE",
-      "handler": "anonymous",
-      "file": "packages\\mock-server\\tests\\server.test.ts",
-      "line": 152,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "User",
-      "method": "GET",
-      "handler": "name",
-      "file": "packages\\mock-server\\tests\\server.test.ts",
-      "line": 154,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "User",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\mock-server\\tests\\server.test.ts",
-      "line": 159,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "User",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\mock-server\\tests\\server.test.ts",
-      "line": 162,
-      "parameters": [],
-      "middleware": []
-    },
-    {
       "path": "${this.options.basePath}/health",
       "method": "GET",
       "handler": "res",
@@ -4292,6 +4238,60 @@
           "in": "path"
         }
       ],
+      "middleware": []
+    },
+    {
+      "path": "User",
+      "method": "GET",
+      "handler": "email",
+      "file": "packages\\mock-server\\tests\\server.test.ts",
+      "line": 127,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "User",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\mock-server\\tests\\server.test.ts",
+      "line": 134,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "User",
+      "method": "DELETE",
+      "handler": "anonymous",
+      "file": "packages\\mock-server\\tests\\server.test.ts",
+      "line": 152,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "User",
+      "method": "GET",
+      "handler": "name",
+      "file": "packages\\mock-server\\tests\\server.test.ts",
+      "line": 154,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "User",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\mock-server\\tests\\server.test.ts",
+      "line": 159,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "User",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\mock-server\\tests\\server.test.ts",
+      "line": 162,
+      "parameters": [],
       "middleware": []
     },
     {
@@ -5149,22 +5149,6 @@
       }
     },
     {
-      "path": "user:123",
-      "method": "GET",
-      "handler": "async",
-      "file": "packages\\stdlib-cache\\src\\index.ts",
-      "line": 21,
-      "parameters": [
-        {
-          "name": "123",
-          "type": "string",
-          "required": true,
-          "in": "path"
-        }
-      ],
-      "middleware": []
-    },
-    {
       "path": "secret",
       "method": "GET",
       "handler": "async",
@@ -5317,6 +5301,22 @@
       "file": "packages\\stdlib-cache\\tests\\hardened-cache.test.ts",
       "line": 435,
       "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "user:123",
+      "method": "GET",
+      "handler": "async",
+      "file": "packages\\stdlib-cache\\src\\index.ts",
+      "line": 21,
+      "parameters": [
+        {
+          "name": "123",
+          "type": "string",
+          "required": true,
+          "in": "path"
+        }
+      ],
       "middleware": []
     },
     {
@@ -5499,8 +5499,35 @@
       "path": "token",
       "method": "GET",
       "handler": "anonymous",
-      "file": "packages\\vscode\\src\\extension.ts",
+      "file": "packages\\vscode\\src\\extension-old.ts",
       "line": 444,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "scanOnSave",
+      "method": "GET",
+      "handler": "doc",
+      "file": "packages\\vscode\\src\\extension.ts",
+      "line": 88,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "watchMode",
+      "method": "GET",
+      "handler": "vscode",
+      "file": "packages\\vscode\\src\\extension.ts",
+      "line": 188,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "shipgate.lastResults",
+      "method": "GET",
+      "handler": "data",
+      "file": "packages\\vscode\\src\\sidebar-provider.ts",
+      "line": 22,
       "parameters": [],
       "middleware": []
     },
@@ -6217,24 +6244,6 @@
       "path": "x-request-id",
       "method": "GET",
       "handler": "anonymous",
-      "file": "dogfood-blog-output\\app\\api\\register-author\\route.ts",
-      "line": 94,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/api/unknown",
-      "method": "GET",
-      "handler": "POST",
-      "file": "dogfood-blog-output\\app\\api\\register-author\\route.ts",
-      "line": 1,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "anonymous",
       "file": "dogfood-blog-output\\app\\api\\search-posts\\route.ts",
       "line": 44,
       "parameters": [],
@@ -6268,60 +6277,21 @@
       "middleware": []
     },
     {
-      "path": "/users",
-      "method": "POST",
-      "handler": "res",
-      "file": "samples\\tutorials\\rest-api\\src\\server.ts",
-      "line": 25,
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "dogfood-blog-output\\app\\api\\register-author\\route.ts",
+      "line": 94,
       "parameters": [],
       "middleware": []
     },
     {
-      "path": "/users/:id",
+      "path": "/api/unknown",
       "method": "GET",
-      "handler": "res",
-      "file": "samples\\tutorials\\rest-api\\src\\server.ts",
-      "line": 51,
-      "parameters": [
-        {
-          "name": "id",
-          "type": "string",
-          "required": true,
-          "in": "path"
-        }
-      ],
-      "middleware": []
-    },
-    {
-      "path": "/users/:id",
-      "method": "PUT",
-      "handler": "res",
-      "file": "samples\\tutorials\\rest-api\\src\\server.ts",
-      "line": 60,
-      "parameters": [
-        {
-          "name": "id",
-          "type": "string",
-          "required": true,
-          "in": "path"
-        }
-      ],
-      "middleware": []
-    },
-    {
-      "path": "/users/:id",
-      "method": "DELETE",
-      "handler": "res",
-      "file": "samples\\tutorials\\rest-api\\src\\server.ts",
-      "line": 85,
-      "parameters": [
-        {
-          "name": "id",
-          "type": "string",
-          "required": true,
-          "in": "path"
-        }
-      ],
+      "handler": "POST",
+      "file": "dogfood-blog-output\\app\\api\\register-author\\route.ts",
+      "line": 1,
+      "parameters": [],
       "middleware": []
     },
     {
@@ -7403,83 +7373,83 @@
       }
     },
     {
-      "path": "/",
-      "method": "GET",
-      "handler": "this",
-      "file": "packages\\health-check\\src\\generators\\express.ts",
-      "line": 162,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/live",
-      "method": "GET",
-      "handler": "this",
-      "file": "packages\\health-check\\src\\generators\\express.ts",
-      "line": 163,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/ready",
-      "method": "GET",
-      "handler": "this",
-      "file": "packages\\health-check\\src\\generators\\express.ts",
-      "line": 164,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/check/${check.name}",
-      "method": "GET",
-      "handler": "this",
-      "file": "packages\\health-check\\src\\generators\\express.ts",
-      "line": 168,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/",
-      "method": "GET",
-      "handler": "this",
-      "file": "packages\\health-check\\src\\generators\\express.ts",
-      "line": 162,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/live",
-      "method": "GET",
-      "handler": "this",
-      "file": "packages\\health-check\\src\\generators\\express.ts",
-      "line": 163,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/ready",
-      "method": "GET",
-      "handler": "this",
-      "file": "packages\\health-check\\src\\generators\\express.ts",
-      "line": 164,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/check/${check.name}",
-      "method": "GET",
-      "handler": "this",
-      "file": "packages\\health-check\\src\\generators\\express.ts",
-      "line": 168,
-      "parameters": [],
-      "middleware": []
-    },
-    {
       "path": ") || func.body.includes(",
       "method": "DELETE",
       "handler": "target",
       "file": "packages\\inference\\src\\extractors\\functions.ts",
       "line": 270,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/",
+      "method": "GET",
+      "handler": "this",
+      "file": "packages\\health-check\\src\\generators\\express.ts",
+      "line": 162,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/live",
+      "method": "GET",
+      "handler": "this",
+      "file": "packages\\health-check\\src\\generators\\express.ts",
+      "line": 163,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/ready",
+      "method": "GET",
+      "handler": "this",
+      "file": "packages\\health-check\\src\\generators\\express.ts",
+      "line": 164,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/check/${check.name}",
+      "method": "GET",
+      "handler": "this",
+      "file": "packages\\health-check\\src\\generators\\express.ts",
+      "line": 168,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/",
+      "method": "GET",
+      "handler": "this",
+      "file": "packages\\health-check\\src\\generators\\express.ts",
+      "line": 162,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/live",
+      "method": "GET",
+      "handler": "this",
+      "file": "packages\\health-check\\src\\generators\\express.ts",
+      "line": 163,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/ready",
+      "method": "GET",
+      "handler": "this",
+      "file": "packages\\health-check\\src\\generators\\express.ts",
+      "line": 164,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/check/${check.name}",
+      "method": "GET",
+      "handler": "this",
+      "file": "packages\\health-check\\src\\generators\\express.ts",
+      "line": 168,
       "parameters": [],
       "middleware": []
     },
@@ -7736,24 +7706,6 @@
       "middleware": []
     },
     {
-      "path": "id",
-      "method": "GET",
-      "handler": "expectedHealedCode",
-      "file": "packages\\isl-healer\\tests\\fixtures\\heal-test-fixtures.ts",
-      "line": 184,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "id",
-      "method": "GET",
-      "handler": "10",
-      "file": "packages\\isl-healer\\tests\\fixtures\\heal-test-fixtures.ts",
-      "line": 191,
-      "parameters": [],
-      "middleware": []
-    },
-    {
       "path": "x-request-id",
       "method": "GET",
       "handler": "anonymous",
@@ -7772,6 +7724,24 @@
       "middleware": []
     },
     {
+      "path": "id",
+      "method": "GET",
+      "handler": "expectedHealedCode",
+      "file": "packages\\isl-healer\\tests\\fixtures\\heal-test-fixtures.ts",
+      "line": 184,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "id",
+      "method": "GET",
+      "handler": "10",
+      "file": "packages\\isl-healer\\tests\\fixtures\\heal-test-fixtures.ts",
+      "line": 191,
+      "parameters": [],
+      "middleware": []
+    },
+    {
       "path": "x-forwarded-for",
       "method": "GET",
       "handler": "resetAt",
@@ -7786,87 +7756,6 @@
       "handler": "resetAt",
       "file": "packages\\isl-pipeline\\dogfood-todo-output\\lib\\rate-limit.ts",
       "line": 12,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
-      "line": 17,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
-      "line": 49,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
-      "line": 85,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
-      "line": 120,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "requestId",
-      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
-      "line": 157,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "success",
-      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
-      "line": 203,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "success",
-      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
-      "line": 246,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
-      "line": 292,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "anonymous",
-      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
-      "line": 343,
       "parameters": [],
       "middleware": []
     },
@@ -7958,6 +7847,87 @@
       "handler": "retryAfter",
       "file": "packages\\isl-pipeline\\src\\adapters\\nextjs-app-router.ts",
       "line": 483,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
+      "line": 17,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
+      "line": 49,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
+      "line": 85,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
+      "line": 120,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "requestId",
+      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
+      "line": 157,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "success",
+      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
+      "line": 203,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "success",
+      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
+      "line": 246,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
+      "line": 292,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\isl-pipeline\\tests\\fixtures\\failing-handlers.ts",
+      "line": 343,
       "parameters": [],
       "middleware": []
     },
@@ -8659,6 +8629,15 @@
       "middleware": []
     },
     {
+      "path": "*",
+      "method": "GET",
+      "handler": "event",
+      "file": "packages\\stdlib-workflow\\implementations\\typescript\\events.ts",
+      "line": 106,
+      "parameters": [],
+      "middleware": []
+    },
+    {
       "path": "category",
       "method": "GET",
       "handler": "anonymous",
@@ -8709,15 +8688,6 @@
       "handler": "anonymous",
       "file": "packages\\stdlib-search\\src\\tests\\scoring.test.ts",
       "line": 69,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "*",
-      "method": "GET",
-      "handler": "event",
-      "file": "packages\\stdlib-workflow\\implementations\\typescript\\events.ts",
-      "line": 106,
       "parameters": [],
       "middleware": []
     },
@@ -8829,6 +8799,63 @@
       "file": "packages\\vscode\\src\\__tests__\\extension-commands.test.ts",
       "line": 247,
       "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/users",
+      "method": "POST",
+      "handler": "res",
+      "file": "samples\\tutorials\\rest-api\\src\\server.ts",
+      "line": 25,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/users/:id",
+      "method": "GET",
+      "handler": "res",
+      "file": "samples\\tutorials\\rest-api\\src\\server.ts",
+      "line": 51,
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "in": "path"
+        }
+      ],
+      "middleware": []
+    },
+    {
+      "path": "/users/:id",
+      "method": "PUT",
+      "handler": "res",
+      "file": "samples\\tutorials\\rest-api\\src\\server.ts",
+      "line": 60,
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "in": "path"
+        }
+      ],
+      "middleware": []
+    },
+    {
+      "path": "/users/:id",
+      "method": "DELETE",
+      "handler": "res",
+      "file": "samples\\tutorials\\rest-api\\src\\server.ts",
+      "line": 85,
+      "parameters": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "in": "path"
+        }
+      ],
       "middleware": []
     },
     {
@@ -9448,7 +9475,7 @@
       "path": "/api/unknown",
       "method": "GET",
       "handler": "GET",
-      "file": "packages\\dashboard-web\\src\\app\\api\\logout\\route.ts",
+      "file": "packages\\dashboard-web\\src\\app\\api\\health\\route.ts",
       "line": 1,
       "parameters": [],
       "middleware": []
@@ -9483,6 +9510,15 @@
       "method": "GET",
       "handler": "POST",
       "file": "packages\\dashboard-web\\src\\app\\api\\login\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "GET",
+      "file": "packages\\dashboard-web\\src\\app\\api\\logout\\route.ts",
       "line": 1,
       "parameters": [],
       "middleware": []
@@ -9779,6 +9815,106 @@
       "middleware": []
     },
     {
+      "path": "redirect",
+      "method": "GET",
+      "handler": "production",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\github\\route.ts",
+      "line": 5,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "GET",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\github\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "redirect",
+      "method": "GET",
+      "handler": "production",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\google\\route.ts",
+      "line": 5,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "GET",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\google\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "authorization",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\checkout\\route.ts",
+      "line": 13,
+      "parameters": [],
+      "middleware": [
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "POST",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\checkout\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "authorization",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\dashboard-web\\src\\app\\api\\user\\profile\\route.ts",
+      "line": 5,
+      "parameters": [],
+      "middleware": [
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "GET",
+      "file": "packages\\dashboard-web\\src\\app\\api\\user\\profile\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "stripe-signature",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts",
+      "line": 14,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "POST",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
       "path": "/api/login",
       "method": "POST",
       "handler": "async",
@@ -10008,7 +10144,7 @@
       "path": "/api/unknown",
       "method": "GET",
       "handler": "POST",
-      "file": "templates\\auth-golden\\src\\app\\api\\auth\\register\\route.ts",
+      "file": "templates\\auth-golden\\src\\app\\api\\auth\\refresh\\route.ts",
       "line": 1,
       "parameters": [],
       "middleware": []
@@ -10017,7 +10153,7 @@
       "path": "/api/unknown",
       "method": "GET",
       "handler": "POST",
-      "file": "templates\\auth-golden\\src\\app\\api\\auth\\refresh\\route.ts",
+      "file": "templates\\auth-golden\\src\\app\\api\\auth\\register\\route.ts",
       "line": 1,
       "parameters": [],
       "middleware": []
@@ -10032,19 +10168,67 @@
       "middleware": []
     },
     {
-      "path": "x-request-id",
+      "path": "code",
       "method": "GET",
       "handler": "anonymous",
-      "file": "packages\\isl-pipeline\\packages\\isl-pipeline\\dogfood-todo-v2\\app\\api\\create-todo\\route.ts",
-      "line": 73,
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\github\\callback\\route.ts",
+      "line": 6,
       "parameters": [],
-      "middleware": []
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "state",
+      "method": "GET",
+      "handler": "headers",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\github\\callback\\route.ts",
+      "line": 7,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
     },
     {
       "path": "/api/unknown",
       "method": "GET",
-      "handler": "POST",
-      "file": "packages\\isl-pipeline\\packages\\isl-pipeline\\dogfood-todo-v2\\app\\api\\create-todo\\route.ts",
+      "handler": "GET",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\github\\callback\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "code",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\google\\callback\\route.ts",
+      "line": 6,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "state",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\google\\callback\\route.ts",
+      "line": 7,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "GET",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\google\\callback\\route.ts",
       "line": 1,
       "parameters": [],
       "middleware": []
@@ -10063,6 +10247,24 @@
       "method": "GET",
       "handler": "POST",
       "file": "packages\\isl-pipeline\\packages\\isl-pipeline\\dogfood-todo-v2\\app\\api\\delete-todo\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\isl-pipeline\\packages\\isl-pipeline\\dogfood-todo-v2\\app\\api\\create-todo\\route.ts",
+      "line": 73,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "POST",
+      "file": "packages\\isl-pipeline\\packages\\isl-pipeline\\dogfood-todo-v2\\app\\api\\create-todo\\route.ts",
       "line": 1,
       "parameters": [],
       "middleware": []
@@ -10107,24 +10309,6 @@
       "path": "x-request-id",
       "method": "GET",
       "handler": "anonymous",
-      "file": "packages\\isl-pipeline\\packages\\isl-pipeline\\dogfood-todo-v2\\app\\api\\reorder-todos\\route.ts",
-      "line": 70,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "/api/unknown",
-      "method": "GET",
-      "handler": "POST",
-      "file": "packages\\isl-pipeline\\packages\\isl-pipeline\\dogfood-todo-v2\\app\\api\\reorder-todos\\route.ts",
-      "line": 1,
-      "parameters": [],
-      "middleware": []
-    },
-    {
-      "path": "x-request-id",
-      "method": "GET",
-      "handler": "anonymous",
       "file": "packages\\isl-pipeline\\packages\\isl-pipeline\\dogfood-todo-v2\\app\\api\\update-todo\\route.ts",
       "line": 83,
       "parameters": [],
@@ -10135,6 +10319,24 @@
       "method": "GET",
       "handler": "POST",
       "file": "packages\\isl-pipeline\\packages\\isl-pipeline\\dogfood-todo-v2\\app\\api\\update-todo\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "x-request-id",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "packages\\isl-pipeline\\packages\\isl-pipeline\\dogfood-todo-v2\\app\\api\\reorder-todos\\route.ts",
+      "line": 70,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "POST",
+      "file": "packages\\isl-pipeline\\packages\\isl-pipeline\\dogfood-todo-v2\\app\\api\\reorder-todos\\route.ts",
       "line": 1,
       "parameters": [],
       "middleware": []

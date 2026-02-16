@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "conventions": [
+    {
+      "category": "naming",
+      "rules": [
+        "Use kebab-case for file names",
+        "Use .test.ts suffix for test files"
+      ]
+    },
+    {
+      "category": "imports",
+      "rules": [
+        "Use @/ alias for src directory imports"
+      ]
+    }
+  ]
+}

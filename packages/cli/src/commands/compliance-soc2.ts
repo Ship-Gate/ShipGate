@@ -9,8 +9,8 @@
  *   shipgate compliance soc2 --evidence <dir>
  */
 
-import { existsSync, readFileSync } from 'fs';
-import { resolve } from 'path';
+import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs';
+import { resolve, dirname } from 'path';
 import chalk from 'chalk';
 import {
   evaluateSOC2,
@@ -20,16 +20,24 @@ import {
 import type { ProofBundleV1 } from '@isl-lang/proof';
 import { isJsonOutput } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
+import { SOC2Framework } from '@isl-lang/compliance/dist/frameworks/soc2.js';
+import { parse as parseISL } from '@isl-lang/parser';
+import { AuditTrailGenerator } from '@isl-lang/compliance/dist/audit-trail.js';
+import { createHash } from 'crypto';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface ComplianceSOC2Options {
+  /** ISL spec file to analyze directly */
+  spec?: string;
   /** Proof bundle path (proof-bundle.json or directory containing it) */
   bundle?: string;
   /** Evidence directory (results.json, manifest.json) */
   evidence?: string;
+  /** Output directory for compliance report */
+  output?: string;
   /** Output format */
   format?: 'pretty' | 'json';
 }
@@ -51,13 +59,18 @@ export async function complianceSOC2(
 ): Promise<ComplianceSOC2Result> {
   const errors: string[] = [];
 
-  if (!options.bundle && !options.evidence) {
+  if (!options.bundle && !options.evidence && !options.spec) {
     return {
       success: false,
       controls: [],
       summary: { total: 0, pass: 0, warn: 0, fail: 0 },
-      errors: ['Specify --bundle or --evidence'],
+      errors: ['Specify --spec, --bundle, or --evidence'],
     };
+  }
+
+  // Handle ISL spec directly
+  if (options.spec) {
+    return analyzeISLSpec(options);
   }
 
   let verdicts: Array<{ phase: string; verdict: string; score?: number; details?: Record<string, unknown>; timestamp?: string }> = [];
@@ -322,4 +335,109 @@ export function getComplianceSOC2ExitCode(result: ComplianceSOC2Result): number 
   const { summary } = result;
   if (summary.fail > 0) return ExitCode.ISL_ERROR;
   return ExitCode.SUCCESS;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ISL Spec Analysis
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function analyzeISLSpec(options: ComplianceSOC2Options): Promise<ComplianceSOC2Result> {
+  const errors: string[] = [];
+  
+  if (!options.spec) {
+    return {
+      success: false,
+      controls: [],
+      summary: { total: 0, pass: 0, warn: 0, fail: 0 },
+      errors: ['No spec file provided'],
+    };
+  }
+
+  const specPath = resolve(options.spec);
+  if (!existsSync(specPath)) {
+    return {
+      success: false,
+      controls: [],
+      summary: { total: 0, pass: 0, warn: 0, fail: 0 },
+      errors: [`ISL spec not found: ${options.spec}`],
+    };
+  }
+
+  try {
+    // Parse ISL spec
+    const specContent = readFileSync(specPath, 'utf-8');
+    const parseResult = parseISL(specContent);
+    
+    if (parseResult.errors.length > 0) {
+      return {
+        success: false,
+        controls: [],
+        summary: { total: 0, pass: 0, warn: 0, fail: 0 },
+        errors: parseResult.errors.map(e => `Parse error: ${e.message}`),
+      };
+    }
+
+    // Map to SOC2 controls
+    const soc2Framework = new SOC2Framework();
+    const controlMappings = soc2Framework.mapDomain(parseResult.domain);
+
+    // Convert to SOC2ControlMapping format
+    const controls: SOC2ControlMapping[] = controlMappings.map((mapping: any) => ({
+      controlId: mapping.controlId,
+      controlName: mapping.controlName,
+      description: mapping.description,
+      status: mapping.status === 'implemented' ? 'pass' : mapping.status === 'partial' ? 'warn' : 'fail',
+      contributingChecks: mapping.evidence.map((e: any, i: number) => ({
+        checkId: `evidence-${i}`,
+        passed: true,
+        description: e.source || e.content || 'ISL construct found',
+      })),
+      evidenceRefs: mapping.evidence.map((e: any, i: number) => ({
+        type: e.type || 'isl_spec',
+        ref: e.source || String(e.content || '').slice(0, 50),
+      })),
+    }));
+
+    const summary = {
+      total: controls.length,
+      pass: controls.filter(c => c.status === 'pass').length,
+      warn: controls.filter(c => c.status === 'warn').length,
+      fail: controls.filter(c => c.status === 'fail').length,
+    };
+
+    // Save report if output specified
+    if (options.output) {
+      const outputDir = resolve(options.output);
+      if (!existsSync(outputDir)) {
+        mkdirSync(outputDir, { recursive: true });
+      }
+      
+      const report = {
+        framework: 'SOC2',
+        timestamp: new Date().toISOString(),
+        spec: options.spec,
+        summary,
+        controls,
+      };
+      
+      writeFileSync(
+        resolve(outputDir, 'soc2-compliance-report.json'),
+        JSON.stringify(report, null, 2)
+      );
+    }
+
+    return {
+      success: true,
+      controls,
+      summary,
+    };
+
+  } catch (err) {
+    return {
+      success: false,
+      controls: [],
+      summary: { total: 0, pass: 0, warn: 0, fail: 0 },
+      errors: [`Failed to analyze ISL spec: ${err instanceof Error ? err.message : String(err)}`],
+    };
+  }
 }

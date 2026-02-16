@@ -16,7 +16,7 @@ export class ShipGateSidebarProvider implements vscode.WebviewViewProvider {
       enableScripts: true, 
       localResourceRoots: [this._extensionUri] 
     };
-    webviewView.webview.html = getWebviewContent();
+    webviewView.webview.html = getWebviewContent(this._extensionUri);
 
     // Restore last state
     const lastState = this._context.workspaceState.get('shipgate.lastResults');

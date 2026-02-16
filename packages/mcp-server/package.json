@@ -1,6 +1,6 @@
 {
   "name": "@isl-lang/mcp-server",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "MCP (Model Context Protocol) server exposing ISL tools for AI assistants",
   "type": "module",
   "main": "./dist/index.js",

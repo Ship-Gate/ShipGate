@@ -3,7 +3,7 @@
   "private": true,
   "displayName": "Shipgate — Behavioral Verification",
   "description": "Behavioral verification for AI-generated code. Write intent specs, catch violations before they ship.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "publisher": "shipgate",
   "license": "MIT",
   "author": "Shipgate Team",
@@ -52,7 +52,7 @@
       "activitybar": [{
         "id": "shipgate",
         "title": "ShipGate",
-        "icon": "media/shipgate-icon.svg"
+        "icon": "media/shipgate-icon.png"
       }]
     },
     "views": {
@@ -125,13 +125,13 @@
       },
       {
         "command": "shipgate.autofix",
-        "title": "ShipGate: Auto-fix Current File",
+        "title": "ShipGate: Heal Current File",
         "category": "ShipGate",
         "icon": "$(wrench)"
       },
       {
         "command": "shipgate.autofixAll",
-        "title": "ShipGate: Auto-fix All Findings",
+        "title": "ShipGate: Heal All Findings",
         "category": "ShipGate",
         "icon": "$(wand)"
       },

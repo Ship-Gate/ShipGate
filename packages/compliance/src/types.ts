@@ -40,6 +40,7 @@ export interface BehaviorDefinition {
   security?: SecuritySpec;
   observability?: ObservabilitySpec;
   compliance?: BehaviorComplianceSpec;
+  annotations?: string[];
 }
 
 export interface ConditionDefinition {
@@ -118,13 +119,17 @@ export interface ControlMapping {
   evidence: ComplianceEvidence[];
   notes?: string;
   risk?: RiskLevel;
+  category?: string;
+  islMappings?: ISLMapping[];
 }
 
 export interface ComplianceEvidence {
-  type: 'isl_spec' | 'verification' | 'configuration' | 'documentation';
+  type: 'isl_spec' | 'verification' | 'configuration' | 'documentation' | 'entity' | 'behavior' | 'annotation';
   source: string;
   content: string;
   timestamp?: string;
+  confidence?: number;
+  description?: string;
 }
 
 export interface ComplianceGap {
@@ -184,7 +189,7 @@ export interface FrameworkControl {
 }
 
 export interface ISLMapping {
-  type: 'annotation' | 'spec' | 'behavior' | 'type' | 'field';
+  type: 'annotation' | 'spec' | 'behavior' | 'type' | 'field' | 'entity' | 'actor';
   pattern: string | RegExp;
   description: string;
 }
