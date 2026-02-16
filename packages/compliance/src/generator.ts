@@ -21,6 +21,8 @@ import { PCIDSSFramework } from './frameworks/pci';
 import { SOC2Framework } from './frameworks/soc2';
 import { HIPAAFramework } from './frameworks/hipaa';
 import { GDPRFramework } from './frameworks/gdpr';
+import { EUAIActFramework } from './frameworks/eu-ai-act';
+import { FedRAMPFramework } from './frameworks/fedramp';
 import { EvidenceCollector } from './evidence';
 import { ComplianceAnalyzer } from './analyzer';
 
@@ -29,6 +31,8 @@ const FRAMEWORK_VERSIONS: Record<ComplianceFramework, string> = {
   'soc2': '2017',
   'hipaa': 'Security Rule',
   'gdpr': '2016/679',
+  'eu-ai-act': '2024/1689',
+  'fedramp': 'Rev 5',
 };
 
 export class ComplianceGenerator {
@@ -78,6 +82,10 @@ export class ComplianceGenerator {
         return new HIPAAFramework().mapDomain(this.domain);
       case 'gdpr':
         return new GDPRFramework().mapDomain(this.domain);
+      case 'eu-ai-act':
+        return new EUAIActFramework().mapDomain(this.domain);
+      case 'fedramp':
+        return new FedRAMPFramework().mapDomain(this.domain);
       default:
         throw new Error(`Unknown framework: ${framework}`);
     }
@@ -354,11 +362,12 @@ The ${this.domain.name} domain has been analyzed for ${frameworkName} v${FRAMEWO
       case 'soc2': return 'SOC2';
       case 'hipaa': return 'HIPAA';
       case 'gdpr': return 'GDPR';
+      case 'eu-ai-act': return 'EU AI Act';
+      case 'fedramp': return 'FedRAMP';
     }
   }
 
   private getControlCategory(controlId: string, framework: ComplianceFramework): string {
-    // This is simplified - in production, would look up from framework
     if (framework === 'pci-dss') {
       const reqNum = parseInt(controlId.split('.')[0], 10);
       const categories: Record<number, string> = {
@@ -372,6 +381,38 @@ The ${this.domain.name} domain has been analyzed for ${frameworkName} v${FRAMEWO
       };
       return categories[reqNum] || 'Other';
     }
+
+    if (framework === 'fedramp') {
+      const family = controlId.split('-')[0];
+      const families: Record<string, string> = {
+        AC: 'Access Control',
+        AU: 'Audit and Accountability',
+        CA: 'Assessment and Authorization',
+        CM: 'Configuration Management',
+        IA: 'Identification and Authentication',
+        IR: 'Incident Response',
+        RA: 'Risk Assessment',
+        SA: 'System Acquisition',
+        SC: 'System and Communications',
+        SI: 'System Integrity',
+      };
+      return families[family] || 'Other';
+    }
+
+    if (framework === 'eu-ai-act') {
+      const artNum = parseInt(controlId.replace('Art.', '').split('(')[0], 10);
+      if (artNum === 9) return 'Risk Management';
+      if (artNum === 10) return 'Data Governance';
+      if (artNum === 11) return 'Technical Documentation';
+      if (artNum === 12) return 'Record-Keeping';
+      if (artNum === 13) return 'Transparency';
+      if (artNum === 14) return 'Human Oversight';
+      if (artNum === 15) return 'Accuracy & Robustness';
+      if (artNum === 17) return 'Quality Management';
+      if (artNum === 50) return 'Transparency Obligations';
+      return 'Other';
+    }
+
     return 'General';
   }
 

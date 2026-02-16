@@ -1,10 +1,12 @@
 import * as vscode from 'vscode';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import { ShipGateSidebarProvider } from './sidebar-provider';
 import { ShipGateDiagnostics } from './diagnostics';
 import { ShipGateCodeLens } from './codelens';
 import { ShipGateStatusBar } from './statusbar';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { runShipgateScan, resolveShipgateExecutable } from './cli/shipgateRunner';
+import type { ScanResult, FileFinding } from './model/types';
 
 const execAsync = promisify(exec);
 
@@ -50,10 +52,10 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.languages.registerCodeLensProvider(
       [
-        { language: 'typescript' }, 
-        { language: 'typescriptreact' }, 
-        { language: 'javascript' }, 
-        { language: 'javascriptreact' }, 
+        { language: 'typescript' },
+        { language: 'typescriptreact' },
+        { language: 'javascript' },
+        { language: 'javascriptreact' },
         { language: 'python' }
       ],
       codeLens
@@ -94,6 +96,34 @@ export function activate(context: vscode.ExtensionContext) {
   console.log('ShipGate extension activated');
 }
 
+function fileFindingsToFindings(files: FileFinding[], cwd: string) {
+  const findings: Array<{ file: string; line: number; message: string; severity: string; engine: string; fixable: boolean }> = [];
+  for (const f of files) {
+    if (f.status === 'PASS') continue;
+    for (const blocker of f.blockers) {
+      findings.push({
+        file: f.file,
+        line: 1,
+        message: blocker,
+        severity: f.status === 'FAIL' ? 'error' : 'warning',
+        engine: f.mode || 'shipgate',
+        fixable: false,
+      });
+    }
+    for (const error of f.errors) {
+      findings.push({
+        file: f.file,
+        line: 1,
+        message: error,
+        severity: 'error',
+        engine: f.mode || 'shipgate',
+        fixable: false,
+      });
+    }
+  }
+  return findings;
+}
+
 async function runVerification(scope: 'full' | 'file', uri?: vscode.Uri) {
   statusBar.setScanning();
   sidebarProvider.sendMessage({ type: 'scanning', scope });
@@ -104,7 +134,7 @@ async function runVerification(scope: 'full' | 'file', uri?: vscode.Uri) {
       throw new Error('No workspace folder found');
     }
 
-    const target = scope === 'file' && uri ? uri.fsPath : '.';
+const target = scope === 'file' && uri ? uri.fsPath : '.';
     
     // Execute shipgate CLI (handle exit codes properly)
     const { stdout, stderr } = await execAsync(`${getCliCommand()} verify ${target} --json`, { 
@@ -118,15 +148,22 @@ async function runVerification(scope: 'full' | 'file', uri?: vscode.Uri) {
       throw err;
     });
 
-    const data = JSON.parse(stdout);
-    sidebarProvider.sendMessage({ type: 'results', data });
-    
-    if (data.findings) {
-      diagnostics.update(data.findings, cwd);
-      codeLens.updateFindings(data.findings);
-    }
-    
-    statusBar.setVerdict(data.verdict || 'SHIP', data.score || 100);
+    // Parse JSON output
+    const result = JSON.parse(stdout);
+
+    // Send results to sidebar
+    sidebarProvider.sendMessage({ type: 'results', data: result });
+
+    // Update diagnostics and codelens with findings
+    const findings = fileFindingsToFindings(result.files, cwd);
+    diagnostics.update(findings, cwd);
+    codeLens.updateFindings(findings);
+
+    // Update status bar
+    statusBar.setVerdict(result.verdict, result.score);
+
+    // Fire-and-forget: POST result to dashboard API
+    postToDashboard(result, cwd);
   } catch (err: any) {
     const errorMsg = err.message || 'Verification failed';
     sidebarProvider.sendMessage({ type: 'error', message: errorMsg });
@@ -136,9 +173,16 @@ async function runVerification(scope: 'full' | 'file', uri?: vscode.Uri) {
 }
 
 async function runInit() {
+  const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  if (!cwd) return;
+
+  const config = vscode.workspace.getConfiguration('shipgate');
+  const customPath = config.get<string>('scan.executablePath');
+  const { executable } = await resolveShipgateExecutable(cwd, customPath);
+
   const terminal = vscode.window.createTerminal('ShipGate Init');
   terminal.show();
-  terminal.sendText(`${getCliCommand()} init`);
+terminal.sendText(`${getCliCommand()} init`);
 }
 
 async function runShipCheck() {
@@ -149,7 +193,7 @@ async function runShipCheck() {
     const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     if (!cwd) throw new Error('No workspace folder found');
 
-    const { stdout } = await execAsync(`${getCliCommand()} ship --ci --json`, { cwd, timeout: 120000 })
+const { stdout } = await execAsync(`${getCliCommand()} ship --ci --json`, { cwd, timeout: 120000 })
       .catch((err) => {
         // CLI returns exit code 1 for NO_SHIP, but still outputs JSON
         if (err.stdout) {
@@ -170,13 +214,13 @@ async function runShipCheck() {
 }
 
 async function runAutofix(scope: 'file' | 'all') {
-  const terminal = vscode.window.createTerminal('ShipGate Heal');
+const terminal = vscode.window.createTerminal('ShipGate Heal');
   terminal.show();
-  
+
   if (scope === 'file') {
     const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
     if (activeFile) {
-      terminal.sendText(`${getCliCommand()} heal "${activeFile}"`);
+terminal.sendText(`${getCliCommand()} heal "${activeFile}"`);
     }
   } else {
     terminal.sendText(`${getCliCommand()} heal .`);
@@ -193,7 +237,7 @@ async function toggleWatch() {
 async function viewProofBundle() {
   const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   if (!cwd) return;
-  
+
   const bundlePath = vscode.Uri.file(`${cwd}/.shipgate/proof-bundle.json`);
   try {
     const doc = await vscode.workspace.openTextDocument(bundlePath);
@@ -204,9 +248,16 @@ async function viewProofBundle() {
 }
 
 async function exportReport() {
+  const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  if (!cwd) return;
+
+  const config = vscode.workspace.getConfiguration('shipgate');
+  const customPath = config.get<string>('scan.executablePath');
+  const { executable } = await resolveShipgateExecutable(cwd, customPath);
+
   const terminal = vscode.window.createTerminal('ShipGate Export');
   terminal.show();
-  terminal.sendText(`${getCliCommand()} export --format pdf`);
+terminal.sendText(`${getCliCommand()} export --format pdf`);
 }
 
 async function showFindings() {
@@ -216,6 +267,45 @@ async function showFindings() {
 async function clearFindings() {
   diagnostics.update([], '');
   vscode.window.showInformationMessage('ShipGate findings cleared');
+}
+
+/** Fire-and-forget POST of scan results to the dashboard API. */
+function postToDashboard(scanResult: ScanResult, cwd: string): void {
+  const config = vscode.workspace.getConfiguration('shipgate');
+  const dashboardUrl = config.get<string>('dashboardApiUrl', 'http://localhost:3700');
+  const { result } = scanResult;
+
+  const body = JSON.stringify({
+    repo: cwd.split(/[\\/]/).pop() || 'unknown',
+    branch: 'main',
+    commit: 'local',
+    verdict: result.verdict,
+    score: result.score,
+    coverage: {
+      specced: result.coverage.specced,
+      total: result.coverage.total,
+      percentage: result.coverage.total > 0
+        ? Math.round((result.coverage.specced / result.coverage.total) * 100)
+        : 0,
+    },
+    files: result.files.map(f => ({
+      path: f.file,
+      verdict: f.status.toLowerCase() as 'pass' | 'warn' | 'fail',
+      method: (f.mode === 'isl' ? 'isl' : 'specless') as 'isl' | 'specless',
+      score: f.score,
+      violations: [...f.blockers, ...f.errors],
+    })),
+    duration: result.duration,
+    triggeredBy: 'vscode' as const,
+  });
+
+  fetch(`${dashboardUrl}/api/v1/reports`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  }).catch(() => {
+    // Silently ignore dashboard reporting failures
+  });
 }
 
 export function deactivate() {

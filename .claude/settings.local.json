@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --filter @isl-lang/vscode build:*)",
+      "Bash(pnpm --filter @isl-lang/dashboard-api build:*)",
+      "Bash(pnpm --filter @isl-lang/dashboard-web build)",
+      "Bash(pnpm install)",
+      "Bash(pnpm --filter shipgate-isl build:*)"
+    ]
+  }
+}
