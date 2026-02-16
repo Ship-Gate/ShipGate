@@ -74,7 +74,7 @@ export interface DashboardStats {
   trustScoreHistory: { date: string; score: number }[]
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api/v1'
 
 class ApiClient {
   private baseUrl: string

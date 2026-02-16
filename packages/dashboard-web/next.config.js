@@ -25,6 +25,15 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
   },
+  // Proxy API calls to dashboard-api in development
+  async rewrites() {
+    return [
+      {
+        source: '/api/v1/:path*',
+        destination: 'http://localhost:3700/api/v1/:path*',
+      },
+    ];
+  },
   // Security headers
   async headers() {
     return [

@@ -13,6 +13,7 @@ import { reportsRouter } from './routes/reports.js';
 import { proofBundlesRouter } from './routes/proof-bundles.js';
 import { coverageRouter } from './routes/coverage.js';
 import { trendsRouter, driftRouter } from './routes/trends.js';
+import { dashboardRouter } from './routes/dashboard.js';
 import { errorHandler, notFoundHandler } from './middleware/error.js';
 import { securityHeaders } from './middleware/security.js';
 import { ensureAuditSchema } from './audit/schema.js';
@@ -190,6 +191,7 @@ export function createApp(options: CreateAppOptions): Express {
   app.use('/api/v1/drift', driftRouter(queries));
   app.use('/api/v1/audit', auditRouter(auditQueries));
   app.use('/api/v1/backbone', backboneRouter(bbQueries));
+  app.use('/api/v1', dashboardRouter(queries));
 
   // ── Error handling ───────────────────────────────────────────────────
   app.use(notFoundHandler);

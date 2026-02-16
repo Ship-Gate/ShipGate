@@ -1,4 +1,4 @@
-// File: C:\Users\mevla\OneDrive\Desktop\projects\IntentOS\packages\dashboard-web\src\app\dashboard\verifications\[id]\page.tsx
+// File: C:\Users\mevla\OneDrive\Desktop\projects\IntentOS\.claude\worktrees\focused-dubinsky\packages\dashboard-web\src\app\dashboard\verifications\[id]\page.tsx
 import * as entry from '../../../../../../src/app/dashboard/verifications/[id]/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
