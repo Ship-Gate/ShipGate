@@ -317,6 +317,10 @@ export class EvidenceCollector {
         return ['[phi]', '[health]', '[medical]', '[sensitive]', '[encrypted]'];
       case 'gdpr':
         return ['[personal_data]', '[pii]', '[sensitive]', '[consent]'];
+      case 'eu-ai-act':
+        return ['[ai_generated]', '[training_data]', '[sensitive]', '[biometric]'];
+      case 'fedramp':
+        return ['[sensitive]', '[secret]', '[cui]', '[fouo]', '[pii]'];
       default:
         return ['[sensitive]', '[secret]'];
     }

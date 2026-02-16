@@ -401,16 +401,13 @@ export class PCIDSSFramework {
       return 'not_implemented';
     }
 
-    const requiredMappings = control.islMappings.length;
-    const foundMappings = new Set(evidence.map(e => e.type)).size;
+    const uniqueSources = new Set(evidence.map(e => e.source.split('.')[0]));
 
-    if (foundMappings >= requiredMappings) {
+    if (uniqueSources.size >= 2 || evidence.length >= control.islMappings.length) {
       return 'implemented';
-    } else if (foundMappings > 0) {
-      return 'partial';
     }
 
-    return 'not_implemented';
+    return 'partial';
   }
 
   private assessRisk(status: ControlStatus, control: FrameworkControl): RiskLevel {
