@@ -44,3 +44,9 @@ packages/cli/*.tgz
 .vibecheck/screenshots/
 .vibecheck/scan-results.json
 .vibecheck/context-engine-ledger.json
+
+# Claude Code worktrees
+.claude/worktrees/
+
+# Local Netlify folder
+.netlify
