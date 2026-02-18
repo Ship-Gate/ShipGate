@@ -25,8 +25,9 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
   },
-  // Proxy API calls to dashboard-api in development
+  // Proxy API calls to dashboard-api in development only
   async rewrites() {
+    if (process.env.NODE_ENV === 'production') return [];
     return [
       {
         source: '/api/v1/:path*',
