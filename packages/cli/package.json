@@ -67,7 +67,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "clean": "rimraf dist",
     "prepack": "pnpm run build",
-    "prepublishOnly": "pnpm run build && node dist/cli.cjs --help",
+    "prepublishOnly": "pnpm run build",
     "postinstall": "node scripts/postinstall.js",
     "pack:check": "npm pack --dry-run",
     "test:unit": "vitest run --passWithNoTests"

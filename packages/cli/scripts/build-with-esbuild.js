@@ -78,7 +78,7 @@ const buildOptions = {
     '@isl-lang/codegen-graphql',
     'chromium-bidi',
     'playwright-core',
-    // OpenTelemetry packages - mark as external to avoid ESM/CJS interop issues
+    // OpenTelemetry packages - circular deps prevent bundling, installed as runtime deps
     '@opentelemetry/api',
     '@opentelemetry/resources',
     '@opentelemetry/sdk-trace-base',
