@@ -111,7 +111,7 @@
     "verify:repro": "pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck && pnpm test",
     "test:tutorials": "npx tsx scripts/test-tutorials.ts",
     "stub:inventory": "npx tsx scripts/stub-inventory.ts",
-    "prepare": "node -e \"try{require('husky')}catch(e){process.exit(0)}\" && husky"
+    "prepare": "husky || true"
   },
   "keywords": [
     "isl",
