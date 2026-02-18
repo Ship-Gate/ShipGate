@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get('state');
   
   try {
-    const backendUrl = process.env.RAILWAY_PUBLIC_DOMAIN || `${process.env.RAILWAY_SERVICE_NAME}.up.railway.app`;
+    const baseUrl = process.env.FRONTEND_URL || new URL(request.url).origin;
     
     // Exchange code for access token
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         client_secret: process.env.GOOGLE_CLIENT_SECRET!,
         code: code!,
         grant_type: 'authorization_code',
-        redirect_uri: `https://${backendUrl}/api/auth/google/callback`,
+        redirect_uri: `${baseUrl}/api/auth/google/callback`,
       }),
     });
     

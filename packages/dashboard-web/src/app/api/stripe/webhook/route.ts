@@ -11,7 +11,7 @@ function getStripeClient() {
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
-  const sig = headers().get('stripe-signature') as string;
+  const sig = (await headers()).get('stripe-signature') as string;
   
   if (!sig) {
     return NextResponse.json({ error: 'No signature' }, { status: 400 });
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const stripeClient = getStripeClient();
     event = stripeClient.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (err) {
-    console.log(`Webhook signature verification failed.`, err.message);
+    console.log(`Webhook signature verification failed.`, (err as Error).message);
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
   

@@ -4,10 +4,8 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const redirect = searchParams.get('redirect');
   
-  // Use localhost for development, production URL for deployment
-  const baseUrl = process.env.NODE_ENV === 'production' 
-    ? 'https://shipgate-backend.vercel.app'
-    : 'http://localhost:3000';
+  const baseUrl = process.env.FRONTEND_URL
+    || new URL(request.url).origin;
   
   const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
     `client_id=${process.env.GOOGLE_CLIENT_ID}&` +
