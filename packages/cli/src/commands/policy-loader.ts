@@ -10,6 +10,8 @@ import { resolve, join } from 'path';
 import { parse as parseYaml } from 'yaml';
 import type { PolicyConfig, PolicyException, EvidenceRequirement } from './policy-schema.js';
 import { DEFAULT_POLICY_CONFIG } from './policy-schema.js';
+// @ts-ignore - minimatch v3 lacks type definitions
+import { Minimatch } from 'minimatch';
 
 export interface LoadedPolicy {
   /** The loaded policy config */
@@ -20,9 +22,14 @@ export interface LoadedPolicy {
   isDefault: boolean;
 }
 
-export interface PolicyValidationError {
-  field: string;
-  message: string;
+export class PolicyValidationError extends Error {
+  validationErrors: Array<{ field: string; message: string }>;
+  
+  constructor(message: string, errors: Array<{ field: string; message: string }>) {
+    super(message);
+    this.name = 'PolicyValidationError';
+    this.validationErrors = errors;
+  }
 }
 
 /**
@@ -84,7 +91,7 @@ export async function loadPolicyFile(filePath: string): Promise<PolicyConfig> {
  * Validate and merge policy config with defaults
  */
 function validateAndMerge(partial: Partial<PolicyConfig>): PolicyConfig {
-  const errors: PolicyValidationError[] = [];
+  const errors: Array<{ field: string; message: string }> = [];
 
   // Validate version
   if (partial.version !== undefined && partial.version !== 1) {
@@ -96,10 +103,11 @@ function validateAndMerge(partial: Partial<PolicyConfig>): PolicyConfig {
 
   // Validate profiles
   const profiles = partial.profiles ?? {};
+  const defaultProfiles = DEFAULT_POLICY_CONFIG.profiles as any;
   const mergedProfiles = {
-    strict: { ...DEFAULT_POLICY_CONFIG.profiles.strict, ...profiles.strict },
-    standard: { ...DEFAULT_POLICY_CONFIG.profiles.standard, ...profiles.standard },
-    lenient: { ...DEFAULT_POLICY_CONFIG.profiles.lenient, ...profiles.lenient },
+    strict: { ...defaultProfiles.strict, ...(profiles as any).strict },
+    standard: { ...defaultProfiles.standard, ...(profiles as any).standard },
+    lenient: { ...defaultProfiles.lenient, ...(profiles as any).lenient },
   };
 
   // Validate threshold ranges
@@ -277,15 +285,3 @@ export async function matchesExceptionScope(
   return false;
 }
 
-/**
- * Custom error class for policy validation errors
- */
-export class PolicyValidationError extends Error {
-  constructor(
-    message: string,
-    public readonly validationErrors: PolicyValidationError[],
-  ) {
-    super(message);
-    this.name = 'PolicyValidationError';
-  }
-}

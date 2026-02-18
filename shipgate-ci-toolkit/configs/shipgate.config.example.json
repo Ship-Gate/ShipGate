@@ -1,0 +1,29 @@
+{
+  "$schema": "https://shipgate.dev/schemas/shipgate-config.schema.json",
+  "version": "1.0",
+  "preset": "baseline",
+  "threshold": 95,
+  "specs": [
+    "specs/**/*.isl"
+  ],
+  "impl": "src",
+  "output": {
+    "json": ".shipgate/last-report.json",
+    "format": "json"
+  },
+  "gates": {
+    "behavioral": { "enabled": true, "weight": 0.50 },
+    "auth":        { "enabled": true, "weight": 0.20 },
+    "placeholder": { "enabled": true, "weight": 0.15 },
+    "env":         { "enabled": true, "weight": 0.15 }
+  },
+  "policy": {
+    "profile": "standard",
+    "policyFile": ".shipgate/policy.json"
+  },
+  "ci": {
+    "failOnWarn": false,
+    "jsonToStdout": true,
+    "annotateGitHub": true
+  }
+}

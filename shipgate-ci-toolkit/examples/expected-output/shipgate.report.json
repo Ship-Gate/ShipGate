@@ -1,0 +1,80 @@
+{
+  "verdict": "PASS",
+  "score": 97,
+  "confidence": 88,
+  "summary": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "blockerCount": 0,
+    "warnCount": 0,
+    "bySeverity": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "info": 0
+    }
+  },
+  "gates": [
+    {
+      "id": "behavioral",
+      "name": "Behavioral Verification",
+      "status": "pass",
+      "weight": 0.5,
+      "findingsCount": 0,
+      "score": 97,
+      "duration": 1204,
+      "message": "9/9 scenarios passed. All pre/postconditions verified."
+    },
+    {
+      "id": "auth",
+      "name": "Auth Gate",
+      "status": "pass",
+      "weight": 0.2,
+      "findingsCount": 0,
+      "score": 100,
+      "duration": 38,
+      "message": "GetUser route requires authentication. No bypass patterns detected."
+    },
+    {
+      "id": "placeholder",
+      "name": "Placeholder Detection",
+      "status": "pass",
+      "weight": 0.15,
+      "findingsCount": 0,
+      "score": 100,
+      "duration": 21,
+      "message": "No stubs, TODO comments, or hardcoded responses detected."
+    },
+    {
+      "id": "env",
+      "name": "Env Leak Gate",
+      "status": "pass",
+      "weight": 0.15,
+      "findingsCount": 0,
+      "score": 100,
+      "duration": 15,
+      "message": "No hardcoded secrets or API keys detected."
+    }
+  ],
+  "findings": [],
+  "metadata": {
+    "toolVersion": "1.0.0",
+    "preset": "baseline",
+    "threshold": 90,
+    "timestamp": "2026-01-15T14:32:11Z",
+    "durationMs": 1842,
+    "specFile": "specs/user-service.isl",
+    "implPath": "src",
+    "fingerprint": "a3f8c12d90e4b567",
+    "specHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "implHash": "d8e8fca2dc0f896fd7cb4cb0031ba249abcd66a86fd6b3b7b5bec1f0e1e9d7a2",
+    "git": {
+      "commit": "abc1234",
+      "branch": "main",
+      "dirty": false
+    }
+  }
+}

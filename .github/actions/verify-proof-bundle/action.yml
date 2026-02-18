@@ -1,0 +1,229 @@
+name: 'ISL Verify - Proof Bundle'
+description: 'Run ISL verification with tiered proof bundles and post results as PR comments'
+author: 'ISL Team'
+
+inputs:
+  tier:
+    description: 'Verification tier (1, 2, or 3)'
+    required: false
+    default: '1'
+  
+  spec:
+    description: 'Path to ISL spec file'
+    required: false
+    default: ''
+  
+  require-proven:
+    description: 'Comma-separated list of properties that must be PROVEN to pass'
+    required: false
+    default: 'import-integrity,auth-coverage,secret-exposure'
+  
+  min-trust-score:
+    description: 'Minimum trust score to pass (0-100)'
+    required: false
+    default: '70'
+  
+  upload-bundle:
+    description: 'Upload proof bundle as artifact'
+    required: false
+    default: 'true'
+  
+  post-comment:
+    description: 'Post proof bundle summary as PR comment'
+    required: false
+    default: 'true'
+  
+  github-token:
+    description: 'GitHub token for posting comments'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  verdict:
+    description: 'Verification verdict (PROVEN, INCOMPLETE_PROOF, FAILED)'
+    value: ${{ steps.verify.outputs.verdict }}
+  
+  score:
+    description: 'Trust score (0-100)'
+    value: ${{ steps.verify.outputs.score }}
+  
+  bundle-path:
+    description: 'Path to proof bundle JSON file'
+    value: ${{ steps.verify.outputs.bundle-path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Install dependencies
+      shell: bash
+      run: |
+        npm install -g @isl-lang/cli
+    
+    - name: Run ISL Verify
+      id: verify
+      shell: bash
+      run: |
+        set +e
+        
+        # Determine tier flags
+        TIER_FLAG=""
+        if [ "${{ inputs.tier }}" = "2" ]; then
+          TIER_FLAG="--runtime"
+        elif [ "${{ inputs.tier }}" = "3" ]; then
+          TIER_FLAG="--deep"
+        fi
+        
+        # Run verification
+        SPEC_FLAG=""
+        if [ -n "${{ inputs.spec }}" ]; then
+          SPEC_FLAG="--spec ${{ inputs.spec }}"
+        fi
+        
+        isl verify $TIER_FLAG $SPEC_FLAG --format json --output proof-bundle.json
+        EXIT_CODE=$?
+        
+        # Parse results
+        VERDICT=$(jq -r '.verdict' proof-bundle.json)
+        SCORE=$(jq -r '.score' proof-bundle.json)
+        
+        echo "verdict=$VERDICT" >> $GITHUB_OUTPUT
+        echo "score=$SCORE" >> $GITHUB_OUTPUT
+        echo "bundle-path=proof-bundle.json" >> $GITHUB_OUTPUT
+        echo "exit-code=$EXIT_CODE" >> $GITHUB_OUTPUT
+    
+    - name: Check required properties
+      if: inputs.require-proven != ''
+      shell: bash
+      run: |
+        # Parse required properties
+        IFS=',' read -ra REQUIRED <<< "${{ inputs.require-proven }}"
+        
+        # Check each required property
+        MISSING=""
+        for prop in "${REQUIRED[@]}"; do
+          STATUS=$(jq -r ".tier1.properties[] | select(.name == \"$prop\") | .status" proof-bundle.json)
+          if [ "$STATUS" != "PROVEN" ]; then
+            MISSING="$MISSING $prop"
+          fi
+        done
+        
+        if [ -n "$MISSING" ]; then
+          echo "❌ Required properties not PROVEN:$MISSING"
+          exit 1
+        fi
+    
+    - name: Check minimum trust score
+      shell: bash
+      run: |
+        SCORE=${{ steps.verify.outputs.score }}
+        MIN_SCORE=${{ inputs.min-trust-score }}
+        
+        if [ "$SCORE" -lt "$MIN_SCORE" ]; then
+          echo "❌ Trust score $SCORE below minimum $MIN_SCORE"
+          exit 1
+        fi
+    
+    - name: Upload proof bundle
+      if: inputs.upload-bundle == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: proof-bundle-${{ github.sha }}
+        path: proof-bundle.json
+        retention-days: 90
+    
+    - name: Generate markdown summary
+      if: inputs.post-comment == 'true'
+      shell: bash
+      run: |
+        isl bundle show proof-bundle.json --format markdown > proof-bundle.md
+    
+    - name: Post PR comment
+      if: inputs.post-comment == 'true' && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const fs = require('fs');
+          const bundle = JSON.parse(fs.readFileSync('proof-bundle.json', 'utf8'));
+          const markdown = fs.readFileSync('proof-bundle.md', 'utf8');
+          
+          // Check for existing comment
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          
+          const botComment = comments.find(comment => 
+            comment.user.type === 'Bot' && 
+            comment.body.includes('ISL Verify — Proof Bundle')
+          );
+          
+          const commentBody = markdown + '\n\n' +
+            `Bundle: [Download proof-bundle.json](../actions/runs/${context.runId})\n` +
+            `Commit: ${context.sha.substring(0, 7)}`;
+          
+          if (botComment) {
+            // Update existing comment
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: commentBody,
+            });
+          } else {
+            // Create new comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: commentBody,
+            });
+          }
+    
+    - name: Compare with base
+      if: github.event_name == 'pull_request'
+      shell: bash
+      continue-on-error: true
+      run: |
+        # Download base branch bundle if available
+        BASE_SHA="${{ github.event.pull_request.base.sha }}"
+        
+        # Try to download from artifacts
+        gh run list --branch ${{ github.event.pull_request.base.ref }} \
+          --limit 1 --json databaseId --jq '.[0].databaseId' > base_run_id.txt
+        
+        if [ -s base_run_id.txt ]; then
+          BASE_RUN_ID=$(cat base_run_id.txt)
+          gh run download $BASE_RUN_ID -n proof-bundle-${BASE_SHA} -D base-bundle || true
+          
+          if [ -f base-bundle/proof-bundle.json ]; then
+            isl bundle diff base-bundle/proof-bundle.json proof-bundle.json > bundle-diff.txt
+            cat bundle-diff.txt >> $GITHUB_STEP_SUMMARY
+          fi
+        fi
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+    
+    - name: Set job status
+      shell: bash
+      run: |
+        EXIT_CODE=${{ steps.verify.outputs.exit-code }}
+        
+        if [ "$EXIT_CODE" = "0" ]; then
+          echo "✅ Verification PROVEN"
+        elif [ "$EXIT_CODE" = "2" ]; then
+          echo "⚠️ Verification INCOMPLETE"
+        else
+          echo "❌ Verification FAILED"
+          exit 1
+        fi
+
+branding:
+  icon: 'shield'
+  color: 'blue'

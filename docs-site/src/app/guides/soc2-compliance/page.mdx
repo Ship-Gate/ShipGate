@@ -1,0 +1,206 @@
+export const metadata = {
+  title: 'SOC 2 Compliance Reports - ISL Verify',
+  description: 'Generate audit-ready compliance reports',
+}
+
+# SOC 2 Compliance Reports
+
+Map ISL Verify properties to SOC 2 Trust Service Criteria and generate audit-ready reports.
+
+---
+
+## Quick Start
+
+```bash
+npx @isl-lang/isl-verify . --proof-bundle --compliance soc2
+```
+
+Generates `.isl-verify/soc2-report.json` mapping properties to SOC 2 controls.
+
+---
+
+## Property → Control Mapping
+
+| ISL Property | SOC 2 Control | Trust Service |
+|--------------|---------------|---------------|
+| auth-coverage | CC6.1 | Common Criteria - Logical Access |
+| sql-injection | CC7.1, CC7.2 | System Operations - Security |
+| secret-exposure | CC6.1, CC7.2 | Logical Access, Data Security |
+| error-handling | CC7.2 | System Operations |
+| type-safety | CC8.1 | Change Management |
+| runtime-auth-blocking | CC6.1 | Logical Access |
+
+---
+
+## Generated Report Structure
+
+```json
+{
+  "reportDate": "2024-02-17T16:27:00.000Z",
+  "organization": "My Company Inc.",
+  "scope": "User authentication and data access systems",
+  "controls": [
+    {
+      "control": "CC6.1",
+      "title": "Logical and Physical Access Controls",
+      "description": "The entity implements logical access security software...",
+      "evidence": {
+        "property": "auth-coverage",
+        "status": "PROVEN",
+        "summary": "All 8 protected routes have auth checks",
+        "confidence": "definitive",
+        "testDate": "2024-02-17T16:27:00.000Z"
+      },
+      "compliance": "COMPLIANT"
+    }
+  ],
+  "summary": {
+    "totalControls": 8,
+    "compliant": 6,
+    "partialCompliant": 1,
+    "nonCompliant": 1
+  }
+}
+```
+
+---
+
+## Customize Mapping
+
+Create `.isl-verify-soc2.json`:
+
+```json
+{
+  "organization": "My Company Inc.",
+  "scope": "User authentication and payment processing",
+  "customMappings": {
+    "auth-coverage": ["CC6.1", "CC6.2"],
+    "sql-injection": ["CC7.1", "CC7.2", "CC7.3"],
+    "custom-payment-validation": ["CC6.7"]
+  },
+  "excludeControls": ["CC5.1"],
+  "additionalEvidence": {
+    "CC9.1": "Annual penetration testing by third party (see report)"
+  }
+}
+```
+
+---
+
+## Export for Auditors
+
+### Markdown Report
+
+```bash
+npx @isl-lang/isl-verify . --compliance soc2 --format markdown > soc2-report.md
+```
+
+### PDF (via HTML)
+
+```bash
+npx @isl-lang/isl-verify . --compliance soc2 --format html > soc2-report.html
+# Convert to PDF with headless Chrome or wkhtmltopdf
+```
+
+### Excel
+
+```bash
+npx @isl-lang/isl-verify . --compliance soc2 --format excel
+```
+
+---
+
+## Continuous Compliance
+
+### Daily Scans
+
+```yaml
+# .github/workflows/compliance.yml
+name: Daily Compliance Scan
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Midnight daily
+  workflow_dispatch:
+
+jobs:
+  compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx @isl-lang/isl-verify . --compliance soc2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: soc2-report-${{ github.run_number }}
+          path: .isl-verify/soc2-report.*
+          retention-days: 365
+```
+
+### Compliance Dashboard
+
+Track compliance over time:
+
+```typescript
+import { generateComplianceReport } from '@isl-lang/isl-verify'
+
+const report = await generateComplianceReport(bundle, {
+  framework: 'soc2',
+  organization: 'My Company',
+})
+
+// Store in database for trend analysis
+await db.complianceReports.create({
+  data: {
+    date: new Date(),
+    compliantControls: report.summary.compliant,
+    totalControls: report.summary.totalControls,
+    report: JSON.stringify(report),
+  },
+})
+```
+
+---
+
+## Other Frameworks
+
+ISL Verify supports multiple compliance frameworks:
+
+```bash
+# ISO 27001
+npx @isl-lang/isl-verify . --compliance iso27001
+
+# PCI DSS
+npx @isl-lang/isl-verify . --compliance pci
+
+# HIPAA
+npx @isl-lang/isl-verify . --compliance hipaa
+```
+
+---
+
+## Audit Trail
+
+Every proof bundle includes:
+
+- **Timestamp** — When verification ran
+- **Commit SHA** — Exact code version
+- **File hashes** — SHA-256 of every file
+- **Signature** — HMAC proof of authenticity
+
+This provides a complete audit trail for compliance reviews.
+
+---
+
+## Next Steps
+
+<div className="grid gap-4 mt-6">
+  <a href="/guides/ci-integration" className="block p-4 border rounded-lg hover:bg-accent transition">
+    <div className="font-semibold">CI/CD Integration</div>
+    <div className="text-sm text-muted-foreground">Automate compliance scanning</div>
+  </a>
+  
+  <a href="/specification" className="block p-4 border rounded-lg hover:bg-accent transition">
+    <div className="font-semibold">Proof Bundle Specification</div>
+    <div className="text-sm text-muted-foreground">Technical details for auditors</div>
+  </a>
+</div>

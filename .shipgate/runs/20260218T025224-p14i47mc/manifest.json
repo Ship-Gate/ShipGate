@@ -1,0 +1,115 @@
+{
+  "verdict": "NO_SHIP",
+  "score": 0,
+  "filesChecked": 2,
+  "violations": [
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @next/bundle-analyzer cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\next.config.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/:path* is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\next.config.js"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: ANALYZE is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\next.config.js"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @next/bundle-analyzer cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\next.config.js"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: react cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\page.tsx"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: framer-motion cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\page.tsx"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: lucide-react cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\page.tsx"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/components/ui/button cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\page.tsx"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/stripe/checkout is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\page.tsx"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: NEXT_PUBLIC_STRIPE_PRO_PRICE_ID is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\page.tsx"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\page.tsx"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: react cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\page.tsx"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: framer-motion cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\page.tsx"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: lucide-react cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\page.tsx"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/components/ui/button cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\page.tsx"
+    }
+  ],
+  "source": "firewall",
+  "runId": "20260218T025224-p14i47mc",
+  "timestamp": "2026-02-18T02:52:24.787Z"
+}

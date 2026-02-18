@@ -6,7 +6,7 @@
   "@isl-lang/import-resolver": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\import-resolver\\dist\\index.js",
   "@isl-lang/semantic-analysis": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\isl-semantic-analysis\\dist\\index.js",
   "@isl-lang/isl-core": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\isl-core\\dist\\index.js",
-  "@isl-lang/isl-verify": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\isl-verify\\dist\\index.js",
+  "@isl-lang/isl-verify": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\isl-verify\\src\\index.ts",
   "@isl-lang/pipeline": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\isl-pipeline\\dist\\index.js",
   "@isl-lang/policy-packs": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\isl-policy-packs\\dist\\index.js",
   "@isl-lang/isl-policy-engine": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\isl-policy-engine\\dist\\index.js",
@@ -15,5 +15,6 @@
   "@isl-lang/firewall": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\isl-firewall\\dist\\index.js",
   "@isl-lang/shipgate-compliance": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\shipgate-compliance\\dist\\index.js",
   "@isl-lang/compliance": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\compliance\\dist\\index.js",
-  "@isl-lang/compliance/dist/frameworks/soc2.js": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\compliance\\dist\\frameworks\\soc2.js"
+  "@isl-lang/compliance/dist/frameworks/soc2.js": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\compliance\\dist\\frameworks\\soc2.js",
+  "@isl-lang/compliance/dist/audit-trail.js": "C:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\packages\\compliance\\dist\\audit-trail.js"
 }

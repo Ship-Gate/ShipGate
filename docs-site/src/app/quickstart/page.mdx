@@ -1,0 +1,168 @@
+export const metadata = {
+  title: 'Quick Start - ISL Verify',
+  description: 'Generate your first proof bundle in 60 seconds',
+}
+
+# Quick Start
+
+Generate your first proof bundle in **60 seconds**.
+
+## Installation
+
+```bash
+npm install -g @isl-lang/isl-verify
+# or
+npx @isl-lang/isl-verify
+```
+
+## Run Your First Scan
+
+Navigate to your project directory and run:
+
+```bash
+npx isl-verify .
+```
+
+This will:
+1. Scan all TypeScript/JavaScript files in your project
+2. Run all available property provers
+3. Generate a trust score (0-100)
+4. Output a verdict: **VERIFIED**, **PARTIAL**, or **INSUFFICIENT**
+
+### Example Output
+
+```
+🔍 ISL Verify - Scanning Project...
+
+✓ Import Integrity: 127/127 imports resolve (definitive)
+✓ Type Safety: TypeScript strict mode passes. 45/45 functions typed. (definitive)
+✓ Auth Coverage: All 8 protected routes have auth checks (definitive)
+✓ SQL Injection: All 15 DB queries use parameterized queries (high)
+✓ Secret Exposure: No hardcoded secrets detected (high)
+⚠ Error Handling: 3 route handlers missing try-catch (high)
+✗ XSS Prevention: 2 unsafe template interpolations found (high)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Trust Score: 78/100 (B)
+Overall Verdict: PARTIAL
+
+5 properties PROVEN, 1 PARTIAL, 1 FAILED, 0 NOT_VERIFIED
+
+Residual Risks:
+  ⚠ PARTIAL — Error Handling: Unhandled errors may crash the application
+  ✗ FAILED — XSS Prevention: Malicious script execution possible (2 issues)
+
+Run with --proof-bundle to generate cryptographic proof
+```
+
+## Generate a Proof Bundle
+
+```bash
+npx isl-verify . --proof-bundle
+```
+
+This creates `.isl-verify/proof-bundle.json` containing:
+- **File hashes** (SHA-256) of every scanned file
+- **Property proofs** with full evidence
+- **HMAC-SHA256 signature** proving bundle integrity
+- **Residual risks** - explicit list of what was NOT verified
+
+### Proof Bundle Structure
+
+```json
+{
+  "version": "1.0",
+  "id": "8f4a2c9b-...",
+  "timestamp": "2024-02-17T16:27:00.000Z",
+  "project": {
+    "name": "my-app",
+    "commit": "abc123...",
+    "framework": "nextjs",
+    "language": "typescript"
+  },
+  "properties": [
+    {
+      "property": "import-integrity",
+      "status": "PROVEN",
+      "summary": "127/127 imports resolve",
+      "confidence": "definitive",
+      "evidence": [...]
+    }
+  ],
+  "summary": {
+    "proven": 5,
+    "partial": 1,
+    "failed": 1,
+    "overallVerdict": "PARTIAL",
+    "trustScore": 78
+  },
+  "signature": "8f4a2c9b..."
+}
+```
+
+## View the Report
+
+```bash
+# Pretty-print to terminal
+npx isl-verify . --proof-bundle --format pretty
+
+# Save as Markdown
+npx isl-verify . --proof-bundle --format markdown > report.md
+
+# GitHub PR comment format
+npx isl-verify . --proof-bundle --format pr-comment > pr-comment.md
+```
+
+## Verify a Bundle
+
+```bash
+npx isl-verify verify-bundle .isl-verify/proof-bundle.json
+```
+
+This checks:
+- ✅ Signature is valid (bundle hasn't been tampered with)
+- ✅ File hashes match current code (code hasn't changed)
+- ✅ Timestamp is recent (bundle isn't stale)
+
+## Configure Properties
+
+Create `.isl-verify.json` in your project root:
+
+```json
+{
+  "provers": {
+    "auth-coverage": {
+      "enabled": true,
+      "publicRoutes": ["/api/health", "/api/auth/*"]
+    },
+    "secret-exposure": {
+      "enabled": true,
+      "allowedPatterns": ["NEXT_PUBLIC_*"]
+    }
+  },
+  "ci": {
+    "failOn": ["FAILED"],
+    "requiredProperties": ["import-integrity", "auth-coverage", "sql-injection"]
+  }
+}
+```
+
+## Next Steps
+
+<div className="grid gap-4 mt-6">
+  <a href="/specification" className="block p-4 border rounded-lg hover:bg-accent transition">
+    <div className="font-semibold">Read the Specification</div>
+    <div className="text-sm text-muted-foreground">Understand the proof bundle format in depth</div>
+  </a>
+  
+  <a href="/guides/ci-integration" className="block p-4 border rounded-lg hover:bg-accent transition">
+    <div className="font-semibold">Add to CI/CD</div>
+    <div className="text-sm text-muted-foreground">Set up GitHub Actions or GitLab CI</div>
+  </a>
+  
+  <a href="/properties" className="block p-4 border rounded-lg hover:bg-accent transition">
+    <div className="font-semibold">Explore Properties</div>
+    <div className="text-sm text-muted-foreground">See all available property provers</div>
+  </a>
+</div>

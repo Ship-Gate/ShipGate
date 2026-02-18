@@ -1,458 +1,288 @@
-# Shipgate ISL — Behavioral Verification for AI-Generated Code v0.2.0
+# Shipgate ISL
 
-[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/shipgate.shipgate-isl?label=VS%20Code%20Marketplace&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=shipgate.shipgate-isl)
-[![Open VSX](https://img.shields.io/open-vsx/v/shipgate/shipgate-isl?label=Open%20VSX)](https://open-vsx.org/extension/shipgate/shipgate-isl)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/shipgate/shipgate/releases/tag/v0.2.0)
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/shipgate.shipgate-isl?label=Marketplace&logo=visual-studio-code&logoColor=white&color=0066b8)](https://marketplace.visualstudio.com/items?itemName=shipgate.shipgate-isl)
+[![Open VSX](https://img.shields.io/open-vsx/v/shipgate/shipgate-isl?label=Open%20VSX&color=a60ee5)](https://open-vsx.org/extension/shipgate/shipgate-isl)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-> **Shipgate** ensures AI-generated code does what you *intended*. Write behavioral specifications in **Intent Specification Language (ISL)**, and Shipgate verifies your codebase against them — catching violations, broken contracts, and missing invariants before they reach production.
+**Write what your code must do. Shipgate enforces it.**
 
-> **Think of it as:** Design-by-contract meets AI code review, built into your editor.
+AI writes the code. You define the contracts. Shipgate verifies every function, entity, and invariant — catching violations before they reach production, right inside VS Code.
 
----
-
-## 🎯 What Shipgate Does
-
-1. **You describe intent** — Write `.isl` specs that define what your code *must* do (preconditions, postconditions, invariants, temporal constraints).
-2. **Shipgate verifies** — Behavioral verification runs against your implementation, reporting violations as diagnostics directly in VS Code.
-3. **AI stays honest** — CodeLens actions, coverage overlays, and status bar indicators give you continuous confidence that generated code matches your specifications.
+> Design-by-contract for the AI era. No manual test-writing. No runtime surprises.
 
 ---
 
-## ✨ Features
+## How It Works
 
-### 🎨 ISL Syntax Highlighting
-
-Full TextMate grammar with rich colorization for keywords, types, annotations, operators, temporal expressions, and more.
-
-![ISL Syntax Highlighting](https://raw.githubusercontent.com/shipgate/shipgate/main/packages/vscode/screenshots/syntax-highlighting.png)
+Write a `.isl` spec describing what your code must do. Shipgate verifies the running implementation against it — automatically, on every save.
 
 ```isl
-domain Payments {
-  behavior Transfer {
+domain UserService {
+  entity User {
+    id: UUID [immutable, unique]
+    email: Email [indexed]
+    passwordHash: String [secret]
+
+    invariants {
+      email.contains("@")
+      passwordHash.length >= 60
+    }
+  }
+
+  behavior RegisterUser {
+    input { email: Email, name: String, password: String }
+    output {
+      success: { user: User }
+      errors { EMAIL_EXISTS, WEAK_PASSWORD }
+    }
+
     preconditions {
-      Account.lookup(from).balance >= input.amount
-      from != to
+      not User.exists(email)
+      input.password.length >= 8
     }
+
     postconditions {
-      success implies {
-        Account.lookup(from).balance == old(balance) - input.amount
-      }
+      success implies User.exists({ id: result.user.id, email: input.email })
     }
+
     temporal {
-      response within 200ms (p99)
+      response within 500ms (p99)
     }
   }
 }
 ```
 
-### 🔍 Real-Time Diagnostics & Quick Fixes
-
-Errors and warnings appear inline as you type. The language server validates ISL syntax, types, and contract consistency. Quick fixes are available for common mistakes.
-
-![Diagnostics & Errors](https://raw.githubusercontent.com/shipgate/shipgate/main/packages/vscode/screenshots/diagnostics.png)
-
-### ⚡ CodeLens Above Behaviors
-
-Inline action buttons appear above every `behavior` and `entity` declaration — verify, generate tests, or check coverage with a single click.
-
-![CodeLens Actions](https://raw.githubusercontent.com/shipgate/shipgate/main/packages/vscode/screenshots/codelens.png)
+Shipgate runs this against your TypeScript implementation and produces:
 
 ```
-▶ Verify  |  🔍 Generate Tests  |  📊 Coverage
-behavior CreateUser {
-  ...
-}
+✓ SHIP  Trust Score: 94%  Confidence: 100%
+  ✓ Preconditions      3/3 passing
+  ✓ Postconditions     2/2 passing
+  ✓ Invariants         2/2 holding
+  ✓ Error cases        2/2 correct
 ```
 
-### 🤖 Generate ISL Spec from Source
-
-Right-click any TypeScript or JavaScript file and select **"Shipgate: Generate ISL Spec"** to scaffold a behavioral spec from your existing code.
-
-![Generate ISL Spec](https://raw.githubusercontent.com/shipgate/shipgate/main/packages/vscode/screenshots/generate-spec.gif)
-
-### 📊 Coverage Overlay
-
-Gutter decorations show which source files have matching ISL specs and whether they pass verification:
-
-| Indicator | Meaning |
-|-----------|---------|
-| 🟢 Green  | Has a matching ISL spec — all passing |
-| 🟡 Yellow | No spec coverage (specless) |
-| 🔴 Red    | Spec exists but verification failed |
-
-### 📈 Status Bar
-
-At a glance, see your verification status:
-- `ISL: ✓ 12/15 specced` — coverage summary
-- `ISL: ✗ 2 violations` — issues to fix
-
-Click to run workspace-wide verification.
-
-### 🌐 Language Server Protocol
-
-Full LSP integration powered by `@isl-lang/lsp-server`:
-
-| Feature | Description |
-|---------|-------------|
-| **Diagnostics** | Real-time error and warning squiggles |
-| **Autocomplete** | Keywords, types, entity and behavior names |
-| **Hover** | Type information and inline documentation |
-| **Go to Definition** | Jump to entity or behavior declarations |
-| **Document Symbols** | Outline view for `.isl` files |
-| **Formatting** | Auto-format on save |
-| **Semantic Tokens** | Enhanced highlighting via LSP |
+If something breaks, violations appear as inline diagnostics — exactly like TypeScript errors.
 
 ---
 
-## 🚀 Quick Start (60 seconds)
+## Features
 
-### 1. Install the extension
+### ISL Language Support
 
-Search for **"Shipgate ISL"** in the VS Code Extensions panel, or install from the command line:
+Full language server integration for `.isl` files — everything you'd expect from a first-class language:
+
+| Capability | Details |
+|------------|---------|
+| **Syntax Highlighting** | Full TextMate grammar — keywords, types, annotations, temporal expressions, constraints |
+| **Diagnostics** | Real-time squiggles as you type — syntax errors, type mismatches, undefined references |
+| **Autocomplete** | Keywords, types, entity names, behavior names, field access |
+| **Hover Documentation** | Type info and constraint details on hover |
+| **Go to Definition** | Jump to any entity or behavior declaration |
+| **Document Outline** | Full symbol tree in the VS Code Outline panel |
+| **Auto-format on Save** | Consistent ISL formatting, configurable |
+| **Code Snippets** | `domain`, `entity`, `behavior`, `scenario` starter templates |
+
+### Verification Dashboard
+
+The Shipgate sidebar panel gives you a live view of your verification state:
+
+- **Trust Score ring** — 0–100 score with SHIP / WARN / NO-SHIP verdict
+- **File-level breakdown** — per-file pass/fail status with violation counts
+- **Evidence trail** — which spec clauses passed, which failed, and why
+- **Pipeline status** — live indicator while verification runs
+- **Action buttons** — Verify, Heal, Coverage, Export Report — all one click
+
+### Inline CodeLens
+
+Action buttons appear directly above every `behavior` and `entity` in source files after verification:
+
+```
+🚢 ShipGate: EMAIL_EXISTS not triggered (post-condition violation)
+behavior RegisterUser { ... }
+```
+
+### Status Bar
+
+Always-visible status at the bottom of the editor. Click to re-verify:
+
+- `$(shield) ShipGate` — idle, ready to scan
+- `$(loading~spin) ShipGate: Scanning...` — verification in progress
+- `$(pass) ShipGate: SHIP (94)` — green, all contracts passing
+- `$(error) ShipGate: NO-SHIP (61)` — red, violations found
+
+### Coverage Decorations
+
+File Explorer decorations show spec coverage at a glance — no need to open each file.
+
+### Generate ISL from Source
+
+Right-click any TypeScript or JavaScript file → **"Shipgate: Generate ISL Spec"** — scaffolds a behavioral spec from your existing function signatures, types, and JSDoc.
+
+---
+
+## Quick Start
+
+**1. Install**
 
 ```bash
 code --install-extension shipgate.shipgate-isl
 ```
 
-### 2. Open a project with `.isl` files
+Or search **"Shipgate ISL"** in the Extensions panel.
 
-The extension activates automatically when it detects `.isl` files in your workspace.
+**2. Create a spec** — save as `specs/user-service.isl` in your project.
 
-### 3. Write your first spec
+**3. Verify** — open the Command Palette (`Ctrl+Shift+P`) and run:
 
-Create a file called `auth.isl`:
+```
+Shipgate: Verify Workspace
+```
 
+Violations appear in the **Problems panel**. The **Shipgate sidebar** shows your trust score.
+
+**4. Fix or Heal** — click **Heal** in the sidebar for AI-powered automatic fixes.
+
+---
+
+## Commands
+
+All available via `Ctrl+Shift+P` / `Cmd+Shift+P`:
+
+| Command | What It Does |
+|---------|-------------|
+| **Shipgate: Verify Workspace** | Run full verification across all `.isl` specs |
+| **Shipgate: Verify Current File** | Verify only the active file's spec |
+| **Shipgate: Generate ISL Spec** | Scaffold a spec from the active source file |
+| **Shipgate: Heal (AI Autofix)** | AI-powered fix for violations in current file |
+| **Shipgate: Heal All** | Fix violations across the entire workspace |
+| **Shipgate: Trust Score** | Print current trust score to terminal |
+| **Shipgate: Coverage** | Show spec coverage report |
+| **Shipgate: Open Report** | View full verification report |
+| **Shipgate: Export Report** | Export verification report as PDF |
+| **Shipgate: Init** | Initialize Shipgate config in current workspace |
+| **ISL: Restart Language Server** | Restart the LSP if it gets stuck |
+
+---
+
+## Configuration
+
+```jsonc
+{
+  // Core
+  "shipgate.languageServer.enabled": true,    // Enable LSP (diagnostics, completions, hover)
+  "shipgate.formatOnSave": true,              // Auto-format .isl files on save
+  "shipgate.lintOnSave": true,               // Lint .isl files on save
+  "shipgate.scanOnSave": false,              // Run full verification on every save (expensive)
+  "shipgate.trace.server": "off",            // LSP trace: "off" | "messages" | "verbose"
+
+  // Verification
+  "shipgate.defaultTarget": "typescript",    // Codegen target: "typescript" | "rust" | "go"
+  "shipgate.validation.enabled": true,       // Real-time ISL validation
+
+  // Firewall (lightweight on-save checks)
+  "shipgate.firewall.enabled": true,
+  "shipgate.firewall.runOnSave": true,       // Run on .ts/.js save (fast, < 100ms)
+
+  // Compliance
+  "shipgate.compliance.frameworks": ["soc2"],
+  "shipgate.severity.minimum": "medium"
+}
+```
+
+---
+
+## ISL in 90 Seconds
+
+ISL (Intent Specification Language) is a declarative language for describing what your code must do — not how.
+
+**Entities** — typed data models with invariants:
 ```isl
-domain Auth {
-  version: "1.0.0"
+entity Payment {
+  id: UUID [immutable, unique]
+  amount: Decimal [positive]
+  status: PaymentStatus
 
-  entity User {
-    id: UUID [immutable, unique]
-    email: Email [indexed]
-    passwordHash: String [secret]
-
-    invariants {
-      email.contains("@")
-    }
-  }
-
-  behavior Login {
-    input {
-      email: Email
-      password: String
-    }
-
-    output {
-      success: { token: String, user: User }
-      errors {
-        INVALID_CREDENTIALS
-        ACCOUNT_LOCKED
-      }
-    }
-
-    preconditions {
-      User.exists(email)
-      User.lookup(email).status != "locked"
-    }
-
-    postconditions {
-      success implies output.token.length > 0
-    }
+  invariants {
+    amount > 0
+    status in ["pending", "completed", "failed"]
   }
 }
 ```
 
-### 4. Verify
-
-Open the Command Palette and run **"Shipgate: Verify Workspace"**. Violations appear in the Problems panel.
-
----
-
-## 📋 Commands
-
-All commands are available from the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
-
-### Core Commands
-
-| Command | Description |
-|---------|-------------|
-| `Shipgate: Generate ISL Spec` | Generate a `.isl` spec from the active source file |
-| `Shipgate: Verify Current File` | Verify the active file against its spec |
-| `Shipgate: Verify Workspace` | Run verification across the entire workspace |
-| `Shipgate: Show ISL Coverage` | Toggle gutter coverage decorations |
-
-### ISL Language Commands
-
-| Command | Description |
-|---------|-------------|
-| `ISL: Parse Current File` | Parse and display the ISL AST |
-| `ISL: Type Check Current File` | Run the ISL type checker |
-| `ISL: Generate TypeScript` | Generate TypeScript types from ISL spec |
-| `ISL: Generate Rust` | Generate Rust types from ISL spec |
-| `ISL: Open REPL` | Open an interactive ISL REPL terminal |
-| `ISL: Restart Language Server` | Restart the LSP server |
-
-### Advanced Commands
-
-| Command | Description |
-|---------|-------------|
-| `Shipgate: Run Scan` | Run comprehensive security and compliance scan |
-| `Shipgate: Heal (AI Autofix)` | AI-powered automatic fixes for violations |
-| `Shipgate: Code to ISL` | Generate ISL spec from existing codebase |
-| `Shipgate: Connect GitHub` | Link repository for CI/CD integration |
-| `Shipgate: Open Report` | View detailed verification report |
-
----
-
-## ⚙️ Configuration
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `shipgate.languageServer.enabled` | `true` | Enable the ISL language server for advanced features |
-| `shipgate.server.path` | `""` | Custom path to the LSP server binary |
-| `shipgate.formatOnSave` | `true` | Auto-format ISL files on save |
-| `shipgate.lintOnSave` | `true` | Run linter when ISL files are saved |
-| `shipgate.defaultTarget` | `"typescript"` | Default code generation target language |
-| `shipgate.trace.server` | `"off"` | Trace LSP communication (`off`, `messages`, `verbose`) |
-| `shipgate.coverage.autoRefresh` | `true` | Auto-refresh coverage decorations on save |
-| `shipgate.codegen.outputDir` | `"generated"` | Output directory for generated code |
-| `shipgate.validation.enabled` | `true` | Enable real-time validation of ISL files |
-
-### Security & Compliance
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `shipgate.firewall.enabled` | `true` | Enable live firewall checks on file save |
-| `shipgate.firewall.runOnSave` | `true` | Run lightweight checks on .ts/.js save |
-| `shipgate.compliance.frameworks` | `["soc2"]` | Active compliance frameworks |
-| `shipgate.severity.minimum` | `"medium"` | Minimum severity to display |
-
-### GitHub Integration
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `shipgate.github.autoSync` | `true` | Auto-sync CI/CD status from GitHub |
-| `shipgate.github.token` | `""` | GitHub token for API access |
-
----
-
-## 🎯 Supported Languages
-
-### ISL File Support
-
-- **Syntax Highlighting** - Full TextMate grammar
-- **Code Completion** - Keywords, types, entities
-- **Diagnostics** - Real-time validation
-- **Formatting** - Auto-format on save
-- **Outline View** - Document symbols
-
-### Source Code Languages
-
-| Language | Spec Generation | Verification |
-|----------|------------------|--------------|
-| TypeScript | ✅ | ✅ |
-| JavaScript | ✅ | ✅ |
-| Python | ✅ | ✅ |
-| Rust | ✅ | ✅ |
-| Go | ✅ | ✅ |
-
----
-
-## 💻 Requirements
-
-- **VS Code** 1.85.0 or newer (also works in **Cursor** and **VSCodium** via Open VSX)
-- **Node.js** 18+ (for the language server)
-- The `shipgate` CLI is optional — the LSP server works standalone for syntax, diagnostics, and completions
-
----
-
-## 🌍 Supported Editors
-
-| Editor | Install From |
-|--------|-------------|
-| VS Code | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=shipgate.shipgate-isl) |
-| Cursor | [Open VSX Registry](https://open-vsx.org/extension/shipgate/shipgate-isl) |
-| VSCodium | [Open VSX Registry](https://open-vsx.org/extension/shipgate/shipgate-isl) |
-
----
-
-## 🔧 Development
-
-### Run the Extension (F5)
-
-1. Open the repo root in VS Code.
-2. Press **F5** or run **Run > Start Debugging**.
-3. A new Extension Development Host window opens with the extension loaded.
-
-### Run Tests
-
-```bash
-# From repo root
-pnpm run test:unit --filter shipgate-isl
-
-# From packages/vscode
-pnpm run test:unit
-```
-
-### Package
-
-```bash
-cd packages/vscode
-pnpm run build
-npx vsce package --no-dependencies
-```
-
-### Debug
-
-```bash
-# Enable trace
-"shipgate.trace.server": "verbose"
-
-# Restart language server
-"ISL: Restart Language Server"
-```
-
----
-
-## 📊 Examples
-
-### Authentication Domain
-
+**Behaviors** — functions with contracts:
 ```isl
-domain Auth {
-  version: "1.0.0"
-
-  entity User {
-    id: UUID [immutable, unique]
-    email: Email [indexed]
-    passwordHash: String [secret]
-    status: UserStatus
-    createdAt: DateTime [immutable]
-    updatedAt: DateTime
-
-    invariants {
-      email.contains("@")
-      passwordHash.length >= 60
-      status in ["active", "inactive", "locked"]
-    }
+behavior ChargeCard {
+  input { cardToken: String, amount: Decimal, currency: String }
+  output {
+    success: { paymentId: UUID, chargedAt: DateTime }
+    errors { CARD_DECLINED, INSUFFICIENT_FUNDS, INVALID_AMOUNT }
   }
 
-  behavior Login {
-    input {
-      email: Email
-      password: String
-      rememberMe?: Boolean
-    }
+  preconditions {
+    input.amount > 0
+    input.currency.length == 3          // ISO 4217
+  }
 
-    output {
-      success: { token: String, user: User, expiresAt: DateTime }
-      errors {
-        INVALID_CREDENTIALS
-        ACCOUNT_LOCKED
-        RATE_LIMITED
-      }
-    }
+  postconditions {
+    success implies Payment.exists({ id: result.paymentId, status: "completed" })
+  }
 
-    preconditions {
-      User.exists(email)
-      User.lookup(email).status != "locked"
-      RateLimit.check(email, 5, per: "minute")
-    }
-
-    postconditions {
-      success implies {
-        output.token.length > 0
-        output.user.email == input.email
-        output.expiresAt > now()
-      }
-    }
-
-    temporal {
-      response within 200ms (p99)
-      token generation within 50ms (p95)
-    }
+  temporal {
+    response within 3s (p99)
   }
 }
 ```
 
-### Generated TypeScript
-
-```typescript
-// Generated by Shipgate
-export interface User {
-  id: string; // UUID
-  email: string; // Email
-  passwordHash: string; // String
-  status: UserStatus;
-  createdAt: Date; // DateTime
-  updatedAt: Date; // DateTime
-}
-
-export type UserStatus = "active" | "inactive" | "locked";
-
-export interface LoginInput {
-  email: string;
-  password: string;
-  rememberMe?: boolean;
-}
-
-export interface LoginSuccess {
-  token: string;
-  user: User;
-  expiresAt: Date;
-}
-
-export type LoginOutput = 
-  | { success: LoginSuccess }
-  | { error: "INVALID_CREDENTIALS" }
-  | { error: "ACCOUNT_LOCKED" }
-  | { error: "RATE_LIMITED" };
-```
+Shipgate generates and runs verification tests from this spec against your actual implementation — no boilerplate, no manual mocks.
 
 ---
 
-## 🔗 Links
+## Requirements
 
-- **Shipgate Documentation**: https://shipgate.dev/docs
-- **ISL Language Reference**: https://shipgate.dev/docs/isl
-- **GitHub Repository**: https://github.com/shipgate/shipgate
-- **Report an Issue**: https://github.com/shipgate/shipgate/issues
-- **Changelog**: [CHANGELOG.md](CHANGELOG.md)
-- **Discord Community**: https://discord.gg/shipgate
+- **VS Code** 1.85.0+ (also works in **Cursor** and **VSCodium** via Open VSX)
+- **Node.js** 18+
+- The `shipgate` CLI — install with `npm install -g shipgate` for full verification. The LSP server works standalone for syntax highlighting, diagnostics, and completions without the CLI.
 
 ---
 
-## 🤝 Contributing
+## Supported Editors
 
-We welcome contributions! See [CONTRIBUTING.md](../../CONTRIBUTING.md) for details.
+| Editor | Source |
+|--------|--------|
+| VS Code | [Marketplace](https://marketplace.visualstudio.com/items?itemName=shipgate.shipgate-isl) |
+| Cursor | [Open VSX](https://open-vsx.org/extension/shipgate/shipgate-isl) |
+| VSCodium | [Open VSX](https://open-vsx.org/extension/shipgate/shipgate-isl) |
 
-### Development Setup
+---
+
+## Development
 
 ```bash
-# Clone repository
 git clone https://github.com/shipgate/shipgate.git
-cd shipgate
+cd shipgate && pnpm install
 
-# Install dependencies
-pnpm install
+# Run extension in debug mode
+cd packages/vscode && code .
+# Press F5
 
-# Build extension
-cd packages/vscode
-pnpm run build
+# Build .vsix
+pnpm run build && pnpm run package
+```
 
-# Run tests
-pnpm run test:unit
+Enable LSP tracing to debug language server issues:
+```json
+"shipgate.trace.server": "verbose"
 ```
 
 ---
 
-## 📄 License
+## License
 
-MIT — see [LICENSE](../../LICENSE) for details.
+MIT — see [LICENSE](../../LICENSE).
 
 ---
 
-**Shipgate ISL v0.2.0** - Behavioral verification for AI-generated code.
+**[Changelog](CHANGELOG.md)** · **[Issues](https://github.com/shipgate/shipgate/issues)** · **[shipgate.dev](https://shipgate.dev)**
 
-> *"Define what your code should do. We enforce it."*
+> *Define what your code must do. We enforce it.*

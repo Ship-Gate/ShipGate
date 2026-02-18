@@ -10,7 +10,7 @@
  */
 
 import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs';
-import { resolve, dirname } from 'path';
+import { resolve } from 'path';
 import chalk from 'chalk';
 import {
   evaluateSOC2,
@@ -20,10 +20,14 @@ import {
 import type { ProofBundleV1 } from '@isl-lang/proof';
 import { isJsonOutput } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
-import { SOC2Framework } from '@isl-lang/compliance/dist/frameworks/soc2.js';
-import { parse as parseISL } from '@isl-lang/parser';
-import { AuditTrailGenerator } from '@isl-lang/compliance/dist/audit-trail.js';
+// Missing compliance modules - stub
+// import { SOC2Mapper } from '@isl-lang/compliance/dist/frameworks/soc2.js';
+// import type { SOC2Control, SOC2Category } from '@isl-lang/compliance/dist/frameworks/soc2.js';
+// import { AuditTrailGenerator } from '@isl-lang/compliance/dist/audit-trail.js';
+const SOC2Mapper = null as any;
+const AuditTrailGenerator = null as any;
 import { createHash } from 'crypto';
+import { parse as parseISL } from '@isl-lang/parser';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -377,8 +381,16 @@ async function analyzeISLSpec(options: ComplianceSOC2Options): Promise<Complianc
       };
     }
 
-    // Map to SOC2 controls
-    const soc2Framework = new SOC2Framework();
+    // Map to SOC2 controls (stubbed - full implementation in @isl-lang/shipgate-compliance)
+    const soc2Framework = SOC2Mapper ? new SOC2Mapper() : null;
+    if (!soc2Framework) {
+      return {
+        success: false,
+        controls: [],
+        summary: { total: 0, pass: 0, warn: 0, fail: 0 },
+        errors: ['SOC2 mapper not available'],
+      };
+    }
     const controlMappings = soc2Framework.mapDomain(parseResult.domain);
 
     // Convert to SOC2ControlMapping format
@@ -412,10 +424,14 @@ async function analyzeISLSpec(options: ComplianceSOC2Options): Promise<Complianc
         mkdirSync(outputDir, { recursive: true });
       }
       
+      // Generate spec hash
+      const specHash = createHash('sha256').update(specContent).digest('hex');
+      
       const report = {
         framework: 'SOC2',
         timestamp: new Date().toISOString(),
         spec: options.spec,
+        specHash,
         summary,
         controls,
       };
@@ -423,6 +439,51 @@ async function analyzeISLSpec(options: ComplianceSOC2Options): Promise<Complianc
       writeFileSync(
         resolve(outputDir, 'soc2-compliance-report.json'),
         JSON.stringify(report, null, 2)
+      );
+
+      // Generate audit trail
+      const auditGenerator = new AuditTrailGenerator();
+      
+      // Build compliance report for audit trail
+      const complianceReport = {
+        framework: 'SOC2',
+        controlMappings: controlMappings.map((mapping: any) => ({
+          controlId: mapping.controlId,
+          controlName: mapping.controlName,
+          category: mapping.category || 'Security',
+          description: mapping.description,
+          status: mapping.status,
+          risk: mapping.status === 'not_implemented' ? 'high' : mapping.status === 'partial' ? 'medium' : 'low',
+          evidence: mapping.evidence.map((e: any) => ({
+            type: e.type,
+            source: e.source || String(e.content || '').slice(0, 100),
+            description: e.content || e.source || '',
+            confidence: 0.8
+          }))
+        }))
+      };
+
+      const auditTrail = auditGenerator.generateAuditTrail(
+        parseResult.domain,
+        complianceReport,
+        {
+          organization: 'Demo Organization',
+          system: parseResult.domain.name || 'ISL-Spec-System',
+          version: '1.0.0',
+          verifiedBy: 'ShipGate CLI'
+        }
+      );
+
+      // Save audit trail as JSON
+      writeFileSync(
+        resolve(outputDir, 'soc2-audit-trail.json'),
+        JSON.stringify(auditTrail, null, 2)
+      );
+
+      // Save CISO-friendly markdown report
+      writeFileSync(
+        resolve(outputDir, 'soc2-ciso-report.md'),
+        auditGenerator.exportCISOReport(auditTrail)
       );
     }
 

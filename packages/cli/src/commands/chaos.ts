@@ -875,11 +875,11 @@ export async function chaos(specFile: string, options: ChaosOptions): Promise<Ch
         }
       }
     
-    ast = getMergedAST(graph) as DomainDeclaration | undefined;
+    ast = getMergedAST(graph) as unknown as DomainDeclaration | undefined;
     
     if (!ast && graph.graphModules.size > 0) {
       const entryModule = graph.graphModules.get(graph.entryPoint);
-      ast = entryModule?.ast as DomainDeclaration | undefined;
+      ast = entryModule?.ast as unknown as DomainDeclaration | undefined;
     }
     
     // Fallback to single-file parsing
@@ -897,7 +897,18 @@ export async function chaos(specFile: string, options: ChaosOptions): Promise<Ch
         };
       }
       
-      ast = parsedAst as DomainDeclaration;
+      ast = parsedAst as unknown as DomainDeclaration;
+    }
+    
+    if (!ast) {
+      spinner.fail('Failed to parse AST');
+      return {
+        success: false,
+        specFile: specPath,
+        implFile: implPath,
+        errors: ['Failed to parse ISL spec - no AST available'],
+        duration: Date.now() - startTime,
+      };
     }
 
     // Read implementation

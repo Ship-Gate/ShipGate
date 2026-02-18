@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://shipgate.dev/schemas/shipgate-report.schema.json",
+  "title": "ShipGate Report",
+  "description": "Canonical output contract for all ShipGate gate commands. Every command that produces a verdict MUST conform to this schema.",
+  "type": "object",
+  "required": ["verdict", "score", "summary", "gates", "findings", "metadata"],
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": ["PASS", "WARN", "FAIL"],
+      "description": "Top-level gate decision. PASS = ship, WARN = ship with caveats, FAIL = no-ship."
+    },
+    "score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Overall trust score 0–100. PASS requires score >= threshold (default 95)."
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Confidence in the verdict 0–100. Low confidence (<20) forces FAIL regardless of score."
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total", "passed", "failed", "skipped", "blockerCount"],
+      "properties": {
+        "total":        { "type": "integer", "minimum": 0 },
+        "passed":       { "type": "integer", "minimum": 0 },
+        "failed":       { "type": "integer", "minimum": 0 },
+        "skipped":      { "type": "integer", "minimum": 0 },
+        "blockerCount": { "type": "integer", "minimum": 0 },
+        "warnCount":    { "type": "integer", "minimum": 0 },
+        "bySeverity": {
+          "type": "object",
+          "properties": {
+            "critical": { "type": "integer" },
+            "high":     { "type": "integer" },
+            "medium":   { "type": "integer" },
+            "low":      { "type": "integer" },
+            "info":     { "type": "integer" }
+          }
+        }
+      }
+    },
+    "gates": {
+      "type": "array",
+      "description": "Per-gate results. Each gate is an individual check category.",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "status", "weight", "findingsCount"],
+        "properties": {
+          "id":            { "type": "string", "description": "Machine-readable gate identifier, e.g. 'auth', 'placeholder', 'env'." },
+          "name":          { "type": "string", "description": "Human-readable gate name." },
+          "status":        { "type": "string", "enum": ["pass", "warn", "fail", "skip"] },
+          "weight":        { "type": "number", "minimum": 0, "maximum": 1, "description": "Weight applied to overall score calculation." },
+          "findingsCount": { "type": "integer", "minimum": 0 },
+          "score":         { "type": "number", "minimum": 0, "maximum": 100 },
+          "duration":      { "type": "number", "description": "Gate execution time in milliseconds." },
+          "message":       { "type": "string" }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "description": "Individual issues found. Empty array means no issues.",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "severity", "confidence", "category", "file"],
+        "properties": {
+          "id":             { "type": "string", "description": "Stable, unique finding ID. Deterministic from content hash." },
+          "title":          { "type": "string" },
+          "severity":       { "type": "string", "enum": ["critical", "high", "medium", "low", "info"] },
+          "confidence":     { "type": "number", "minimum": 0, "maximum": 1, "description": "Confidence in this specific finding, 0.0–1.0." },
+          "category":       { "type": "string", "description": "Gate category, e.g. 'auth', 'placeholder', 'env', 'behavioral', 'drift'." },
+          "file":           { "type": "string", "description": "Relative file path from project root." },
+          "line":           { "type": "integer", "minimum": 1 },
+          "column":         { "type": "integer", "minimum": 1 },
+          "evidence":       { "type": "string", "description": "Code snippet or data that triggered this finding." },
+          "recommendation": { "type": "string", "description": "Actionable fix suggestion." },
+          "fixable":        { "type": "boolean", "description": "True if ShipGate heal can auto-fix this." },
+          "ruleId":         { "type": "string" }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["toolVersion", "timestamp"],
+      "properties": {
+        "toolVersion":   { "type": "string", "description": "ShipGate CLI version, semver." },
+        "preset":        { "type": "string", "description": "Active config preset name: baseline, strict, ai-heavy." },
+        "threshold":     { "type": "number", "minimum": 0, "maximum": 100 },
+        "timestamp":     { "type": "string", "format": "date-time" },
+        "durationMs":    { "type": "number" },
+        "specFile":      { "type": "string" },
+        "implPath":      { "type": "string" },
+        "fingerprint":   { "type": "string", "description": "SHA-256 derived fingerprint of spec+impl+results. Deterministic." },
+        "specHash":      { "type": "string" },
+        "implHash":      { "type": "string" },
+        "git": {
+          "type": "object",
+          "properties": {
+            "commit":  { "type": "string" },
+            "branch":  { "type": "string" },
+            "dirty":   { "type": "boolean" },
+            "tag":     { "type": "string" }
+          }
+        },
+        "ci": {
+          "type": "object",
+          "properties": {
+            "provider":   { "type": "string", "description": "github-actions, gitlab, circleci, etc." },
+            "buildId":    { "type": "string" },
+            "runUrl":     { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "verdict": "PASS",
+      "score": 97,
+      "confidence": 85,
+      "summary": { "total": 12, "passed": 12, "failed": 0, "skipped": 0, "blockerCount": 0, "warnCount": 0 },
+      "gates": [
+        { "id": "behavioral", "name": "Behavioral Verification", "status": "pass", "weight": 0.5, "findingsCount": 0, "score": 98 },
+        { "id": "auth",       "name": "Auth Gate",              "status": "pass", "weight": 0.2, "findingsCount": 0, "score": 100 },
+        { "id": "placeholder","name": "Placeholder Detection",  "status": "pass", "weight": 0.15, "findingsCount": 0, "score": 100 },
+        { "id": "env",        "name": "Env Leak Gate",          "status": "pass", "weight": 0.15, "findingsCount": 0, "score": 100 }
+      ],
+      "findings": [],
+      "metadata": {
+        "toolVersion": "1.0.0",
+        "preset": "baseline",
+        "threshold": 95,
+        "timestamp": "2026-01-15T14:32:00Z",
+        "durationMs": 1842,
+        "fingerprint": "a1b2c3d4e5f6a7b8",
+        "specFile": "specs/user-auth.isl",
+        "implPath": "src/auth"
+      }
+    }
+  ]
+}

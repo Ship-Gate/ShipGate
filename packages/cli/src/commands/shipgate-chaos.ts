@@ -272,9 +272,9 @@ async function runShipGateChaosVerification(
             violations.push({
               invariant: record.invariantName || record.invariantId || 'unknown',
               specClause: record.specClauses && record.specClauses.length > 0 ? {
-                file: record.specClauses[0]!.file || 'unknown',
-                line: record.specClauses[0]!.line,
-                clause: record.specClauses[0]!.clause || 'unknown',
+                file: (record.specClauses[0] as any)?.file || 'unknown',
+                line: (record.specClauses[0] as any)?.line || 0,
+                clause: (record.specClauses[0] as any)?.clause || 'unknown',
               } : undefined,
               violation: {
                 expected: record.expected,
@@ -668,11 +668,11 @@ export async function shipgateChaosRun(
       }
     }
     
-    ast = getMergedAST(graph) as DomainDeclaration | undefined;
+    ast = getMergedAST(graph) as unknown as DomainDeclaration | undefined;
     
     if (!ast && graph.graphModules.size > 0) {
       const entryModule = graph.graphModules.get(graph.entryPoint);
-      ast = entryModule?.ast as DomainDeclaration | undefined;
+      ast = entryModule?.ast as unknown as DomainDeclaration | undefined;
     }
     
     // Fallback to single-file parsing
@@ -698,7 +698,7 @@ export async function shipgateChaosRun(
         };
       }
       
-      ast = parsedAst as DomainDeclaration;
+      ast = parsedAst as unknown as DomainDeclaration;
     }
 
     // Read implementation

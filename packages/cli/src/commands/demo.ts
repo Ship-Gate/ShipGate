@@ -367,6 +367,7 @@ would be handled by middleware or a dedicated service that actually exists.
  * Run the demo command
  */
 export async function demo(options: DemoOptions = {}): Promise<DemoResult> {
+  const startTime = Date.now();
   const spinner = ora('Setting up demo...').start();
   const errors: string[] = [];
   const demoPath = resolve(options.output || './shipgate-demo');
@@ -400,8 +401,11 @@ export async function demo(options: DemoOptions = {}): Promise<DemoResult> {
     // Create a simple verify result for summary
     const verifyResultForSummary = {
       success: gateResult.decision === 'SHIP',
-      trustScore: gateResult.trustScore,
-      errors: gateResult.error ? [gateResult.error] : [],
+      trustScore: gateResult.trustScore || 0,
+      errors,
+      specFile: join(demoPath, 'specs', 'auth.isl'),
+      implFile: join(demoPath, 'src', 'auth.ts'),
+      duration: Date.now() - startTime,
     };
 
     // Step 5: Create proof bundle

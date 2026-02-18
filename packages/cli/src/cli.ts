@@ -64,7 +64,7 @@ import {
   islGenerate, printIslGenerateResult, getIslGenerateExitCode,
   specQuality, printSpecQualityResult, getSpecQualityExitCode,
   securityReport, printSecurityReportResult, getSecurityReportExitCode,
-  policyCheck, printPolicyCheckResult, getPolicyCheckExitCode,
+  policyCheckTeam, printPolicyCheckTeamResult, getPolicyCheckTeamExitCode,
   policyInit, printPolicyInitResult,
   shipgateChaosRun, printShipGateChaosResult, getShipGateChaosExitCode,
   verifyEvolution, printEvolutionResult, getEvolutionExitCode,
@@ -516,8 +516,12 @@ program
   .option('--temporal-min-samples <num>', 'Minimum samples for temporal verification', '10')
   .option('--reality', 'Enable reality probe (route and env var verification)')
   .option('--reality-base-url <url>', 'Base URL for reality probe (e.g., http://localhost:3000)')
-  .option('--reality-route-map <path>', 'Path to route map or OpenAPI spec (default: .shipgate/truthpack/routes.json)')
-  .option('--reality-env-vars <path>', 'Path to env vars JSON (default: .shipgate/truthpack/env.json)')
+  .option('--reality-route-map <path>', 'Path to route map or OpenAPI spec')
+  .option('--reality-env-vars <path>', 'Path to env vars JSON')
+  .option('--runtime', 'Enable Tier 2 runtime verification (behavioral API testing)')
+  .option('--runtime-base-url <url>', 'Base URL if app already running (skips app launcher)')
+  .option('--project-dir <path>', 'Project directory for runtime verification')
+  .option('--no-resolve-imports', 'Disable import resolution')
   .option('--all', 'Enable all verification modes (SMT + PBT + Temporal + Reality)')
   .option('--sandbox <mode>', 'Sandbox execution mode: auto (default), worker, docker, or off (no sandbox)', 'auto')
   .option('--sandbox-timeout <ms>', 'Sandbox execution timeout in milliseconds', '30000')
@@ -1112,7 +1116,7 @@ program
   .description('Run security scan on a project (SQL injection, auth bypass, secrets, XSS, SSRF, deps, OWASP headers)')
   .option('--include-audit', 'Include npm audit (can be slow)')
   .option('--spec <file>', 'ISL spec path for auth-bypass check')
-  .action(async (path?: string, options) => {
+  .action(async (path: string | undefined, options) => {
     const opts = program.opts();
     const result = await securityReport(path, {
       format: opts.format,
@@ -1435,7 +1439,7 @@ policyCommand
     const isJson = opts.format === 'json';
 
     try {
-      const result = await policyCheck({
+      const result = await policyCheckTeam({
         teamConfig: options.teamConfig,
         directory: options.directory,
         json: isJson,
@@ -1451,10 +1455,10 @@ policyCommand
           source: result.config.source,
         }, null, 2));
       } else {
-        printPolicyCheckResult(result, { verbose: opts.verbose });
+        printPolicyCheckTeamResult(result, { verbose: opts.verbose });
       }
 
-      process.exit(getPolicyCheckExitCode(result));
+      process.exit(getPolicyCheckTeamExitCode(result));
     } catch (err: unknown) {
       if (err instanceof TeamConfigError) {
         if (isJson) {
@@ -2343,8 +2347,7 @@ shipgateCommand
     const parserModule = await import('@isl-lang/parser');
     const CURRENT_ISL_VERSION = (parserModule as { CURRENT_ISL_VERSION?: string }).CURRENT_ISL_VERSION || '0.2';
     
-    const result = await migrate({
-      input: file,
+    const result = await migrate(file, {
       output: options.output,
       targetVersion: (options.target || CURRENT_ISL_VERSION) as '0.1' | '0.2',
       dryRun: options.dryRun,
@@ -2633,7 +2636,8 @@ domainCommand
       printDomainValidateResult(result, { verbose: opts.verbose });
     }
 
-    process.exit(getDomainValidateExitCode(result));
+    const exitResult = await getDomainValidateExitCode(result);
+    process.exit(exitResult.exitCode);
   });
 
 // ─────────────────────────────────────────────────────────────────────────────

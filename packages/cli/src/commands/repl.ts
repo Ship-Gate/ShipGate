@@ -365,7 +365,8 @@ function evaluateInput(input: string, state: ReplState, showAst: boolean = false
         process.stdout.write(chalk.red(`✗ Error: ${error.message}\n`));
         if ('line' in error && error.line) {
           const adjustedLine = needsWrapper ? Math.max(1, (error.line as number) - 1) : error.line;
-          process.stdout.write(chalk.gray(`  at line ${adjustedLine}, column ${error.column ?? 0}\n`));
+          const column = 'column' in error ? (error as any).column ?? 0 : 0;
+          process.stdout.write(chalk.gray(`  at line ${adjustedLine}, column ${column}\n`));
         }
       }
       process.stdout.write('\n');
@@ -611,7 +612,7 @@ async function handleVerify(state: ReplState): Promise<boolean> {
         state.timeout,
         'Typechecker import timed out'
       );
-      check = typechecker.check;
+      check = typechecker.check as any;
     } catch {
       process.stdout.write(chalk.yellow('⚠ Typechecker not available. Install @isl-lang/typechecker\n'));
       return true;

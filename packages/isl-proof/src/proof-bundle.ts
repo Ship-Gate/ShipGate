@@ -30,12 +30,16 @@ export interface ProofBundle {
     version: string;
     hash: string;
   };
+  /** Verification Surface - what was checked and what wasn't */
+  verificationSurface: VerificationSurface;
   /** Verification evidence */
   evidence: Evidence[];
   /** Test results */
   tests: TestEvidence[];
   /** Gate results */
   gate: GateEvidence;
+  /** Residual risks from unverified or partial properties */
+  residualRisks: ResidualRisk[];
   /** Overall verdict */
   verdict: 'PROVEN' | 'UNPROVEN' | 'VIOLATED';
   /** Proof chain (for auditing) */
@@ -116,6 +120,42 @@ export interface ProofChainEntry {
   timestamp: string;
 }
 
+export interface VerificationSurface {
+  /** Languages verified */
+  languages: string[];
+  /** Frameworks detected and verified */
+  frameworks: string[];
+  /** Verification tiers executed (1=static, 2=runtime, 3=property-based) */
+  tiersRun: number[];
+  /** Properties that were verified */
+  propertiesVerified: string[];
+  /** Properties explicitly out of scope */
+  explicitlyOutOfScope: string[];
+  /** Properties detected but not verified */
+  detectedButNotVerified?: string[];
+}
+
+export interface ResidualRisk {
+  /** Risk identifier */
+  id: string;
+  /** Risk description */
+  risk: string;
+  /** Potential impact */
+  impact: string;
+  /** Why this wasn't verified */
+  reasonNotVerified: string;
+  /** Recommended mitigation */
+  recommendedMitigation: string;
+  /** Responsible party */
+  owner: 'Engineering' | 'Security' | 'Compliance' | 'Product';
+  /** Risk status */
+  status: 'acknowledged' | 'mitigated' | 'accepted' | 'transferred';
+  /** Severity level */
+  severity?: 'critical' | 'high' | 'medium' | 'low';
+  /** Related property (if any) */
+  relatedProperty?: string;
+}
+
 // ============================================================================
 // Proof Bundle Builder
 // ============================================================================
@@ -126,10 +166,23 @@ export class ProofBundleBuilder {
   private tests: TestEvidence[] = [];
   private gate: GateEvidence | null = null;
   private chain: ProofChainEntry[] = [];
+  private languages: string[] = ['typescript'];
+  private frameworks: string[] = [];
+  private tiersRun: number[] = [1];
 
   constructor(ast: ISLAST) {
     this.ast = ast;
     this.addChainEntry('initialize', this.hashAST(ast), '');
+  }
+
+  /**
+   * Set verification context (language, frameworks, tiers)
+   */
+  setVerificationContext(context: { languages?: string[]; frameworks?: string[]; tiersRun?: number[] }): this {
+    if (context.languages) this.languages = context.languages;
+    if (context.frameworks) this.frameworks = context.frameworks;
+    if (context.tiersRun) this.tiersRun = context.tiersRun;
+    return this;
   }
 
   /**
@@ -229,6 +282,12 @@ export class ProofBundleBuilder {
       verdict = 'UNPROVEN';
     }
 
+    // Generate verification surface
+    const verificationSurface = this.buildVerificationSurface();
+
+    // Generate residual risks
+    const residualRisks = this.buildResidualRisks();
+
     // Build bundle
     const bundle: ProofBundle = {
       version: '1.0.0',
@@ -239,6 +298,7 @@ export class ProofBundleBuilder {
         version: this.ast.version,
         hash: this.hashAST(this.ast),
       },
+      verificationSurface,
       evidence: this.evidence,
       tests: this.tests,
       gate: this.gate || {
@@ -247,6 +307,7 @@ export class ProofBundleBuilder {
         violations: [],
         verdict: 'NO_SHIP',
       },
+      residualRisks,
       verdict,
       chain: this.chain,
     };
@@ -257,6 +318,184 @@ export class ProofBundleBuilder {
     this.addChainEntry('finalize', '', bundle.bundleId);
 
     return bundle;
+  }
+
+  /**
+   * Build verification surface from evidence and context
+   */
+  private buildVerificationSurface(): VerificationSurface {
+    // Collect unique property types that were verified
+    const propertiesVerified = new Set<string>();
+    const detectedButNotVerified = new Set<string>();
+
+    for (const ev of this.evidence) {
+      const propertyType = this.evidenceToPropertyType(ev);
+      if (ev.status === 'satisfied' || ev.status === 'partial') {
+        propertiesVerified.add(propertyType);
+      } else if (ev.status === 'unsatisfied' || ev.status === 'manual-review') {
+        detectedButNotVerified.add(propertyType);
+      }
+    }
+
+    // Explicitly out of scope (properties we know we can't verify)
+    const explicitlyOutOfScope = [
+      'rate-limiting',
+      'csrf-protection',
+      'business-logic-correctness',
+      'performance-scalability',
+      'third-party-service-behavior',
+      'runtime-monitoring',
+      'distributed-tracing',
+    ];
+
+    return {
+      languages: this.languages,
+      frameworks: this.frameworks,
+      tiersRun: this.tiersRun,
+      propertiesVerified: Array.from(propertiesVerified),
+      explicitlyOutOfScope,
+      detectedButNotVerified: Array.from(detectedButNotVerified),
+    };
+  }
+
+  /**
+   * Build residual risk ledger from unverified/partial evidence
+   */
+  private buildResidualRisks(): ResidualRisk[] {
+    const risks: ResidualRisk[] = [];
+
+    // Collect unverified properties
+    const unverifiedProperties = this.evidence.filter(
+      e => e.status === 'manual-review' || e.status === 'unsatisfied'
+    );
+
+    for (const ev of unverifiedProperties) {
+      const propertyType = this.evidenceToPropertyType(ev);
+      const riskInfo = this.getRiskInfo(propertyType, ev);
+
+      risks.push({
+        id: `${propertyType}-${this.hashString(ev.clause.id).slice(0, 8)}`,
+        risk: riskInfo.risk,
+        impact: riskInfo.impact,
+        reasonNotVerified: ev.status === 'manual-review' 
+          ? 'Requires manual review'
+          : ev.notes || 'Unable to verify automatically',
+        recommendedMitigation: riskInfo.mitigation,
+        owner: riskInfo.owner,
+        status: 'acknowledged',
+        severity: riskInfo.severity,
+        relatedProperty: propertyType,
+      });
+    }
+
+    // Add risks for explicitly out-of-scope items that were detected in code
+    if (this.gate?.violations) {
+      for (const violation of this.gate.violations) {
+        if (violation.severity === 'critical' || violation.severity === 'high') {
+          risks.push({
+            id: `gate-${violation.ruleId}-${this.hashString(violation.file).slice(0, 8)}`,
+            risk: `Gate violation: ${violation.ruleId}`,
+            impact: violation.message,
+            reasonNotVerified: 'Detected by gate scanner but not formally verified',
+            recommendedMitigation: 'Address gate violation or document risk acceptance',
+            owner: 'Engineering',
+            status: 'acknowledged',
+            severity: violation.severity,
+          });
+        }
+      }
+    }
+
+    return risks;
+  }
+
+  /**
+   * Map evidence to property type
+   */
+  private evidenceToPropertyType(ev: Evidence): string {
+    const clauseType = ev.clause.type;
+    const source = ev.clause.source.toLowerCase();
+
+    if (source.includes('auth')) return 'auth-coverage';
+    if (source.includes('validation') || source.includes('input')) return 'input-validation';
+    if (source.includes('sql') || source.includes('injection')) return 'sql-injection';
+    if (source.includes('secret') || source.includes('credential')) return 'secret-exposure';
+    if (source.includes('error') || source.includes('exception')) return 'error-handling';
+    if (source.includes('import') || source.includes('dependency')) return 'import-integrity';
+    if (source.includes('type')) return 'type-safety';
+
+    return clauseType === 'precondition' ? 'precondition-check' : 'postcondition-check';
+  }
+
+  /**
+   * Get risk information for a property type
+   */
+  private getRiskInfo(propertyType: string, ev: Evidence): {
+    risk: string;
+    impact: string;
+    mitigation: string;
+    owner: ResidualRisk['owner'];
+    severity: ResidualRisk['severity'];
+  } {
+    const riskMap: Record<string, any> = {
+      'auth-coverage': {
+        risk: 'Missing or incomplete authentication verification',
+        impact: 'Unauthorized access to protected resources',
+        mitigation: 'Add authentication middleware to all protected routes',
+        owner: 'Engineering',
+        severity: 'critical',
+      },
+      'input-validation': {
+        risk: 'Unvalidated user input',
+        impact: 'Injection attacks, data corruption, or unexpected behavior',
+        mitigation: 'Add input validation using Zod or similar library',
+        owner: 'Engineering',
+        severity: 'high',
+      },
+      'sql-injection': {
+        risk: 'SQL injection vulnerability',
+        impact: 'Database compromise, data theft, or data loss',
+        mitigation: 'Use parameterized queries or ORM',
+        owner: 'Security',
+        severity: 'critical',
+      },
+      'secret-exposure': {
+        risk: 'Hardcoded secrets or credentials',
+        impact: 'Credential theft, unauthorized access',
+        mitigation: 'Move secrets to environment variables or secret manager',
+        owner: 'Security',
+        severity: 'critical',
+      },
+      'error-handling': {
+        risk: 'Inadequate error handling',
+        impact: 'Information disclosure, poor user experience, or crashes',
+        mitigation: 'Add try-catch blocks and return appropriate error codes',
+        owner: 'Engineering',
+        severity: 'medium',
+      },
+      'import-integrity': {
+        risk: 'Unverified or hallucinated imports',
+        impact: 'Runtime failures, dependency confusion attacks',
+        mitigation: 'Verify all imports exist in package.json and node_modules',
+        owner: 'Engineering',
+        severity: 'high',
+      },
+      'type-safety': {
+        risk: 'Type safety not verified',
+        impact: 'Runtime type errors, unexpected behavior',
+        mitigation: 'Enable TypeScript strict mode and fix type errors',
+        owner: 'Engineering',
+        severity: 'medium',
+      },
+    };
+
+    return riskMap[propertyType] || {
+      risk: `Unverified property: ${ev.clause.source}`,
+      impact: 'Unknown risk impact',
+      mitigation: 'Manual review and verification required',
+      owner: 'Engineering',
+      severity: 'medium',
+    };
   }
 
   /**
@@ -305,9 +544,9 @@ export class ProofBundleBuilder {
     return this.hashObject(rest);
   }
 
-  private hashBundle(bundle: ProofBundle): string {
+  private hashBundle(bundle: ProofBundle | Omit<ProofBundle, 'bundleId' | 'signature'>): string {
     // Exclude bundleId and signature for deterministic hashing
-    const { bundleId, signature, ...rest } = bundle;
+    const { bundleId, signature, ...rest } = bundle as ProofBundle;
     return this.hashObject(rest);
   }
 }

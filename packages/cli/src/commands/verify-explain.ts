@@ -8,8 +8,19 @@
 
 import { join } from 'path';
 import type { UnifiedVerifyResult, FileVerifyResultEntry } from './verify.js';
-import type { ISLClaim, GateEvidence } from '@isl-lang/gate/verdict-scoring';
+import type { ISLClaim } from '@isl-lang/gate/verdict-scoring';
 import { scoreVerdicts, DEFAULT_SCORING_CONFIG, generateExplainReports } from '@isl-lang/gate/verdict-scoring';
+
+// GateEvidence type definition (if not exported from gate)
+type GateEvidenceSource = 'isl-spec' | 'specless-scanner' | 'static-analysis' | 'runtime-probe' | 'test-execution' | 'manual-review';
+
+interface GateEvidence {
+  source: GateEvidenceSource;
+  check: string;
+  result: 'pass' | 'warn' | 'fail' | 'skip';
+  confidence: number;
+  details?: string;
+}
 
 // ============================================================================
 // Conversion Helpers
@@ -59,7 +70,7 @@ function convertToEvidence(result: UnifiedVerifyResult): GateEvidence[] {
   
   for (const file of result.files) {
     evidence.push({
-      source: file.mode === 'ISL verified' ? 'isl-spec' : 'specless-scanner',
+      source: (file.mode === 'ISL verified' ? 'isl-spec' : 'specless-scanner') as GateEvidenceSource,
       check: `file:${file.file}`,
       result: file.status === 'PASS' ? 'pass'
         : file.status === 'WARN' ? 'warn'
@@ -72,7 +83,7 @@ function convertToEvidence(result: UnifiedVerifyResult): GateEvidence[] {
     // Add blockers as evidence
     for (const blocker of file.blockers) {
       evidence.push({
-        source: file.mode === 'ISL verified' ? 'isl-spec' : 'specless-scanner',
+        source: (file.mode === 'ISL verified' ? 'isl-spec' : 'specless-scanner') as GateEvidenceSource,
         check: `blocker:${file.file}`,
         result: 'fail',
         confidence: 1.0,
@@ -100,7 +111,7 @@ export async function generateExplainReportsForVerify(
   const evidence = convertToEvidence(result);
   
   // Score verdicts
-  const scoringResult = scoreVerdicts(claims, evidence, DEFAULT_SCORING_CONFIG);
+  const scoringResult = scoreVerdicts(claims, evidence as any, DEFAULT_SCORING_CONFIG);
   
   // Generate reports
   const reports = await generateExplainReports(scoringResult, outputDir);

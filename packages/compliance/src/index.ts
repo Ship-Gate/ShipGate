@@ -15,8 +15,9 @@ export { SOC2Framework, SOC2_CONTROLS } from './frameworks/soc2';
 export { PCIDSSFramework, PCI_REQUIREMENTS } from './frameworks/pci';
 export { HIPAAFramework, HIPAA_RULES } from './frameworks/hipaa';
 export { GDPRFramework, GDPR_ARTICLES } from './frameworks/gdpr';
-export { EUAIActFramework, EU_AI_ACT_ARTICLES } from './frameworks/eu-ai-act';
-export { FedRAMPFramework, FEDRAMP_CONTROLS } from './frameworks/fedramp';
+// TODO: Implement these frameworks
+// export { EUAIActFramework, EU_AI_ACT_ARTICLES } from './frameworks/eu-ai-act';
+// export { FedRAMPFramework, FEDRAMP_CONTROLS } from './frameworks/fedramp';
 
 // Aggregation
 export { ComplianceAggregator, aggregateCompliance } from './aggregator';

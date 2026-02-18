@@ -31,6 +31,37 @@ export { Sort, Expr, Decl, toSMTLib, sortToSMTLib, declToSMTLib, simplify, freeV
 // Prover
 export { Prover, verifyISLProperties } from './prover.js';
 
+// Input Validation Prover
+export type {
+  ValidationLibrary,
+  ConstraintQuality,
+  ValidationEvidence,
+  ValidationSchema,
+  ValidationField,
+  FieldConstraints,
+  FieldAccess,
+  EndpointInfo,
+  InputValidationPropertyProof,
+  Finding,
+} from './input-validation/types.js';
+
+export {
+  InputValidationProver,
+  proveInputValidation,
+  proveInputValidationMultiple,
+  detectValidation,
+  detectZodValidation,
+  detectJoiValidation,
+  detectYupValidation,
+  detectClassValidatorValidation,
+  detectManualValidation,
+  detectFastifyValidation,
+  traceFieldAccesses,
+  extractFieldNames,
+  checkCompleteness,
+  analyzeConstraintQuality,
+} from './input-validation/index.js';
+
 // ============================================================================
 // Convenience Functions
 // ============================================================================

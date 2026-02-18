@@ -252,18 +252,7 @@ export async function generateBadge(
  * Generate SLSA-style attestation JSON
  */
 function generateAttestationJSON(manifest: ProofBundleManifest, includeManifest = false): Record<string, unknown> {
-  const attestation: Record<string, unknown> = {
-    _type: 'https://in-toto.io/Statement/v1',
-    subject: [
-      {
-        name: `proof-bundle-${manifest.bundleId}`,
-        digest: {
-          sha256: manifest.bundleId,
-        },
-      },
-    ],
-    predicateType: 'https://isl-lang.dev/proof-bundle/v1',
-    predicate: {
+  const predicate: Record<string, unknown> = {
       verdict: manifest.verdict,
       verdictReason: manifest.verdictReason,
       spec: {
@@ -299,20 +288,19 @@ function generateAttestationJSON(manifest: ProofBundleManifest, includeManifest 
       },
       generatedAt: manifest.generatedAt,
       bundleId: manifest.bundleId,
-    },
-  };
+    };
   
   // Add tool versions if available
   if (manifest.toolVersions) {
-    attestation.predicate.toolchain = {
-      ...attestation.predicate.toolchain,
+    predicate.toolchain = {
+      ...(predicate.toolchain as Record<string, unknown>),
       ...manifest.toolVersions,
     };
   }
   
   // Add verification results if available
   if (manifest.verifyResults) {
-    attestation.predicate.verification = {
+    predicate.verification = {
       verdict: manifest.verifyResults.verdict,
       summary: manifest.verifyResults.summary,
     };
@@ -320,8 +308,22 @@ function generateAttestationJSON(manifest: ProofBundleManifest, includeManifest 
   
   // Include full manifest if requested
   if (includeManifest) {
-    attestation.predicate.manifest = manifest;
+    predicate.manifest = manifest;
   }
+
+  const attestation: Record<string, unknown> = {
+    _type: 'https://in-toto.io/Statement/v1',
+    subject: [
+      {
+        name: `proof-bundle-${manifest.bundleId}`,
+        digest: {
+          sha256: manifest.bundleId,
+        },
+      },
+    ],
+    predicateType: 'https://isl-lang.dev/proof-bundle/v1',
+    predicate,
+  };
   
   return attestation;
 }

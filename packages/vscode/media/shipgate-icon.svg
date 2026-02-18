@@ -1,5 +1,12 @@
-<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="16" height="16" rx="2" fill="#0a0a0f"/>
-  <path d="M8 2L2 8L8 14L14 8L8 2Z" fill="#00e68a" stroke="#00e68a" stroke-width="1" stroke-linejoin="round"/>
-  <circle cx="8" cy="8" r="2" fill="#0a0a0f"/>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Mast -->
+  <line x1="12" y1="2" x2="12" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Main sail (right, large) -->
+  <path d="M12 3 L20 14 L12 14 Z" fill="currentColor" opacity="0.9"/>
+  <!-- Jib sail (left, small) -->
+  <path d="M12 6 L5 14 L12 14 Z" fill="currentColor" opacity="0.55"/>
+  <!-- Hull -->
+  <path d="M5 15 Q12 18.5 19 15 L18 17 Q12 20 6 17 Z" fill="currentColor"/>
+  <!-- Water ripple -->
+  <path d="M3 19 Q7.5 17.5 12 19 Q16.5 20.5 21 19" stroke="currentColor" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.4"/>
 </svg>

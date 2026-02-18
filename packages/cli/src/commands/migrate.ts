@@ -175,10 +175,8 @@ export function printMigrateResult(result: MigrateResult): void {
 
     if (outputFile && outputFile !== inputFile) {
       console.log(`  Output: ${outputFile}`);
-    } else if (!dryRun) {
-      console.log('  File updated in place');
     } else {
-      console.log('  (dry run - no changes written)');
+      console.log('  File updated in place');
     }
 }
 

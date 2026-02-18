@@ -1,0 +1,31 @@
+ShipGate CI Toolkit — Commercial License
+Copyright (c) 2026 ShipGate
+
+This license governs use of the ShipGate CI Toolkit ("the Toolkit").
+By downloading or using the Toolkit, you agree to these terms.
+
+PERMITTED USES
+--------------
+- Internal use within a single organization (all tiers)
+- Modification of config files, presets, and CI templates for your own projects
+- Agency/freelance use within client projects (Team tier only — one client per seat)
+- Redistribution of ShipGate-produced reports and artifacts (e.g., SHIP certificates, proof bundles)
+
+PROHIBITED USES
+---------------
+- Resale, sublicensing, or redistribution of the Toolkit itself or any derivative of the Toolkit
+- Offering the Toolkit as a competing or complementary product or service to third parties
+- Removing or altering copyright notices or attribution
+
+TIER RESTRICTIONS
+-----------------
+- Solo (Tier A): Personal use only. One developer. No team usage. No commercial client work.
+- Pro (Tier B): Commercial use within one organization. Up to 3 developers.
+- Team (Tier C): Up to the purchased seat count. Includes agency/client project use.
+
+DISCLAIMER
+----------
+THE TOOLKIT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+THE AUTHORS SHALL NOT BE LIABLE FOR ANY DAMAGES ARISING FROM USE OF THE TOOLKIT.
+
+For licensing questions: support@shipgate.dev

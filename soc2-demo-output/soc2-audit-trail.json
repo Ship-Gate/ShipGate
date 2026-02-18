@@ -1,0 +1,365 @@
+{
+  "id": "e4a7a386e58e309e",
+  "timestamp": "2026-02-17T16:13:30.387Z",
+  "framework": "SOC2",
+  "organization": "Demo Organization",
+  "system": {
+    "kind": "Identifier",
+    "name": "Example",
+    "location": {
+      "file": "<input>",
+      "line": 4,
+      "column": 8,
+      "endLine": 4,
+      "endColumn": 15
+    }
+  },
+  "version": "1.0.0",
+  "summary": {
+    "totalControls": 21,
+    "implementedControls": 0,
+    "partialControls": 4,
+    "notImplementedControls": 17,
+    "overallCompliance": 0,
+    "criticalGaps": 0,
+    "highRiskGaps": 17,
+    "lastUpdated": "2026-02-17T16:13:30.387Z"
+  },
+  "controls": [
+    {
+      "controlId": "CC6.1",
+      "controlName": "Logical Access Security",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.387Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "CC6.2",
+      "controlName": "User Registration",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "CC6.3",
+      "controlName": "Credential Management",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "CC6.6",
+      "controlName": "External Boundaries",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "CC6.7",
+      "controlName": "Transmission Protection",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "CC6.8",
+      "controlName": "Unauthorized Software Prevention",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "CC7.1",
+      "controlName": "Detection of Changes",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "CC7.2",
+      "controlName": "System Monitoring",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "CC7.3",
+      "controlName": "Security Event Analysis",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "CC7.4",
+      "controlName": "Incident Response",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "CC7.5",
+      "controlName": "Recovery Procedures",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "CC8.1",
+      "controlName": "Change Authorization",
+      "category": "Security",
+      "status": "partial",
+      "risk": "medium",
+      "evidenceCount": 1,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "CC9.1",
+      "controlName": "Risk Identification",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "CC9.2",
+      "controlName": "Vendor Risk Management",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "A1.1",
+      "controlName": "Capacity Planning",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "A1.2",
+      "controlName": "Environmental Protections",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "C1.1",
+      "controlName": "Confidential Information Identification",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "C1.2",
+      "controlName": "Confidential Information Disposal",
+      "category": "Security",
+      "status": "not_implemented",
+      "risk": "high",
+      "evidenceCount": 0,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "PI1.1",
+      "controlName": "Input Validation",
+      "category": "Security",
+      "status": "partial",
+      "risk": "medium",
+      "evidenceCount": 1,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "PI1.2",
+      "controlName": "Processing Validation",
+      "category": "Security",
+      "status": "partial",
+      "risk": "medium",
+      "evidenceCount": 1,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    },
+    {
+      "controlId": "PI1.3",
+      "controlName": "Output Validation",
+      "category": "Security",
+      "status": "partial",
+      "risk": "medium",
+      "evidenceCount": 1,
+      "lastVerified": "2026-02-17T16:13:30.388Z",
+      "verifiedBy": "ShipGate CLI",
+      "artifacts": [
+        "isl-specification.isl"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "CC8.1-evidence-0",
+      "controlId": "CC8.1",
+      "type": "isl_spec",
+      "description": "ISL-first development process",
+      "source": "behavior [object Object]",
+      "timestamp": "2026-02-17T16:13:30.388Z",
+      "hash": "0be194e7d451ef54e72312f349acb6f6e70a14e9e8e18ce400945ca5153cdcf0",
+      "confidence": 0.8,
+      "artifacts": []
+    },
+    {
+      "id": "PI1.1-evidence-0",
+      "controlId": "PI1.1",
+      "type": "isl_spec",
+      "description": "1 preconditions defined",
+      "source": "[object Object].preconditions",
+      "timestamp": "2026-02-17T16:13:30.388Z",
+      "hash": "4f1fe88c0039b6f572d82b7e05bf3d5538e88adff82945473aa197f92a74f230",
+      "confidence": 0.8,
+      "artifacts": []
+    },
+    {
+      "id": "PI1.2-evidence-0",
+      "controlId": "PI1.2",
+      "type": "isl_spec",
+      "description": "1 postconditions defined",
+      "source": "[object Object].postconditions",
+      "timestamp": "2026-02-17T16:13:30.388Z",
+      "hash": "099f9564eabcb0e9474c6bd51a05d7c8e5e10870dc1fd8bf789128a05331f6b8",
+      "confidence": 0.8,
+      "artifacts": []
+    },
+    {
+      "id": "PI1.3-evidence-0",
+      "controlId": "PI1.3",
+      "type": "isl_spec",
+      "description": "1 postconditions defined",
+      "source": "[object Object].postconditions",
+      "timestamp": "2026-02-17T16:13:30.388Z",
+      "hash": "099f9564eabcb0e9474c6bd51a05d7c8e5e10870dc1fd8bf789128a05331f6b8",
+      "confidence": 0.8,
+      "artifacts": []
+    }
+  ],
+  "changes": [],
+  "attestations": [
+    {
+      "id": "system-attestation-1",
+      "type": "system",
+      "attestant": "ShipGate CLI",
+      "role": "Security Officer",
+      "statement": "I attest that this system has been reviewed and meets the compliance requirements based on ISL verification evidence.",
+      "timestamp": "2026-02-17T16:13:30.388Z",
+      "status": "active",
+      "evidence": [
+        "isl-specification.isl",
+        "verification-report.json"
+      ]
+    }
+  ]
+}

@@ -7,6 +7,11 @@ import { ShipGateCodeLens } from './codelens';
 import { ShipGateStatusBar } from './statusbar';
 import { runShipgateScan, resolveShipgateExecutable } from './cli/shipgateRunner';
 import type { ScanResult, FileFinding } from './model/types';
+import { ProofBundlePanelProvider } from './views/proof-bundle-panel';
+import { EvidenceDecorationManager } from './views/evidence-decorations';
+import { EvidenceCodeLensProvider, ImportDecorationManager } from './views/evidence-codelens';
+import { FileDecorationProvider } from './views/file-decorations';
+import { registerProofCommands } from './commands/proof-commands';
 
 const execAsync = promisify(exec);
 
@@ -14,6 +19,11 @@ let sidebarProvider: ShipGateSidebarProvider;
 let diagnostics: ShipGateDiagnostics;
 let statusBar: ShipGateStatusBar;
 let codeLens: ShipGateCodeLens;
+let proofBundlePanel: ProofBundlePanelProvider;
+let evidenceDecorations: EvidenceDecorationManager;
+let evidenceCodeLens: EvidenceCodeLensProvider;
+let importDecorations: ImportDecorationManager;
+let fileDecorations: FileDecorationProvider;
 let extensionContext: vscode.ExtensionContext;
 
 function getCliCommand(): string {
@@ -43,6 +53,14 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
+  // Proof Bundle Panel
+  proofBundlePanel = new ProofBundlePanelProvider(context.extensionUri, context);
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider('shipgate.proofBundle', proofBundlePanel, {
+      webviewOptions: { retainContextWhenHidden: true }
+    })
+  );
+
   // Diagnostics
   diagnostics = new ShipGateDiagnostics();
   context.subscriptions.push(diagnostics);
@@ -62,9 +80,35 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
+  // Evidence CodeLens
+  evidenceCodeLens = new EvidenceCodeLensProvider();
+  context.subscriptions.push(
+    vscode.languages.registerCodeLensProvider(
+      [
+        { language: 'typescript' },
+        { language: 'typescriptreact' },
+        { language: 'javascript' },
+        { language: 'javascriptreact' },
+      ],
+      evidenceCodeLens
+    )
+  );
+
   // Status bar
   statusBar = new ShipGateStatusBar();
   context.subscriptions.push(statusBar);
+
+  // Evidence Decorations
+  evidenceDecorations = new EvidenceDecorationManager(context);
+  context.subscriptions.push(evidenceDecorations);
+
+  // Import Decorations
+  importDecorations = new ImportDecorationManager();
+  context.subscriptions.push(importDecorations);
+
+  // File Decorations
+  fileDecorations = new FileDecorationProvider();
+  context.subscriptions.push(vscode.window.registerFileDecorationProvider(fileDecorations));
 
   // Commands
   context.subscriptions.push(
@@ -82,7 +126,23 @@ export function activate(context: vscode.ExtensionContext) {
     }),
     vscode.commands.registerCommand('shipgate.showFindings', () => showFindings()),
     vscode.commands.registerCommand('shipgate.clearFindings', () => clearFindings()),
+    vscode.commands.registerCommand('shipgate.trustScore', () => runInTerminal('trust-score', 'ShipGate Trust Score')),
+    vscode.commands.registerCommand('shipgate.coverage', () => runInTerminal('coverage', 'ShipGate Coverage')),
+    vscode.commands.registerCommand('shipgate.drift', () => runInTerminal('drift', 'ShipGate Drift')),
+    vscode.commands.registerCommand('shipgate.securityReport', () => runInTerminal('security-report', 'ShipGate Security')),
+    vscode.commands.registerCommand('shipgate.compliance', () => runInTerminal('compliance soc2', 'ShipGate Compliance')),
+    vscode.commands.registerCommand('shipgate.policyCheck', () => runInTerminal('policy check', 'ShipGate Policy')),
+    vscode.commands.registerCommand('shipgate.genSpec', () => runGenSpec()),
+    vscode.commands.registerCommand('shipgate.fmtSpecs', () => runInTerminal('fmt .', 'ShipGate Format')),
+    vscode.commands.registerCommand('shipgate.migrateSpecs', () => runInTerminal('migrate .', 'ShipGate Migrate')),
+    vscode.commands.registerCommand('shipgate.lintSpecs', () => runInTerminal('lint .', 'ShipGate Lint')),
+    vscode.commands.registerCommand('shipgate.chaosTest', () => runInTerminal('chaos .', 'ShipGate Chaos')),
+    vscode.commands.registerCommand('shipgate.simulate', () => runInTerminal('simulate', 'ShipGate Simulate')),
+    vscode.commands.registerCommand('shipgate.pbt', () => runInTerminal('pbt .', 'ShipGate PBT')),
   );
+
+  // Proof Bundle Commands
+  registerProofCommands(context);
 
   // Scan on save
   context.subscriptions.push(
@@ -149,21 +209,34 @@ const target = scope === 'file' && uri ? uri.fsPath : '.';
     });
 
     // Parse JSON output
-    const result = JSON.parse(stdout);
+    const cliResult = JSON.parse(stdout);
+    
+    // Format data for webview
+    const workspaceName = vscode.workspace.workspaceFolders?.[0]?.name || 'workspace';
+    const dashboardData = {
+      projectName: workspaceName,
+      branch: 'main', // TODO: Get from git
+      verdict: cliResult.result?.verdict || cliResult.verdict || 'UNKNOWN',
+      score: cliResult.result?.score || cliResult.score || 0,
+      files: cliResult.result?.files || cliResult.files || [],
+      coverage: cliResult.result?.coverage || cliResult.coverage || { specced: 0, total: 0 },
+      duration: cliResult.result?.duration || cliResult.duration || 0,
+      timestamp: new Date().toISOString()
+    };
 
     // Send results to sidebar
-    sidebarProvider.sendMessage({ type: 'results', data: result });
+    sidebarProvider.sendMessage({ type: 'results', data: dashboardData });
 
     // Update diagnostics and codelens with findings
-    const findings = fileFindingsToFindings(result.files, cwd);
+    const findings = fileFindingsToFindings(dashboardData.files, cwd);
     diagnostics.update(findings, cwd);
     codeLens.updateFindings(findings);
 
     // Update status bar
-    statusBar.setVerdict(result.verdict, result.score);
+    statusBar.setVerdict(dashboardData.verdict, dashboardData.score);
 
     // Fire-and-forget: POST result to dashboard API
-    postToDashboard(result, cwd);
+    postToDashboard(cliResult as any, cwd);
   } catch (err: any) {
     const errorMsg = err.message || 'Verification failed';
     sidebarProvider.sendMessage({ type: 'error', message: errorMsg });
@@ -227,6 +300,23 @@ terminal.sendText(`${getCliCommand()} heal "${activeFile}"`);
   }
 }
 
+function runInTerminal(subcommand: string, title: string): void {
+  const terminal = vscode.window.createTerminal(title);
+  terminal.show();
+  terminal.sendText(`${getCliCommand()} ${subcommand}`);
+}
+
+async function runGenSpec(): Promise<void> {
+  const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
+  if (!activeFile) {
+    vscode.window.showWarningMessage('Open a source file to generate a spec for it');
+    return;
+  }
+  const terminal = vscode.window.createTerminal('ShipGate Gen Spec');
+  terminal.show();
+  terminal.sendText(`${getCliCommand()} gen "${activeFile}"`);
+}
+
 async function toggleWatch() {
   const config = vscode.workspace.getConfiguration('shipgate');
   const current = config.get('watchMode');
@@ -270,32 +360,38 @@ async function clearFindings() {
 }
 
 /** Fire-and-forget POST of scan results to the dashboard API. */
-function postToDashboard(scanResult: ScanResult, cwd: string): void {
+function postToDashboard(scanResult: any, cwd: string): void {
   const config = vscode.workspace.getConfiguration('shipgate');
   const dashboardUrl = config.get<string>('dashboardApiUrl', 'http://localhost:3700');
-  const { result } = scanResult;
+  
+  // CLI may return flat JSON or nested under .result
+  const result = scanResult?.result ?? scanResult;
+  if (!result?.verdict) return; // nothing useful to post
+
+  const files: any[] = result.files ?? [];
+  const coverage = result.coverage ?? { specced: 0, total: 0 };
 
   const body = JSON.stringify({
     repo: cwd.split(/[\\/]/).pop() || 'unknown',
     branch: 'main',
     commit: 'local',
     verdict: result.verdict,
-    score: result.score,
+    score: result.score ?? 0,
     coverage: {
-      specced: result.coverage.specced,
-      total: result.coverage.total,
-      percentage: result.coverage.total > 0
-        ? Math.round((result.coverage.specced / result.coverage.total) * 100)
+      specced: coverage.specced ?? 0,
+      total: coverage.total ?? 0,
+      percentage: (coverage.total ?? 0) > 0
+        ? Math.round(((coverage.specced ?? 0) / coverage.total) * 100)
         : 0,
     },
-    files: result.files.map(f => ({
+    files: files.map(f => ({
       path: f.file,
-      verdict: f.status.toLowerCase() as 'pass' | 'warn' | 'fail',
+      verdict: (f.status ?? 'fail').toLowerCase() as 'pass' | 'warn' | 'fail',
       method: (f.mode === 'isl' ? 'isl' : 'specless') as 'isl' | 'specless',
-      score: f.score,
-      violations: [...f.blockers, ...f.errors],
+      score: f.score ?? 0,
+      violations: [...(f.blockers ?? []), ...(f.errors ?? [])],
     })),
-    duration: result.duration,
+    duration: result.duration ?? 0,
     triggeredBy: 'vscode' as const,
   });
 

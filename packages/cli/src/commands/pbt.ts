@@ -129,8 +129,8 @@ async function runPBTVerification(
     const pbt = await import('@isl-lang/pbt');
 
     // Create a simple implementation wrapper from the source
-    const createMockImpl = (behaviorName: string): pbt.BehaviorImplementation => ({
-      async execute(input: Record<string, unknown>): Promise<pbt.ExecutionResult> {
+    const createMockImpl = (behaviorName: string): any => ({
+      async execute(input: Record<string, unknown>): Promise<any> {
         const email = input.email as string | undefined;
         const password = input.password as string | undefined;
 
@@ -360,11 +360,11 @@ export async function pbt(specFile: string, options: PBTOptions): Promise<PBTRes
       }
     }
     
-    ast = getMergedAST(graph) as DomainDeclaration | undefined;
+    ast = getMergedAST(graph) as unknown as DomainDeclaration | undefined;
     
     if (!ast && graph.graphModules.size > 0) {
       const entryModule = graph.graphModules.get(graph.entryPoint);
-      ast = entryModule?.ast as DomainDeclaration | undefined;
+      ast = entryModule?.ast as unknown as DomainDeclaration | undefined;
     }
     
     // Fallback to single-file parsing
@@ -382,7 +382,7 @@ export async function pbt(specFile: string, options: PBTOptions): Promise<PBTRes
         };
       }
       
-      ast = parsedAst as DomainDeclaration;
+      ast = parsedAst as unknown as DomainDeclaration;
     }
 
     // Read implementation

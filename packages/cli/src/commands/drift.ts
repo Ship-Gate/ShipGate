@@ -10,7 +10,7 @@
  *   isl drift --output <format> # Output format (text, json, diff)
  */
 
-import { readFile, readdir, stat } from 'fs/promises';
+import { readFile, readdir, stat as fsStat } from 'fs/promises';
 import { existsSync } from 'fs';
 import { resolve, relative, dirname, basename, extname, join } from 'path';
 import { glob } from 'glob';
@@ -33,6 +33,7 @@ async function getRouteDetector() {
       } else {
         // Try importing from audit-v2 subpath if available
         try {
+          // @ts-ignore - audit-v2 subpath not available
           const auditV2Module = await import('@isl-lang/core/audit-v2');
           if (auditV2Module && typeof auditV2Module.detectRoutes === 'function') {
             detectRoutesFn = auditV2Module.detectRoutes;
@@ -210,10 +211,10 @@ async function scanRoutes(codePath: string): Promise<DetectedRoute[]> {
   for (const file of files) {
     try {
       const content = await readFile(file, 'utf-8');
-      const result = detectRoutes(content, relative(codePath, file), {
+      const result = detectRoutes ? detectRoutes(content, relative(codePath, file), {
         minConfidence: 0.4,
         includeSnippets: false,
-      });
+      }) : { candidates: [] };
       
       for (const candidate of result.candidates) {
         if (candidate.category === 'route' && candidate.httpMethod && candidate.routePath) {
@@ -410,10 +411,10 @@ async function parseSpec(specPath: string): Promise<{
       name: behavior.name.name,
       inputs: behavior.input.fields.map(f => ({
         name: f.name.name,
-        type: f.type.type,
+        type: (f.type as any).type ?? 'unknown',
       })),
-      outputs: behavior.output ? { type: behavior.output.type.type } : undefined,
-      errors: behavior.errors.map(e => ({ name: e.name.name })),
+      outputs: behavior.output ? (behavior.output as any).type?.type ?? 'void' : 'void',
+      errors: (behavior as any).errors?.map((e: any) => ({ name: e.name.name })),
     });
   }
   
@@ -423,7 +424,7 @@ async function parseSpec(specPath: string): Promise<{
       name: entity.name.name,
       fields: entity.fields.map(f => ({
         name: f.name.name,
-        type: f.type.type,
+        type: (f.type as any).type ?? 'unknown',
         optional: f.optional !== undefined,
       })),
     });
@@ -451,7 +452,7 @@ export async function detectDrift(
   let specFiles: string[] = [];
   if (specPath) {
     const absSpecPath = resolve(specPath);
-    const stat = await stat(absSpecPath);
+    const stat = await fsStat(absSpecPath);
     if (stat.isDirectory()) {
       const files = await readdir(absSpecPath);
       specFiles = files

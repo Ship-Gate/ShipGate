@@ -90,11 +90,13 @@ export async function simulateCommand(options: SimulateOptions): Promise<Simulat
     let parseTestData: any;
     
     try {
+      // @ts-expect-error - @isl-lang/interpreter is an optional dependency
       const interpreterModule = await import('@isl-lang/interpreter');
       RuntimeSimulator = interpreterModule.RuntimeSimulator;
       simulate = interpreterModule.simulate;
       parseTestData = interpreterModule.parseTestData;
-    } catch (error) {
+    } catch (error: unknown) {
+      // @isl-lang/interpreter is an optional dependency
       throw new Error(
         '@isl-lang/interpreter is not available. Install it with: pnpm add -D @isl-lang/interpreter'
       );
@@ -195,7 +197,6 @@ function generateSimpleTestData(behavior: Domain['behaviors'][0], count: number)
           case 'Int':
             pre[fieldName] = 10 + i;
             break;
-          case 'Float':
           case 'Decimal':
             pre[fieldName] = 10.5 + i;
             break;

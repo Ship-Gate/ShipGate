@@ -182,7 +182,7 @@ const LINT_RULES: LintRule[] = [
     severity: 'error',
     check: (domain, filePath) => {
       const issues: LintIssue[] = [];
-      const behaviorNames = new Map<string, BehaviorDeclaration[]>();
+      const behaviorNames = new Map<string, any[]>();
       
       for (const behavior of domain.behaviors || []) {
         const name = behavior.name.name;
@@ -275,21 +275,22 @@ const LINT_RULES: LintRule[] = [
     severity: 'warning',
     check: (domain, filePath) => {
       const issues: LintIssue[] = [];
-      const importedNames = new Map<string, string[]>(); // name -> [sources]
+      const importedNames: string[] = []; // name -> [sources]
       
       // Collect all imported names
       for (const importDecl of domain.imports || []) {
-        for (const name of importDecl.names || []) {
+        const names = (importDecl as any).names || [];
+        for (const name of names) {
           const symbolName = name.name;
-          if (!importedNames.has(symbolName)) {
-            importedNames.set(symbolName, []);
+          if (!importedNames.includes(symbolName)) {
+            importedNames.push(symbolName);
           }
-          importedNames.get(symbolName)!.push(importDecl.from.value);
         }
       }
       
       // Check for ambiguous imports (same name from different sources)
-      for (const [name, sources] of importedNames.entries()) {
+      for (const name of importedNames) {
+        const sources = (domain.imports || []).filter((imp) => ((imp as any).names || []).some((n: any) => n.name === name)).map((imp) => imp.from.value);
         const uniqueSources = [...new Set(sources)];
         if (uniqueSources.length > 1) {
           issues.push({
@@ -332,8 +333,8 @@ const LINT_RULES: LintRule[] = [
                 severity: 'warning',
                 message: `Behavior '${behavior.name.name}' has unreachable postcondition "${postExpr}" due to precondition "${preExpr}"`,
                 file: filePath,
-                line: behavior.postconditions.span?.start?.line,
-                column: behavior.postconditions.span?.start?.column,
+                line: (behavior.postconditions as any).span?.start.line,
+                column: (behavior.postconditions as any).span?.start.column,
                 suggestion: 'Review preconditions and postconditions for logical consistency',
               });
             }
@@ -388,7 +389,8 @@ const LINT_RULES: LintRule[] = [
       const referenced = collectReferencedSymbols(domain);
       
       for (const importDecl of domain.imports || []) {
-        for (const name of importDecl.names || []) {
+        const names = (importDecl as any).names || [];
+        for (const name of names) {
           const symbolName = name.name;
           // Check if imported symbol is used
           if (!referenced.entities.has(symbolName) &&
@@ -945,8 +947,8 @@ export async function lint(file: string, options: LintOptions = {}): Promise<Lin
           severity: 'error' as const,
           message: e.message,
           file: filePath,
-          line: 'line' in e ? e.line : undefined,
-          column: 'column' in e ? e.column : undefined,
+          line: ('line' in e ? e.line as number : undefined) ?? 0,
+          column: ('column' in e ? e.column as number : undefined) ?? 0,
         })),
         stats: { errors: parseErrors.length, warnings: 0, info: 0, semanticErrors: 0, semanticWarnings: 0, semanticHints: 0 },
         duration: Date.now() - startTime,

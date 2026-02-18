@@ -21,8 +21,9 @@ import { PCIDSSFramework } from './frameworks/pci';
 import { SOC2Framework } from './frameworks/soc2';
 import { HIPAAFramework } from './frameworks/hipaa';
 import { GDPRFramework } from './frameworks/gdpr';
-import { EUAIActFramework } from './frameworks/eu-ai-act';
-import { FedRAMPFramework } from './frameworks/fedramp';
+// TODO: Implement these frameworks
+// import { EUAIActFramework } from './frameworks/eu-ai-act';
+// import { FedRAMPFramework } from './frameworks/fedramp';
 import { EvidenceCollector } from './evidence';
 import { ComplianceAnalyzer } from './analyzer';
 
@@ -83,9 +84,9 @@ export class ComplianceGenerator {
       case 'gdpr':
         return new GDPRFramework().mapDomain(this.domain);
       case 'eu-ai-act':
-        return new EUAIActFramework().mapDomain(this.domain);
+        throw new Error('EU AI Act framework not yet implemented');
       case 'fedramp':
-        return new FedRAMPFramework().mapDomain(this.domain);
+        throw new Error('FedRAMP framework not yet implemented');
       default:
         throw new Error(`Unknown framework: ${framework}`);
     }

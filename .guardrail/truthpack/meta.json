@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-02-16T16:41:46.902Z",
-  "hash": "0000000019c8a9a0",
+  "generatedAt": "2026-02-17T20:32:00.679Z",
+  "hash": "000000006e58dd2b",
   "scannerVersions": {
     "routes": "1.0.0",
     "env": "1.0.0",
@@ -9,9 +9,9 @@
     "contracts": "1.0.0"
   },
   "summary": {
-    "routes": 988,
+    "routes": 1056,
     "envVars": 47,
     "authRules": 29,
-    "contracts": 9791
+    "contracts": 9933
   }
 }

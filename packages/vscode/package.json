@@ -1,9 +1,8 @@
 {
   "name": "shipgate-isl",
-  "private": true,
   "displayName": "Shipgate — Behavioral Verification",
   "description": "Behavioral verification for AI-generated code. Write intent specs, catch violations before they ship.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "shipgate",
   "license": "MIT",
   "author": "Shipgate Team",
@@ -52,14 +51,15 @@
       "activitybar": [{
         "id": "shipgate",
         "title": "ShipGate",
-        "icon": "media/shipgate-icon.png"
+        "icon": "media/shipgate-icon.svg"
       }]
     },
     "views": {
       "shipgate": [{
         "type": "webview",
         "id": "shipgate.sidebar",
-        "name": "ShipGate"
+        "name": "ShipGate",
+        "icon": "media/shipgate-icon.svg"
       }]
     },
     "languages": [

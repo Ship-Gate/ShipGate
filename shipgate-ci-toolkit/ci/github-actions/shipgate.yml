@@ -1,0 +1,70 @@
+name: ShipGate Quality Gate
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  shipgate:
+    name: ShipGate CI Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install ShipGate CLI
+        run: npm install -g @shipgate/cli
+
+      - name: Run ShipGate gate
+        id: gate
+        run: |
+          shipgate gate specs/ \
+            --impl src \
+            --threshold 90 \
+            --threshold 90 \
+            --format json \
+            --output .shipgate/report.json \
+            --ci
+        continue-on-error: true
+
+      - name: Upload ShipGate report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shipgate-report
+          path: .shipgate/report.json
+
+      - name: Annotate PR with findings
+        if: github.event_name == 'pull_request' && always()
+        run: |
+          if [ -f .shipgate/report.json ]; then
+            VERDICT=$(jq -r '.verdict' .shipgate/report.json)
+            SCORE=$(jq -r '.score' .shipgate/report.json)
+            BLOCKERS=$(jq -r '.summary.blockerCount' .shipgate/report.json)
+            echo "### ShipGate: $VERDICT (score: $SCORE/100, blockers: $BLOCKERS)" >> $GITHUB_STEP_SUMMARY
+
+            if [ "$VERDICT" = "FAIL" ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Blocking findings:**" >> $GITHUB_STEP_SUMMARY
+              jq -r '.findings[] | select(.severity == "critical" or .severity == "high") | "- [\(.severity)] \(.title) — \(.file):\(.line // "?")"' \
+                .shipgate/report.json >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+      - name: Fail if NO-SHIP
+        if: steps.gate.outcome == 'failure'
+        run: |
+          echo "ShipGate verdict: FAIL. See report artifact for details."
+          exit 1

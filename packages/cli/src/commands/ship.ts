@@ -107,7 +107,7 @@ export async function shipCommand(
     };
 
     try {
-      shipModule = await import('@isl-lang/isl-ship');
+      shipModule = await import('@isl-lang/isl-ship') as any;
     } catch {
       spinner?.fail('Failed to load @isl-lang/isl-ship');
       return {
@@ -139,7 +139,6 @@ export async function shipCommand(
       },
       projectName: options.name,
       deploy: options.deploy,
-      dbUrl: options.dbUrl,
       force: options.force,
       contracts: !options.noContracts,
       verbose: options.verbose,

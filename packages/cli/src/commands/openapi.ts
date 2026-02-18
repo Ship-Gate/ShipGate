@@ -156,7 +156,7 @@ export async function openapiValidate(
       spec = JSON.parse(content);
     }
 
-    await SwaggerParser.validate(spec as Parameters<typeof SwaggerParser.validate>[0]);
+    await SwaggerParser.validate(spec as unknown as Parameters<typeof SwaggerParser.validate>[0]);
 
     return {
       success: true,

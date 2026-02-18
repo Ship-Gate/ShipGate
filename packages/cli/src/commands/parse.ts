@@ -57,8 +57,8 @@ function formatAST(ast: DomainDeclaration, indent = 0): string[] {
       lines.push(`${prefix}    ${chalk.green('•')} ${entity.name.name}`);
       if (entity.fields && entity.fields.length > 0) {
         for (const field of entity.fields) {
-          const typeStr = field.type?.name ?? 'unknown';
-          lines.push(`${prefix}      ${chalk.gray('-')} ${field.name.name}: ${chalk.yellow(typeStr)}`);
+          const typeName = (field.type as any).name ?? 'unknown';
+          lines.push(`${prefix}      ${chalk.gray('-')} ${field.name.name}: ${chalk.yellow(typeName)}`);
         }
       }
     }
@@ -68,16 +68,17 @@ function formatAST(ast: DomainDeclaration, indent = 0): string[] {
   if (ast.behaviors.length > 0) {
     lines.push(`${prefix}  ${chalk.gray('Behaviors:')}`);
     for (const behavior of ast.behaviors) {
-      const inputs = behavior.inputs?.map(i => `${i.name.name}: ${i.type?.name ?? '?'}`).join(', ') ?? '';
-      const output = behavior.output?.name ?? 'void';
+      const inputs = behavior.input?.fields?.map((i: any) => `${i.name.name}: ${(i.type as any)?.name ?? '?'}`).join(', ') ?? '';
+      const output = (behavior.output as any)?.name ?? 'void';
       lines.push(`${prefix}    ${chalk.blue('•')} ${behavior.name.name}(${inputs}) -> ${chalk.yellow(output)}`);
       
       // Postconditions count
-      const postCount = behavior.body?.postconditions?.length ?? 0;
-      const scenarioCount = behavior.body?.scenarios?.length ?? 0;
-      if (postCount > 0 || scenarioCount > 0) {
+      const bodyItems = (behavior as any).body?.statements ?? [];
+      const postconditions = bodyItems.filter((s: any) => s.type === 'postcondition').map((s: any) => s.value);
+      const scenarioCount = bodyItems.filter((s: any) => s.type === 'scenario').length;
+      if (postconditions.length > 0 || scenarioCount > 0) {
         const parts: string[] = [];
-        if (postCount > 0) parts.push(`${postCount} postcondition${postCount === 1 ? '' : 's'}`);
+        if (postconditions.length > 0) parts.push(`${postconditions.length} postcondition${postconditions.length === 1 ? '' : 's'}`);
         if (scenarioCount > 0) parts.push(`${scenarioCount} scenario${scenarioCount === 1 ? '' : 's'}`);
         lines.push(`${prefix}      ${chalk.gray(parts.join(', '))}`);
       }
@@ -108,20 +109,20 @@ function astToJson(ast: DomainDeclaration): object {
       name: e.name.name,
       fields: e.fields?.map(f => ({
         name: f.name.name,
-        type: f.type?.name ?? null,
+        type: (f.type as any).name ?? null,
         optional: f.optional ?? false,
       })) ?? [],
     })),
     behaviors: ast.behaviors.map(b => ({
       type: 'Behavior',
       name: b.name.name,
-      inputs: b.inputs?.map(i => ({
+      inputs: b.input?.fields?.map((i: any) => ({
         name: i.name.name,
-        type: i.type?.name ?? null,
+        type: (i.type as any)?.name ?? null,
       })) ?? [],
-      output: b.output?.name ?? null,
-      postconditions: b.body?.postconditions?.length ?? 0,
-      scenarios: b.body?.scenarios?.length ?? 0,
+      output: (b.output as any)?.name ?? null,
+      postconditions: (b as any).body?.postconditions?.length ?? 0,
+      scenarios: (b as any).body?.scenarios?.length ?? 0,
     })),
     invariants: ast.invariants?.map(i => ({
       type: 'Invariant',

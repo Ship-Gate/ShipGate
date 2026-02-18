@@ -153,14 +153,14 @@ export function printSeedResetResult(result: SeedResetResult, format: 'pretty' |
   }
 }
 
-export function getSeedGenerateExitCode(result: SeedGenerateResult): ExitCode {
-  return result.success ? ExitCode.OK : ExitCode.RUNTIME_ERROR;
+export function getSeedGenerateExitCode(result: SeedGenerateResult): typeof ExitCode[keyof typeof ExitCode] {
+  return result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR;
 }
 
-export function getSeedRunExitCode(result: SeedRunResult): ExitCode {
-  return result.success ? ExitCode.OK : ExitCode.RUNTIME_ERROR;
+export function getSeedRunExitCode(result: SeedRunResult): typeof ExitCode[keyof typeof ExitCode] {
+  return result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR;
 }
 
-export function getSeedResetExitCode(result: SeedResetResult): ExitCode {
-  return result.success ? ExitCode.OK : ExitCode.RUNTIME_ERROR;
+export function getSeedResetExitCode(result: SeedResetResult): typeof ExitCode[keyof typeof ExitCode] {
+  return result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR;
 }

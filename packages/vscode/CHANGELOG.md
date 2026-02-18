@@ -1,25 +1,48 @@
 # Changelog
 
-## 0.1.1
-
-### Patch Changes
-
-- Updated dependencies [b67276d]
-  - @isl-lang/lsp-server@1.0.0
-  - @isl-lang/firewall@0.2.1
-
-All notable changes to the **Shipgate ISL** VS Code extension are documented here.
-
+All notable changes to the **Shipgate ISL** VS Code extension are documented here.  
 This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## [0.3.0] — 2026-02-17
+
+### Added
+
+- **New gate logo** — Marketplace icon updated to the official Shipgate S|G gate logo.
+- **Sailship sidebar icon** — Activity bar and sidebar now display a clean sailship SVG that adapts to VS Code dark/light themes.
+- **CSP-compliant webview** — Removed external Google Fonts dependency; sidebar panel now uses VS Code's native font variables (`--vscode-font-family`, `--vscode-editor-font-family`) for perfect theme integration and CSP compliance.
+- **Dashboard sailship header** — Dashboard panel header icon updated to ⛵.
+
+### Fixed
+
+- **Webview Content Security Policy** — Added explicit CSP meta tag to the sidebar webview, preventing console security warnings and potential future Marketplace rejections.
+- **External font loading** — Google Fonts was silently blocked by VS Code's default CSP. Fonts now correctly inherit from the user's VS Code theme and editor settings.
 
 ### Changed
 
-- **Gate on save** — Clarified configuration descriptions for `shipgate.firewall.runOnSave` (lightweight checks on save) and `shipgate.scan.scanOnSave` (full gate on save). Firewall on save is enabled by default.
-- **Marketplace** — Added "Machine Learning" category for better discovery among AI coding tools.
+- Bumped version to `0.3.0`.
+
+---
+
+## [0.2.0] — 2026-02-10
+
+### Added
+
+- **ShipGate Dashboard** — Full-featured sidebar panel with trust score ring, verdict badge, file-level findings, pipeline status, and action buttons.
+- **Proof Bundle Viewer** — Dedicated webview panel for inspecting verification proof bundles (`.shipgate/proof-bundle.json`).
+- **Evidence Decorations** — Gutter decorations showing pass/fail evidence markers in source files after verification.
+- **Evidence CodeLens** — Inline CodeLens badges above functions showing verification evidence source.
+- **File Decorations** — Explorer file decorations (✓/✗) reflecting spec coverage and verification status.
+- **Watch mode** — `shipgate.toggleWatch` command and `shipgate.watchMode` config toggle.
+- **Trust score command** — `shipgate.trustScore` shows the current trust score in a terminal.
+- **Coverage, drift, security, compliance, chaos, simulate, PBT commands** — Full command palette integration for all CLI subcommands.
+- **Scan on save** — `shipgate.scanOnSave` config triggers verification on every file save.
+
+### Fixed
+
+- CLI exit-code handling — `shipgate verify` exits 1 for NO_SHIP but still emits JSON; the extension now correctly parses results in both cases.
+- Sidebar state persistence — last scan results are restored when the panel is re-opened via `workspaceState`.
 
 ---
 

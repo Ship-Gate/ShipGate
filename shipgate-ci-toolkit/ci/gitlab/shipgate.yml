@@ -1,0 +1,25 @@
+shipgate-gate:
+  stage: test
+  image: node:20-alpine
+  before_script:
+    - npm ci
+    - npm install -g @shipgate/cli
+  script:
+    - |
+      shipgate gate specs/ \
+        --impl src \
+        --threshold 90 \
+        --threshold 90 \
+        --format json \
+        --out gl-code-quality-report.json \
+        --ci
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+    paths:
+      - gl-code-quality-report.json
+    when: always
+    expire_in: 7 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

@@ -171,7 +171,7 @@ export function printCreateBundleResult(
 /**
  * Get exit code for create bundle result
  */
-export function getCreateBundleExitCode(result: CreateBundleResult): ExitCode {
+export function getCreateBundleExitCode(result: CreateBundleResult): number {
   return result.success ? ExitCodeEnum.SUCCESS : ExitCodeEnum.ISL_ERROR;
 }
 
@@ -316,7 +316,7 @@ export function printVerifyBundleResult(
 /**
  * Get exit code for verify bundle result
  */
-export function getVerifyBundleExitCode(result: VerifyBundleResult): ExitCode {
+export function getVerifyBundleExitCode(result: VerifyBundleResult): number {
   if (!result.success) {
     return ExitCodeEnum.ISL_ERROR;
   }

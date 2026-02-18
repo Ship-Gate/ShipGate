@@ -1,0 +1,161 @@
+{
+  "decision": "SHIP",
+  "trustScore": 90,
+  "confidence": 100,
+  "clauses": [
+    {
+      "id": "scenarios-getuser-preconditions-should-satisfy-precondition:-(input.id-!==-null)-should-validate-precondition",
+      "type": "scenarios",
+      "description": "GetUser Preconditions should satisfy precondition: (input.id !== null) should validate precondition",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "scenarios-getuser-preconditions-should-satisfy-precondition:-(input.id-!==-null)-should-reject-invalid-input",
+      "type": "scenarios",
+      "description": "GetUser Preconditions should satisfy precondition: (input.id !== null) should reject invalid input",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "postconditions-getuser-postconditions-on-success-should-satisfy-all-success-postconditions",
+      "type": "postconditions",
+      "description": "GetUser Postconditions on success should satisfy all success postconditions",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "scenarios-getuser-contract-implications-success-implies-(result.id-===-input.id)",
+      "type": "scenarios",
+      "description": "GetUser Contract Implications success implies (result.id === input.id)",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "scenarios-getuser-error-cases-should-return-not_found-when-no-user-with-the-given-id-exists",
+      "type": "scenarios",
+      "description": "GetUser Error Cases should return NOT_FOUND when No user with the given ID exists",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "scenarios-getuser-error-cases-should-return-forbidden-when-caller-has-no-access",
+      "type": "scenarios",
+      "description": "GetUser Error Cases should return FORBIDDEN when caller has no access",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "scenarios-registeruser-preconditions-should-validate-length-constraint-should-validate-precondition",
+      "type": "scenarios",
+      "description": "RegisterUser Preconditions should validate length constraint should validate precondition",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "scenarios-registeruser-preconditions-should-validate-length-constraint-should-reject-invalid-input",
+      "type": "scenarios",
+      "description": "RegisterUser Preconditions should validate length constraint should reject invalid input",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "postconditions-registeruser-postconditions-on-success-should-satisfy-all-success-postconditions",
+      "type": "postconditions",
+      "description": "RegisterUser Postconditions on success should satisfy all success postconditions",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "scenarios-registeruser-contract-implications-success-implies-((((user.exists({-id:-result.id-})---...",
+      "type": "scenarios",
+      "description": "RegisterUser Contract Implications success implies ((((User.exists({ id: result.id }) - ...",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "scenarios-registeruser-error-cases-should-return-email_exists-when-email-already-registered",
+      "type": "scenarios",
+      "description": "RegisterUser Error Cases should return EMAIL_EXISTS when Email already registered",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "scenarios-registeruser-error-cases-should-return-invalid_email-when-email-format-is-invalid",
+      "type": "scenarios",
+      "description": "RegisterUser Error Cases should return INVALID_EMAIL when Email format is invalid",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "scenarios-registeruser-error-cases-should-return-weak_password-when-password-does-not-meet-minimum-requirements",
+      "type": "scenarios",
+      "description": "RegisterUser Error Cases should return WEAK_PASSWORD when Password does not meet minimum requirements",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "postconditions-registeruser-postcondition-verification-on-success-returns-a-defined-result-object",
+      "type": "postconditions",
+      "description": "RegisterUser postcondition verification on success returns a defined result object",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "postconditions-registeruser-postcondition-verification-postcondition:-result-is-not-null-or-undefined",
+      "type": "postconditions",
+      "description": "RegisterUser postcondition verification postcondition: result is not null or undefined",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "invariants-registeruser-invariant-checks-invariant:-function-is-callable-and-returns-synchronously-or-async",
+      "type": "invariants",
+      "description": "RegisterUser invariant checks invariant: function is callable and returns synchronously or async",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "invariants-registeruser-invariant-checks-invariant:-result-maintains-success-field-contract",
+      "type": "invariants",
+      "description": "RegisterUser invariant checks invariant: result maintains success field contract",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "postconditions-getuser-postcondition-verification-on-success-returns-a-defined-result-object",
+      "type": "postconditions",
+      "description": "GetUser postcondition verification on success returns a defined result object",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "postconditions-getuser-postcondition-verification-postcondition:-result-is-not-null-or-undefined",
+      "type": "postconditions",
+      "description": "GetUser postcondition verification postcondition: result is not null or undefined",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "invariants-getuser-invariant-checks-invariant:-function-is-callable-and-returns-synchronously-or-async",
+      "type": "invariants",
+      "description": "GetUser invariant checks invariant: function is callable and returns synchronously or async",
+      "status": "passed",
+      "error": ""
+    },
+    {
+      "id": "invariants-getuser-invariant-checks-invariant:-result-maintains-success-field-contract",
+      "type": "invariants",
+      "description": "GetUser invariant checks invariant: result maintains success field contract",
+      "status": "passed",
+      "error": ""
+    }
+  ],
+  "summary": {
+    "total": 21,
+    "passed": 21,
+    "failed": 0,
+    "skipped": 0
+  },
+  "blockers": []
+}

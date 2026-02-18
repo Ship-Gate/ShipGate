@@ -39,7 +39,7 @@ process.exit = function(code?: number | null): never {
     }
   }
   
-  return originalExit.call(process, code ?? 0);
+  return originalExit.call(process, code ?? 0) as never;
 };
 
 // Parse command line arguments and execute — flush traces before exit

@@ -1,0 +1,29 @@
+{
+  "name": "ai-heavy",
+  "description": "Tuned for codebases where >50% of code is AI-generated. Aggressive placeholder, drift, and hallucination detection. Lower behavioral threshold to account for spec coverage gaps.",
+  "threshold": 80,
+  "minConfidence": 30,
+  "gates": {
+    "behavioral": { "enabled": true,  "weight": 0.35, "minScore": 70 },
+    "auth":        { "enabled": true,  "weight": 0.20, "minScore": 100 },
+    "placeholder": { "enabled": true,  "weight": 0.20, "minScore": 100 },
+    "env":         { "enabled": true,  "weight": 0.10, "minScore": 100 },
+    "drift":       { "enabled": true,  "weight": 0.10, "minScore": 60 },
+    "chaos":       { "enabled": true,  "weight": 0.05, "minScore": 60 },
+    "pbt":         { "enabled": false }
+  },
+  "policy": {
+    "profile": "standard",
+    "blockOn": ["critical"],
+    "warnOn": ["high", "medium", "low"],
+    "extraRules": [
+      "no-fake-routes",
+      "no-placeholder-responses",
+      "no-commented-out-logic",
+      "no-hardcoded-ids",
+      "no-todo-in-critical-path"
+    ]
+  },
+  "failOnWarn": false,
+  "outputFormats": ["json"]
+}

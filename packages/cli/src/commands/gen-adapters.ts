@@ -118,8 +118,8 @@ export function domainToGraphQL(domain: ParserDomain): GraphQLDomain {
     version: domain.version?.value || '1.0.0',
     types: domain.types.map(t => ({
       name: t.name.name,
-      kind: 'alias' as const,
-      definition: typeToString(t.definition)
+      baseType: typeToString(t.definition),
+      constraints: []
     })),
     entities: domain.entities.map(entityToGraphQL),
     behaviors: domain.behaviors.map(behaviorToGraphQL)
@@ -132,9 +132,7 @@ export function domainToGraphQL(domain: ParserDomain): GraphQLDomain {
 function entityToGraphQL(entity: ParserEntity): GraphQLEntity {
   return {
     name: entity.name.name,
-    description: undefined, // Parser entities don't have descriptions
-    fields: entity.fields.map(fieldToGraphQL),
-    invariants: entity.invariants?.map(inv => String(inv))
+    fields: entity.fields.map(fieldToGraphQL)
   };
 }
 
@@ -144,15 +142,9 @@ function entityToGraphQL(entity: ParserEntity): GraphQLEntity {
 function behaviorToGraphQL(behavior: ParserBehavior): GraphQLBehavior {
   return {
     name: behavior.name.name,
-    description: behavior.description?.value,
-    input: behavior.input?.fields?.map(fieldToGraphQL) || [],
-    output: behavior.output ? {
-      success: getTypeName(behavior.output.success),
-      errors: behavior.output.errors?.map(e => ({
-        code: e.name.name,
-        message: e.when?.value
-      })) || []
-    } : undefined
+    inputs: behavior.input?.fields?.map(fieldToGraphQL) || [],
+    outputType: behavior.output ? getTypeName(behavior.output.success) : 'Void',
+    errors: behavior.output?.errors?.map(e => e.name.name) || []
   };
 }
 
@@ -189,8 +181,7 @@ function fieldToGraphQL(field: ParserField): GraphQLField {
     name: field.name.name,
     type: typeToString(field.type),
     optional: field.optional,
-    description: undefined, // ISL fields don't have descriptions
-    modifiers: [],
-    default: undefined
+    annotations: field.annotations.map(a => a.name.name),
+    constraints: []
   };
 }

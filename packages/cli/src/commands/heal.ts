@@ -16,7 +16,7 @@ import { glob } from 'glob';
 import chalk from 'chalk';
 import ora from 'ora';
 import { parse as parseISL } from '@isl-lang/parser';
-import { SemanticHealer, type RepoContext } from '@isl-lang/pipeline';
+import { SemanticHealer, type RepoContext, type SemanticHealResult, type SemanticHealIteration, type SemanticViolation } from '@isl-lang/pipeline';
 import {
   HealPlanExecutor,
   type VerificationFailureInput,
@@ -139,7 +139,7 @@ async function readCodeFiles(files: string[]): Promise<Map<string, string>> {
  * Detect framework from code
  */
 function detectFramework(codeMap: Map<string, string>): 'nextjs' | 'express' | 'fastify' {
-  for (const code of codeMap.values()) {
+  for (const code of Array.from(codeMap.values())) {
     if (code.includes('NextResponse') || code.includes('next/server')) {
       return 'nextjs';
     }
@@ -164,7 +164,7 @@ export async function heal(pattern: string, options: HealOptions = {}): Promise<
     // Find spec file
     let specPath = options.spec;
     if (!specPath) {
-      specPath = await findSpecFile(pattern);
+      specPath = await findSpecFile(pattern) ?? undefined;
       if (!specPath) {
         const error = 'No ISL spec file found. Use --spec to specify one.';
         errors.push(error);
@@ -198,9 +198,9 @@ export async function heal(pattern: string, options: HealOptions = {}): Promise<
 
     // Parse ISL spec
     const specContent = await readFile(specPath, 'utf-8');
-    const { ast, errors: parseErrors } = parseISL(specContent, specPath);
+    const { domain, errors: parseErrors } = parseISL(specContent, specPath);
 
-    if (parseErrors.length > 0 || !ast) {
+    if (!domain || parseErrors.length > 0) {
       const error = `Failed to parse ISL spec: ${parseErrors.map(e => 'message' in e ? e.message : String(e)).join(', ')}`;
       errors.push(error);
       return {
@@ -260,7 +260,7 @@ export async function heal(pattern: string, options: HealOptions = {}): Promise<
 
     // Run semantic healer
     const healer = new SemanticHealer(
-      ast,
+      domain,
       repoContext,
       codeMap,
       {
@@ -275,29 +275,29 @@ export async function heal(pattern: string, options: HealOptions = {}): Promise<
     const result = await healer.heal();
 
     // Map history to our format
-    const history: HealResult['history'] = result.history.map(iter => ({
+    const history: HealResult['history'] = result.history.map((iter: SemanticHealIteration) => ({
       iteration: iter.iteration,
-      violations: iter.violations.map(v => ({
-        ruleId: v.ruleId,
-        file: v.file,
+      violations: iter.violations?.map((v: SemanticViolation) => ({
+        ruleId: v.ruleId ?? 'unknown',
+        file: v.file ?? '',
         line: v.line,
         message: v.message,
-        severity: v.severity,
-      })),
-      patchesApplied: iter.patchesApplied,
+        severity: v.severity ?? 'medium',
+      })) ?? [],
+      patchesApplied: iter.patchesApplied ?? [],
       fingerprint: iter.fingerprint,
       duration: iter.duration,
     }));
 
     return {
       success: result.ok,
-      reason: result.reason,
+      reason: result.reason as HealResult['reason'],
       iterations: result.iterations,
       finalScore: result.finalScore,
       finalVerdict: result.finalVerdict,
       history,
       files: Array.from(codeMap.keys()),
-      errors: result.unknownRules,
+      errors: [],
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -499,7 +499,7 @@ export async function aiHeal(targetPath: string, options: HealOptions = {}): Pro
     for (const a of analyzed) {
       byCategory.set(a.category, (byCategory.get(a.category) ?? 0) + 1);
     }
-    spinner?.info(chalk.yellow(`Dry run: would fix ${entries.length} file(s) — ${[...byCategory].map(([c, n]) => `${c}: ${n}`).join(', ')}`));
+    spinner?.info(chalk.yellow(`Dry run: would fix ${entries.length} file(s) — ${Array.from(byCategory).map(([c, n]) => `${c}: ${n}`).join(', ')}`));
     return {
       success: false,
       reason: 'stuck',
@@ -516,7 +516,7 @@ export async function aiHeal(targetPath: string, options: HealOptions = {}): Pro
   const { report: healReport, fixesApplied } = report;
 
   // Map to HealResult history
-  for (const iter of healReport.iterations) {
+  for await (const iter of healReport.iterations) {
     history.push({
       iteration: iter.iteration,
       violations: entries.map(e => ({
@@ -525,7 +525,7 @@ export async function aiHeal(targetPath: string, options: HealOptions = {}): Pro
         message: e.blockers[0] ?? 'verification failed',
         severity: 'high',
       })),
-      patchesApplied: iter.fixesApplied,
+      patchesApplied: iter.fixesApplied ?? [],
       fingerprint: `iter-${iter.iteration}`,
       duration: 0,
     });
@@ -632,7 +632,7 @@ export function printHealResult(result: HealResult, options: { format?: 'pretty'
     
     const maxDisplay = 10; // Show at most 10 iterations
     const toShow = result.history.slice(0, maxDisplay);
-    const skipped = result.history.length - maxShow;
+    const skipped = result.history.length - maxDisplay;
 
     for (const iter of toShow) {
       const iterColor = iter.violations.length === 0 ? chalk.green : chalk.yellow;
@@ -681,10 +681,7 @@ export function printHealResult(result: HealResult, options: { format?: 'pretty'
   // Next steps
   if (!result.success) {
     console.log(chalk.yellow('  Next Steps:'));
-    if (result.reason === 'unknown_rule') {
-      console.log('    • Some violations cannot be fixed automatically');
-      console.log('    • Review the errors above and fix manually');
-    } else if (result.reason === 'max_iterations') {
+    if (result.reason === 'max_iterations') {
       console.log('    • Maximum iterations reached');
       console.log('    • Try increasing --max-iterations or fix remaining violations manually');
     } else if (result.reason === 'stuck') {

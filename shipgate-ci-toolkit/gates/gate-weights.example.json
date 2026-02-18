@@ -1,0 +1,12 @@
+{
+  "comment": "Override individual gate weights. All weights must sum to 1.0. Set weight to 0 to disable without removing the gate.",
+  "gates": {
+    "behavioral":  { "weight": 0.50, "enabled": true,  "minScore": 80  },
+    "auth":        { "weight": 0.20, "enabled": true,  "minScore": 100 },
+    "placeholder": { "weight": 0.15, "enabled": true,  "minScore": 100 },
+    "env":         { "weight": 0.15, "enabled": true,  "minScore": 100 },
+    "drift":       { "weight": 0.00, "enabled": false, "minScore": 80  },
+    "chaos":       { "weight": 0.00, "enabled": false, "minScore": 70  },
+    "pbt":         { "weight": 0.00, "enabled": false, "minScore": 70  }
+  }
+}

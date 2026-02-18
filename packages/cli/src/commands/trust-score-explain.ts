@@ -134,10 +134,7 @@ export async function trustScoreExplain(
     });
 
     // Load history
-    const history = await loadHistory(
-      config.historyPath,
-      projectFingerprint ?? undefined,
-    );
+    const history = await loadHistory(config.historyPath ?? '.shipgate/trust-history.json');
 
     // Get last N entries
     const recentHistory = history.entries.slice(0, historyCount);
@@ -261,6 +258,9 @@ function mapCategoryName(category: string): TrustCategory {
   // Default: treat unknown categories as postconditions
   return 'postconditions';
 }
+
+// Define ClauseStatus locally if not exported
+type ClauseStatus = 'pass' | 'fail' | 'partial' | 'unknown';
 
 /**
  * Map verification status to ClauseStatus.

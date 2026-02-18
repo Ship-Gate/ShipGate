@@ -393,7 +393,6 @@ export default function Landing() {
         <TerminalDemo />
 
         {/* Social proof */}
-        <SocialProof />
 
         {/* Pricing */}
         <PricingSection />

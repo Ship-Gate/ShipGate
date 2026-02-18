@@ -285,17 +285,17 @@ export class ShipgateSidebarProvider implements vscode.WebviewViewProvider {
   }
 
   private buildMarkdownSummary(state: SidebarState): string {
-    if (!state.scan) return 'Shipgate: No scan data.';
+    if (!state.scan || !state.scan.result) return 'Shipgate: No scan data.';
     const r = state.scan.result;
     const lines = [
       `## Shipgate Scan`,
-      `- **Verdict:** ${r.verdict}`,
-      `- **Score:** ${Math.round(r.score * 100)}%`,
-      `- **Files:** ${r.files.length}`,
-      `- **Passed:** ${r.files.filter((f) => f.status === 'PASS').length}`,
-      `- **Failed:** ${r.files.filter((f) => f.status === 'FAIL').length}`,
+      `- **Verdict:** ${r.verdict ?? 'UNKNOWN'}`,
+      `- **Score:** ${Math.round((r.score ?? 0) * 100)}%`,
+      `- **Files:** ${r.files?.length ?? 0}`,
+      `- **Passed:** ${r.files?.filter((f) => f.status === 'PASS').length ?? 0}`,
+      `- **Failed:** ${r.files?.filter((f) => f.status === 'FAIL').length ?? 0}`,
     ];
-    if (r.blockers.length > 0) {
+    if (r.blockers?.length > 0) {
       lines.push('', '### Blockers');
       r.blockers.forEach((b) => lines.push(`- ${b}`));
     }

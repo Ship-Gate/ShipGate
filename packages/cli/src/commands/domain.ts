@@ -689,9 +689,11 @@ export function printDomainValidateResult(
 /**
  * Get exit code for domain validate result
  */
-export function getDomainValidateExitCode(result: DomainValidateResult): ExitCode {
+export async function getDomainValidateExitCode(
+  result: DomainValidateResult
+): Promise<{ exitCode: typeof ExitCode[keyof typeof ExitCode] }> {
   if (!result.success || !result.valid) {
-    return ExitCode.ISL_ERROR;
+    return { exitCode: ExitCode.ISL_ERROR };
   }
-  return ExitCode.SUCCESS;
+  return { exitCode: ExitCode.SUCCESS };
 }

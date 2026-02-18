@@ -46,7 +46,9 @@ export { verifyProof, printProofVerifyResult, getProofVerifyExitCode, type Proof
 
 export { proofPack, printProofPackResult, getProofPackExitCode, type ProofPackOptions, type ProofPackResult } from './proof-pack.js';
 
-export { createPolicyBundle, printCreateBundleResult, getCreateBundleExitCode, verifyPolicyBundle, printVerifyBundleResult, getVerifyBundleExitCode, type CreateBundleOptions, type CreateBundleResult, type VerifyBundleOptions, type VerifyBundleResult } from './policy-bundle.js';
+export { createPolicyBundle, printCreateBundleResult, getCreateBundleExitCode, verifyPolicyBundle, printVerifyBundleResult, getVerifyBundleExitCode, type CreateBundleOptions, type CreateBundleResult, type VerifyBundleOptions as PolicyBundleVerifyOptions, type VerifyBundleResult as PolicyBundleVerifyResult } from './policy-bundle.js';
+
+export { verifyBundle, type VerifyBundleOptions } from './verify-bundle.js';
 
 export { watch, type WatchOptions, type WatchResult } from './watch.js';
 
@@ -60,7 +62,7 @@ export { specQuality, printSpecQualityResult, getSpecQualityExitCode, type SpecQ
 
 export { securityReport, printSecurityReportResult, getSecurityReportExitCode, type SecurityReportOptions, type SecurityReportResult } from './security-report.js';
 
-export { policyCheck, printPolicyCheckResult, getPolicyCheckExitCode, policyInit, printPolicyInitResult, type PolicyCheckOptions, type PolicyCheckResult, type PolicyInitOptions, type PolicyInitResult } from './policy-team.js';
+export { policyCheck as policyCheckTeam, printPolicyCheckResult as printPolicyCheckTeamResult, getPolicyCheckExitCode as getPolicyCheckTeamExitCode, policyInit, printPolicyInitResult, type PolicyCheckOptions as PolicyCheckTeamOptions, type PolicyCheckResult as PolicyCheckTeamResult, type PolicyInitOptions, type PolicyInitResult } from './policy-team.js';
 
 export { truthpackBuild, truthpackDiff, printTruthpackBuildResult, printTruthpackDiffResult, getTruthpackBuildExitCode, getTruthpackDiffExitCode, type TruthpackBuildOptions, type TruthpackBuildResult, type TruthpackDiffOptions, type TruthpackDiffResult } from './truthpack.js';
 

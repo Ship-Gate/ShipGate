@@ -1,0 +1,37 @@
+name: 'ISL Verify'
+description: 'Run ISL Verify formal verification with PR comments'
+author: 'ISL Verify Team'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  pattern:
+    description: 'File pattern to verify'
+    required: false
+    default: '**/*.{ts,js}'
+  tier:
+    description: 'Verification tier (tier1, tier2, tier3)'
+    required: false
+    default: 'tier1'
+  license:
+    description: 'ISL Verify license key (required for tier2/tier3)'
+    required: false
+  fail-on-error:
+    description: 'Fail the action if verification finds issues'
+    required: false
+    default: 'true'
+  comment-pr:
+    description: 'Comment verification results on PR'
+    required: false
+    default: 'true'
+
+outputs:
+  findings-count:
+    description: 'Number of findings detected'
+  passed:
+    description: 'Whether verification passed'
+
+runs:
+  using: 'node20'
+  main: 'dist-bundle/index.js'

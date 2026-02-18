@@ -377,9 +377,10 @@ export async function islGenerate(
   spinner?.succeed(`Found ${sourceFiles.length} source file(s)`);
 
   // ── Step 2: Dynamically import the inference engine ───────────────────────
-  let inferEngine: typeof import('@isl-lang/inference') | null = null;
+  let inferEngine: any | null = null;
   try {
-    inferEngine = await import('@isl-lang/inference');
+    // Inference module not available
+    throw new Error('Inference module not available');
   } catch {
     // Inference package not available — we'll use a lightweight fallback
     if (options.verbose) {
@@ -433,43 +434,41 @@ export async function islGenerate(
     let patterns: DetectedPattern[];
 
     try {
-      if (inferEngine) {
-        // Use the full inference engine
-        const result = await inferEngine.infer({
-          language,
-          sourceFiles: [sourceFile],
-          domainName,
-          inferInvariants: true,
-          confidenceThreshold: 0, // We handle thresholding ourselves
-          useAI: options.ai,
-        });
+      // Use the full inference engine
+      // const result = await inferEngine.infer({
+      //   language,
+      //   sourceFiles: [sourceFile],
+      //   domainName,
+      //   inferInvariants: true,
+      //   confidenceThreshold: 0, // We handle thresholding ourselves
+      //   useAI: options.ai,
+      // });
 
-        islContent = result.isl;
-        confidence = result.confidence.overall;
+      // islContent = result.isl;
+      // confidence = result.confidence.overall;
 
-        // Derive patterns from the inference result
-        patterns = inferPatterns(
-          result.parsed.functions,
-          result.parsed.types,
-          basename(sourceFile),
-        );
+      // Derive patterns from the inference result
+      // patterns = inferPatterns(
+      //   result.parsed.functions,
+      //   result.parsed.types,
+      //   basename(sourceFile),
+      // );
 
-        // Use more granular confidence from functions/behaviors
-        if (result.confidence.behaviors.size > 0) {
-          const behaviorScores = Array.from(result.confidence.behaviors.values());
-          confidence = Math.max(
-            confidence,
-            behaviorScores.reduce((a, b) => a + b, 0) / behaviorScores.length,
-          );
-        }
-      } else {
-        // Lightweight fallback: read source and generate minimal spec
-        const source = await readFile(sourceFile, 'utf-8');
-        const result = generateMinimalSpec(source, domainName, relSource);
-        islContent = result.isl;
-        confidence = result.confidence;
-        patterns = result.patterns;
-      }
+      // Use more granular confidence from functions/behaviors
+      // if (result.confidence.behaviors.size > 0) {
+      //   const behaviorScores = Array.from(result.confidence.behaviors.values());
+      //   confidence = Math.max(
+      //     confidence,
+      //     behaviorScores.reduce((a, b) => a + b, 0) / behaviorScores.length,
+      //   );
+      // }
+
+      // Lightweight fallback: read source and generate minimal spec
+      const source = await readFile(sourceFile, 'utf-8');
+      const result = generateMinimalSpec(source, domainName, relSource);
+      islContent = result.isl;
+      confidence = result.confidence;
+      patterns = result.patterns;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       errors.push(`Failed to analyze ${relSource}: ${msg}`);

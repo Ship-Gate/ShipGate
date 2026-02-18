@@ -78,7 +78,7 @@ export function getWebviewContent(vscodeUri: vscode.Uri): string {
       width: 28px;
       height: 28px;
       border-radius: 6px;
-      background-image: url('${uri}/media/shipgate-icon.png');
+      background-image: url('${uri}/media/shipgate-icon.svg');
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;

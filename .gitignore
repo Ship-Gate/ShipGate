@@ -48,5 +48,9 @@ packages/cli/*.tgz
 # Claude Code worktrees
 .claude/worktrees/
 
+# ISL Studio demo repos (nested git repos, not submodules)
+demos/islstudio-gate-action/
+demos/islstudio-hello-gate/
+
 # Local Netlify folder
 .netlify

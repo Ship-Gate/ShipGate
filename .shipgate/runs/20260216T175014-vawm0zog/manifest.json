@@ -1,0 +1,710 @@
+{
+  "verdict": "NO_SHIP",
+  "score": 0,
+  "filesChecked": 15,
+  "violations": [
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./generator cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\aggregator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./generator cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\auto-linker.ts"
+    },
+    {
+      "policyId": "auth/hardcoded-credentials",
+      "message": "Hardcoded credentials detected",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\auto-linker.ts"
+    },
+    {
+      "policyId": "auth/hardcoded-credentials",
+      "message": "Hardcoded credentials detected",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\auto-linker.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./frameworks/pci cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./frameworks/soc2 cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./frameworks/hipaa cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./frameworks/gdpr cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./frameworks/eu-ai-act cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./frameworks/fedramp cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./evidence cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./analyzer cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: cors cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: express-rate-limit cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./config/env.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./utils/logger.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./utils/metrics.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./utils/telemetry.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./db/schema.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./db/queries.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./routes/reports.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./routes/proof-bundles.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./routes/coverage.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./routes/trends.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./routes/dashboard.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./middleware/error.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./middleware/security.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./audit/schema.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./audit/queries.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./audit/service.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./audit/routes.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./backbone/queries.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./backbone/routes.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/metrics is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/health is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/reports is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/proof-bundles is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/coverage is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/trends is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/drift is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/audit is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/backbone is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1 is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./config/env.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./utils/logger.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./utils/metrics.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./utils/telemetry.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./db/schema.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./db/queries.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./routes/reports.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./routes/proof-bundles.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./routes/coverage.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./routes/trends.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./routes/dashboard.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./middleware/error.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./middleware/security.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./audit/schema.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./audit/queries.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./audit/service.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./audit/routes.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./backbone/queries.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./backbone/routes.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./types.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./db/schema.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./db/schema.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./db/queries.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./audit/index.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./backbone/index.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./auth/index.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: express cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: cors cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: express-rate-limit cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: sql.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: express cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\routes\\dashboard.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../db/queries.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\routes\\dashboard.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../types.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\routes\\dashboard.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: express cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\routes\\dashboard.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @next/bundle-analyzer cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\next.config.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/:path* is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\next.config.js"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: ANALYZE is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\next.config.js"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @next/bundle-analyzer cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\next.config.js"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: react cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\hooks\\useApi.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/api cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\hooks\\useApi.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/runs-api cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\hooks\\useApi.ts"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: NEXT_PUBLIC_USE_MOCK is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\hooks\\useApi.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: react cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\hooks\\useApi.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/api cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\hooks\\useApi.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/runs-api cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\hooks\\useApi.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1 is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\lib\\api.ts"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: NEXT_PUBLIC_API_URL is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\lib\\api.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./sidebar-provider cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./diagnostics cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./codelens cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./statusbar cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./cli/shipgateRunner cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    }
+  ],
+  "source": "firewall",
+  "runId": "20260216T175014-vawm0zog",
+  "timestamp": "2026-02-16T17:50:14.099Z"
+}

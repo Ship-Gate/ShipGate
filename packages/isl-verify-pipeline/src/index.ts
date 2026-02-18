@@ -207,3 +207,37 @@ export {
   readVerificationResults,
   readEvaluationTable,
 } from './output/proof-bundle-integration.js';
+
+// Tier 3 Provers
+export {
+  PropertyTestProver,
+  MutationTestProver,
+  type PropertyTestConfig,
+  type PropertyTestEvidence,
+  type PropertyTestResult,
+  type PropertyProof,
+  type MutationTestConfig,
+  type MutationEvidence,
+  type MutationTestResult,
+  type MutationProof,
+  type PropertyTestThoroughness,
+  type MutationTestThoroughness,
+} from './provers/index.js';
+
+// Tiered Verification
+export {
+  TieredVerificationOrchestrator,
+  Tier3Runner,
+  type Tier3Config,
+  type Tier3Result,
+  type TieredVerificationResult,
+} from './tier3-integration.js';
+
+// Proof Bundle Formatting
+export {
+  ProofBundleBuilder,
+  ProofBundleFormatter,
+  type ProofBundle,
+  type ProofProperty,
+  type Finding,
+} from './proof-bundle-formatter.js';

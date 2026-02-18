@@ -1,0 +1,54 @@
+{
+  "name": "@shipgate/core",
+  "version": "1.0.0",
+  "description": "ISL Verify - Open source formal verification core (Tier 1 static provers)",
+  "license": "MIT",
+  "author": "ISL Team",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "isl-verify": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts"
+  },
+  "keywords": [
+    "formal-verification",
+    "static-analysis",
+    "security",
+    "isl",
+    "testing",
+    "proof"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/isl-verify/isl-verify.git",
+    "directory": "packages/core"
+  },
+  "dependencies": {
+    "@shipgate/shared": "workspace:*",
+    "commander": "^11.1.0",
+    "chalk": "^4.1.2",
+    "glob": "^10.3.10",
+    "picocolors": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
