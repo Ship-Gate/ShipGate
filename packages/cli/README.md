@@ -1,4 +1,4 @@
-# Shipgate CLI v2.1.0
+# Shipgate CLI v2.1.1
 
 [![npm version](https://badge.fury.io/js/shipgate.svg)](https://badge.fury.io/js/shipgate)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)

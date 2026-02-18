@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.1.0] - 2026-02-17
+## [2.1.1] - 2026-02-17
 
 ### Added
 - `shipgate gate` end-to-end SHIP/NO-SHIP verdict with trust scoring
