@@ -1,5 +1,5 @@
 [build]
-  command = "npm install --legacy-peer-deps && npm run build"
+  command = "cd ../.. && pnpm install --filter @isl-lang/dashboard-web... && pnpm --filter @isl-lang/dashboard-web run build"
   publish = ".next"
 
 [build.environment]
