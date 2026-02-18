@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.1.0] - 2026-02-17
+
+### Added
+- `shipgate gate` end-to-end SHIP/NO-SHIP verdict with trust scoring
+- `shipgate proof badge` — generate SVG/URL badges from proof bundles
+- `shipgate proof attest` — SLSA-style attestation JSON for supply chain security
+- `shipgate proof comment` — GitHub PR comment generation from proof bundles
+- Full-stack ISL constructs: `api`, `storage`, `workflow`, `event`, `handler`, `screen`, `config`
+- Execution-proof fallback runner for environments where Vitest cannot run
+- Synthetic test suppression — skipped/synthetic tests never produce SHIP verdicts
+- `verification_blocked` as a critical failure in the verdict engine
+
+### Fixed
+- Trust-score-first decision logic (removed false-positive TYPE_ERROR early exits)
+- Test import path resolution (`../src/` → `./src/`)
+- `vitest.config.mjs` plain-object format to avoid package resolution failures
+
+### Changed
+- Rebuilt CLI bundle with all upstream fixes
+
 ## 2.0.0
 
 ### Major Changes

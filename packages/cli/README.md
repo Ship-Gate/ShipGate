@@ -295,7 +295,7 @@ npx shipgate generate --target typescript src/
 ## Documentation
 
 - Full documentation: https://shipgate.dev/docs
-- GitHub: https://github.com/guardiavault-oss/ISL-LANG
+- GitHub: https://github.com/Ship-Gate/ShipGate
 
 ## License
 
