@@ -1,0 +1,17 @@
+{
+  "name": "shipgate-demo",
+  "version": "1.0.0",
+  "description": "ShipGate demo application",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "echo \"No tests yet\""
+  },
+  "dependencies": {
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^9.0.0",
+    "typescript": "^5.0.0"
+  }
+}

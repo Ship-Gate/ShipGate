@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "lib": ["ES2022"],
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@isl-verify/core": ["./packages/core/src"],
+      "@isl-verify/runtime": ["./packages/runtime/src"],
+      "@isl-verify/action": ["./packages/action/src"],
+      "@isl-verify/dashboard": ["./packages/dashboard/src"],
+      "@isl-verify/compliance": ["./packages/compliance/src"],
+      "@isl-verify/shared": ["./packages/shared/src"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+}

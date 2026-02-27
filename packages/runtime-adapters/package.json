@@ -1,0 +1,61 @@
+{
+  "name": "@isl-lang/runtime-adapters",
+  "version": "0.1.1",
+  "description": "Runtime adapters for Fastify, Express, and Fetch to capture traces for verification",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./fastify": {
+      "import": "./dist/fastify.js",
+      "types": "./dist/fastify.d.ts"
+    },
+    "./express": {
+      "import": "./dist/express.js",
+      "types": "./dist/express.d.ts"
+    },
+    "./fetch": {
+      "import": "./dist/fetch.js",
+      "types": "./dist/fetch.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/fastify.ts src/express.ts src/fetch.ts src/collector.ts --format esm --dts --clean --tsconfig tsconfig.json",
+    "dev": "tsup src/index.ts src/fastify.ts src/express.ts src/fetch.ts src/collector.ts --format esm --dts --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@isl-lang/trace-format": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/express": "^4.17.21",
+    "fastify": "^4.24.3",
+    "express": "^4.18.2",
+    "supertest": "^6.3.3",
+    "@types/supertest": "^2.0.16",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "rimraf": "^5.0.5"
+  },
+  "peerDependencies": {
+    "fastify": "^4.0.0",
+    "express": "^4.0.0"
+  },
+  "author": "ISL Team",
+  "license": "MIT",
+  "sideEffects": false
+}

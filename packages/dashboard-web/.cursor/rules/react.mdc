@@ -1,0 +1,32 @@
+---
+description: React component patterns and hooks
+globs: ["**/*.tsx", "**/*.jsx"]
+alwaysApply: false
+priority: 75
+---
+
+# React Best Practices
+
+## Component Patterns
+- Prefer functional components with hooks
+- Use TypeScript for props interfaces
+- Keep components small and focused
+
+## Hooks
+- Custom hooks should start with `use`
+- Don't call hooks conditionally
+- Extract complex logic to custom hooks
+
+## State Management
+- Lift state up when needed
+- Use context for global state sparingly
+- Prefer server state libraries (React Query, SWR) for API data
+
+## Performance
+- Memoize expensive computations with `useMemo`
+- Memoize callbacks with `useCallback` when passing to children
+- Use React.memo for pure components
+
+---
+<!-- guardrail:auto-generated -->
+*Verified by Guardrail ✓*

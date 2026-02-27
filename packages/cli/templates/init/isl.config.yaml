@@ -1,0 +1,32 @@
+# ISL Configuration
+# Documentation: https://intentos.dev/docs/config
+
+version: "1.0"
+name: {{name}}
+
+# ISL source files
+include:
+  - src/**/*.isl
+
+# Files to exclude
+exclude:
+  - node_modules/**
+  - dist/**
+  - generated/**
+
+# Output configuration
+output:
+  dir: ./generated
+  types: true
+  tests: true
+  docs: false
+
+# AI generation settings
+ai:
+  model: claude-sonnet-4-20250514
+  apiKey: ${ANTHROPIC_API_KEY}
+
+# Verification settings
+verify:
+  timeout: 30000
+  minTrustScore: 70

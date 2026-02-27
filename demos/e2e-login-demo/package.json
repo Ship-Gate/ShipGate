@@ -1,0 +1,28 @@
+{
+  "name": "@isl-demos/e2e-login",
+  "version": "0.1.1",
+  "license": "MIT",
+  "description": "End-to-end demo: NL → ISL → Code → Gate → Heal → Test → Proof",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "demo": "tsx src/demo.ts",
+    "demo:failure": "tsx src/demo-failure.ts",
+    "demo:record": "tsx src/demo.ts 2>&1 | tee output/terminal-recording.txt",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@isl-lang/translator": "workspace:*",
+    "@isl-lang/generator": "workspace:*",
+    "@isl-lang/pipeline": "workspace:*",
+    "@isl-lang/proof": "workspace:*",
+    "zod": "^3.22.0",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  }
+}

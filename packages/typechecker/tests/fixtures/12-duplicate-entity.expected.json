@@ -1,0 +1,30 @@
+[
+  {
+    "code": "ISL_T021",
+    "severity": "error",
+    "message": "Entity 'User' is already defined",
+    "location": {
+      "file": "12-duplicate-entity.isl",
+      "line": 7,
+      "column": 10,
+      "endLine": 7,
+      "endColumn": 14
+    },
+    "source": "typechecker",
+    "relatedInformation": [
+      {
+        "message": "Previously defined here",
+        "location": {
+          "file": "12-duplicate-entity.isl",
+          "line": 3,
+          "column": 10,
+          "endLine": 3,
+          "endColumn": 14
+        }
+      }
+    ],
+    "help": [
+      "Rename one of the entities or remove the duplicate"
+    ]
+  }
+]

@@ -1,0 +1,166 @@
+{
+  "name": "@isl-lang/stdlib-audit",
+  "version": "2.0.0",
+  "description": "ISL Standard Library - Audit Logging for Compliance",
+  "license": "MIT",
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "keywords": [
+    "intentos",
+    "isl",
+    "stdlib",
+    "audit",
+    "logging",
+    "compliance",
+    "soc2",
+    "pci-dss",
+    "hipaa",
+    "gdpr"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./types": {
+      "import": {
+        "types": "./dist/types.d.ts",
+        "default": "./dist/types.js"
+      },
+      "require": {
+        "types": "./dist/types.d.cts",
+        "default": "./dist/types.cjs"
+      }
+    },
+    "./storage/postgres": {
+      "import": {
+        "types": "./dist/storage/postgres.d.ts",
+        "default": "./dist/storage/postgres.js"
+      },
+      "require": {
+        "types": "./dist/storage/postgres.d.cts",
+        "default": "./dist/storage/postgres.cjs"
+      }
+    },
+    "./storage/elasticsearch": {
+      "import": {
+        "types": "./dist/storage/elasticsearch.d.ts",
+        "default": "./dist/storage/elasticsearch.js"
+      },
+      "require": {
+        "types": "./dist/storage/elasticsearch.d.cts",
+        "default": "./dist/storage/elasticsearch.cjs"
+      }
+    },
+    "./storage/s3": {
+      "import": {
+        "types": "./dist/storage/s3.d.ts",
+        "default": "./dist/storage/s3.js"
+      },
+      "require": {
+        "types": "./dist/storage/s3.d.cts",
+        "default": "./dist/storage/s3.cjs"
+      }
+    },
+    "./exporters/csv": {
+      "import": {
+        "types": "./dist/exporters/csv.d.ts",
+        "default": "./dist/exporters/csv.js"
+      },
+      "require": {
+        "types": "./dist/exporters/csv.d.cts",
+        "default": "./dist/exporters/csv.cjs"
+      }
+    },
+    "./exporters/json": {
+      "import": {
+        "types": "./dist/exporters/json.d.ts",
+        "default": "./dist/exporters/json.js"
+      },
+      "require": {
+        "types": "./dist/exporters/json.d.cts",
+        "default": "./dist/exporters/json.cjs"
+      }
+    },
+    "./utils/pii": {
+      "import": {
+        "types": "./dist/utils/pii.d.ts",
+        "default": "./dist/utils/pii.js"
+      },
+      "require": {
+        "types": "./dist/utils/pii.d.cts",
+        "default": "./dist/utils/pii.cjs"
+      }
+    },
+    "./utils/hashing": {
+      "import": {
+        "types": "./dist/utils/hashing.d.ts",
+        "default": "./dist/utils/hashing.js"
+      },
+      "require": {
+        "types": "./dist/utils/hashing.d.cts",
+        "default": "./dist/utils/hashing.cjs"
+      }
+    },
+    "./utils/retention": {
+      "import": {
+        "types": "./dist/utils/retention.d.ts",
+        "default": "./dist/utils/retention.js"
+      },
+      "require": {
+        "types": "./dist/utils/retention.d.cts",
+        "default": "./dist/utils/retention.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "intents"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint implementations/typescript --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.2",
+    "vitest": "^1.0.4"
+  },
+  "peerDependencies": {
+    "@isl-lang/isl-core": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@isl-lang/isl-core": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "sideEffects": false
+}

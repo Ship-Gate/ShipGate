@@ -1,0 +1,19 @@
+{
+  "name": "@isl-lang/e2e-tests",
+  "version": "0.0.1",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^1.6.1"
+  },
+  "dependencies": {
+    "@isl-lang/parser": "workspace:*",
+    "@isl-lang/isl-verify": "workspace:*",
+    "@isl-lang/codegen-tests": "workspace:*",
+    "next": "^14.1.0"
+  }
+}

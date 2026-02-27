@@ -1,0 +1,25 @@
+# ShipGate configuration for IntentOS monorepo
+# Scopes verification to avoid scanning 10,000+ files
+
+version: 1
+
+ci:
+  # Exclude generated code, tests, and heavy packages (applied BEFORE scanning)
+  ignore:
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/.next/**"
+    - "**/coverage/**"
+    - "**/.git/**"
+    - "**/*.test.*"
+    - "**/*.spec.*"
+    - "**/*.d.ts"
+    - "**/*.min.js"
+    - "**/*.bundle.js"
+    - "**/fixtures/**"
+    - "**/__tests__/**"
+    - "**/golden/**"
+    - "**/vibe-test/**"
+    - "**/vibe-test*/**"
+    - "packages/**"

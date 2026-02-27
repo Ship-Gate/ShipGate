@@ -1,0 +1,38 @@
+{
+  "name": "shipgate-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shipgate - Formal verification toolkit powered by ISL with open-source core and paid tiers",
+  "scripts": {
+    "build": "pnpm --filter \"@shipgate/shared\" build && pnpm --filter \"@shipgate/core\" build && pnpm --filter \"@shipgate/runtime\" build && pnpm --filter \"@shipgate/compliance\" build && pnpm --filter \"@shipgate/action\" build",
+    "build:core": "pnpm --filter @shipgate/core build",
+    "build:runtime": "pnpm --filter @shipgate/runtime build",
+    "build:action": "pnpm --filter @shipgate/action build",
+    "build:compliance": "pnpm --filter @shipgate/compliance build",
+    "build:license-server": "pnpm --filter @shipgate/license-server build",
+    "test": "pnpm -r --filter '@shipgate/*' --filter '!@shipgate/license-server' test",
+    "test:ci": "pnpm -r --filter '@shipgate/*' --filter '!@shipgate/license-server' test:ci",
+    "lint": "pnpm -r --filter '@shipgate/*' lint",
+    "typecheck": "pnpm --filter \"@shipgate/shared\" typecheck && pnpm --filter \"@shipgate/core\" typecheck && pnpm --filter \"@shipgate/runtime\" typecheck && pnpm --filter \"@shipgate/compliance\" typecheck && pnpm --filter \"@shipgate/action\" typecheck",
+    "clean": "pnpm -r --filter '@shipgate/*' clean && rm -rf node_modules",
+    "publish:core": "cd packages/core && npm publish --access public",
+    "publish:shared": "cd packages/shared && npm publish --access public",
+    "dev:license-server": "pnpm --filter @shipgate/license-server dev",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "pnpm build && pnpm changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.1",
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.1",
+    "prettier": "^3.2.4",
+    "eslint": "^8.56.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.1"
+}

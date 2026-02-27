@@ -1,0 +1,22 @@
+{
+  "name": "baseline",
+  "description": "Recommended starting point. Catches critical issues without blocking on stylistic concerns. Suitable for most teams shipping AI-assisted code.",
+  "threshold": 90,
+  "minConfidence": 20,
+  "gates": {
+    "behavioral": { "enabled": true,  "weight": 0.50, "minScore": 80 },
+    "auth":        { "enabled": true,  "weight": 0.20, "minScore": 100 },
+    "placeholder": { "enabled": true,  "weight": 0.15, "minScore": 100 },
+    "env":         { "enabled": true,  "weight": 0.15, "minScore": 100 },
+    "drift":       { "enabled": false },
+    "chaos":       { "enabled": false },
+    "pbt":         { "enabled": false }
+  },
+  "policy": {
+    "profile": "standard",
+    "blockOn": ["critical"],
+    "warnOn": ["high", "medium"]
+  },
+  "failOnWarn": false,
+  "outputFormats": ["json"]
+}

@@ -1,0 +1,150 @@
+{
+  "verdict": "NO_SHIP",
+  "score": 0,
+  "filesChecked": 4,
+  "violations": [
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\github\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\github\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\google\\callback\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: jsonwebtoken cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\google\\callback\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\google\\callback\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: jsonwebtoken cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\google\\callback\\route.ts"
+    },
+    {
+      "policyId": "pii/exposed-in-url",
+      "message": "Sensitive data in URL query string",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\google\\callback\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\google\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\google\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: stripe cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/headers cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: stripe cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/headers cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    }
+  ],
+  "source": "firewall",
+  "runId": "20260218T060840-xqwpbb5m",
+  "timestamp": "2026-02-18T06:08:40.628Z"
+}

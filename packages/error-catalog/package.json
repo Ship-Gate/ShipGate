@@ -1,0 +1,71 @@
+{
+  "name": "@isl-lang/error-catalog",
+  "version": "1.0.1",
+  "description": "Error catalog generator from ISL error definitions",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "error-catalog": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src/",
+    "generate": "ts-node src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
+  },
+  "keywords": [
+    "isl",
+    "errors",
+    "catalog",
+    "documentation",
+    "api"
+  ],
+  "author": "mevla",
+  "license": "MIT",
+  "dependencies": {
+    "@isl-lang/parser": "workspace:*",
+    "commander": "^11.1.0",
+    "handlebars": "^4.7.8",
+    "chalk": "^5.3.0",
+    "glob": "^10.3.10",
+    "yaml": "^2.3.4",
+    "marked": "^11.1.1",
+    "highlight.js": "^11.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.1.0",
+    "@vitest/coverage-v8": "^1.1.0",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "private": true,
+  "experimental": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}

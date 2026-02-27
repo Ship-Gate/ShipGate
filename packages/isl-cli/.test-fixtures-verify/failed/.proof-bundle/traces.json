@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "specFile": "login.isl",
+  "traces": [
+    {
+      "id": "evt-1",
+      "type": "call",
+      "timestamp": 1000,
+      "behavior": "Login",
+      "input": {
+        "email": "test@example.com",
+        "password": "password123"
+      }
+    },
+    {
+      "id": "evt-2",
+      "type": "return",
+      "timestamp": 1050,
+      "behavior": "Login",
+      "output": {
+        "id": "session-123",
+        "user_id": "user-456",
+        "expires_at": "2025-12-31"
+      },
+      "stateAfter": {
+        "Session": {
+          "session-123": {
+            "id": "session-123",
+            "user_id": "user-456"
+          }
+        },
+        "User": {
+          "user-456": {
+            "id": "user-456",
+            "email": "test@example.com",
+            "failed_attempts": 3
+          }
+        }
+      }
+    }
+  ]
+}

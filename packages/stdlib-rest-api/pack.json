@@ -1,0 +1,30 @@
+{
+  "name": "stdlib-rest-api",
+  "version": "1.0.0",
+  "description": "REST API standard library - CRUD operations, pagination, filtering, versioning",
+  "author": "IntentOS Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/guardiavault-oss/ISL-LANG.git",
+    "directory": "packages/stdlib-rest-api"
+  },
+  "keywords": [
+    "isl",
+    "rest",
+    "api",
+    "crud",
+    "pagination",
+    "filtering"
+  ],
+  "domain": "RestAPI",
+  "dependencies": {},
+  "files": [
+    {
+      "path": "intents/domain.isl",
+      "checksum": "placeholder-checksum",
+      "size": 0
+    }
+  ],
+  "publishedAt": "2026-02-09T00:00:00Z"
+}

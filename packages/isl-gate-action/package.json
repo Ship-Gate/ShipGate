@@ -1,0 +1,51 @@
+{
+  "name": "@isl-lang/gate-action",
+  "version": "0.1.0",
+  "description": "ShipGate ISL Verify — GitHub Action for AI code verification",
+  "main": "dist/index.js",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "ncc build src/index.ts -o dist --source-map --license licenses.txt",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@actions/core": "^1.10.0",
+    "@actions/github": "^6.0.0"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.38.0",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0",
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.1"
+  },
+  "files": [
+    "dist",
+    "action.yml"
+  ],
+  "keywords": [
+    "shipgate",
+    "isl",
+    "github-action",
+    "ci-cd",
+    "verification",
+    "ai-safety"
+  ],
+  "author": "ShipGate",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "sideEffects": false
+}

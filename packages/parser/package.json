@@ -1,0 +1,70 @@
+{
+  "name": "@isl-lang/parser",
+  "version": "1.0.0",
+  "description": "ISL (Intent Specification Language) recursive descent parser - transforms ISL source into AST",
+  "author": "ISL Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/isl-lang/isl.git",
+    "directory": "packages/parser"
+  },
+  "homepage": "https://isl-lang.dev/docs/parser",
+  "bugs": {
+    "url": "https://github.com/isl-lang/isl/issues"
+  },
+  "keywords": [
+    "isl",
+    "parser",
+    "ast",
+    "intent-specification",
+    "dsl",
+    "recursive-descent"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build:grammar": "peggy src/grammar/isl.peggy -o src/grammar/isl-parser.js --format es",
+    "build": "pnpm run build:grammar && tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:fuzz": "vitest run tests/fuzz-harness.test.ts",
+    "test:fuzz:smoke": "vitest run tests/fuzz-harness.test.ts --testNamePattern='Fuzz Acceptance Test'",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "prepublishOnly": "pnpm run build",
+    "test:unit": "vitest run --passWithNoTests",
+    "corpus:build": "tsx scripts/build-corpus.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "peggy": "^4.2.0",
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "sideEffects": false
+}

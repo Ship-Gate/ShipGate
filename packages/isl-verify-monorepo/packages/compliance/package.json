@@ -1,0 +1,30 @@
+{
+  "name": "@shipgate/compliance",
+  "version": "1.0.0",
+  "description": "ISL Verify Compliance Reports - SOC 2, HIPAA, PCI-DSS, EU AI Act (License Required)",
+  "license": "SEE LICENSE IN LICENSE",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@shipgate/core": "workspace:*",
+    "@shipgate/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

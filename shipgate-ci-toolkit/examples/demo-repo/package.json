@@ -1,0 +1,15 @@
+{
+  "name": "shipgate-demo",
+  "version": "1.0.0",
+  "description": "ShipGate demo project — run npm install then shipgate gate",
+  "type": "module",
+  "scripts": {
+    "gate": "shipgate gate specs/user-service.isl --impl src --threshold 90",
+    "check": "shipgate check specs/user-service.isl"
+  },
+  "devDependencies": {
+    "vitest": "^1.6.0",
+    "typescript": "^5.3.3",
+    "@types/node": "^20.0.0"
+  }
+}

@@ -1,0 +1,671 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Error Formatting - Golden Snapshots > Configuration Errors > E0600: Invalid configuration file 1`] = `
+"error[E0600]: Invalid configuration file
+  --> isl.config.json:3:3
+  |
+1 | {
+2 |   "version": 1
+3 |   "strict": true
+  |   ^^^^^^^^
+4 | }
+  |
+   = note: The configuration file (isl.config.json or isl.config.yaml) could not
+be parsed. This is usually due to syntax errors in the file.
+   = help: Missing comma after "version": 1"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Configuration Errors > E0601: Missing configuration 1`] = `
+"error[E0601]: Missing configuration
+  --> isl.config.json:1:1
+   = help: Add "specDir": "./specs" to your isl.config.json"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Edge Cases > handles error without source file gracefully 1`] = `
+"error[E0100]: Unexpected token
+  --> unknown.isl:42:10
+   = note: The parser encountered a token that doesn't fit the expected syntax.
+This often indicates a typo, missing punctuation, or misunderstanding
+of ISL syntax.
+   = help: Check for typos in keywords
+   = help: Verify the syntax matches ISL specification
+   = help: Use proper punctuation (colons, braces, parentheses)"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Edge Cases > handles warning severity 1`] = `
+"warning[E0312]: Unused entity
+  --> test.isl:3:3
+  |
+1 | domain Test {
+2 |   version: "1.0.0"
+3 |   entity OldUser {
+  |   ^^^^^^^
+4 |     id: UUID
+5 |   }
+  |
+   = note: A postcondition references a field on 'result' that is not declared
+in the output type. This will cause a runtime error when the
+postcondition is evaluated.
+   = help: Check the spelling of the field name
+   = help: Add the missing field to the output type
+   = help: Use a field that exists in the declared output"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Evaluation Errors > E0400: Division by zero 1`] = `
+"error[E0400]: Division by zero
+  --> test.isl:5:25
+  |
+3 |   behavior Calculate {
+4 |     postconditions {
+5 |       average == total / count
+  |                         ^^^^^
+6 |     }
+7 |   }
+  |
+   = note: An expression attempted to divide by zero, which is undefined in
+mathematics. This often occurs when a divisor variable is zero.
+   = help: Add a precondition to ensure divisor is non-zero
+   = help: Use a default value or handle the zero case
+   = help: Check for zero before dividing"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Evaluation Errors > E0401: Null reference 1`] = `
+"error[E0401]: Null reference
+  --> test.isl:5:7
+  |
+3 |   behavior Check {
+4 |     postconditions {
+5 |       account.balance > 0
+  |       ^^^^^^^^^^^^^^^
+6 |     }
+7 |   }
+  |
+   = note: An expression tried to access a property or call a method on a null
+value. This is one of the most common runtime errors.
+   = help: Check for null before accessing properties
+   = help: Use optional chaining (?.) for safe access
+   = help: Add preconditions to verify values exist"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Evaluation Errors > E0403: Undefined property 1`] = `
+"error[E0403]: Undefined property
+  --> test.isl:8:13
+   |
+ 6 |   behavior Check {
+ 7 |     postconditions {
+ 8 |       account.balace > 0
+   |             ^^^^^^
+ 9 |     }
+10 |   }
+   |
+   = note: An expression tried to access a property that doesn't exist on the value.
+This is a runtime error that occurs when accessing fields, methods, or
+other properties that aren't defined.
+   = help: Did you mean 'balance'?"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Evaluation Errors > E0404: Invalid operation 1`] = `
+"error[E0404]: Invalid operation
+  --> test.isl:5:7
+  |
+3 |   behavior Check {
+4 |     postconditions {
+5 |       "hello".length()
+  |       ^^^^^^^^^^^^^^^^
+6 |     }
+7 |   }
+  |
+   = note: An operation was attempted that is not valid for the given values or
+context. This is a catch-all for various runtime errors that don't fit
+into more specific categories.
+   = help: Use .length property instead of .length() method"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Evaluation Errors > E0408: Type coercion failed 1`] = `
+"error[E0408]: Type coercion failed
+  --> test.isl:5:7
+  |
+3 |   behavior Parse {
+4 |     postconditions {
+5 |       parseInt("not a number")
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^
+6 |     }
+7 |   }
+  |
+   = note: An attempt to convert a value from one type to another failed because
+the conversion is not possible or the value is invalid for the target type.
+   = help: Ensure the value can be converted to the target type
+   = help: Use proper conversion functions (parseInt, toString, etc.)
+   = help: Validate the value format before conversion
+   = help: Handle null/undefined cases explicitly"
+`;
+
+exports[`Error Formatting - Golden Snapshots > I/O Errors > E0700: File not found 1`] = `
+"error[E0700]: File not found
+  --> specs/payment.isl:1:1
+   = note: The specified file could not be found. Check that the path is correct
+and the file exists.
+   = help: Verify the file path is correct
+   = help: Check the current working directory"
+`;
+
+exports[`Error Formatting - Golden Snapshots > I/O Errors > E0705: Import not found 1`] = `
+"error[E0705]: Import not found
+  --> login.isl:1:22
+  |
+1 | import { Auth } from "@isl-lang/stdlib/auht"
+  |                      ^^^^^^^^^^^^^^^^^^^^^^^
+  |
+   = note: The import statement references a module that cannot be found. This
+could be a built-in module, a package, or a local file.
+   = help: Did you mean '@isl-lang/stdlib/auth'?"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Lexer Errors > E0001: Unexpected character 1`] = `
+"error[E0001]: Unexpected character
+  --> test.isl:2:9
+  |
+1 | domain Test {
+2 |   name: “String”
+  |         ^
+3 | }
+  |
+   = note: The lexer encountered a character that is not valid in ISL source code.
+This often happens when copying code from a word processor or website,
+which may insert special characters like curly quotes or non-breaking spaces.
+   = help: Replace curly quotes “” with straight quotes """
+`;
+
+exports[`Error Formatting - Golden Snapshots > Lexer Errors > E0002: Unterminated string literal 1`] = `
+"error[E0002]: Unterminated string literal
+  --> test.isl:3:20
+  |
+1 | domain Test {
+2 |   version: "1.0.0"
+3 |   description: "This string never ends
+4 | }
+  |
+   = note: A string literal was started with a quote but never closed. In ISL,
+strings must be enclosed in matching double quotes ("...") or single
+quotes ('...').
+   = help: Add the missing closing quote
+   = help: For multi-line strings, use triple quotes """..."""
+   = help: Escape special characters with backslash"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Lexer Errors > E0006: Unterminated block comment 1`] = `
+"error[E0006]: Unterminated block comment
+  --> test.isl:1:1
+  |
+1 | /* This comment
+  | ^^^^^^^^^^^^^^
+2 | never ends
+3 | 
+  |
+   = note: A block comment was started with /* but never closed with */.
+Block comments can span multiple lines but must be properly closed.
+   = help: Add the missing */ at the end of the comment"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Multiple Diagnostics > formats multiple errors with summary 1`] = `
+"error[E0101]: Expected token
+  --> test.isl:4:8
+  |
+2 |   version: "1.0.0"
+3 |   entity User {
+4 |     id uuid
+  |        ^^^^
+5 |     emial: Strng
+6 |   }
+  |
+   = help: Use 'name: Type' syntax
+
+error[E0201]: Undefined type
+  --> test.isl:5:12
+  |
+3 |   entity User {
+4 |     id uuid
+5 |     emial: Strng
+  |            ^^^^^
+6 |   }
+7 | }
+  |
+   = note: The type referenced in your code has not been defined. This could be
+a built-in type with a typo, or a custom type that hasn't been declared.
+
+Built-in types: String, Int, Decimal, Boolean, UUID, Timestamp, Duration,
+                List<T>, Map<K,V>, Set<T>, Optional<T>
+   = help: Did you mean 'String'?
+
+warning[E0311]: Unused variable
+  --> test.isl:5:5
+  |
+3 |   entity User {
+4 |     id uuid
+5 |     emial: Strng
+  |     ^^^^^
+6 |   }
+7 | }
+  |
+   = note: A precondition references 'result' or 'output', but these values don't
+exist until after the behavior executes. Preconditions are checked
+BEFORE execution, so they can only reference inputs and existing state.
+   = help: Move the check to a postcondition if validating output
+   = help: Reference input fields instead of output fields
+   = help: Use old() in postconditions to compare pre/post state
+
+2 errors, 1 warning generated"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Parser Errors > E0100: Unexpected token 1`] = `
+"error[E0100]: Unexpected token
+  --> test.isl:5:5
+  |
+3 |   entity User {
+4 |     id: UUID
+5 |     @invalid
+  |     ^^^^^^^
+6 |   }
+7 | }
+  |
+   = note: The parser encountered a token that doesn't fit the expected syntax.
+This often indicates a typo, missing punctuation, or misunderstanding
+of ISL syntax.
+   = help: Check for typos in keywords
+   = help: Verify the syntax matches ISL specification
+   = help: Use proper punctuation (colons, braces, parentheses)"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Parser Errors > E0101: Expected token (missing colon) 1`] = `
+"error[E0101]: Expected token
+  --> auth.isl:4:8
+  |
+2 |   version: "1.0.0"
+3 |   entity User {
+4 |     id UUID
+  |        ^^^^
+5 |   }
+6 | }
+  |
+   = help: Entity fields use 'name: Type' syntax
+   = help: Fix: id: UUID"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Parser Errors > E0102: Expected identifier 1`] = `
+"error[E0102]: Expected identifier
+  --> test.isl:3:10
+  |
+1 | domain Test {
+2 |   version: "1.0.0"
+3 |   entity {
+  |          ^
+4 |     id: UUID
+5 |   }
+  |"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Parser Errors > E0105: Missing closing brace (multi-line span) 1`] = `
+"error[E0105]: Missing closing brace
+  --> test.isl:3:15
+  |
+2 |   version: "1.0.0"
+3 |   entity User {
+  |               ^
+4 |     id: UUID
+  | ^^^^^^^^^^^^
+5 |     name: String
+  | ^^^^^^^^^^^^^^^^
+6 |     email: String
+  | ^^^^^^^^^^^^^^^^^
+7 | 
+  |
+   = note: A block was opened with { but the matching closing brace } was not found.
+Every opening brace must have a corresponding closing brace.
+   = help: Add the missing closing brace
+   = help: Use an editor with bracket matching to find unmatched braces
+   = help: Format the code to make nesting levels clear
+
+note: Block opened here
+  --> test.isl:3:15
+  |
+3 |   entity User {
+  |               ^
+  |"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Parser Errors > E0105: Missing closing brace 1`] = `
+"error[E0105]: Missing closing brace
+  --> test.isl:6:1
+  |
+4 |     id: UUID
+5 |     name: String
+6 | 
+  |
+   = note: A block was opened with { but the matching closing brace } was not found.
+Every opening brace must have a corresponding closing brace.
+   = help: Add the missing closing brace
+   = help: Use an editor with bracket matching to find unmatched braces
+   = help: Format the code to make nesting levels clear
+
+note: Block opened here
+  --> test.isl:3:15
+  |
+3 |   entity User {
+  |               ^
+  |"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Parser Errors > E0109: Duplicate entity 1`] = `
+"error[E0109]: Duplicate entity
+  --> test.isl:6:3
+  |
+4 |     id: UUID
+5 |   }
+6 |   entity User {
+  |   ^^^^^^^^^^^
+7 |     name: String
+8 |   }
+  |
+   = note: An entity with this name has already been defined. Each entity in a
+domain must have a unique name.
+   = help: Rename one of the duplicate entities
+   = help: Remove the duplicate definition
+   = help: If importing, use namespacing or aliases
+
+note: Previously defined here
+  --> test.isl:3:3
+  |
+3 |   entity User {
+  |   ^^^^^^^^^^^
+  |"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Parser Errors > E0118: Unclosed block 1`] = `
+"error[E0118]: Unclosed block
+  --> auth.isl:5:1
+  |
+3 |   behavior Login {
+4 |     input { email: String }
+5 | 
+  |
+   = help: Add a closing '}' to close the behavior Login block
+
+note: Block opened here
+  --> auth.isl:3:19
+  |
+3 |   behavior Login {
+  |"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Parser Errors > E0119: Unknown keyword (behaviour -> behavior) 1`] = `
+"error[E0119]: Unexpected keyword
+  --> auth.isl:3:3
+  |
+1 | domain Auth {
+2 |   version: "1.0.0"
+3 |   behaviour Login {
+  |   ^^^^^^^^^
+4 |     input { email: String }
+5 |   }
+  |
+   = help: Did you mean 'behavior'? (American spelling)"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Semantic Errors > E0300: Undefined variable (typo) 1`] = `
+"error[E0300]: Undefined variable
+  --> test.isl:8:7
+   |
+ 6 |     }
+ 7 |     preconditions {
+ 8 |       ammount > 0
+   |       ^^^^^^^
+ 9 |     }
+10 |   }
+   |
+   = note: You're using a variable that hasn't been declared in the current scope.
+Variables must be declared before use, either as input parameters,
+local bindings, or in parent scopes.
+   = help: Did you mean 'amount'?"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Semantic Errors > E0301: Undefined entity 1`] = `
+"error[E0301]: Undefined entity
+  --> test.isl:5:7
+  |
+3 |   behavior Transfer {
+4 |     preconditions {
+5 |       Account.exists(senderId)
+  |       ^^^^^^^
+6 |     }
+7 |   }
+  |
+   = note: You're referencing an entity that hasn't been defined in this domain.
+Entities must be declared before they can be used in behaviors, types, or
+other entities.
+   = help: Check spelling of the entity name
+   = help: Import the entity from the correct domain if it exists elsewhere
+   = help: Define the entity before using it
+   = help: Use correct casing (entities start with uppercase)"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Semantic Errors > E0302: Undefined behavior 1`] = `
+"error[E0302]: Undefined behavior
+  --> test.isl:5:7
+  |
+3 |   scenario "test" {
+4 |     given {
+5 |       Transfer(amount: 100)
+  |       ^^^^^^^^
+6 |     }
+7 |   }
+  |
+   = note: You're referencing a behavior that hasn't been defined in this domain.
+Behaviors must be declared before they can be referenced in scenarios,
+policies, or other behaviors.
+   = help: Check spelling of the behavior name
+   = help: Import the behavior from the correct domain if it exists elsewhere
+   = help: Define the behavior before referencing it
+   = help: Use correct casing (behaviors start with uppercase)"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Semantic Errors > E0304: old() outside postcondition 1`] = `
+"error[E0304]: old() outside postcondition
+  --> test.isl:5:7
+  |
+3 |   behavior Transfer {
+4 |     preconditions {
+5 |       old(sender.balance) >= amount
+  |       ^^^^^^^^^^^^^^^^^^^
+6 |     }
+7 |   }
+  |
+   = note: old() captures the value of an expression before a behavior executes
+   = help: In preconditions, reference values directly without old()"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Semantic Errors > E0305: result outside postcondition 1`] = `
+"error[E0305]: result outside postcondition
+  --> test.isl:5:7
+  |
+3 |   behavior CalculateTotal {
+4 |     preconditions {
+5 |       result > 0
+  |       ^^^^^^
+6 |     }
+7 |   }
+  |
+   = note: The 'result' keyword refers to the return value of a behavior. It only
+exists after the behavior completes, so it can only be used in
+postconditions.
+   = help: Move the expression to a postcondition
+   = help: Use output fields to define what the behavior returns"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Semantic Errors > E0309: Duplicate definition 1`] = `
+"error[E0309]: Duplicate definition
+  --> test.isl:5:5
+  |
+3 |   entity Account {
+4 |     balance: Decimal
+5 |     balance: Int
+  |     ^^^^^^^^^^^^
+6 |   }
+7 | }
+  |
+   = help: Remove the duplicate field or rename one of them
+
+note: Previously defined here
+  --> test.isl:4:5
+  |
+4 |     balance: Decimal
+  |     ^^^^^^^^^^^^^^^^
+  |"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Type Errors > E0200: Type mismatch 1`] = `
+"error[E0200]: Type mismatch
+  --> test.isl:8:24
+   |
+ 6 |   behavior Transfer {
+ 7 |     postconditions {
+ 8 |       sender.balance == "100.00"
+   |                        ^^^^^^^^
+ 9 |     }
+10 |   }
+   |
+   = note: The expression has type 'String' but 'Decimal' was expected
+   = help: Use a Decimal literal instead: 100.00"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Type Errors > E0201: Undefined type (case sensitivity) 1`] = `
+"error[E0201]: Undefined type
+  --> test.isl:4:9
+  |
+2 |   version: "1.0.0"
+3 |   entity User {
+4 |     id: uuid
+  |         ^^^^
+5 |     age: Intger
+6 |   }
+  |
+   = note: The type referenced in your code has not been defined. This could be
+a built-in type with a typo, or a custom type that hasn't been declared.
+
+Built-in types: String, Int, Decimal, Boolean, UUID, Timestamp, Duration,
+                List<T>, Map<K,V>, Set<T>, Optional<T>
+   = help: Did you mean 'UUID'?
+   = help: Type names are case-sensitive"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Type Errors > E0201: Undefined type (typo) 1`] = `
+"error[E0201]: Undefined type
+  --> users.isl:4:12
+  |
+2 |   version: "1.0.0"
+3 |   entity User {
+4 |     email: Emal
+  |            ^^^^
+5 |   }
+6 | }
+  |
+   = note: Available types: Email, String, Number, Boolean, UUID
+   = help: Did you mean 'Email'?"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Type Errors > E0202: Undefined field (typo) 1`] = `
+"error[E0202]: Undefined field
+  --> test.isl:8:15
+   |
+ 6 |   behavior Check {
+ 7 |     preconditions {
+ 8 |       account.balace > 0
+   |               ^^^^^^
+ 9 |     }
+10 |   }
+   |
+   = note: You're trying to access a field that doesn't exist on this type.
+This is often caused by typos in field names.
+   = help: Did you mean 'balance'?
+   = help: Available fields: balance"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Type Errors > E0210: Incompatible comparison 1`] = `
+"error[E0210]: Incompatible comparison
+  --> test.isl:9:7
+   |
+ 7 |   behavior Check {
+ 8 |     postconditions {
+ 9 |       user.name == user.age
+   |       ^^^^^^^^^^^^^^^^^^^^
+10 |     }
+11 |   }
+   |
+   = note: 'name' is String but 'age' is Int - these types are not comparable
+   = help: Ensure both sides of comparison have compatible types
+   = help: Convert types explicitly if needed
+   = help: Use appropriate comparison methods for complex types"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Verification Errors > E0500: Precondition failed 1`] = `
+"error[E0500]: Precondition failed
+  --> banking.isl:5:7
+  |
+3 |   behavior Transfer {
+4 |     preconditions {
+5 |       amount > 0
+  |       ^^^^^^^^^^
+6 |       sender.balance >= amount
+7 |     }
+  |
+   = note: The caller passed amount = -50, which violates this precondition
+   = help: Validate inputs before invoking Transfer"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Verification Errors > E0501: Postcondition failed 1`] = `
+"error[E0501]: Postcondition failed
+  --> banking.isl:5:7
+  |
+3 |   behavior Transfer {
+4 |     postconditions {
+5 |       sender.balance == old(sender.balance) - amount
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 |       receiver.balance == old(receiver.balance) + amount
+7 |     }
+  |
+   = note: Expected sender.balance = 950.00 but got 1000.00
+   = note: The sender balance was not debited
+   = help: Ensure the implementation debits the sender account"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Verification Errors > E0502: Invariant violated 1`] = `
+"error[E0502]: Invariant violated
+  --> banking.isl:4:5
+  |
+2 |   version: "1.0.0"
+3 |   invariant "non-negative balance" {
+4 |     all a in Account: a.balance >= 0
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+5 |   }
+6 | }
+  |
+   = note: After Transfer, account "acc-123" has balance = -50.00
+   = help: Add a precondition to Transfer: sender.balance >= amount"
+`;
+
+exports[`Error Formatting - Golden Snapshots > Verification Errors > E0506: Security policy violation 1`] = `
+"error[E0506]: Security policy violation
+  --> auth.isl:5:7
+  |
+3 |   behavior Login {
+4 |     security {
+5 |       must "return identical error for wrong email or password"
+  |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 |     }
+7 |   }
+  |
+   = note: Invalid email returns 404 "User not found"
+   = note: Invalid password returns 401 "Wrong password"
+   = note: Different error messages let attackers enumerate valid email addresses
+   = help: Return the same 401 status and message for both cases
+   = help: Fix: return res.status(401).json({ error: "Invalid credentials" })"
+`;

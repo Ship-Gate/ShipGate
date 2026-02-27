@@ -1,0 +1,17 @@
+[
+  {
+    "code": "ISL_T013",
+    "severity": "error",
+    "message": "Variable 'user' is not defined in this scope",
+    "location": {
+      "file": "06-undefined-field.isl",
+      "line": 15,
+      "column": 7,
+      "endLine": 15,
+      "endColumn": 11
+    },
+    "source": "typechecker",
+    "notes": [],
+    "help": []
+  }
+]

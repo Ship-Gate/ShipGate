@@ -1,0 +1,87 @@
+{
+  "items": [
+    {
+      "title": "Set up CI/CD pipeline",
+      "description": "No continuous integration detected — add GitHub Actions, CircleCI, or GitLab CI",
+      "status": "planned",
+      "priority": "high",
+      "aiSuggested": true,
+      "category": "feature",
+      "source": "signal",
+      "id": "1771137508779mmxu5t7w7",
+      "createdAt": "2026-02-15T06:38:28.779Z"
+    },
+    {
+      "title": "Add a LICENSE file",
+      "description": "No license file found — add one to clarify usage rights for contributors and users",
+      "status": "planned",
+      "priority": "low",
+      "aiSuggested": true,
+      "category": "docs",
+      "source": "signal",
+      "id": "1771137508780q98dde8cp",
+      "createdAt": "2026-02-15T06:38:28.780Z"
+    }
+  ],
+  "adaptations": [
+    {
+      "id": "1771137508780e68fhz",
+      "timestamp": "2026-02-15T06:38:28.780Z",
+      "type": "signal_detected",
+      "itemId": "1771137508779mmxu5t7w7",
+      "itemTitle": "Set up CI/CD pipeline",
+      "description": "Detected: No CI/CD config detected"
+    },
+    {
+      "id": "1771137508780rs8bor",
+      "timestamp": "2026-02-15T06:38:28.780Z",
+      "type": "signal_detected",
+      "itemId": "1771137508780q98dde8cp",
+      "itemTitle": "Add a LICENSE file",
+      "description": "Detected: No LICENSE file"
+    }
+  ],
+  "lastUpdated": "2026-02-15T06:38:28.783Z",
+  "lastSignalHash": "has-docker:false|has-ci:false|no-ci:true|no-tests:false|no-env-example:false|has-prisma:false|has-drizzle:false|large-bundle:false|no-license:true",
+  "projectSignals": [
+    {
+      "type": "has-docker",
+      "detected": false
+    },
+    {
+      "type": "has-ci",
+      "detected": false
+    },
+    {
+      "type": "no-ci",
+      "detected": true,
+      "detail": "No CI/CD config detected"
+    },
+    {
+      "type": "no-tests",
+      "detected": false
+    },
+    {
+      "type": "no-env-example",
+      "detected": false
+    },
+    {
+      "type": "has-prisma",
+      "detected": false
+    },
+    {
+      "type": "has-drizzle",
+      "detected": false
+    },
+    {
+      "type": "large-bundle",
+      "detected": false,
+      "detail": "24 dependencies"
+    },
+    {
+      "type": "no-license",
+      "detected": true,
+      "detail": "No LICENSE file"
+    }
+  ]
+}

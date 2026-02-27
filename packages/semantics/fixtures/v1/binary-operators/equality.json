@@ -1,0 +1,113 @@
+{
+  "name": "equality-operators",
+  "description": "V1 equality operator semantics (== and !=)",
+  "version": "1.0.0",
+  "frozenForVersion": "1.x.x",
+  "cases": [
+    {
+      "operator": "==",
+      "left": 1,
+      "right": 1,
+      "expected": true,
+      "description": "Numbers: equal"
+    },
+    {
+      "operator": "==",
+      "left": 1,
+      "right": 2,
+      "expected": false,
+      "description": "Numbers: not equal"
+    },
+    {
+      "operator": "==",
+      "left": "hello",
+      "right": "hello",
+      "expected": true,
+      "description": "Strings: equal"
+    },
+    {
+      "operator": "==",
+      "left": "hello",
+      "right": "world",
+      "expected": false,
+      "description": "Strings: not equal"
+    },
+    {
+      "operator": "==",
+      "left": true,
+      "right": true,
+      "expected": true,
+      "description": "Booleans: both true"
+    },
+    {
+      "operator": "==",
+      "left": true,
+      "right": false,
+      "expected": false,
+      "description": "Booleans: different"
+    },
+    {
+      "operator": "==",
+      "left": null,
+      "right": null,
+      "expected": true,
+      "description": "Null: both null"
+    },
+    {
+      "operator": "==",
+      "left": [1, 2, 3],
+      "right": [1, 2, 3],
+      "expected": true,
+      "description": "Arrays: deep equality"
+    },
+    {
+      "operator": "==",
+      "left": [1, 2, 3],
+      "right": [1, 2, 4],
+      "expected": false,
+      "description": "Arrays: different values"
+    },
+    {
+      "operator": "==",
+      "left": [1, 2],
+      "right": [1, 2, 3],
+      "expected": false,
+      "description": "Arrays: different lengths"
+    },
+    {
+      "operator": "==",
+      "left": {"a": 1, "b": 2},
+      "right": {"a": 1, "b": 2},
+      "expected": true,
+      "description": "Objects: deep equality"
+    },
+    {
+      "operator": "==",
+      "left": {"a": 1},
+      "right": {"a": 2},
+      "expected": false,
+      "description": "Objects: different values"
+    },
+    {
+      "operator": "==",
+      "left": 1,
+      "right": "1",
+      "expected": false,
+      "description": "Different types: no coercion"
+    },
+    {
+      "operator": "!=",
+      "left": 1,
+      "right": 2,
+      "expected": true,
+      "description": "Inequality: different values"
+    },
+    {
+      "operator": "!=",
+      "left": 1,
+      "right": 1,
+      "expected": false,
+      "description": "Inequality: same values"
+    }
+  ]
+}

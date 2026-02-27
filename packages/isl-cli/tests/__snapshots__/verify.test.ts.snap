@@ -1,0 +1,356 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`isl verify CLI output > Human-readable output > renders FAILED result correctly > verify-failed-human 1`] = `
+"╔══════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                   ISL Verification: AuthLogin                                    ║
+╟──────────────────────────────────────────────────────────────────────────────────────────────────╢
+║  Verdict:  FAILED                                                                                  ║
+║  1 proven  1 failed  0 unknown  (2 total)                                                        ║
+║  File: login.isl                                                                                 ║
+║  Duration: 52ms                                                                                  ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ CLAUSE ID              │ CLAUSE TEXT                                    │ VERDICT  │ EVIDENCE           │
+├────────────────────────┼────────────────────────────────────────────────┼──────────┼────────────────────┤
+│ Login:post:45        │ Session.exists(result.id)                    │ TRUE     │ trace:Login        │
+│ Login:post:47        │ User.failed_attempts == 0                    │ FALSE    │ trace:Login        │
+└────────────────────────┴────────────────────────────────────────────────┴──────────┴────────────────────┘
+
+✗ Failed Clauses
+────────────────────────────────────────────────────────────────────────────────
+  Login:post:47 [postcondition]
+  at login.isl:47
+  Clause: User.failed_attempts == 0
+  Error: Expected failed_attempts to be 0, got 3
+  Expected: 0
+  Actual:   3
+  Evidence: trace from Login (2 events, 50ms)
+
+
+✗ 1 clause(s) violated. Contract not satisfied.
+  Exit code: 1 (FAILED)"
+`;
+
+exports[`isl verify CLI output > Human-readable output > renders INCOMPLETE_PROOF result correctly > verify-incomplete-human 1`] = `
+"╔══════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                   ISL Verification: AuthLogin                                    ║
+╟──────────────────────────────────────────────────────────────────────────────────────────────────╢
+║  Verdict:  INCOMPLETE                                                                        ║
+║  1 proven  0 failed  2 unknown  (3 total)                                                        ║
+║  File: login.isl                                                                                 ║
+║  Duration: 45ms                                                                                  ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ CLAUSE ID              │ CLAUSE TEXT                                    │ VERDICT  │ EVIDENCE           │
+├────────────────────────┼────────────────────────────────────────────────┼──────────┼────────────────────┤
+│ Login:post:45        │ Session.exists(result.id)                    │ TRUE     │ trace:Login        │
+│ Login:inv:55         │ password never_logged                        │ UNKNOWN  │ (none)             │
+│ Login:sec:60         │ rate_limit 10 per hour per email             │ UNKNOWN  │ (none)             │
+└────────────────────────┴────────────────────────────────────────────────┴──────────┴────────────────────┘
+
+? Unknown Clauses (require additional data)
+────────────────────────────────────────────────────────────────────────────────
+  Login:inv:55 [invariant]
+  at login.isl:55
+  Clause: password never_logged
+  Reason: [ADAPTER_UNAVAILABLE] Security invariant requires log analysis adapter
+  To fix: Enable the logging adapter: isl verify --adapter logging
+
+  Login:sec:60 [security]
+  at login.isl:60
+  Clause: rate_limit 10 per hour per email
+  Reason: [ADAPTER_UNAVAILABLE] Rate limit verification requires rate-limit adapter
+  To fix: Enable the rate-limit adapter: isl verify --adapter rate-limit
+
+
+? 2 clause(s) could not be evaluated. Proof incomplete.
+  Exit code: 2 (INCOMPLETE_PROOF)"
+`;
+
+exports[`isl verify CLI output > Human-readable output > renders PROVEN result correctly > verify-proven-human 1`] = `
+"╔══════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                   ISL Verification: AuthLogin                                    ║
+╟──────────────────────────────────────────────────────────────────────────────────────────────────╢
+║  Verdict:  PROVEN                                                                                  ║
+║  3 proven  0 failed  0 unknown  (3 total)                                                        ║
+║  File: login.isl                                                                                 ║
+║  Duration: 50ms                                                                                  ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ CLAUSE ID              │ CLAUSE TEXT                                    │ VERDICT  │ EVIDENCE           │
+├────────────────────────┼────────────────────────────────────────────────┼──────────┼────────────────────┤
+│ Login:post:45        │ Session.exists(result.id)                    │ TRUE     │ trace:Login        │
+│ Login:post:46        │ Session.user_id == User.lookup(email).id     │ TRUE     │ trace:Login        │
+│ Login:post:47        │ User.failed_attempts == 0                    │ TRUE     │ trace:Login        │
+└────────────────────────┴────────────────────────────────────────────────┴──────────┴────────────────────┘
+
+✓ All clauses proven. Contract verified.
+  Exit code: 0 (PROVEN)"
+`;
+
+exports[`isl verify CLI output > JSON output > produces valid JSON for FAILED result > verify-failed-json 1`] = `
+"{
+  "schemaVersion": "1.0",
+  "verdict": "FAILED",
+  "exitCode": 1,
+  "result": {
+    "verdict": "FAILED",
+    "specName": "AuthLogin",
+    "specFile": "login.isl",
+    "clauses": [
+      {
+        "clauseId": "Login:post:45",
+        "clauseText": "Session.exists(result.id)",
+        "clauseType": "postcondition",
+        "behavior": "Login",
+        "verdict": "TRUE",
+        "evidence": {
+          "type": "trace_slice",
+          "behavior": "Login",
+          "eventIds": [
+            "evt-1",
+            "evt-2"
+          ],
+          "startMs": 1000,
+          "endMs": 1050
+        },
+        "source": {
+          "file": "login.isl",
+          "line": 45,
+          "column": 7
+        }
+      },
+      {
+        "clauseId": "Login:post:47",
+        "clauseText": "User.failed_attempts == 0",
+        "clauseType": "postcondition",
+        "behavior": "Login",
+        "verdict": "FALSE",
+        "evidence": {
+          "type": "trace_slice",
+          "behavior": "Login",
+          "eventIds": [
+            "evt-1",
+            "evt-2"
+          ],
+          "startMs": 1000,
+          "endMs": 1050
+        },
+        "source": {
+          "file": "login.isl",
+          "line": 47,
+          "column": 7
+        },
+        "failureMessage": "Expected failed_attempts to be 0, got 3",
+        "expected": 0,
+        "actual": 3
+      }
+    ],
+    "summary": {
+      "total": 2,
+      "proven": 1,
+      "failed": 1,
+      "unknown": 0
+    },
+    "durationMs": 52,
+    "timestamp": "2025-02-02T12:00:00.000Z"
+  },
+  "meta": {
+    "cliVersion": "0.1.0",
+    "nodeVersion": "v24.12.0",
+    "platform": "win32",
+    "timestamp": "2026-02-09T08:32:33.622Z"
+  }
+}"
+`;
+
+exports[`isl verify CLI output > JSON output > produces valid JSON for INCOMPLETE_PROOF result > verify-incomplete-json 1`] = `
+"{
+  "schemaVersion": "1.0",
+  "verdict": "INCOMPLETE_PROOF",
+  "exitCode": 2,
+  "result": {
+    "verdict": "INCOMPLETE_PROOF",
+    "specName": "AuthLogin",
+    "specFile": "login.isl",
+    "clauses": [
+      {
+        "clauseId": "Login:post:45",
+        "clauseText": "Session.exists(result.id)",
+        "clauseType": "postcondition",
+        "behavior": "Login",
+        "verdict": "TRUE",
+        "evidence": {
+          "type": "trace_slice",
+          "behavior": "Login",
+          "eventIds": [
+            "evt-1",
+            "evt-2"
+          ],
+          "startMs": 1000,
+          "endMs": 1050
+        },
+        "source": {
+          "file": "login.isl",
+          "line": 45,
+          "column": 7
+        }
+      },
+      {
+        "clauseId": "Login:inv:55",
+        "clauseText": "password never_logged",
+        "clauseType": "invariant",
+        "behavior": "Login",
+        "verdict": "UNKNOWN",
+        "evidence": {
+          "type": "none",
+          "reason": "Requires log analysis adapter"
+        },
+        "source": {
+          "file": "login.isl",
+          "line": 55,
+          "column": 7
+        },
+        "unknownReason": {
+          "code": "ADAPTER_UNAVAILABLE",
+          "message": "Security invariant requires log analysis adapter",
+          "remediation": "Enable the logging adapter: isl verify --adapter logging"
+        }
+      },
+      {
+        "clauseId": "Login:sec:60",
+        "clauseText": "rate_limit 10 per hour per email",
+        "clauseType": "security",
+        "behavior": "Login",
+        "verdict": "UNKNOWN",
+        "evidence": {
+          "type": "none",
+          "reason": "Requires rate-limit adapter"
+        },
+        "source": {
+          "file": "login.isl",
+          "line": 60,
+          "column": 7
+        },
+        "unknownReason": {
+          "code": "ADAPTER_UNAVAILABLE",
+          "message": "Rate limit verification requires rate-limit adapter",
+          "remediation": "Enable the rate-limit adapter: isl verify --adapter rate-limit"
+        }
+      }
+    ],
+    "summary": {
+      "total": 3,
+      "proven": 1,
+      "failed": 0,
+      "unknown": 2
+    },
+    "durationMs": 45,
+    "timestamp": "2025-02-02T12:00:00.000Z"
+  },
+  "meta": {
+    "cliVersion": "0.1.0",
+    "nodeVersion": "v24.12.0",
+    "platform": "win32",
+    "timestamp": "2026-02-09T08:32:33.623Z"
+  }
+}"
+`;
+
+exports[`isl verify CLI output > JSON output > produces valid JSON for PROVEN result > verify-proven-json 1`] = `
+"{
+  "schemaVersion": "1.0",
+  "verdict": "PROVEN",
+  "exitCode": 0,
+  "result": {
+    "verdict": "PROVEN",
+    "specName": "AuthLogin",
+    "specFile": "login.isl",
+    "clauses": [
+      {
+        "clauseId": "Login:post:45",
+        "clauseText": "Session.exists(result.id)",
+        "clauseType": "postcondition",
+        "behavior": "Login",
+        "verdict": "TRUE",
+        "evidence": {
+          "type": "trace_slice",
+          "behavior": "Login",
+          "eventIds": [
+            "evt-1",
+            "evt-2"
+          ],
+          "startMs": 1000,
+          "endMs": 1050
+        },
+        "source": {
+          "file": "login.isl",
+          "line": 45,
+          "column": 7
+        }
+      },
+      {
+        "clauseId": "Login:post:46",
+        "clauseText": "Session.user_id == User.lookup(email).id",
+        "clauseType": "postcondition",
+        "behavior": "Login",
+        "verdict": "TRUE",
+        "evidence": {
+          "type": "trace_slice",
+          "behavior": "Login",
+          "eventIds": [
+            "evt-1",
+            "evt-2"
+          ],
+          "startMs": 1000,
+          "endMs": 1050
+        },
+        "source": {
+          "file": "login.isl",
+          "line": 46,
+          "column": 7
+        }
+      },
+      {
+        "clauseId": "Login:post:47",
+        "clauseText": "User.failed_attempts == 0",
+        "clauseType": "postcondition",
+        "behavior": "Login",
+        "verdict": "TRUE",
+        "evidence": {
+          "type": "trace_slice",
+          "behavior": "Login",
+          "eventIds": [
+            "evt-1",
+            "evt-2"
+          ],
+          "startMs": 1000,
+          "endMs": 1050
+        },
+        "source": {
+          "file": "login.isl",
+          "line": 47,
+          "column": 7
+        }
+      }
+    ],
+    "summary": {
+      "total": 3,
+      "proven": 3,
+      "failed": 0,
+      "unknown": 0
+    },
+    "durationMs": 50,
+    "timestamp": "2025-02-02T12:00:00.000Z"
+  },
+  "meta": {
+    "cliVersion": "0.1.0",
+    "nodeVersion": "v24.12.0",
+    "platform": "win32",
+    "timestamp": "2026-02-09T08:32:33.618Z"
+  }
+}"
+`;

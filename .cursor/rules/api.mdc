@@ -1,0 +1,41 @@
+---
+description: API route patterns (988 verified routes)
+globs: ["**/api/**/*.ts", "**/routes/**/*.ts"]
+alwaysApply: false
+priority: 80
+---
+
+# API Conventions
+
+## Verified Routes (988 total)
+- `POST Profiler.enable` → bench\profiler.ts:48
+- `POST Profiler.start` → bench\profiler.ts:49
+- `POST Profiler.stop` → bench\profiler.ts:79
+- `GET /api/users` → demos\reality-probe-demo\server.ts:15
+- `GET /health` → demos\reality-probe-demo\server.ts:20
+- `GET x-forwarded-for` → dogfood-blog-output\lib\rate-limit.ts:12
+- `GET x-real-ip` → dogfood-blog-output\lib\rate-limit.ts:12
+- `GET x-forwarded-for` → demos\e2e-login-demo\src\demo.ts:479
+- `GET x-forwarded-for` → demos\e2e-login-demo\src\demo.ts:526
+- `GET /health` → demos\flagship-auth-payments\src\server.ts:51
+
+... and 978 more in .vibecheck/truthpack/routes.json
+
+## Pattern Requirements
+- Use consistent HTTP methods (GET for read, POST for create, etc.)
+- Always validate request body with schemas
+- Return consistent response shapes
+- Handle errors with proper status codes
+
+## Response Format
+```typescript
+// Success
+{ success: true, data: T }
+
+// Error
+{ success: false, error: { code: string, message: string } }
+```
+
+---
+<!-- guardrail:auto-generated -->
+*Verified by Guardrail ✓*

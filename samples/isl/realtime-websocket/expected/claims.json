@@ -1,0 +1,62 @@
+{
+  "domain": "RealtimeWebsocket",
+  "parseSuccess": true,
+  "checkSuccess": true,
+  "minEntities": 3,
+  "minBehaviors": 4,
+  "claims": [
+    {
+      "id": "ws-join-postcondition",
+      "type": "postcondition",
+      "behavior": "JoinRoom",
+      "description": "Connection established in CONNECTED state; member count incremented",
+      "verdict": "pass"
+    },
+    {
+      "id": "ws-message-ordering",
+      "type": "invariant",
+      "behavior": "SendMessage",
+      "description": "Message sequence numbers are monotonically increasing and gap-free per room",
+      "verdict": "pass"
+    },
+    {
+      "id": "ws-delivery-guarantee",
+      "type": "invariant",
+      "behavior": "SendMessage",
+      "description": "Messages delivered to all CONNECTED members in room",
+      "verdict": "pass"
+    },
+    {
+      "id": "ws-leave-postcondition",
+      "type": "postcondition",
+      "behavior": "LeaveRoom",
+      "description": "Connection transitions to DISCONNECTED; member count decremented",
+      "verdict": "pass"
+    },
+    {
+      "id": "ws-heartbeat-timeout",
+      "type": "invariant",
+      "behavior": "Heartbeat",
+      "description": "No heartbeat for 30s auto-disconnects the connection",
+      "verdict": "pass"
+    },
+    {
+      "id": "ws-presence-broadcast",
+      "type": "invariant",
+      "description": "Join/leave events broadcast PRESENCE messages to room members",
+      "verdict": "pass"
+    },
+    {
+      "id": "ws-ordering-scenario",
+      "type": "scenario",
+      "description": "Message ordering guarantee across multiple senders",
+      "verdict": "pass"
+    },
+    {
+      "id": "ws-timeout-scenario",
+      "type": "scenario",
+      "description": "Heartbeat timeout disconnects idle connection",
+      "verdict": "pass"
+    }
+  ]
+}

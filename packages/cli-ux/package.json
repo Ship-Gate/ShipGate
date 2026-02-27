@@ -1,0 +1,63 @@
+{
+  "name": "@isl-lang/cli-ux",
+  "version": "0.1.0",
+  "description": "CLI UX components for ISL verification output - pretty rendering and JSON mode",
+  "author": "ISL Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/isl-lang/isl.git",
+    "directory": "packages/cli-ux"
+  },
+  "keywords": [
+    "isl",
+    "cli",
+    "ux",
+    "verification",
+    "renderer"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:update": "vitest run --update",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "prepublishOnly": "pnpm run build",
+    "test:unit": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^25.1.0",
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "sideEffects": false
+}

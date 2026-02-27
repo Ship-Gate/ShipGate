@@ -1,0 +1,60 @@
+{
+  "name": "@isl-lang/schema-evolution",
+  "version": "2.0.0",
+  "description": "Safe schema evolution and migration tools for ISL specifications",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --no-dts",
+    "test": "vitest run --passWithNoTests",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "diff": "^5.2.0",
+    "semver": "^7.6.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/diff": "^5.0.9",
+    "@types/semver": "^7.5.6",
+    "typescript": "^5.3.0",
+    "tsup": "^8.0.0",
+    "vitest": "^1.0.0",
+    "rimraf": "^5.0.5"
+  },
+  "peerDependencies": {
+    "@isl-lang/isl-core": "workspace:*",
+    "@isl-lang/parser": "workspace:*"
+  },
+  "author": "mevla",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "private": true,
+  "experimental": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "name": "@isl-lang/codegen-loadtest",
+  "version": "0.1.0",
+  "description": "Generate load tests (k6, Artillery, Gatling) from ISL temporal specs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
+  },
+  "files": [
+    "dist"
+  ],
+  "author": "mevla",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "private": true,
+  "experimental": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "sideEffects": false
+}

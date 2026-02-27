@@ -1,0 +1,87 @@
+name: 'ISL Verify'
+description: 'Verify ISL specifications and implementations in your CI/CD pipeline'
+author: 'ISL Language Team'
+
+branding:
+  icon: 'check-circle'
+  color: 'green'
+
+inputs:
+  specs:
+    description: 'Glob pattern for ISL spec files'
+    required: true
+    default: 'src/**/*.isl'
+  
+  implementation:
+    description: 'Path to implementation file for verification (optional)'
+    required: false
+    default: ''
+  
+  check-only:
+    description: 'Only run syntax/type checking, skip verification'
+    required: false
+    default: 'false'
+  
+  fail-on-warning:
+    description: 'Fail the action if warnings are found'
+    required: false
+    default: 'false'
+  
+  fail-threshold:
+    description: 'Minimum verification score to pass (0-100)'
+    required: false
+    default: '0'
+  
+  generate-types:
+    description: 'Generate TypeScript type definitions'
+    required: false
+    default: 'false'
+  
+  generate-tests:
+    description: 'Generate test files from specifications'
+    required: false
+    default: 'false'
+  
+  upload-proofs:
+    description: 'Upload proof bundles as artifacts'
+    required: false
+    default: 'false'
+  
+  working-directory:
+    description: 'Working directory for running commands'
+    required: false
+    default: '.'
+  
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '20'
+
+outputs:
+  verdict:
+    description: 'Verification verdict (verified/risky/unsafe/unchecked)'
+  
+  score:
+    description: 'Verification score (0-100)'
+  
+  errors:
+    description: 'Number of errors found'
+  
+  warnings:
+    description: 'Number of warnings found'
+  
+  specs-checked:
+    description: 'Number of spec files checked'
+  
+  coverage-preconditions:
+    description: 'Precondition coverage percentage'
+  
+  coverage-postconditions:
+    description: 'Postcondition coverage percentage'
+  
+  coverage-invariants:
+    description: 'Invariant coverage percentage'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

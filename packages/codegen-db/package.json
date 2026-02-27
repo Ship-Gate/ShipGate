@@ -1,0 +1,52 @@
+{
+  "name": "@isl-lang/codegen-db",
+  "version": "0.1.1",
+  "description": "Generate database adapters (Prisma, Drizzle, TypeORM) from ISL entities",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "author": "mevla",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "private": true,
+  "experimental": true,
+  "sideEffects": false
+}

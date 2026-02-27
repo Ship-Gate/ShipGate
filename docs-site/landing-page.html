@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>shipgate — the last gate before production for AI-written code</title>
+<meta name="description" content="Behavioral CI gate for AI-generated code. Define intent with ISL. Verify implementation. SHIP or NO_SHIP.">
+<style>
+  :root { --bg: #0a0a0a; --fg: #e5e5e5; --muted: #737373; --accent: #22c55e; --warn: #eab308; --danger: #ef4444; --code-bg: #171717; --border: #262626; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; background: var(--bg); color: var(--fg); line-height: 1.6; }
+  .container { max-width: 800px; margin: 0 auto; padding: 0 24px; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: var(--code-bg); padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; overflow-x: auto; font-size: 14px; line-height: 1.5; }
+  .section { padding: 80px 0; border-bottom: 1px solid var(--border); }
+  h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.02em; }
+  h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 24px; }
+  h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+  p { color: var(--muted); margin-bottom: 16px; }
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+  .ship { background: #14532d; color: var(--accent); }
+  .noship { background: #450a0a; color: var(--danger); }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="section" style="padding-top:120px;">
+<div class="container">
+  <h1>shipgate</h1>
+  <p style="font-size:1.2rem;color:var(--fg);margin:16px 0 32px;">The last gate before production for AI-written code.</p>
+  <p>AI generates code that compiles, passes linting, and looks correct. But it hallucinates routes, forgets auth, and references env vars that don't exist. shipgate catches what linters can't.</p>
+  <div style="margin-top:32px;display:flex;gap:16px;flex-wrap:wrap;">
+    <pre style="margin:0;display:inline-block;">npm install -g shipgate</pre>
+    <a href="https://shipgate.dev/docs" style="padding:10px 20px;border:1px solid var(--border);border-radius:8px;display:inline-block;">Read the Docs</a>
+  </div>
+  <div style="margin-top:32px;">
+    <img src="https://vhs.charm.sh/vhs-2kRF2qC1pB5NkxepJTpOCu.gif" alt="ShipGate terminal demo — vibe, scan, gate" style="max-width:100%;border-radius:8px;border:1px solid var(--border);">
+  </div>
+</div>
+</section>
+
+<!-- THE 3 LIES -->
+<section class="section">
+<div class="container">
+  <h2>The 3 Lies AI Tells Your Codebase</h2>
+
+  <div style="margin-bottom:32px;">
+    <h3>1. Ghost Routes</h3>
+    <p>AI generates a handler for <code>/api/v1/admin/users</code> but never declares the route in your spec. It compiles. It even returns JSON. But it's a phantom endpoint with no contract.</p>
+    <pre><span style="color:var(--danger);">BLOCK</span> GHOST_ROUTE: Route /api/v1/admin/users not in ISL API spec
+  Fix: Add to ISL api block or remove the handler.</pre>
+  </div>
+
+  <div style="margin-bottom:32px;">
+    <h3>2. Ghost Env Vars</h3>
+    <p>AI reads <code>process.env.STRIPE_SECRET_KEY</code> but the variable isn't in your config, your <code>.env.example</code>, or your Truthpack. Deploys will crash silently.</p>
+    <pre><span style="color:var(--danger);">BLOCK</span> GHOST_ENV: STRIPE_SECRET_KEY not declared in ISL config
+  Fix: Add to ISL config block or .env.example.</pre>
+  </div>
+
+  <div>
+    <h3>3. Auth Bypasses</h3>
+    <p>AI creates a route handler without auth middleware. Your ISL spec says <code>actor must: authenticated</code>. The code just... doesn't check.</p>
+    <pre><span style="color:var(--warn);">WARN</span>  AUTH_MISSING: Endpoint /api/v1/users accessible without authentication
+  Fix: Add auth middleware matching ISL actor constraint.</pre>
+  </div>
+</div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section">
+<div class="container">
+  <h2>How It Works</h2>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:24px;">
+    <div>
+      <p style="font-size:2rem;margin-bottom:8px;">1</p>
+      <h3>Define Intent</h3>
+      <p>Write ISL specs by hand, or describe what you want in plain English. shipgate generates the behavioral contract.</p>
+    </div>
+    <div>
+      <p style="font-size:2rem;margin-bottom:8px;">2</p>
+      <h3>Verify Code</h3>
+      <p>shipgate checks every precondition, postcondition, and invariant. Runs 27 policy rules. Cross-references your Truthpack.</p>
+    </div>
+    <div>
+      <p style="font-size:2rem;margin-bottom:8px;">3</p>
+      <h3>Gate the Merge</h3>
+      <p><span class="badge ship">SHIP</span> or <span class="badge noship">NO_SHIP</span>. Exit code 0 or 1. Evidence bundle attached. No ambiguity.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- THE VIBE PIPELINE -->
+<section class="section">
+<div class="container">
+  <h2>The Vibe Pipeline</h2>
+  <p>Go from a sentence to a verified, deployed project. One command.</p>
+  <pre>$ shipgate vibe "build a todo API with auth and JWT"
+
+<span style="color:var(--muted);">⠋ Stage 1/5: Converting natural language to ISL spec...</span>
+<span style="color:var(--accent);">✓</span> ISL spec generated (confidence: 87%)
+<span style="color:var(--muted);">⠋ Stage 2/5: Validating ISL specification...</span>
+<span style="color:var(--accent);">✓</span> Spec valid — 3 entities, 5 behaviors, 2 invariants
+<span style="color:var(--muted);">⠋ Stage 3/5: Generating full-stack code...</span>
+<span style="color:var(--accent);">✓</span> 14 files generated (backend, frontend, tests, database)
+<span style="color:var(--muted);">⠋ Stage 4/5: Running TypeScript check...</span>
+<span style="color:var(--accent);">✓</span> Type check passed
+<span style="color:var(--muted);">⠋ Stage 5/5: Verifying generated code...</span>
+
+<span style="color:var(--accent);">SHIP</span> — Generated 14 files in ./todo-api/
+
+  Ship Score: 91/100
+  Duration:   12.4s</pre>
+</div>
+</section>
+
+<!-- SHIP SCORE -->
+<section class="section">
+<div class="container">
+  <h2>Ship Score</h2>
+  <p>Every verification produces a score from 0 to 100. It measures spec coverage, policy compliance, and verification depth. Not a vibes-based metric — a deterministic calculation you can audit.</p>
+  <div style="margin-top:24px;">
+    <div style="background:var(--code-bg);border-radius:8px;padding:16px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span>Ship Score</span><span style="color:var(--accent);">91/100</span></div>
+      <div style="background:var(--border);border-radius:4px;height:8px;"><div style="background:var(--accent);border-radius:4px;height:8px;width:91%;"></div></div>
+    </div>
+    <p><strong>70+</strong> = SHIP &nbsp;&nbsp; <strong>&lt;70</strong> = NO_SHIP with exact violations listed</p>
+  </div>
+</div>
+</section>
+
+<!-- INTEGRATIONS -->
+<section class="section">
+<div class="container">
+  <h2>Integrations</h2>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+    <div style="background:var(--code-bg);padding:16px;border-radius:8px;"><h3>Cursor</h3><p>MCP server intercepts suggestions in real time</p></div>
+    <div style="background:var(--code-bg);padding:16px;border-radius:8px;"><h3>GitHub Actions</h3><p>Gate PRs with zero config. Evidence as artifacts</p></div>
+    <div style="background:var(--code-bg);padding:16px;border-radius:8px;"><h3>Copilot / Claude Code</h3><p>AI Firewall checks every suggestion against Truthpack</p></div>
+    <div style="background:var(--code-bg);padding:16px;border-radius:8px;"><h3>VS Code</h3><p>Real-time verification with inline diagnostics</p></div>
+    <div style="background:var(--code-bg);padding:16px;border-radius:8px;"><h3>Multi-Language</h3><p>TypeScript, Python, Rust, Go codegen from ISL</p></div>
+    <div style="background:var(--code-bg);padding:16px;border-radius:8px;"><h3>Any CI</h3><p>Exit 0 = SHIP. Exit 1 = NO_SHIP. Works everywhere.</p></div>
+  </div>
+</div>
+</section>
+
+<!-- OPEN SOURCE -->
+<section class="section">
+<div class="container">
+  <h2>Open Source</h2>
+  <p>ISL is open. The CLI is open. The policy engine is open. Truthpack is open. Evidence bundles are an open JSON schema. Build on it. Fork it. Run it air-gapped.</p>
+  <div style="margin-top:24px;display:flex;gap:16px;">
+    <a href="https://github.com/Ship-Gate/ShipGate">GitHub</a>
+    <a href="https://www.npmjs.com/package/shipgate">npm</a>
+    <a href="https://shipgate.dev/docs">Docs</a>
+  </div>
+</div>
+</section>
+
+<!-- FOOTER -->
+<footer style="padding:40px 0;text-align:center;color:var(--muted);font-size:13px;">
+  <div class="container">
+    <p>shipgate is MIT licensed. Built by developers who got burned by AI-generated code that "worked."</p>
+    <p style="margin-top:8px;">
+      <a href="https://github.com/Ship-Gate/ShipGate">GitHub</a> &middot;
+      <a href="https://www.npmjs.com/package/shipgate">npm</a> &middot;
+      <a href="https://shipgate.dev/docs">Docs</a> &middot;
+      <a href="https://discord.gg/shipgate">Discord</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

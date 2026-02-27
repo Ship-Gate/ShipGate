@@ -1,0 +1,147 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Verdict Formatting - Golden Snapshots > Compact Format > formats compact NO_SHIP 1`] = `"ISL Gate: NO_SHIP (score: 45/100) - 1 critical, 1 high violations"`;
+
+exports[`Verdict Formatting - Golden Snapshots > Compact Format > formats compact SHIP 1`] = `"ISL Gate: SHIP (score: 100/100)"`;
+
+exports[`Verdict Formatting - Golden Snapshots > NO_SHIP Verdicts > formats a NO_SHIP verdict with invariant violation 1`] = `
+"─── ISL Verify ────────────────────────────────────────────
+
+  ✗ FAIL  banking.isl
+
+  ─── banking.isl:4 ───
+    │
+  4 │       all a in Account: a.balance >= 0
+    │       ────────────────────────────────
+    │
+  Violation: Account "acc-123" has balance = -50.00 after Withdraw
+
+  Why this matters:
+    The non-negative balance invariant was violated after
+    the Withdraw behavior executed. This means the system
+    allows overdrafts.
+
+  Fix:
+    Add precondition to Withdraw: account.balance >= amount
+
+────────────────────────────────────────────────────────────
+  Score: 55/100    Verdict: NO_SHIP
+  1 critical violation
+  Completed in 678ms
+────────────────────────────────────────────────────────────"
+`;
+
+exports[`Verdict Formatting - Golden Snapshots > NO_SHIP Verdicts > formats a NO_SHIP verdict with multiple violations 1`] = `
+"─── ISL Verify ────────────────────────────────────────────
+
+  ✗ FAIL  payment.isl
+
+  Violation: Precondition not enforced: negative amounts accepted
+
+  Violation: Invariant violated: account can go negative
+
+  Violation: Rate limiting not implemented
+
+────────────────────────────────────────────────────────────
+  Score: 30/100    Verdict: NO_SHIP
+  1 critical, 1 high, 1 medium violations
+  Completed in 1.5s
+────────────────────────────────────────────────────────────"
+`;
+
+exports[`Verdict Formatting - Golden Snapshots > NO_SHIP Verdicts > formats a NO_SHIP verdict with postcondition failure 1`] = `
+"─── ISL Verify ────────────────────────────────────────────
+
+  ✗ FAIL  banking.isl
+
+  ─── banking.isl:5 ───
+    │
+  5 │         sender.balance == old(sender.balance) - amount
+    │         ──────────────────────────────────────────────
+    │
+  Violation: Sender balance was not debited after transfer
+
+  Why this matters:
+    The sender account balance remained unchanged after
+    the transfer. Money was credited to the receiver but
+    never debited from the sender, creating money from
+    nothing.
+
+  Fix:
+    Add sender.balance -= amount before crediting the receiver
+
+────────────────────────────────────────────────────────────
+  Score: 60/100    Verdict: NO_SHIP
+  1 critical violation
+  Completed in 456ms
+────────────────────────────────────────────────────────────"
+`;
+
+exports[`Verdict Formatting - Golden Snapshots > NO_SHIP Verdicts > formats a NO_SHIP verdict with security violation 1`] = `
+"─── ISL Verify ────────────────────────────────────────────
+
+  ✗ FAIL  login.isl
+
+  ─── login.isl:5 ───
+    │
+  5 │         must "return identical error for wrong email or password"
+    │         ─────────────────────────────────────────────────────────
+    │
+  Violation: Error messages differ based on failure reason
+
+  Why this matters:
+    Different error messages let attackers enumerate valid
+    email addresses (user existence oracle).
+
+  Fix:
+    Return the same 401 status and message for both cases:
+    return res.status(401).json({ error: "Invalid credentials" })
+
+────────────────────────────────────────────────────────────
+  Score: 45/100    Verdict: NO_SHIP
+  1 critical violation
+  Completed in 890ms
+────────────────────────────────────────────────────────────"
+`;
+
+exports[`Verdict Formatting - Golden Snapshots > SHIP Verdicts > formats a SHIP verdict with high score 1`] = `
+"─── ISL Verify ────────────────────────────────────────────
+
+  ✓ PASS  47 of 48 postconditions verified (1 skipped)
+────────────────────────────────────────────────────────────
+  Score: 97/100    Verdict: SHIP
+  Completed in 1.2s
+────────────────────────────────────────────────────────────"
+`;
+
+exports[`Verdict Formatting - Golden Snapshots > SHIP Verdicts > formats a clean SHIP verdict 1`] = `
+"─── ISL Verify ────────────────────────────────────────────
+
+  ✓ PASS  All 12 postconditions verified
+────────────────────────────────────────────────────────────
+  Score: 100/100    Verdict: SHIP
+  Completed in 342ms
+────────────────────────────────────────────────────────────"
+`;
+
+exports[`Verdict Formatting - Golden Snapshots > Single Violation > formats a standalone violation message 1`] = `
+"  ─── auth.isl:22 ───
+  │
+  22 │   must "return identical error for wrong email or password"
+  │
+  Violation: Error messages differ based on failure reason
+
+  Why this matters:
+    Different error messages let attackers enumerate valid
+    email addresses.
+
+  Fix:
+    Return the same 401 status and message for both cases"
+`;
+
+exports[`Verdict Formatting - Golden Snapshots > Single Violation > formats a violation without spec source 1`] = `
+"  Violation: Negative amounts accepted
+
+  Fix:
+    Add validation: if (amount <= 0) throw new Error("Invalid amount")"
+`;

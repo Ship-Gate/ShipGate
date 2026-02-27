@@ -1,0 +1,47 @@
+/* Star background – gradient + warp stars */
+:root {
+  --star-bg: #0b0f14;
+}
+
+.star-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 800px at 80% 10%, rgba(124, 58, 237, 0.25), transparent 60%),
+    radial-gradient(1000px 700px at 10% 90%, rgba(6, 182, 212, 0.22), transparent 55%),
+    var(--star-bg);
+}
+
+.star-field-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.star-field-star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.8;
+  animation: star-twinkle var(--duration, 3s) infinite ease-in-out;
+  will-change: transform, opacity;
+}
+
+@keyframes star-twinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}

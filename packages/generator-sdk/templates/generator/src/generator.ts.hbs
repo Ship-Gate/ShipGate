@@ -1,0 +1,45 @@
+/**
+ * {{pascalCase name}} Generator
+ *
+ * Custom ISL code generator for {{targetLanguage}}.
+ */
+
+import {
+  Generator,
+  type GeneratedFile,
+  type DomainDeclaration,
+  type EntityDeclaration,
+  type BehaviorDeclaration,
+} from '@intentos/generator-sdk';
+
+export class {{pascalCase name}}Generator extends Generator {
+  readonly name = '{{kebabCase name}}';
+  version = '1.0.0';
+  description = '{{description}}';
+  targetLanguages = ['{{targetLanguage}}'];
+
+  protected visitDomain(domain: DomainDeclaration): GeneratedFile[] {
+    return [{
+      path: 'index{{extension}}',
+      content: this.template('index', { domain }),
+    }];
+  }
+
+  protected visitEntity(entity: EntityDeclaration): GeneratedFile[] {
+    return [{
+      path: `entities/${this.toKebabCase(entity.name.name)}{{extension}}`,
+      content: this.template('entity', { entity }),
+    }];
+  }
+
+  protected visitBehavior(behavior: BehaviorDeclaration): GeneratedFile[] {
+    return [{
+      path: `behaviors/${this.toKebabCase(behavior.name.name)}{{extension}}`,
+      content: this.template('behavior', { behavior }),
+    }];
+  }
+
+  private toKebabCase(str: string): string {
+    return str.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+  }
+}

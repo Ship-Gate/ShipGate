@@ -1,0 +1,16 @@
+{
+  "name": "@isl-lang/gate-calibration",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "Gate calibration benchmark corpus",
+  "type": "module",
+  "scripts": {
+    "generate": "tsx generate-fixtures.ts",
+    "benchmark": "tsx runner.ts",
+    "benchmark:tune": "tsx runner.ts --tune",
+    "benchmark:verbose": "tsx runner.ts --verbose"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0"
+  }
+}

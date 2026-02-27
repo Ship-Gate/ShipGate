@@ -1,0 +1,56 @@
+{
+  "name": "@isl-lang/verifier",
+  "version": "0.1.1",
+  "description": "Evidence-first, deterministic verification engine for ISL specifications",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@isl-lang/parser": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "keywords": [
+    "isl",
+    "verification",
+    "evidence",
+    "deterministic",
+    "contracts"
+  ],
+  "license": "MIT",
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "experimental": true,
+  "sideEffects": false
+}

@@ -1,0 +1,8 @@
+{
+  "hash": "sha256:fdccf3d94f44f507",
+  "computed": "2026-02-08T12:08:50.623Z",
+  "inputs": {
+    "packageJson": "sha256:c195162306ff",
+    "detection": "sha256:beb0c2569982"
+  }
+}

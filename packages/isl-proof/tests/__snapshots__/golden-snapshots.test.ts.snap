@@ -1,0 +1,129 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Golden Snapshots - Edge Cases > should handle empty behaviors consistently > empty-behaviors-verification 1`] = `
+{
+  "evidence": [],
+  "evidenceCount": 0,
+  "summary": {
+    "failedClauses": 0,
+    "incompleteClauses": 0,
+    "notProvenClauses": 0,
+    "provenClauses": 0,
+    "totalClauses": 0,
+  },
+  "verdict": "INCOMPLETE_PROOF",
+}
+`;
+
+exports[`Golden Snapshots - Proof Bundle Verification > should produce consistent output for INCOMPLETE_PROOF bundle > incomplete-bundle-verification 1`] = `
+{
+  "complete": true,
+  "issueCodes": [
+    "INCOMPLETE_PROOF",
+    "VERDICT_MISMATCH",
+  ],
+  "issueCount": 2,
+  "valid": false,
+  "verdict": "INCOMPLETE_PROOF",
+}
+`;
+
+exports[`Golden Snapshots - Proof Bundle Verification > should produce consistent output for PROVEN bundle > proven-bundle-verification 1`] = `
+{
+  "complete": true,
+  "issueCodes": [],
+  "issueCount": 0,
+  "valid": true,
+  "verdict": "PROVEN",
+}
+`;
+
+exports[`Golden Snapshots - Real World Fixtures > should produce consistent output for auth.isl > auth-verification 1`] = `
+{
+  "evidence": [],
+  "evidenceCount": 0,
+  "summary": {
+    "failedClauses": 0,
+    "incompleteClauses": 0,
+    "notProvenClauses": 0,
+    "provenClauses": 0,
+    "totalClauses": 0,
+  },
+  "verdict": "INCOMPLETE_PROOF",
+}
+`;
+
+exports[`Golden Snapshots - Real World Fixtures > should produce consistent output for crud.isl > crud-verification 1`] = `
+{
+  "evidence": [],
+  "evidenceCount": 0,
+  "summary": {
+    "failedClauses": 0,
+    "incompleteClauses": 0,
+    "notProvenClauses": 0,
+    "provenClauses": 0,
+    "totalClauses": 0,
+  },
+  "verdict": "INCOMPLETE_PROOF",
+}
+`;
+
+exports[`Golden Snapshots - Real World Fixtures > should produce consistent output for payment.isl > payment-verification 1`] = `
+{
+  "evidence": [],
+  "evidenceCount": 0,
+  "summary": {
+    "failedClauses": 0,
+    "incompleteClauses": 0,
+    "notProvenClauses": 0,
+    "provenClauses": 0,
+    "totalClauses": 0,
+  },
+  "verdict": "INCOMPLETE_PROOF",
+}
+`;
+
+exports[`Golden Snapshots - Valid Fixtures > should produce consistent output for all-features.isl > all-features-verification 1`] = `
+{
+  "evidence": [],
+  "evidenceCount": 0,
+  "summary": {
+    "failedClauses": 0,
+    "incompleteClauses": 0,
+    "notProvenClauses": 0,
+    "provenClauses": 0,
+    "totalClauses": 0,
+  },
+  "verdict": "INCOMPLETE_PROOF",
+}
+`;
+
+exports[`Golden Snapshots - Valid Fixtures > should produce consistent output for complex-types.isl > complex-types-verification 1`] = `
+{
+  "evidence": [],
+  "evidenceCount": 0,
+  "summary": {
+    "failedClauses": 0,
+    "incompleteClauses": 0,
+    "notProvenClauses": 0,
+    "provenClauses": 0,
+    "totalClauses": 0,
+  },
+  "verdict": "INCOMPLETE_PROOF",
+}
+`;
+
+exports[`Golden Snapshots - Valid Fixtures > should produce consistent output for minimal.isl > minimal-verification 1`] = `
+{
+  "evidence": [],
+  "evidenceCount": 0,
+  "summary": {
+    "failedClauses": 0,
+    "incompleteClauses": 0,
+    "notProvenClauses": 0,
+    "provenClauses": 0,
+    "totalClauses": 0,
+  },
+  "verdict": "INCOMPLETE_PROOF",
+}
+`;

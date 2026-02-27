@@ -1,0 +1,187 @@
+# ISL Gate Workflow (Unified: spec + firewall)
+#
+# Single entry point for "all AI code": runs authoritative gate when a spec exists
+# and firewall + policy on all changed files. NO_SHIP if either path fails.
+#
+# Usage:
+#   1. Copy this file to .github/workflows/isl-gate.yml
+#   2. PRs will require both spec verification (when spec exists) and firewall checks
+#
+# The gate will:
+#   - Run authoritative gate (parser, typechecker, verifier) when spec exists
+#   - Run firewall + policy on all changed .ts/.js/.tsx/.jsx files
+#   - Merge verdict: NO_SHIP if either path fails
+#   - Post results as PR comment, upload evidence, block merge if NO_SHIP
+
+name: ISL Gate
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'src/**'
+      - 'specs/**'
+      - '*.isl'
+      - 'packages/**'
+
+  workflow_dispatch:
+    inputs:
+      spec:
+        description: 'Path to ISL spec (optional; omit for firewall-only)'
+        required: false
+        default: ''
+      implementation:
+        description: 'Implementation path'
+        required: true
+        default: '.'
+
+jobs:
+  gate:
+    name: SHIP/NO_SHIP Gate (Spec + Firewall)
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    outputs:
+      verdict: ${{ steps.gate.outputs.verdict }}
+      score: ${{ steps.gate.outputs.score }}
+      exit_code: ${{ steps.gate.outputs.exit_code }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build gate and verified-build
+        run: |
+          pnpm --filter @isl-lang/gate build
+          pnpm --filter @isl-lang/verified-build build
+
+      - name: Get changed files
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE=HEAD~1
+          fi
+          FILES=$(git diff --name-only "$BASE" HEAD 2>/dev/null | grep -E '\.(ts|js|tsx|jsx)$' || true)
+          {
+            echo 'changed_files<<GATEEOF'
+            echo "$FILES"
+            echo 'GATEEOF'
+          } >> $GITHUB_OUTPUT
+          echo "Count: $(echo "$FILES" | grep -c . || echo 0)"
+
+      - name: Find spec
+        id: spec
+        run: |
+          SPEC="${{ github.event.inputs.spec }}"
+          if [ -z "$SPEC" ]; then
+            SPEC=$(find . -name "*.isl" -type f -not -path "./node_modules/*" 2>/dev/null | head -1)
+          fi
+          if [ -n "$SPEC" ] && [ -f "$SPEC" ]; then
+            echo "path=$SPEC" >> $GITHUB_OUTPUT
+          else
+            echo "path=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Unified Gate
+        id: gate
+        env:
+          PROJECT_ROOT: ${{ github.workspace }}
+          SPEC: ${{ steps.spec.outputs.path }}
+          IMPL: ${{ github.event.inputs.implementation || '.' }}
+          CHANGED_FILES: ${{ steps.changed.outputs.changed_files }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: |
+          cd packages/verified-build
+          node run-unified-gate.mjs > ../../unified-gate-result.json 2>&1
+          EXIT=$?
+          echo "exit_code=$EXIT" >> $GITHUB_OUTPUT
+          VERDICT=$(jq -r '.verdict // "NO_SHIP"' ../../unified-gate-result.json 2>/dev/null) || VERDICT=NO_SHIP
+          SCORE=$(jq -r '.score // 0' ../../unified-gate-result.json 2>/dev/null) || SCORE=0
+          echo "verdict=$VERDICT" >> $GITHUB_OUTPUT
+          echo "score=$SCORE" >> $GITHUB_OUTPUT
+          cat ../../unified-gate-result.json
+          exit $EXIT
+
+      - name: Upload Evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: isl-evidence-${{ github.sha }}
+          path: |
+            evidence/
+            unified-gate-result.json
+          retention-days: 90
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const resultPath = 'unified-gate-result.json';
+            const result = fs.existsSync(resultPath) ? JSON.parse(fs.readFileSync(resultPath, 'utf8')) : {};
+            const verdict = result.verdict || 'NO_SHIP';
+            const score = result.score ?? 0;
+            const sources = (result.sources || []).join(', ') || 'none';
+            const emoji = verdict === 'SHIP' ? '✅' : '❌';
+            const body = `## ${emoji} ISL Gate: ${verdict}
+            | Metric | Value |
+            |--------|-------|
+            | Score | ${score}/100 |
+            | Sources | ${sources} |
+
+            ${verdict === 'SHIP' ? '**All checks passed. Safe to merge.**' : '**Fix issues before merging.**'}
+
+            ---
+            *Unified gate: spec (when present) + firewall on changed files*`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.user.type === 'Bot' && c.body.includes('ISL Gate:'));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Enforce Gate
+        if: steps.gate.outputs.verdict == 'NO_SHIP'
+        run: |
+          echo "❌ NO_SHIP - Fix issues and push again"
+          exit 1

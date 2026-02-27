@@ -1,0 +1,17 @@
+{
+  "name": "Template Sample",
+  "description": "Copy this directory and customize for your sample",
+  "promptFile": "prompt.json",
+  "contextFile": "context.json",
+  "expectedIslFile": "expected.isl",
+  "testCommands": [
+    "pnpm test"
+  ],
+  "typecheckCommands": [
+    "pnpm typecheck"
+  ],
+  "enabled": false,
+  "tags": [
+    "template"
+  ]
+}

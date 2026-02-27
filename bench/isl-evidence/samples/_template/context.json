@@ -1,0 +1,25 @@
+{
+  "domain": "example",
+  "existingTypes": {
+    "ExampleType": {
+      "id": "string",
+      "name": "string",
+      "createdAt": "Date"
+    }
+  },
+  "constraints": [
+    "Example constraint 1",
+    "Example constraint 2"
+  ],
+  "examples": [
+    {
+      "input": {
+        "name": "test"
+      },
+      "expectedOutput": {
+        "success": true,
+        "id": "generated-uuid"
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [],
+  "linked": [
+    ["@isl-lang/parser", "@isl-lang/typechecker", "@isl-lang/evaluator"],
+    ["@isl-lang/lsp-server"],
+    ["@isl-lang/codegen-core", "@isl-lang/codegen-types"],
+    ["@isl-lang/verifier-runtime", "@isl-lang/isl-verify"],
+    ["@isl-lang/isl-stdlib", "@isl-lang/stdlib-core"]
+  ],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "___dependencies": {
+    "note": "The ignore list below is auto-derived from experimental.json experimental + internal sections"
+  },
+  "ignore": [
+    "@isl-lang/sdk-typescript",
+    "@isl-lang/sdk-web",
+    "@isl-lang/sdk-react-native",
+    "@isl-lang/runtime-sdk",
+    "@isl-lang/runtime-universal",
+    "@isl-lang/dashboard-api"
+  ]
+}

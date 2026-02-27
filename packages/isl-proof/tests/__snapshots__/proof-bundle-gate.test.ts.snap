@@ -1,0 +1,43 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`proof-bundle-gate snapshot > produces stable JSON output for fixture 1`] = `
+"{
+  "bundleHash": "1c993df6707abe4c99a7b50517afbc23b4757cbdcd6f4329549b61b8af8bb2c5",
+  "configDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "results": [
+    {
+      "category": "auth",
+      "checkId": "auth/bypass-detected",
+      "severity": "critical",
+      "status": "pass"
+    },
+    {
+      "category": "auth",
+      "checkId": "auth/hardcoded-credentials",
+      "severity": "high",
+      "status": "pass"
+    },
+    {
+      "category": "payments",
+      "checkId": "payments/client-side-amount",
+      "severity": "high",
+      "status": "pass"
+    },
+    {
+      "category": "pii",
+      "checkId": "pii/logged-sensitive-data",
+      "evidenceRefs": [
+        "src/api.ts:42"
+      ],
+      "severity": "medium",
+      "status": "fail"
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "score": 75,
+  "timestamp": "2026-02-14T12:00:00.000Z",
+  "toolVersion": "2.0.0",
+  "verdict": "NO_SHIP"
+}
+"
+`;

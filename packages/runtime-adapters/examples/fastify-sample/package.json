@@ -1,0 +1,15 @@
+{
+  "name": "@isl-lang/runtime-adapters-fastify-sample",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "tsx server.ts",
+    "verify": "shipgate verify --spec auth.isl --impl server.ts"
+  },
+  "dependencies": {
+    "@isl-lang/runtime-adapters": "workspace:*",
+    "fastify": "^4.24.3",
+    "tsx": "^4.7.0"
+  }
+}

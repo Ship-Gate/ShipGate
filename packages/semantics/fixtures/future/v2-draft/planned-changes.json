@@ -1,0 +1,51 @@
+{
+  "name": "v2-planned-semantic-changes",
+  "description": "Documented semantic changes planned for v2.0.0 (DRAFT)",
+  "status": "draft",
+  "note": "This file documents INTENTIONAL breaking changes for the next major version",
+  "plannedChanges": [
+    {
+      "id": "v2-1",
+      "category": "comparison",
+      "change": "Add optional chaining comparison operators",
+      "v1Behavior": "Comparing with null/undefined throws or returns false",
+      "v2Behavior": "New ?< ?> ?<= ?>= operators handle null gracefully",
+      "rationale": "Better ergonomics for nullable comparisons"
+    },
+    {
+      "id": "v2-2",
+      "category": "temporal",
+      "change": "Add 'until' temporal operator",
+      "v1Behavior": "No 'until' operator exists",
+      "v2Behavior": "A until B: A must hold until B becomes true",
+      "rationale": "Common temporal pattern in distributed systems"
+    },
+    {
+      "id": "v2-3",
+      "category": "quantifiers",
+      "change": "Add 'first' and 'last' quantifiers",
+      "v1Behavior": "Must use filter()[0] or filter().last()",
+      "v2Behavior": "first x in C: P and last x in C: P as first-class",
+      "rationale": "Common patterns deserve first-class support"
+    },
+    {
+      "id": "v2-4",
+      "category": "equality",
+      "change": "Consider adding === for reference equality",
+      "v1Behavior": "== is always deep structural equality",
+      "v2Behavior": "=== for reference equality, == unchanged",
+      "rationale": "Some use cases need reference identity checks",
+      "status": "under-discussion"
+    }
+  ],
+  "nonBreakingAdditions": [
+    {
+      "id": "v2-nb-1",
+      "description": "New built-in functions can be added in minor versions"
+    },
+    {
+      "id": "v2-nb-2",
+      "description": "New temporal operators can be added as opt-in"
+    }
+  ]
+}

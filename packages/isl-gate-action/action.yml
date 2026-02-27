@@ -1,0 +1,36 @@
+name: 'ShipGate ISL Verify'
+description: 'Verify AI-generated code against ISL behavioral specs'
+author: 'ShipGate'
+
+branding:
+  icon: 'shield'
+  color: 'green'
+
+inputs:
+  path:
+    description: 'Path to verify (default: entire repo)'
+    required: false
+    default: '.'
+  mode:
+    description: 'Verification mode: auto, strict, specless'
+    required: false
+    default: 'auto'
+  fail-on:
+    description: 'Failure threshold: error, warning, unspecced'
+    required: false
+    default: 'error'
+  config:
+    description: 'Path to .shipgate.yml (auto-detected if not set)'
+    required: false
+
+outputs:
+  verdict:
+    description: 'SHIP, WARN, or NO_SHIP'
+  score:
+    description: 'Confidence score (0-1)'
+  report:
+    description: 'JSON report path'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

@@ -1,0 +1,41 @@
+{
+  "name": "@isl-lang/verifier-sandbox",
+  "version": "1.0.0",
+  "description": "Sandboxed execution for ISL verification to prevent arbitrary code execution",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.build.json",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "isl",
+    "verification",
+    "sandbox",
+    "security"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "@isl-lang/core": "*"
+  }
+}

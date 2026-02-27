@@ -1,0 +1,21 @@
+{
+  "$schema": "https://shipgate.dev/schemas/project.v1.json",
+  "version": "1.0.0",
+  "linkedAt": "2026-02-08T12:08:50.623Z",
+  "linkedBy": "shipgate@5.3.4",
+  "project": {
+    "name": "01-money-transfer",
+    "root": "c:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\demos\\three-big-lies\\live-sessions\\01-money-transfer"
+  },
+  "detection": {
+    "packageManager": "npm",
+    "framework": "Node.js",
+    "frameworkKey": "node",
+    "frameworkVersion": null,
+    "runtime": "node",
+    "runtimeVersion": "24.12.0",
+    "monorepo": null,
+    "ci": null
+  },
+  "manifestHash": "sha256:fdccf3d94f44f507"
+}

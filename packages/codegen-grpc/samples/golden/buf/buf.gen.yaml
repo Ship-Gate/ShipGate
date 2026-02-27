@@ -1,0 +1,23 @@
+version: v1
+plugins:
+  - plugin: buf.build/protocolbuffers/go
+    out: github.com/isl-lang/auth/gen/go
+    opt: paths=source_relative
+
+  - plugin: buf.build/grpc/go
+    out: github.com/isl-lang/auth/gen/go
+    opt: paths=source_relative
+
+  - plugin: buf.build/envoyproxy/protoc-gen-validate
+    out: github.com/isl-lang/auth/gen/go
+    opt:
+      - paths=source_relative
+      - lang=go
+
+  - plugin: buf.build/connectrpc/es
+    out: gen/ts
+    opt: target=ts
+
+  - plugin: buf.build/bufbuild/es
+    out: gen/ts
+    opt: target=ts

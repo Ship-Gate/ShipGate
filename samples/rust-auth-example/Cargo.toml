@@ -1,0 +1,14 @@
+[package]
+name = "rust-auth-example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+isl-runtime = { path = "../../packages/isl-runtime-rs" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+
+[[bin]]
+name = "main"
+path = "src/main.rs"

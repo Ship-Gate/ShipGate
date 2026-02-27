@@ -1,0 +1,2873 @@
+{
+  "verdict": "NO_SHIP",
+  "score": 0,
+  "filesChecked": 141,
+  "violations": [
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: uuid cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "demo-working.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: uuid cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "demo-working.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: commander cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: chalk cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./output.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./exit-codes.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./utils.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./config.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./config/index.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./commands/index.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/core cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/observability cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./output.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./exit-codes.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./utils.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./config.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./config/index.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./config/index.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./commands/index.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./commands/verify.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: commander cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: chalk cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/core cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/observability cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "auth/bypass-detected",
+      "message": "Auth bypass pattern detected",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: chalk cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/shipgate-compliance cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../output.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../exit-codes.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/compliance/dist/frameworks/soc2.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/parser cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/compliance/dist/audit-trail.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../output.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../exit-codes.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: chalk cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/shipgate-compliance cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/proof cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/compliance/dist/frameworks/soc2.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/parser cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/compliance/dist/audit-trail.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance-soc2.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/parser cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/compliance cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../exit-codes.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../output.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../exit-codes.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../output.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/parser cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/compliance cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\cli\\src\\commands\\compliance.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./generator cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\aggregator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./generator cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\auto-linker.ts"
+    },
+    {
+      "policyId": "auth/hardcoded-credentials",
+      "message": "Hardcoded credentials detected",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\auto-linker.ts"
+    },
+    {
+      "policyId": "auth/hardcoded-credentials",
+      "message": "Hardcoded credentials detected",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\auto-linker.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./frameworks/pci cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./frameworks/soc2 cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./frameworks/hipaa cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./frameworks/gdpr cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./frameworks/eu-ai-act cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./frameworks/fedramp cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./evidence cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./analyzer cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\compliance\\src\\generator.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: cors cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: express-rate-limit cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./config/env.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./utils/logger.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./utils/metrics.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./utils/telemetry.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./db/schema.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./db/queries.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./routes/reports.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./routes/proof-bundles.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./routes/coverage.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./routes/trends.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./routes/dashboard.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./middleware/error.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./middleware/security.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./audit/schema.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./audit/queries.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./audit/service.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./audit/routes.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./backbone/queries.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./backbone/routes.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/metrics is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/health is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/reports is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/proof-bundles is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/coverage is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/trends is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/drift is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/audit is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/backbone is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1 is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./config/env.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./utils/logger.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./utils/metrics.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./utils/telemetry.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./db/schema.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./db/queries.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./routes/reports.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./routes/proof-bundles.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./routes/coverage.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./routes/trends.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./routes/dashboard.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./middleware/error.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./middleware/security.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./audit/schema.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./audit/queries.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./audit/service.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./audit/routes.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./backbone/queries.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./backbone/routes.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./types.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./db/schema.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./db/schema.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./db/queries.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./audit/index.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./backbone/index.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./auth/index.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: express cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: cors cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: express-rate-limit cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: sql.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\index.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: express cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\routes\\dashboard.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../db/queries.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\routes\\dashboard.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../types.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\routes\\dashboard.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: express cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-api\\src\\routes\\dashboard.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/auth/github/callback/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\github\\callback\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/auth/github/callback is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\github\\callback\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/auth/github/callback/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\github\\callback\\route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\github\\callback\\route.js"
+    },
+    {
+      "policyId": "pii/exposed-in-url",
+      "message": "Sensitive data in URL query string",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\github\\callback\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/auth/github/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\github\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/auth/github is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\github\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/auth/github/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\github\\route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\github\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/auth/google/callback/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\google\\callback\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/auth/google/callback is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\google\\callback\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/auth/google/callback/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\google\\callback\\route.js"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: RAILWAY_PUBLIC_DOMAIN is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\google\\callback\\route.js"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: RAILWAY_SERVICE_NAME is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\google\\callback\\route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\google\\callback\\route.js"
+    },
+    {
+      "policyId": "pii/exposed-in-url",
+      "message": "Sensitive data in URL query string",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\google\\callback\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/auth/google/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\google\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/auth/google is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\google\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/auth/google/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\google\\route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\auth\\google\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/health/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\health\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/health is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\health\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/health/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\health\\route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\health\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/login/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\login\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/login is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\login\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/login/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\login\\route.js"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: DASHBOARD_PASSWORD is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\login\\route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\login\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/logout/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\logout\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/logout is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\logout\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/logout/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\logout\\route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\logout\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/stripe/checkout/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\stripe\\checkout\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/stripe/checkout is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\stripe\\checkout\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/stripe/checkout/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\stripe\\checkout\\route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\stripe\\checkout\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/stripe/webhook/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\stripe\\webhook\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/stripe/webhook is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\stripe\\webhook\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/stripe/webhook/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\stripe\\webhook\\route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\stripe\\webhook\\route.js"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\stripe\\webhook\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/user/profile/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\user\\profile\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/user/profile is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\user\\profile\\route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/user/profile/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\user\\profile\\route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\app\\api\\user\\profile\\route.js"
+    },
+    {
+      "policyId": "intent/audit-missing",
+      "message": "Destructive operation may lack audit trail",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\dashboard-web\\.next\\server\\chunks\\316.js"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: NODE_DEBUG is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\chunks\\442.js"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: NODE_DEBUG is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\chunks\\442.js"
+    },
+    {
+      "policyId": "intent/audit-missing",
+      "message": "Destructive operation may lack audit trail",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\dashboard-web\\.next\\server\\chunks\\442.js"
+    },
+    {
+      "policyId": "auth/hardcoded-credentials",
+      "message": "Hardcoded credentials detected",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\server\\chunks\\51.js"
+    },
+    {
+      "policyId": "intent/audit-missing",
+      "message": "Destructive operation may lack audit trail",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\dashboard-web\\.next\\server\\chunks\\680.js"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\dashboard-web\\.next\\static\\chunks\\main-b5dfc1cb26988ce9.js"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../../../src/app/api/auth/github/callback/route.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\github\\callback\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../../src/app/api/auth/github/callback/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\github\\callback\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../../src/app/api/auth/github/callback/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\github\\callback\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\github\\callback\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../../src/app/api/auth/github/route.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\github\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/auth/github/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\github\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/auth/github/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\github\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\github\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../../../src/app/api/auth/google/callback/route.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\google\\callback\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../../src/app/api/auth/google/callback/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\google\\callback\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../../src/app/api/auth/google/callback/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\google\\callback\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\google\\callback\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../../src/app/api/auth/google/route.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\google\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/auth/google/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\google\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/auth/google/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\google\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\auth\\google\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../src/app/api/health/route.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\health\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/api/health/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\health\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/api/health/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\health\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\health\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../../src/app/api/stripe/checkout/route.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\stripe\\checkout\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/stripe/checkout/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\stripe\\checkout\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/stripe/checkout/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\stripe\\checkout\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\stripe\\checkout\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../../src/app/api/stripe/webhook/route.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/stripe/webhook/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/stripe/webhook/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "payments/missing-webhook-verification",
+      "message": "Webhook may lack signature verification",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "payments/missing-webhook-verification",
+      "message": "Webhook may lack signature verification",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../../src/app/api/user/profile/route.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\user\\profile\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/user/profile/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\user\\profile\\route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/user/profile/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\user\\profile\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\.next\\types\\app\\api\\user\\profile\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @next/bundle-analyzer cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\next.config.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1/:path* is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\next.config.js"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: ANALYZE is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\next.config.js"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @next/bundle-analyzer cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\next.config.js"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\github\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\github\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\google\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\auth\\google\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\checkout\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: stripe cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\checkout\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: jsonwebtoken cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\checkout\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\checkout\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: stripe cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\checkout\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: jsonwebtoken cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\checkout\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: stripe cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/headers cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: stripe cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/headers cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\dashboard-web\\src\\app\\api\\stripe\\webhook\\route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: react cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\hooks\\useApi.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/api cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\hooks\\useApi.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/runs-api cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\hooks\\useApi.ts"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: NEXT_PUBLIC_USE_MOCK is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\hooks\\useApi.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: react cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\hooks\\useApi.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/api cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\hooks\\useApi.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/runs-api cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\hooks\\useApi.ts"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/v1 is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\lib\\api.ts"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: NEXT_PUBLIC_API_URL is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\dashboard-web\\src\\lib\\api.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\app\\_not-found.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\app\\dashboard\\cicd\\page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\app\\dashboard\\deploys\\page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\app\\dashboard\\domains\\page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\app\\dashboard\\findings\\page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\app\\dashboard\\page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\app\\dashboard\\prs\\page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\app\\dashboard\\runs\\page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\app\\dashboard\\team\\page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\app\\dashboard\\verifications\\page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\app\\page.js"
+    },
+    {
+      "policyId": "intent/audit-missing",
+      "message": "Destructive operation may lack audit trail",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\chunks\\457.js"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ${n} cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\chunks\\624.js"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: NEXT_OTEL_FETCH_DISABLED is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\chunks\\860.js"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: NEXT_OTEL_VERBOSE is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\chunks\\860.js"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: NEXT_OTEL_VERBOSE is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\chunks\\860.js"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\chunks\\860.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\pages\\_app.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\pages\\_document.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\pages\\_error.js"
+    },
+    {
+      "policyId": "intent/audit-missing",
+      "message": "Destructive operation may lack audit trail",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\shipgate-dashboard\\.next\\server\\pages\\_error.js"
+    },
+    {
+      "policyId": "intent/audit-missing",
+      "message": "Destructive operation may lack audit trail",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\shipgate-dashboard\\.next\\static\\chunks\\123-8346c3ad65de7ab8.js"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: use server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\static\\chunks\\166-27d2027d4e2d85be.js"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\shipgate-dashboard\\.next\\static\\chunks\\166-27d2027d4e2d85be.js"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ').concat(s, cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\static\\chunks\\319-8de7da1a2692c3b1.js"
+    },
+    {
+      "policyId": "intent/audit-missing",
+      "message": "Destructive operation may lack audit trail",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\shipgate-dashboard\\.next\\static\\chunks\\app\\dashboard\\layout-9fa19e969f459375.js"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\shipgate-dashboard\\.next\\static\\chunks\\main-d516c4b3806dcbed.js"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../app/dashboard/cicd/page.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\types\\app\\dashboard\\cicd\\page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../app/dashboard/cicd/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\types\\app\\dashboard\\cicd\\page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../app/dashboard/cicd/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\types\\app\\dashboard\\cicd\\page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/dist/lib/metadata/types/metadata-interface.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\shipgate-dashboard\\.next\\types\\app\\dashboard\\cicd\\page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\codelens.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\codelens.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./sidebar-provider cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./diagnostics cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./codelens cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./statusbar cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./cli/shipgateRunner cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages\\vscode\\src\\extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\sidebar-provider.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./webview/content cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\sidebar-provider.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\sidebar-provider.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\webview\\content.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages\\vscode\\src\\webview\\content.ts"
+    }
+  ],
+  "source": "firewall",
+  "runId": "20260216T174716-ave8tfr0",
+  "timestamp": "2026-02-16T17:47:16.684Z"
+}

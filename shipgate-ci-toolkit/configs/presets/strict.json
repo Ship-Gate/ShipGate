@@ -1,0 +1,22 @@
+{
+  "name": "strict",
+  "description": "Production-hardened. Requires 95+ score, blocks on any high-severity finding. Use for main branch protection or release gates.",
+  "threshold": 95,
+  "minConfidence": 40,
+  "gates": {
+    "behavioral": { "enabled": true,  "weight": 0.45, "minScore": 90 },
+    "auth":        { "enabled": true,  "weight": 0.20, "minScore": 100 },
+    "placeholder": { "enabled": true,  "weight": 0.15, "minScore": 100 },
+    "env":         { "enabled": true,  "weight": 0.10, "minScore": 100 },
+    "drift":       { "enabled": true,  "weight": 0.05, "minScore": 80 },
+    "chaos":       { "enabled": true,  "weight": 0.05, "minScore": 70 },
+    "pbt":         { "enabled": false }
+  },
+  "policy": {
+    "profile": "strict",
+    "blockOn": ["critical", "high"],
+    "warnOn": ["medium", "low"]
+  },
+  "failOnWarn": true,
+  "outputFormats": ["json", "junit"]
+}

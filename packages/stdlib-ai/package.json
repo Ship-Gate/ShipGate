@@ -1,0 +1,113 @@
+{
+  "name": "@isl-lang/stdlib-ai",
+  "version": "0.1.0",
+  "description": "AI/ML integration - LLMs, embeddings, and model inference",
+  "license": "MIT",
+  "author": "mevla",
+  "homepage": "https://intentlang.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "keywords": [
+    "isl",
+    "intent-specification-language",
+    "stdlib",
+    "ai",
+    "llm",
+    "embeddings",
+    "rag",
+    "agents",
+    "openai",
+    "anthropic"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js",
+      "require": "./dist/types.cjs"
+    },
+    "./completion": {
+      "types": "./dist/completion.d.ts",
+      "import": "./dist/completion.js",
+      "require": "./dist/completion.cjs"
+    },
+    "./embeddings": {
+      "types": "./dist/embeddings.d.ts",
+      "import": "./dist/embeddings.js",
+      "require": "./dist/embeddings.cjs"
+    },
+    "./agents": {
+      "types": "./dist/agents.d.ts",
+      "import": "./dist/agents.js",
+      "require": "./dist/agents.cjs"
+    },
+    "./rag": {
+      "types": "./dist/rag.d.ts",
+      "import": "./dist/rag.js",
+      "require": "./dist/rag.cjs"
+    },
+    "./extraction": {
+      "types": "./dist/extraction.d.ts",
+      "import": "./dist/extraction.js",
+      "require": "./dist/extraction.cjs"
+    },
+    "./moderation": {
+      "types": "./dist/moderation.d.ts",
+      "import": "./dist/moderation.js",
+      "require": "./dist/moderation.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "intents",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint implementations/typescript --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@isl-lang/stdlib-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "private": true,
+  "experimental": true,
+  "sideEffects": false
+}

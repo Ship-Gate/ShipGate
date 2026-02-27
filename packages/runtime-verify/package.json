@@ -1,0 +1,60 @@
+{
+  "name": "@isl-lang/runtime-verify",
+  "version": "0.1.0",
+  "description": "Runtime verification helpers for generated code - pre/post/invariant enforcement",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./snippets": {
+      "types": "./dist/snippets.d.ts",
+      "import": "./dist/snippets.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "keywords": [
+    "isl",
+    "verification",
+    "runtime",
+    "preconditions",
+    "postconditions",
+    "invariants",
+    "contracts",
+    "assertions"
+  ],
+  "license": "MIT",
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "experimental": true,
+  "sideEffects": false
+}

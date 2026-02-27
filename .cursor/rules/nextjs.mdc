@@ -1,0 +1,25 @@
+---
+description: Next.js App Router conventions
+globs: ["**/*.tsx", "**/*.ts"]
+alwaysApply: false
+priority: 80
+---
+
+# Next.js Conventions
+
+## Router: App Router
+
+### File Conventions
+- Use `page.tsx` for pages
+- Use `layout.tsx` for layouts
+- Use `loading.tsx` for loading states
+- Use `error.tsx` for error boundaries
+
+### Data Fetching
+- Use Server Components by default
+- Use `'use client'` directive for client components
+- Prefer server actions for mutations
+
+---
+<!-- guardrail:auto-generated -->
+*Verified by Guardrail ✓*

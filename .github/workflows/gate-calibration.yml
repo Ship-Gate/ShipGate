@@ -1,0 +1,101 @@
+name: Gate Calibration Test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bench/corpus/**'
+      - 'packages/cli/**'
+      - 'packages/isl-gate/**'
+      - 'packages/cli/**'
+  pull_request:
+    paths:
+      - 'bench/corpus/**'
+      - 'packages/cli/**'
+      - 'packages/isl-gate/**'
+      - 'packages/cli/**'
+  schedule:
+    # Run daily to catch regressions
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  calibration:
+    name: Gate Calibration Benchmark
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build packages
+        run: npm run build
+      
+      - name: Generate fixtures (if needed)
+        run: |
+          if [ ! -d "bench/corpus/good" ] || [ -z "$(ls -A bench/corpus/good)" ]; then
+            npx tsx bench/corpus/generate-fixtures.ts
+          fi
+      
+      - name: Run calibration benchmark
+        id: benchmark
+        run: |
+          npx tsx bench/corpus/runner.ts --json > benchmark-results.json || true
+          cat benchmark-results.json
+      
+      - name: Check false positive rate
+        run: |
+          if [ -f benchmark-results.json ]; then
+            FP_RATE=$(node -e "
+              const data = require('./benchmark-results.json');
+              const fpRate = data.metrics && data.metrics.good > 0 
+                ? data.metrics.falsePositives / data.metrics.good 
+                : 1;
+              console.log(fpRate);
+              process.exit(fpRate > 0.05 ? 1 : 0);
+            ")
+            echo "False positive rate: $FP_RATE"
+            if (( $(echo "$FP_RATE > 0.05" | bc -l) )); then
+              echo "❌ False positive rate exceeds 5% target"
+              exit 1
+            fi
+          else
+            echo "⚠️ Benchmark results not found, skipping check"
+          fi
+      
+      - name: Check false negative rate
+        run: |
+          if [ -f benchmark-results.json ]; then
+            FN_RATE=$(node -e "
+              const data = require('./benchmark-results.json');
+              const fnRate = data.metrics && data.metrics.bad > 0 
+                ? data.metrics.falseNegatives / data.metrics.bad 
+                : 1;
+              console.log(fnRate);
+              process.exit(fnRate > 0.10 ? 1 : 0);
+            ")
+            echo "False negative rate: $FN_RATE"
+            if (( $(echo "$FN_RATE > 0.10" | bc -l) )); then
+              echo "❌ False negative rate exceeds 10% target"
+              exit 1
+            fi
+          else
+            echo "⚠️ Benchmark results not found, skipping check"
+          fi
+      
+      - name: Upload benchmark results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark-results.json
+          retention-days: 30
+          if-no-files-found: ignore

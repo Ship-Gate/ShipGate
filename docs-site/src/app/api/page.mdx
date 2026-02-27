@@ -1,0 +1,337 @@
+export const metadata = {
+  title: 'API Reference - ISL Verify',
+  description: 'Programmatic usage of ISL Verify',
+}
+
+# API Reference
+
+Use ISL Verify programmatically in Node.js applications.
+
+---
+
+## Installation
+
+```bash
+npm install @isl-lang/isl-verify
+```
+
+---
+
+## Quick Start
+
+```typescript
+import { ProofBundleGenerator } from '@isl-lang/isl-verify'
+
+const generator = new ProofBundleGenerator('/path/to/project')
+const bundle = await generator.generate()
+
+console.log(`Trust Score: ${bundle.summary.trustScore}/100`)
+console.log(`Verdict: ${bundle.summary.overallVerdict}`)
+```
+
+---
+
+## ProofBundleGenerator
+
+### Constructor
+
+```typescript
+new ProofBundleGenerator(projectPath: string, options?: GeneratorOptions)
+```
+
+**Options:**
+```typescript
+interface GeneratorOptions {
+  provers?: PropertyProver[]         // Custom provers
+  config?: VerifyConfig              // Configuration
+  signingSecret?: string             // HMAC signing key
+}
+```
+
+### Methods
+
+#### `generate()`
+
+```typescript
+async generate(): Promise<ProofBundle>
+```
+
+Runs all provers and generates a complete proof bundle.
+
+**Example:**
+```typescript
+const bundle = await generator.generate()
+console.log(bundle.summary.trustScore)
+```
+
+---
+
+## BundleVerifier
+
+### Verify Signature
+
+```typescript
+import { verifySignature } from '@isl-lang/isl-verify'
+
+const isValid = await verifySignature(bundle, { secret: 'my-secret' })
+if (!isValid) {
+  throw new Error('Bundle signature invalid - tampered!')
+}
+```
+
+### Verify File Hashes
+
+```typescript
+import { BundleVerifier } from '@isl-lang/isl-verify'
+
+const verifier = new BundleVerifier(bundle)
+const fileIntegrity = await verifier.verifyFileHashes()
+
+if (!fileIntegrity.valid) {
+  console.log('Changed files:', fileIntegrity.changedFiles)
+}
+```
+
+---
+
+## Custom Provers
+
+### PropertyProver Interface
+
+```typescript
+interface PropertyProver {
+  id: string
+  name: string
+  tier: 1 | 2 | 3
+  prove(project: ProjectContext): Promise<PropertyProof>
+}
+```
+
+### Example: Custom Prover
+
+```typescript
+import { PropertyProver, ProjectContext, PropertyProof } from '@isl-lang/isl-verify'
+
+class CustomLicenseProver implements PropertyProver {
+  id = 'custom-license-check'
+  name = 'License Header Check'
+  tier = 2 as const
+
+  async prove(project: ProjectContext): Promise<PropertyProof> {
+    const findings = []
+    
+    for (const file of project.sourceFiles) {
+      const content = await fs.readFile(file, 'utf-8')
+      if (!content.startsWith('// Copyright')) {
+        findings.push({
+          file,
+          line: 1,
+          severity: 'warning' as const,
+          message: 'Missing license header',
+        })
+      }
+    }
+
+    return {
+      property: 'custom-license-check',
+      status: findings.length === 0 ? 'PROVEN' : 'PARTIAL',
+      summary: `${findings.length} files missing license headers`,
+      evidence: [],
+      findings,
+      method: 'pattern-matching',
+      confidence: 'high',
+      duration_ms: 100,
+    }
+  }
+}
+
+// Use custom prover
+const generator = new ProofBundleGenerator('/path/to/project', {
+  provers: [new CustomLicenseProver()],
+})
+```
+
+---
+
+## Trust Score Calculation
+
+```typescript
+import { calculateTrustScore } from '@isl-lang/isl-verify'
+
+const score = calculateTrustScore(bundle.properties)
+console.log(score)  // 0-100
+```
+
+**Algorithm:**
+```typescript
+let score = 0
+
+for (const property of properties) {
+  const tier = PROPERTY_TIERS[property.property]
+  
+  if (property.status === 'PROVEN') {
+    score += tier === 1 ? 10 : tier === 2 ? 5 : 3
+  } else if (property.status === 'PARTIAL') {
+    score += tier === 1 ? 5 : tier === 2 ? 2 : 1
+  }
+}
+
+return Math.min(100, score)
+```
+
+---
+
+## Residual Risks
+
+```typescript
+import { generateResidualRisks } from '@isl-lang/isl-verify'
+
+const risks = generateResidualRisks(bundle.properties)
+
+for (const risk of risks) {
+  console.log(risk)
+  // "FAILED — XSS Prevention: Malicious script execution possible (2 issues)"
+}
+```
+
+---
+
+## Configuration
+
+### Load from File
+
+```typescript
+import { loadConfig } from '@isl-lang/isl-verify'
+
+const config = await loadConfig('/path/to/project')
+```
+
+### Configuration Schema
+
+```typescript
+interface VerifyConfig {
+  provers?: {
+    [key: string]: {
+      enabled?: boolean
+      options?: Record<string, unknown>
+    }
+  }
+  ci?: {
+    failOn?: ('FAILED' | 'PARTIAL' | 'INSUFFICIENT')[]
+    requiredProperties?: string[]
+    allowPartial?: string[]
+  }
+  output?: {
+    format?: 'json' | 'markdown' | 'pr-comment'
+    saveTo?: string
+  }
+}
+```
+
+---
+
+## CLI Integration
+
+Run ISL Verify from code:
+
+```typescript
+import { spawn } from 'child_process'
+
+function runVerify(projectPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn('npx', ['@isl-lang/isl-verify', projectPath, '--proof-bundle'], {
+      stdio: 'inherit',
+    })
+    
+    proc.on('exit', (code) => {
+      if (code === 0) resolve()
+      else reject(new Error(`Verification failed with code ${code}`))
+    })
+  })
+}
+
+await runVerify('./my-project')
+```
+
+---
+
+## TypeScript Types
+
+All types are exported:
+
+```typescript
+import type {
+  ProofBundle,
+  PropertyProof,
+  PropertyName,
+  PropertyStatus,
+  ImportEvidence,
+  AuthEvidence,
+  SecretEvidence,
+  SQLEvidence,
+  ErrorHandlingEvidence,
+  TypeSafetyEvidence,
+  Finding,
+  ProjectContext,
+} from '@isl-lang/isl-verify'
+```
+
+---
+
+## Examples
+
+### Check Specific Property
+
+```typescript
+import { ImportIntegrityProver } from '@isl-lang/isl-verify'
+
+const prover = new ImportIntegrityProver()
+const project = await buildProjectContext('/path/to/project')
+const proof = await prover.prove(project)
+
+if (proof.status !== 'PROVEN') {
+  console.error('Import integrity failed!')
+  for (const finding of proof.findings) {
+    console.log(`${finding.file}:${finding.line} - ${finding.message}`)
+  }
+}
+```
+
+### Generate HTML Report
+
+```typescript
+import { generateHTMLReport } from '@isl-lang/isl-verify'
+
+const html = await generateHTMLReport(bundle)
+await fs.writeFile('report.html', html)
+```
+
+### Stream Progress
+
+```typescript
+generator.on('prover:start', (prover) => {
+  console.log(`Running ${prover.name}...`)
+})
+
+generator.on('prover:complete', (prover, proof) => {
+  console.log(`✓ ${prover.name}: ${proof.status}`)
+})
+
+const bundle = await generator.generate()
+```
+
+---
+
+## Next Steps
+
+<div className="grid gap-4 mt-6">
+  <a href="/guides/custom-provers" className="block p-4 border rounded-lg hover:bg-accent transition">
+    <div className="font-semibold">Write Custom Provers</div>
+    <div className="text-sm text-muted-foreground">Extend verification with custom rules</div>
+  </a>
+  
+  <a href="/specification" className="block p-4 border rounded-lg hover:bg-accent transition">
+    <div className="font-semibold">Proof Bundle Specification</div>
+    <div className="text-sm text-muted-foreground">Complete JSON schema reference</div>
+  </a>
+</div>

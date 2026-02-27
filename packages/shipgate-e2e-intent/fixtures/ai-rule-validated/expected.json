@@ -1,0 +1,13 @@
+{
+  "good": {
+    "verdictOneOf": ["SHIP", "WARN"],
+    "scoreAbove": 0.6,
+    "description": "Strong postconditions + compliant code → high score, validated AI rules"
+  },
+  "bad": {
+    "verdictOneOf": ["NO_SHIP", "WARN"],
+    "scoreBelow": 0.7,
+    "mustContainMessagePatterns": ["postcondition", "fail"],
+    "description": "Violates postconditions → low score, AI rules disproven"
+  }
+}

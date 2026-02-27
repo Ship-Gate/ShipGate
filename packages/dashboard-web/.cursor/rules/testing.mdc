@@ -1,0 +1,39 @@
+---
+description: Testing patterns and requirements
+globs: ["**/*.test.ts", "**/*.spec.ts"]
+alwaysApply: false
+priority: 70
+---
+
+# Testing Guidelines
+
+## File Naming
+- Test files: `*.test.ts`
+- Integration tests: `*.integration.test.ts`
+
+## Test Structure
+```typescript
+describe('ComponentName', () => {
+  describe('method or scenario', () => {
+    it('should do something specific', () => {
+      // Arrange
+      // Act
+      // Assert
+    });
+  });
+});
+```
+
+## Requirements
+- All new features must have tests
+- All bug fixes must have regression tests
+- Test edge cases and error conditions
+
+## Forbidden
+- No skipped tests without explanation
+- No tests that depend on execution order
+- No tests that mutate global state
+
+---
+<!-- guardrail:auto-generated -->
+*Verified by Guardrail ✓*

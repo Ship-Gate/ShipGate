@@ -1,0 +1,68 @@
+{
+  "description": "Evidence from runtime assertions (present but not executed)",
+  "evidence": [
+    {
+      "type": "RUNTIME_ASSERT",
+      "source": "src/services/payment.ts",
+      "description": "Assert: amount > 0 before processing payment",
+      "location": {
+        "file": "src/services/payment.ts",
+        "line": 42
+      },
+      "metadata": {
+        "assertType": "precondition",
+        "expression": "amount > 0"
+      }
+    },
+    {
+      "type": "RUNTIME_ASSERT",
+      "source": "src/services/payment.ts",
+      "description": "Assert: transaction.status after payment processing for post-payment-status",
+      "location": {
+        "file": "src/services/payment.ts",
+        "line": 78
+      },
+      "metadata": {
+        "assertType": "postcondition",
+        "expression": "transaction.status == 'completed'"
+      }
+    },
+    {
+      "type": "RUNTIME_ASSERT",
+      "source": "src/services/inventory.ts",
+      "description": "Assert: stock count post-update for post-inventory-update",
+      "location": {
+        "file": "src/services/inventory.ts",
+        "line": 55
+      },
+      "metadata": {
+        "assertType": "postcondition",
+        "expression": "item.stock >= 0"
+      }
+    }
+  ],
+  "clauses": [
+    {
+      "id": "post-payment-status",
+      "expression": "result.transaction.status == 'completed'",
+      "description": "Payment transaction must have completed status"
+    },
+    {
+      "id": "post-inventory-update",
+      "expression": "result.item.stock >= 0",
+      "description": "Stock must be non-negative after update"
+    }
+  ],
+  "expectedResults": [
+    {
+      "clauseId": "post-payment-status",
+      "status": "PARTIAL",
+      "evidenceType": "RUNTIME_ASSERT"
+    },
+    {
+      "clauseId": "post-inventory-update",
+      "status": "PARTIAL",
+      "evidenceType": "RUNTIME_ASSERT"
+    }
+  ]
+}

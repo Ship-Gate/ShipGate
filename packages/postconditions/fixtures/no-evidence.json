@@ -1,0 +1,38 @@
+{
+  "description": "Clauses with no evidence (expected to FAIL)",
+  "evidence": [],
+  "clauses": [
+    {
+      "id": "post-audit-log",
+      "expression": "sideEffects.auditLogCreated == true",
+      "description": "Audit log must be created for sensitive operations"
+    },
+    {
+      "id": "post-cache-invalidation",
+      "expression": "sideEffects.cacheInvalidated == true",
+      "description": "Cache must be invalidated after update"
+    },
+    {
+      "id": "post-notification-sent",
+      "expression": "sideEffects.notificationSent == true",
+      "description": "Notification must be sent to affected users"
+    }
+  ],
+  "expectedResults": [
+    {
+      "clauseId": "post-audit-log",
+      "status": "FAIL",
+      "evidenceType": "NO_EVIDENCE"
+    },
+    {
+      "clauseId": "post-cache-invalidation",
+      "status": "FAIL",
+      "evidenceType": "NO_EVIDENCE"
+    },
+    {
+      "clauseId": "post-notification-sent",
+      "status": "FAIL",
+      "evidenceType": "NO_EVIDENCE"
+    }
+  ]
+}

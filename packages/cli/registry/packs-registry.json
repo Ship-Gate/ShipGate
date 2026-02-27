@@ -1,0 +1,42 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-02-09T00:00:00Z",
+  "packs": {
+    "stdlib-auth": {
+      "name": "stdlib-auth",
+      "version": "1.0.0",
+      "description": "Authentication and authorization standard library for ISL - login, logout, sessions, MFA, OAuth",
+      "downloadUrl": "file://packages/stdlib-auth",
+      "manifestUrl": "file://packages/stdlib-auth/pack.json",
+      "checksum": "placeholder-checksum",
+      "signature": {
+        "algorithm": "sha256",
+        "value": "placeholder-signature"
+      }
+    },
+    "stdlib-payments": {
+      "name": "stdlib-payments",
+      "version": "1.0.0",
+      "description": "Payment processing standard library - charges, refunds, subscriptions, invoices",
+      "downloadUrl": "file://packages/stdlib-payments",
+      "manifestUrl": "file://packages/stdlib-payments/pack.json",
+      "checksum": "placeholder-checksum",
+      "signature": {
+        "algorithm": "sha256",
+        "value": "placeholder-signature"
+      }
+    },
+    "stdlib-rest-api": {
+      "name": "stdlib-rest-api",
+      "version": "1.0.0",
+      "description": "REST API standard library - CRUD operations, pagination, filtering, versioning",
+      "downloadUrl": "file://packages/stdlib-rest-api",
+      "manifestUrl": "file://packages/stdlib-rest-api/pack.json",
+      "checksum": "placeholder-checksum",
+      "signature": {
+        "algorithm": "sha256",
+        "value": "placeholder-signature"
+      }
+    }
+  }
+}

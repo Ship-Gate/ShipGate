@@ -1,0 +1,24 @@
+---
+description: Next.js Pages Router conventions
+globs: ["**/*.tsx", "**/*.ts"]
+alwaysApply: false
+priority: 80
+---
+
+# Next.js Conventions
+
+## Router: Pages Router
+
+### File Conventions
+- Pages in `pages/` directory
+- API routes in `pages/api/`
+- Use `_app.tsx` for app wrapper
+
+### Data Fetching
+- Use `getServerSideProps` for SSR
+- Use `getStaticProps` for SSG
+- API routes for client-side data
+
+---
+<!-- guardrail:auto-generated -->
+*Verified by Guardrail ✓*

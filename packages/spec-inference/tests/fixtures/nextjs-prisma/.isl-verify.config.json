@@ -1,0 +1,18 @@
+{
+  "projectRoot": ".",
+  "sourceDirs": [
+    "src",
+    "app",
+    "lib",
+    "pages"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".next",
+    "coverage"
+  ],
+  "truthpackPath": ".vibecheck/truthpack",
+  "threshold": 80,
+  "verbose": false
+}

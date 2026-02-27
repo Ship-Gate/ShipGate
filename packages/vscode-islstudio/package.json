@@ -1,0 +1,236 @@
+{
+  "name": "vscode-islstudio",
+  "displayName": "Shipgate",
+  "description": "Unified code gate. Truthpack validation (routes, env, imports) + 25 security rules (auth, pii, payments, rate-limit, intent). SHIP or NO_SHIP with evidence. Verified by ShipGate.",
+  "version": "1.0.0",
+  "publisher": "shipgate",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shipgate/shipgate"
+  },
+  "bugs": {
+    "url": "https://github.com/shipgate/shipgate/issues"
+  },
+  "homepage": "https://shipgate.dev",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "security",
+    "linter",
+    "shipgate",
+    "auth",
+    "pii",
+    "gate",
+    "typescript",
+    "javascript",
+    "code review",
+    "pull request",
+    "ai-safety",
+    "truthpack"
+  ],
+  "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "badges": [
+    {
+      "url": "https://img.shields.io/npm/v/shipgate.svg",
+      "href": "https://www.npmjs.com/package/shipgate",
+      "description": "npm version"
+    }
+  ],
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:javascript",
+    "onLanguage:typescriptreact",
+    "onLanguage:javascriptreact"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "islstudio.runGate",
+        "title": "ISL Studio: Run Gate (All Files)",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "islstudio.runGateChangedOnly",
+        "title": "ISL Studio: Run Gate (Changed Files Only)",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "islstudio.healUntilShip",
+        "title": "ISL Studio: Heal Until Ship",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "islstudio.setIntentBlocks",
+        "title": "ISL Studio: Set Intent Blocks",
+        "icon": "$(symbol-structure)"
+      },
+      {
+        "command": "islstudio.explainRule",
+        "title": "ISL Studio: Explain Rule",
+        "icon": "$(book)"
+      },
+      {
+        "command": "islstudio.viewProofBundle",
+        "title": "ISL Studio: View Proof Bundle",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "islstudio.refreshSidebar",
+        "title": "ISL Studio: Refresh Sidebar",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "islstudio.createBaseline",
+        "title": "ISL Studio: Create Baseline",
+        "icon": "$(save)"
+      },
+      {
+        "command": "islstudio.useBaseline",
+        "title": "ISL Studio: Show Baseline Status",
+        "icon": "$(list-flat)"
+      },
+      {
+        "command": "islstudio.init",
+        "title": "ISL Studio: Initialize Project",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "islstudio.showOutput",
+        "title": "ISL Studio: Show Output",
+        "icon": "$(output)"
+      }
+    ],
+    "views": {
+      "islstudio": [
+        {
+          "id": "islstudioSidebar",
+          "name": "ISL Studio",
+          "icon": "$(shield)",
+          "when": "islstudio.enable"
+        },
+        {
+          "id": "shipgate.sidebar",
+          "name": "ShipGate",
+          "icon": "$(dashboard)",
+          "type": "webview",
+          "when": "islstudio.enable"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "islstudio",
+          "title": "ISL Studio",
+          "icon": "icon.png"
+        }
+      ]
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "islstudio.runGate"
+        },
+        {
+          "command": "islstudio.runGateChangedOnly"
+        },
+        {
+          "command": "islstudio.healUntilShip"
+        },
+        {
+          "command": "islstudio.setIntentBlocks"
+        },
+        {
+          "command": "islstudio.explainRule"
+        },
+        {
+          "command": "islstudio.viewProofBundle"
+        },
+        {
+          "command": "islstudio.refreshSidebar"
+        },
+        {
+          "command": "islstudio.createBaseline"
+        },
+        {
+          "command": "islstudio.useBaseline"
+        },
+        {
+          "command": "islstudio.init"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ISL Studio",
+      "properties": {
+        "islstudio.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable ISL Studio diagnostics"
+        },
+        "islstudio.runOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run quick check on file save"
+        },
+        "islstudio.runOnOpen": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run gate on workspace open"
+        },
+        "islstudio.changedOnlyByDefault": {
+          "type": "boolean",
+          "default": true,
+          "description": "Only check changed files by default"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "watch": "tsup --watch",
+    "package": "vsce package",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "rimraf": "^5.0.5"
+  },
+  "dependencies": {},
+  "private": true,
+  "experimental": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}

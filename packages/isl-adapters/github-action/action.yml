@@ -1,0 +1,55 @@
+name: 'ISL Gate'
+description: 'Run ISL Gate to verify code quality and produce SHIP/NO_SHIP verdicts'
+author: 'ShipGate'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  mode:
+    description: 'Gate mode: check (PR comment) or enforce (block on failure)'
+    required: false
+    default: 'check'
+  token:
+    description: 'GitHub token for API access'
+    required: false
+    default: ${{ github.token }}
+  working-directory:
+    description: 'Working directory (defaults to repo root)'
+    required: false
+    default: '.'
+  spec-pattern:
+    description: 'Glob pattern for ISL spec files'
+    required: false
+    default: '**/*.isl'
+  changed-only:
+    description: 'Only check files changed in this PR'
+    required: false
+    default: 'true'
+  fail-on:
+    description: 'Verdict that causes failure: no_ship, warn, or never'
+    required: false
+    default: 'no_ship'
+  output-format:
+    description: 'Output format: json, sarif, or markdown'
+    required: false
+    default: 'markdown'
+  upload-evidence:
+    description: 'Upload evidence bundle as artifact'
+    required: false
+    default: 'true'
+
+outputs:
+  verdict:
+    description: 'Gate verdict: SHIP or NO_SHIP'
+  score:
+    description: 'Gate score (0-100)'
+  evidence-path:
+    description: 'Path to evidence bundle'
+  pr-comment-url:
+    description: 'URL of the PR comment'
+
+runs:
+  using: 'node20'
+  main: 'dist/action.js'

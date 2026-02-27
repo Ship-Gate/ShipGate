@@ -1,0 +1,18 @@
+{
+  "name": "repo-isl-violation",
+  "version": "1.0.0",
+  "description": "Demo: ISL spec violations blocked by ShipGate gate",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "verify": "npx shipgate verify src/",
+    "verify:fixed": "npx shipgate verify fixed/",
+    "gate": "npx shipgate gate"
+  },
+  "keywords": ["isl", "shipgate", "security", "demo"],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.0"
+  }
+}

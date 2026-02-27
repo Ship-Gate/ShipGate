@@ -1,0 +1,68 @@
+{
+  "domain": "FileStorage",
+  "parseSuccess": true,
+  "checkSuccess": true,
+  "minEntities": 2,
+  "minBehaviors": 4,
+  "claims": [
+    {
+      "id": "fs-upload-postcondition",
+      "type": "postcondition",
+      "behavior": "UploadFile",
+      "description": "File created in SCANNING status; checksum computed; bucket quota updated",
+      "verdict": "pass"
+    },
+    {
+      "id": "fs-pipeline-invariant",
+      "type": "invariant",
+      "behavior": "UploadFile",
+      "description": "File goes through UPLOADING→SCANNING→PROCESSING→READY pipeline",
+      "verdict": "pass"
+    },
+    {
+      "id": "fs-scan-quarantine",
+      "type": "postcondition",
+      "behavior": "ScanFile",
+      "description": "Malware-detected files quarantined; clean files proceed to PROCESSING",
+      "verdict": "pass"
+    },
+    {
+      "id": "fs-quarantine-invariant",
+      "type": "invariant",
+      "description": "Quarantined files are never served to clients",
+      "verdict": "pass"
+    },
+    {
+      "id": "fs-download-integrity",
+      "type": "postcondition",
+      "behavior": "DownloadFile",
+      "description": "Downloaded file checksum matches stored checksum",
+      "verdict": "pass"
+    },
+    {
+      "id": "fs-quota-reclaim",
+      "type": "postcondition",
+      "behavior": "DeleteFile",
+      "description": "Bucket used_size_bytes decremented on deletion",
+      "verdict": "pass"
+    },
+    {
+      "id": "fs-quota-invariant",
+      "type": "invariant",
+      "description": "Bucket used_size_bytes never exceeds max_size_bytes",
+      "verdict": "pass"
+    },
+    {
+      "id": "fs-lifecycle-scenario",
+      "type": "scenario",
+      "description": "Upload pipeline lifecycle completes with checksum integrity",
+      "verdict": "pass"
+    },
+    {
+      "id": "fs-quarantine-scenario",
+      "type": "scenario",
+      "description": "Quarantined file blocked from download",
+      "verdict": "pass"
+    }
+  ]
+}

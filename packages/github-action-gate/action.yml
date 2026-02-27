@@ -1,0 +1,47 @@
+name: 'Shipgate'
+description: 'Block unsafe AI-generated code. SHIP or NO_SHIP verdict on every change.'
+author: 'Shipgate'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  mode:
+    description: 'Gate mode: check (PR comment only) or enforce (block merge)'
+    required: false
+    default: 'enforce'
+  threshold:
+    description: 'Minimum score to pass (0-100)'
+    required: false
+    default: '80'
+  config-path:
+    description: 'Path to .shipgate/config.json'
+    required: false
+    default: '.shipgate/config.json'
+  fail-on:
+    description: 'Fail on: any, blocker, none'
+    required: false
+    default: 'blocker'
+  changed-only:
+    description: 'Only check changed files (PR only)'
+    required: false
+    default: 'true'
+  token:
+    description: 'GitHub token for API access'
+    required: true
+    default: ${{ github.token }}
+
+outputs:
+  verdict:
+    description: 'SHIP or NO_SHIP'
+  score:
+    description: 'Score out of 100'
+  violations:
+    description: 'Number of violations found'
+  evidence-path:
+    description: 'Path to evidence directory'
+
+runs:
+  using: 'node16'
+  main: 'dist/index.js'

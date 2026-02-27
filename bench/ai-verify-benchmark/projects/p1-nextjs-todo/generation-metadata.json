@@ -1,0 +1,15 @@
+{
+  "project": "p1-nextjs-todo",
+  "description": "Next.js todo app with basic CRUD operations",
+  "generatedWith": {
+    "tool": "Cursor Composer",
+    "version": "0.43.0",
+    "model": "claude-3.5-sonnet",
+    "prompt": "Build a Next.js 14 todo app with App Router. Use TypeScript, Tailwind CSS, and local state management. Include create, read, update, delete operations. No database needed, just in-memory state.",
+    "date": "2026-02-17T16:25:00Z"
+  },
+  "framework": "nextjs",
+  "language": "typescript",
+  "totalFiles": 8,
+  "linesOfCode": 342
+}

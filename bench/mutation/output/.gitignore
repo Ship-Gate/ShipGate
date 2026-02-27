@@ -1,0 +1,4 @@
+# Ignore generated mutation reports
+*.json
+*.md
+!.gitignore

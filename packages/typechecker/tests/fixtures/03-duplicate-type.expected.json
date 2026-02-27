@@ -1,0 +1,30 @@
+[
+  {
+    "code": "ISL_T020",
+    "severity": "error",
+    "message": "Type 'Email' is already defined",
+    "location": {
+      "file": "03-duplicate-type.isl",
+      "line": 5,
+      "column": 8,
+      "endLine": 5,
+      "endColumn": 13
+    },
+    "source": "typechecker",
+    "relatedInformation": [
+      {
+        "message": "Previously defined here",
+        "location": {
+          "file": "03-duplicate-type.isl",
+          "line": 4,
+          "column": 8,
+          "endLine": 4,
+          "endColumn": 13
+        }
+      }
+    ],
+    "help": [
+      "Rename one of the types or remove the duplicate"
+    ]
+  }
+]

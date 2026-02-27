@@ -1,0 +1,36 @@
+---
+description: TypeScript strict mode and type safety
+globs: ["**/*.ts", "**/*.tsx"]
+alwaysApply: false
+priority: 85
+---
+
+# TypeScript Standards
+
+## Type Safety
+- NEVER use `any` type - use `unknown` if uncertain
+- Always declare explicit return types for exported functions
+- Use `strict: true` in tsconfig.json
+
+## Type Definitions
+- Prefer `interface` for object shapes
+- Use `type` for unions and primitives
+- Export types that are used by other modules
+
+## Best Practices
+- Use `as const` for literal types
+- Avoid type assertions (`as`) - fix the types instead
+- Use discriminated unions for complex state
+
+## Common Patterns
+```typescript
+// Good: Explicit types
+function getUser(id: string): Promise<User> { ... }
+
+// Bad: Implicit any
+function getUser(id) { ... }
+```
+
+---
+<!-- guardrail:auto-generated -->
+*Verified by Guardrail ✓*

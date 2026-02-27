@@ -1,0 +1,329 @@
+export const metadata = {
+  title: 'CI/CD Integration - ISL Verify',
+  description: 'Add ISL Verify to your CI pipeline in 5 minutes',
+}
+
+# CI/CD Integration
+
+Add ISL Verify to any CI system that runs Node.js. Block PRs that fail critical security properties.
+
+---
+
+## GitHub Actions (Recommended)
+
+Create `.github/workflows/isl-verify.yml`:
+
+```yaml
+name: ISL Verify
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run ISL Verify
+        run: npx @isl-lang/isl-verify . --proof-bundle --format pr-comment
+        
+      - name: Upload proof bundle
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: proof-bundle
+          path: .isl-verify/proof-bundle.json
+          
+      - name: Comment PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('.isl-verify/report.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+```
+
+### Require Specific Properties
+
+Fail the build if critical properties aren't PROVEN:
+
+```yaml
+      - name: Run ISL Verify
+        run: |
+          npx @isl-lang/isl-verify . --proof-bundle \
+            --require-proven import-integrity \
+            --require-proven auth-coverage \
+            --require-proven sql-injection \
+            --require-proven type-safety
+```
+
+This exits with code 1 (failing the build) if any required property isn't PROVEN.
+
+### Store Bundles as Artifacts
+
+```yaml
+      - name: Upload proof bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: proof-bundle-${{ github.sha }}
+          path: .isl-verify/proof-bundle.json
+          retention-days: 90
+```
+
+Access proof bundles for audits via Actions → Artifacts.
+
+---
+
+## GitLab CI
+
+Create `.gitlab-ci.yml`:
+
+```yaml
+stages:
+  - verify
+
+isl-verify:
+  stage: verify
+  image: node:20
+  
+  before_script:
+    - npm ci
+    
+  script:
+    - npx @isl-lang/isl-verify . --proof-bundle --format markdown > report.md
+    
+  artifacts:
+    when: always
+    paths:
+      - .isl-verify/proof-bundle.json
+      - report.md
+    reports:
+      junit: .isl-verify/junit.xml  # if using --format junit
+    expire_in: 3 months
+    
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+```
+
+### Block Merge on Failure
+
+```yaml
+isl-verify:
+  script:
+    - |
+      npx @isl-lang/isl-verify . --proof-bundle \
+        --require-proven import-integrity \
+        --require-proven auth-coverage \
+        --fail-on FAILED
+```
+
+---
+
+## CircleCI
+
+Create `.circleci/config.yml`:
+
+```yaml
+version: 2.1
+
+jobs:
+  verify:
+    docker:
+      - image: cimg/node:20.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - deps-{{ checksum "package-lock.json" }}
+      - run:
+          name: Install dependencies
+          command: npm ci
+      - run:
+          name: Run ISL Verify
+          command: npx @isl-lang/isl-verify . --proof-bundle
+      - store_artifacts:
+          path: .isl-verify/proof-bundle.json
+      - store_test_results:
+          path: .isl-verify
+
+workflows:
+  verify-code:
+    jobs:
+      - verify
+```
+
+---
+
+## Generic CI (Any System)
+
+For any CI system that runs Node.js:
+
+```bash
+#!/bin/bash
+set -e
+
+# Install dependencies
+npm ci
+
+# Run verification
+npx @isl-lang/isl-verify . --proof-bundle --format json > verify-result.json
+
+# Check verdict
+VERDICT=$(cat verify-result.json | jq -r '.summary.overallVerdict')
+
+if [ "$VERDICT" = "INSUFFICIENT" ]; then
+  echo "❌ Verification FAILED"
+  exit 1
+elif [ "$VERDICT" = "PARTIAL" ]; then
+  echo "⚠️  Verification PARTIAL - review required"
+  # Decide: exit 1 to fail, or exit 0 to warn only
+  exit 0
+else
+  echo "✅ Verification PASSED"
+  exit 0
+fi
+```
+
+---
+
+## Configuration
+
+Create `.isl-verify.json` to configure CI behavior:
+
+```json
+{
+  "ci": {
+    "failOn": ["FAILED", "INSUFFICIENT"],
+    "requiredProperties": [
+      "import-integrity",
+      "type-safety",
+      "auth-coverage",
+      "sql-injection"
+    ],
+    "allowPartial": ["error-handling", "secret-exposure"]
+  },
+  "provers": {
+    "auth-coverage": {
+      "publicRoutes": ["/api/health", "/api/auth/*"]
+    }
+  },
+  "output": {
+    "format": "pr-comment",
+    "saveTo": ".isl-verify/report.md"
+  }
+}
+```
+
+### Fail Criteria
+
+- **`failOn`** — Fail build if overall verdict matches
+- **`requiredProperties`** — Fail if these aren't PROVEN
+- **`allowPartial`** — Don't fail if these are PARTIAL (warnings only)
+
+---
+
+## Proof Bundle Signing
+
+For tamper-proof bundles, set a signing secret:
+
+```yaml
+env:
+  ISL_VERIFY_SECRET: ${{ secrets.ISL_VERIFY_SECRET }}
+```
+
+Generate secret:
+```bash
+openssl rand -hex 32
+```
+
+Store in GitHub: Settings → Secrets and variables → Actions → New repository secret
+
+---
+
+## Performance Optimization
+
+### Cache Dependencies
+
+```yaml
+- uses: actions/cache@v3
+  with:
+    path: ~/.npm
+    key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+```
+
+### Parallel Property Verification
+
+ISL Verify runs all provers in parallel by default. For large projects:
+
+```json
+{
+  "ci": {
+    "maxProvers": 8,
+    "timeout": 300000
+  }
+}
+```
+
+### Skip on Draft PRs
+
+```yaml
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+    
+jobs:
+  verify:
+    if: github.event.pull_request.draft == false
+```
+
+---
+
+## Monorepo Support
+
+Verify multiple packages:
+
+```yaml
+jobs:
+  verify:
+    strategy:
+      matrix:
+        package: [api, web, mobile]
+    steps:
+      - name: Verify ${{ matrix.package }}
+        run: npx @isl-lang/isl-verify ./packages/${{ matrix.package }} --proof-bundle
+```
+
+---
+
+## Next Steps
+
+<div className="grid gap-4 mt-6">
+  <a href="/guides/soc2-compliance" className="block p-4 border rounded-lg hover:bg-accent transition">
+    <div className="font-semibold">Generate SOC 2 Reports</div>
+    <div className="text-sm text-muted-foreground">Map properties to compliance controls</div>
+  </a>
+  
+  <a href="/guides/ai-workflow" className="block p-4 border rounded-lg hover:bg-accent transition">
+    <div className="font-semibold">AI Code Review Workflow</div>
+    <div className="text-sm text-muted-foreground">Verify Cursor/Copilot generated code</div>
+  </a>
+</div>

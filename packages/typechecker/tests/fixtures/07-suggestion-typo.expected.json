@@ -1,0 +1,22 @@
+[
+  {
+    "code": "ISL_T022",
+    "severity": "error",
+    "message": "Field 'emial' does not exist on type 'User'",
+    "location": {
+      "file": "07-suggestion-typo.isl",
+      "line": 7,
+      "column": 5,
+      "endLine": 7,
+      "endColumn": 10
+    },
+    "source": "typechecker",
+    "notes": [
+      "File: 07-suggestion-typo.isl",
+      "Range: 7:5-7:10"
+    ],
+    "help": [
+      "Did you mean 'email'?"
+    ]
+  }
+]

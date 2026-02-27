@@ -1,0 +1,42 @@
+{
+  "name": "stdlib-auth",
+  "version": "1.0.0",
+  "description": "Authentication and authorization standard library for ISL - login, logout, sessions, MFA, OAuth",
+  "author": "IntentOS Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/guardiavault-oss/ISL-LANG.git",
+    "directory": "packages/stdlib-auth"
+  },
+  "keywords": [
+    "isl",
+    "auth",
+    "authentication",
+    "authorization",
+    "jwt",
+    "oauth",
+    "mfa",
+    "session"
+  ],
+  "domain": "Auth",
+  "dependencies": {},
+  "files": [
+    {
+      "path": "intents/domain.isl",
+      "checksum": "placeholder-checksum",
+      "size": 0
+    },
+    {
+      "path": "intents/behaviors/authenticate.isl",
+      "checksum": "placeholder-checksum",
+      "size": 0
+    },
+    {
+      "path": "intents/behaviors/authorize.isl",
+      "checksum": "placeholder-checksum",
+      "size": 0
+    }
+  ],
+  "publishedAt": "2026-02-09T00:00:00Z"
+}

@@ -1,0 +1,35 @@
+{
+  "session": {
+    "timestamp": "2026-02-08T12:08:50.804Z",
+    "project": "01-money-transfer",
+    "projectPath": "c:\\Users\\mevla\\OneDrive\\Desktop\\projects\\IntentOS\\demos\\three-big-lies\\live-sessions\\01-money-transfer",
+    "action": "context_generated",
+    "files": 3,
+    "components": 0,
+    "platform": "all"
+  },
+  "summary": {
+    "totalSessions": 127,
+    "sessionsToday": 28,
+    "sessionsThisWeek": 28,
+    "totalFileEdits": 0,
+    "recentProjects": [
+      "project",
+      "nextjs-app-router",
+      "header-test-1770473661951-fedexrsdgtb",
+      "header-test-1770473732081-ircagh1ldw",
+      "express-api",
+      "header-test-1770474353138-ec2pyg4z9zo",
+      "react-vite-ts",
+      "fastify-prisma",
+      "Clawdbot",
+      "01-money-transfer"
+    ],
+    "mostActiveHours": [
+      "3:00",
+      "7:00",
+      "2:00"
+    ]
+  },
+  "lastUpdated": "2026-02-08T12:08:50.805Z"
+}

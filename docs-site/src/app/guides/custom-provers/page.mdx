@@ -1,0 +1,331 @@
+export const metadata = {
+  title: 'Writing Custom Provers - ISL Verify',
+  description: 'Extend ISL Verify with custom verification rules',
+}
+
+# Writing Custom Provers
+
+Add project-specific verification rules by implementing the `PropertyProver` interface.
+
+---
+
+## PropertyProver Interface
+
+```typescript
+interface PropertyProver {
+  id: string                    // unique identifier
+  name: string                  // human-readable name
+  tier: 1 | 2 | 3              // importance tier
+  prove(project: ProjectContext): Promise<PropertyProof>
+}
+```
+
+---
+
+## Minimal Example
+
+```typescript
+import { PropertyProver, ProjectContext, PropertyProof } from '@isl-lang/isl-verify'
+import { readFile } from 'fs/promises'
+
+export class LicenseHeaderProver implements PropertyProver {
+  id = 'license-header'
+  name = 'License Header Check'
+  tier = 2 as const
+
+  async prove(project: ProjectContext): Promise<PropertyProof> {
+    const startTime = Date.now()
+    const findings = []
+
+    for (const file of project.sourceFiles) {
+      const content = await readFile(file, 'utf-8')
+      
+      if (!content.startsWith('// Copyright')) {
+        findings.push({
+          file,
+          line: 1,
+          severity: 'warning' as const,
+          message: 'Missing license header',
+          suggestion: 'Add "// Copyright 2024 My Company" at top of file',
+        })
+      }
+    }
+
+    const status = findings.length === 0 ? 'PROVEN' : 'PARTIAL'
+    
+    return {
+      property: 'license-header',
+      status,
+      summary: findings.length === 0
+        ? `All ${project.sourceFiles.length} files have license headers`
+        : `${findings.length} files missing license headers`,
+      evidence: [],
+      findings,
+      method: 'pattern-matching',
+      confidence: 'high',
+      duration_ms: Date.now() - startTime,
+    }
+  }
+}
+```
+
+---
+
+## Using Custom Provers
+
+```typescript
+import { ProofBundleGenerator } from '@isl-lang/isl-verify'
+import { LicenseHeaderProver } from './provers/license-header'
+
+const generator = new ProofBundleGenerator('/path/to/project', {
+  provers: [
+    new LicenseHeaderProver(),
+    // Can mix with built-in provers
+  ],
+})
+
+const bundle = await generator.generate()
+```
+
+---
+
+## AST Analysis Example
+
+Use `ts-morph` for TypeScript AST traversal:
+
+```typescript
+import { Project } from 'ts-morph'
+
+export class NoConsoleLogProver implements PropertyProver {
+  id = 'no-console-log'
+  name = 'No Console.log Statements'
+  tier = 2 as const
+
+  async prove(context: ProjectContext): Promise<PropertyProof> {
+    const project = new Project({ tsConfigFilePath: context.tsConfigPath })
+    const findings = []
+
+    for (const sourceFile of project.getSourceFiles()) {
+      // Find all console.log calls
+      const calls = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)
+      
+      for (const call of calls) {
+        const expr = call.getExpression()
+        if (expr.getText() === 'console.log') {
+          findings.push({
+            file: sourceFile.getFilePath(),
+            line: call.getStartLineNumber(),
+            severity: 'warning' as const,
+            message: 'console.log() found - use proper logging',
+            suggestion: 'Replace with logger.info() or remove',
+          })
+        }
+      }
+    }
+
+    return {
+      property: 'no-console-log',
+      status: findings.length === 0 ? 'PROVEN' : 'FAILED',
+      summary: `${findings.length} console.log statements found`,
+      evidence: [],
+      findings,
+      method: 'static-ast-analysis',
+      confidence: 'definitive',
+      duration_ms: 0,
+    }
+  }
+}
+```
+
+---
+
+## Pattern Matching Example
+
+```typescript
+export class TodoCommentProver implements PropertyProver {
+  id = 'no-todo-comments'
+  name = 'No TODO Comments'
+  tier = 3 as const
+
+  async prove(context: ProjectContext): Promise<PropertyProof> {
+    const findings = []
+    const todoRegex = /\/\/\s*TODO:|\/\*\s*TODO:/gi
+
+    for (const file of context.sourceFiles) {
+      const content = await readFile(file, 'utf-8')
+      const lines = content.split('\n')
+      
+      lines.forEach((line, index) => {
+        if (todoRegex.test(line)) {
+          findings.push({
+            file,
+            line: index + 1,
+            severity: 'warning' as const,
+            message: 'TODO comment found',
+            suggestion: 'Complete the TODO or create a GitHub issue',
+          })
+        }
+      })
+    }
+
+    return {
+      property: 'no-todo-comments',
+      status: findings.length === 0 ? 'PROVEN' : 'PARTIAL',
+      summary: `${findings.length} TODO comments found`,
+      evidence: [],
+      findings,
+      method: 'pattern-matching',
+      confidence: 'high',
+      duration_ms: 0,
+    }
+  }
+}
+```
+
+---
+
+## Evidence Collection
+
+Custom evidence types:
+
+```typescript
+interface LicenseEvidence {
+  file: string
+  hasHeader: boolean
+  headerText?: string
+  license?: 'MIT' | 'Apache-2.0' | 'GPL-3.0'
+}
+
+export class LicenseProver implements PropertyProver {
+  // ... same as before but with evidence
+
+  async prove(context: ProjectContext): Promise<PropertyProof> {
+    const evidence: LicenseEvidence[] = []
+    
+    for (const file of context.sourceFiles) {
+      const content = await readFile(file, 'utf-8')
+      const firstLine = content.split('\n')[0]
+      
+      evidence.push({
+        file,
+        hasHeader: firstLine.includes('Copyright'),
+        headerText: firstLine,
+        license: this.detectLicense(content),
+      })
+    }
+
+    return {
+      // ... same as before
+      evidence: evidence as any,  // TypeScript limitation
+    }
+  }
+
+  private detectLicense(content: string): 'MIT' | 'Apache-2.0' | 'GPL-3.0' | undefined {
+    if (content.includes('MIT License')) return 'MIT'
+    if (content.includes('Apache License')) return 'Apache-2.0'
+    if (content.includes('GNU General Public License')) return 'GPL-3.0'
+    return undefined
+  }
+}
+```
+
+---
+
+## Testing Provers
+
+```typescript
+import { describe, it, expect } from 'vitest'
+import { LicenseHeaderProver } from './license-header'
+
+describe('LicenseHeaderProver', () => {
+  it('should pass when all files have headers', async () => {
+    const prover = new LicenseHeaderProver()
+    const context = await buildTestContext([
+      { path: 'src/index.ts', content: '// Copyright 2024\nexport {}' },
+    ])
+
+    const proof = await prover.prove(context)
+    
+    expect(proof.status).toBe('PROVEN')
+    expect(proof.findings).toHaveLength(0)
+  })
+
+  it('should fail when files missing headers', async () => {
+    const prover = new LicenseHeaderProver()
+    const context = await buildTestContext([
+      { path: 'src/index.ts', content: 'export {}' },
+    ])
+
+    const proof = await prover.prove(context)
+    
+    expect(proof.status).toBe('PARTIAL')
+    expect(proof.findings).toHaveLength(1)
+    expect(proof.findings[0].message).toContain('Missing license header')
+  })
+})
+```
+
+---
+
+## Contributing Upstream
+
+To contribute a prover to ISL Verify:
+
+1. **Fork the repo** — `git clone https://github.com/yourusername/isl-verify`
+2. **Add to `src/proof/`** — Create `your-prover.ts`
+3. **Export from index** — Add to `src/proof/index.ts`
+4. **Add tests** — `tests/proof/your-prover.test.ts`
+5. **Update docs** — Add to property reference
+6. **Submit PR** — With description and examples
+
+---
+
+## Configuration
+
+Allow users to configure your prover:
+
+```typescript
+interface LicenseProverOptions {
+  requiredText?: string
+  allowedLicenses?: string[]
+}
+
+export class LicenseHeaderProver implements PropertyProver {
+  constructor(private options: LicenseProverOptions = {}) {}
+
+  async prove(context: ProjectContext): Promise<PropertyProof> {
+    const requiredText = this.options.requiredText || 'Copyright'
+    // ... use options
+  }
+}
+```
+
+Users configure via `.isl-verify.json`:
+
+```json
+{
+  "provers": {
+    "license-header": {
+      "enabled": true,
+      "requiredText": "Copyright 2024 My Company",
+      "allowedLicenses": ["MIT", "Apache-2.0"]
+    }
+  }
+}
+```
+
+---
+
+## Next Steps
+
+<div className="grid gap-4 mt-6">
+  <a href="/api" className="block p-4 border rounded-lg hover:bg-accent transition">
+    <div className="font-semibold">API Reference</div>
+    <div className="text-sm text-muted-foreground">Complete PropertyProver interface docs</div>
+  </a>
+  
+  <a href="/properties" className="block p-4 border rounded-lg hover:bg-accent transition">
+    <div className="font-semibold">Built-in Properties</div>
+    <div className="text-sm text-muted-foreground">See examples of existing provers</div>
+  </a>
+</div>

@@ -1,0 +1,40 @@
+{
+  "id": "auth-fastify",
+  "name": "Fastify Auth Template",
+  "description": "Production-quality auth for Fastify with Prisma, JWT (@fastify/jwt), bcrypt, and JSON Schema. Structure: src/routes/, src/plugins/, src/schemas/, src/services/, src/hooks/.",
+  "version": "1.0.0",
+  "stack": {
+    "framework": "fastify",
+    "orm": "prisma",
+    "language": "typescript",
+    "validation": "json-schema",
+    "passwordHashing": "bcrypt",
+    "jwt": "@fastify/jwt"
+  },
+  "supportedFrameworks": ["fastify"],
+  "whenToUse": {
+    "triggers": ["User requests auth implementation", "Spec includes Register, Login, Logout, Refresh behaviors", "Project uses Fastify + Prisma"],
+    "conditions": {
+      "mustHave": ["Fastify 4.x+", "Prisma", "PostgreSQL or SQLite"],
+      "optional": ["TypeScript strict mode"]
+    }
+  },
+  "files": [
+    "prisma/schema.prisma",
+    "src/app.ts",
+    "src/fastify.config.ts",
+    "src/lib/auth.ts",
+    "src/lib/db.ts",
+    "src/routes/auth.ts",
+    "src/schemas/auth.ts",
+    "src/services/auth.ts",
+    "src/plugins/auth.ts",
+    "src/plugins/cors.ts",
+    "src/types/auth.ts"
+  ],
+  "envRequired": ["DATABASE_URL", "JWT_SECRET"],
+  "dependencies": {
+    "production": ["fastify", "@fastify/jwt", "@fastify/cors", "fastify-plugin", "prisma", "@prisma/client", "bcrypt", "jose"],
+    "dev": ["typescript", "tsx", "@types/bcrypt", "@types/node"]
+  }
+}

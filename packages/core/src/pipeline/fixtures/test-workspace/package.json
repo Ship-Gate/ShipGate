@@ -1,0 +1,15 @@
+{
+  "name": "test-workspace",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "Test workspace for pipeline fixture tests",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "echo 'stub build'"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

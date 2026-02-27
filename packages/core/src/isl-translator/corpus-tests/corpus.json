@@ -1,0 +1,619 @@
+{
+  "version": "1.0.0",
+  "description": "Corpus of prompts and expected AST shape rules for ISL translator testing",
+  "entries": [
+    {
+      "id": "auth-001",
+      "prompt": "Create a user authentication system with login and registration",
+      "category": "authentication",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 2,
+        "requiredFields": ["id", "email", "password_hash"],
+        "requirePreconditions": true,
+        "requirePostconditions": true
+      },
+      "tags": ["auth", "security", "user-management"]
+    },
+    {
+      "id": "auth-002",
+      "prompt": "Implement password reset flow with email verification",
+      "category": "authentication",
+      "expectedShape": {
+        "minEntities": 1,
+        "minBehaviors": 2,
+        "requiredKinds": ["Behavior", "Entity"],
+        "requireTemporal": true
+      },
+      "tags": ["auth", "email", "verification"]
+    },
+    {
+      "id": "auth-003",
+      "prompt": "Build session management with token-based authentication",
+      "category": "authentication",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 3,
+        "requiredFields": ["token_hash", "expires_at"],
+        "requireSecurity": true
+      },
+      "tags": ["auth", "session", "tokens"]
+    },
+    {
+      "id": "auth-004",
+      "prompt": "Create OAuth2 integration with social login providers",
+      "category": "authentication",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 2,
+        "requiredKinds": ["Entity", "Behavior"],
+        "requirePreconditions": true
+      },
+      "tags": ["auth", "oauth", "social"]
+    },
+    {
+      "id": "auth-005",
+      "prompt": "Implement multi-factor authentication with TOTP support",
+      "category": "authentication",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 3,
+        "requireSecurity": true,
+        "requireTemporal": true
+      },
+      "tags": ["auth", "mfa", "totp", "security"]
+    },
+    {
+      "id": "crud-001",
+      "prompt": "Create a blog post management system with CRUD operations",
+      "category": "crud",
+      "expectedShape": {
+        "minEntities": 1,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "title", "content"],
+        "requirePostconditions": true
+      },
+      "tags": ["crud", "blog", "content"]
+    },
+    {
+      "id": "crud-002",
+      "prompt": "Build a product catalog with categories and inventory",
+      "category": "crud",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "name", "price"],
+        "requirePreconditions": true
+      },
+      "tags": ["crud", "ecommerce", "catalog"]
+    },
+    {
+      "id": "crud-003",
+      "prompt": "Implement a task management system with projects and assignments",
+      "category": "crud",
+      "expectedShape": {
+        "minEntities": 3,
+        "minBehaviors": 5,
+        "requiredFields": ["id", "title", "status"],
+        "requirePostconditions": true
+      },
+      "tags": ["crud", "tasks", "project-management"]
+    },
+    {
+      "id": "crud-004",
+      "prompt": "Create a document management system with versioning",
+      "category": "crud",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "version"],
+        "requirePreconditions": true,
+        "requirePostconditions": true
+      },
+      "tags": ["crud", "documents", "versioning"]
+    },
+    {
+      "id": "crud-005",
+      "prompt": "Build a customer relationship management (CRM) system",
+      "category": "crud",
+      "expectedShape": {
+        "minEntities": 3,
+        "minBehaviors": 6,
+        "requiredFields": ["id", "name", "email"],
+        "requirePostconditions": true
+      },
+      "tags": ["crud", "crm", "business"]
+    },
+    {
+      "id": "payment-001",
+      "prompt": "Create a payment processing system with card transactions",
+      "category": "payments",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 3,
+        "requiredKinds": ["Behavior", "ErrorSpec"],
+        "requireSecurity": true,
+        "requireTemporal": true
+      },
+      "tags": ["payments", "transactions", "financial"]
+    },
+    {
+      "id": "payment-002",
+      "prompt": "Implement subscription billing with recurring charges",
+      "category": "payments",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "amount", "interval"],
+        "requireTemporal": true
+      },
+      "tags": ["payments", "subscriptions", "billing"]
+    },
+    {
+      "id": "payment-003",
+      "prompt": "Build a refund processing system with partial refunds",
+      "category": "payments",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 2,
+        "requirePreconditions": true,
+        "requirePostconditions": true
+      },
+      "tags": ["payments", "refunds", "transactions"]
+    },
+    {
+      "id": "payment-004",
+      "prompt": "Create an invoicing system with payment tracking",
+      "category": "payments",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "total", "status"],
+        "requireTemporal": true
+      },
+      "tags": ["payments", "invoicing", "accounting"]
+    },
+    {
+      "id": "payment-005",
+      "prompt": "Implement a wallet system with balance transfers",
+      "category": "payments",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "balance"],
+        "requirePreconditions": true,
+        "requirePostconditions": true,
+        "requireSecurity": true
+      },
+      "tags": ["payments", "wallet", "transfers"]
+    },
+    {
+      "id": "order-001",
+      "prompt": "Create an order management system with status tracking",
+      "category": "orders",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "status", "total"],
+        "requirePostconditions": true
+      },
+      "tags": ["orders", "ecommerce", "fulfillment"]
+    },
+    {
+      "id": "order-002",
+      "prompt": "Build a shopping cart system with item management",
+      "category": "orders",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "quantity", "price"],
+        "requirePreconditions": true
+      },
+      "tags": ["orders", "cart", "ecommerce"]
+    },
+    {
+      "id": "order-003",
+      "prompt": "Implement order fulfillment with shipping integration",
+      "category": "orders",
+      "expectedShape": {
+        "minEntities": 3,
+        "minBehaviors": 3,
+        "requiredKinds": ["Behavior", "Entity"],
+        "requireTemporal": true
+      },
+      "tags": ["orders", "shipping", "fulfillment"]
+    },
+    {
+      "id": "order-004",
+      "prompt": "Create a return and exchange processing system",
+      "category": "orders",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 3,
+        "requirePreconditions": true,
+        "requirePostconditions": true
+      },
+      "tags": ["orders", "returns", "exchanges"]
+    },
+    {
+      "id": "order-005",
+      "prompt": "Build a reservation system for booking appointments",
+      "category": "orders",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "start_time", "end_time"],
+        "requirePreconditions": true,
+        "requireTemporal": true
+      },
+      "tags": ["orders", "reservations", "booking"]
+    },
+    {
+      "id": "notification-001",
+      "prompt": "Create a notification system with multiple channels",
+      "category": "notifications",
+      "expectedShape": {
+        "minEntities": 1,
+        "minBehaviors": 3,
+        "requiredFields": ["id", "type", "status"],
+        "requireTemporal": true
+      },
+      "tags": ["notifications", "messaging", "alerts"]
+    },
+    {
+      "id": "notification-002",
+      "prompt": "Implement email notification service with templates",
+      "category": "notifications",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 2,
+        "requiredKinds": ["Behavior"],
+        "requireTemporal": true
+      },
+      "tags": ["notifications", "email", "templates"]
+    },
+    {
+      "id": "notification-003",
+      "prompt": "Build push notification system for mobile apps",
+      "category": "notifications",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 3,
+        "requiredFields": ["id", "device_token"],
+        "requireTemporal": true
+      },
+      "tags": ["notifications", "push", "mobile"]
+    },
+    {
+      "id": "notification-004",
+      "prompt": "Create SMS notification system with delivery tracking",
+      "category": "notifications",
+      "expectedShape": {
+        "minEntities": 1,
+        "minBehaviors": 2,
+        "requiredFields": ["id", "phone_number", "status"],
+        "requireTemporal": true
+      },
+      "tags": ["notifications", "sms", "messaging"]
+    },
+    {
+      "id": "notification-005",
+      "prompt": "Implement webhook delivery system with retry logic",
+      "category": "notifications",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 3,
+        "requiredFields": ["id", "url", "retry_count"],
+        "requireTemporal": true,
+        "requirePostconditions": true
+      },
+      "tags": ["notifications", "webhooks", "integration"]
+    },
+    {
+      "id": "inventory-001",
+      "prompt": "Create an inventory management system with stock tracking",
+      "category": "inventory",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "quantity", "sku"],
+        "requirePreconditions": true,
+        "requirePostconditions": true
+      },
+      "tags": ["inventory", "stock", "warehouse"]
+    },
+    {
+      "id": "inventory-002",
+      "prompt": "Build warehouse management with location tracking",
+      "category": "inventory",
+      "expectedShape": {
+        "minEntities": 3,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "location", "quantity"],
+        "requirePostconditions": true
+      },
+      "tags": ["inventory", "warehouse", "logistics"]
+    },
+    {
+      "id": "inventory-003",
+      "prompt": "Implement stock replenishment with reorder points",
+      "category": "inventory",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 3,
+        "requiredFields": ["id", "reorder_point", "quantity"],
+        "requirePreconditions": true
+      },
+      "tags": ["inventory", "replenishment", "automation"]
+    },
+    {
+      "id": "inventory-004",
+      "prompt": "Create batch and lot tracking for products",
+      "category": "inventory",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 3,
+        "requiredFields": ["id", "batch_number", "expiry_date"],
+        "requirePostconditions": true
+      },
+      "tags": ["inventory", "batch", "tracking"]
+    },
+    {
+      "id": "inventory-005",
+      "prompt": "Build inventory audit and cycle counting system",
+      "category": "inventory",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 3,
+        "requiredKinds": ["Behavior", "Entity"],
+        "requirePostconditions": true
+      },
+      "tags": ["inventory", "audit", "counting"]
+    },
+    {
+      "id": "analytics-001",
+      "prompt": "Create a user activity tracking system",
+      "category": "analytics",
+      "expectedShape": {
+        "minEntities": 1,
+        "minBehaviors": 2,
+        "requiredFields": ["id", "event_type", "timestamp"],
+        "requireTemporal": true
+      },
+      "tags": ["analytics", "tracking", "events"]
+    },
+    {
+      "id": "analytics-002",
+      "prompt": "Build a metrics aggregation and reporting system",
+      "category": "analytics",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 3,
+        "requiredKinds": ["Behavior", "Entity"],
+        "requireTemporal": true
+      },
+      "tags": ["analytics", "metrics", "reporting"]
+    },
+    {
+      "id": "analytics-003",
+      "prompt": "Implement funnel analysis with conversion tracking",
+      "category": "analytics",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 2,
+        "requiredFields": ["id", "step", "timestamp"],
+        "requirePostconditions": true
+      },
+      "tags": ["analytics", "funnel", "conversion"]
+    },
+    {
+      "id": "analytics-004",
+      "prompt": "Create A/B testing framework with experiment tracking",
+      "category": "analytics",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "variant", "result"],
+        "requirePreconditions": true
+      },
+      "tags": ["analytics", "ab-testing", "experiments"]
+    },
+    {
+      "id": "analytics-005",
+      "prompt": "Build cohort analysis system for user retention",
+      "category": "analytics",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 2,
+        "requiredKinds": ["Behavior"],
+        "requirePostconditions": true
+      },
+      "tags": ["analytics", "cohort", "retention"]
+    },
+    {
+      "id": "workflow-001",
+      "prompt": "Create an approval workflow with multi-level review",
+      "category": "workflow",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "status", "approver_id"],
+        "requirePreconditions": true,
+        "requirePostconditions": true
+      },
+      "tags": ["workflow", "approval", "review"]
+    },
+    {
+      "id": "workflow-002",
+      "prompt": "Implement state machine for order processing",
+      "category": "workflow",
+      "expectedShape": {
+        "minEntities": 1,
+        "minBehaviors": 3,
+        "requiredKinds": ["Entity", "Behavior"],
+        "requirePreconditions": true,
+        "requirePostconditions": true
+      },
+      "tags": ["workflow", "state-machine", "processing"]
+    },
+    {
+      "id": "workflow-003",
+      "prompt": "Build task scheduling system with dependencies",
+      "category": "workflow",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "scheduled_at", "status"],
+        "requireTemporal": true
+      },
+      "tags": ["workflow", "scheduling", "tasks"]
+    },
+    {
+      "id": "workflow-004",
+      "prompt": "Create document review workflow with comments",
+      "category": "workflow",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "status", "reviewer_id"],
+        "requirePostconditions": true
+      },
+      "tags": ["workflow", "review", "documents"]
+    },
+    {
+      "id": "workflow-005",
+      "prompt": "Implement escalation workflow with SLA tracking",
+      "category": "workflow",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 3,
+        "requiredFields": ["id", "priority", "due_at"],
+        "requireTemporal": true,
+        "requirePreconditions": true
+      },
+      "tags": ["workflow", "escalation", "sla"]
+    },
+    {
+      "id": "content-001",
+      "prompt": "Create a content management system with publishing workflow",
+      "category": "content",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "title", "status"],
+        "requirePostconditions": true
+      },
+      "tags": ["content", "cms", "publishing"]
+    },
+    {
+      "id": "content-002",
+      "prompt": "Build media asset management with file uploads",
+      "category": "content",
+      "expectedShape": {
+        "minEntities": 1,
+        "minBehaviors": 3,
+        "requiredFields": ["id", "filename", "mime_type"],
+        "requirePreconditions": true
+      },
+      "tags": ["content", "media", "uploads"]
+    },
+    {
+      "id": "content-003",
+      "prompt": "Implement commenting system with moderation",
+      "category": "content",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 4,
+        "requiredFields": ["id", "content", "status"],
+        "requirePreconditions": true,
+        "requirePostconditions": true
+      },
+      "tags": ["content", "comments", "moderation"]
+    },
+    {
+      "id": "content-004",
+      "prompt": "Create tagging and categorization system",
+      "category": "content",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 3,
+        "requiredFields": ["id", "name"],
+        "requirePostconditions": true
+      },
+      "tags": ["content", "tagging", "categorization"]
+    },
+    {
+      "id": "content-005",
+      "prompt": "Build content versioning with rollback support",
+      "category": "content",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 3,
+        "requiredFields": ["id", "version", "content"],
+        "requirePreconditions": true,
+        "requirePostconditions": true
+      },
+      "tags": ["content", "versioning", "rollback"]
+    },
+    {
+      "id": "search-001",
+      "prompt": "Create full-text search service with indexing",
+      "category": "search",
+      "expectedShape": {
+        "minEntities": 1,
+        "minBehaviors": 3,
+        "requiredKinds": ["Behavior"],
+        "requireTemporal": true
+      },
+      "tags": ["search", "indexing", "full-text"]
+    },
+    {
+      "id": "search-002",
+      "prompt": "Implement faceted search with filtering",
+      "category": "search",
+      "expectedShape": {
+        "minEntities": 2,
+        "minBehaviors": 2,
+        "requiredFields": ["id", "facets"],
+        "requirePreconditions": true
+      },
+      "tags": ["search", "faceted", "filtering"]
+    },
+    {
+      "id": "search-003",
+      "prompt": "Build autocomplete suggestion service",
+      "category": "search",
+      "expectedShape": {
+        "minEntities": 1,
+        "minBehaviors": 2,
+        "requiredKinds": ["Behavior"],
+        "requireTemporal": true
+      },
+      "tags": ["search", "autocomplete", "suggestions"]
+    },
+    {
+      "id": "search-004",
+      "prompt": "Create search analytics with query logging",
+      "category": "search",
+      "expectedShape": {
+        "minEntities": 1,
+        "minBehaviors": 2,
+        "requiredFields": ["id", "query", "timestamp"],
+        "requirePostconditions": true
+      },
+      "tags": ["search", "analytics", "logging"]
+    },
+    {
+      "id": "search-005",
+      "prompt": "Implement relevance ranking and sorting",
+      "category": "search",
+      "expectedShape": {
+        "minEntities": 1,
+        "minBehaviors": 2,
+        "requiredKinds": ["Behavior"],
+        "requirePreconditions": true
+      },
+      "tags": ["search", "ranking", "relevance"]
+    }
+  ]
+}

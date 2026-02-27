@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Expression Compiler Test Fixtures",
+  "description": "Schema for expression-compiler evaluation test fixtures",
+  "type": "object",
+  "required": ["contexts"],
+  "properties": {
+    "description": {
+      "type": "string",
+      "description": "Description of the fixture file"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the fixture format"
+    },
+    "contexts": {
+      "type": "array",
+      "description": "Array of test contexts",
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "context", "tests"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this test context"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description"
+          },
+          "context": {
+            "type": "object",
+            "description": "Evaluation context",
+            "properties": {
+              "input": {
+                "type": "object",
+                "description": "Input values"
+              },
+              "result": {
+                "type": "object",
+                "description": "Result values (for postconditions)"
+              },
+              "variables": {
+                "type": "object",
+                "description": "Additional variables in scope"
+              },
+              "entities": {
+                "type": "object",
+                "description": "Entity data keyed by entity name",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["id"],
+                    "properties": {
+                      "id": { "type": "string" }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          },
+          "tests": {
+            "type": "array",
+            "description": "Test cases for this context",
+            "items": {
+              "type": "object",
+              "required": ["ir", "expected"],
+              "properties": {
+                "ir": {
+                  "type": "string",
+                  "description": "IR expression in pseudo-notation"
+                },
+                "expected": {
+                  "description": "Expected evaluation result"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Optional description of this test case"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

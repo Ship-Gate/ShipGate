@@ -1,0 +1,57 @@
+{
+  "name": "@isl-lang/stdlib-messaging",
+  "version": "1.0.1",
+  "description": "ISL Standard Library - Messaging (queues, events, pub/sub)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./intents/*": "./intents/*"
+  },
+  "files": [
+    "dist",
+    "intents"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --clean --outDir dist && tsc -p tsconfig.build.json",
+    "dev": "tsup src/index.ts --format esm --dts --watch --outDir dist",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.1.0",
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "keywords": [
+    "isl",
+    "messaging",
+    "queue",
+    "pubsub",
+    "events"
+  ],
+  "author": "mevla",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "sideEffects": false
+}

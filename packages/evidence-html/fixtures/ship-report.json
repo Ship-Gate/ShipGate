@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "1.0.0",
+  "verdict": "SHIP",
+  "summary": {
+    "totalClauses": 2,
+    "passedClauses": 2,
+    "partialClauses": 0,
+    "failedClauses": 0,
+    "passRate": 100,
+    "totalDurationMs": 95
+  },
+  "metadata": {
+    "contractName": "UserService",
+    "contractFile": "contracts/user.isl",
+    "verifierVersion": "1.0.0",
+    "gitCommit": "abc1234",
+    "gitBranch": "main"
+  },
+  "clauses": [
+    {
+      "id": "user-001",
+      "name": "Create user returns valid ID",
+      "status": "PASS",
+      "description": "When creating a new user, a unique UUID is returned",
+      "evidence": [
+        {
+          "type": "assertion",
+          "description": "Response contains valid UUID v4",
+          "location": {
+            "file": "src/user/create.ts",
+            "line": 25,
+            "snippet": "return { id: uuidv4() }"
+          }
+        }
+      ],
+      "durationMs": 45
+    },
+    {
+      "id": "user-002",
+      "name": "Get user returns correct data",
+      "status": "PASS",
+      "description": "Retrieved user matches the created user",
+      "evidence": [
+        {
+          "type": "postcondition",
+          "description": "User email matches input"
+        }
+      ],
+      "durationMs": 50
+    }
+  ],
+  "assumptions": [
+    {
+      "id": "assume-001",
+      "description": "Database connection is stable",
+      "risk": "low"
+    }
+  ],
+  "openQuestions": [],
+  "reproCommands": [
+    {
+      "description": "Run user service tests",
+      "command": "pnpm test:user"
+    }
+  ]
+}

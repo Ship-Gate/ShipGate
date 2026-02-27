@@ -1,0 +1,151 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Evaluator Diagnostic Snapshots > 1. EVAL_UNKNOWN_IDENTIFIER - typo in variable name > unknown-identifier-typo 1`] = `
+"error[EVAL_UNKNOWN_IDENTIFIER]: Identifier 'ammount' is not defined in the current scope
+  --> specs/banking.isl:21:55
+   |
+19 |     }
+20 |     
+21 |     postconditions {
+   |                                                       ^^^^^^^ Identifier 'ammount' is not defined in the curr...
+22 |       fromAccount.balance == old(fromAccount.balance) - ammount
+23 |       toAccount.balance == old(toAccount.balance) + amount
+   |
+   = help: Did you mean: amount, account?"
+`;
+
+exports[`Evaluator Diagnostic Snapshots > 2. EVAL_TYPE_MISMATCH - comparing incompatible types > type-mismatch-comparison 1`] = `
+"error[EVAL_TYPE_MISMATCH]: Expected Number, got String
+  --> specs/banking.isl:18:7
+   |
+16 |     
+17 |     preconditions {
+18 |       fromAccount.balance >= amount
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Expected Number, got String
+19 |     }
+20 |     
+   |
+   = help: Ensure both sides of the comparison have the same type"
+`;
+
+exports[`Evaluator Diagnostic Snapshots > 3. EVAL_NULL_ACCESS - property access on null value > null-access-property 1`] = `
+"error[EVAL_NULL_ACCESS]: Cannot access property 'balance' on null or undefined value
+  --> specs/banking.isl:18:7
+   |
+16 |     
+17 |     preconditions {
+18 |       fromAccount.balance >= amount
+   |       ^^^^^^^^^^^^^^^^^^^^^ Cannot access property 'balance' on null or und...
+19 |     }
+20 |     
+   |
+   = help: Use optional chaining (?.) or add a null check before accessing 'balance'"
+`;
+
+exports[`Evaluator Diagnostic Snapshots > 4. EVAL_OLD_WITHOUT_SNAPSHOT - old() used outside postcondition > old-without-snapshot 1`] = `
+"error[EVAL_OLD_WITHOUT_SNAPSHOT]: old() expression requires a previous state snapshot (only valid in postconditions)
+  --> specs/banking.isl:18:27
+   |
+16 |     
+17 |     preconditions {
+18 |       fromAccount.balance >= amount
+   |                           ^^^^^^^^^ old() expression requires a previous state snap...
+19 |     }
+20 |     
+   |
+   = help: old() can only be used in postconditions where a state snapshot is available"
+`;
+
+exports[`Evaluator Diagnostic Snapshots > 5. EVAL_MAX_DEPTH_EXCEEDED - infinite recursion detected > max-depth-exceeded 1`] = `
+"error[EVAL_MAX_DEPTH_EXCEEDED]: Maximum evaluation depth (1000) exceeded - possible infinite recursion
+  --> specs/banking.isl:21:7
+   |
+19 |     }
+20 |     
+21 |     postconditions {
+   |       ^^^^^^^^^^^^^^ Maximum evaluation depth (1000) exceeded - poss...
+22 |       fromAccount.balance == old(fromAccount.balance) - ammount
+23 |       toAccount.balance == old(toAccount.balance) + amount
+   |
+   = help: Check for circular references or infinite recursion in your expressions"
+`;
+
+exports[`Evaluator Diagnostic Snapshots > 6. EVAL_UNKNOWN_METHOD - calling undefined method > unknown-method 1`] = `
+"error[EVAL_UNKNOWN_METHOD]: Method 'tranfer' does not exist on type 'Account'
+  --> specs/banking.isl:18:7
+   |
+16 |     
+17 |     preconditions {
+18 |       fromAccount.balance >= amount
+   |       ^^^^^^^^^^^^^^^^^^ Method 'tranfer' does not exist on type 'Account'
+19 |     }
+20 |     
+   |
+   = help: Available methods on Account: transfer, deposit, withdraw"
+`;
+
+exports[`Evaluator Diagnostic Snapshots > 7. EVAL_UNKNOWN_PROPERTY - accessing undefined property > unknown-property 1`] = `
+"error[EVAL_UNKNOWN_PROPERTY]: Property 'balace' does not exist on type 'Account'
+  --> specs/banking.isl:18:19
+   |
+16 |     
+17 |     preconditions {
+18 |       fromAccount.balance >= amount
+   |                   ^^^^^^ Property 'balace' does not exist on type 'Account'
+19 |     }
+20 |     
+   |
+   = help: Available properties on Account: balance, owner, id"
+`;
+
+exports[`Evaluator Diagnostic Snapshots > 8. EVAL_NOT_ITERABLE - quantifier on non-iterable type > not-iterable 1`] = `
+"error[EVAL_NOT_ITERABLE]: Value of type 'String' is not iterable (quantifier requires array or collection)
+  --> specs/banking.isl:18:7
+   |
+16 |     
+17 |     preconditions {
+18 |       fromAccount.balance >= amount
+   |       ^^^^^^^^^^^^^^^^^^^^^^^ Value of type 'String' is not iterable (quantif...
+19 |     }
+20 |     
+   |
+   = help: Quantifiers (all, any, etc.) require an array or entity collection"
+`;
+
+exports[`Evaluator Diagnostic Snapshots > 9. EVAL_INDEX_OUT_OF_BOUNDS - array index exceeds bounds > index-out-of-bounds 1`] = `
+"error[EVAL_INDEX_OUT_OF_BOUNDS]: Index 5 is out of bounds for array of length 3
+  --> specs/banking.isl:18:7
+   |
+16 |     
+17 |     preconditions {
+18 |       fromAccount.balance >= amount
+   |       ^^^^^^^^^^^^^ Index 5 is out of bounds for array of length 3
+19 |     }
+20 |     
+   |
+   = help: Array has 3 element(s), valid indices are 0 to 2"
+`;
+
+exports[`Evaluator Diagnostic Snapshots > 10. EVAL_DIVISION_BY_ZERO - division by zero > division-by-zero 1`] = `
+"error[EVAL_DIVISION_BY_ZERO]: Cannot divide by zero
+  --> specs/banking.isl:18:7
+   |
+16 |     
+17 |     preconditions {
+18 |       fromAccount.balance >= amount
+   |       ^^^^^^^^^^^^^^^^^^ Cannot divide by zero
+19 |     }
+20 |     
+   |
+   = help: Add a precondition to ensure the divisor is non-zero"
+`;
+
+exports[`Unsupported Operator Diagnostic > formats unsupported operator with source > unsupported-operator 1`] = `
+"error[EVAL_UNSUPPORTED_OP]: Operator '**' is not supported in evaluation
+  --> test.isl:1:19
+  |
+1 | let result = base ** exponent
+  |                   ^^ Operator '**' is not supported in evaluation
+  |
+   = help: Check the ISL documentation for supported operators"
+`;

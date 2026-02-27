@@ -1,0 +1,100 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Shipgate E2E Intent Verification > fixture: ai-rule-speculative > bad.ts should be caught by the spec 1`] = `
+{
+  "detailCount": 1,
+  "fixture": "ai-rule-speculative",
+  "passed": false,
+  "variant": "bad",
+  "verdict": "NO_SHIP",
+}
+`;
+
+exports[`Shipgate E2E Intent Verification > fixture: empty-spec-zero > bad.ts should be caught by the spec 1`] = `
+{
+  "detailCount": 1,
+  "fixture": "empty-spec-zero",
+  "passed": false,
+  "variant": "bad",
+  "verdict": "NO_SHIP",
+}
+`;
+
+exports[`Shipgate E2E Intent Verification > fixture: empty-spec-zero > good.ts should satisfy the spec 1`] = `
+{
+  "detailCount": 1,
+  "fixture": "empty-spec-zero",
+  "passed": false,
+  "variant": "good",
+  "verdict": "NO_SHIP",
+}
+`;
+
+exports[`Shipgate E2E Intent Verification > fixture: good-code-good-spec > bad.ts should be caught by the spec 1`] = `
+{
+  "detailCount": 1,
+  "fixture": "good-code-good-spec",
+  "passed": false,
+  "variant": "bad",
+  "verdict": "NO_SHIP",
+}
+`;
+
+exports[`Shipgate E2E Intent Verification > fixture: shallow-auto-spec > bad.ts with minimal exports should produce low auto-spec score 1`] = `
+{
+  "fixture": "shallow-auto-spec",
+  "passed": false,
+  "variant": "bad",
+  "verdict": "NO_SHIP",
+}
+`;
+
+exports[`Shipgate E2E Intent Verification > fixture: shallow-spec-noship > bad.ts should be caught by the spec 1`] = `
+{
+  "detailCount": 1,
+  "fixture": "shallow-spec-noship",
+  "passed": false,
+  "variant": "bad",
+  "verdict": "NO_SHIP",
+}
+`;
+
+exports[`Shipgate E2E Intent Verification > fixture: shallow-spec-noship > good.ts should satisfy the spec 1`] = `
+{
+  "detailCount": 1,
+  "fixture": "shallow-spec-noship",
+  "passed": false,
+  "variant": "good",
+  "verdict": "NO_SHIP",
+}
+`;
+
+exports[`Shipgate E2E Intent Verification > fixture: tests-blocked-noship > bad.ts should be caught by the spec 1`] = `
+{
+  "detailCount": 1,
+  "fixture": "tests-blocked-noship",
+  "passed": false,
+  "variant": "bad",
+  "verdict": "NO_SHIP",
+}
+`;
+
+exports[`Shipgate E2E Intent Verification > fixture: tests-blocked-noship > good.ts should satisfy the spec 1`] = `
+{
+  "detailCount": 1,
+  "fixture": "tests-blocked-noship",
+  "passed": false,
+  "variant": "good",
+  "verdict": "NO_SHIP",
+}
+`;
+
+exports[`Shipgate E2E Intent Verification > fixture: vitest-fails > bad.ts should be caught by the spec 1`] = `
+{
+  "detailCount": 1,
+  "fixture": "vitest-fails",
+  "passed": false,
+  "variant": "bad",
+  "verdict": "NO_SHIP",
+}
+`;

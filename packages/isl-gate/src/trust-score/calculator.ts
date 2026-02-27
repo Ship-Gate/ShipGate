@@ -1,0 +1,379 @@
+/**
+ * Trust Score Calculator
+ *
+ * Computes a defensible 0-100 trust score from verification results
+ * across six categories with configurable weights and unknown-penalty.
+ *
+ * Scoring rules:
+ * - Each category produces a raw 0-100 score from its clause results
+ * - pass = 100, fail = 0, partial = 50, unknown = (1 - unknownPenalty) * 100
+ * - Category scores are combined via weighted average
+ * - criticalFailsBlock: a single failing clause can force score to 0
+ * - Final score is always an integer 0-100
+ *
+ * @module @isl-lang/gate/trust-score/calculator
+ */
+
+import type {
+  TrustCategory,
+  TrustScoreInput,
+  TrustScoreConfig,
+  TrustScoreResult,
+  CategoryScore,
+  TrustVerdict,
+  ResolvedTrustConfig,
+  ClauseStatus,
+  TrustClauseResult,
+  EvidenceSource,
+} from './types.js';
+
+import {
+  TRUST_CATEGORIES,
+  DEFAULT_WEIGHTS,
+  EVIDENCE_PRIORITY,
+} from './types.js';
+
+// ============================================================================
+// Configuration Resolution
+// ============================================================================
+
+/**
+ * Resolve partial user config into a fully-populated config.
+ */
+export function resolveConfig(config?: TrustScoreConfig): ResolvedTrustConfig {
+  const weights = { ...DEFAULT_WEIGHTS, ...config?.weights };
+  const weightSum = Object.values(weights).reduce((a, b) => a + b, 0);
+
+  if (weightSum <= 0) {
+    throw new Error('Trust score weights must sum to a positive number');
+  }
+
+  const normalizedWeights = {} as Record<TrustCategory, number>;
+  for (const cat of TRUST_CATEGORIES) {
+    normalizedWeights[cat] = weights[cat] / weightSum;
+  }
+
+  return {
+    weights,
+    normalizedWeights,
+    unknownPenalty: clamp(config?.unknownPenalty ?? 0.5, 0, 1),
+    shipThreshold: config?.shipThreshold ?? 85,
+    warnThreshold: config?.warnThreshold ?? 60,
+    criticalFailsBlock: config?.criticalFailsBlock ?? true,
+    historyPath: config?.historyPath ?? '.isl-gate/trust-history.json',
+    maxHistoryEntries: config?.maxHistoryEntries ?? 50,
+    enableEvidencePriority: config?.enableEvidencePriority ?? true,
+    evidenceDecayHalfLifeDays: config?.evidenceDecayHalfLifeDays ?? 90,
+  };
+}
+
+// ============================================================================
+// Score Calculation
+// ============================================================================
+
+/**
+ * Compute the trust score from verification clause results.
+ */
+export function calculateTrustScore(
+  input: TrustScoreInput,
+  config?: TrustScoreConfig,
+): TrustScoreResult {
+  const resolved = resolveConfig(config);
+  const clauses = input.clauses;
+
+  // Group clauses by category
+  const grouped = groupByCategory(clauses);
+
+  // Score each category
+  const categoryScores: CategoryScore[] = TRUST_CATEGORIES.map(cat => {
+    const catClauses = grouped.get(cat) ?? [];
+    return scoreSingleCategory(cat, catClauses, resolved);
+  });
+
+  // Check for critical blockers
+  const criticalBlock = resolved.criticalFailsBlock && hasCriticalFailure(clauses);
+
+  // Compute overall weighted score
+  let overallScore: number;
+  if (criticalBlock) {
+    overallScore = 0;
+  } else {
+    overallScore = Math.round(
+      categoryScores.reduce((sum, cs) => sum + cs.weightedScore, 0),
+    );
+  }
+  overallScore = clamp(overallScore, 0, 100);
+
+  // Aggregate counts
+  const counts = aggregateCounts(categoryScores);
+
+  // Determine verdict
+  const verdict = determineVerdict(overallScore, resolved);
+
+  // Build reasons
+  const reasons = buildReasons(overallScore, verdict, criticalBlock, categoryScores, resolved);
+
+  return {
+    score: overallScore,
+    verdict,
+    categories: categoryScores,
+    totalClauses: clauses.length,
+    counts,
+    criticalBlock,
+    reasons,
+    config: resolved,
+    timestamp: input.metadata?.timestamp ?? new Date().toISOString(),
+  };
+}
+
+// ============================================================================
+// Category Scoring
+// ============================================================================
+
+/**
+ * Score a single category from its clause results.
+ * Applies evidence priority weighting and time decay if enabled.
+ */
+function scoreSingleCategory(
+  category: TrustCategory,
+  clauses: TrustClauseResult[],
+  config: ResolvedTrustConfig,
+): CategoryScore {
+  const weight = config.normalizedWeights[category];
+
+  if (clauses.length === 0) {
+    // Empty category = score 0. Missing coverage is risk, not success.
+    return {
+      category,
+      score: 0,
+      coverage_score: 0,
+      execution_score: 0,
+      pass_score: 0,
+      weight,
+      weightedScore: 0,
+      clauseCount: 0,
+      counts: { pass: 0, fail: 0, partial: 0, unknown: 0 },
+      gaps: [`no ${category} defined`],
+      confidence: 0,
+    };
+  }
+
+  const counts = { pass: 0, fail: 0, partial: 0, unknown: 0 };
+  let weightedScoreSum = 0;
+  let totalWeight = 0;
+  const now = Date.now();
+
+  for (const clause of clauses) {
+    counts[clause.status]++;
+    
+    // Base score from status
+    const baseScore = clauseStatusToScore(clause.status, config.unknownPenalty);
+    
+    // Evidence priority multiplier
+    const evidenceSource: EvidenceSource = clause.evidenceSource ?? 'heuristic';
+    const priorityMultiplier = config.enableEvidencePriority
+      ? EVIDENCE_PRIORITY[evidenceSource] / EVIDENCE_PRIORITY.heuristic
+      : 1.0;
+    
+    // Time decay multiplier
+    let decayMultiplier = 1.0;
+    if (config.evidenceDecayHalfLifeDays > 0 && clause.evidenceTimestamp) {
+      const evidenceTime = new Date(clause.evidenceTimestamp).getTime();
+      const ageDays = (now - evidenceTime) / (1000 * 60 * 60 * 24);
+      if (ageDays > 0) {
+        // Exponential decay: multiplier = 2^(-age/halfLife)
+        decayMultiplier = Math.pow(2, -ageDays / config.evidenceDecayHalfLifeDays);
+      }
+    }
+    
+    // Weighted score for this clause
+    const clauseWeight = priorityMultiplier * decayMultiplier;
+    weightedScoreSum += baseScore * clauseWeight;
+    totalWeight += clauseWeight;
+  }
+
+  // Honest sub-scores
+  const total = clauses.length;
+  const executed = counts.pass + counts.fail + counts.partial; // unknown did NOT execute
+  const coverage_score = 100; // clauses exist → coverage credit
+  const execution_score = total > 0 ? Math.round((executed / total) * 100) : 0;
+  const pass_score = executed > 0 ? Math.round((counts.pass / executed) * 100) : 0;
+
+  // Composite: floor(0.45*coverage + 0.35*execution + 0.20*pass)
+  const compositeScore = Math.floor(
+    0.45 * coverage_score + 0.35 * execution_score + 0.20 * pass_score
+  );
+
+  // Also factor in evidence-weighted score for finer granularity
+  const evidenceScore = totalWeight > 0
+    ? Math.round(weightedScoreSum / totalWeight)
+    : 0;
+
+  // Final score: blend composite model with evidence-weighted score
+  const score = clamp(Math.round((compositeScore + evidenceScore) / 2), 0, 100);
+
+  // Detect gaps
+  const gaps: string[] = [];
+  if (counts.unknown > 0) gaps.push(`${counts.unknown} unknown (unverified)`);
+  if (counts.fail > 0) gaps.push(`${counts.fail} failing clauses`);
+  if (executed === 0) gaps.push('no clauses executed');
+
+  // Confidence: execution rate × volume factor
+  const executionRate = total > 0 ? executed / total : 0;
+  const volumeFactor = Math.min(total / 5, 1);
+  const confidence = Math.round(executionRate * volumeFactor * 100) / 100;
+
+  return {
+    category,
+    score,
+    coverage_score,
+    execution_score,
+    pass_score,
+    weight,
+    weightedScore: score * weight,
+    clauseCount: clauses.length,
+    counts,
+    gaps,
+    confidence,
+  };
+}
+
+/**
+ * Convert a clause status into a 0-100 score.
+ */
+function clauseStatusToScore(status: ClauseStatus, unknownPenalty: number): number {
+  switch (status) {
+    case 'pass':
+      return 100;
+    case 'fail':
+      return 0;
+    case 'partial':
+      return 50;
+    case 'unknown':
+      return Math.round((1 - unknownPenalty) * 100);
+  }
+}
+
+// ============================================================================
+// Verdict Logic
+// ============================================================================
+
+/**
+ * Determine the verdict from the overall score.
+ */
+function determineVerdict(score: number, config: ResolvedTrustConfig): TrustVerdict {
+  if (score >= config.shipThreshold) return 'SHIP';
+  if (score >= config.warnThreshold) return 'WARN';
+  return 'BLOCK';
+}
+
+/**
+ * Check if any clause is a critical failure (fail status with explicit confidence < 10).
+ * A failing clause in the invariants or preconditions category is always critical.
+ */
+function hasCriticalFailure(clauses: TrustClauseResult[]): boolean {
+  const criticalCategories: TrustCategory[] = ['invariants', 'preconditions'];
+
+  return clauses.some(c => {
+    if (c.status !== 'fail') return false;
+    // Explicit critical marker via low confidence
+    if (c.confidence !== undefined && c.confidence < 10) return true;
+    // Invariant/precondition failures are always critical
+    if (criticalCategories.includes(c.category)) return true;
+    return false;
+  });
+}
+
+// ============================================================================
+// Reason Building
+// ============================================================================
+
+/**
+ * Build human-readable reasons for the verdict.
+ */
+function buildReasons(
+  score: number,
+  verdict: TrustVerdict,
+  criticalBlock: boolean,
+  categories: CategoryScore[],
+  config: ResolvedTrustConfig,
+): string[] {
+  const reasons: string[] = [];
+
+  if (criticalBlock) {
+    reasons.push('Critical clause failure detected -- score forced to 0');
+  }
+
+  if (verdict === 'SHIP') {
+    reasons.push(`Trust score ${score}/100 meets SHIP threshold (>= ${config.shipThreshold})`);
+  } else if (verdict === 'WARN') {
+    reasons.push(`Trust score ${score}/100 is below SHIP threshold (${config.shipThreshold}) but above BLOCK (${config.warnThreshold})`);
+  } else {
+    reasons.push(`Trust score ${score}/100 is below BLOCK threshold (${config.warnThreshold})`);
+  }
+
+  // Flag weak categories
+  const weakCategories = categories.filter(c => c.score < config.warnThreshold && c.clauseCount > 0);
+  for (const wc of weakCategories) {
+    reasons.push(`${wc.category}: ${wc.score}/100 (${wc.counts.fail} failed, ${wc.counts.unknown} unknown)`);
+  }
+
+  // Flag empty categories — missing coverage is risk, not success
+  const emptyCategories = categories.filter(c => c.clauseCount === 0);
+  if (emptyCategories.length > 0) {
+    const names = emptyCategories.map(c => c.category).join(', ');
+    reasons.push(`No coverage for categories: ${names} (score 0 applied)`);
+  }
+
+  // Surface category-level gaps
+  for (const cat of categories) {
+    if (cat.gaps.length > 0) {
+      reasons.push(`${cat.category} gaps: ${cat.gaps.join('; ')}`);
+    }
+  }
+
+  return reasons;
+}
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+/**
+ * Group clause results by their category.
+ */
+function groupByCategory(
+  clauses: TrustClauseResult[],
+): Map<TrustCategory, TrustClauseResult[]> {
+  const map = new Map<TrustCategory, TrustClauseResult[]>();
+  for (const clause of clauses) {
+    const existing = map.get(clause.category) ?? [];
+    existing.push(clause);
+    map.set(clause.category, existing);
+  }
+  return map;
+}
+
+/**
+ * Aggregate counts across all categories.
+ */
+function aggregateCounts(
+  categories: CategoryScore[],
+): { pass: number; fail: number; partial: number; unknown: number } {
+  return categories.reduce(
+    (acc, cs) => ({
+      pass: acc.pass + cs.counts.pass,
+      fail: acc.fail + cs.counts.fail,
+      partial: acc.partial + cs.counts.partial,
+      unknown: acc.unknown + cs.counts.unknown,
+    }),
+    { pass: 0, fail: 0, partial: 0, unknown: 0 },
+  );
+}
+
+/**
+ * Clamp a number to a range.
+ */
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}

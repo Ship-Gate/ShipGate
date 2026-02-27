@@ -1,0 +1,58 @@
+{
+  "name": "@isl-lang/stdlib-analytics",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Analytics event tracking standard library for ISL",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist/",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@isl-lang/stdlib-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "keywords": [
+    "isl",
+    "analytics",
+    "tracking",
+    "segment",
+    "amplitude",
+    "mixpanel",
+    "posthog"
+  ],
+  "license": "MIT",
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}

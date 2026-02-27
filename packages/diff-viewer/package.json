@@ -1,0 +1,58 @@
+{
+  "name": "@isl-lang/diff-viewer",
+  "version": "0.1.1",
+  "private": true,
+  "description": "Visual diff viewer for ISL specification changes",
+  "scripts": {
+    "dev": "next dev -p 3002",
+    "build": "echo 'Skipping Next.js build'",
+    "start": "next start -p 3002",
+    "lint": "next lint",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*",
+    "@monaco-editor/react": "^4.6.0",
+    "diff": "^5.1.0",
+    "lucide-react": "^0.303.0",
+    "monaco-editor": "^0.45.0",
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/diff": "^5.0.8",
+    "@types/node": "^20.10.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
+  },
+  "author": "mevla",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}

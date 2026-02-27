@@ -1,0 +1,145 @@
+{
+  "project": "p1-nextjs-todo",
+  "generatedWith": {
+    "tool": "Cursor Composer",
+    "prompt": "Build a Next.js 14 todo app with App Router. Use TypeScript, Tailwind CSS, and local state management.",
+    "date": "2026-02-17T16:25:00Z"
+  },
+  "issues": [
+    {
+      "file": "src/app/api/todos/route.ts",
+      "line": 15,
+      "category": "hallucination",
+      "subcategory": "phantom-api",
+      "description": "Uses fictional @/lib/storage method getTodos() that doesn't exist",
+      "severity": "critical",
+      "planted": false
+    },
+    {
+      "file": "src/app/api/todos/route.ts",
+      "line": 23,
+      "category": "security",
+      "subcategory": "missing-auth",
+      "description": "POST endpoint has no authentication check",
+      "severity": "high",
+      "planted": true
+    },
+    {
+      "file": "src/app/api/todos/route.ts",
+      "line": 25,
+      "category": "security",
+      "subcategory": "unvalidated-input",
+      "description": "Request body not validated before processing",
+      "severity": "high",
+      "planted": false
+    },
+    {
+      "file": "src/components/TodoList.tsx",
+      "line": 42,
+      "category": "hallucination",
+      "subcategory": "phantom-function",
+      "description": "Calls non-existent useTodoStore() hook",
+      "severity": "critical",
+      "planted": false
+    },
+    {
+      "file": "src/components/TodoList.tsx",
+      "line": 67,
+      "category": "quality",
+      "subcategory": "placeholder-code",
+      "description": "Contains TODO comment indicating incomplete implementation",
+      "severity": "medium",
+      "planted": false
+    },
+    {
+      "file": "src/lib/validation.ts",
+      "line": 8,
+      "category": "hallucination",
+      "subcategory": "phantom-package",
+      "description": "Imports from 'zod-validator' which doesn't exist (should be 'zod')",
+      "severity": "critical",
+      "planted": true
+    },
+    {
+      "file": "src/lib/db.ts",
+      "line": 12,
+      "category": "quality",
+      "subcategory": "dead-code",
+      "description": "Exported function initializeDB() is never called",
+      "severity": "low",
+      "planted": true
+    },
+    {
+      "file": "src/app/page.tsx",
+      "line": 28,
+      "category": "type-error",
+      "subcategory": "missing-types",
+      "description": "useState initialized with 'any' instead of proper Todo type",
+      "severity": "medium",
+      "planted": true
+    },
+    {
+      "file": "src/app/page.tsx",
+      "line": 45,
+      "category": "quality",
+      "subcategory": "unreachable-code",
+      "description": "Return statement unreachable after unconditional throw",
+      "severity": "medium",
+      "planted": true
+    },
+    {
+      "file": "src/types/todo.ts",
+      "line": 5,
+      "category": "type-error",
+      "subcategory": "type-mismatch",
+      "description": "createdAt declared as string but used as Date elsewhere",
+      "severity": "medium",
+      "planted": false
+    },
+    {
+      "file": "src/app/api/todos/[id]/route.ts",
+      "line": 18,
+      "category": "security",
+      "subcategory": "missing-auth",
+      "description": "DELETE endpoint has no authentication or authorization",
+      "severity": "critical",
+      "planted": true
+    },
+    {
+      "file": "src/components/AddTodo.tsx",
+      "line": 33,
+      "category": "quality",
+      "subcategory": "error-handling",
+      "description": "Async operation has no error handling or try/catch",
+      "severity": "medium",
+      "planted": false
+    },
+    {
+      "file": "src/utils/api.ts",
+      "line": 7,
+      "category": "hallucination",
+      "subcategory": "phantom-api",
+      "description": "References API_BASE_URL env var that is never defined",
+      "severity": "high",
+      "planted": false
+    },
+    {
+      "file": "src/utils/api.ts",
+      "line": 22,
+      "category": "dead-code",
+      "subcategory": "unused-export",
+      "description": "Exported refreshToken() function is never imported or used",
+      "severity": "low",
+      "planted": true
+    },
+    {
+      "file": "src/hooks/useTodos.ts",
+      "line": 14,
+      "category": "quality",
+      "subcategory": "race-condition",
+      "description": "Concurrent updates can overwrite each other, no optimistic locking",
+      "severity": "medium",
+      "planted": true
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "isl-verify-benchmark",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "benchmark": "tsx runner.ts",
+    "benchmark:report": "tsx runner.ts --report-only",
+    "benchmark:single": "tsx runner.ts --project",
+    "test": "echo \"Run npm run benchmark to execute the full benchmark suite\""
+  },
+  "dependencies": {
+    "tsx": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}

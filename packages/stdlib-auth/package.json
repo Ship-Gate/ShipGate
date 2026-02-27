@@ -1,0 +1,69 @@
+{
+  "name": "@isl-lang/stdlib-auth",
+  "version": "1.0.0",
+  "description": "Authentication and authorization standard library for ISL",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./jwt": "./dist/jwt.js",
+    "./oauth": "./dist/oauth.js",
+    "./rbac": "./dist/rbac.js",
+    "./mfa": "./dist/mfa.js",
+    "./session": "./dist/session.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "jose": "^5.2.0",
+    "otplib": "^12.0.1",
+    "bcryptjs": "^2.4.3",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.11.0",
+    "@types/uuid": "^9.0.8",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
+  },
+  "keywords": [
+    "isl",
+    "auth",
+    "authentication",
+    "authorization",
+    "jwt",
+    "oauth",
+    "rbac"
+  ],
+  "license": "MIT",
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}

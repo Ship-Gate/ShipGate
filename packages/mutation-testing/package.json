@@ -1,0 +1,61 @@
+{
+  "name": "@isl-lang/mutation-testing",
+  "version": "2.0.0",
+  "description": "Mutation testing for ISL specifications",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src/",
+    "clean": "rimraf dist",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
+  },
+  "peerDependencies": {
+    "@isl-lang/isl-core": "workspace:*"
+  },
+  "keywords": [
+    "isl",
+    "mutation-testing",
+    "test-quality",
+    "verification"
+  ],
+  "license": "MIT",
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "private": true,
+  "experimental": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}

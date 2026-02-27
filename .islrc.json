@@ -1,0 +1,27 @@
+{
+  "$schema": "https://intentos.dev/schemas/islrc.json",
+  "version": "1.0",
+  "specs": [
+    "specs/**/*.isl"
+  ],
+  "output": {
+    "typescript": "src/generated",
+    "rust": "src-rs/generated"
+  },
+  "codegen": {
+    "target": "typescript",
+    "strictTypes": true,
+    "generateTests": true
+  },
+  "lsp": {
+    "enable": true,
+    "format": {
+      "indentSize": 2,
+      "useTabs": false
+    }
+  },
+  "ai": {
+    "provider": "openai",
+    "model": "gpt-4o"
+  }
+}

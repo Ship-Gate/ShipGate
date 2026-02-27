@@ -1,0 +1,4 @@
+# Ignore all generated output except gitkeep
+*
+!.gitignore
+!.gitkeep

@@ -1,0 +1,40 @@
+{
+  "name": "@isl/samples",
+  "version": "1.0.0",
+  "license": "MIT",
+  "private": true,
+  "description": "Canonical ISL sample library — 10 domains used by every generator, verifier, and test harness",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./domains/*": "./*/domain.isl",
+    "./expected/*": "./*/expected/*.json"
+  },
+  "files": [
+    "src",
+    "tiny-crud",
+    "auth-roles",
+    "payments-idempotency",
+    "async-jobs",
+    "event-sourcing",
+    "multi-tenant-saas",
+    "realtime-websocket",
+    "file-storage",
+    "audit-compliance",
+    "hard-mode"
+  ],
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

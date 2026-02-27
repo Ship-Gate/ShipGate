@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: payments-service
+  labels:
+    app.kubernetes.io/name: payments
+    app.kubernetes.io/component: service
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: isl-codegen-k8s
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: payments
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http

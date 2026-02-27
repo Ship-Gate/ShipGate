@@ -1,0 +1,21 @@
+[
+  {
+    "code": "ISL_T001",
+    "severity": "error",
+    "message": "Circular import detected: ./a.isl -> ./b.isl -> ./a.isl",
+    "location": {
+      "file": "./a.isl",
+      "line": 1,
+      "column": 1,
+      "endLine": 1,
+      "endColumn": 1
+    },
+    "source": "typechecker",
+    "notes": [
+      "Circular imports create infinite dependency chains"
+    ],
+    "help": [
+      "Break the cycle by extracting shared types to a common module"
+    ]
+  }
+]

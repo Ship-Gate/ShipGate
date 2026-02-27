@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShipGate Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --bg0: #0a0a0f;
+      --bg1: #111118;
+      --bg2: #1a1a24;
+      --bg3: #222233;
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(255,255,255,0.12);
+      --text0: #ffffff;
+      --text1: #c8c8d4;
+      --text2: #8888a0;
+      --text3: #555566;
+      --ship: #00e68a;
+      --ship-bg: rgba(0,230,138,0.08);
+      --ship-glow: rgba(0,230,138,0.3);
+      --warn: #ffb547;
+      --warn-bg: rgba(255,181,71,0.08);
+      --noship: #ff5c6a;
+      --noship-bg: rgba(255,92,106,0.08);
+      --accent: #6366f1;
+      --accent-bg: rgba(99,102,241,0.08);
+      --blue: #38bdf8;
+      --blue-bg: rgba(56,189,248,0.08);
+    }
+
+    body {
+      background: var(--bg0);
+      color: var(--text1);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    .container { padding: 12px; }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .logo {
+      width: 24px;
+      height: 24px;
+      border-radius: 5px;
+      background: linear-gradient(135deg, var(--ship), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    
+    .header-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text0);
+      letter-spacing: -0.02em;
+    }
+    
+    .header-subtitle {
+      font-size: 10px;
+      color: var(--text3);
+      margin-left: 6px;
+    }
+
+    .live-indicator {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--blue-bg);
+      border: 1px solid rgba(56,189,248,0.2);
+    }
+    
+    .live-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--blue);
+      animation: pulse 2s infinite;
+    }
+    
+    .live-text {
+      font-size: 9px;
+      color: var(--blue);
+      font-weight: 500;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .stat-card {
+      background: var(--bg1);
+      border-radius: 6px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .stat-glow {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      filter: blur(14px);
+      opacity: 0.1;
+    }
+    
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    
+    .stat-label {
+      font-size: 8px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    
+    .stat-icon {
+      font-size: 10px;
+    }
+    
+    .stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text0);
+      font-family: 'Consolas', 'Courier New', monospace;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    
+    .stat-sub {
+      font-size: 8px;
+      margin-top: 2px;
+    }
+
+    /* Section Card */
+    .section-card {
+      background: var(--bg1);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    
+    .section-header {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text0);
+    }
+    
+    .section-subtitle {
+      font-size: 10px;
+      color: var(--text3);
+      margin-left: 6px;
+    }
+
+    /* Badge */
+    .badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      white-space: nowrap;
+      display: inline-block;
+    }
+    
+    .badge-ship { color: var(--ship); background: var(--ship-bg); border: 1px solid rgba(0,230,138,0.2); }
+    .badge-warn { color: var(--warn); background: var(--warn-bg); border: 1px solid rgba(255,181,71,0.2); }
+    .badge-noship { color: var(--noship); background: var(--noship-bg); border: 1px solid rgba(255,92,106,0.2); }
+    .badge-accent { color: var(--accent); background: var(--accent-bg); border: 1px solid rgba(99,102,241,0.2); }
+    .badge-blue { color: var(--blue); background: var(--blue-bg); border: 1px solid rgba(56,189,248,0.2); }
+    .badge-neutral { color: var(--text2); background: var(--bg2); border: 1px solid var(--border); }
+
+    /* Status Dot */
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+      position: relative;
+    }
+    
+    .status-dot.running::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      border: 1.5px solid var(--blue);
+      animation: ping 1.5s cubic-bezier(0,0,0.2,1) infinite;
+      opacity: 0;
+    }
+
+    /* CI/CD Item */
+    .cicd-item {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    
+    .cicd-item:hover { background: rgba(255,255,255,0.015); }
+    
+    .cicd-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .cicd-content {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .cicd-title {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text0);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .cicd-meta {
+      font-size: 9px;
+      color: var(--text3);
+      margin-top: 1px;
+      display: flex;
+      gap: 6px;
+    }
+    
+    .cicd-score {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text0);
+      font-family: 'Consolas', 'Courier New', monospace;
+      min-width: 20px;
+      text-align: right;
+    }
+    
+    .cicd-duration {
+      font-size: 9px;
+      color: var(--text3);
+      font-family: 'Consolas', 'Courier New', monospace;
+      min-width: 42px;
+      text-align: right;
+    }
+    
+    .cicd-expand {
+      font-size: 9px;
+      color: var(--text3);
+      transition: transform 0.2s;
+    }
+    
+    .cicd-expand.expanded { transform: rotate(180deg); }
+
+    /* Expanded Details */
+    .cicd-details {
+      padding: 4px 12px 10px 28px;
+      display: none;
+    }
+    
+    .cicd-details.show { display: block; }
+    
+    .job-pipeline {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .job-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+    }
+    
+    .job-name {
+      font-size: 9px;
+      color: var(--text1);
+    }
+    
+    .job-duration {
+      font-size: 8px;
+      color: var(--text3);
+      font-family: 'Consolas', 'Courier New', monospace;
+    }
+    
+    .job-arrow {
+      color: var(--text3);
+      font-size: 9px;
+    }
+
+    /* Blockers */
+    .blockers {
+      padding: 6px 10px;
+      border-radius: 5px;
+      background: var(--noship-bg);
+      border: 1px solid rgba(255,92,106,0.15);
+      margin-top: 4px;
+    }
+    
+    .blockers-title {
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--noship);
+      margin-bottom: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .blocker-item {
+      font-size: 10px;
+      color: var(--noship);
+      opacity: 0.8;
+      display: flex;
+      gap: 5px;
+      margin-top: 2px;
+    }
+
+    /* Actions */
+    .actions {
+      display: flex;
+      gap: 5px;
+      margin-top: 8px;
+    }
+    
+    .action-btn {
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text2);
+      font-size: 9px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    
+    .action-btn:hover { background: rgba(255,255,255,0.03); }
+    
+    .action-btn.primary {
+      border: 1px solid rgba(0,230,138,0.3);
+      background: var(--ship-bg);
+      color: var(--ship);
+      font-weight: 600;
+    }
+
+    /* PR Item */
+    .pr-item {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .pr-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    
+    .pr-content {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .pr-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text0);
+      margin-bottom: 2px;
+    }
+    
+    .pr-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+      color: var(--text3);
+    }
+    
+    .pr-number {
+      color: var(--accent);
+      font-family: 'Consolas', 'Courier New', monospace;
+    }
+    
+    .pr-verdict {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .pr-score {
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'Consolas', 'Courier New', monospace;
+    }
+
+    /* Checks */
+    .checks {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 6px;
+      border-radius: 3px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+    }
+    
+    .check-name {
+      font-size: 8px;
+      color: var(--text3);
+    }
+
+    /* Timeline */
+    .timeline-item {
+      display: flex;
+      gap: 10px;
+      padding: 6px 12px;
+      position: relative;
+    }
+    
+    .timeline-line {
+      position: absolute;
+      left: 21px;
+      top: 22px;
+      bottom: -6px;
+      width: 1px;
+      background: var(--border);
+    }
+    
+    .timeline-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .timeline-content {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .timeline-msg {
+      font-size: 11px;
+      color: var(--text1);
+      line-height: 1.4;
+    }
+    
+    .timeline-detail {
+      font-size: 9px;
+      color: var(--text3);
+      margin-top: 1px;
+    }
+
+    /* Animations */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    
+    @keyframes ping {
+      0% { transform: scale(1); opacity: 0.6; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg0); }
+    ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #2a2a3a; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">⛵</div>
+    <span class="header-title">ShipGate</span>
+    <span class="header-subtitle" id="projectName">Loading...</span>
+    <div class="live-indicator">
+      <span class="live-dot"></span>
+      <span class="live-text" id="liveStatus">Idle</span>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Stats Grid -->
+    <div class="stats-grid" id="statsGrid">
+      <!-- Stats will be populated by JS -->
+    </div>
+
+    <!-- CI/CD Pipeline -->
+    <div class="section-card">
+      <div class="section-header">
+        <div>
+          <span class="section-title">CI/CD Pipeline</span>
+          <span class="section-subtitle">Workflow runs</span>
+        </div>
+        <span class="badge badge-neutral" id="cicdCount">0 runs</span>
+      </div>
+      <div id="cicdList">
+        <!-- CI/CD items will be populated by JS -->
+      </div>
+    </div>
+
+    <!-- Open Pull Requests -->
+    <div class="section-card">
+      <div class="section-header">
+        <div>
+          <span class="section-title">Pull Requests</span>
+          <span class="section-subtitle" id="prRepo">Repository</span>
+        </div>
+        <span class="badge badge-accent" id="prCount">0 open</span>
+      </div>
+      <div id="prList">
+        <!-- PR items will be populated by JS -->
+      </div>
+    </div>
+
+    <!-- Activity Timeline -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">Activity</span>
+      </div>
+      <div id="timeline">
+        <!-- Timeline items will be populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const vscode = acquireVsCodeApi();
+
+    // Helper functions
+    function verdictColor(v) {
+      if (v === 'SHIP' || v === 'pass') return 'var(--ship)';
+      if (v === 'WARN' || v === 'pending') return 'var(--warn)';
+      if (v === 'NO_SHIP' || v === 'fail') return 'var(--noship)';
+      if (v === 'running') return 'var(--blue)';
+      return 'var(--text3)';
+    }
+
+    function verdictBadge(v) {
+      if (v === 'SHIP' || v === 'pass') return 'badge-ship';
+      if (v === 'WARN' || v === 'pending') return 'badge-warn';
+      if (v === 'NO_SHIP' || v === 'fail') return 'badge-noship';
+      if (v === 'running') return 'badge-blue';
+      return 'badge-neutral';
+    }
+
+    function statusClass(s) {
+      if (s === 'success' || s === 'pass') return 'success';
+      if (s === 'failure' || s === 'fail') return 'failure';
+      if (s === 'running') return 'running';
+      return 'pending';
+    }
+
+    // Render stats
+    function renderStats(stats) {
+      const grid = document.getElementById('statsGrid');
+      grid.innerHTML = stats.map(s => `
+        <div class="stat-card">
+          <div class="stat-glow" style="background: ${s.color};"></div>
+          <div class="stat-header">
+            <span class="stat-label">${s.label}</span>
+            <span class="stat-icon">${s.icon}</span>
+          </div>
+          <div class="stat-value">${s.value}</div>
+          <div class="stat-sub" style="color: ${s.color};">${s.sub}</div>
+        </div>
+      `).join('');
+    }
+
+    // Render CI/CD pipeline
+    function renderCICD(workflows) {
+      const list = document.getElementById('cicdList');
+      if (!workflows || !Array.isArray(workflows)) {
+        workflows = [];
+      }
+      document.getElementById('cicdCount').textContent = `${workflows.length} runs`;
+      
+      if (workflows.length === 0) {
+        list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text3); font-size: 11px;">No recent runs</div>';
+        return;
+      }
+      
+      list.innerHTML = workflows.map((wf, i) => `
+        <div class="cicd-item" onclick="toggleExpand(${i})">
+          <div class="cicd-header">
+            <span class="status-dot ${statusClass(wf.status)}" style="background: ${verdictColor(wf.status)};"></span>
+            <div class="cicd-content">
+              <div class="cicd-title">
+                <span>${wf.commitMsg}</span>
+                <span class="pr-number">${wf.pr}</span>
+              </div>
+              <div class="cicd-meta">
+                <span>${wf.branch}</span>
+                <span>•</span>
+                <span>${wf.author}</span>
+                <span>•</span>
+                <span>${wf.time}</span>
+              </div>
+            </div>
+            ${wf.verdict ? `<span class="badge ${verdictBadge(wf.verdict)}">${wf.verdict}</span>` : ''}
+            ${wf.score !== undefined && wf.score !== null ? `<span class="cicd-score" style="color: ${verdictColor(wf.verdict || 'pending')};">${wf.score}</span>` : ''}
+            <span class="cicd-duration">${wf.duration || '—'}</span>
+            <span class="cicd-expand" id="expand-${i}">▾</span>
+          </div>
+          <div class="cicd-details" id="details-${i}">
+            <div class="job-pipeline">
+              ${(wf.jobs || []).map((job, ji) => `
+                <div class="job-item">
+                  <span class="status-dot" style="width: 5px; height: 5px; background: ${verdictColor(job.status)};"></span>
+                  <span class="job-name" style="color: ${job.status === 'pending' ? 'var(--text3)' : 'var(--text1)'};">${job.name}</span>
+                  <span class="job-duration">${job.duration}</span>
+                </div>
+                ${ji < wf.jobs.length - 1 ? '<span class="job-arrow">→</span>' : ''}
+              `).join('')}
+            </div>
+            ${wf.blockers ? `
+              <div class="blockers">
+                <div class="blockers-title">Blockers</div>
+                ${wf.blockers.map(b => `<div class="blocker-item"><span>✗</span><span>${b}</span></div>`).join('')}
+              </div>
+            ` : ''}
+            <div class="actions">
+              <button class="action-btn">View Logs</button>
+              <button class="action-btn">View Proof</button>
+              <button class="action-btn">Re-run</button>
+              ${wf.verdict === 'NO_SHIP' ? '<button class="action-btn primary">Auto-fix →</button>' : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Render PRs
+    function renderPRs(prs, repo) {
+      const list = document.getElementById('prList');
+      if (!prs || !Array.isArray(prs)) {
+        prs = [];
+      }
+      document.getElementById('prCount').textContent = `${prs.length} open`;
+      document.getElementById('prRepo').textContent = repo || 'Repository';
+      
+      if (prs.length === 0) {
+        list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text3); font-size: 11px;">No open pull requests</div>';
+        return;
+      }
+      
+      list.innerHTML = prs.map(pr => `
+        <div class="pr-item">
+          <div class="pr-header">
+            <div class="pr-content">
+              <div class="pr-title">${pr.title}</div>
+              <div class="pr-meta">
+                <span class="pr-number">#${pr.number}</span>
+                <span>•</span>
+                <span>${pr.author}</span>
+                <span>•</span>
+                <span>${pr.filesChanged} files</span>
+                <span>•</span>
+                <span>${pr.opened}</span>
+              </div>
+            </div>
+            ${pr.verdict ? `
+              <div class="pr-verdict">
+                <span class="badge ${verdictBadge(pr.verdict)}">${pr.verdict}</span>
+                <span class="pr-score" style="color: ${verdictColor(pr.verdict)};">${pr.score}</span>
+              </div>
+            ` : '<span class="badge badge-blue">Scanning...</span>'}
+          </div>
+          <div class="checks">
+            ${(pr.checks || []).map(ck => `
+              <div class="check-item">
+                <span class="status-dot" style="width: 5px; height: 5px; background: ${verdictColor(ck.status)};"></span>
+                <span class="check-name" style="color: ${ck.status === 'pass' ? 'var(--text2)' : ck.status === 'fail' ? 'var(--noship)' : 'var(--text3)'};">${ck.name}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Render timeline
+    function renderTimeline(events) {
+      const timeline = document.getElementById('timeline');
+      if (!events || !Array.isArray(events)) {
+        events = [];
+      }
+      
+      if (events.length === 0) {
+        timeline.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text3); font-size: 11px;">No recent activity</div>';
+        return;
+      }
+      
+      timeline.innerHTML = events.map((ev, i) => {
+        const color = verdictColor(ev.type);
+        const icons = { ship: '✓', noship: '✗', deploy: '▲', running: '◎', fix: '⚡', alert: '!', default: '•' };
+        const icon = icons[ev.type] || icons.default;
+        
+        return `
+          <div class="timeline-item">
+            ${i < events.length - 1 ? '<div class="timeline-line"></div>' : ''}
+            <div class="timeline-icon" style="color: ${color}; background: ${color}12; border: 1px solid ${color}25;">
+              ${icon}
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-msg">${ev.msg}</div>
+              <div class="timeline-detail">${ev.detail} • ${ev.author} • ${ev.time}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Toggle expand
+    function toggleExpand(index) {
+      const details = document.getElementById(`details-${index}`);
+      const expand = document.getElementById(`expand-${index}`);
+      const isExpanded = details.classList.contains('show');
+      
+      // Close all others
+      document.querySelectorAll('.cicd-details').forEach(d => d.classList.remove('show'));
+      document.querySelectorAll('.cicd-expand').forEach(e => e.classList.remove('expanded'));
+      
+      if (!isExpanded) {
+        details.classList.add('show');
+        expand.classList.add('expanded');
+      }
+    }
+
+    // Message handler
+    window.addEventListener('message', event => {
+      const message = event.data;
+      
+      switch (message.type) {
+        case 'updateDashboard':
+          renderStats(message.stats || []);
+          renderCICD(message.cicd || []);
+          renderPRs(message.prs || [], message.repo);
+          renderTimeline(message.timeline || []);
+          document.getElementById('projectName').textContent = message.projectName || 'No project';
+          document.getElementById('liveStatus').textContent = message.liveStatus || 'Idle';
+          break;
+        case 'results':
+          // Handle legacy results format
+          if (message.data) {
+            const data = message.data;
+            const defaultStats = [
+              { label: 'Verdict', value: data.verdict || '—', sub: 'last scan', color: verdictColor(data.verdict || 'pending'), icon: '◎' },
+              { label: 'Score', value: data.score !== undefined ? `${data.score}` : '—', sub: 'overall', color: 'var(--ship)', icon: '✓' },
+              { label: 'Violations', value: (data.violations?.length || 0).toString(), sub: 'found', color: 'var(--noship)', icon: '!' },
+              { label: 'Files', value: (data.filesScanned || 0).toString(), sub: 'scanned', color: 'var(--accent)', icon: '▲' },
+            ];
+            renderStats(defaultStats);
+          }
+          break;
+      }
+    });
+
+    // Request initial data
+    vscode.postMessage({ type: 'ready' });
+  </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+{
+  "name": "@isl-lang/mcp-server",
+  "version": "0.2.0",
+  "description": "MCP (Model Context Protocol) server exposing ISL tools for AI assistants",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "isl-mcp": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/core.ts src/auth.ts src/tools/pipeline/index.ts src/tools/pipeline/pipeline-tools.ts src/tools/pipeline/gate-tool.ts src/tools/pipeline/pipeline-types.ts src/tools/pipeline/gate-types.ts --format esm --dts --clean",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@isl-lang/parser": "workspace:*",
+    "@isl-lang/typechecker": "workspace:*",
+    "@isl-lang/codegen-runtime": "workspace:*",
+    "@isl-lang/isl-verify": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.1",
+    "tsx": "^4.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "rimraf": "^5.0.5"
+  },
+  "keywords": [
+    "isl",
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "cursor",
+    "llm"
+  ],
+  "license": "MIT",
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isl-lang/isl.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false
+}

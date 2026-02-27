@@ -1,0 +1,43 @@
+# Source files (not needed in package)
+.vscode/**
+.vscode-test/**
+src/**
+scripts/**
+**/*.ts
+!dist/**/*.js
+
+# Development files
+node_modules/**
+.gitignore
+.eslintrc.json
+.eslintrc.js
+tsconfig.json
+esbuild.js
+*.map
+
+# Test files
+test/**
+out/test/**
+**/*.test.ts
+**/*.spec.ts
+
+# Build artifacts
+*.vsix
+
+# Development docs (keep README + CHANGELOG for marketplace)
+CONTRIBUTING.md
+README-isl.md
+docs/**
+
+# Old icon references (marketplace uses root icon.png)
+icons/isl-icon.png
+
+# Screenshots source (referenced via URLs in README)
+screenshots/**
+
+# Other
+.github/**
+.git/**
+.turbo/**
+**/.DS_Store
+**/Thumbs.db

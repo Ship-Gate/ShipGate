@@ -1,0 +1,181 @@
+# Release Shipgate CLI to npm and create GitHub Release.
+# Tag triggers (shipgate@* or v*) run full publish. Use workflow_dispatch with dry_run: true to validate without publishing.
+# Prefer creating release tags from main after CI and critical-tests pass.
+
+name: Release Shipgate CLI
+
+on:
+  push:
+    tags:
+      - 'shipgate@*'
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to publish (e.g., shipgate@1.0.0)'
+        required: true
+        type: string
+      dry_run:
+        description: 'If true, build and test only; do not publish to npm or create GitHub Release'
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: release-shipgate-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release Shipgate CLI
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine dry run
+        id: dry_run
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ github.event.inputs.dry_run }}" >> $GITHUB_OUTPUT
+          else
+            echo "value=false" >> $GITHUB_OUTPUT
+          fi
+          echo "Dry run: ${{ steps.dry_run.outputs.value }}"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build CLI dependencies
+        run: pnpm exec turbo build --filter=...shipgate
+        description: Build workspace deps of shipgate so dist/ exist for CLI bundle
+
+      - name: Build CLI package
+        working-directory: packages/cli
+        run: pnpm run build
+
+      - name: Verify build output
+        working-directory: packages/cli
+        run: |
+          if [ ! -f dist/cli.cjs ]; then
+            echo "Error: dist/cli.cjs not found"
+            exit 1
+          fi
+          if [ ! -s dist/cli.cjs ]; then
+            echo "Error: dist/cli.cjs is empty"
+            exit 1
+          fi
+          # Verify shebang
+          if ! head -1 dist/cli.cjs | grep -q '#!/usr/bin/env node'; then
+            echo "Error: Missing shebang in dist/cli.cjs"
+            exit 1
+          fi
+          echo "✓ Build output verified"
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${{ github.ref_name }}"
+          fi
+          # Remove 'shipgate@' prefix if present
+          VERSION="${VERSION#shipgate@}"
+          # Remove 'v' prefix if present
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Update package version
+        working-directory: packages/cli
+        run: |
+          npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
+          cat package.json | grep '"version"'
+
+      - name: Run smoke tests
+        working-directory: packages/cli
+        run: |
+          # Test CLI help
+          node dist/cli.cjs --help > /dev/null || exit 1
+          # Test version
+          node dist/cli.cjs --version > /dev/null || exit 1
+          echo "✓ Inline smoke checks passed"
+          # Full smoke test suite (vitest)
+          pnpm run test:smoke
+          echo "✓ Smoke tests passed"
+
+      - name: Run e2e consumer tests
+        working-directory: packages/cli
+        run: |
+          pnpm run test:e2e-consumer
+          echo "✓ E2E consumer (init/check/gate from separate dir) passed"
+
+      - name: Publish to npm
+        if: steps.dry_run.outputs.value != 'true'
+        working-directory: packages/cli
+        run: |
+          npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Verify published package
+        if: steps.dry_run.outputs.value != 'true'
+        run: |
+          sleep 5
+          npm view shipgate@${{ steps.version.outputs.version }} version || exit 1
+          echo "✓ Package published successfully"
+
+      - name: Create GitHub Release
+        if: steps.dry_run.outputs.value != 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: shipgate@${{ steps.version.outputs.version }}
+          name: Shipgate CLI v${{ steps.version.outputs.version }}
+          body: |
+            ## Shipgate CLI v${{ steps.version.outputs.version }}
+
+            ### Installation
+
+            ```bash
+            npm install -g shipgate
+            # or
+            npx shipgate init
+            ```
+
+            ### What's Changed
+
+            See [CHANGELOG.md](packages/cli/CHANGELOG.md) for details.
+
+            ### Quick Start
+
+            ```bash
+            npx shipgate init
+            npx shipgate check specs/
+            ```
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Dry run summary
+        if: steps.dry_run.outputs.value == 'true'
+        run: |
+          echo "✓ Dry run complete: build and tests passed; publish and GitHub Release skipped."

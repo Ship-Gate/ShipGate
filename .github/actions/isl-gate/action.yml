@@ -1,0 +1,190 @@
+name: 'ISL Gate'
+description: 'SHIP/NO-SHIP gate for AI-generated code. Blocks merge if verification fails.'
+author: 'ISL Team'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  spec:
+    description: 'Path to ISL specification file'
+    required: true
+  implementation:
+    description: 'Path to implementation file or directory'
+    required: true
+  threshold:
+    description: 'Minimum trust score to SHIP (0-100)'
+    required: false
+    default: '95'
+  fail-on-no-ship:
+    description: 'Fail the workflow if NO-SHIP (default: true)'
+    required: false
+    default: 'true'
+  upload-evidence:
+    description: 'Upload evidence bundle as artifact (default: true)'
+    required: false
+    default: 'true'
+  comment-on-pr:
+    description: 'Post results as PR comment (default: true)'
+    required: false
+    default: 'true'
+  working-directory:
+    description: 'Working directory for the gate'
+    required: false
+    default: '.'
+
+outputs:
+  decision:
+    description: 'Gate decision: SHIP or NO-SHIP'
+    value: ${{ steps.gate.outputs.decision }}
+  trust-score:
+    description: 'Trust score (0-100)'
+    value: ${{ steps.gate.outputs.trust-score }}
+  fingerprint:
+    description: 'Evidence bundle fingerprint'
+    value: ${{ steps.gate.outputs.fingerprint }}
+  evidence-path:
+    description: 'Path to evidence bundle'
+    value: ${{ steps.gate.outputs.evidence-path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Shipgate CLI
+      shell: bash
+      run: |
+        npm install -g shipgate@latest || echo "Using local CLI (shipgate or isl)"
+
+    - name: Run ISL Gate
+      id: gate
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        echo "🚦 Running ISL Gate..."
+        echo "   Spec: ${{ inputs.spec }}"
+        echo "   Impl: ${{ inputs.implementation }}"
+        echo "   Threshold: ${{ inputs.threshold }}%"
+        echo ""
+
+        # Run the gate command
+        set +e
+        RESULT=$(npx isl gate "${{ inputs.spec }}" \
+          --impl "${{ inputs.implementation }}" \
+          --threshold "${{ inputs.threshold }}" \
+          --output ./evidence \
+          --format json 2>&1)
+        EXIT_CODE=$?
+        set -e
+
+        echo "$RESULT"
+
+        # Parse JSON output
+        DECISION=$(echo "$RESULT" | jq -r '.decision // "NO-SHIP"')
+        TRUST_SCORE=$(echo "$RESULT" | jq -r '.trustScore // 0')
+        FINGERPRINT=$(echo "$RESULT" | jq -r '.manifest.fingerprint // "unknown"')
+
+        # Set outputs
+        echo "decision=$DECISION" >> $GITHUB_OUTPUT
+        echo "trust-score=$TRUST_SCORE" >> $GITHUB_OUTPUT
+        echo "fingerprint=$FINGERPRINT" >> $GITHUB_OUTPUT
+        echo "evidence-path=evidence/" >> $GITHUB_OUTPUT
+
+        # Print summary
+        echo ""
+        if [ "$DECISION" = "SHIP" ]; then
+          echo "✅ SHIP - Trust Score: ${TRUST_SCORE}%"
+        else
+          echo "❌ NO-SHIP - Trust Score: ${TRUST_SCORE}%"
+        fi
+        echo "📋 Fingerprint: $FINGERPRINT"
+
+        # Store for later steps
+        echo "$DECISION" > .isl-gate-decision
+        echo "$TRUST_SCORE" > .isl-gate-score
+
+    - name: Upload Evidence Bundle
+      if: inputs.upload-evidence == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: isl-evidence-${{ github.sha }}
+        path: ${{ inputs.working-directory }}/evidence/
+        retention-days: 30
+
+    - name: Comment on PR
+      if: inputs.comment-on-pr == 'true' && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const decision = fs.readFileSync('.isl-gate-decision', 'utf8').trim();
+          const score = fs.readFileSync('.isl-gate-score', 'utf8').trim();
+          const fingerprint = '${{ steps.gate.outputs.fingerprint }}';
+          
+          const emoji = decision === 'SHIP' ? '✅' : '❌';
+          const color = decision === 'SHIP' ? '🟢' : '🔴';
+          
+          const body = `## ${emoji} ISL Gate: ${decision}
+
+          | Metric | Value |
+          |--------|-------|
+          | Trust Score | ${score}% |
+          | Threshold | ${{ inputs.threshold }}% |
+          | Fingerprint | \`${fingerprint}\` |
+
+          ${decision === 'SHIP' 
+            ? '**This code passed verification and is safe to merge.**' 
+            : '**This code failed verification. Please fix the issues before merging.**'}
+
+          <details>
+          <summary>View Evidence Bundle</summary>
+
+          The evidence bundle has been uploaded as an artifact. Download it to see:
+          - \`manifest.json\` - Deterministic fingerprint and input hashes
+          - \`results.json\` - Clause-by-clause verification results
+          - \`report.html\` - Human-readable report
+
+          </details>
+
+          ---
+          *Generated by ISL Gate • [Documentation](https://intentos.dev/docs/ci)*`;
+
+          // Find existing comment
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+
+          const botComment = comments.find(c => 
+            c.user.type === 'Bot' && c.body.includes('ISL Gate:')
+          );
+
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+          }
+
+    - name: Fail on NO-SHIP
+      if: inputs.fail-on-no-ship == 'true' && steps.gate.outputs.decision == 'NO-SHIP'
+      shell: bash
+      run: |
+        echo "❌ Gate decision: NO-SHIP"
+        echo "Trust score ${{ steps.gate.outputs.trust-score }}% is below threshold ${{ inputs.threshold }}%"
+        exit 1

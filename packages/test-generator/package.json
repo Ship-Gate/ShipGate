@@ -1,0 +1,68 @@
+{
+  "name": "@isl-lang/test-generator",
+  "version": "1.0.0",
+  "description": "Generate executable tests with domain-specific assertions from ISL specifications",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./strategies": {
+      "types": "./dist/strategies/index.d.ts",
+      "default": "./dist/strategies/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:update": "vitest run --update",
+    "lint": "eslint src/**/*.ts",
+    "clean": "rimraf dist",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "isl",
+    "test-generation",
+    "domain-driven",
+    "auth",
+    "payments",
+    "uploads",
+    "webhooks",
+    "assertions"
+  ],
+  "author": "mevla",
+  "license": "MIT",
+  "dependencies": {
+    "@isl-lang/parser": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "rimraf": "^5.0.0",
+    "tsup": "^8.0.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}

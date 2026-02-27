@@ -1,0 +1,34 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-02-09T00:00:00.000Z",
+  "routes": [
+    {
+      "path": "/api/users",
+      "method": "GET",
+      "handler": "getUsers",
+      "file": "server.ts",
+      "line": 10,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/health",
+      "method": "GET",
+      "handler": "healthCheck",
+      "file": "server.ts",
+      "line": 15,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/api/foo",
+      "method": "GET",
+      "handler": "getFoo",
+      "file": "spec.isl",
+      "line": 1,
+      "parameters": [],
+      "middleware": [],
+      "note": "GHOST ROUTE - claimed in spec but not implemented"
+    }
+  ]
+}

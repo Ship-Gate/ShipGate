@@ -1,0 +1,445 @@
+export const metadata = {
+  title: 'Proof Bundle Specification v1.0',
+  description: 'Authoritative specification for ISL Verify proof bundles',
+}
+
+# Proof Bundle Specification
+
+**Version:** 1.0  
+**Status:** Authoritative
+
+This document defines the complete specification for ISL Verify proof bundles. Third-party verifiers can implement this spec to independently validate proof bundles.
+
+---
+
+## Overview
+
+A **proof bundle** is a cryptographically signed JSON document that provides **definitive evidence** that a codebase satisfies specific security and correctness properties.
+
+### Design Principles
+
+1. **Tamper-proof** — HMAC-SHA256 signature over canonical JSON
+2. **Comprehensive** — Contains full evidence, not just pass/fail
+3. **Honest** — Explicit residual risks for what was NOT verified
+4. **Reproducible** — Deterministic evidence generation
+5. **Versioned** — Forward and backward compatibility via semver
+
+---
+
+## JSON Schema
+
+### Root Object
+
+```typescript
+interface ProofBundle {
+  version: '1.0'
+  id: string                    // UUIDv4
+  timestamp: string             // ISO 8601
+  project: ProjectMetadata
+  fileHashes: FileHash[]
+  properties: PropertyProof[]
+  summary: BundleSummary
+  metadata: BundleMetadata
+  signature: string             // HMAC-SHA256 hex
+}
+```
+
+### ProjectMetadata
+
+```typescript
+interface ProjectMetadata {
+  name: string                  // from package.json
+  path: string                  // absolute path scanned
+  commit: string | null         // git HEAD SHA, null if not git repo
+  branch: string | null         // current branch
+  framework: string             // 'nextjs' | 'express' | 'fastify' | ...
+  language: 'typescript' | 'javascript'
+  fileCount: number             // total files scanned
+  loc: number                   // total lines of code
+}
+```
+
+### FileHash
+
+```typescript
+interface FileHash {
+  path: string                  // relative to project root
+  hash: string                  // SHA-256 hex
+}
+```
+
+**Purpose:** Proves which exact version of the code was verified. Any file modification invalidates all file hashes.
+
+### PropertyProof
+
+```typescript
+interface PropertyProof {
+  property: PropertyName        // see Property Types below
+  status: PropertyStatus        // 'PROVEN' | 'PARTIAL' | 'FAILED' | 'NOT_VERIFIED'
+  summary: string               // human-readable result
+  evidence: Evidence[]          // type varies by property
+  findings: Finding[]           // issues detected
+  method: VerificationMethod    // how property was verified
+  confidence: ConfidenceLevel   // 'definitive' | 'high' | 'medium'
+  duration_ms: number           // time taken to prove
+}
+```
+
+#### Property Types
+
+```typescript
+type PropertyName =
+  // Tier 1: Critical security/correctness (static analysis)
+  | 'import-integrity'          // All imports resolve to real files/modules
+  | 'type-safety'               // TypeScript strict mode passes
+  | 'auth-coverage'             // Protected endpoints have auth checks
+  | 'sql-injection'             // No unsafe SQL query construction
+  | 'xss-prevention'            // No unsafe HTML/template rendering
+  | 'input-validation'          // User input is validated
+  | 'error-handling'            // Errors are caught and don't leak stacks
+  | 'secret-exposure'           // No hardcoded secrets
+  
+  // Tier 2: Important but not critical
+  | 'dependency-security'       // No known CVEs in dependencies
+  | 'rate-limiting'             // Endpoints have rate limits
+  | 'logging-compliance'        // No PII in logs
+  | 'data-encryption'           // Sensitive data encrypted
+  | 'session-security'          // Session tokens secure
+  
+  // Tier 3: Runtime behavioral (HTTP testing)
+  | 'runtime-auth-blocking'     // Actually blocks unauthenticated requests
+  | 'runtime-input-validation'  // Actually rejects invalid input
+  | 'runtime-response-shape'    // API responses match spec
+  | 'runtime-no-data-leak'      // No data leakage across users
+```
+
+#### Property Status
+
+- **`PROVEN`** — Property holds for all checked code
+- **`PARTIAL`** — Property holds for most code, minor gaps
+- **`FAILED`** — Property violated, critical issues found
+- **`NOT_VERIFIED`** — Prover ran but couldn't determine result
+
+#### Verification Methods
+
+```typescript
+type VerificationMethod =
+  | 'static-ast-analysis'       // Parse TS/JS AST and verify structure
+  | 'pattern-matching'          // Regex/text search for known patterns
+  | 'entropy-analysis'          // Shannon entropy for secret detection
+  | 'tsc-validation'            // Run TypeScript compiler
+  | 'runtime-http-test'         // Start app, make HTTP requests
+```
+
+#### Confidence Levels
+
+- **`definitive`** — Mathematically certain (e.g., tsc compiles, import resolves)
+- **`high`** — Very likely correct, tested extensively (e.g., pattern matching + heuristics)
+- **`medium`** — Best-effort, may have false positives/negatives
+
+### Evidence
+
+Evidence format varies by property. Examples:
+
+#### ImportEvidence
+
+```typescript
+interface ImportEvidence {
+  source: string                // file containing import
+  line: number
+  importPath: string            // 'react', './utils', '@/lib/db'
+  symbols: string[]             // ['useState', 'useEffect']
+  resolvedTo: string | null     // absolute path or null if unresolved
+  symbolsVerified: boolean      // true if symbols exist in resolved module
+  status: 'verified' | 'unresolved_module' | 'unresolved_symbol' | 'missing_types'
+}
+```
+
+#### AuthEvidence
+
+```typescript
+interface AuthEvidence {
+  route: string                 // 'POST /api/orders'
+  file: string
+  line: number
+  shouldBeProtected: boolean    // determined by heuristics/config
+  protectionReason: string      // 'heuristic: modifies data'
+  isProtected: boolean          // auth check found
+  authMethod: string | null     // 'withAuth() wrapper', 'getServerSession()'
+  authVerifiedAt: number | null // line number of auth check
+  issues: string[]              // ['auth check after DB write']
+}
+```
+
+#### SecretEvidence
+
+```typescript
+interface SecretEvidence {
+  file: string
+  line: number
+  pattern: string               // 'stripe_live_key', 'high_entropy_string'
+  entropy?: number              // Shannon entropy (bits/char)
+  variableName?: string
+  context: string               // surrounding code (max 100 chars)
+}
+```
+
+### Finding
+
+```typescript
+interface Finding {
+  file: string
+  line: number
+  severity: 'error' | 'warning'
+  message: string
+  suggestion?: string           // how to fix
+}
+```
+
+### BundleSummary
+
+```typescript
+interface BundleSummary {
+  proven: number                // count of PROVEN properties
+  partial: number
+  failed: number
+  notVerified: number
+  overallVerdict: 'VERIFIED' | 'PARTIAL' | 'INSUFFICIENT'
+  trustScore: number            // 0-100
+  residualRisks: string[]       // explicit list of unverified risks
+}
+```
+
+#### Trust Score Calculation
+
+```typescript
+// Tier 1 properties: 10 points each when PROVEN, 5 when PARTIAL
+// Tier 2 properties: 5 points each when PROVEN, 2 when PARTIAL
+// FAILED and NOT_VERIFIED: 0 points
+// Max score: 100
+
+const TIER_1_PROVEN = 10
+const TIER_1_PARTIAL = 5
+const TIER_2_PROVEN = 5
+const TIER_2_PARTIAL = 2
+
+let score = 0
+for (const prop of properties) {
+  const tier = PROPERTY_TIERS[prop.property]
+  if (prop.status === 'PROVEN') {
+    score += tier === 1 ? TIER_1_PROVEN : TIER_2_PROVEN
+  } else if (prop.status === 'PARTIAL') {
+    score += tier === 1 ? TIER_1_PARTIAL : TIER_2_PARTIAL
+  }
+}
+return Math.min(100, score)
+```
+
+#### Overall Verdict
+
+```typescript
+function getVerdict(trustScore: number): 'VERIFIED' | 'PARTIAL' | 'INSUFFICIENT' {
+  if (trustScore >= 80) return 'VERIFIED'
+  if (trustScore >= 50) return 'PARTIAL'
+  return 'INSUFFICIENT'
+}
+```
+
+### BundleMetadata
+
+```typescript
+interface BundleMetadata {
+  toolVersion: string           // '1.2.3'
+  proversRun: string[]          // ['tier1-import-integrity', 'tier1-auth-coverage', ...]
+  duration_ms: number           // total scan duration
+  config: Record<string, unknown> // sanitized config (no secrets)
+}
+```
+
+---
+
+## Signature Scheme
+
+### Key Derivation
+
+```typescript
+function deriveSigningKey(options: { projectPath: string; secret?: string }): string {
+  if (options.secret) {
+    return options.secret  // user-provided secret
+  }
+
+  // Fallback: derive from project metadata
+  const components = []
+  
+  // Try git remote URL
+  const remoteUrl = execSync('git config --get remote.origin.url').trim()
+  if (remoteUrl) components.push(remoteUrl)
+  
+  // Add project path, hostname, username
+  components.push(options.projectPath)
+  components.push(os.hostname())
+  components.push(os.userInfo().username)
+  
+  return crypto.createHash('sha256')
+    .update(components.join('|'))
+    .digest('hex')
+}
+```
+
+### Canonical Payload
+
+```typescript
+function createCanonicalPayload(bundle: Omit<ProofBundle, 'signature'>): string {
+  // Recursively sort all object keys for deterministic JSON
+  const sorted = sortObjectKeys(bundle)
+  return JSON.stringify(sorted)
+}
+```
+
+### Sign
+
+```typescript
+function signBundle(bundle: Omit<ProofBundle, 'signature'>, secret?: string): string {
+  const signingKey = deriveSigningKey({ projectPath: bundle.project.path, secret })
+  const payload = createCanonicalPayload(bundle)
+  
+  const hmac = crypto.createHmac('sha256', signingKey)
+  hmac.update(payload)
+  
+  return hmac.digest('hex')
+}
+```
+
+### Verify
+
+```typescript
+function verifyBundleSignature(bundle: ProofBundle, secret?: string): boolean {
+  const { signature, ...bundleWithoutSignature } = bundle
+  const expectedSignature = signBundle(bundleWithoutSignature, secret)
+  
+  return signature === expectedSignature
+}
+```
+
+---
+
+## Residual Risks
+
+Every proof bundle **MUST** include explicit residual risks for:
+
+1. **Properties NOT VERIFIED** — Each property that wasn't checked
+2. **Properties FAILED** — Each property that failed verification
+3. **Properties PARTIAL** — Each property with incomplete coverage
+4. **Inherent Limitations** — What ISL Verify fundamentally cannot check
+
+### Format
+
+```typescript
+const residualRisks = [
+  "NOT VERIFIED — Rate Limiting: Endpoints may be vulnerable to DoS attacks",
+  "FAILED — XSS Prevention: Malicious script execution possible (2 issues found)",
+  "PARTIAL — Auth Coverage: Protected endpoints may be accessible (confidence: high)",
+  "LIMITATION — Business logic correctness cannot be statically verified",
+  "LIMITATION — Infrastructure security not verified (deployment config, DNS, etc.)"
+]
+```
+
+### Inherent Limitations
+
+ISL Verify **CANNOT** verify:
+- Business logic correctness
+- Third-party dependency runtime behavior
+- Infrastructure configuration (Docker, K8s, cloud services)
+- Performance and scalability
+- User experience and accessibility
+- Complex race conditions
+- Cryptographic implementation correctness
+
+---
+
+## Example Proof Bundle
+
+```json
+{
+  "version": "1.0",
+  "id": "8f4a2c9b-7d5e-4a3b-9c1e-2f8a6b4d3e1c",
+  "timestamp": "2024-02-17T16:27:00.000Z",
+  "project": {
+    "name": "my-app",
+    "path": "/Users/alice/projects/my-app",
+    "commit": "abc123def456...",
+    "branch": "main",
+    "framework": "nextjs",
+    "language": "typescript",
+    "fileCount": 127,
+    "loc": 8542
+  },
+  "fileHashes": [
+    { "path": "src/app/api/auth/route.ts", "hash": "3f7a..." },
+    { "path": "src/lib/db.ts", "hash": "9c2b..." }
+  ],
+  "properties": [
+    {
+      "property": "import-integrity",
+      "status": "PROVEN",
+      "summary": "127/127 imports resolve",
+      "evidence": [],
+      "findings": [],
+      "method": "static-ast-analysis",
+      "confidence": "definitive",
+      "duration_ms": 234
+    }
+  ],
+  "summary": {
+    "proven": 5,
+    "partial": 1,
+    "failed": 1,
+    "notVerified": 6,
+    "overallVerdict": "PARTIAL",
+    "trustScore": 78,
+    "residualRisks": [
+      "FAILED — XSS Prevention: Malicious script execution possible (2 issues)"
+    ]
+  },
+  "metadata": {
+    "toolVersion": "1.0.0",
+    "proversRun": ["tier1-import-integrity", "tier1-type-safety"],
+    "duration_ms": 1542,
+    "config": {}
+  },
+  "signature": "8f4a2c9b7d5e4a3b9c1e2f8a6b4d3e1c..."
+}
+```
+
+---
+
+## Compatibility
+
+### Version Policy
+
+- **Major version** (1.x → 2.x): Breaking changes to schema
+- **Minor version** (1.0 → 1.1): New properties or fields (backward compatible)
+- **Patch version** (1.0.0 → 1.0.1): Bug fixes
+
+Verifiers **MUST** reject bundles with major version mismatch.
+
+### Future Extensions
+
+Reserved top-level fields for v1.x extensions:
+- `attestations` — Third-party audit signatures
+- `dependencies` — Dependency proof bundles
+- `customProperties` — User-defined properties
+
+---
+
+## Reference Implementation
+
+See `packages/isl-verify` for the canonical TypeScript implementation.
+
+---
+
+## See Also
+
+- [Property Reference](/properties) — All available properties
+- [API Reference](/api) — Programmatic usage
+- [CI Integration Guide](/guides/ci-integration) — GitHub Actions setup

@@ -1,0 +1,328 @@
+/* ============================================================================
+ * ISL Vibe Panel — Theme-aware sidebar styling
+ *
+ * Uses VS Code CSS variables for light/dark theme compatibility.
+ * ============================================================================ */
+
+:root {
+  --vibe-surface: var(--vscode-sideBar-background, #252526);
+  --vibe-surface-1: var(--vscode-sideBarSectionHeader-background, #2d2d30);
+  --vibe-surface-2: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.05));
+  --vibe-border: var(--vscode-sideBarSectionHeader-border, rgba(255, 255, 255, 0.08));
+  --vibe-text: var(--vscode-foreground, #cccccc);
+  --vibe-text-muted: var(--vscode-descriptionForeground, #858585);
+  --vibe-accent: var(--vscode-button-background, #0e639c);
+  --vibe-accent-hover: var(--vscode-button-hoverBackground, #1177bb);
+  --vibe-success: var(--vscode-testing-iconPassed, #89d185);
+  --vibe-warning: var(--vscode-testing-iconQueued, #cca700);
+  --vibe-error: var(--vscode-testing-iconFailed, #f14c4c);
+  --vibe-focus: var(--vscode-focusBorder, #007acc);
+  --vibe-input-bg: var(--vscode-input-background, #3c3c3c);
+  --vibe-input-border: var(--vscode-input-border, transparent);
+  --vibe-font: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  --vibe-mono: var(--vscode-editor-font-family, 'SF Mono', 'Cascadia Code', monospace);
+  --vibe-r: 6px;
+  --vibe-r-sm: 4px;
+}
+
+/* Light theme overrides */
+.vscode-light {
+  --vibe-surface: var(--vscode-sideBar-background, #f3f3f3);
+  --vibe-surface-1: var(--vscode-sideBarSectionHeader-background, #e8e8e8);
+  --vibe-surface-2: rgba(0, 0, 0, 0.05);
+  --vibe-border: rgba(0, 0, 0, 0.1);
+  --vibe-text: var(--vscode-foreground, #333333);
+  --vibe-text-muted: var(--vscode-descriptionForeground, #6e6e6e);
+  --vibe-input-bg: var(--vscode-input-background, #ffffff);
+}
+
+/* Base */
+body.vibe-panel {
+  font-family: var(--vibe-font);
+  font-size: 12px;
+  color: var(--vibe-text);
+  background: var(--vibe-surface);
+  padding: 12px;
+  overflow-y: auto;
+  line-height: 1.4;
+}
+
+#vibe-root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Section headers */
+.vibe-section {
+  background: var(--vibe-surface-1);
+  border: 1px solid var(--vibe-border);
+  border-radius: var(--vibe-r);
+  overflow: hidden;
+}
+
+.vibe-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 12px;
+  color: var(--vibe-text-muted);
+  border-bottom: 1px solid var(--vibe-border);
+}
+
+.vibe-section-body {
+  padding: 12px;
+}
+
+/* Prompt input */
+.vibe-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  font-family: var(--vibe-font);
+  font-size: 12px;
+  color: var(--vibe-text);
+  background: var(--vibe-input-bg);
+  border: 1px solid var(--vibe-input-border);
+  border-radius: var(--vibe-r-sm);
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.vibe-textarea:focus {
+  outline: none;
+  border-color: var(--vibe-focus);
+}
+
+.vibe-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.vibe-select {
+  flex: 1;
+  min-width: 100px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--vibe-text);
+  background: var(--vibe-input-bg);
+  border: 1px solid var(--vibe-input-border);
+  border-radius: var(--vibe-r-sm);
+}
+
+.vibe-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--vscode-button-foreground, #ffffff);
+  background: var(--vibe-accent);
+  border: none;
+  border-radius: var(--vibe-r-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.vibe-btn:hover {
+  background: var(--vibe-accent-hover);
+}
+
+.vibe-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.vibe-btn--secondary {
+  background: transparent;
+  color: var(--vibe-text);
+  border: 1px solid var(--vibe-border);
+}
+
+.vibe-btn--secondary:hover {
+  background: var(--vibe-surface-2);
+}
+
+/* Recent prompts */
+.vibe-recent {
+  margin-top: 8px;
+}
+
+.vibe-recent-item {
+  display: block;
+  width: 100%;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--vibe-text-muted);
+  background: transparent;
+  border: none;
+  border-radius: var(--vibe-r-sm);
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vibe-recent-item:hover {
+  background: var(--vibe-surface-2);
+  color: var(--vibe-text);
+}
+
+/* Pipeline progress */
+.vibe-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vibe-stage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--vibe-surface-2);
+  border-radius: var(--vibe-r-sm);
+}
+
+.vibe-stage--running {
+  background: rgba(0, 122, 204, 0.1);
+  border: 1px solid var(--vibe-focus);
+}
+
+.vibe-stage--done .vibe-stage-icon {
+  color: var(--vibe-success);
+}
+
+.vibe-stage--failed .vibe-stage-icon {
+  color: var(--vibe-error);
+}
+
+.vibe-stage-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--vibe-text-muted);
+}
+
+.vibe-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--vibe-border);
+  border-top-color: var(--vibe-accent);
+  border-radius: 50%;
+  animation: vibe-spin 0.8s linear infinite;
+}
+
+@keyframes vibe-spin {
+  to { transform: rotate(360deg); }
+}
+
+.vibe-stage-name {
+  flex: 1;
+  font-size: 12px;
+}
+
+.vibe-stage-meta {
+  font-size: 10px;
+  color: var(--vibe-text-muted);
+}
+
+.vibe-stage-error {
+  font-size: 11px;
+  color: var(--vibe-error);
+  margin-top: 4px;
+}
+
+.vibe-progress-bar {
+  height: 4px;
+  background: var(--vibe-surface-2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.vibe-progress-fill {
+  height: 100%;
+  background: var(--vibe-accent);
+  transition: width 0.3s ease;
+}
+
+.vibe-eta {
+  font-size: 10px;
+  color: var(--vibe-text-muted);
+  margin-top: 4px;
+}
+
+/* Results */
+.vibe-file-tree {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.vibe-file-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-family: var(--vibe-mono);
+  cursor: pointer;
+  border-radius: var(--vibe-r-sm);
+}
+
+.vibe-file-item:hover {
+  background: var(--vibe-surface-2);
+}
+
+.vibe-file-item::before {
+  content: '📄';
+  font-size: 12px;
+}
+
+.vibe-trust-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--vibe-r-sm);
+  margin-top: 8px;
+}
+
+.vibe-trust-badge--green {
+  background: rgba(137, 209, 133, 0.2);
+  color: var(--vibe-success);
+}
+
+.vibe-trust-badge--yellow {
+  background: rgba(204, 167, 0, 0.2);
+  color: var(--vibe-warning);
+}
+
+.vibe-trust-badge--red {
+  background: rgba(241, 76, 76, 0.2);
+  color: var(--vibe-error);
+}
+
+.vibe-cert-summary {
+  font-size: 11px;
+  color: var(--vibe-text-muted);
+  margin-top: 6px;
+}
+
+/* Actions */
+.vibe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.vibe-actions .vibe-btn {
+  flex: 1;
+  min-width: 80px;
+}

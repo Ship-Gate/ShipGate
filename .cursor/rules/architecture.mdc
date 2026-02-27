@@ -1,0 +1,27 @@
+---
+description: Project architecture guidelines for nextjs-app-router
+alwaysApply: true
+priority: 90
+---
+
+# Architecture Guidelines
+
+## Project Type: feature-based
+## Framework: nextjs-app-router
+## Language: typescript
+
+### Directory Structure
+- Organize code by feature/domain
+- Each feature should be self-contained
+- Shared code goes in `shared/` or `common/`
+
+### Import Conventions
+- Use @/ for src directory imports
+
+### File Naming
+- Use kebab-case for file names
+- Use .test.ts suffix for test files
+
+---
+<!-- guardrail:auto-generated -->
+*Verified by Guardrail ✓*

@@ -1,0 +1,86 @@
+{
+  "name": "@isl-lang/generator-sdk",
+  "version": "1.0.1",
+  "description": "SDK for building custom ISL code generators",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./visitors": {
+      "types": "./dist/visitors/index.d.ts",
+      "import": "./dist/visitors/index.js"
+    },
+    "./templates": {
+      "types": "./dist/templates/index.d.ts",
+      "import": "./dist/templates/index.js"
+    },
+    "./output": {
+      "types": "./dist/output/index.d.ts",
+      "import": "./dist/output/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js"
+    }
+  },
+  "bin": {
+    "isl-generator": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src --ext .ts",
+    "clean": "rimraf dist",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run --passWithNoTests"
+  },
+  "keywords": [
+    "isl",
+    "intentos",
+    "generator",
+    "codegen",
+    "sdk",
+    "template",
+    "visitor-pattern"
+  ],
+  "author": "mevla",
+  "license": "MIT",
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*",
+    "handlebars": "^4.7.8",
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "inquirer": "^9.2.15",
+    "glob": "^10.3.10",
+    "fs-extra": "^11.2.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.1"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "private": true,
+  "experimental": true,
+  "sideEffects": false
+}

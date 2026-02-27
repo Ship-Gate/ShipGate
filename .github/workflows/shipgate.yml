@@ -1,0 +1,176 @@
+# ShipGate PR Gate — Turnkey workflow
+# Runs shipgate verify and gates on SHIP/NO_SHIP.
+# Fails on NO_SHIP; optionally on WARN (via fail-on).
+#
+# Works in this repo (monorepo) and in sample Next.js repos with minimal edits.
+# For simple repos: remove the Shipgate Setup step and use "npx shipgate verify ." directly.
+
+name: ShipGate
+
+on:
+  pull_request:
+    branches: [main, master]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: shipgate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shipgate-verify:
+    name: ShipGate Verify
+    runs-on: ubuntu-latest
+    env:
+      SHIPGATE_FAIL_ON: ${{ vars.SHIPGATE_FAIL_ON || 'error' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Shipgate Setup
+        uses: ./.github/actions/shipgate-setup
+        # For simple repos (Next.js, etc.): remove this step and use:
+        # - uses: pnpm/action-setup@v2
+        #   with:
+        #     version: 8
+        # - uses: actions/setup-node@v4
+        #   with:
+        #     node-version: 20
+        #     cache: 'pnpm'
+        # - run: pnpm install --frozen-lockfile
+        #   (or: npm ci)
+
+      - name: Create reports directory
+        run: mkdir -p .shipgate/reports
+
+      - name: Run ShipGate Verify
+        id: shipgate
+        run: |
+          # stdout → JSON file; stderr → job log (GitHub Actions annotations)
+          set +e
+          pnpm exec shipgate verify . --ci --fail-on "$SHIPGATE_FAIL_ON" --format github > .shipgate/reports/ci.json
+          EXIT_CODE=$?
+          set -e
+
+          # Parse verdict from JSON (even on failure)
+          VERDICT=$(jq -r '.verdict // "UNKNOWN"' .shipgate/reports/ci.json 2>/dev/null || echo "UNKNOWN")
+          TRUST_SCORE=$(jq -r '.trustScore // 0' .shipgate/reports/ci.json 2>/dev/null || echo "0")
+          SUMMARY=$(jq -r '.summary // ""' .shipgate/reports/ci.json 2>/dev/null || echo "")
+
+          echo "verdict=$VERDICT" >> $GITHUB_OUTPUT
+          echo "trust_score=$TRUST_SCORE" >> $GITHUB_OUTPUT
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          echo "$SUMMARY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Step summary
+          echo "## ShipGate Verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Verdict:** \`$VERDICT\` | **Trust Score:** $TRUST_SCORE/100" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$VERDICT" = "NO_SHIP" ]; then
+            echo "::error::ShipGate: NO_SHIP — verification failed"
+            echo "### Merge blocked" >> $GITHUB_STEP_SUMMARY
+          elif [ "$VERDICT" = "SHIP" ]; then
+            echo "### Ready to merge" >> $GITHUB_STEP_SUMMARY
+          elif [ "$VERDICT" = "WARN" ]; then
+            echo "::warning::ShipGate: WARN — review recommended"
+            echo "### Review recommended" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          exit $EXIT_CODE
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shipgate-report
+          path: .shipgate/reports/ci.json
+          retention-days: 30
+          if-no-files-found: warn
+
+  # Optional: PR comment summary
+  comment:
+    name: PR Comment
+    runs-on: ubuntu-latest
+    needs: shipgate-verify
+    if: always() && github.event_name == 'pull_request' && (needs.shipgate-verify.result == 'success' || needs.shipgate-verify.result == 'failure')
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Download report
+        uses: actions/download-artifact@v4
+        with:
+          name: shipgate-report
+          path: .shipgate/reports/
+        continue-on-error: true
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let verdict = 'UNKNOWN';
+            let trustScore = 0;
+            let summary = '';
+            let reportJson = '{}';
+
+            try {
+              const report = JSON.parse(fs.readFileSync('.shipgate/reports/ci.json', 'utf8'));
+              verdict = report.verdict || 'UNKNOWN';
+              trustScore = report.trustScore ?? 0;
+              summary = report.summary || '';
+              reportJson = JSON.stringify(report, null, 2);
+            } catch (e) {
+              reportJson = 'Report not available';
+            }
+
+            const emoji = verdict === 'SHIP' ? '✅' : verdict === 'NO_SHIP' ? '❌' : '⚠️';
+            const status = verdict === 'SHIP' ? 'passed' : verdict === 'NO_SHIP' ? 'failed' : 'needs review';
+
+            const body = `## ${emoji} ShipGate: ${status}
+
+            **Verdict:** \`${verdict}\` | **Trust Score:** ${trustScore}/100
+
+            ${summary ? `> ${summary}` : ''}
+
+            <details>
+            <summary>Full report</summary>
+
+            \`\`\`json
+            ${reportJson}
+            \`\`\`
+
+            </details>
+
+            ---
+            *ShipGate PR gate • [Docs](https://shipgate.dev/docs/ci)*`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('ShipGate:')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

@@ -1,0 +1,60 @@
+{
+  "name": "@isl-lang/isl-smt",
+  "version": "0.1.1",
+  "description": "SMT solver integration for ISL - satisfiability checking for preconditions, postconditions, and refinement types",
+  "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "isl",
+    "smt",
+    "z3",
+    "verification",
+    "satisfiability",
+    "preconditions",
+    "postconditions",
+    "refinement-types"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*",
+    "@isl-lang/prover": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "rimraf": "^5.0.5"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "sideEffects": false
+}

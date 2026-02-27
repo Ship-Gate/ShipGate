@@ -1,0 +1,26 @@
+# ISL Verify Runtime License
+
+Copyright (c) 2026 ISL Verify
+
+This software is source-available but NOT open source.
+
+**License Terms:**
+
+1. **Viewing and Reference**: You may view the source code for educational and reference purposes.
+
+2. **License Required**: Use of this software in production requires a valid ISL Verify Team or Enterprise license.
+
+3. **Restrictions**: 
+   - You may NOT use this software in production without a valid license
+   - You may NOT redistribute this software
+   - You may NOT create derivative works for commercial use
+
+4. **Permitted Use**:
+   - Development and testing with a valid license
+   - Internal company use with a valid license matching your repository count
+
+5. **Obtaining a License**: Visit https://isl-verify.com/pricing to purchase a license.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.

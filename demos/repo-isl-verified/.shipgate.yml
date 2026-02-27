@@ -1,0 +1,18 @@
+version: 1
+
+specs:
+  include:
+    - "src/**/*.isl"
+
+verify:
+  strict: true
+  policies:
+    auth:
+      enabled: true
+    rate-limit:
+      enabled: true
+    pii:
+      enabled: true
+
+evidence:
+  output_dir: ".shipgate/evidence"

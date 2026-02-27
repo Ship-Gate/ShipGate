@@ -1,0 +1,106 @@
+{
+  "name": "comparison-operators",
+  "description": "V1 comparison operator semantics (<, >, <=, >=)",
+  "version": "1.0.0",
+  "frozenForVersion": "1.x.x",
+  "cases": [
+    {
+      "operator": "<",
+      "left": 1,
+      "right": 2,
+      "expected": true,
+      "description": "Less than: true case"
+    },
+    {
+      "operator": "<",
+      "left": 2,
+      "right": 1,
+      "expected": false,
+      "description": "Less than: false case"
+    },
+    {
+      "operator": "<",
+      "left": 1,
+      "right": 1,
+      "expected": false,
+      "description": "Less than: equal values"
+    },
+    {
+      "operator": ">",
+      "left": 2,
+      "right": 1,
+      "expected": true,
+      "description": "Greater than: true case"
+    },
+    {
+      "operator": ">",
+      "left": 1,
+      "right": 2,
+      "expected": false,
+      "description": "Greater than: false case"
+    },
+    {
+      "operator": ">",
+      "left": 1,
+      "right": 1,
+      "expected": false,
+      "description": "Greater than: equal values"
+    },
+    {
+      "operator": "<=",
+      "left": 1,
+      "right": 2,
+      "expected": true,
+      "description": "Less than or equal: less"
+    },
+    {
+      "operator": "<=",
+      "left": 1,
+      "right": 1,
+      "expected": true,
+      "description": "Less than or equal: equal"
+    },
+    {
+      "operator": "<=",
+      "left": 2,
+      "right": 1,
+      "expected": false,
+      "description": "Less than or equal: greater"
+    },
+    {
+      "operator": ">=",
+      "left": 2,
+      "right": 1,
+      "expected": true,
+      "description": "Greater than or equal: greater"
+    },
+    {
+      "operator": ">=",
+      "left": 1,
+      "right": 1,
+      "expected": true,
+      "description": "Greater than or equal: equal"
+    },
+    {
+      "operator": ">=",
+      "left": 1,
+      "right": 2,
+      "expected": false,
+      "description": "Greater than or equal: less"
+    },
+    {
+      "operator": "<",
+      "left": -5,
+      "right": 5,
+      "expected": true,
+      "description": "Negative numbers"
+    },
+    {
+      "operator": ">",
+      "left": 0.5,
+      "right": 0.4,
+      "expected": true,
+      "description": "Decimal numbers"
+    }
+  ]
+}

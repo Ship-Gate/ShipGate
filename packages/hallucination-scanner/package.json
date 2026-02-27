@@ -1,0 +1,42 @@
+{
+  "name": "@isl-lang/hallucination-scanner",
+  "version": "0.1.0",
+  "description": "Static hallucination scanner: Rust resolver, Cargo-aware dependency checks, trust scoring",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "tree-sitter": "^0.21.0",
+    "tree-sitter-go": "^0.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "rimraf": "^5.0.5"
+  },
+  "author": "mevla",
+  "license": "MIT",
+  "private": true,
+  "sideEffects": false
+}

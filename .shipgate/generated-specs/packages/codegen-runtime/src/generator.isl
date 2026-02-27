@@ -1,0 +1,13 @@
+# @tier 3 — Auto-generated utility spec (export-only verification)
+# exports: generate, generateBehavior, create, wrap, VerificationContext
+# dependencies: 
+
+domain Generator {
+  version: "1.0.0"
+
+  type VerificationContext = String
+
+  invariants exports_present {
+    - true
+  }
+}

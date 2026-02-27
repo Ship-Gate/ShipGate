@@ -1,0 +1,32 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "paths": {
+      "@isl-lang/codegen-python": ["../../packages/codegen-python/dist"],
+      "@isl-lang/codegen-graphql": ["../../packages/codegen-graphql/dist"],
+      "@isl-lang/core": ["../../packages/core/dist"],
+      "@isl-lang/parser": ["../../packages/parser/dist"],
+      "@isl-lang/isl-core": ["../../packages/isl-core/dist"],
+      "@isl-lang/isl-verify": ["../../packages/isl-verify/dist"],
+      "@isl-lang/isl-firewall": ["../../packages/isl-firewall/dist"]
+    }
+  },
+  "include": ["src/**/*", "src/modules.d.ts"],
+  "exclude": ["node_modules", "dist"]
+}

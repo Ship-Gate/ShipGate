@@ -1,0 +1,224 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-02-15T08:13:01.634Z",
+  "routes": [
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "GET",
+      "file": "src\\app\\api\\health\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "password",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "src\\app\\api\\login\\route.ts",
+      "line": 9,
+      "parameters": [],
+      "middleware": [
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "redirect",
+      "method": "GET",
+      "handler": "error",
+      "file": "src\\app\\api\\login\\route.ts",
+      "line": 10,
+      "parameters": [],
+      "middleware": [
+        "auth"
+      ]
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "POST",
+      "file": "src\\app\\api\\login\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "GET",
+      "file": "src\\app\\api\\logout\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "redirect",
+      "method": "GET",
+      "handler": "production",
+      "file": "src\\app\\api\\auth\\github\\route.ts",
+      "line": 5,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "GET",
+      "file": "src\\app\\api\\auth\\github\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "redirect",
+      "method": "GET",
+      "handler": "production",
+      "file": "src\\app\\api\\auth\\google\\route.ts",
+      "line": 5,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "GET",
+      "file": "src\\app\\api\\auth\\google\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "authorization",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "src\\app\\api\\user\\profile\\route.ts",
+      "line": 5,
+      "parameters": [],
+      "middleware": [
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "GET",
+      "file": "src\\app\\api\\user\\profile\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "authorization",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "src\\app\\api\\stripe\\checkout\\route.ts",
+      "line": 13,
+      "parameters": [],
+      "middleware": [
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "POST",
+      "file": "src\\app\\api\\stripe\\checkout\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "stripe-signature",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "src\\app\\api\\stripe\\webhook\\route.ts",
+      "line": 14,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "POST",
+      "file": "src\\app\\api\\stripe\\webhook\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "code",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "src\\app\\api\\auth\\github\\callback\\route.ts",
+      "line": 6,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "state",
+      "method": "GET",
+      "handler": "headers",
+      "file": "src\\app\\api\\auth\\github\\callback\\route.ts",
+      "line": 7,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "GET",
+      "file": "src\\app\\api\\auth\\github\\callback\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    },
+    {
+      "path": "code",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "src\\app\\api\\auth\\google\\callback\\route.ts",
+      "line": 6,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "state",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "src\\app\\api\\auth\\google\\callback\\route.ts",
+      "line": 7,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/api/unknown",
+      "method": "GET",
+      "handler": "GET",
+      "file": "src\\app\\api\\auth\\google\\callback\\route.ts",
+      "line": 1,
+      "parameters": [],
+      "middleware": []
+    }
+  ]
+}

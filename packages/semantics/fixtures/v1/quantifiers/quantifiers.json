@@ -1,0 +1,145 @@
+{
+  "name": "quantifiers",
+  "description": "V1 quantifier semantics (all, any, none, count, sum, filter)",
+  "version": "1.0.0",
+  "frozenForVersion": "1.x.x",
+  "cases": [
+    {
+      "quantifier": "all",
+      "collection": [2, 4, 6, 8],
+      "predicateDescription": "x > 0",
+      "expected": true,
+      "description": "ALL: all positive"
+    },
+    {
+      "quantifier": "all",
+      "collection": [2, 4, -1, 8],
+      "predicateDescription": "x > 0",
+      "expected": false,
+      "description": "ALL: one negative"
+    },
+    {
+      "quantifier": "all",
+      "collection": [],
+      "predicateDescription": "x > 0",
+      "expected": true,
+      "description": "ALL: empty collection (vacuously true)"
+    },
+    {
+      "quantifier": "any",
+      "collection": [1, 2, 3, 4],
+      "predicateDescription": "x > 3",
+      "expected": true,
+      "description": "ANY: one matching"
+    },
+    {
+      "quantifier": "any",
+      "collection": [1, 2, 3],
+      "predicateDescription": "x > 3",
+      "expected": false,
+      "description": "ANY: none matching"
+    },
+    {
+      "quantifier": "any",
+      "collection": [],
+      "predicateDescription": "x > 0",
+      "expected": false,
+      "description": "ANY: empty collection"
+    },
+    {
+      "quantifier": "none",
+      "collection": [1, 2, 3],
+      "predicateDescription": "x < 0",
+      "expected": true,
+      "description": "NONE: no negatives"
+    },
+    {
+      "quantifier": "none",
+      "collection": [1, -2, 3],
+      "predicateDescription": "x < 0",
+      "expected": false,
+      "description": "NONE: one negative"
+    },
+    {
+      "quantifier": "none",
+      "collection": [],
+      "predicateDescription": "x < 0",
+      "expected": true,
+      "description": "NONE: empty collection"
+    },
+    {
+      "quantifier": "count",
+      "collection": [1, 2, 3, 4, 5],
+      "predicateDescription": "x > 2",
+      "expected": 3,
+      "description": "COUNT: three match"
+    },
+    {
+      "quantifier": "count",
+      "collection": [1, 2, 3],
+      "predicateDescription": "x > 10",
+      "expected": 0,
+      "description": "COUNT: none match"
+    },
+    {
+      "quantifier": "sum",
+      "collection": [1, 2, 3, 4],
+      "predicateDescription": "x (identity)",
+      "expected": 10,
+      "description": "SUM: all values"
+    },
+    {
+      "quantifier": "sum",
+      "collection": [],
+      "predicateDescription": "x",
+      "expected": 0,
+      "description": "SUM: empty collection"
+    },
+    {
+      "quantifier": "filter",
+      "collection": [1, 2, 3, 4, 5],
+      "predicateDescription": "x > 2",
+      "expected": [3, 4, 5],
+      "description": "FILTER: matching items"
+    },
+    {
+      "quantifier": "filter",
+      "collection": [1, 2, 3],
+      "predicateDescription": "x > 10",
+      "expected": [],
+      "description": "FILTER: no matches"
+    }
+  ],
+  "shortCircuitBehavior": [
+    {
+      "quantifier": "all",
+      "shortCircuit": true,
+      "description": "ALL short-circuits on first false"
+    },
+    {
+      "quantifier": "any",
+      "shortCircuit": true,
+      "description": "ANY short-circuits on first true"
+    },
+    {
+      "quantifier": "none",
+      "shortCircuit": true,
+      "description": "NONE short-circuits on first true"
+    },
+    {
+      "quantifier": "count",
+      "shortCircuit": false,
+      "description": "COUNT must evaluate all items"
+    },
+    {
+      "quantifier": "sum",
+      "shortCircuit": false,
+      "description": "SUM must evaluate all items"
+    },
+    {
+      "quantifier": "filter",
+      "shortCircuit": false,
+      "description": "FILTER must evaluate all items"
+    }
+  ]
+}

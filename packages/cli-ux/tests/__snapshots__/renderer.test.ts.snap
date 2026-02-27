@@ -1,0 +1,366 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`render > renders complete output for critical result 1`] = `
+"╭──────────────────────────────────────────────────────────╮
+│                 ISL Verification Result                  │
+├──────────────────────────────────────────────────────────┤
+│ Score: 0/100                                    NO_SHIP  │
+│ Confidence: 90%                                          │
+│ Recommendation: Critical Issues                          │
+╰──────────────────────────────────────────────────────────╯
+
+📊 Category Breakdown
+────────────────────────────────────────
+Postconditions  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0% 0/2
+
+✗ Failed Clauses (3)
+────────────────────────────────────────
+
+[CRITICAL] auth_token_validation [precondition]
+  at specs/auth.isl:10
+  Authentication bypass detected
+
+[CRITICAL] password_hashing [postcondition]
+  at specs/auth.isl:25
+  Password stored in plaintext
+
+[HIGH] session_invalidation [postcondition]
+  at specs/auth.isl:40
+  Session not invalidated on logout
+
+💡 How to Fix
+────────────────────────────────────────
+1. Fix 2 critical issue(s) immediately - these block deployment
+2.   → auth_token_validation: Ensure token is validated before processing request
+3.   → password_hashing: Use bcrypt or argon2 for password hashing
+4. Review postcondition logic - ensure return values match spec
+5. Validate input handling - preconditions are not being met
+
+🔄 Repro Commands
+────────────────────────────────────────
+# Re-run verification
+$ isl verify specs/auth.isl src/auth.ts
+
+# Run with detailed output
+$ isl verify specs/auth.isl src/auth.ts --detailed
+
+# Run specific clause: auth_token_validation
+$ isl verify specs/auth.isl src/auth.ts --filter "auth_token_validation"
+
+# Get JSON output for CI
+$ isl verify specs/auth.isl src/auth.ts --format json
+"
+`;
+
+exports[`render > renders complete output for failing result 1`] = `
+"╭──────────────────────────────────────────────────────────╮
+│                 ISL Verification Result                  │
+├──────────────────────────────────────────────────────────┤
+│ Score: 50/100                                   NO_SHIP  │
+│ Confidence: 85%                                          │
+│ Recommendation: Not Ready                                │
+╰──────────────────────────────────────────────────────────╯
+
+📊 Category Breakdown
+────────────────────────────────────────
+Postconditions  ███████████████████████░░░░░░░░░░░░░░░░░░░░░░░  50% 1/2
+Invariants      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0% 0/1
+Scenarios       ███████████████████████░░░░░░░░░░░░░░░░░░░░░░░  50% 1/2
+Temporal        ██████████████████████████████████████████████ 100% 1/1
+
+✗ Failed Clauses (3)
+────────────────────────────────────────
+
+[CRITICAL] transfer_credits_receiver_balance [postcondition]
+  at specs/payment.isl:16:5
+  Receiver balance not updated correctly
+  Expression: receiver.balance == old(receiver.balance) + amount
+  Expected: 150
+  Actual:   100
+
+[HIGH] balance_never_negative [invariant]
+  at specs/payment.isl:22
+  Invariant violated: balance became negative
+  Expression: account.balance >= 0
+  Expected: true
+  Actual:   false
+
+[MEDIUM] insufficient_funds_rejection [scenario]
+  at specs/payment.isl:35
+  Transfer should have been rejected but succeeded
+
+💡 How to Fix
+────────────────────────────────────────
+1. Fix 1 critical issue(s) immediately - these block deployment
+2.   → transfer_credits_receiver_balance: Check that transfer() adds amount to receiver balance
+3. Review postcondition logic - ensure return values match spec
+4. Check invariant violations - state may be inconsistent
+5. balance_never_negative: Add balance check before deduction
+
+🔄 Repro Commands
+────────────────────────────────────────
+# Re-run verification
+$ isl verify specs/payment.isl src/payment.ts
+
+# Run with detailed output
+$ isl verify specs/payment.isl src/payment.ts --detailed
+
+# Run specific clause: transfer_credits_receiver_balance
+$ isl verify specs/payment.isl src/payment.ts --filter "transfer_credits_receiver_balance"
+
+# Get JSON output for CI
+$ isl verify specs/payment.isl src/payment.ts --format json
+"
+`;
+
+exports[`render > renders complete output for passing result 1`] = `
+"╭──────────────────────────────────────────────────────────╮
+│                 ISL Verification Result                  │
+├──────────────────────────────────────────────────────────┤
+│ Score: 100/100                                     SHIP  │
+│ Confidence: 95%                                          │
+│ Recommendation: Production Ready                         │
+╰──────────────────────────────────────────────────────────╯
+
+📊 Category Breakdown
+────────────────────────────────────────
+Postconditions  ██████████████████████████████████████████████ 100% 2/2
+Invariants      ██████████████████████████████████████████████ 100% 1/1
+Scenarios       ██████████████████████████████████████████████ 100% 1/1
+Temporal        ██████████████████████████████████████████████ 100% 1/1
+
+🔄 Repro Commands
+────────────────────────────────────────
+# Re-run verification
+$ isl verify specs/payment.isl src/payment.ts
+
+# Run with detailed output
+$ isl verify specs/payment.isl src/payment.ts --detailed
+
+# Get JSON output for CI
+$ isl verify specs/payment.isl src/payment.ts --format json
+"
+`;
+
+exports[`render > renders empty result 1`] = `
+"╭──────────────────────────────────────────────────────────╮
+│                 ISL Verification Result                  │
+├──────────────────────────────────────────────────────────┤
+│ Score: 100/100                                     SHIP  │
+│ Confidence: 0%                                           │
+│ Recommendation: Production Ready                         │
+╰──────────────────────────────────────────────────────────╯
+
+📊 Category Breakdown
+────────────────────────────────────────
+
+🔄 Repro Commands
+────────────────────────────────────────
+# Re-run verification
+$ isl verify specs/empty.isl src/empty.ts
+
+# Run with detailed output
+$ isl verify specs/empty.isl src/empty.ts --detailed
+
+# Get JSON output for CI
+$ isl verify specs/empty.isl src/empty.ts --format json
+"
+`;
+
+exports[`render > renders with all options disabled 1`] = `
+"╭──────────────────────────────────────────────────────────╮
+│                 ISL Verification Result                  │
+├──────────────────────────────────────────────────────────┤
+│ Score: 50/100                                   NO_SHIP  │
+│ Confidence: 85%                                          │
+│ Recommendation: Not Ready                                │
+╰──────────────────────────────────────────────────────────╯
+
+✗ Failed Clauses (3)
+────────────────────────────────────────
+
+[CRITICAL] transfer_credits_receiver_balance [postcondition]
+  at specs/payment.isl:16:5
+  Receiver balance not updated correctly
+  Expression: receiver.balance == old(receiver.balance) + amount
+  Expected: 150
+  Actual:   100
+
+[HIGH] balance_never_negative [invariant]
+  at specs/payment.isl:22
+  Invariant violated: balance became negative
+  Expression: account.balance >= 0
+  Expected: true
+  Actual:   false
+
+[MEDIUM] insufficient_funds_rejection [scenario]
+  at specs/payment.isl:35
+  Transfer should have been rejected but succeeded"
+`;
+
+exports[`renderBanner > renders NO_SHIP banner for failing result 1`] = `
+"╭──────────────────────────────────────────────────────────╮
+│                 ISL Verification Result                  │
+├──────────────────────────────────────────────────────────┤
+│ Score: 50/100                                   NO_SHIP  │
+│ Confidence: 85%                                          │
+│ Recommendation: Not Ready                                │
+╰──────────────────────────────────────────────────────────╯"
+`;
+
+exports[`renderBanner > renders SHIP banner for passing result 1`] = `
+"╭──────────────────────────────────────────────────────────╮
+│                 ISL Verification Result                  │
+├──────────────────────────────────────────────────────────┤
+│ Score: 100/100                                     SHIP  │
+│ Confidence: 95%                                          │
+│ Recommendation: Production Ready                         │
+╰──────────────────────────────────────────────────────────╯"
+`;
+
+exports[`renderBanner > renders critical issues banner 1`] = `
+"╭──────────────────────────────────────────────────────────╮
+│                 ISL Verification Result                  │
+├──────────────────────────────────────────────────────────┤
+│ Score: 0/100                                    NO_SHIP  │
+│ Confidence: 90%                                          │
+│ Recommendation: Critical Issues                          │
+╰──────────────────────────────────────────────────────────╯"
+`;
+
+exports[`renderBanner > renders staging recommended banner 1`] = `
+"╭──────────────────────────────────────────────────────────╮
+│                 ISL Verification Result                  │
+├──────────────────────────────────────────────────────────┤
+│ Score: 87/100                                   NO_SHIP  │
+│ Confidence: 88%                                          │
+│ Recommendation: Staging Recommended                      │
+╰──────────────────────────────────────────────────────────╯"
+`;
+
+exports[`renderBanner > renders with custom terminal width 1`] = `
+"╭────────────────────────────────────────────────╮
+│            ISL Verification Result             │
+├────────────────────────────────────────────────┤
+│ Score: 100/100                           SHIP  │
+│ Confidence: 95%                                │
+│ Recommendation: Production Ready               │
+╰────────────────────────────────────────────────╯"
+`;
+
+exports[`renderBreakdown > renders category breakdown 1`] = `
+"
+📊 Category Breakdown
+────────────────────────────────────────
+Postconditions  ██████████████████████████████████████████████ 100% 2/2
+Invariants      ██████████████████████████████████████████████ 100% 1/1
+Scenarios       ██████████████████████████████████████████████ 100% 1/1
+Temporal        ██████████████████████████████████████████████ 100% 1/1"
+`;
+
+exports[`renderBreakdown > shows scores and pass/fail counts 1`] = `
+"
+📊 Category Breakdown
+────────────────────────────────────────
+Postconditions  ███████████████████████░░░░░░░░░░░░░░░░░░░░░░░  50% 1/2
+Invariants      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0% 0/1
+Scenarios       ███████████████████████░░░░░░░░░░░░░░░░░░░░░░░  50% 1/2
+Temporal        ██████████████████████████████████████████████ 100% 1/1"
+`;
+
+exports[`renderFailures > renders critical failures 1`] = `
+"
+✗ Failed Clauses (3)
+────────────────────────────────────────
+
+[CRITICAL] auth_token_validation [precondition]
+  at specs/auth.isl:10
+  Authentication bypass detected
+
+[CRITICAL] password_hashing [postcondition]
+  at specs/auth.isl:25
+  Password stored in plaintext
+
+[HIGH] session_invalidation [postcondition]
+  at specs/auth.isl:40
+  Session not invalidated on logout"
+`;
+
+exports[`renderFailures > renders failures for failing result 1`] = `
+"
+✗ Failed Clauses (3)
+────────────────────────────────────────
+
+[CRITICAL] transfer_credits_receiver_balance [postcondition]
+  at specs/payment.isl:16:5
+  Receiver balance not updated correctly
+  Expression: receiver.balance == old(receiver.balance) + amount
+  Expected: 150
+  Actual:   100
+
+[HIGH] balance_never_negative [invariant]
+  at specs/payment.isl:22
+  Invariant violated: balance became negative
+  Expression: account.balance >= 0
+  Expected: true
+  Actual:   false
+
+[MEDIUM] insufficient_funds_rejection [scenario]
+  at specs/payment.isl:35
+  Transfer should have been rejected but succeeded"
+`;
+
+exports[`renderFailures > respects maxFailures option 1`] = `
+"
+✗ Failed Clauses (3)
+────────────────────────────────────────
+
+[CRITICAL] transfer_credits_receiver_balance [postcondition]
+  at specs/payment.isl:16:5
+  Receiver balance not updated correctly
+  Expression: receiver.balance == old(receiver.balance) + amount
+  Expected: 150
+  Actual:   100
+
+... and 2 more failure(s)"
+`;
+
+exports[`renderHowToFix > renders critical fixes for critical result 1`] = `
+"
+💡 How to Fix
+────────────────────────────────────────
+1. Fix 2 critical issue(s) immediately - these block deployment
+2.   → auth_token_validation: Ensure token is validated before processing request
+3.   → password_hashing: Use bcrypt or argon2 for password hashing
+4. Review postcondition logic - ensure return values match spec
+5. Validate input handling - preconditions are not being met"
+`;
+
+exports[`renderHowToFix > renders fix suggestions for failing result 1`] = `
+"
+💡 How to Fix
+────────────────────────────────────────
+1. Fix 1 critical issue(s) immediately - these block deployment
+2.   → transfer_credits_receiver_balance: Check that transfer() adds amount to receiver balance
+3. Review postcondition logic - ensure return values match spec
+4. Check invariant violations - state may be inconsistent
+5. balance_never_negative: Add balance check before deduction"
+`;
+
+exports[`renderReproCommands > renders repro commands section 1`] = `
+"
+🔄 Repro Commands
+────────────────────────────────────────
+# Re-run verification
+$ isl verify specs/payment.isl src/payment.ts
+
+# Run with detailed output
+$ isl verify specs/payment.isl src/payment.ts --detailed
+
+# Run specific clause: transfer_credits_receiver_balance
+$ isl verify specs/payment.isl src/payment.ts --filter "transfer_credits_receiver_balance"
+
+# Get JSON output for CI
+$ isl verify specs/payment.isl src/payment.ts --format json
+"
+`;

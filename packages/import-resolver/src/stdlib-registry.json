@@ -1,0 +1,173 @@
+{
+  "$schema": "./stdlib-registry.schema.json",
+  "version": "1.0.0",
+  "description": "ISL Standard Library Module Registry - 1.0 Release",
+  "modules": {
+    "@isl/string": {
+      "version": "1.0.0",
+      "path": "stdlib/string",
+      "files": {
+        "index": "index.isl"
+      },
+      "exports": ["StringCase", "TrimMode", "EmailFormat", "UrlFormat", "PhoneFormat", "StringValidationResult", "SplitResult", "Length", "IsEmpty", "IsBlank", "ToLowerCase", "ToUpperCase", "ToTitleCase", "ToCamelCase", "ToPascalCase", "ToSnakeCase", "ToKebabCase", "ChangeCase", "Trim", "TrimStart", "TrimEnd", "TrimChars", "Contains", "StartsWith", "EndsWith", "IndexOf", "LastIndexOf", "Substring", "Slice", "Replace", "ReplaceAll", "Split", "Join", "Concat", "Repeat", "PadStart", "PadEnd", "Reverse", "CharAt", "CharCodeAt", "FromCharCode", "IsValidEmail", "IsValidUrl", "IsValidPhone", "MatchesPattern", "IsAlpha", "IsAlphanumeric", "IsNumeric", "IsHexadecimal", "IsLowerCase", "IsUpperCase"],
+      "description": "String manipulation and validation operations (100% deterministic)",
+      "deterministic": true
+    },
+    "@isl/math": {
+      "version": "1.0.0",
+      "path": "stdlib/math",
+      "files": {
+        "index": "index.isl"
+      },
+      "exports": ["PositiveInt", "NonNegativeInt", "Percentage", "UnitInterval", "RoundingMode", "NumericRange", "StatisticsResult", "Abs", "Sign", "Min", "Max", "Clamp", "Floor", "Ceil", "Round", "RoundTo", "Trunc", "Add", "Subtract", "Multiply", "Divide", "Mod", "Pow", "Sqrt", "SafeAdd", "SafeSubtract", "SafeMultiply", "Approximately", "IsPositive", "IsNegative", "IsZero", "IsInteger", "IsFinite", "InRange", "Lerp", "InverseLerp", "Sum", "Average", "Median", "Variance", "StdDev", "MinOf", "MaxOf", "Statistics", "Percentage", "PercentageOf", "RoundCurrency", "DiscountedPrice"],
+      "description": "Mathematical operations (100% deterministic)",
+      "deterministic": true
+    },
+    "@isl/collections": {
+      "version": "1.0.0",
+      "path": "stdlib/collections",
+      "files": {
+        "index": "index.isl"
+      },
+      "exports": ["SortOrder", "CompareResult", "KeyValuePair", "IndexedValue", "GroupedResult", "Length", "IsEmpty", "First", "Last", "Get", "Map", "Filter", "Reduce", "FlatMap", "Find", "FindIndex", "FindLast", "FindLastIndex", "IndexOf", "Includes", "Every", "Some", "None", "Take", "TakeWhile", "Drop", "DropWhile", "Slice", "Concat", "Flatten", "Zip", "Unzip", "Reverse", "Sort", "SortBy", "SortWith", "Unique", "UniqueBy", "Chunk", "GroupBy", "Partition", "MapGet", "MapSet", "MapRemove", "MapHas", "MapKeys", "MapValues", "MapEntries", "MapSize", "MapMerge", "MapPick", "MapOmit", "MapMapValues", "MapFilterValues", "FromEntries", "Union", "Intersection", "Difference", "SymmetricDifference", "Range", "Repeat", "WithIndex", "Count"],
+      "description": "List and Map operations (100% deterministic, stable sort)",
+      "deterministic": true
+    },
+    "@isl/json": {
+      "version": "1.0.0",
+      "path": "stdlib/json",
+      "files": {
+        "index": "index.isl"
+      },
+      "exports": ["JSONValue", "JSONObject", "JSONArray", "JSONPath", "JSONPointer", "JSONPatchOp", "JSONFormatOptions", "JSONParseResult", "JSONPatch", "JSONDiff", "JSONSchemaValidation", "Parse", "TryParse", "Stringify", "StringifyPretty", "StringifyCompact", "Get", "GetString", "GetNumber", "GetBoolean", "GetArray", "GetObject", "Has", "Set", "Remove", "Merge", "Clone", "Keys", "Values", "Entries", "Query", "Equals", "Diff", "ApplyPatches", "IsValid", "IsObject", "IsArray", "IsString", "IsNumber", "IsBoolean", "IsNull", "Flatten", "Unflatten", "Pick", "Omit"],
+      "description": "JSON parsing, serialization, and manipulation (100% deterministic)",
+      "deterministic": true
+    },
+    "@isl/datetime": {
+      "version": "1.0.0",
+      "path": "stdlib/datetime",
+      "files": {
+        "index": "index.isl"
+      },
+      "exports": ["Timestamp", "Duration", "TimeZone", "DateFormat", "DatePart", "DayOfWeek", "DateTimeComponents", "DurationComponents", "Now", "AddDuration", "SubtractDuration", "DiffTimestamps", "FormatTimestamp", "ParseTimestamp", "GetDatePart", "ToComponents", "FromComponents", "DurationToMs", "MsToDuration", "IsLeapYear", "DaysInMonth", "CompareTimestamps", "IsBefore", "IsAfter", "IsBetween"],
+      "description": "Date and time operations (Now is non-deterministic, all others deterministic)",
+      "deterministic": false,
+      "nondeterministic_functions": ["Now"]
+    },
+    "@isl/uuid": {
+      "version": "1.0.0",
+      "path": "stdlib/uuid",
+      "files": {
+        "index": "index.isl"
+      },
+      "exports": ["UUID", "UUIDVersion", "UUIDNamespace", "UUIDFormat", "UUIDInfo", "UUIDComponents", "GenerateUUID", "GenerateUUIDv7", "GenerateUUIDv5", "GenerateUUIDv3", "GenerateNamespacedUUID", "IsValidUUID", "IsNilUUID", "IsMaxUUID", "ParseUUID", "FormatUUID", "NormalizeUUID", "GetUUIDVersion", "ToComponents", "FromComponents", "CompareUUIDs", "UUIDsEqual"],
+      "description": "UUID generation, validation, and parsing (v4/v7 non-deterministic, v3/v5 deterministic)",
+      "deterministic": false,
+      "nondeterministic_functions": ["GenerateUUID", "GenerateUUIDv7"]
+    },
+    "@isl/crypto": {
+      "version": "1.0.0",
+      "path": "stdlib/crypto",
+      "files": {
+        "index": "index.isl"
+      },
+      "exports": ["HashAlgorithm", "PasswordHashAlgorithm", "HmacAlgorithm", "HashOutput", "PasswordHash", "SecureToken", "HmacSignature", "SecretKey", "HashResult", "PasswordHashConfig", "Hash", "HashSHA256", "HashSHA512", "HashSHA3", "HashBlake3", "HashPassword", "VerifyPassword", "NeedsRehash", "Hmac", "VerifyHmac", "GenerateToken", "GenerateApiKey", "GenerateBytes", "DeriveKey", "ConstantTimeEquals", "HashFile"],
+      "description": "Cryptographic hashing and secure operations (random generation non-deterministic)",
+      "deterministic": false,
+      "nondeterministic_functions": ["GenerateToken", "GenerateApiKey", "GenerateBytes", "HashPassword"]
+    },
+    "@isl/encoding": {
+      "version": "1.0.0",
+      "path": "stdlib/encoding",
+      "files": {
+        "index": "index.isl"
+      },
+      "exports": ["Base64String", "Base64UrlString", "HexString", "UrlEncodedString", "HtmlEncodedString", "Encoding", "EncodingResult", "DecodingResult", "EncodeBase64", "DecodeBase64", "TryDecodeBase64", "EncodeBase64Url", "DecodeBase64Url", "IsValidBase64", "IsValidBase64Url", "EncodeUrl", "DecodeUrl", "TryDecodeUrl", "EncodeUrlComponent", "DecodeUrlComponent", "BuildQueryString", "ParseQueryString", "EscapeHtml", "UnescapeHtml", "EscapeHtmlAttribute", "EncodeHex", "DecodeHex", "IsValidHex", "EncodeUtf8", "DecodeUtf8", "GetByteLength", "StringToCodePoints", "CodePointsToString", "EscapeJsonString", "UnescapeJsonString", "Convert", "DetectEncoding"],
+      "description": "Base64, URL, HTML, and Hex encoding operations (100% deterministic)",
+      "deterministic": true
+    },
+    "@isl/regex": {
+      "version": "1.0.0",
+      "path": "stdlib/regex",
+      "files": {
+        "index": "index.isl"
+      },
+      "exports": ["RegexPattern", "RegexFlags", "MatchResult", "Match", "MatchAllResult", "ReplaceResult", "SplitResult", "PatternInfo", "ValidationError", "Test", "Match", "MatchAll", "Exec", "Groups", "Captures", "Replace", "ReplaceAll", "ReplaceWithFunction", "Split", "Escape", "IsValidPattern", "ValidatePattern", "GetPatternInfo", "JoinPatterns", "WrapGroup", "Quantify", "MatchEmail", "MatchUrl", "MatchPhone", "MatchUuid", "MatchIpAddress", "ExtractAll", "ExtractNamed"],
+      "description": "Safe regex pattern matching operations (100% deterministic)",
+      "deterministic": true
+    },
+    "@isl/url": {
+      "version": "1.0.0",
+      "path": "stdlib/url",
+      "files": {
+        "index": "index.isl"
+      },
+      "exports": ["URLString", "Protocol", "Host", "Port", "Path", "QueryString", "Fragment", "ParsedURL", "URLComponents", "QueryParams", "URLParseResult", "Parse", "TryParse", "ParseQuery", "GetProtocol", "GetHost", "GetHostname", "GetPort", "GetPathname", "GetSearch", "GetHash", "GetOrigin", "GetQueryParam", "GetQueryParams", "GetQueryParamAll", "HasQueryParam", "SetQueryParam", "SetQueryParams", "RemoveQueryParam", "ClearQueryParams", "Build", "BuildQuery", "Join", "Resolve", "IsValid", "IsAbsolute", "IsRelative", "IsHttps", "IsSameOrigin", "Normalize", "RemoveTrailingSlash", "AddTrailingSlash", "SetProtocol", "SetHost", "SetPathname", "SetHash", "GetPathSegments", "GetFilename", "GetExtension"],
+      "description": "URL parsing and manipulation operations (100% deterministic)",
+      "deterministic": true
+    }
+  },
+  "aliases": {
+    "stdlib-string": "@isl/string",
+    "stdlib-strings": "@isl/string",
+    "stdlib-math": "@isl/math",
+    "stdlib-collections": "@isl/collections",
+    "stdlib-json": "@isl/json",
+    "stdlib-datetime": "@isl/datetime",
+    "stdlib-uuid": "@isl/uuid",
+    "stdlib-crypto": "@isl/crypto",
+    "stdlib-encoding": "@isl/encoding",
+    "stdlib-regex": "@isl/regex",
+    "stdlib-url": "@isl/url"
+  },
+  "categories": {
+    "core": {
+      "name": "Core Primitives",
+      "description": "Essential string, number, and collection operations",
+      "modules": ["@isl/string", "@isl/math", "@isl/collections"]
+    },
+    "data": {
+      "name": "Data Formats",
+      "description": "JSON, encoding, and URL handling",
+      "modules": ["@isl/json", "@isl/encoding", "@isl/url"]
+    },
+    "temporal": {
+      "name": "Temporal",
+      "description": "Date, time, and unique identifiers",
+      "modules": ["@isl/datetime", "@isl/uuid"]
+    },
+    "security": {
+      "name": "Security",
+      "description": "Cryptographic operations",
+      "modules": ["@isl/crypto"]
+    },
+    "patterns": {
+      "name": "Patterns",
+      "description": "Pattern matching and validation",
+      "modules": ["@isl/regex"]
+    }
+  },
+  "determinism_policy": {
+    "version": "1.0.0",
+    "description": "Functions marked as non-deterministic are excluded from formal verification",
+    "fully_deterministic_modules": [
+      "@isl/string",
+      "@isl/math",
+      "@isl/collections",
+      "@isl/json",
+      "@isl/encoding",
+      "@isl/regex",
+      "@isl/url"
+    ],
+    "mixed_determinism_modules": [
+      "@isl/datetime",
+      "@isl/uuid",
+      "@isl/crypto"
+    ],
+    "nondeterministic_functions": {
+      "@isl/datetime": ["Now"],
+      "@isl/uuid": ["GenerateUUID", "GenerateUUIDv7"],
+      "@isl/crypto": ["GenerateToken", "GenerateApiKey", "GenerateBytes", "HashPassword"]
+    }
+  }
+}

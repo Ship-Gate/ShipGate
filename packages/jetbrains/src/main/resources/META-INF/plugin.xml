@@ -1,0 +1,236 @@
+<idea-plugin>
+    <id>com.isl.plugin</id>
+    <name>ISL - Intent Specification Language</name>
+    <vendor email="support@intentos.dev" url="https://intentos.dev">ISL Team</vendor>
+    
+    <description><![CDATA[
+        <h1>Intent Specification Language (ISL) Support</h1>
+        <p>Full IDE support for ISL, the language for defining behavioral contracts.</p>
+        
+        <h2>Features</h2>
+        <ul>
+            <li><b>Syntax Highlighting</b> - Full highlighting for keywords, types, annotations, and more</li>
+            <li><b>Code Completion</b> - Smart completion for keywords, types, entities, and references</li>
+            <li><b>Error Checking</b> - Real-time validation with error highlighting</li>
+            <li><b>Navigation</b> - Go to definition, find usages, structure view</li>
+            <li><b>Code Generation</b> - Generate TypeScript/Python types, tests, and documentation</li>
+            <li><b>Verification</b> - Verify implementations against ISL specifications</li>
+            <li><b>Refactoring</b> - Rename entities, behaviors, and types safely</li>
+        </ul>
+        
+        <h2>Supported File Types</h2>
+        <ul>
+            <li><code>.isl</code> - Intent Specification Language files</li>
+        </ul>
+    ]]></description>
+    
+    <change-notes><![CDATA[
+        <h2>0.1.0</h2>
+        <ul>
+            <li>Initial release</li>
+            <li>Syntax highlighting</li>
+            <li>Code completion</li>
+            <li>Error checking</li>
+            <li>Structure view</li>
+            <li>Code generation actions</li>
+        </ul>
+    ]]></change-notes>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- File Type -->
+        <fileType 
+            name="ISL File"
+            implementationClass="com.isl.plugin.ISLFileType"
+            fieldName="INSTANCE"
+            language="ISL"
+            extensions="isl"/>
+        
+        <!-- Language -->
+        <lang.parserDefinition 
+            language="ISL"
+            implementationClass="com.isl.plugin.parser.ISLParserDefinition"/>
+        
+        <!-- Syntax Highlighting -->
+        <lang.syntaxHighlighterFactory 
+            language="ISL"
+            implementationClass="com.isl.plugin.highlighting.ISLSyntaxHighlighterFactory"/>
+        
+        <!-- Annotator (semantic error highlighting) -->
+        <annotator 
+            language="ISL"
+            implementationClass="com.isl.plugin.annotator.ISLAnnotator"/>
+        
+        <!-- Completion -->
+        <completion.contributor 
+            language="ISL"
+            implementationClass="com.isl.plugin.completion.ISLCompletionContributor"/>
+        
+        <!-- Structure View -->
+        <lang.psiStructureViewFactory 
+            language="ISL"
+            implementationClass="com.isl.plugin.structure.ISLStructureViewFactory"/>
+        
+        <!-- Find Usages -->
+        <lang.findUsagesProvider 
+            language="ISL"
+            implementationClass="com.isl.plugin.findusages.ISLFindUsagesProvider"/>
+        
+        <!-- Folding -->
+        <lang.foldingBuilder 
+            language="ISL"
+            implementationClass="com.isl.plugin.folding.ISLFoldingBuilder"/>
+        
+        <!-- Formatter -->
+        <lang.formatter 
+            language="ISL"
+            implementationClass="com.isl.plugin.formatting.ISLFormattingModelBuilder"/>
+        
+        <!-- Commenter -->
+        <lang.commenter 
+            language="ISL"
+            implementationClass="com.isl.plugin.ISLCommenter"/>
+        
+        <!-- Brace Matcher -->
+        <lang.braceMatcher 
+            language="ISL"
+            implementationClass="com.isl.plugin.ISLBraceMatcher"/>
+        
+        <!-- Quote Handler -->
+        <lang.quoteHandler
+            language="ISL"
+            implementationClass="com.isl.plugin.ISLQuoteHandler"/>
+        
+        <!-- Color Settings Page -->
+        <colorSettingsPage 
+            implementationClass="com.isl.plugin.highlighting.ISLColorSettingsPage"/>
+        
+        <!-- Live Templates -->
+        <defaultLiveTemplates file="/liveTemplates/ISL.xml"/>
+        <liveTemplateContext 
+            contextId="ISL"
+            implementation="com.isl.plugin.templates.ISLTemplateContextType"/>
+        
+        <!-- Tool Window for Verification Results -->
+        <toolWindow 
+            id="ISL Verification"
+            anchor="bottom"
+            icon="/icons/isl-toolwindow.svg"
+            factoryClass="com.isl.plugin.toolwindow.ISLToolWindowFactory"/>
+        
+        <!-- Notifications -->
+        <notificationGroup 
+            id="ISL Notifications" 
+            displayType="BALLOON"/>
+        
+        <!-- Line Marker (gutter icons) -->
+        <codeInsight.lineMarkerProvider
+            language="ISL"
+            implementationClass="com.isl.plugin.markers.ISLLineMarkerProvider"/>
+        
+        <!-- Documentation Provider -->
+        <lang.documentationProvider
+            language="ISL"
+            implementationClass="com.isl.plugin.documentation.ISLDocumentationProvider"/>
+        
+        <!-- Reference Contributor -->
+        <psi.referenceContributor
+            language="ISL"
+            implementation="com.isl.plugin.references.ISLReferenceContributor"/>
+    </extensions>
+
+    <actions>
+        <!-- Generate Menu -->
+        <group id="ISL.GenerateMenu" text="ISL Generate" popup="true" icon="/icons/isl-generate.svg">
+            <add-to-group group-id="GenerateGroup" anchor="first"/>
+            
+            <action id="ISL.GenerateTypes"
+                    class="com.isl.plugin.actions.GenerateTypesAction"
+                    text="Generate Types"
+                    description="Generate TypeScript/Python types from ISL specification"
+                    icon="/icons/isl-types.svg"/>
+            
+            <action id="ISL.GenerateTests"
+                    class="com.isl.plugin.actions.GenerateTestsAction"
+                    text="Generate Tests"
+                    description="Generate test files from ISL specification"
+                    icon="/icons/isl-tests.svg"/>
+            
+            <action id="ISL.GenerateDocs"
+                    class="com.isl.plugin.actions.GenerateDocsAction"
+                    text="Generate Documentation"
+                    description="Generate documentation from ISL specification"
+                    icon="/icons/isl-docs.svg"/>
+            
+            <separator/>
+            
+            <action id="ISL.GenerateOpenAPI"
+                    class="com.isl.plugin.actions.GenerateOpenAPIAction"
+                    text="Generate OpenAPI Spec"
+                    description="Generate OpenAPI specification from ISL"/>
+        </group>
+        
+        <!-- Tools Menu -->
+        <group id="ISL.ToolsMenu" text="ISL" popup="true" icon="/icons/isl.svg">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            
+            <action id="ISL.Verify"
+                    class="com.isl.plugin.actions.VerifyAction"
+                    text="Verify Implementation"
+                    description="Verify implementation against ISL specification"
+                    icon="/icons/isl-verify.svg">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt V"/>
+            </action>
+            
+            <action id="ISL.CheckSpec"
+                    class="com.isl.plugin.actions.CheckSpecAction"
+                    text="Check Specification"
+                    description="Validate ISL specification syntax and semantics"
+                    icon="/icons/isl-check.svg">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt C"/>
+            </action>
+            
+            <separator/>
+            
+            <action id="ISL.RunChaos"
+                    class="com.isl.plugin.actions.RunChaosAction"
+                    text="Run Chaos Tests"
+                    description="Run chaos testing scenarios"/>
+            
+            <action id="ISL.ViewCoverage"
+                    class="com.isl.plugin.actions.ViewCoverageAction"
+                    text="View Spec Coverage"
+                    description="View specification coverage report"/>
+        </group>
+        
+        <!-- Editor Context Menu -->
+        <group id="ISL.EditorMenu">
+            <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+            <separator/>
+            
+            <action id="ISL.QuickVerify"
+                    class="com.isl.plugin.actions.QuickVerifyAction"
+                    text="Quick Verify"
+                    description="Quick verify the current behavior"
+                    icon="/icons/isl-verify.svg"/>
+            
+            <action id="ISL.GoToImplementation"
+                    class="com.isl.plugin.actions.GoToImplementationAction"
+                    text="Go to Implementation"
+                    description="Navigate to the implementation of this spec"/>
+            
+            <separator/>
+        </group>
+        
+        <!-- New File Action -->
+        <action id="ISL.NewFile"
+                class="com.isl.plugin.actions.NewISLFileAction"
+                text="ISL Specification"
+                description="Create a new ISL specification file"
+                icon="/icons/isl.svg">
+            <add-to-group group-id="NewGroup" anchor="after" relative-to-action="NewFile"/>
+        </action>
+    </actions>
+</idea-plugin>

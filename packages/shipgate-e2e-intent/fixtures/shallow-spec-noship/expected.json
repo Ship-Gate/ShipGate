@@ -1,0 +1,11 @@
+{
+  "good": {
+    "verdictOneOf": ["WARN", "NO_SHIP", "SHIP"],
+    "description": "Good code with shallow spec: at best WARN because spec lacks postconditions"
+  },
+  "bad": {
+    "verdictOneOf": ["WARN", "NO_SHIP"],
+    "scoreBelow": 0.85,
+    "description": "Bad code with shallow spec: should NOT ship — spec is too weak to prove safety"
+  }
+}

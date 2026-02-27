@@ -1,0 +1,225 @@
+{
+  "framework": "SOC2",
+  "timestamp": "2026-02-16T16:30:15.578Z",
+  "spec": "specs/example.isl",
+  "summary": {
+    "total": 21,
+    "pass": 0,
+    "warn": 4,
+    "fail": 17
+  },
+  "controls": [
+    {
+      "controlId": "CC6.1",
+      "controlName": "Logical Access Security",
+      "description": "The entity implements logical access security software, infrastructure, and architectures",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "CC6.2",
+      "controlName": "User Registration",
+      "description": "Prior to issuing credentials, the entity registers and authorizes users",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "CC6.3",
+      "controlName": "Credential Management",
+      "description": "The entity authorizes, modifies, or removes access to data and assets",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "CC6.6",
+      "controlName": "External Boundaries",
+      "description": "The entity implements controls to prevent or detect unauthorized access",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "CC6.7",
+      "controlName": "Transmission Protection",
+      "description": "The entity restricts the transmission of information to authorized channels",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "CC6.8",
+      "controlName": "Unauthorized Software Prevention",
+      "description": "The entity implements controls to prevent unauthorized software installation",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "CC7.1",
+      "controlName": "Detection of Changes",
+      "description": "The entity detects changes to infrastructure and software",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "CC7.2",
+      "controlName": "System Monitoring",
+      "description": "The entity monitors system components to detect anomalies",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "CC7.3",
+      "controlName": "Security Event Analysis",
+      "description": "The entity evaluates security events to determine their impact",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "CC7.4",
+      "controlName": "Incident Response",
+      "description": "The entity responds to identified security incidents",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "CC7.5",
+      "controlName": "Recovery Procedures",
+      "description": "The entity identifies, develops, and implements recovery activities",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "CC8.1",
+      "controlName": "Change Authorization",
+      "description": "The entity authorizes, designs, and develops changes to infrastructure and software",
+      "status": "warn",
+      "contributingChecks": [
+        {
+          "checkId": "evidence-0",
+          "passed": true,
+          "description": "ISL-first development process"
+        }
+      ],
+      "evidenceRefs": [
+        {
+          "type": "isl_spec",
+          "ref": "behavior [object Object]"
+        }
+      ]
+    },
+    {
+      "controlId": "CC9.1",
+      "controlName": "Risk Identification",
+      "description": "The entity identifies and assesses risks to objectives",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "CC9.2",
+      "controlName": "Vendor Risk Management",
+      "description": "The entity assesses and manages risks associated with vendors",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "A1.1",
+      "controlName": "Capacity Planning",
+      "description": "The entity maintains processing capacity to meet availability commitments",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "A1.2",
+      "controlName": "Environmental Protections",
+      "description": "The entity implements environmental protections",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "C1.1",
+      "controlName": "Confidential Information Identification",
+      "description": "The entity identifies and maintains confidential information",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "C1.2",
+      "controlName": "Confidential Information Disposal",
+      "description": "The entity disposes of confidential information to meet objectives",
+      "status": "fail",
+      "contributingChecks": [],
+      "evidenceRefs": []
+    },
+    {
+      "controlId": "PI1.1",
+      "controlName": "Input Validation",
+      "description": "The entity validates inputs before processing",
+      "status": "warn",
+      "contributingChecks": [
+        {
+          "checkId": "evidence-0",
+          "passed": true,
+          "description": "1 preconditions defined"
+        }
+      ],
+      "evidenceRefs": [
+        {
+          "type": "isl_spec",
+          "ref": "[object Object].preconditions"
+        }
+      ]
+    },
+    {
+      "controlId": "PI1.2",
+      "controlName": "Processing Validation",
+      "description": "The entity implements processing validation",
+      "status": "warn",
+      "contributingChecks": [
+        {
+          "checkId": "evidence-0",
+          "passed": true,
+          "description": "1 postconditions defined"
+        }
+      ],
+      "evidenceRefs": [
+        {
+          "type": "isl_spec",
+          "ref": "[object Object].postconditions"
+        }
+      ]
+    },
+    {
+      "controlId": "PI1.3",
+      "controlName": "Output Validation",
+      "description": "The entity validates outputs to meet processing integrity requirements",
+      "status": "warn",
+      "contributingChecks": [
+        {
+          "checkId": "evidence-0",
+          "passed": true,
+          "description": "1 postconditions defined"
+        }
+      ],
+      "evidenceRefs": [
+        {
+          "type": "isl_spec",
+          "ref": "[object Object].postconditions"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,510 @@
+import express from 'express';
+import cors from 'cors';
+
+const app = express();
+const PORT = 3456;
+
+app.use(cors());
+
+// Stripe webhook needs raw body for signature verification
+app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }));
+app.use(express.json());
+
+// Demo data - simulates ISL pipeline processing
+const DEMO_ISL_SPECS = {
+  counter: `domain Counter
+
+state {
+  count: int = 0
+}
+
+behavior increment {
+  precondition: true
+  postcondition: count' = count + 1
+}
+
+behavior decrement {
+  precondition: count > 0
+  postcondition: count' = count - 1
+}
+
+invariant count >= 0`,
+
+  auth: `domain Authentication
+use stdlib-auth
+
+state {
+  users: Map<string, User>
+  sessions: Map<string, Session>
+}
+
+behavior register(email: string, password: string) -> Result<User, AuthError> {
+  precondition: email.isValidEmail() && password.length >= 8
+  postcondition: users'.has(email) && result.isOk()
+  errors: [InvalidEmail, WeakPassword, EmailTaken]
+}
+
+behavior login(email: string, password: string) -> Result<Session, AuthError> {
+  precondition: users.has(email)
+  postcondition: sessions'.has(result.value.id)
+  errors: [InvalidCredentials, AccountLocked]
+  
+  rateLimit: 5 per minute per email
+}
+
+invariant forall s in sessions: s.expiresAt > now()`,
+
+  payments: `domain Payments
+use stdlib-payments
+
+state {
+  balance: Money
+  transactions: List<Transaction>
+}
+
+behavior charge(amount: Money, card: Card) -> Result<Transaction, PaymentError> {
+  precondition: amount > 0 && card.isValid()
+  postcondition: 
+    transactions'.length = transactions.length + 1 &&
+    result.value.status = "completed"
+  errors: [InsufficientFunds, InvalidCard, PaymentDeclined]
+  
+  sensitive: card.number, card.cvv
+  audit: true
+}
+
+invariant balance >= 0`,
+};
+
+const DEMO_CODE = {
+  counter: `export class Counter {
+  private count: number = 0;
+
+  increment(): void {
+    this.count += 1;
+  }
+
+  decrement(): void {
+    if (this.count <= 0) {
+      throw new Error('Count cannot go below 0');
+    }
+    this.count -= 1;
+  }
+
+  getCount(): number {
+    return this.count;
+  }
+}`,
+
+  auth: `export class AuthService {
+  private users = new Map<string, User>();
+  private sessions = new Map<string, Session>();
+  private rateLimiter = new RateLimiter({ max: 5, windowMs: 60000 });
+
+  async register(email: string, password: string): Promise<Result<User, AuthError>> {
+    // Precondition checks
+    if (!isValidEmail(email)) {
+      return err({ type: 'InvalidEmail', message: 'Email format is invalid' });
+    }
+    if (password.length < 8) {
+      return err({ type: 'WeakPassword', message: 'Password must be at least 8 characters' });
+    }
+    if (this.users.has(email)) {
+      return err({ type: 'EmailTaken', message: 'Email already registered' });
+    }
+
+    // Create user with hashed password
+    const user: User = {
+      id: generateId(),
+      email,
+      passwordHash: await hashPassword(password),
+      createdAt: new Date(),
+    };
+    
+    this.users.set(email, user);
+    return ok(user);
+  }
+
+  async login(email: string, password: string): Promise<Result<Session, AuthError>> {
+    // Rate limiting
+    if (!this.rateLimiter.check(email)) {
+      return err({ type: 'RateLimited', message: 'Too many attempts, try again later' });
+    }
+
+    const user = this.users.get(email);
+    if (!user || !(await verifyPassword(password, user.passwordHash))) {
+      return err({ type: 'InvalidCredentials', message: 'Invalid email or password' });
+    }
+
+    const session: Session = {
+      id: generateId(),
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    };
+    
+    this.sessions.set(session.id, session);
+    return ok(session);
+  }
+}`,
+
+  payments: `export class PaymentService {
+  private balance: Money = { amount: 0, currency: 'USD' };
+  private transactions: Transaction[] = [];
+  private auditLog = new AuditLogger();
+
+  async charge(amount: Money, card: Card): Promise<Result<Transaction, PaymentError>> {
+    // Precondition checks
+    if (amount.amount <= 0) {
+      return err({ type: 'InvalidAmount', message: 'Amount must be positive' });
+    }
+    if (!validateCard(card)) {
+      return err({ type: 'InvalidCard', message: 'Card validation failed' });
+    }
+
+    // Mask sensitive data before logging
+    const maskedCard = maskSensitiveData(card, ['number', 'cvv']);
+    this.auditLog.log('charge_attempt', { amount, card: maskedCard });
+
+    try {
+      // Process payment through gateway
+      const result = await paymentGateway.process(amount, card);
+      
+      const transaction: Transaction = {
+        id: generateId(),
+        amount,
+        status: 'completed',
+        timestamp: new Date(),
+      };
+      
+      this.transactions.push(transaction);
+      this.auditLog.log('charge_success', { transactionId: transaction.id });
+      
+      return ok(transaction);
+    } catch (error) {
+      this.auditLog.log('charge_failed', { error: error.message });
+      return err({ type: 'PaymentDeclined', message: error.message });
+    }
+  }
+}`,
+};
+
+const REGULAR_AI_CODE = {
+  auth: `// Generated by regular AI - security issues highlighted
+export class AuthService {
+  private users = {};  // ❌ No type safety
+
+  register(email, password) {
+    // ❌ No email validation
+    // ❌ No password strength check
+    this.users[email] = { password };  // ❌ Plain text password!
+    return { success: true };
+  }
+
+  login(email, password) {
+    // ❌ No rate limiting
+    // ❌ Timing attack vulnerable
+    if (this.users[email]?.password === password) {
+      return { token: email };  // ❌ Predictable token
+    }
+    return { error: 'Invalid' };  // ❌ Generic error exposes existence
+  }
+}`,
+
+  payments: `// Generated by regular AI - security issues highlighted
+export class PaymentService {
+  charge(amount, cardNumber, cvv) {
+    // ❌ No input validation
+    // ❌ Sensitive data in parameters
+    console.log('Charging card:', cardNumber);  // ❌ Logging sensitive data!
+    
+    // ❌ No error handling
+    const result = processPayment(amount, cardNumber, cvv);
+    
+    return result;  // ❌ No audit trail
+  }
+}`,
+};
+
+// API Endpoints
+
+// Parse plain English to ISL
+app.post('/api/parse', (req, res) => {
+  const { input } = req.body;
+  
+  // Simulate parsing delay
+  setTimeout(() => {
+    let spec = DEMO_ISL_SPECS.counter;
+    
+    if (input?.toLowerCase().includes('auth')) {
+      spec = DEMO_ISL_SPECS.auth;
+    } else if (input?.toLowerCase().includes('payment')) {
+      spec = DEMO_ISL_SPECS.payments;
+    }
+    
+    res.json({
+      success: true,
+      isl: spec,
+      parseTime: 145,
+    });
+  }, 500);
+});
+
+// Generate code from ISL
+app.post('/api/generate', (req, res) => {
+  const { isl, target = 'typescript' } = req.body;
+  
+  setTimeout(() => {
+    let code = DEMO_CODE.counter;
+    
+    if (isl?.includes('Authentication')) {
+      code = DEMO_CODE.auth;
+    } else if (isl?.includes('Payments')) {
+      code = DEMO_CODE.payments;
+    }
+    
+    res.json({
+      success: true,
+      code,
+      target,
+      generateTime: 234,
+    });
+  }, 800);
+});
+
+// Verify code against ISL
+app.post('/api/verify', (req, res) => {
+  const { isl } = req.body;
+  
+  setTimeout(() => {
+    const verifications = [
+      { name: 'Preconditions', status: 'verified', count: 3 },
+      { name: 'Postconditions', status: 'verified', count: 4 },
+      { name: 'Invariants', status: 'verified', count: 2 },
+      { name: 'Error Handling', status: 'verified', count: 5 },
+      { name: 'Security Constraints', status: 'verified', count: 3 },
+    ];
+    
+    // Calculate trust score based on domain complexity
+    let score = 94;
+    if (isl?.includes('Payments')) {
+      score = 97;
+      verifications.push({ name: 'PCI Compliance', status: 'verified', count: 8 });
+    } else if (isl?.includes('Authentication')) {
+      score = 96;
+      verifications.push({ name: 'Rate Limiting', status: 'verified', count: 2 });
+    }
+    
+    res.json({
+      success: true,
+      trustScore: score,
+      verifications,
+      verifyTime: 567,
+    });
+  }, 1000);
+});
+
+// Compare regular AI vs ISL Studio
+app.post('/api/compare', (req, res) => {
+  const { domain = 'auth' } = req.body;
+  
+  const issues = domain === 'payments' ? [
+    { line: 3, severity: 'critical', message: 'No input validation' },
+    { line: 4, severity: 'critical', message: 'Sensitive data exposed in function signature' },
+    { line: 5, severity: 'critical', message: 'Logging sensitive card data' },
+    { line: 8, severity: 'warning', message: 'No error handling' },
+    { line: 10, severity: 'warning', message: 'No audit trail' },
+  ] : [
+    { line: 3, severity: 'warning', message: 'No type safety' },
+    { line: 6, severity: 'critical', message: 'No email validation' },
+    { line: 7, severity: 'critical', message: 'No password strength requirements' },
+    { line: 8, severity: 'critical', message: 'Storing plain text password!' },
+    { line: 13, severity: 'warning', message: 'No rate limiting - vulnerable to brute force' },
+    { line: 15, severity: 'warning', message: 'Timing attack vulnerable comparison' },
+    { line: 16, severity: 'warning', message: 'Predictable session token' },
+  ];
+  
+  res.json({
+    regularAI: {
+      code: REGULAR_AI_CODE[domain as keyof typeof REGULAR_AI_CODE] || REGULAR_AI_CODE.auth,
+      issues,
+      trustScore: 23,
+    },
+    intentOS: {
+      code: DEMO_CODE[domain as keyof typeof DEMO_CODE] || DEMO_CODE.auth,
+      issues: [],
+      trustScore: domain === 'payments' ? 97 : 96,
+    },
+  });
+});
+
+// Live API simulation endpoints
+app.post('/api/live/register', (req, res) => {
+  const { email, password } = req.body;
+  
+  const checks = [
+    { name: 'email.isValidEmail()', passed: email?.includes('@'), required: true },
+    { name: 'password.length >= 8', passed: password?.length >= 8, required: true },
+  ];
+  
+  const allPassed = checks.every(c => !c.required || c.passed);
+  
+  setTimeout(() => {
+    res.json({
+      success: allPassed,
+      checks,
+      verification: {
+        preconditions: checks,
+        postconditions: allPassed ? [
+          { name: "users'.has(email)", passed: true },
+          { name: 'result.isOk()', passed: true },
+        ] : [],
+      },
+    });
+  }, 300);
+});
+
+app.post('/api/live/charge', (req, res) => {
+  const { amount, card } = req.body;
+
+  const checks = [
+    { name: 'amount > 0', passed: amount > 0, required: true },
+    { name: 'card.isValid()', passed: card?.number?.length === 16, required: true },
+  ];
+
+  const securityChecks = [
+    { name: 'Sensitive data masked', passed: true },
+    { name: 'Audit log created', passed: true },
+  ];
+
+  setTimeout(() => {
+    res.json({
+      success: true,
+      checks,
+      securityChecks,
+      verification: {
+        preconditions: checks,
+        postconditions: [
+          { name: "transactions'.length = transactions.length + 1", passed: true },
+          { name: 'result.value.status = "completed"', passed: true },
+        ],
+        security: securityChecks,
+      },
+    });
+  }, 400);
+});
+
+// Subscription checkout: create Stripe Checkout session for Team plan
+// Requires STRIPE_SECRET_KEY and STRIPE_TEAM_PRICE_ID in env; otherwise returns 503 with message
+app.post('/api/create-checkout-session', async (req, res) => {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  const priceId = process.env.STRIPE_TEAM_PRICE_ID;
+  const successUrl = process.env.STRIPE_SUCCESS_URL ?? `${req.protocol}://${req.get('host')?.replace(String(PORT), '5173') ?? ''}/dashboard?session_id={CHECKOUT_SESSION_ID}`;
+  const cancelUrl = process.env.STRIPE_CANCEL_URL ?? `${req.protocol}://${req.get('host')?.replace(String(PORT), '5173') ?? ''}/pricing`;
+
+  if (!stripeSecretKey || !priceId) {
+    res.status(503).json({
+      message: 'Billing is not configured. Set STRIPE_SECRET_KEY and STRIPE_TEAM_PRICE_ID to enable checkout.',
+    });
+    return;
+  }
+
+  try {
+    const stripe = await import('stripe');
+    const stripeClient = new stripe.default(stripeSecretKey);
+    const session = await stripeClient.checkout.sessions.create({
+      mode: 'subscription',
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      allow_promotion_codes: true,
+      subscription_data: { trial_period_days: 14 },
+    });
+    res.json({ url: session.url ?? '' });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Checkout failed';
+    res.status(500).json({ message });
+  }
+});
+
+// Billing portal: create Stripe Customer Portal session for managing subscription
+// Requires STRIPE_SECRET_KEY and STRIPE_PORTAL_RETURN_URL (optional) in env
+app.post('/api/create-portal-session', async (req, res) => {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  const customerId = (req.body as { customerId?: string }).customerId;
+  const returnUrl = process.env.STRIPE_PORTAL_RETURN_URL ?? `${req.protocol}://${req.get('host')?.replace(String(PORT), '5173') ?? ''}/dashboard`;
+
+  if (!stripeSecretKey) {
+    res.status(503).json({
+      message: 'Billing is not configured. Set STRIPE_SECRET_KEY to enable portal.',
+    });
+    return;
+  }
+  if (!customerId || typeof customerId !== 'string') {
+    res.status(400).json({ message: 'customerId is required.' });
+    return;
+  }
+
+  try {
+    const stripe = await import('stripe');
+    const stripeClient = new stripe.default(stripeSecretKey);
+    const session = await stripeClient.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: returnUrl,
+    });
+    res.json({ url: session.url ?? '' });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Portal failed';
+    res.status(500).json({ message });
+  }
+});
+
+// Stripe webhook: subscription lifecycle (checkout completed, subscription updated/deleted)
+// Set STRIPE_WEBHOOK_SECRET in env (from Stripe Dashboard → Webhooks → signing secret)
+app.post('/api/webhooks/stripe', async (req: express.Request, res: express.Response) => {
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  const sig = req.headers['stripe-signature'];
+  const rawBody = req.body as Buffer | undefined;
+
+  if (!secret || !sig || !rawBody || !Buffer.isBuffer(rawBody)) {
+    res.status(400).send('Webhook secret or body missing');
+    return;
+  }
+
+  let event: import('stripe').Stripe.Event;
+  try {
+    const stripe = await import('stripe');
+    const stripeClient = new stripe.default(process.env.STRIPE_SECRET_KEY!);
+    event = stripeClient.webhooks.constructEvent(rawBody, sig, secret);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Webhook error';
+    res.status(400).send(message);
+    return;
+  }
+
+  switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object as import('stripe').Stripe.Checkout.Session;
+      const customerId = session.customer as string | null;
+      const subscriptionId = session.subscription as string | null;
+      if (customerId && subscriptionId) {
+        // TODO: persist customerId + subscriptionId to your DB or Clerk org/user metadata
+        // e.g. await clerkClient.organizations.updateOrganization(orgId, { publicMetadata: { stripeCustomerId: customerId, stripeSubscriptionId: subscriptionId, plan: 'team' } });
+      }
+      break;
+    }
+    case 'customer.subscription.updated':
+    case 'customer.subscription.deleted': {
+      const sub = event.data.object as import('stripe').Stripe.Subscription;
+      const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer?.id;
+      const plan = sub.status === 'active' ? 'team' : 'free';
+      if (customerId) {
+        // TODO: update your DB or Clerk metadata with plan and optionally subscriptionId
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  res.sendStatus(200);
+});

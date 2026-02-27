@@ -1,0 +1,172 @@
+{
+  "version": "1.0.0",
+  "metadata": {
+    "specPath": "/src/specs/payment-processing.isl",
+    "reportPath": "/reports/payment-evidence.json",
+    "fingerprint": "x9y8z7w6v5u4t3s2r1q0p9o8n7m6l5k4",
+    "timestamp": "2026-02-01T14:30:00.000Z",
+    "duration": 2567,
+    "islVersion": "0.5.0",
+    "environment": "staging"
+  },
+  "summary": {
+    "total": 10,
+    "passed": 3,
+    "partial": 0,
+    "failed": 6,
+    "skipped": 1,
+    "score": 33,
+    "byCategory": {
+      "precondition": { "total": 3, "passed": 2, "failed": 1 },
+      "postcondition": { "total": 4, "passed": 1, "failed": 3 },
+      "invariant": { "total": 2, "passed": 0, "failed": 2 },
+      "effect": { "total": 1, "passed": 0, "failed": 0 }
+    }
+  },
+  "clauses": [
+    {
+      "id": "pre-amount",
+      "name": "Payment amount is positive",
+      "status": "PASS",
+      "category": "precondition",
+      "location": {
+        "filePath": "/src/specs/payment-processing.isl",
+        "startLine": 8,
+        "endLine": 10
+      },
+      "duration": 5
+    },
+    {
+      "id": "pre-currency",
+      "name": "Currency is supported",
+      "status": "PASS",
+      "category": "precondition",
+      "location": {
+        "filePath": "/src/specs/payment-processing.isl",
+        "startLine": 12,
+        "endLine": 14
+      },
+      "duration": 3
+    },
+    {
+      "id": "pre-merchant",
+      "name": "Merchant account is verified",
+      "status": "FAIL",
+      "category": "precondition",
+      "location": {
+        "filePath": "/src/specs/payment-processing.isl",
+        "startLine": 16,
+        "endLine": 19
+      },
+      "message": "Merchant verification endpoint returns 503",
+      "impact": "critical",
+      "duration": 2000,
+      "suggestedFix": "Check merchant verification service health and add retry logic"
+    },
+    {
+      "id": "post-transaction",
+      "name": "Transaction ID is generated",
+      "status": "PASS",
+      "category": "postcondition",
+      "location": {
+        "filePath": "/src/specs/payment-processing.isl",
+        "startLine": 23,
+        "endLine": 25
+      },
+      "duration": 45
+    },
+    {
+      "id": "post-receipt",
+      "name": "Receipt is sent to customer",
+      "status": "FAIL",
+      "category": "postcondition",
+      "location": {
+        "filePath": "/src/specs/payment-processing.isl",
+        "startLine": 27,
+        "endLine": 30
+      },
+      "message": "Email service queue is full",
+      "expected": "email_sent: true",
+      "actual": "email_sent: false",
+      "impact": "medium",
+      "duration": 150,
+      "suggestedFix": "Scale email service workers or implement async queue"
+    },
+    {
+      "id": "post-ledger",
+      "name": "Ledger entry is created",
+      "status": "FAIL",
+      "category": "postcondition",
+      "location": {
+        "filePath": "/src/specs/payment-processing.isl",
+        "startLine": 32,
+        "endLine": 35
+      },
+      "message": "Ledger write timed out after 5s",
+      "impact": "high",
+      "duration": 5000,
+      "suggestedFix": "Optimize ledger write or increase timeout"
+    },
+    {
+      "id": "post-webhook",
+      "name": "Webhook is dispatched",
+      "status": "FAIL",
+      "category": "postcondition",
+      "location": {
+        "filePath": "/src/specs/payment-processing.isl",
+        "startLine": 37,
+        "endLine": 40
+      },
+      "message": "Webhook URL returned 404",
+      "expected": "status: 200",
+      "actual": "status: 404",
+      "impact": "low",
+      "duration": 800,
+      "suggestedFix": "Verify webhook URL configuration"
+    },
+    {
+      "id": "inv-idempotency",
+      "name": "Payments are idempotent",
+      "status": "FAIL",
+      "category": "invariant",
+      "location": {
+        "filePath": "/src/specs/payment-processing.isl",
+        "startLine": 44,
+        "endLine": 48
+      },
+      "message": "Duplicate payment request created second charge",
+      "impact": "critical",
+      "duration": 450,
+      "suggestedFix": "Implement idempotency key checking before processing"
+    },
+    {
+      "id": "inv-decimal",
+      "name": "Decimal precision is preserved",
+      "status": "FAIL",
+      "category": "invariant",
+      "location": {
+        "filePath": "/src/specs/payment-processing.isl",
+        "startLine": 50,
+        "endLine": 53
+      },
+      "message": "Amount 10.555 rounded to 10.55 instead of preserving",
+      "expected": "10.555",
+      "actual": "10.55",
+      "impact": "high",
+      "duration": 20,
+      "suggestedFix": "Use Decimal type instead of float for amounts"
+    },
+    {
+      "id": "effect-audit",
+      "name": "Audit log is written",
+      "status": "SKIP",
+      "category": "effect",
+      "location": {
+        "filePath": "/src/specs/payment-processing.isl",
+        "startLine": 57,
+        "endLine": 60
+      },
+      "message": "Skipped: audit service not configured in test environment"
+    }
+  ]
+}

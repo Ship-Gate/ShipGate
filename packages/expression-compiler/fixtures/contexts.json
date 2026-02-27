@@ -1,0 +1,327 @@
+{
+  "$schema": "./schema.json",
+  "description": "Test fixtures for expression-compiler evaluation",
+  "version": "1.0.0",
+  "contexts": [
+    {
+      "id": "basic-existence-1",
+      "description": "Simple existence check - value present",
+      "context": {
+        "input": { "email": "test@example.com" },
+        "variables": { "x": "hello", "y": null }
+      },
+      "tests": [
+        { "ir": "Existence(x, true)", "expected": true },
+        { "ir": "Existence(y, true)", "expected": false },
+        { "ir": "Existence(y, false)", "expected": true }
+      ]
+    },
+    {
+      "id": "basic-existence-2",
+      "description": "Existence check with property chains",
+      "context": {
+        "input": {},
+        "variables": {
+          "user": { "name": "Alice", "address": { "city": "NYC", "zip": null } }
+        }
+      },
+      "tests": [
+        { "ir": "Existence(user.name, true)", "expected": true },
+        { "ir": "Existence(user.address.city, true)", "expected": true },
+        { "ir": "Existence(user.address.zip, true)", "expected": false },
+        { "ir": "Existence(user.phone, true)", "expected": false }
+      ]
+    },
+    {
+      "id": "string-length-1",
+      "description": "String length comparisons",
+      "context": {
+        "input": { "name": "Alice", "bio": "" },
+        "variables": { "password": "secret123" }
+      },
+      "tests": [
+        { "ir": "Compare(>, StringLength(input.name), 0)", "expected": true },
+        { "ir": "Compare(>, StringLength(input.bio), 0)", "expected": false },
+        { "ir": "Compare(>=, StringLength(password), 8)", "expected": true },
+        { "ir": "Compare(<=, StringLength(password), 20)", "expected": true }
+      ]
+    },
+    {
+      "id": "string-regex-1",
+      "description": "Email validation patterns",
+      "context": {
+        "input": {
+          "validEmail": "user@example.com",
+          "invalidEmail": "not-an-email",
+          "phoneEmail": "+1234567890"
+        }
+      },
+      "tests": [
+        { "ir": "StringMatches(input.validEmail, /^[^@]+@[^@]+$/)", "expected": true },
+        { "ir": "StringMatches(input.invalidEmail, /^[^@]+@[^@]+$/)", "expected": false },
+        { "ir": "StringMatches(input.phoneEmail, /^\\+?\\d{10,}$/)", "expected": true }
+      ]
+    },
+    {
+      "id": "string-includes-1",
+      "description": "String contains operations",
+      "context": {
+        "input": { "message": "Hello, World!" },
+        "variables": { "domain": "example.com" }
+      },
+      "tests": [
+        { "ir": "StringIncludes(input.message, \"World\")", "expected": true },
+        { "ir": "StringIncludes(input.message, \"world\")", "expected": false },
+        { "ir": "StringStartsWith(domain, \"example\")", "expected": true },
+        { "ir": "StringEndsWith(domain, \".com\")", "expected": true }
+      ]
+    },
+    {
+      "id": "number-comparison-1",
+      "description": "Numeric boundary checks",
+      "context": {
+        "input": { "age": 25, "score": 85.5 },
+        "variables": { "temperature": -5, "balance": 0 }
+      },
+      "tests": [
+        { "ir": "Compare(>=, input.age, 18)", "expected": true },
+        { "ir": "Compare(<, input.age, 65)", "expected": true },
+        { "ir": "Between(input.score, 0, 100, true)", "expected": true },
+        { "ir": "Compare(<, temperature, 0)", "expected": true },
+        { "ir": "Equality(balance, 0, false)", "expected": true }
+      ]
+    },
+    {
+      "id": "number-between-1",
+      "description": "Between range validations",
+      "context": {
+        "input": { "price": 49.99, "quantity": 5 },
+        "variables": { "discount": 15 }
+      },
+      "tests": [
+        { "ir": "Between(input.price, 10, 100, true)", "expected": true },
+        { "ir": "Between(input.quantity, 1, 10, true)", "expected": true },
+        { "ir": "Between(discount, 0, 50, true)", "expected": true },
+        { "ir": "Between(discount, 20, 30, true)", "expected": false }
+      ]
+    },
+    {
+      "id": "enum-status-1",
+      "description": "Status enum membership",
+      "context": {
+        "input": { "status": "active" },
+        "result": { "paymentStatus": "succeeded" },
+        "variables": { "role": "admin" }
+      },
+      "tests": [
+        { "ir": "InSet(input.status, ['active', 'pending', 'inactive'], false)", "expected": true },
+        { "ir": "InSet(input.status, ['deleted', 'banned'], false)", "expected": false },
+        { "ir": "InSet(result.paymentStatus, ['succeeded', 'paid'], false)", "expected": true },
+        { "ir": "InSet(role, ['admin', 'superuser'], false)", "expected": true },
+        { "ir": "InSet(role, ['guest'], true)", "expected": true }
+      ]
+    },
+    {
+      "id": "boolean-logic-1",
+      "description": "Boolean AND/OR combinations",
+      "context": {
+        "input": { "isAdmin": true, "isVerified": true, "isBanned": false },
+        "variables": { "canEdit": true, "canDelete": false }
+      },
+      "tests": [
+        { "ir": "And([input.isAdmin, input.isVerified])", "expected": true },
+        { "ir": "And([input.isAdmin, input.isBanned])", "expected": false },
+        { "ir": "Or([canEdit, canDelete])", "expected": true },
+        { "ir": "Or([input.isBanned, canDelete])", "expected": false },
+        { "ir": "Not(input.isBanned)", "expected": true }
+      ]
+    },
+    {
+      "id": "boolean-implies-1",
+      "description": "Implication logic",
+      "context": {
+        "input": { "isPremium": true, "hasAccess": true },
+        "variables": { "isGuest": false, "canView": true }
+      },
+      "tests": [
+        { "ir": "Implies(input.isPremium, input.hasAccess)", "expected": true },
+        { "ir": "Implies(isGuest, canView)", "expected": true },
+        { "ir": "Implies(input.isPremium, isGuest)", "expected": false }
+      ]
+    },
+    {
+      "id": "array-length-1",
+      "description": "Array length checks",
+      "context": {
+        "input": { "items": [1, 2, 3], "tags": [] },
+        "variables": { "permissions": ["read", "write"] }
+      },
+      "tests": [
+        { "ir": "Compare(>, ArrayLength(input.items), 0)", "expected": true },
+        { "ir": "Compare(>, ArrayLength(input.tags), 0)", "expected": false },
+        { "ir": "Compare(>=, ArrayLength(permissions), 1)", "expected": true },
+        { "ir": "Equality(ArrayLength(input.items), 3, false)", "expected": true }
+      ]
+    },
+    {
+      "id": "array-includes-1",
+      "description": "Array element membership",
+      "context": {
+        "input": { "roles": ["admin", "editor"] },
+        "variables": { "allowedStatuses": ["active", "pending", "approved"] }
+      },
+      "tests": [
+        { "ir": "ArrayIncludes(input.roles, \"admin\")", "expected": true },
+        { "ir": "ArrayIncludes(input.roles, \"guest\")", "expected": false },
+        { "ir": "ArrayIncludes(allowedStatuses, \"active\")", "expected": true },
+        { "ir": "ArrayIncludes(allowedStatuses, \"deleted\")", "expected": false }
+      ]
+    },
+    {
+      "id": "quantifier-all-1",
+      "description": "Universal quantification",
+      "context": {
+        "input": {},
+        "variables": {
+          "positiveNumbers": [1, 2, 3, 4, 5],
+          "mixedNumbers": [1, -2, 3, -4, 5],
+          "emptyList": []
+        }
+      },
+      "tests": [
+        { "ir": "QuantifierAll(positiveNumbers, 'n', Compare(>, n, 0))", "expected": true },
+        { "ir": "QuantifierAll(mixedNumbers, 'n', Compare(>, n, 0))", "expected": false },
+        { "ir": "QuantifierAll(emptyList, 'n', Compare(>, n, 0))", "expected": true }
+      ]
+    },
+    {
+      "id": "quantifier-any-1",
+      "description": "Existential quantification",
+      "context": {
+        "input": {},
+        "variables": {
+          "scores": [45, 60, 75, 90],
+          "failingScores": [30, 40, 45],
+          "emptyScores": []
+        }
+      },
+      "tests": [
+        { "ir": "QuantifierAny(scores, 's', Compare(>=, s, 90))", "expected": true },
+        { "ir": "QuantifierAny(failingScores, 's', Compare(>=, s, 50))", "expected": false },
+        { "ir": "QuantifierAny(emptyScores, 's', Compare(>=, s, 50))", "expected": false }
+      ]
+    },
+    {
+      "id": "quantifier-none-1",
+      "description": "None quantification",
+      "context": {
+        "input": {},
+        "variables": {
+          "validAges": [25, 30, 35, 40],
+          "agesWithNegative": [25, -5, 35],
+          "emptyAges": []
+        }
+      },
+      "tests": [
+        { "ir": "QuantifierNone(validAges, 'a', Compare(<, a, 0))", "expected": true },
+        { "ir": "QuantifierNone(agesWithNegative, 'a', Compare(<, a, 0))", "expected": false },
+        { "ir": "QuantifierNone(emptyAges, 'a', Compare(<, a, 0))", "expected": true }
+      ]
+    },
+    {
+      "id": "quantifier-count-1",
+      "description": "Count quantification",
+      "context": {
+        "input": {},
+        "variables": {
+          "numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+          "users": [
+            { "active": true },
+            { "active": true },
+            { "active": false }
+          ]
+        }
+      },
+      "tests": [
+        { "ir": "QuantifierCount(numbers, 'n', Compare(>, n, 5))", "expected": 5 }
+      ]
+    },
+    {
+      "id": "entity-exists-1",
+      "description": "Entity existence checks",
+      "context": {
+        "input": {},
+        "entities": {
+          "User": [
+            { "id": "u1", "email": "alice@example.com", "status": "active" },
+            { "id": "u2", "email": "bob@example.com", "status": "pending" }
+          ]
+        }
+      },
+      "tests": [
+        { "ir": "EntityExists(\"User\", null)", "expected": true },
+        { "ir": "EntityExists(\"User\", {email: \"alice@example.com\"})", "expected": true },
+        { "ir": "EntityExists(\"User\", {email: \"nobody@example.com\"})", "expected": false },
+        { "ir": "EntityExists(\"User\", {status: \"active\"})", "expected": true },
+        { "ir": "EntityExists(\"Session\", null)", "expected": false }
+      ]
+    },
+    {
+      "id": "entity-count-1",
+      "description": "Entity counting",
+      "context": {
+        "input": {},
+        "entities": {
+          "Product": [
+            { "id": "p1", "category": "electronics", "inStock": true },
+            { "id": "p2", "category": "electronics", "inStock": false },
+            { "id": "p3", "category": "clothing", "inStock": true }
+          ]
+        }
+      },
+      "tests": [
+        { "ir": "EntityCount(\"Product\", null)", "expected": 3 },
+        { "ir": "EntityCount(\"Product\", {category: \"electronics\"})", "expected": 2 },
+        { "ir": "EntityCount(\"Product\", {inStock: true})", "expected": 2 },
+        { "ir": "EntityCount(\"Product\", {category: \"food\"})", "expected": 0 }
+      ]
+    },
+    {
+      "id": "input-result-1",
+      "description": "Input/Result value comparisons",
+      "context": {
+        "input": { "email": "user@example.com", "role": "admin" },
+        "result": { "id": "usr-123", "email": "user@example.com", "status": "created" }
+      },
+      "tests": [
+        { "ir": "Equality(input.email, result.email, false)", "expected": true },
+        { "ir": "Existence(result.id, true)", "expected": true },
+        { "ir": "InSet(result.status, ['created', 'updated'], false)", "expected": true }
+      ]
+    },
+    {
+      "id": "complex-combined-1",
+      "description": "Complex combined conditions",
+      "context": {
+        "input": { "email": "premium@example.com", "plan": "premium" },
+        "result": { "userId": "u-456", "features": ["advanced", "priority"] },
+        "variables": { "maxFeatures": 10 },
+        "entities": {
+          "User": [
+            { "id": "u-456", "email": "premium@example.com", "status": "active" }
+          ]
+        }
+      },
+      "tests": [
+        {
+          "ir": "And([Existence(result.userId, true), EntityExists(\"User\", {id: \"u-456\"})])",
+          "expected": true
+        },
+        {
+          "ir": "And([InSet(input.plan, [\"premium\", \"enterprise\"], false), Compare(<, ArrayLength(result.features), maxFeatures)])",
+          "expected": true
+        }
+      ]
+    }
+  ]
+}

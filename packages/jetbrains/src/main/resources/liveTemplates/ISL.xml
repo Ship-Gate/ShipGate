@@ -1,0 +1,111 @@
+<templateSet group="ISL">
+    <template name="domain" value="domain $NAME$ {&#10;  version: &quot;$VERSION$&quot;&#10;&#10;  $END$&#10;}" description="Create a domain" toReformat="true" toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;MyDomain&quot;" alwaysStopAt="true"/>
+        <variable name="VERSION" expression="" defaultValue="&quot;1.0.0&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="ISL" value="true"/>
+        </context>
+    </template>
+    
+    <template name="entity" value="entity $NAME$ {&#10;  id: UUID [immutable, unique]&#10;  $FIELD$: $TYPE$&#10;  created_at: Timestamp [immutable]&#10;  updated_at: Timestamp&#10;&#10;  invariants {&#10;    $END$&#10;  }&#10;}" description="Create an entity" toReformat="true" toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;Entity&quot;" alwaysStopAt="true"/>
+        <variable name="FIELD" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
+        <variable name="TYPE" expression="" defaultValue="&quot;String&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="ISL" value="true"/>
+        </context>
+    </template>
+    
+    <template name="behavior" value="behavior $NAME$ {&#10;  description: &quot;$DESC$&quot;&#10;&#10;  actors {&#10;    $ACTOR$ {&#10;      must: authenticated&#10;    }&#10;  }&#10;&#10;  input {&#10;    $INPUT$: $INPUT_TYPE$&#10;  }&#10;&#10;  output {&#10;    success: $OUTPUT_TYPE$&#10;&#10;    errors {&#10;      $ERROR$ {&#10;        when: &quot;$ERROR_MSG$&quot;&#10;        retriable: $RETRIABLE$&#10;      }&#10;    }&#10;  }&#10;&#10;  preconditions {&#10;    $END$&#10;  }&#10;&#10;  postconditions {&#10;    success implies {&#10;      - $POST$&#10;    }&#10;  }&#10;}" description="Create a behavior" toReformat="true" toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;DoSomething&quot;" alwaysStopAt="true"/>
+        <variable name="DESC" expression="" defaultValue="&quot;Description&quot;" alwaysStopAt="true"/>
+        <variable name="ACTOR" expression="" defaultValue="&quot;User&quot;" alwaysStopAt="true"/>
+        <variable name="INPUT" expression="" defaultValue="&quot;id&quot;" alwaysStopAt="true"/>
+        <variable name="INPUT_TYPE" expression="" defaultValue="&quot;UUID&quot;" alwaysStopAt="true"/>
+        <variable name="OUTPUT_TYPE" expression="" defaultValue="&quot;Boolean&quot;" alwaysStopAt="true"/>
+        <variable name="ERROR" expression="" defaultValue="&quot;NOT_FOUND&quot;" alwaysStopAt="true"/>
+        <variable name="ERROR_MSG" expression="" defaultValue="&quot;Resource not found&quot;" alwaysStopAt="true"/>
+        <variable name="RETRIABLE" expression="" defaultValue="&quot;false&quot;" alwaysStopAt="true"/>
+        <variable name="POST" expression="" defaultValue="&quot;result == true&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="ISL" value="true"/>
+        </context>
+    </template>
+    
+    <template name="enum" value="enum $NAME$ {&#10;  $VALUE1$&#10;  $VALUE2$&#10;  $END$&#10;}" description="Create an enum" toReformat="true" toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;Status&quot;" alwaysStopAt="true"/>
+        <variable name="VALUE1" expression="" defaultValue="&quot;ACTIVE&quot;" alwaysStopAt="true"/>
+        <variable name="VALUE2" expression="" defaultValue="&quot;INACTIVE&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="ISL" value="true"/>
+        </context>
+    </template>
+    
+    <template name="type" value="type $NAME$ = $BASE$ { $CONSTRAINT$: $VALUE$ }" description="Create a type alias" toReformat="true" toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;Email&quot;" alwaysStopAt="true"/>
+        <variable name="BASE" expression="" defaultValue="&quot;String&quot;" alwaysStopAt="true"/>
+        <variable name="CONSTRAINT" expression="" defaultValue="&quot;format&quot;" alwaysStopAt="true"/>
+        <variable name="VALUE" expression="" defaultValue="&quot;email&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="ISL" value="true"/>
+        </context>
+    </template>
+    
+    <template name="input" value="input {&#10;  $FIELD$: $TYPE$$ANNOTATION$&#10;  $END$&#10;}" description="Create input block" toReformat="true" toShortenFQNames="true">
+        <variable name="FIELD" expression="" defaultValue="&quot;field&quot;" alwaysStopAt="true"/>
+        <variable name="TYPE" expression="" defaultValue="&quot;String&quot;" alwaysStopAt="true"/>
+        <variable name="ANNOTATION" expression="" defaultValue="&quot;&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="ISL" value="true"/>
+        </context>
+    </template>
+    
+    <template name="output" value="output {&#10;  success: $TYPE$&#10;&#10;  errors {&#10;    $END$&#10;  }&#10;}" description="Create output block" toReformat="true" toShortenFQNames="true">
+        <variable name="TYPE" expression="" defaultValue="&quot;Boolean&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="ISL" value="true"/>
+        </context>
+    </template>
+    
+    <template name="error" value="$NAME$ {&#10;  when: &quot;$CONDITION$&quot;&#10;  retriable: $RETRIABLE$&#10;}" description="Create error definition" toReformat="true" toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;ERROR_NAME&quot;" alwaysStopAt="true"/>
+        <variable name="CONDITION" expression="" defaultValue="&quot;Error condition&quot;" alwaysStopAt="true"/>
+        <variable name="RETRIABLE" expression="" defaultValue="&quot;false&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="ISL" value="true"/>
+        </context>
+    </template>
+    
+    <template name="preconditions" value="preconditions {&#10;  $CONDITION$&#10;  $END$&#10;}" description="Create preconditions block" toReformat="true" toShortenFQNames="true">
+        <variable name="CONDITION" expression="" defaultValue="&quot;input.field.is_valid&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="ISL" value="true"/>
+        </context>
+    </template>
+    
+    <template name="postconditions" value="postconditions {&#10;  success implies {&#10;    - $CONDITION$&#10;  }&#10;&#10;  failure implies {&#10;    - $FAILURE_COND$&#10;  }&#10;}" description="Create postconditions block" toReformat="true" toShortenFQNames="true">
+        <variable name="CONDITION" expression="" defaultValue="&quot;Entity.exists(result.id)&quot;" alwaysStopAt="true"/>
+        <variable name="FAILURE_COND" expression="" defaultValue="&quot;no changes made&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="ISL" value="true"/>
+        </context>
+    </template>
+    
+    <template name="temporal" value="temporal {&#10;  - within $DURATION$ ($PERCENTILE$): $ACTION$&#10;  $END$&#10;}" description="Create temporal block" toReformat="true" toShortenFQNames="true">
+        <variable name="DURATION" expression="" defaultValue="&quot;500ms&quot;" alwaysStopAt="true"/>
+        <variable name="PERCENTILE" expression="" defaultValue="&quot;p99&quot;" alwaysStopAt="true"/>
+        <variable name="ACTION" expression="" defaultValue="&quot;response returned&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="ISL" value="true"/>
+        </context>
+    </template>
+    
+    <template name="security" value="security {&#10;  - rate_limit $LIMIT$ per $UNIT$ per $KEY$&#10;  $END$&#10;}" description="Create security block" toReformat="true" toShortenFQNames="true">
+        <variable name="LIMIT" expression="" defaultValue="&quot;100&quot;" alwaysStopAt="true"/>
+        <variable name="UNIT" expression="" defaultValue="&quot;hour&quot;" alwaysStopAt="true"/>
+        <variable name="KEY" expression="" defaultValue="&quot;ip_address&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="ISL" value="true"/>
+        </context>
+    </template>
+</templateSet>

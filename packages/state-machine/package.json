@@ -1,0 +1,60 @@
+{
+  "name": "@isl-lang/state-machine",
+  "version": "0.1.1",
+  "description": "Generate state machines and workflows from ISL lifecycle specifications",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run --passWithNoTests",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*",
+    "xstate": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "vitest": "^1.0.0",
+    "typescript": "^5.3.0",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
+  },
+  "keywords": [
+    "isl",
+    "state-machine",
+    "xstate",
+    "workflow",
+    "lifecycle"
+  ],
+  "license": "MIT",
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "private": true,
+  "experimental": true,
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}

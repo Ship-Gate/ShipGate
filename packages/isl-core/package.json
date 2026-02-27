@@ -1,0 +1,103 @@
+{
+  "name": "@isl-lang/isl-core",
+  "version": "1.0.0",
+  "description": "ISL Core - Parser, Type Checker, Formatter, Linter, and Verification for the Intent Specification Language",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./check": {
+      "import": "./dist/check/index.js",
+      "types": "./dist/check/index.d.ts"
+    },
+    "./fmt": {
+      "import": "./dist/fmt/index.js",
+      "types": "./dist/fmt/index.d.ts"
+    },
+    "./lint": {
+      "import": "./dist/lint/index.js",
+      "types": "./dist/lint/index.d.ts"
+    },
+    "./imports": {
+      "import": "./dist/imports/index.js",
+      "types": "./dist/imports/index.d.ts"
+    },
+    "./verification": {
+      "import": "./dist/isl-agent/verification/index.js",
+      "types": "./dist/isl-agent/verification/index.d.ts"
+    },
+    "./testgen": {
+      "import": "./dist/testgen/index.js",
+      "types": "./dist/testgen/index.d.ts"
+    },
+    "./ast": {
+      "import": "./dist/ast/index.js",
+      "types": "./dist/ast/index.d.ts"
+    },
+    "./lexer": {
+      "import": "./dist/lexer/index.js",
+      "types": "./dist/lexer/index.d.ts"
+    },
+    "./adapters": {
+      "import": "./dist/adapters/index.js",
+      "types": "./dist/adapters/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.build.json",
+    "dev": "tsup --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "test:pack": "pnpm build && pnpm pack && node --experimental-vm-modules tests/pack-smoke.test.mjs",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist *.tgz",
+    "prepublishOnly": "pnpm build",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@isl-lang/parser": "workspace:*"
+  },
+  "devDependencies": {
+    "picocolors": "^1.1.1",
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "isl",
+    "intent-specification-language",
+    "design-by-contract",
+    "formal-specification",
+    "parser",
+    "type-checker",
+    "formatter",
+    "linter"
+  ],
+  "author": "ISL Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git",
+    "directory": "packages/isl-core"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "sideEffects": false
+}

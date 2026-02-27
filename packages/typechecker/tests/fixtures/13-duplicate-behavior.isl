@@ -1,0 +1,21 @@
+domain TestDomain {
+  version: "1.0.0"
+  
+  behavior CreateUser {
+    input {
+      name: String
+    }
+    output {
+      success: String
+    }
+  }
+  
+  behavior CreateUser {
+    input {
+      email: String
+    }
+    output {
+      success: String
+    }
+  }
+}

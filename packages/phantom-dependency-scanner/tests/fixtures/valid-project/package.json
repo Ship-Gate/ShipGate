@@ -1,0 +1,12 @@
+{
+  "name": "valid-project",
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "name": "counter",
+  "specFile": "counter.isl",
+  "implFile": "counter.impl.ts",
+  "testFile": "counter.test.ts",
+  "mutations": [
+    {
+      "id": "remove-increment-assert",
+      "type": "remove-assert",
+      "description": "Remove assertion that validates input amount",
+      "target": {
+        "file": "counter.impl.ts",
+        "line": 24,
+        "pattern": "assert\\(validateInput"
+      },
+      "expectedFailedClause": "precondition_1",
+      "expectedScoreDrop": 25
+    },
+    {
+      "id": "change-boundary-check",
+      "type": "change-comparator",
+      "description": "Change > to >= in boundary check (allows zero)",
+      "target": {
+        "file": "counter.impl.ts",
+        "line": 14,
+        "pattern": "value > 0"
+      },
+      "expectedFailedClause": "invariant_boundary_1",
+      "expectedScoreDrop": 25
+    },
+    {
+      "id": "delete-result-expectation",
+      "type": "delete-expectation",
+      "description": "Delete test expectation for result value",
+      "target": {
+        "file": "counter.test.ts",
+        "line": 21,
+        "pattern": "expect\\(result\\.value\\)"
+      },
+      "expectedFailedClause": "postcondition_success_1",
+      "expectedScoreDrop": 20
+    },
+    {
+      "id": "bypass-input-validation",
+      "type": "bypass-precondition",
+      "description": "Bypass input validation function",
+      "target": {
+        "file": "counter.impl.ts",
+        "line": 8,
+        "pattern": "function validateInput"
+      },
+      "expectedFailedClause": "precondition_validation_1",
+      "expectedScoreDrop": 50
+    }
+  ],
+  "expectedBaselineScore": 100
+}

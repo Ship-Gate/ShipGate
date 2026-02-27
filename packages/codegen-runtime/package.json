@@ -1,0 +1,50 @@
+{
+  "name": "@isl-lang/codegen-runtime",
+  "version": "0.1.1",
+  "description": "Generate self-verifying code with runtime pre/post condition checks from ISL specifications",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --no-dts --clean && tsc -p tsconfig.build.json",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@isl-lang/parser": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "rimraf": "^5.0.5"
+  },
+  "keywords": [
+    "isl",
+    "codegen",
+    "runtime-verification",
+    "contracts",
+    "design-by-contract"
+  ],
+  "license": "MIT",
+  "author": "mevla",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isl-lang/isl.git"
+  },
+  "private": true,
+  "sideEffects": false
+}

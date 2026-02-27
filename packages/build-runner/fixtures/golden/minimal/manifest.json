@@ -1,0 +1,15 @@
+{
+  "root": "./output",
+  "generated": "build-runner",
+  "fileCount": 0,
+  "counts": {
+    "config": 0,
+    "evidence": 1,
+    "fixture": 1,
+    "helper": 0,
+    "report": 1,
+    "test": 1,
+    "types": 1
+  },
+  "files": []
+}

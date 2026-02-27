@@ -1,0 +1,149 @@
+{
+  "version": "1.0.0",
+  "metadata": {
+    "specPath": "/src/specs/user-auth.isl",
+    "reportPath": "/reports/user-auth-evidence.json",
+    "fingerprint": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+    "timestamp": "2026-02-01T12:00:00.000Z",
+    "duration": 1234,
+    "islVersion": "0.5.0",
+    "environment": "test"
+  },
+  "summary": {
+    "total": 8,
+    "passed": 5,
+    "partial": 1,
+    "failed": 2,
+    "skipped": 0,
+    "score": 69,
+    "byCategory": {
+      "precondition": { "total": 2, "passed": 2, "failed": 0 },
+      "postcondition": { "total": 3, "passed": 2, "failed": 1 },
+      "invariant": { "total": 2, "passed": 1, "failed": 1 },
+      "scenario": { "total": 1, "passed": 0, "failed": 0 }
+    }
+  },
+  "clauses": [
+    {
+      "id": "pre-1",
+      "name": "User email must be valid",
+      "status": "PASS",
+      "category": "precondition",
+      "location": {
+        "filePath": "/src/specs/user-auth.isl",
+        "startLine": 10,
+        "endLine": 12,
+        "startColumn": 2,
+        "endColumn": 45
+      },
+      "duration": 15
+    },
+    {
+      "id": "pre-2",
+      "name": "Password meets complexity requirements",
+      "status": "PASS",
+      "category": "precondition",
+      "location": {
+        "filePath": "/src/specs/user-auth.isl",
+        "startLine": 14,
+        "endLine": 16,
+        "startColumn": 2,
+        "endColumn": 50
+      },
+      "duration": 8
+    },
+    {
+      "id": "post-1",
+      "name": "Authentication token is returned",
+      "status": "PASS",
+      "category": "postcondition",
+      "location": {
+        "filePath": "/src/specs/user-auth.isl",
+        "startLine": 20,
+        "endLine": 22,
+        "startColumn": 2,
+        "endColumn": 40
+      },
+      "duration": 45
+    },
+    {
+      "id": "post-2",
+      "name": "Token expires after configured duration",
+      "status": "FAIL",
+      "category": "postcondition",
+      "location": {
+        "filePath": "/src/specs/user-auth.isl",
+        "startLine": 24,
+        "endLine": 27,
+        "startColumn": 2,
+        "endColumn": 35
+      },
+      "message": "Token expiry time is 24h but expected 1h",
+      "expected": "3600",
+      "actual": "86400",
+      "impact": "high",
+      "duration": 120,
+      "suggestedFix": "Update TOKEN_EXPIRY constant in auth config to 3600"
+    },
+    {
+      "id": "post-3",
+      "name": "User session is created",
+      "status": "PASS",
+      "category": "postcondition",
+      "location": {
+        "filePath": "/src/specs/user-auth.isl",
+        "startLine": 29,
+        "endLine": 31,
+        "startColumn": 2,
+        "endColumn": 38
+      },
+      "duration": 28
+    },
+    {
+      "id": "inv-1",
+      "name": "Password is never stored in plain text",
+      "status": "PASS",
+      "category": "invariant",
+      "location": {
+        "filePath": "/src/specs/user-auth.isl",
+        "startLine": 35,
+        "endLine": 37,
+        "startColumn": 2,
+        "endColumn": 55
+      },
+      "duration": 200
+    },
+    {
+      "id": "inv-2",
+      "name": "Rate limiting is enforced",
+      "status": "FAIL",
+      "category": "invariant",
+      "location": {
+        "filePath": "/src/specs/user-auth.isl",
+        "startLine": 39,
+        "endLine": 42,
+        "startColumn": 2,
+        "endColumn": 42
+      },
+      "message": "Rate limiter allows unlimited requests",
+      "impact": "critical",
+      "duration": 350,
+      "suggestedFix": "Implement rate limiting middleware in auth router"
+    },
+    {
+      "id": "scenario-1",
+      "name": "Login flow happy path",
+      "status": "PARTIAL",
+      "category": "scenario",
+      "location": {
+        "filePath": "/src/specs/user-auth.isl",
+        "startLine": 46,
+        "endLine": 55,
+        "startColumn": 2,
+        "endColumn": 5
+      },
+      "message": "3/4 steps passed, logout not verified",
+      "duration": 580
+    }
+  ]
+}

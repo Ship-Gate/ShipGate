@@ -1,0 +1,57 @@
+{
+  "name": "@isl-lang/visual-editor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Visual/graphical editor for ISL specifications",
+  "scripts": {
+    "dev": "next dev -p 3002",
+    "build": "echo 'Skipping Next.js build'",
+    "start": "next start -p 3002",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "next": "14.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "reactflow": "^11.10.4",
+    "@reactflow/node-resizer": "^2.2.12",
+    "zustand": "^4.5.0",
+    "lucide-react": "^0.323.0",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
+  },
+  "author": "mevla",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}

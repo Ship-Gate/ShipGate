@@ -1,0 +1,136 @@
+{
+  "name": "arithmetic-operators",
+  "description": "V1 arithmetic operator semantics (+, -, *, /, %)",
+  "version": "1.0.0",
+  "frozenForVersion": "1.x.x",
+  "cases": [
+    {
+      "operator": "+",
+      "left": 1,
+      "right": 2,
+      "expected": 3,
+      "description": "Addition: positive numbers"
+    },
+    {
+      "operator": "+",
+      "left": -1,
+      "right": -2,
+      "expected": -3,
+      "description": "Addition: negative numbers"
+    },
+    {
+      "operator": "+",
+      "left": 1.5,
+      "right": 2.5,
+      "expected": 4.0,
+      "description": "Addition: decimals"
+    },
+    {
+      "operator": "+",
+      "left": "hello",
+      "right": " world",
+      "expected": "hello world",
+      "description": "String concatenation"
+    },
+    {
+      "operator": "+",
+      "left": "value: ",
+      "right": 42,
+      "expected": "value: 42",
+      "description": "String + number coercion"
+    },
+    {
+      "operator": "-",
+      "left": 5,
+      "right": 3,
+      "expected": 2,
+      "description": "Subtraction: positive result"
+    },
+    {
+      "operator": "-",
+      "left": 3,
+      "right": 5,
+      "expected": -2,
+      "description": "Subtraction: negative result"
+    },
+    {
+      "operator": "*",
+      "left": 3,
+      "right": 4,
+      "expected": 12,
+      "description": "Multiplication"
+    },
+    {
+      "operator": "*",
+      "left": -3,
+      "right": 4,
+      "expected": -12,
+      "description": "Multiplication: negative"
+    },
+    {
+      "operator": "*",
+      "left": 0,
+      "right": 100,
+      "expected": 0,
+      "description": "Multiplication by zero"
+    },
+    {
+      "operator": "/",
+      "left": 10,
+      "right": 2,
+      "expected": 5,
+      "description": "Division: even"
+    },
+    {
+      "operator": "/",
+      "left": 7,
+      "right": 2,
+      "expected": 3.5,
+      "description": "Division: with remainder"
+    },
+    {
+      "operator": "/",
+      "left": -10,
+      "right": 2,
+      "expected": -5,
+      "description": "Division: negative"
+    },
+    {
+      "operator": "%",
+      "left": 10,
+      "right": 3,
+      "expected": 1,
+      "description": "Modulo: positive"
+    },
+    {
+      "operator": "%",
+      "left": 10,
+      "right": 5,
+      "expected": 0,
+      "description": "Modulo: no remainder"
+    },
+    {
+      "operator": "%",
+      "left": -10,
+      "right": 3,
+      "expected": -1,
+      "description": "Modulo: negative dividend"
+    }
+  ],
+  "errorCases": [
+    {
+      "operator": "/",
+      "left": 10,
+      "right": 0,
+      "expectedError": "Division by zero",
+      "description": "Division by zero throws"
+    },
+    {
+      "operator": "%",
+      "left": 10,
+      "right": 0,
+      "expectedError": "Modulo by zero",
+      "description": "Modulo by zero throws"
+    }
+  ]
+}

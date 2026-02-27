@@ -1,0 +1,85 @@
+{
+  "version": "1.0.0",
+  "metadata": {
+    "specPath": "/src/specs/calculator.isl",
+    "fingerprint": "calc123456789abcdef0123456789abcd",
+    "timestamp": "2026-02-01T10:15:00.000Z",
+    "duration": 156,
+    "islVersion": "0.5.0"
+  },
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "partial": 0,
+    "failed": 0,
+    "skipped": 0,
+    "score": 100,
+    "byCategory": {
+      "precondition": { "total": 2, "passed": 2, "failed": 0 },
+      "postcondition": { "total": 2, "passed": 2, "failed": 0 },
+      "invariant": { "total": 1, "passed": 1, "failed": 0 }
+    }
+  },
+  "clauses": [
+    {
+      "id": "pre-valid-a",
+      "name": "Input A is a valid number",
+      "status": "PASS",
+      "category": "precondition",
+      "location": {
+        "filePath": "/src/specs/calculator.isl",
+        "startLine": 5,
+        "endLine": 7
+      },
+      "duration": 2
+    },
+    {
+      "id": "pre-valid-b",
+      "name": "Input B is a valid number",
+      "status": "PASS",
+      "category": "precondition",
+      "location": {
+        "filePath": "/src/specs/calculator.isl",
+        "startLine": 9,
+        "endLine": 11
+      },
+      "duration": 2
+    },
+    {
+      "id": "post-sum",
+      "name": "Sum equals A + B",
+      "status": "PASS",
+      "category": "postcondition",
+      "location": {
+        "filePath": "/src/specs/calculator.isl",
+        "startLine": 15,
+        "endLine": 17
+      },
+      "duration": 50
+    },
+    {
+      "id": "post-type",
+      "name": "Result is a number",
+      "status": "PASS",
+      "category": "postcondition",
+      "location": {
+        "filePath": "/src/specs/calculator.isl",
+        "startLine": 19,
+        "endLine": 21
+      },
+      "duration": 1
+    },
+    {
+      "id": "inv-commutative",
+      "name": "Addition is commutative",
+      "status": "PASS",
+      "category": "invariant",
+      "location": {
+        "filePath": "/src/specs/calculator.isl",
+        "startLine": 25,
+        "endLine": 28
+      },
+      "duration": 100
+    }
+  ]
+}

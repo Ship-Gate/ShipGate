@@ -1,0 +1,12 @@
+{
+  "good": {
+    "verdictOneOf": ["SHIP", "WARN"],
+    "scoreAbove": 0.6,
+    "mustNotContainMessages": ["missing error handling"]
+  },
+  "bad": {
+    "verdictOneOf": ["NO_SHIP", "WARN"],
+    "scoreBelow": 0.7,
+    "mustContainMessagePatterns": ["precondition", "fail"]
+  }
+}

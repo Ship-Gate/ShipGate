@@ -1,0 +1,76 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["CI", "NODE_ENV"],
+  "globalPassThroughEnv": [
+    "TURBO_TOKEN",
+    "TURBO_TEAM",
+    "TURBO_REMOTE_ONLY"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
+      "inputs": ["src/**", "tsconfig.json", "tsup.config.*", "package.json"]
+    },
+    "build:production": {
+      "dependsOn": ["^build:production"],
+      "outputs": ["dist/**"],
+      "inputs": ["src/**", "tsconfig.json", "tsup.config.*", "package.json"],
+      "env": ["NODE_ENV"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "inputs": ["src/**", "tests/**", "tsconfig.json", "package.json"]
+    },
+    "typecheck:production": {
+      "dependsOn": ["^typecheck:production"],
+      "outputs": [],
+      "inputs": ["src/**", "tsconfig.json", "package.json"]
+    },
+    "lint": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "inputs": ["src/**", "tests/**", ".eslintrc*", "package.json"]
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "tests/**", "vitest.config.*", "package.json"]
+    },
+    "test:unit": {
+      "dependsOn": ["build"],
+      "outputs": [],
+      "inputs": ["src/**", "tests/**/*.test.ts", "vitest.config.*", "package.json"]
+    },
+    "test:integration": {
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**", "tests/**", "vitest.config.*", "package.json"],
+      "env": ["CI", "INTEGRATION"]
+    },
+    "test:critical": {
+      "dependsOn": ["build"],
+      "outputs": [],
+      "inputs": ["src/**", "tests/**", "package.json"],
+      "env": ["CI"]
+    },
+    "test:perf": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "env": ["CI", "PERF_BUDGET"]
+    },
+    "docs": {
+      "dependsOn": ["build"],
+      "outputs": ["docs/**", "README.md", "API.md"],
+      "inputs": ["src/**", "docs/**", "README.md", "package.json"]
+    },
+    "clean": {
+      "cache": false
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

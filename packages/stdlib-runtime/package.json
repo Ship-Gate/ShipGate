@@ -1,0 +1,95 @@
+{
+  "name": "@isl-lang/stdlib-runtime",
+  "version": "1.0.0",
+  "description": "ISL Standard Library Runtime Implementations - 10 Core Modules for 1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./string": {
+      "import": "./dist/string.js",
+      "types": "./dist/string.d.ts"
+    },
+    "./math": {
+      "import": "./dist/math.js",
+      "types": "./dist/math.d.ts"
+    },
+    "./collections": {
+      "import": "./dist/collections.js",
+      "types": "./dist/collections.d.ts"
+    },
+    "./json": {
+      "import": "./dist/json.js",
+      "types": "./dist/json.d.ts"
+    },
+    "./datetime": {
+      "import": "./dist/datetime.js",
+      "types": "./dist/datetime.d.ts"
+    },
+    "./uuid": {
+      "import": "./dist/uuid.js",
+      "types": "./dist/uuid.d.ts"
+    },
+    "./crypto": {
+      "import": "./dist/crypto.js",
+      "types": "./dist/crypto.d.ts"
+    },
+    "./encoding": {
+      "import": "./dist/encoding.js",
+      "types": "./dist/encoding.d.ts"
+    },
+    "./regex": {
+      "import": "./dist/regex.js",
+      "types": "./dist/regex.d.ts"
+    },
+    "./url": {
+      "import": "./dist/url.js",
+      "types": "./dist/url.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.build.json",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "isl",
+    "stdlib",
+    "runtime",
+    "string",
+    "math",
+    "collections",
+    "json",
+    "datetime",
+    "uuid",
+    "crypto",
+    "encoding",
+    "regex",
+    "url"
+  ],
+  "author": "ISL Team",
+  "license": "MIT",
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "rimraf": "^5.0.5"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "sideEffects": false
+}

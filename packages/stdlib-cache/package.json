@@ -1,0 +1,66 @@
+{
+  "name": "@isl-lang/stdlib-cache",
+  "private": true,
+  "version": "0.1.1",
+  "description": "ISL standard library for caching with multiple backend support",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./memory": {
+      "types": "./dist/backends/memory.d.ts",
+      "import": "./dist/backends/memory.js"
+    },
+    "./redis": {
+      "types": "./dist/backends/redis.d.ts",
+      "import": "./dist/backends/redis.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
+  },
+  "files": [
+    "dist",
+    "src",
+    "isl"
+  ],
+  "keywords": [
+    "isl",
+    "cache",
+    "redis",
+    "memory",
+    "lru",
+    "ttl"
+  ],
+  "author": "mevla",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "sideEffects": false
+}

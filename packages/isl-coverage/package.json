@@ -1,0 +1,36 @@
+{
+  "name": "@isl-lang/isl-coverage",
+  "private": true,
+  "version": "1.0.1",
+  "license": "MIT",
+  "description": "Coverage analytics engine for ISL specifications",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.build.json",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@isl-lang/parser": "workspace:*",
+    "@isl-lang/typechecker": "workspace:*",
+    "@isl-lang/isl-discovery": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}

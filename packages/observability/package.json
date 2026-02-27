@@ -1,0 +1,68 @@
+{
+  "name": "@isl-lang/observability",
+  "private": true,
+  "version": "0.1.0",
+  "description": "OpenTelemetry-based observability for ISL CLI and pipeline instrumentation",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./exporters/console": {
+      "import": "./dist/exporters/console.js",
+      "types": "./dist/exporters/console.d.ts"
+    },
+    "./exporters/otlp": {
+      "import": "./dist/exporters/otlp.js",
+      "types": "./dist/exporters/otlp.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/exporters/console.ts src/exporters/otlp.ts --format esm --no-dts --clean && tsc -p tsconfig.build.json",
+    "dev": "tsup src/index.ts src/exporters/console.ts src/exporters/otlp.ts --format esm --dts --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.8.0",
+    "@opentelemetry/resources": "^1.22.0",
+    "@opentelemetry/sdk-trace-base": "^1.22.0",
+    "@opentelemetry/sdk-trace-node": "^1.22.0",
+    "@opentelemetry/semantic-conventions": "^1.22.0"
+  },
+  "devDependencies": {
+    "@opentelemetry/exporter-trace-otlp-http": "^0.49.0",
+    "@types/node": "^20.10.0",
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "peerDependencies": {
+    "@opentelemetry/exporter-trace-otlp-http": ">=0.49.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentelemetry/exporter-trace-otlp-http": {
+      "optional": true
+    }
+  },
+  "author": "ISL Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/guardiavault-oss/ISL-LANG.git",
+    "directory": "packages/observability"
+  },
+  "sideEffects": false
+}

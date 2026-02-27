@@ -1,0 +1,32 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@5.2
+
+jobs:
+  shipgate:
+    executor: node/default
+    steps:
+      - checkout
+      - node/install-packages
+      - run:
+          name: Install ShipGate CLI
+          command: npm install -g @shipgate/cli
+      - run:
+          name: Run ShipGate gate
+          command: |
+            shipgate gate specs/ \
+              --impl src \
+              --threshold 90 \
+              --threshold 90 \
+              --format json \
+              --output /tmp/shipgate-report.json \
+              --ci
+      - store_artifacts:
+          path: /tmp/shipgate-report.json
+          destination: shipgate-report.json
+
+workflows:
+  ci:
+    jobs:
+      - shipgate

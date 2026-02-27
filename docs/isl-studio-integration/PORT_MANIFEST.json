@@ -1,0 +1,491 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-02-01T00:00:00.000Z",
+  "source": "C:\\Users\\mevla\\OneDrive\\Desktop\\ShipGate-Real",
+  "target": "c:\\Users\\mevla\\OneDrive\\Desktop\\IntentOS",
+  "packages": [
+    {
+      "name": "isl-gate",
+      "description": "Core gate decision engine - produces SHIP/NO_SHIP verdicts",
+      "files": [
+        {
+          "source_path": "packages/core/src/scoring/ship-score.ts",
+          "dest_path": "packages/isl-gate/src/scoring/ship-score.ts",
+          "reason": "6-dimension ship score calculator - core decision logic",
+          "used_by": ["gate", "evidence"]
+        },
+        {
+          "source_path": "packages/core/src/scoring/isl-scorer.ts",
+          "dest_path": "packages/isl-gate/src/scoring/isl-scorer.ts",
+          "reason": "ISL conformance scorer - verifies ISL spec compliance",
+          "used_by": ["gate"]
+        },
+        {
+          "source_path": "packages/core/src/scoring/unified-scorer.ts",
+          "dest_path": "packages/isl-gate/src/scoring/unified-scorer.ts",
+          "reason": "Unified pass rate and health status calculation",
+          "used_by": ["gate", "cli"]
+        },
+        {
+          "source_path": "packages/core/src/scoring/category-scorer.ts",
+          "dest_path": "packages/isl-gate/src/scoring/category-scorer.ts",
+          "reason": "Category-level scoring for dimension breakdown",
+          "used_by": ["gate"]
+        },
+        {
+          "source_path": "packages/core/src/scoring/index.ts",
+          "dest_path": "packages/isl-gate/src/scoring/index.ts",
+          "reason": "Scoring module exports",
+          "used_by": ["gate"]
+        },
+        {
+          "source_path": "packages/core/src/utils/errors.ts",
+          "dest_path": "packages/isl-gate/src/utils/errors.ts",
+          "reason": "Error types - ShipGateError, FirewallBlockedError, etc.",
+          "used_by": ["all"]
+        },
+        {
+          "source_path": "packages/core/src/utils/logger.ts",
+          "dest_path": "packages/isl-gate/src/utils/logger.ts",
+          "reason": "Logging utility",
+          "used_by": ["all"]
+        },
+        {
+          "source_path": "packages/core/src/utils/cache.ts",
+          "dest_path": "packages/isl-gate/src/utils/cache.ts",
+          "reason": "Simple cache for performance",
+          "used_by": ["firewall", "gate"]
+        },
+        {
+          "source_path": "packages/core/src/utils/retry.ts",
+          "dest_path": "packages/isl-gate/src/utils/retry.ts",
+          "reason": "Retry and timeout utilities",
+          "used_by": ["firewall", "evidence"]
+        },
+        {
+          "source_path": "packages/core/src/utils/validation.ts",
+          "dest_path": "packages/isl-gate/src/utils/validation.ts",
+          "reason": "Input validation utilities",
+          "used_by": ["firewall", "gate"]
+        },
+        {
+          "source_path": "packages/core/src/utils/performance.ts",
+          "dest_path": "packages/isl-gate/src/utils/performance.ts",
+          "reason": "Performance tracking",
+          "used_by": ["firewall", "gate"]
+        },
+        {
+          "source_path": "packages/core/src/git/change-detector.ts",
+          "dest_path": "packages/isl-gate/src/git/change-detector.ts",
+          "reason": "Git changed files detection for fast mode",
+          "used_by": ["gate"]
+        },
+        {
+          "source_path": "packages/core/src/discovery/file-walker.ts",
+          "dest_path": "packages/isl-gate/src/discovery/file-walker.ts",
+          "reason": "File discovery for scanning",
+          "used_by": ["gate"]
+        }
+      ]
+    },
+    {
+      "name": "isl-firewall",
+      "description": "Agent file write governance - prevents hallucinated code from being written",
+      "files": [
+        {
+          "source_path": "packages/core/src/firewall/agent-firewall.ts",
+          "dest_path": "packages/isl-firewall/src/agent-firewall.ts",
+          "reason": "Central firewall orchestrator - main entry point",
+          "used_by": ["mcp", "cli"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/policy-engine.ts",
+          "dest_path": "packages/isl-firewall/src/policy-engine.ts",
+          "reason": "Policy evaluation engine - ghost route/env/type detection",
+          "used_by": ["firewall"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/claim-extractor.ts",
+          "dest_path": "packages/isl-firewall/src/claim-extractor.ts",
+          "reason": "Extract verifiable claims from code",
+          "used_by": ["firewall"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/evidence-resolver.ts",
+          "dest_path": "packages/isl-firewall/src/evidence-resolver.ts",
+          "reason": "Resolve evidence for claims against truthpack",
+          "used_by": ["firewall"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/intent-validator.ts",
+          "dest_path": "packages/isl-firewall/src/intent-validator.ts",
+          "reason": "Validate agent intents before allowing writes",
+          "used_by": ["firewall"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/unblock-planner.ts",
+          "dest_path": "packages/isl-firewall/src/unblock-planner.ts",
+          "reason": "Generate unblock plans when firewall blocks",
+          "used_by": ["firewall", "mcp"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/allow-list.ts",
+          "dest_path": "packages/isl-firewall/src/allow-list.ts",
+          "reason": "Allowed path patterns for firewall filtering",
+          "used_by": ["firewall"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/confidence.ts",
+          "dest_path": "packages/isl-firewall/src/confidence.ts",
+          "reason": "Confidence tiers (hard_block/soft_block/warn)",
+          "used_by": ["firewall", "mcp"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/ast-call-extractor.ts",
+          "dest_path": "packages/isl-firewall/src/ast-call-extractor.ts",
+          "reason": "AST-based phantom call detection",
+          "used_by": ["firewall"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/scope-creep-detector.ts",
+          "dest_path": "packages/isl-firewall/src/scope-creep-detector.ts",
+          "reason": "Scope creep detection for intent validation",
+          "used_by": ["firewall"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/index.ts",
+          "dest_path": "packages/isl-firewall/src/index.ts",
+          "reason": "Firewall module exports",
+          "used_by": ["all"]
+        },
+        {
+          "source_path": "packages/mcp-server/src/hooks/file-write-hook.ts",
+          "dest_path": "packages/isl-firewall/src/hooks/file-write-hook.ts",
+          "reason": "File write interception hook for MCP",
+          "used_by": ["mcp"]
+        },
+        {
+          "source_path": "packages/mcp-server/src/runtime/intent-gate.ts",
+          "dest_path": "packages/isl-firewall/src/runtime/intent-gate.ts",
+          "reason": "Intent-based gate runtime",
+          "used_by": ["mcp"]
+        },
+        {
+          "source_path": "packages/mcp-server/src/services/audit-service.ts",
+          "dest_path": "packages/isl-firewall/src/services/audit-service.ts",
+          "reason": "Durable audit service for firewall logs",
+          "used_by": ["firewall", "evidence"]
+        }
+      ]
+    },
+    {
+      "name": "isl-evidence",
+      "description": "Evidence bundle & reporting - produces receipts for gate decisions",
+      "files": [
+        {
+          "source_path": "packages/core/src/tracing/evidence-pack-generator.ts",
+          "dest_path": "packages/isl-evidence/src/evidence-pack-generator.ts",
+          "reason": "Generate evidence packs for auditing",
+          "used_by": ["gate", "cli"]
+        },
+        {
+          "source_path": "packages/core/src/tracing/audit-logger.ts",
+          "dest_path": "packages/isl-evidence/src/audit-logger.ts",
+          "reason": "Audit logging for evidence persistence",
+          "used_by": ["evidence"]
+        },
+        {
+          "source_path": "packages/core/src/formatters/sarif/sarif-formatter.ts",
+          "dest_path": "packages/isl-evidence/src/formatters/sarif-formatter.ts",
+          "reason": "SARIF output format for IDE integration",
+          "used_by": ["evidence", "cli"]
+        },
+        {
+          "source_path": "packages/core/src/formatters/sarif/types.ts",
+          "dest_path": "packages/isl-evidence/src/formatters/sarif-types.ts",
+          "reason": "SARIF type definitions",
+          "used_by": ["evidence"]
+        },
+        {
+          "source_path": "packages/core/src/formatters/junit/junit-formatter.ts",
+          "dest_path": "packages/isl-evidence/src/formatters/junit-formatter.ts",
+          "reason": "JUnit output format for CI systems",
+          "used_by": ["evidence", "ci"]
+        },
+        {
+          "source_path": "packages/core/src/formatters/markdown/markdown-formatter.ts",
+          "dest_path": "packages/isl-evidence/src/formatters/markdown-formatter.ts",
+          "reason": "Markdown output for PR comments",
+          "used_by": ["evidence", "github"]
+        },
+        {
+          "source_path": "packages/core/src/formatters/html/report-template.ts",
+          "dest_path": "packages/isl-evidence/src/formatters/html/report-template.ts",
+          "reason": "HTML report template",
+          "used_by": ["evidence"]
+        },
+        {
+          "source_path": "packages/core/src/formatters/html/components.ts",
+          "dest_path": "packages/isl-evidence/src/formatters/html/components.ts",
+          "reason": "HTML report components",
+          "used_by": ["evidence"]
+        },
+        {
+          "source_path": "packages/core/src/formatters/html/styles.ts",
+          "dest_path": "packages/isl-evidence/src/formatters/html/styles.ts",
+          "reason": "HTML report styles",
+          "used_by": ["evidence"]
+        }
+      ]
+    },
+    {
+      "name": "isl-policy-packs",
+      "description": "Policy pack framework + starter packs (auth, payments, pii, rate-limit)",
+      "files": [
+        {
+          "source_path": "packages/core/src/policy/types.ts",
+          "dest_path": "packages/isl-policy-packs/src/types.ts",
+          "reason": "Policy type definitions",
+          "used_by": ["policy-packs", "firewall"]
+        },
+        {
+          "source_path": "packages/core/src/policy/parser.ts",
+          "dest_path": "packages/isl-policy-packs/src/parser.ts",
+          "reason": "YAML policy parser",
+          "used_by": ["policy-packs"]
+        },
+        {
+          "source_path": "packages/core/src/policy/resolver.ts",
+          "dest_path": "packages/isl-policy-packs/src/resolver.ts",
+          "reason": "Policy resolver (extends/inheritance)",
+          "used_by": ["policy-packs"]
+        },
+        {
+          "source_path": "packages/core/src/policy/schema.ts",
+          "dest_path": "packages/isl-policy-packs/src/schema.ts",
+          "reason": "Policy JSON schema",
+          "used_by": ["policy-packs"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/rules/base-rule.ts",
+          "dest_path": "packages/isl-policy-packs/src/rules/base-rule.ts",
+          "reason": "Base rule class for rule implementation",
+          "used_by": ["policy-packs"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/rules/ghost-route.ts",
+          "dest_path": "packages/isl-policy-packs/src/rules/ghost-route.ts",
+          "reason": "Ghost route detection rule",
+          "used_by": ["auth-pack"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/rules/ghost-env.ts",
+          "dest_path": "packages/isl-policy-packs/src/rules/ghost-env.ts",
+          "reason": "Ghost env var detection rule",
+          "used_by": ["auth-pack"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/rules/auth-drift.ts",
+          "dest_path": "packages/isl-policy-packs/src/rules/auth-drift.ts",
+          "reason": "Auth drift detection rule",
+          "used_by": ["auth-pack"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/rules/contract-drift.ts",
+          "dest_path": "packages/isl-policy-packs/src/rules/contract-drift.ts",
+          "reason": "Contract drift detection rule",
+          "used_by": ["payments-pack"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/rules/unsafe-side-effect.ts",
+          "dest_path": "packages/isl-policy-packs/src/rules/unsafe-side-effect.ts",
+          "reason": "Unsafe side effect detection rule",
+          "used_by": ["pii-pack"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/rules/scope-explosion.ts",
+          "dest_path": "packages/isl-policy-packs/src/rules/scope-explosion.ts",
+          "reason": "Scope explosion detection rule",
+          "used_by": ["rate-limit-pack"]
+        },
+        {
+          "source_path": "packages/core/src/firewall/rules/index.ts",
+          "dest_path": "packages/isl-policy-packs/src/rules/index.ts",
+          "reason": "Rules module exports",
+          "used_by": ["policy-packs"]
+        }
+      ]
+    },
+    {
+      "name": "isl-adapters",
+      "description": "CI + MCP adapters - GitHub Action, MCP tools, CLI glue",
+      "files": [
+        {
+          "source_path": "packages/github-action/src/action.ts",
+          "dest_path": "packages/isl-adapters/src/github/action.ts",
+          "reason": "GitHub Action main entry point",
+          "used_by": ["ci"]
+        },
+        {
+          "source_path": "packages/github-action/action.yml",
+          "dest_path": "packages/isl-adapters/github-action/action.yml",
+          "reason": "GitHub Action definition",
+          "used_by": ["ci"]
+        },
+        {
+          "source_path": "packages/core/src/ci/github-actions.ts",
+          "dest_path": "packages/isl-adapters/src/github/context.ts",
+          "reason": "GitHub context detection",
+          "used_by": ["ci"]
+        },
+        {
+          "source_path": "packages/core/src/integrations/github-pr-client.ts",
+          "dest_path": "packages/isl-adapters/src/github/pr-client.ts",
+          "reason": "PR comment client",
+          "used_by": ["ci"]
+        },
+        {
+          "source_path": "packages/mcp-server/src/tools/firewall-tools.ts",
+          "dest_path": "packages/isl-adapters/src/mcp/firewall-tools.ts",
+          "reason": "MCP firewall tools",
+          "used_by": ["mcp"]
+        },
+        {
+          "source_path": "packages/mcp-server/src/tools/validation-tools.ts",
+          "dest_path": "packages/isl-adapters/src/mcp/validation-tools.ts",
+          "reason": "MCP validation tools",
+          "used_by": ["mcp"]
+        },
+        {
+          "source_path": "packages/mcp-server/src/ui/response-builder.ts",
+          "dest_path": "packages/isl-adapters/src/mcp/response-builder.ts",
+          "reason": "MCP response formatting",
+          "used_by": ["mcp"]
+        },
+        {
+          "source_path": "packages/mcp-server/src/ui/text-formatters.ts",
+          "dest_path": "packages/isl-adapters/src/mcp/text-formatters.ts",
+          "reason": "Text formatting utilities for MCP",
+          "used_by": ["mcp"]
+        }
+      ]
+    }
+  ],
+  "dropped": [
+    {
+      "category": "Dashboards & Web UI",
+      "paths": [
+        "apps/web/*",
+        "packages/dashboard-api/*",
+        "packages/dashboard-web/*"
+      ],
+      "reason": "Non-goal: Marketing/dashboard UI not required for gate"
+    },
+    {
+      "category": "Reality Mode",
+      "paths": [
+        "packages/core/src/reality/*"
+      ],
+      "reason": "Complex browser testing - move to Phase 2+"
+    },
+    {
+      "category": "Autofix System",
+      "paths": [
+        "packages/core/src/autofix/*"
+      ],
+      "reason": "Gate only decides SHIP/NO_SHIP - fixing is separate concern"
+    },
+    {
+      "category": "Advanced Scanners",
+      "paths": [
+        "packages/core/src/scanners/*",
+        "packages/core/src/shipgate-mock-detector/*"
+      ],
+      "reason": "Over-engineered - use policy packs instead"
+    },
+    {
+      "category": "VSCode Extension",
+      "paths": [
+        "packages/vscode-extension/*",
+        "apps/vscode-extension/*"
+      ],
+      "reason": "Shipgate has its own VSCode extension"
+    },
+    {
+      "category": "API Server",
+      "paths": [
+        "packages/api-server/*"
+      ],
+      "reason": "Cloud API not required for local gate"
+    },
+    {
+      "category": "Truthpack Generator",
+      "paths": [
+        "packages/core/src/truthpack/*"
+      ],
+      "reason": "Shipgate has its own validation system"
+    },
+    {
+      "category": "Most CLI Commands",
+      "paths": [
+        "apps/cli/src/commands/badge.ts",
+        "apps/cli/src/commands/certify.ts",
+        "apps/cli/src/commands/demo.ts",
+        "apps/cli/src/commands/doctor.ts",
+        "apps/cli/src/commands/forge.ts",
+        "apps/cli/src/commands/missions.ts",
+        "apps/cli/src/commands/quickstart.ts",
+        "apps/cli/src/commands/reality.ts",
+        "apps/cli/src/commands/roast.ts",
+        "apps/cli/src/commands/scan.ts",
+        "apps/cli/src/commands/share.ts",
+        "apps/cli/src/commands/welcome.ts",
+        "apps/cli/src/commands/watch.ts"
+      ],
+      "reason": "UX/onboarding/marketing - not gate"
+    }
+  ],
+  "moveLater": [
+    {
+      "category": "Reality Mode Runtime",
+      "paths": [
+        "packages/core/src/reality/runtime/*",
+        "packages/core/src/reality/proof/*",
+        "packages/core/src/reality/safety/*"
+      ],
+      "reason": "Runtime proof adds value but complex - Phase 2+",
+      "targetPhase": "Phase 5"
+    },
+    {
+      "category": "Additional Scanners as Policy Packs",
+      "paths": [
+        "packages/core/src/secrets/*",
+        "packages/core/src/shipgate-mock-detector/*"
+      ],
+      "reason": "Implement as policy packs later",
+      "targetPhase": "Phase 4+"
+    }
+  ],
+  "outputContracts": {
+    "gateResult": {
+      "verdict": "SHIP | NO_SHIP",
+      "score": "number (0..100)",
+      "reasons": "Array<{ code: string, message: string, files: string[] }>",
+      "evidencePath": "string (folder path)",
+      "fingerprint": "string (deterministic hash)"
+    },
+    "evidenceBundle": {
+      "structure": [
+        "evidence/manifest.json",
+        "evidence/results.json",
+        "evidence/report.html",
+        "evidence/artifacts/"
+      ]
+    }
+  },
+  "totalFiles": {
+    "keep": 56,
+    "drop": 250,
+    "moveLater": 15
+  }
+}

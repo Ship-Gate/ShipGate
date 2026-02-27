@@ -1,0 +1,64 @@
+{
+  "name": "@isl-lang/agent-os",
+  "version": "0.1.1",
+  "description": "Agent orchestration system for IntentOS - triage, plan, execute, verify",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@isl-lang/isl-core": "workspace:*",
+    "@isl-lang/parser": "workspace:*",
+    "@isl-lang/intent-translator": "workspace:*",
+    "@isl-lang/isl-compiler": "workspace:*",
+    "@isl-lang/isl-verify": "workspace:*",
+    "@isl-lang/codegen-types": "workspace:*",
+    "@isl-lang/ai-generator": "workspace:*",
+    "@isl-lang/ai-copilot": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.1.0",
+    "rimraf": "^5.0.5",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "keywords": [
+    "intentos",
+    "agent-os",
+    "orchestration",
+    "ai",
+    "automation"
+  ],
+  "author": "mevla",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guardiavault-oss/ISL-LANG.git"
+  },
+  "homepage": "https://intentlang.dev",
+  "bugs": {
+    "url": "https://github.com/guardiavault-oss/ISL-LANG/issues"
+  },
+  "private": true,
+  "experimental": true,
+  "sideEffects": false
+}

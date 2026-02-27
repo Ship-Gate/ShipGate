@@ -1,0 +1,181 @@
+name: MVP Green Gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate-linux:
+    name: MVP Gate (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run MVP Gate
+        run: |
+          echo "========================================"
+          echo "   ISL Monorepo - MVP Green Gate"
+          echo "========================================"
+          echo ""
+          
+          FAILED=0
+          
+          echo "[1/3] Running build..."
+          if pnpm build; then
+            echo "  ✓ Build passed"
+          else
+            echo "  ✗ Build failed"
+            FAILED=1
+          fi
+          
+          echo "[2/3] Running typecheck..."
+          if pnpm typecheck; then
+            echo "  ✓ Typecheck passed"
+          else
+            echo "  ✗ Typecheck failed"
+            FAILED=1
+          fi
+          
+          echo "[3/3] Running CLI tests..."
+          if pnpm --filter @isl-lang/cli test; then
+            echo "  ✓ CLI tests passed"
+          else
+            echo "  ✗ CLI tests failed"
+            FAILED=1
+          fi
+          
+          echo ""
+          echo "========================================"
+          if [ $FAILED -eq 1 ]; then
+            echo "❌ MVP GATE: FAILED"
+            exit 1
+          else
+            echo "✅ MVP GATE: PASSED"
+            exit 0
+          fi
+
+  gate-windows:
+    name: MVP Gate (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run MVP Gate
+        shell: pwsh
+        run: |
+          Write-Host "========================================"
+          Write-Host "   ISL Monorepo - MVP Green Gate"
+          Write-Host "========================================"
+          Write-Host ""
+          
+          $failed = $false
+          
+          Write-Host "[1/3] Running build..."
+          pnpm build
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "  ✓ Build passed"
+          } else {
+            Write-Host "  ✗ Build failed"
+            $failed = $true
+          }
+          
+          Write-Host "[2/3] Running typecheck..."
+          pnpm typecheck
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "  ✓ Typecheck passed"
+          } else {
+            Write-Host "  ✗ Typecheck failed"
+            $failed = $true
+          }
+          
+          Write-Host "[3/3] Running CLI tests..."
+          pnpm --filter @isl-lang/cli test
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "  ✓ CLI tests passed"
+          } else {
+            Write-Host "  ✗ CLI tests failed"
+            $failed = $true
+          }
+          
+          Write-Host ""
+          Write-Host "========================================"
+          if ($failed) {
+            Write-Host "❌ MVP GATE: FAILED"
+            exit 1
+          } else {
+            Write-Host "✅ MVP GATE: PASSED"
+            exit 0
+          }
+
+  # Optional: Check experimental packages on schedule (non-blocking)
+  experimental-check:
+    name: Experimental Check (Non-blocking)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Check Experimental Packages
+        run: |
+          echo "Checking experimental packages (failures expected)..."
+          pnpm run typecheck:experimental || true
+          echo ""
+          echo "Note: Experimental package failures are expected and don't block the gate."
+          echo "See docs/repo-tiers.md for details."

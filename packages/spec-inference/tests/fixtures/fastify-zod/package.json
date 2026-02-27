@@ -1,0 +1,7 @@
+{
+  "name": "fastify-zod-fixture",
+  "dependencies": {
+    "fastify": "^4.24.0",
+    "zod": "^3.22.0"
+  }
+}

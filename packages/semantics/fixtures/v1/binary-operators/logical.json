@@ -1,0 +1,137 @@
+{
+  "name": "logical-operators",
+  "description": "V1 logical operator semantics (and, or, implies, iff)",
+  "version": "1.0.0",
+  "frozenForVersion": "1.x.x",
+  "cases": [
+    {
+      "operator": "and",
+      "left": true,
+      "right": true,
+      "expected": true,
+      "description": "AND: both true"
+    },
+    {
+      "operator": "and",
+      "left": true,
+      "right": false,
+      "expected": false,
+      "description": "AND: one false"
+    },
+    {
+      "operator": "and",
+      "left": false,
+      "right": true,
+      "expected": false,
+      "description": "AND: other false"
+    },
+    {
+      "operator": "and",
+      "left": false,
+      "right": false,
+      "expected": false,
+      "description": "AND: both false"
+    },
+    {
+      "operator": "or",
+      "left": true,
+      "right": true,
+      "expected": true,
+      "description": "OR: both true"
+    },
+    {
+      "operator": "or",
+      "left": true,
+      "right": false,
+      "expected": true,
+      "description": "OR: one true"
+    },
+    {
+      "operator": "or",
+      "left": false,
+      "right": true,
+      "expected": true,
+      "description": "OR: other true"
+    },
+    {
+      "operator": "or",
+      "left": false,
+      "right": false,
+      "expected": false,
+      "description": "OR: both false"
+    },
+    {
+      "operator": "implies",
+      "left": true,
+      "right": true,
+      "expected": true,
+      "description": "IMPLIES: T -> T = T"
+    },
+    {
+      "operator": "implies",
+      "left": true,
+      "right": false,
+      "expected": false,
+      "description": "IMPLIES: T -> F = F"
+    },
+    {
+      "operator": "implies",
+      "left": false,
+      "right": true,
+      "expected": true,
+      "description": "IMPLIES: F -> T = T (vacuous truth)"
+    },
+    {
+      "operator": "implies",
+      "left": false,
+      "right": false,
+      "expected": true,
+      "description": "IMPLIES: F -> F = T (vacuous truth)"
+    },
+    {
+      "operator": "iff",
+      "left": true,
+      "right": true,
+      "expected": true,
+      "description": "IFF: T <-> T = T"
+    },
+    {
+      "operator": "iff",
+      "left": true,
+      "right": false,
+      "expected": false,
+      "description": "IFF: T <-> F = F"
+    },
+    {
+      "operator": "iff",
+      "left": false,
+      "right": true,
+      "expected": false,
+      "description": "IFF: F <-> T = F"
+    },
+    {
+      "operator": "iff",
+      "left": false,
+      "right": false,
+      "expected": true,
+      "description": "IFF: F <-> F = T"
+    }
+  ],
+  "shortCircuitCases": [
+    {
+      "operator": "and",
+      "description": "AND short-circuits on false left operand",
+      "shortCircuit": true
+    },
+    {
+      "operator": "or",
+      "description": "OR short-circuits on true left operand",
+      "shortCircuit": true
+    },
+    {
+      "operator": "implies",
+      "description": "IMPLIES short-circuits on false left operand",
+      "shortCircuit": true
+    }
+  ]
+}

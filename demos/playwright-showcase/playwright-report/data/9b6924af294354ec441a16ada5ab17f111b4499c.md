@@ -1,0 +1,43 @@
+# Page snapshot
+
+```yaml
+- main [ref=e6]:
+  - generic [ref=e9]:
+    - heading "The 3 Biggest Lies AI Tells" [level=1] [ref=e10]
+    - paragraph [ref=e11]: And how ISL catches every single one
+    - generic [ref=e12]:
+      - button "Pause" [ref=e13] [cursor=pointer]:
+        - img [ref=e14]
+        - text: Pause
+      - button "Skip" [active] [ref=e17] [cursor=pointer]:
+        - img [ref=e18]
+        - text: Skip
+      - button "Restart" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]
+        - text: Restart
+      - button "Toggle Voice" [ref=e24] [cursor=pointer]:
+        - img [ref=e25]
+    - generic [ref=e29]:
+      - text: ElevenLabs API key not set. Voice narration disabled.
+      - button "Add key" [ref=e30] [cursor=pointer]
+    - generic [ref=e31]: "Step 4 / 5 — Lie 3: Validation"
+    - generic [ref=e34]:
+      - paragraph [ref=e36]: “ISL caught it. This code would never ship.”
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e40]: AI-Generated Registration
+          - button [ref=e41] [cursor=pointer]:
+            - img [ref=e42]
+        - code [ref=e46]:
+          - generic [ref=e47]: "export function registerUser(email: string, name: string) {"
+          - generic [ref=e48]: "const id = `user_${Date.now()}`;"
+          - generic [ref=e49]: "users.set(email, { id, email, name }); // No validation!"
+          - generic [ref=e50]: "return { id };"
+          - generic [ref=e51]: "}"
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - img [ref=e55]
+          - generic [ref=e59]: NO-SHIP
+        - paragraph [ref=e60]: No input validation - accepts empty strings, invalid email, SQL injection, XSS
+        - paragraph [ref=e61]: "Trust Score: 0%"
+```

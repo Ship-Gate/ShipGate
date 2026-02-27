@@ -1,0 +1,47 @@
+{
+  "name": "@isl-lang/flagship-demo",
+  "version": "0.0.1",
+  "description": "Flagship ISL demo: OAuth, Payments, and Uploads with end-to-end verification",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "parse": "isl parse spec/simple-test.isl",
+    "check": "isl check spec/simple-test.isl",
+    "lint": "isl lint spec/simple-test.isl",
+    "gen": "isl generate spec/simple-test.isl --types --tests --output generated/",
+    "build": "pnpm exec shipgate build spec/simple-test.isl --output generated/",
+    "build:all": "pnpm exec shipgate build spec/simple-test.isl -o generated/ && echo Build complete",
+    "verify": "isl verify spec/simple-test.isl --impl src/handlers/auth.ts --detailed",
+    "evidence": "node scripts/generate-evidence.js",
+    "demo": "node scripts/run-demo.js",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "isl",
+    "demo",
+    "oauth",
+    "payments",
+    "verification"
+  ],
+  "author": "ISL Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "shipgate": "workspace:*",
+    "@isl-lang/islstudio": "workspace:*",
+    "@isl-lang/parser": "workspace:*",
+    "@isl-lang/isl-verify": "workspace:*",
+    "@isl-lang/build-runner": "workspace:*",
+    "@isl-lang/codegen-tests": "workspace:*",
+    "@isl-lang/evidence-schema": "workspace:*",
+    "@isl-lang/evidence-html": "workspace:*",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.0",
+    "@types/uuid": "^9.0.7",
+    "typescript": "^5.3.0"
+  }
+}

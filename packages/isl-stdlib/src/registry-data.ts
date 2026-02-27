@@ -1,0 +1,640 @@
+/**
+ * Registry Data
+ * 
+ * AUTO-GENERATED - DO NOT EDIT
+ * Generated: 2026-02-08T22:00:00.000Z
+ * 
+ * Run `pnpm run generate-registry` to regenerate.
+ */
+
+import type { StdlibRegistry } from './types.js';
+
+export const REGISTRY_DATA: StdlibRegistry = {
+  "$schema": "./registry.schema.json",
+  "version": "1.0.0",
+  "description": "ISL Standard Library Canonical Registry",
+  "generated": "2026-02-08T22:00:00.000Z",
+  "stdlibRoot": "stdlib",
+  "modules": {
+    "stdlib-core": {
+      "name": "@isl-lang/stdlib-core",
+      "version": "1.0.0",
+      "description": "Base types and primitives (Email, URL, UUID, Timestamp, Currency, pagination, audit metadata)",
+      "category": "data",
+      "status": "implemented",
+      "entryPoint": "core/base-types.isl",
+      "exports": {
+        ".": "core/base-types.isl",
+        "/base-types": "core/base-types.isl"
+      },
+      "files": [
+        {
+          "path": "core/base-types.isl",
+          "contentHash": "06663cca713043f2a6b6d471ec84257db69d699502cf7b11004ea353fe0edb87"
+        }
+      ],
+      "moduleHash": "d3fe6034db6fa59d96532180a46f4255a64d38c115e7c0f0b2b86dd03136beef",
+      "provides": {
+        "entities": [
+          "PageInfo",
+          "AuditMetadata"
+        ],
+        "behaviors": [],
+        "enums": [
+          "Currency",
+          "SortDirection"
+        ],
+        "types": [
+          "Email",
+          "URL",
+          "Phone",
+          "Slug",
+          "Locale",
+          "CountryCode",
+          "IPv4",
+          "IPv6",
+          "IPAddress",
+          "SemVer",
+          "MimeType",
+          "UUID",
+          "ULID",
+          "CUID",
+          "Timestamp",
+          "Duration",
+          "DateString",
+          "TimeString",
+          "DateTimeString",
+          "TimeZone",
+          "Currency",
+          "Money",
+          "MonetaryAmount",
+          "Percentage",
+          "PositiveInt",
+          "NonNegativeInt",
+          "ByteSize",
+          "Markdown",
+          "HTML",
+          "JSON",
+          "PageSize",
+          "PageOffset",
+          "Cursor",
+          "SortDirection"
+        ]
+      },
+      "dependencies": [],
+      "peerDependencies": [],
+      "keywords": [
+        "types",
+        "primitives",
+        "email",
+        "url",
+        "uuid",
+        "timestamp",
+        "currency",
+        "pagination",
+        "core"
+      ]
+    },
+    "stdlib-auth": {
+      "name": "@isl-lang/stdlib-auth",
+      "version": "1.0.0",
+      "description": "Authentication and authorization (OAuth, sessions, rate limiting, password reset)",
+      "category": "security",
+      "status": "implemented",
+      "entryPoint": "auth/oauth-login.isl",
+      "exports": {
+        ".": "auth/oauth-login.isl",
+        "/oauth-login": "auth/oauth-login.isl",
+        "/password-reset": "auth/password-reset.isl",
+        "/rate-limit-login": "auth/rate-limit-login.isl",
+        "/session-create": "auth/session-create.isl"
+      },
+      "files": [
+        {
+          "path": "auth/oauth-login.isl",
+          "contentHash": "2a5c3d73da5aa742a29e8d9e479afcef8325f9f2fe3581523845492ef8064f32"
+        },
+        {
+          "path": "auth/password-reset.isl",
+          "contentHash": "988efc8a963d000eb4a645b9de1671c62e9448472268d26ebd8aa740097b5e09"
+        },
+        {
+          "path": "auth/rate-limit-login.isl",
+          "contentHash": "8761ff4417c4e00ca04201c096f5821202414e7235310670dbca01e23ee2d1f6"
+        },
+        {
+          "path": "auth/session-create.isl",
+          "contentHash": "ec5695854a84f6c3940501ac91d49d1d1523b03265a0a2f8db04c80ba948d373"
+        }
+      ],
+      "moduleHash": "0c057caa19f6779d09c1eda414994cdc707eb901d208f648776010597b64761a",
+      "provides": {
+        "entities": [
+          "OAuthCredential",
+          "PasswordResetRequest",
+          "LoginAttempt",
+          "RateLimitBucket",
+          "LoginBlock",
+          "Session"
+        ],
+        "behaviors": [
+          "InitiateOAuth",
+          "ExchangeOAuthCode",
+          "RefreshOAuthToken",
+          "RevokeOAuthCredential",
+          "RequestPasswordReset",
+          "ValidateResetToken",
+          "ResetPassword",
+          "CheckPasswordStrength",
+          "CheckLoginRateLimit",
+          "RecordLoginAttempt",
+          "BlockIdentifier",
+          "UnblockIdentifier",
+          "GetLoginAttemptHistory",
+          "ResetRateLimit",
+          "CreateSession",
+          "ValidateSession",
+          "RevokeSession",
+          "RevokeAllUserSessions",
+          "CleanupExpiredSessions"
+        ],
+        "enums": [
+          "OAuthProvider",
+          "PasswordStrength",
+          "RateLimitAction"
+        ],
+        "types": [
+          "OAuthProvider",
+          "OAuthCode",
+          "OAuthState",
+          "AccessToken",
+          "RefreshToken",
+          "OAuthScope",
+          "ResetToken",
+          "Password",
+          "PasswordStrength",
+          "RateLimitKey",
+          "RateLimitWindow",
+          "RateLimitAction",
+          "SessionId",
+          "SessionToken",
+          "DeviceFingerprint",
+          "SessionDuration"
+        ]
+      },
+      "dependencies": [
+        "stdlib-core"
+      ],
+      "peerDependencies": [],
+      "keywords": [
+        "auth",
+        "authentication",
+        "oauth",
+        "session",
+        "login",
+        "security",
+        "password"
+      ]
+    },
+    "stdlib-http": {
+      "name": "@isl-lang/stdlib-http",
+      "version": "1.0.0",
+      "description": "HTTP contracts (Request, Response, StatusCode, Headers, middleware patterns)",
+      "category": "infrastructure",
+      "status": "implemented",
+      "entryPoint": "http/request-response.isl",
+      "exports": {
+        ".": "http/request-response.isl",
+        "/request-response": "http/request-response.isl",
+        "/middleware": "http/middleware.isl"
+      },
+      "files": [
+        {
+          "path": "http/request-response.isl",
+          "contentHash": "048b45ab72023e4a466795303dbe00ec0ec688bf6b159a967f494b1f8d9bf441"
+        },
+        {
+          "path": "http/middleware.isl",
+          "contentHash": "7d14ea85ec916266540f21e4d55b937fc74512442c49b2bdbc8642774d9ecc11"
+        }
+      ],
+      "moduleHash": "f45130f57f315b93d8bd83cb5cb286d743a7d269fa35267981d170a87413c129",
+      "provides": {
+        "entities": [
+          "HTTPRequest",
+          "HTTPResponse",
+          "HTTPError",
+          "CacheControl",
+          "RequestLog",
+          "RetryConfig",
+          "CircuitBreakerConfig"
+        ],
+        "behaviors": [
+          "SendRequest",
+          "ParseRequest",
+          "BuildErrorResponse",
+          "ValidateContentType",
+          "LogRequest",
+          "CompressResponse",
+          "CalculateRetryDelay",
+          "CheckCircuitBreaker"
+        ],
+        "enums": [
+          "HTTPMethod",
+          "HTTPStatusCode",
+          "ContentType",
+          "AuthScheme",
+          "LogLevel",
+          "CompressionAlgorithm",
+          "RetryStrategy"
+        ],
+        "types": [
+          "HTTPMethod",
+          "HTTPStatusCode",
+          "ContentType",
+          "AuthScheme",
+          "HeaderName",
+          "HeaderValue",
+          "QueryParam",
+          "PathSegment",
+          "BearerToken",
+          "APIKey",
+          "LogLevel",
+          "CompressionAlgorithm",
+          "RetryStrategy"
+        ]
+      },
+      "dependencies": [
+        "stdlib-core"
+      ],
+      "peerDependencies": [],
+      "keywords": [
+        "http",
+        "request",
+        "response",
+        "rest",
+        "api",
+        "middleware",
+        "headers",
+        "status"
+      ]
+    },
+    "stdlib-payments": {
+      "name": "@isl-lang/stdlib-payments",
+      "version": "1.0.0",
+      "description": "PCI-compliant payment processing (payments, refunds, subscriptions, webhooks)",
+      "category": "business",
+      "status": "implemented",
+      "entryPoint": "payments/process-payment.isl",
+      "exports": {
+        ".": "payments/process-payment.isl",
+        "/process-payment": "payments/process-payment.isl",
+        "/process-refund": "payments/process-refund.isl",
+        "/subscription-create": "payments/subscription-create.isl",
+        "/webhook-handle": "payments/webhook-handle.isl"
+      },
+      "files": [
+        {
+          "path": "payments/process-payment.isl",
+          "contentHash": "f03e73df122428d33a1d6eae8ed92c0f54a333c80f34594dfe9f4558614d6e2a"
+        },
+        {
+          "path": "payments/process-refund.isl",
+          "contentHash": "0942eef359321cb1345577f9c27517b76b9de985f3bdb794830c40457f8dc7bb"
+        },
+        {
+          "path": "payments/subscription-create.isl",
+          "contentHash": "69b25d87f64d2ae03fdf454e3cb84ace6f7160d418616960e83a3ddf7fba05f1"
+        },
+        {
+          "path": "payments/webhook-handle.isl",
+          "contentHash": "111179fd18be77245c74a956224814b5d3cead059a32953459abf8316babd9d2"
+        }
+      ],
+      "moduleHash": "d2ab2b72d20a6fad6946aa2e63d8fd7c8f97f0124b221aef82553654bc65f5bd",
+      "provides": {
+        "entities": [
+          "Payment",
+          "PaymentCard",
+          "Refund",
+          "Plan",
+          "Subscription",
+          "SubscriptionInvoice",
+          "WebhookEvent",
+          "WebhookEndpoint"
+        ],
+        "behaviors": [
+          "CreatePayment",
+          "ProcessPaymentIntent",
+          "CancelPayment",
+          "GetPayment",
+          "ListCustomerPayments",
+          "CreateRefund",
+          "ProcessRefundIntent",
+          "CancelRefund",
+          "GetRefund",
+          "ListPaymentRefunds",
+          "CalculateRefundableAmount",
+          "CreateSubscription",
+          "CancelSubscription",
+          "PauseSubscription",
+          "ResumeSubscription",
+          "ChangePlan",
+          "GetSubscription",
+          "RenewSubscription",
+          "ReceiveWebhook",
+          "ProcessWebhook",
+          "HandlePaymentSucceeded",
+          "HandlePaymentFailed",
+          "HandleSubscriptionEvent",
+          "HandleDisputeCreated",
+          "RetryFailedWebhook"
+        ],
+        "enums": [
+          "Currency",
+          "PaymentMethod",
+          "PaymentStatus",
+          "CardBrand",
+          "RefundStatus",
+          "RefundReason",
+          "BillingInterval",
+          "SubscriptionStatus",
+          "WebhookProvider",
+          "WebhookEventType",
+          "WebhookStatus"
+        ],
+        "types": [
+          "PaymentId",
+          "Money",
+          "Currency",
+          "PaymentMethod",
+          "PaymentStatus",
+          "CardBrand",
+          "RefundId",
+          "RefundStatus",
+          "RefundReason",
+          "SubscriptionId",
+          "BillingInterval",
+          "SubscriptionStatus",
+          "WebhookId",
+          "WebhookProvider",
+          "WebhookEventType",
+          "WebhookStatus"
+        ]
+      },
+      "dependencies": [
+        "stdlib-core"
+      ],
+      "peerDependencies": [
+        "stdlib-auth"
+      ],
+      "keywords": [
+        "payments",
+        "pci",
+        "stripe",
+        "subscriptions",
+        "billing",
+        "refunds",
+        "webhooks"
+      ]
+    },
+    "stdlib-storage": {
+      "name": "@isl-lang/stdlib-storage",
+      "version": "1.0.0",
+      "description": "Data persistence patterns (CRUD, pagination, search, soft-delete, batch operations)",
+      "category": "storage",
+      "status": "implemented",
+      "entryPoint": "storage/crud.isl",
+      "exports": {
+        ".": "storage/crud.isl",
+        "/crud": "storage/crud.isl",
+        "/search": "storage/search.isl"
+      },
+      "files": [
+        {
+          "path": "storage/crud.isl",
+          "contentHash": "121f4b1e508adaa95aee2743cd20ca7abe11871986d6c3a05626bd2f7140f5c6"
+        },
+        {
+          "path": "storage/search.isl",
+          "contentHash": "3619740176de87f6f9458c1e32b7c0ddf5355f9d037e629fa11c4675e80fc1dd"
+        }
+      ],
+      "moduleHash": "e604743b75d3566da7376bd64b22c81272dfdbc0178c8318a45b5bd2df9f5e86",
+      "provides": {
+        "entities": [
+          "SortSpec",
+          "FilterSpec",
+          "PaginationSpec",
+          "PaginatedResult",
+          "SoftDeleteMetadata",
+          "SearchResult",
+          "SearchFacet",
+          "FacetBucket",
+          "SearchSuggestion",
+          "SearchIndex",
+          "SearchIndexField"
+        ],
+        "behaviors": [
+          "Create",
+          "Read",
+          "Update",
+          "Delete",
+          "List",
+          "Restore",
+          "BatchCreate",
+          "Search",
+          "Suggest",
+          "IndexDocument",
+          "DeleteFromIndex",
+          "ReindexAll"
+        ],
+        "enums": [
+          "SortDirection",
+          "FilterOperator",
+          "ConflictStrategy",
+          "IsolationLevel",
+          "SearchScoreMode",
+          "IndexType",
+          "FacetType"
+        ],
+        "types": [
+          "RecordId",
+          "SortDirection",
+          "FilterOperator",
+          "ConflictStrategy",
+          "IsolationLevel",
+          "SearchQuery",
+          "SearchScoreMode",
+          "IndexType",
+          "FacetType"
+        ]
+      },
+      "dependencies": [
+        "stdlib-core"
+      ],
+      "peerDependencies": [],
+      "keywords": [
+        "storage",
+        "crud",
+        "database",
+        "pagination",
+        "search",
+        "soft-delete",
+        "batch"
+      ]
+    },
+    "stdlib-security": {
+      "name": "@isl-lang/stdlib-security",
+      "version": "1.0.0",
+      "description": "Security primitives (rate limiting, CORS, CSRF, input validation, XSS prevention)",
+      "category": "security",
+      "status": "implemented",
+      "entryPoint": "security/rate-limit.isl",
+      "exports": {
+        ".": "security/rate-limit.isl",
+        "/rate-limit": "security/rate-limit.isl",
+        "/input-validation": "security/input-validation.isl",
+        "/cors": "security/cors.isl"
+      },
+      "files": [
+        {
+          "path": "security/rate-limit.isl",
+          "contentHash": "d690a64950f30d80327e9b7d06a1dafe0e901452989d20a4ad7c28eebcbadfcf"
+        },
+        {
+          "path": "security/input-validation.isl",
+          "contentHash": "4b56e73a67cd3f9bc0ac975986a3d26c583b8c282946abffbbf8725441d290c6"
+        },
+        {
+          "path": "security/cors.isl",
+          "contentHash": "a24d4fa8f23981b96ab26a9ce9d1ae8593c6f321aa8baf12712ffdfbd840e799"
+        }
+      ],
+      "moduleHash": "6ac75889f28ec359daa62e4df252401b5cec571b35f21a50f91ae80935b51766",
+      "provides": {
+        "entities": [
+          "RateLimitConfig",
+          "RateLimitState",
+          "RateLimitResult",
+          "TokenBucketState",
+          "ValidationError",
+          "ValidationResult",
+          "SanitizationConfig",
+          "CORSConfig",
+          "CORSResult",
+          "CSRFConfig",
+          "CSRFToken"
+        ],
+        "behaviors": [
+          "CheckRateLimit",
+          "ConsumeToken",
+          "ResetRateLimit",
+          "GetRateLimitStatus",
+          "ValidateInput",
+          "SanitizeString",
+          "DetectInjection",
+          "ValidateEmail",
+          "ValidateURL",
+          "SanitizeBatch",
+          "CheckCORS",
+          "HandlePreflight",
+          "GenerateCSRFToken",
+          "ValidateCSRFToken"
+        ],
+        "enums": [
+          "RateLimitAlgorithm",
+          "RateLimitScope",
+          "RateLimitAction",
+          "ThrottleMode",
+          "SanitizationMode",
+          "ValidationSeverity",
+          "XSSVector",
+          "InjectionType",
+          "CORSMethod",
+          "SameSitePolicy",
+          "CSRFTokenPlacement"
+        ],
+        "types": [
+          "RateLimitAlgorithm",
+          "RateLimitScope",
+          "RateLimitAction",
+          "ThrottleMode",
+          "SanitizationMode",
+          "ValidationSeverity",
+          "XSSVector",
+          "InjectionType",
+          "CORSMethod",
+          "SameSitePolicy",
+          "CSRFTokenPlacement"
+        ]
+      },
+      "dependencies": [
+        "stdlib-core"
+      ],
+      "peerDependencies": [],
+      "keywords": [
+        "security",
+        "rate-limit",
+        "cors",
+        "csrf",
+        "xss",
+        "validation",
+        "sanitization",
+        "injection"
+      ]
+    }
+  },
+  "categories": {
+    "data": {
+      "name": "Data & Primitives",
+      "description": "Base types, formats, and data primitives",
+      "modules": [
+        "stdlib-core"
+      ]
+    },
+    "security": {
+      "name": "Security",
+      "description": "Authentication, authorization, and security patterns",
+      "modules": [
+        "stdlib-auth",
+        "stdlib-security"
+      ]
+    },
+    "infrastructure": {
+      "name": "Infrastructure",
+      "description": "HTTP, networking, and infrastructure patterns",
+      "modules": [
+        "stdlib-http"
+      ]
+    },
+    "business": {
+      "name": "Business Logic",
+      "description": "Payments, billing, and SaaS patterns",
+      "modules": [
+        "stdlib-payments"
+      ]
+    },
+    "storage": {
+      "name": "Storage",
+      "description": "Data persistence, search, and file management",
+      "modules": [
+        "stdlib-storage"
+      ]
+    }
+  },
+  "importAliases": {
+    "@isl/stdlib-core": "stdlib-core",
+    "@isl/core": "stdlib-core",
+    "@isl/stdlib-auth": "stdlib-auth",
+    "@isl/auth": "stdlib-auth",
+    "@isl/stdlib-http": "stdlib-http",
+    "@isl/http": "stdlib-http",
+    "@isl/stdlib-payments": "stdlib-payments",
+    "@isl/payments": "stdlib-payments",
+    "@isl/stdlib-storage": "stdlib-storage",
+    "@isl/storage": "stdlib-storage",
+    "@isl/stdlib-security": "stdlib-security",
+    "@isl/security": "stdlib-security"
+  }
+};

@@ -1,0 +1,68 @@
+{
+  "items": [
+    {
+      "title": "Harden Docker configuration",
+      "description": "Review Dockerfile for multi-stage builds, non-root user, and minimal base images",
+      "status": "planned",
+      "priority": "medium",
+      "aiSuggested": true,
+      "category": "security",
+      "source": "signal",
+      "id": "17710551360532uwni65d3",
+      "createdAt": "2026-02-14T07:45:36.053Z"
+    }
+  ],
+  "adaptations": [
+    {
+      "id": "1771055136054jv0ys0",
+      "timestamp": "2026-02-14T07:45:36.054Z",
+      "type": "signal_detected",
+      "itemId": "17710551360532uwni65d3",
+      "itemTitle": "Harden Docker configuration",
+      "description": "Detected: Docker config found"
+    }
+  ],
+  "lastUpdated": "2026-02-14T07:45:36.054Z",
+  "lastSignalHash": "has-docker:true|has-ci:true|no-ci:false|no-tests:false|no-env-example:false|has-prisma:false|has-drizzle:false|large-bundle:false|no-license:false",
+  "projectSignals": [
+    {
+      "type": "has-docker",
+      "detected": true,
+      "detail": "Docker config found"
+    },
+    {
+      "type": "has-ci",
+      "detected": true,
+      "detail": "GitHub Actions found"
+    },
+    {
+      "type": "no-ci",
+      "detected": false
+    },
+    {
+      "type": "no-tests",
+      "detected": false
+    },
+    {
+      "type": "no-env-example",
+      "detected": false
+    },
+    {
+      "type": "has-prisma",
+      "detected": false
+    },
+    {
+      "type": "has-drizzle",
+      "detected": false
+    },
+    {
+      "type": "large-bundle",
+      "detected": false,
+      "detail": "0 dependencies"
+    },
+    {
+      "type": "no-license",
+      "detected": false
+    }
+  ]
+}

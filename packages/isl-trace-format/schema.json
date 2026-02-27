@@ -1,0 +1,198 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ISL Trace Event Schema",
+  "description": "Stable trace event schema for ISL generated tests, healer iterations, verification engine, and proof bundles",
+  "definitions": {
+    "timingInfo": {
+      "type": "object",
+      "description": "Timing information for temporal constraint verification",
+      "properties": {
+        "startMs": {
+          "type": "number",
+          "description": "Start timestamp in milliseconds (high-res)"
+        },
+        "endMs": {
+          "type": "number",
+          "description": "End timestamp in milliseconds (high-res)"
+        },
+        "durationMs": {
+          "type": "number",
+          "description": "Duration in milliseconds"
+        },
+        "sequence": {
+          "type": "number",
+          "description": "Sequence number within the trace (for ordering verification)"
+        }
+      },
+      "required": ["startMs"]
+    },
+    "traceEvent": {
+      "$id": "TraceEvent",
+      "type": "object",
+      "description": "A single trace event",
+      "required": ["time", "kind", "correlationId", "handler", "inputs", "outputs", "events"],
+      "properties": {
+        "time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "handler_call",
+            "handler_return",
+            "handler_error",
+            "state_change",
+            "check",
+            "invariant",
+            "precondition",
+            "postcondition",
+            "temporal",
+            "nested",
+            "rate_limit_checked",
+            "audit_written",
+            "session_created",
+            "user_updated",
+            "error_returned"
+          ],
+          "description": "Event kind/type"
+        },
+        "correlationId": {
+          "type": "string",
+          "description": "Correlation ID for tracing across systems"
+        },
+        "handler": {
+          "type": "string",
+          "description": "Handler/function name"
+        },
+        "inputs": {
+          "type": "object",
+          "description": "Sanitized inputs (PII redacted)",
+          "additionalProperties": true
+        },
+        "outputs": {
+          "type": "object",
+          "description": "Sanitized outputs (PII redacted)",
+          "additionalProperties": true
+        },
+        "events": {
+          "type": "array",
+          "description": "Nested events (for hierarchical traces)",
+          "items": {
+            "$ref": "#/definitions/traceEvent"
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Optional metadata",
+          "additionalProperties": true
+        },
+        "timing": {
+          "$ref": "#/definitions/timingInfo"
+        }
+      },
+      "additionalProperties": false
+    },
+    "loginTraceMetadata": {
+      "type": "object",
+      "description": "Login-specific trace metadata",
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": ["success", "invalid_credentials", "rate_limited", "account_locked", "validation_error", "server_error"],
+          "description": "Login outcome"
+        },
+        "userIdHash": {
+          "type": "string",
+          "description": "User identifier (sanitized hash)"
+        },
+        "mfaRequired": {
+          "type": "boolean",
+          "description": "Whether MFA was required"
+        },
+        "mfaCompleted": {
+          "type": "boolean",
+          "description": "Whether MFA was completed"
+        },
+        "recentFailedAttempts": {
+          "type": "number",
+          "description": "Number of recent failed attempts (anonymized)"
+        },
+        "accountLocked": {
+          "type": "boolean",
+          "description": "Whether account was locked after this attempt"
+        }
+      },
+      "required": ["outcome"]
+    },
+    "traceMetadata": {
+      "type": "object",
+      "description": "Trace metadata",
+      "properties": {
+        "testName": { "type": "string" },
+        "scenario": { "type": "string" },
+        "implementation": { "type": "string" },
+        "version": { "type": "string" },
+        "environment": { "type": "string" },
+        "passed": { "type": "boolean" },
+        "failureIndex": { "type": "number" },
+        "duration": { "type": "number" },
+        "iteration": { "type": "number" },
+        "proofBundleId": { "type": "string" },
+        "auth": { "$ref": "#/definitions/loginTraceMetadata" }
+      },
+      "additionalProperties": true
+    },
+    "trace": {
+      "type": "object",
+      "description": "A complete trace (collection of events)",
+      "required": ["id", "name", "domain", "startTime", "correlationId", "events"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Trace ID"
+        },
+        "name": {
+          "type": "string",
+          "description": "Trace name/description"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Domain/behavior name"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Start time (ISO 8601)"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "End time (ISO 8601, optional)"
+        },
+        "correlationId": {
+          "type": "string",
+          "description": "Root correlation ID"
+        },
+        "events": {
+          "type": "array",
+          "description": "All events in the trace",
+          "items": {
+            "$ref": "#/definitions/traceEvent"
+          }
+        },
+        "initialState": {
+          "type": "object",
+          "description": "Initial state snapshot",
+          "additionalProperties": true
+        },
+        "metadata": {
+          "$ref": "#/definitions/traceMetadata"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$ref": "#/definitions/traceEvent"
+}

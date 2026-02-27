@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --canvas-bg: #1a1a2e;
+  --panel-bg: #16213e;
+  --accent: #0f3460;
+  --highlight: #e94560;
+}
+
+body {
+  background-color: var(--canvas-bg);
+  color: #e2e8f0;
+}
+
+/* React Flow Customization */
+.react-flow__node {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.react-flow__edge-path {
+  stroke-width: 2;
+}
+
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #64748b;
+  border: 2px solid #1e293b;
+}
+
+.react-flow__handle:hover {
+  background: var(--highlight);
+}
+
+.react-flow__minimap {
+  background-color: var(--panel-bg) !important;
+  border-radius: 8px;
+}
+
+.react-flow__controls {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.react-flow__controls-button {
+  background: var(--panel-bg);
+  border-color: var(--accent);
+}
+
+.react-flow__controls-button:hover {
+  background: var(--accent);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--panel-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1e4a7d;
+}
+
+/* Animations */
+@keyframes pulse-highlight {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(233, 69, 96, 0); }
+}
+
+.node-selected {
+  animation: pulse-highlight 2s infinite;
+}
+
+/* Code Preview */
+.code-preview {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.code-preview .keyword {
+  color: #c678dd;
+}
+
+.code-preview .type {
+  color: #e5c07b;
+}
+
+.code-preview .string {
+  color: #98c379;
+}
+
+.code-preview .number {
+  color: #d19a66;
+}
+
+.code-preview .comment {
+  color: #5c6370;
+  font-style: italic;
+}

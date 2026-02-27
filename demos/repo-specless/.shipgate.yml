@@ -1,0 +1,34 @@
+# ShipGate configuration — specless mode
+# No .isl specs required. ShipGate infers behavioral expectations
+# from code patterns, type signatures, and domain conventions.
+
+mode: specless
+
+scan:
+  include:
+    - src/**/*.ts
+  exclude:
+    - src/**/*.test.ts
+    - src/**/*.spec.ts
+    - node_modules/**
+
+policies:
+  # Detect functions that look like they do something but don't
+  fake-feature-detection: warn
+  # Flag stub implementations that return hardcoded success
+  stub-detection: error
+  # Security: token/session lifecycle issues
+  security-token-lifecycle: warn
+  # Ensure payment processing actually calls a processor
+  payment-integration-verification: error
+
+thresholds:
+  # Confidence score below which a function is flagged
+  min_confidence: 0.40
+  # Any single FAIL → NO_SHIP
+  fail_is_fatal: true
+
+output:
+  format: table
+  colors: true
+  verdict: true

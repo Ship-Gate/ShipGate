@@ -1,0 +1,156 @@
+{
+  "__comment": "Base Grafana dashboard template for ISL domains",
+  "dashboard": {
+    "id": null,
+    "uid": "isl-template",
+    "title": "ISL - Template Domain",
+    "tags": ["isl", "verification"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "rows": [
+      {
+        "title": "Overview",
+        "panels": [
+          {
+            "title": "Trust Score",
+            "type": "gauge",
+            "targets": [{
+              "expr": "isl_trust_score{domain='$domain'}"
+            }],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "min": 0,
+                "max": 100,
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "value": null, "color": "red" },
+                    { "value": 70, "color": "yellow" },
+                    { "value": 85, "color": "green" }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "title": "Verification Rate",
+            "type": "stat",
+            "targets": [{
+              "expr": "sum(rate(isl_verification_total{domain='$domain',verdict='verified'}[1h]))"
+            }]
+          },
+          {
+            "title": "Failure Rate",
+            "type": "stat",
+            "targets": [{
+              "expr": "sum(rate(isl_verification_total{domain='$domain',verdict='unsafe'}[1h]))"
+            }],
+            "fieldConfig": {
+              "defaults": {
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "value": null, "color": "green" },
+                    { "value": 0.01, "color": "red" }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "title": "Verification Trends",
+        "panels": [
+          {
+            "title": "Verifications Over Time",
+            "type": "timeseries",
+            "targets": [{
+              "expr": "sum by (verdict) (rate(isl_verification_total{domain='$domain'}[5m]))",
+              "legendFormat": "{{verdict}}"
+            }]
+          },
+          {
+            "title": "Score Trend",
+            "type": "timeseries",
+            "targets": [{
+              "expr": "avg(isl_verification_score{domain='$domain'}) by (behavior)"
+            }]
+          }
+        ]
+      },
+      {
+        "title": "Coverage",
+        "panels": [
+          {
+            "title": "Coverage by Category",
+            "type": "bargauge",
+            "targets": [{
+              "expr": "isl_coverage_ratio{domain='$domain'}",
+              "legendFormat": "{{category}}"
+            }]
+          }
+        ]
+      },
+      {
+        "title": "Latency",
+        "panels": [
+          {
+            "title": "Response Time Distribution",
+            "type": "heatmap",
+            "targets": [{
+              "expr": "sum(rate(isl_implementation_latency_seconds_bucket{domain='$domain'}[5m])) by (le)"
+            }]
+          },
+          {
+            "title": "P99 Latency",
+            "type": "timeseries",
+            "targets": [{
+              "expr": "histogram_quantile(0.99, sum(rate(isl_implementation_latency_seconds_bucket{domain='$domain'}[5m])) by (le, behavior))"
+            }]
+          }
+        ]
+      },
+      {
+        "title": "Chaos Testing",
+        "collapse": true,
+        "panels": [
+          {
+            "title": "Chaos Test Results",
+            "type": "piechart",
+            "targets": [{
+              "expr": "sum by (result) (isl_chaos_test_total{domain='$domain'})"
+            }]
+          }
+        ]
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "datasource",
+          "type": "datasource",
+          "query": "prometheus"
+        },
+        {
+          "name": "domain",
+          "type": "query",
+          "query": "label_values(isl_verification_total, domain)"
+        },
+        {
+          "name": "behavior",
+          "type": "query",
+          "query": "label_values(isl_verification_total{domain='$domain'}, behavior)"
+        }
+      ]
+    }
+  },
+  "overwrite": true
+}
