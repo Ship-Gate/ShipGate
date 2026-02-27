@@ -54,6 +54,9 @@ function filterSourceFiles(files: string[]): string[] {
       if (f.startsWith('scripts/')) return false;
       // Exclude isl-firewall (gate's own CLI; console.log/imports are self-referential)
       if (f.includes('packages/isl-firewall/') || f.includes('packages\\isl-firewall\\')) return false;
+      // Exclude Next.js apps — framework imports (next/server, @/ aliases) can't be resolved from monorepo root
+      if (f.includes('packages/shipgate-dashboard/') || f.includes('packages\\shipgate-dashboard\\')) return false;
+      if (f.includes('docs-site/') || f.includes('landing-main/')) return false;
       return true;
     })
     .map((f) => resolve(ROOT, f))
