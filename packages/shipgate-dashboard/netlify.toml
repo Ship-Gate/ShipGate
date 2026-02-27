@@ -5,6 +5,7 @@
   NODE_VERSION = "20"
   NODE_OPTIONS = "--max-old-space-size=4096"
   HUSKY = "0"
+  NEXTAUTH_URL = "https://app.shipgate.dev"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
