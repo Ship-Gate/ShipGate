@@ -1,6 +1,6 @@
-# ISL API Reference
+# ShipGate API Reference
 
-Complete API documentation for all ISL packages.
+Complete API documentation for core ShipGate packages. Package names use the `@isl-lang/` scope internally.
 
 ## @isl-lang/parser
 
@@ -99,28 +99,28 @@ interface SourceLocation {
 
 ---
 
-## @isl-lang/cli
+## @isl-lang/cli (published as `shipgate`)
 
-Command-line interface for ISL.
+Command-line interface for ShipGate.
 
 ### Installation
 
 ```bash
-npm install -g @isl-lang/cli
+npm install -g shipgate
 # or
-npx @isl-lang/cli
+npx shipgate
 ```
 
 ### Commands
 
-#### `isl init [name]`
+#### `shipgate init [name]`
 
-Initialize a new ISL project.
+Initialize a new ShipGate project.
 
 ```bash
-isl init my-project
-isl init --template minimal
-isl init --template full
+shipgate init my-project
+shipgate init --template minimal
+shipgate init --template full
 ```
 
 Options:
@@ -385,10 +385,17 @@ const goFiles = generateGo(domain, {
 | Go | ✓ | ✓ | ✗ | Partial | Experimental |
 | JVM | Partial | ✗ | ✗ | ✗ | Experimental |
 | C# | Partial | ✗ | ✗ | ✗ | Experimental |
+| GraphQL | ✓ | N/A | N/A | N/A | **v1** |
+| gRPC | ✓ | ✓ | N/A | N/A | Experimental |
+| OpenAPI | ✓ | N/A | N/A | N/A | **v1** |
+| Terraform | ✓ | ✓ | N/A | N/A | Experimental |
+| WASM | ✓ | ✓ | N/A | N/A | Experimental |
+| Kubernetes | ✓ | ✓ | N/A | N/A | Experimental |
 
-> **Note**: Python codegen with full contract support (preconditions, postconditions, invariants)
-> is supported as of v1.0. Other languages have partial or experimental support and may have
-> incomplete contract checking.
+ShipGate has 30 codegen packages total covering types, stubs, contracts, validators, load tests, database schemas, and more.
+
+> **Note**: TypeScript and Python have full contract support (preconditions, postconditions, invariants).
+> Other languages have partial or experimental support and may have incomplete contract checking.
 
 ---
 

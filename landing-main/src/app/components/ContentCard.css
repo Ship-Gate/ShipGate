@@ -1,0 +1,243 @@
+/* ═══════════════════════════════════════════════════════════════
+   ShipGate – Custom Component Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Override default light body */
+html, body {
+  background: #06060a !important;
+  color: #c8c8d4;
+  scroll-behavior: smooth;
+}
+
+/* ─── Hero Section ─────────────────────────────────────────── */
+.hero-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.hero-wrapper--parallax {
+  perspective: 1200px;
+  perspective-origin: center 40%;
+}
+
+.hero {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 0 24px;
+  will-change: transform, opacity;
+}
+
+.hero-content--3d {
+  transform-style: preserve-3d;
+  transform-origin: center bottom;
+}
+
+.hero-title-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.h1--scalingSize {
+  display: block;
+  font-size: clamp(40px, 8vw, 88px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  color: #ffffff;
+  position: relative;
+  background: linear-gradient(180deg, #ffffff 30%, rgba(255,255,255,0.5) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.h1--scalingSize::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0,230,138,0.3), rgba(99,102,241,0.3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: blur(30px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Logo Marquee positioned at bottom of hero */
+.hero-marquee {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, transparent, rgba(6,6,10,0.6));
+  padding: 8px 0;
+}
+
+/* ─── Section Headings ─────────────────────────────────────── */
+.section-heading {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 750;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  color: #ffffff;
+  max-width: 600px;
+}
+
+/* ─── Soft Glass Cards ─────────────────────────────────────── */
+.soft-card {
+  position: relative;
+  background: rgba(12, 12, 20, 0.6);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.soft-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.soft-card:hover {
+  border-color: rgba(255,255,255,0.1);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04);
+}
+
+/* Icon pill inside soft-card */
+.soft-card__icon-pill {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 50%;
+}
+
+/* Button inside soft-card */
+.soft-card__btn {
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.soft-card__btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.15);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+/* ─── Problem Box ──────────────────────────────────────────── */
+.problem-box {
+  position: relative;
+  background: rgba(15, 10, 12, 0.7);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 24px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow: hidden;
+  transition: border-color 0.3s, transform 0.3s;
+}
+
+.problem-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,40,40,0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.problem-box:hover {
+  border-color: rgba(255,255,255,0.1);
+  transform: translateY(-2px);
+}
+
+/* ─── Problem Content ──────────────────────────────────────── */
+.problem-content {
+  will-change: transform;
+}
+
+/* ─── Responsive adjustments ───────────────────────────────── */
+@media (max-width: 640px) {
+  html, body {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .h1--scalingSize {
+    font-size: clamp(32px, 10vw, 56px);
+  }
+  .hero-content {
+    padding: 0 16px;
+  }
+  .section-heading {
+    font-size: clamp(24px, 6vw, 36px);
+  }
+  .hero-marquee {
+    padding: 4px 0;
+  }
+
+  /* Reduce blur on mobile for GPU perf */
+  .soft-card {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .problem-box {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    padding: 20px;
+  }
+
+  /* Disable hover transforms on touch devices */
+  .problem-box:hover {
+    transform: none;
+  }
+
+  .soft-card:hover {
+    box-shadow: none;
+  }
+
+  /* Ensure tap targets are at least 44px */
+  button, a {
+    min-height: 44px;
+  }
+}
+
+/* ─── Blink cursor for terminals ───────────────────────────── */
+@keyframes cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}

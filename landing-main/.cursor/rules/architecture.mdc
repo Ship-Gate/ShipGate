@@ -1,0 +1,26 @@
+---
+description: Project architecture guidelines for express
+alwaysApply: true
+priority: 90
+---
+
+# Architecture Guidelines
+
+## Project Type: src-based
+## Framework: express
+## Language: typescript
+
+### Directory Structure
+- Follow existing directory conventions
+- Keep related files together
+- Use index files for clean exports
+
+### Import Conventions
+- Use @/ for src directory imports
+
+### File Naming
+- Use kebab-case for files
+
+---
+<!-- guardrail:auto-generated -->
+*Verified by Guardrail ✓*

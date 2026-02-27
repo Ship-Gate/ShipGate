@@ -1,0 +1,104 @@
+/* ── Tunnel 3D Scroll System ─────────────────────────────── */
+
+.tunnel-viewport {
+  position: fixed;
+  inset: 0;
+  perspective: 1800px;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Mobile-specific perspective adjustments */
+@media (max-width: 767px) {
+  .tunnel-viewport {
+    perspective: 1600px; /* Slightly smaller for mobile but still wide */
+  }
+}
+
+.tunnel-world {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.tunnel-section {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  opacity: 0;
+  background: rgba(6, 6, 10, 0.88);
+  backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  padding: 48px 32px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+/* Radial vignette — tunnel depth fog */
+.tunnel-depth-mask {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 25%,
+    rgba(6, 6, 10, 0.3) 55%,
+    rgba(6, 6, 10, 0.75) 80%,
+    rgba(6, 6, 10, 0.95) 95%,
+    rgba(6, 6, 10, 1) 100%
+  );
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Invisible scroll-space creator */
+.tunnel-scroll-proxy {
+  position: relative;
+  width: 100%;
+  pointer-events: none;
+  z-index: -1;
+  touch-action: pan-y;
+}
+
+/* ── Mobile performance optimizations ─────────────────────── */
+@media (max-width: 767px) {
+  .tunnel-section {
+    backdrop-filter: blur(10px) saturate(120%);
+    padding: 28px 16px;
+    border-radius: 18px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  }
+
+  .tunnel-world {
+    will-change: auto;
+  }
+
+  .tunnel-depth-mask {
+    background: radial-gradient(
+      ellipse at center,
+      transparent 0%,
+      transparent 20%,
+      rgba(6, 6, 10, 0.35) 50%,
+      rgba(6, 6, 10, 0.8) 75%,
+      rgba(6, 6, 10, 1) 100%
+    );
+  }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .tunnel-section {
+    backdrop-filter: none;
+    transition: none;
+  }
+}

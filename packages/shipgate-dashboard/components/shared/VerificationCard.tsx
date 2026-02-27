@@ -5,7 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { VerdictBadge } from '@/components/shared/VerdictBadge'
 import { formatDate, formatDuration, formatPercentage } from '@/lib/utils'
-import type { VerificationResult } from '@/lib/api'
+interface VerificationResult {
+  id: string;
+  domainId: string;
+  domainName: string;
+  timestamp: string;
+  duration: number;
+  verdict: 'pass' | 'fail' | 'partial' | 'error';
+  trustScore: number;
+  coverage: {
+    behaviors: number;
+    totalBehaviors: number;
+    preconditions: number;
+    totalPreconditions: number;
+    postconditions: number;
+    totalPostconditions: number;
+  };
+  results: unknown[];
+}
 
 interface VerificationCardProps {
   verification: VerificationResult

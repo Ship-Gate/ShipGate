@@ -1,0 +1,114 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-02-16T17:22:01.231Z",
+  "routes": [
+    {
+      "path": "/api/auth/google",
+      "method": "GET",
+      "handler": "passport",
+      "file": "server.js",
+      "line": 125,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/api/auth/google/callback",
+      "method": "GET",
+      "handler": "passport",
+      "file": "server.js",
+      "line": 127,
+      "parameters": [],
+      "middleware": [
+        "authenticate",
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/api/auth/github",
+      "method": "GET",
+      "handler": "passport",
+      "file": "server.js",
+      "line": 135,
+      "parameters": [],
+      "middleware": [
+        "authenticate",
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/api/auth/github/callback",
+      "method": "GET",
+      "handler": "passport",
+      "file": "server.js",
+      "line": 137,
+      "parameters": [],
+      "middleware": [
+        "authenticate",
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/api/user/profile",
+      "method": "GET",
+      "handler": "verifyToken",
+      "file": "server.js",
+      "line": 146,
+      "parameters": [],
+      "middleware": [
+        "authenticate",
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/api/create-checkout-session",
+      "method": "POST",
+      "handler": "verifyToken",
+      "file": "server.js",
+      "line": 151,
+      "parameters": [],
+      "middleware": [
+        "authenticate",
+        "auth"
+      ],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/api/stripe/webhook",
+      "method": "POST",
+      "handler": "express",
+      "file": "server.js",
+      "line": 180,
+      "parameters": [],
+      "middleware": [],
+      "auth": {
+        "required": true
+      }
+    },
+    {
+      "path": "/api/health",
+      "method": "GET",
+      "handler": "res",
+      "file": "server.js",
+      "line": 217,
+      "parameters": [],
+      "middleware": []
+    }
+  ]
+}

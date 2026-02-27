@@ -1,7 +1,7 @@
 {
-  "mode": "off",
+  "mode": "observe",
   "intent": null,
   "violationCount": 241,
   "blockedCount": 0,
-  "updatedAt": "2026-02-27T05:12:58.801Z"
+  "updatedAt": "2026-02-27T10:24:12.087Z"
 }

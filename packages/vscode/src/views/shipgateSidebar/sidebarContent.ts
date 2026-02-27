@@ -290,53 +290,85 @@ export function getWebviewContent(webview: vscode.Webview): string {
   <title>ShipGate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg0: #0a0a0f;
-      --bg1: #111118;
-      --bg2: #1a1a24;
-      --bg3: #222233;
-      --border: rgba(255,255,255,0.06);
-      --borderHover: rgba(255,255,255,0.12);
-      --text0: #ffffff;
-      --text1: #c8c8d4;
-      --text2: #8888a0;
-      --text3: #555566;
+      --bg0: #08080d;
+      --bg1: #0e0e16;
+      --bg2: #15151f;
+      --bg3: #1e1e2d;
+      --bg4: #282840;
+      --border: rgba(255,255,255,0.05);
+      --borderSubtle: rgba(255,255,255,0.03);
+      --borderHover: rgba(255,255,255,0.10);
+      --borderFocus: rgba(99,102,241,0.4);
+      --text0: #f0f0f5;
+      --text1: #c0c0d0;
+      --text2: #7e7e96;
+      --text3: #4a4a5e;
       --ship: #00e68a;
-      --shipBg: rgba(0,230,138,0.08);
-      --shipBorder: rgba(0,230,138,0.12);
-      --shipGlow: rgba(0,230,138,0.3);
+      --shipDim: #00c078;
+      --shipBg: rgba(0,230,138,0.07);
+      --shipBorder: rgba(0,230,138,0.10);
+      --shipGlow: rgba(0,230,138,0.25);
       --warn: #ffb547;
-      --warnBg: rgba(255,181,71,0.08);
-      --warnBorder: rgba(255,181,71,0.12);
+      --warnBg: rgba(255,181,71,0.07);
+      --warnBorder: rgba(255,181,71,0.10);
       --noship: #ff5c6a;
-      --noshipBg: rgba(255,92,106,0.08);
-      --noshipBorder: rgba(255,92,106,0.12);
+      --noshipBg: rgba(255,92,106,0.07);
+      --noshipBorder: rgba(255,92,106,0.10);
       --accent: #6366f1;
-      --accentBg: rgba(99,102,241,0.08);
+      --accentDim: #4f46e5;
+      --accentBg: rgba(99,102,241,0.07);
       --blue: #38bdf8;
-      --blueBg: rgba(56,189,248,0.08);
+      --blueBg: rgba(56,189,248,0.07);
       --highSev: #ff8a4c;
+      --surface: rgba(255,255,255,0.02);
+      --glass: rgba(255,255,255,0.03);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.3), 0 0 0 1px var(--border);
+      --shadow-elevated: 0 4px 16px rgba(0,0,0,0.4), 0 0 0 1px var(--border);
+      --transition-fast: 0.12s cubic-bezier(0.4,0,0.2,1);
+      --transition-med: 0.2s cubic-bezier(0.4,0,0.2,1);
+      --transition-slow: 0.35s cubic-bezier(0.4,0,0.2,1);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
       background: var(--bg0);
       color: var(--text1);
       font-size: 12px;
       line-height: 1.5;
-      width: 320px;
+      width: 100%;
       min-height: 100vh;
       overflow-x: hidden;
       display: flex;
       flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
     .sg-header {
       flex-shrink: 0;
-      padding: 16px 18px 0;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg0);
+      padding: 14px 16px 0;
+      background: linear-gradient(180deg, var(--bg1) 0%, var(--bg0) 100%);
+      position: relative;
+      z-index: 10;
+    }
+    .sg-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 16px;
+      right: 16px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, var(--border) 20%, var(--border) 80%, transparent 100%);
     }
     .sg-header-top {
       display: flex;
@@ -344,102 +376,125 @@ export function getWebviewContent(webview: vscode.Webview): string {
       justify-content: space-between;
       margin-bottom: 12px;
     }
-    .sg-logo-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .sg-logo-row { display: flex; align-items: center; gap: 10px; }
     .sg-logo-box {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
       background: linear-gradient(135deg, var(--ship) 0%, var(--accent) 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
-      font-weight: 700;
+      font-size: 15px;
+      font-weight: 800;
       color: var(--bg0);
+      box-shadow: 0 0 12px var(--shipGlow), 0 2px 8px rgba(0,0,0,0.3);
     }
-    .sg-brand { font-weight: 600; color: var(--text0); font-size: 14px; }
-    .sg-repo { font-size: 11px; color: var(--text3); margin-top: 2px; }
-    .sg-header-actions { display: flex; gap: 6px; }
+    .sg-brand { font-weight: 700; color: var(--text0); font-size: 14px; letter-spacing: -0.3px; }
+    .sg-repo { font-size: 10px; color: var(--text3); margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
+    .sg-header-actions { display: flex; gap: 5px; }
     .sg-icon-btn {
       width: 28px;
       height: 28px;
       border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--bg2);
-      color: var(--text2);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text3);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
-      transition: border-color 0.15s, color 0.15s;
+      font-size: 13px;
+      transition: all var(--transition-fast);
     }
-    .sg-icon-btn:hover { border-color: var(--borderHover); color: var(--text0); }
+    .sg-icon-btn:hover { border-color: var(--borderHover); color: var(--text1); background: var(--bg3); }
     .sg-tabs {
       display: flex;
       gap: 0;
-      border-bottom: 1px solid var(--border);
+      position: relative;
+      padding: 0 0 0 0;
     }
     .sg-tab {
       flex: 1;
-      padding: 10px 12px;
+      padding: 9px 4px;
       background: none;
       border: none;
-      color: var(--text2);
+      color: var(--text3);
       font-family: inherit;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 500;
       cursor: pointer;
       border-bottom: 2px solid transparent;
-      transition: color 0.15s, border-color 0.15s;
+      transition: all var(--transition-fast);
+      position: relative;
+      text-align: center;
     }
-    .sg-tab:hover { color: var(--text1); }
-    .sg-tab.active { color: var(--text0); border-bottom-color: var(--ship); }
+    .sg-tab:hover { color: var(--text2); }
+    .sg-tab.active {
+      color: var(--text0);
+      border-bottom-color: var(--ship);
+      text-shadow: 0 0 10px var(--shipGlow);
+    }
+
     .sg-content {
       flex: 1;
       overflow-y: auto;
-      padding: 16px 18px;
-      transition: opacity 0.12s ease;
+      padding: 16px 16px;
+      scroll-behavior: smooth;
     }
+    .sg-content > * { animation: fadeSlideIn 0.2s ease-out; }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .sg-footer {
       flex-shrink: 0;
-      padding: 12px 18px;
+      padding: 10px 16px;
       border-top: 1px solid var(--border);
       background: var(--bg1);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
     }
-    .sg-footer-time { font-size: 11px; color: var(--text3); }
+    .sg-footer-time { font-size: 10px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
     .sg-verify-btn {
-      padding: 8px 16px;
-      border-radius: 6px;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
       border: none;
-      background: linear-gradient(135deg, var(--ship) 0%, #00c078 100%);
+      background: linear-gradient(135deg, var(--ship) 0%, var(--shipDim) 100%);
       color: var(--bg0);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 700;
       cursor: pointer;
-      transition: opacity 0.15s;
+      transition: all var(--transition-fast);
+      letter-spacing: 0.3px;
+      box-shadow: 0 0 10px rgba(0,230,138,0.15);
     }
-    .sg-verify-btn:hover { opacity: 0.9; }
-    .sg-empty-state {
-      text-align: center;
-      padding: 48px 24px;
+    .sg-verify-btn:hover { box-shadow: 0 0 18px rgba(0,230,138,0.25); transform: translateY(-1px); }
+    .sg-verify-btn:active { transform: translateY(0); }
+
+    .sg-empty-state { text-align: center; padding: 32px 20px; }
+    .sg-empty-icon { font-size: 36px; margin-bottom: 16px; opacity: 0.6; }
+    .sg-empty-title { font-size: 15px; font-weight: 700; color: var(--text0); margin-bottom: 6px; letter-spacing: -0.3px; }
+    .sg-empty-desc { color: var(--text2); font-size: 12px; line-height: 1.6; margin-bottom: 20px; }
+
+    .sg-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: border-color var(--transition-fast);
     }
-    .sg-empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
-    .sg-empty-title { font-size: 14px; font-weight: 600; color: var(--text0); margin-bottom: 8px; }
-    .sg-empty-desc { color: var(--text2); font-size: 12px; }
+    .sg-card:hover { border-color: var(--borderHover); }
+    .sg-card + .sg-card { margin-top: 8px; }
+
     .sg-verdict-card {
       padding: 18px;
-      border-radius: 10px;
-      margin-bottom: 16px;
+      border-radius: var(--radius-lg);
+      margin-bottom: 14px;
       position: relative;
       overflow: hidden;
     }
@@ -448,17 +503,27 @@ export function getWebviewContent(webview: vscode.Webview): string {
     .sg-verdict-card.noship { background: var(--noshipBg); border: 1px solid var(--noshipBorder); }
     .sg-glow-circle {
       position: absolute;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      top: -30px;
+      right: -30px;
+      filter: blur(35px);
+      opacity: 0.2;
+    }
+    .sg-glow-circle-bl {
+      position: absolute;
       width: 60px;
       height: 60px;
       border-radius: 50%;
-      top: -20px;
-      right: -20px;
-      filter: blur(28px);
-      opacity: 0.25;
+      bottom: -25px;
+      left: -25px;
+      filter: blur(30px);
+      opacity: 0.1;
     }
-    .sg-verdict-card.ship .sg-glow-circle { background: var(--ship); }
-    .sg-verdict-card.warn .sg-glow-circle { background: var(--warn); }
-    .sg-verdict-card.noship .sg-glow-circle { background: var(--noship); }
+    .sg-verdict-card.ship .sg-glow-circle, .sg-verdict-card.ship .sg-glow-circle-bl { background: var(--ship); }
+    .sg-verdict-card.warn .sg-glow-circle, .sg-verdict-card.warn .sg-glow-circle-bl { background: var(--warn); }
+    .sg-verdict-card.noship .sg-glow-circle, .sg-verdict-card.noship .sg-glow-circle-bl { background: var(--noship); }
     .sg-verdict-inner {
       display: flex;
       align-items: center;
@@ -466,171 +531,474 @@ export function getWebviewContent(webview: vscode.Webview): string {
       position: relative;
       z-index: 1;
     }
-    .sg-ring-wrap { flex-shrink: 0; }
+    .sg-ring-wrap { flex-shrink: 0; position: relative; }
     .sg-ring-wrap svg { display: block; }
-    .sg-verdict-text h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .sg-verdict-text p { font-size: 12px; color: var(--text2); }
+    .sg-ring-label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text0);
+    }
+    .sg-verdict-text h3 { font-size: 16px; font-weight: 800; margin-bottom: 3px; letter-spacing: -0.3px; }
+    .sg-verdict-text p { font-size: 11px; color: var(--text2); }
+
     .sg-stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 16px;
+      gap: 6px;
+      margin-bottom: 14px;
     }
     .sg-stat-card {
       background: var(--bg2);
-      border-radius: 10px;
-      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px;
       position: relative;
+      overflow: hidden;
+      transition: border-color var(--transition-fast);
     }
-    .sg-stat-card .sg-sparkline { position: absolute; top: 10px; right: 10px; opacity: 0.7; }
-    .sg-stat-value { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 18px; color: var(--text0); }
-    .sg-stat-label { font-size: 10px; text-transform: uppercase; color: var(--text3); margin-top: 4px; }
-    .sg-section-title { font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; }
-    .sg-compliance-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
+    .sg-stat-card:hover { border-color: var(--borderHover); }
+    .sg-stat-card .sg-sparkline { position: absolute; top: 10px; right: 10px; opacity: 0.5; }
+    .sg-stat-value { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 17px; color: var(--text0); }
+    .sg-stat-label { font-size: 9px; text-transform: uppercase; color: var(--text3); margin-top: 3px; letter-spacing: 0.5px; font-weight: 600; }
+
+    .sg-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text3);
+      margin-bottom: 8px;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
     }
+    .sg-compliance-row { display: flex; gap: 6px; margin-bottom: 14px; }
     .sg-compliance-card {
       flex: 1;
       background: var(--bg2);
-      border-radius: 10px;
-      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px;
       text-align: center;
     }
-    .sg-compliance-value { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 16px; }
+    .sg-compliance-value { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 15px; }
     .sg-compliance-value.ship { color: var(--ship); }
     .sg-compliance-value.warn { color: var(--warn); }
     .sg-compliance-value.noship { color: var(--noship); }
-    .sg-compliance-label { font-size: 10px; color: var(--text3); margin-top: 4px; }
-    .sg-provenance-bar {
-      margin-bottom: 8px;
-    }
-    .sg-provenance-bar .row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-    .sg-provenance-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .sg-provenance-label { font-size: 11px; color: var(--text1); flex: 0 0 80px; }
-    .sg-provenance-track {
-      flex: 1;
-      height: 6px;
-      background: var(--bg3);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-    .sg-provenance-fill {
-      height: 100%;
-      border-radius: 3px;
-      transition: width 0.5s ease;
-    }
-    .sg-provenance-pct { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); width: 32px; text-align: right; }
+    .sg-compliance-label { font-size: 9px; color: var(--text3); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600; }
+
+    .sg-provenance-bar { margin-bottom: 6px; }
+    .sg-provenance-bar .row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+    .sg-provenance-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .sg-provenance-label { font-size: 10px; color: var(--text2); flex: 0 0 76px; }
+    .sg-provenance-track { flex: 1; height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+    .sg-provenance-fill { height: 100%; border-radius: 2px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+    .sg-provenance-pct { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); width: 30px; text-align: right; }
+
     .sg-claim-row {
       background: var(--bg2);
-      border-radius: 6px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
       margin-bottom: 6px;
       overflow: hidden;
+      transition: border-color var(--transition-fast);
     }
+    .sg-claim-row:hover { border-color: var(--borderHover); }
     .sg-claim-header {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 10px 14px;
+      padding: 10px 12px;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: background var(--transition-fast);
     }
-    .sg-claim-header:hover { background: var(--bg3); }
+    .sg-claim-header:hover { background: var(--glass); }
     .sg-claim-status {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
+      font-size: 11px;
       flex-shrink: 0;
+      font-weight: 700;
     }
-    .sg-claim-status.proven { background: var(--shipBg); color: var(--ship); }
-    .sg-claim-status.partial { background: var(--warnBg); color: var(--warn); }
-    .sg-claim-status.failed { background: var(--noshipBg); color: var(--noship); }
-    .sg-claim-name { flex: 1; font-weight: 500; color: var(--text0); }
-    .sg-claim-conf { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); }
+    .sg-claim-status.proven { background: var(--shipBg); color: var(--ship); border: 1px solid var(--shipBorder); }
+    .sg-claim-status.partial { background: var(--warnBg); color: var(--warn); border: 1px solid var(--warnBorder); }
+    .sg-claim-status.failed { background: var(--noshipBg); color: var(--noship); border: 1px solid var(--noshipBorder); }
+    .sg-claim-name { flex: 1; font-weight: 500; color: var(--text0); font-size: 12px; }
+    .sg-claim-conf { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); }
     .sg-claim-body {
       max-height: 400px;
       overflow: hidden;
-      padding: 12px 14px 12px;
+      padding: 10px 12px;
       border-top: 1px solid var(--border);
-      transition: max-height 0.15s ease, padding 0.15s ease;
+      transition: max-height 0.2s ease, padding 0.2s ease;
     }
     .sg-claim-body.collapsed { max-height: 0; padding-top: 0; padding-bottom: 0; overflow: hidden; }
-    .sg-claim-evidence { font-size: 11px; color: var(--text2); margin-bottom: 8px; }
+    .sg-claim-evidence { font-size: 11px; color: var(--text2); margin-bottom: 6px; line-height: 1.5; }
     .sg-control-badge {
       display: inline-block;
-      padding: 2px 8px;
-      border-radius: 3px;
+      padding: 2px 7px;
+      border-radius: 4px;
       background: var(--accentBg);
       color: var(--accent);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 600;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      border: 1px solid rgba(99,102,241,0.12);
     }
+
     .sg-file-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
+      gap: 8px;
+      padding: 9px 12px;
       background: var(--bg2);
-      border-radius: 6px;
-      margin-bottom: 6px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: 5px;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: all var(--transition-fast);
     }
-    .sg-file-row:hover { background: var(--bg3); }
+    .sg-file-row:hover { background: var(--bg3); border-color: var(--borderHover); transform: translateX(2px); }
     .sg-file-badge {
-      padding: 2px 8px;
-      border-radius: 3px;
+      padding: 2px 7px;
+      border-radius: 4px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 600;
+      font-size: 9px;
+      font-weight: 700;
       flex-shrink: 0;
+      letter-spacing: 0.3px;
     }
-    .sg-file-badge.ship { background: var(--shipBg); color: var(--ship); border: 1px solid rgba(0,230,138,0.2); }
-    .sg-file-badge.warn { background: var(--warnBg); color: var(--warn); border: 1px solid rgba(255,181,71,0.2); }
-    .sg-file-badge.noship { background: var(--noshipBg); color: var(--noship); border: 1px solid rgba(255,92,106,0.2); }
-    .sg-file-name { flex: 1; font-size: 12px; color: var(--text1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .sg-file-score { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); }
-    .sg-pipeline-status { background: var(--bg2); border-radius: 8px; padding: 12px; margin-bottom: 16px; border: 1px solid var(--border); }
+    .sg-file-badge.ship { background: var(--shipBg); color: var(--ship); border: 1px solid var(--shipBorder); }
+    .sg-file-badge.warn { background: var(--warnBg); color: var(--warn); border: 1px solid var(--warnBorder); }
+    .sg-file-badge.noship { background: var(--noshipBg); color: var(--noship); border: 1px solid var(--noshipBorder); }
+    .sg-file-name { flex: 1; font-size: 11px; color: var(--text1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sg-file-score { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); }
+
+    .sg-pipeline-status { background: var(--bg2); border-radius: var(--radius-md); padding: 12px; margin-bottom: 14px; border: 1px solid var(--border); }
     .sg-pipeline-status .header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
     .sg-pipeline-status .job-dots { display: flex; gap: 4px; margin-top: 8px; }
-    .sg-pipeline-status .job-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .sg-pipeline-status .job-dot { width: 8px; height: 8px; border-radius: 50%; transition: background var(--transition-fast); }
     .sg-pipeline-status .job-dot.success { background: var(--ship); }
     .sg-pipeline-status .job-dot.running { background: var(--blue); animation: pulse 2s infinite; }
-    .sg-pipeline-status .job-dot.pending { background: var(--bg3); }
+    .sg-pipeline-status .job-dot.pending { background: var(--bg4); }
     .sg-pipeline-status .job-dot.failure { background: var(--noship); }
-    .sg-findings-preview { margin-bottom: 16px; }
-    .sg-finding-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 11px; }
+
+    .sg-findings-preview { margin-bottom: 14px; }
+    .sg-finding-row { display: flex; align-items: center; gap: 7px; padding: 5px 0; font-size: 11px; }
     .sg-finding-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-    .sg-finding-dot.critical { background: var(--noship); box-shadow: 0 0 6px rgba(255,92,106,0.6); }
+    .sg-finding-dot.critical { background: var(--noship); box-shadow: 0 0 6px rgba(255,92,106,0.5); }
     .sg-finding-dot.high { background: var(--highSev); }
     .sg-finding-dot.medium { background: var(--warn); }
     .sg-finding-dot.low { background: var(--text3); }
     .sg-finding-msg { flex: 1; color: var(--text1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .sg-view-all { font-size: 10px; color: var(--accent); cursor: pointer; margin-top: 4px; }
-    .sg-pipeline-tab .run-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--bg2); border-radius: 6px; margin-bottom: 6px; cursor: pointer; }
-    .sg-pipeline-tab .run-row:hover { background: var(--bg3); }
-    .sg-pipeline-tab .run-detail { padding: 8px 12px 12px 24px; font-size: 11px; border-left: 2px solid var(--border); margin-left: 12px; margin-bottom: 8px; }
-    .sg-pipeline-tab .job-line { display: flex; align-items: center; gap: 6px; padding: 4px 0; }
-    .sg-pipeline-tab .env-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--bg2); border-radius: 6px; margin-bottom: 6px; font-size: 11px; }
-    .sg-pipeline-tab .env-name { font-weight: 500; color: var(--text0); }
-    .sg-pipeline-tab .env-score { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .sg-view-all { font-size: 10px; color: var(--accent); cursor: pointer; margin-top: 6px; transition: color var(--transition-fast); }
+    .sg-view-all:hover { color: #818cf8; }
+
+    .sg-pipeline-tab .run-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: 5px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .sg-pipeline-tab .run-row:hover { background: var(--bg3); border-color: var(--borderHover); }
+    .sg-pipeline-tab .run-detail {
+      padding: 8px 12px 12px 20px;
+      font-size: 11px;
+      border-left: 2px solid var(--accent);
+      margin-left: 12px;
+      margin-bottom: 8px;
+    }
+    .sg-pipeline-tab .job-line { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
+    .sg-pipeline-tab .env-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: 5px;
+      font-size: 11px;
+    }
+    .sg-pipeline-tab .env-name { font-weight: 600; color: var(--text0); }
+    .sg-pipeline-tab .env-score { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+    @keyframes shimmer {
+      0% { background-position: -200px 0; }
+      100% { background-position: 200px 0; }
+    }
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 0 10px rgba(0,230,138,0.15); }
+      50% { box-shadow: 0 0 22px rgba(0,230,138,0.3); }
+    }
+
+    .sg-actions-section { margin-bottom: 18px; }
+    .sg-actions-section-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sg-actions-section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+    }
+
+    .sg-action-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: all var(--transition-med);
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      position: relative;
+      overflow: hidden;
+    }
+    .sg-action-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 0%, var(--glass) 100%);
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+    }
+    .sg-action-card:hover {
+      border-color: var(--borderHover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-card);
+    }
+    .sg-action-card:hover::before { opacity: 1; }
+    .sg-action-card:active { transform: translateY(0); box-shadow: none; }
+
+    .sg-action-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .sg-action-icon.go { background: linear-gradient(135deg, var(--ship), var(--shipDim)); box-shadow: 0 2px 8px rgba(0,230,138,0.2); }
+    .sg-action-icon.vibe { background: linear-gradient(135deg, var(--accent), #818cf8); box-shadow: 0 2px 8px rgba(99,102,241,0.2); }
+    .sg-action-icon.scan { background: linear-gradient(135deg, var(--blue), #0ea5e9); box-shadow: 0 2px 8px rgba(56,189,248,0.2); }
+    .sg-action-icon.gen { background: linear-gradient(135deg, var(--warn), #f59e0b); box-shadow: 0 2px 8px rgba(255,181,71,0.2); }
+    .sg-action-icon.infer { background: linear-gradient(135deg, #a78bfa, #7c3aed); box-shadow: 0 2px 8px rgba(124,58,237,0.2); }
+    .sg-action-icon.heal { background: linear-gradient(135deg, #f472b6, #ec4899); box-shadow: 0 2px 8px rgba(236,72,153,0.2); }
+
+    .sg-action-body { flex: 1; min-width: 0; position: relative; z-index: 1; }
+    .sg-action-title { font-size: 12px; font-weight: 600; color: var(--text0); margin-bottom: 1px; letter-spacing: -0.1px; }
+    .sg-action-desc { font-size: 10px; color: var(--text3); line-height: 1.4; }
+    .sg-action-arrow {
+      color: var(--text3);
+      font-size: 12px;
+      flex-shrink: 0;
+      transition: all var(--transition-fast);
+      position: relative;
+      z-index: 1;
+    }
+    .sg-action-card:hover .sg-action-arrow { color: var(--text1); transform: translateX(2px); }
+
+    .sg-gen-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-top: 4px; }
+    .sg-gen-btn {
+      padding: 8px 6px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text2);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .sg-gen-btn:hover {
+      border-color: var(--borderHover);
+      background: var(--bg3);
+      color: var(--text0);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-card);
+    }
+    .sg-gen-btn:active { transform: translateY(0); }
+
+    .sg-action-hero {
+      background: linear-gradient(145deg, rgba(0,230,138,0.04), rgba(99,102,241,0.04), rgba(56,189,248,0.02));
+      border: 1px solid rgba(0,230,138,0.08);
+      border-radius: var(--radius-lg);
+      padding: 22px 18px 20px;
+      margin-bottom: 16px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .sg-action-hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 30% 20%, rgba(0,230,138,0.06) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 80%, rgba(99,102,241,0.04) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .sg-action-hero-icon { font-size: 28px; margin-bottom: 10px; position: relative; z-index: 1; }
+    .sg-action-hero-title { font-size: 16px; font-weight: 800; color: var(--text0); margin-bottom: 4px; letter-spacing: -0.4px; position: relative; z-index: 1; }
+    .sg-action-hero-desc { font-size: 11px; color: var(--text2); margin-bottom: 16px; line-height: 1.5; position: relative; z-index: 1; max-width: 220px; margin-left: auto; margin-right: auto; }
+    .sg-action-hero-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      border: none;
+      background: linear-gradient(135deg, var(--ship) 0%, var(--accent) 100%);
+      color: var(--bg0);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 0 16px rgba(0,230,138,0.2), 0 4px 12px rgba(0,0,0,0.3);
+      letter-spacing: 0.2px;
+    }
+    .sg-action-hero-btn:hover {
+      box-shadow: 0 0 24px rgba(0,230,138,0.35), 0 6px 16px rgba(0,0,0,0.4);
+      transform: translateY(-2px);
+    }
+    .sg-action-hero-btn:active { transform: translateY(0); }
+    .sg-action-hero-kbd {
+      display: block;
+      margin-top: 10px;
+      font-size: 10px;
+      color: var(--text3);
+      position: relative;
+      z-index: 1;
+    }
+    .sg-kbd {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: var(--bg4);
+      color: var(--text2);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      border: 1px solid var(--border);
+    }
+
+    .sg-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, var(--border) 20%, var(--border) 80%, transparent 100%);
+      margin: 14px 0;
+    }
+
+    .sg-empty-onboard {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px 20px;
+      text-align: center;
+      margin-top: 8px;
+    }
+    .sg-empty-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      text-align: left;
+      padding: 8px 0;
+    }
+    .sg-empty-step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accentBg);
+      border: 1px solid rgba(99,102,241,0.15);
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .sg-empty-step-text { font-size: 11px; color: var(--text1); line-height: 1.5; }
+    .sg-empty-step-text strong { color: var(--text0); }
+    .sg-empty-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 16px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      border: none;
+      background: linear-gradient(135deg, var(--ship) 0%, var(--accent) 100%);
+      color: var(--bg0);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      box-shadow: 0 0 12px rgba(0,230,138,0.15);
+    }
+    .sg-empty-cta:hover { box-shadow: 0 0 20px rgba(0,230,138,0.3); transform: translateY(-1px); }
+
+    .sg-file-summary {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding: 10px 0;
+    }
+    .sg-file-summary-item {
+      flex: 1;
+      text-align: center;
+    }
+    .sg-file-summary-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .sg-file-summary-label {
+      font-size: 9px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-top: 2px;
+    }
   </style>
 </head>
 <body>
@@ -650,6 +1018,7 @@ export function getWebviewContent(webview: vscode.Webview): string {
     </div>
     <div class="sg-tabs">
       <button class="sg-tab active" data-tab="overview">Overview</button>
+      <button class="sg-tab" data-tab="actions">Actions</button>
       <button class="sg-tab" data-tab="claims">Claims</button>
       <button class="sg-tab" data-tab="pipeline">Pipeline</button>
       <button class="sg-tab" data-tab="files">Files</button>
@@ -720,11 +1089,20 @@ export function getWebviewContent(webview: vscode.Webview): string {
 
   function renderEmpty() {
     var el = document.getElementById('sg-content');
-    el.innerHTML = '<div class="sg-empty-state">' +
-      '<div class="sg-empty-icon">&#x26A1;</div>' +
-      '<div class="sg-empty-title">Run your first scan</div>' +
-      '<div class="sg-empty-desc">Click Verify below to analyze your workspace.</div>' +
-    '</div>';
+    var html = '<div class="sg-empty-state">';
+    html += '<div class="sg-empty-icon">&#x26A1;</div>';
+    html += '<div class="sg-empty-title">Welcome to ShipGate</div>';
+    html += '<div class="sg-empty-desc">Behavioral verification for AI-generated code. Get started in seconds.</div>';
+    html += '</div>';
+    html += '<div class="sg-empty-onboard">';
+    html += '<div class="sg-empty-step"><div class="sg-empty-step-num">1</div><div class="sg-empty-step-text"><strong>Initialize</strong> &mdash; Run <span class="sg-kbd">shipgate go</span> to detect your project and generate ISL specs</div></div>';
+    html += '<div class="sg-empty-step"><div class="sg-empty-step-num">2</div><div class="sg-empty-step-text"><strong>Verify</strong> &mdash; ShipGate checks your code against behavioral contracts</div></div>';
+    html += '<div class="sg-empty-step"><div class="sg-empty-step-num">3</div><div class="sg-empty-step-text"><strong>Ship</strong> &mdash; Get a SHIP / NO_SHIP verdict with evidence</div></div>';
+    html += '<button class="sg-empty-cta" id="sg-empty-go">&#x25B6; Get started</button>';
+    html += '</div>';
+    el.innerHTML = html;
+    var btn = document.getElementById('sg-empty-go');
+    if (btn) btn.addEventListener('click', function() { post('goCommand'); });
   }
 
   function renderOverview() {
@@ -739,14 +1117,14 @@ export function getWebviewContent(webview: vscode.Webview): string {
 
     var html = '';
 
-    // Verdict card
     html += '<div class="sg-verdict-card ' + v.toLowerCase().replace('_','') + '">';
     html += '<div class="sg-glow-circle"></div>';
+    html += '<div class="sg-glow-circle-bl"></div>';
     html += '<div class="sg-verdict-inner">';
-    html += '<div class="sg-ring-wrap">' + ring(d.score || 0, 64, 4, color) + '</div>';
+    html += '<div class="sg-ring-wrap">' + ring(d.score || 0, 64, 4, color) + '<span class="sg-ring-label">' + (d.score || 0) + '</span></div>';
     html += '<div class="sg-verdict-text">';
     html += '<h3 style="color:' + color + '">' + v.replace('_',' ') + '</h3>';
-    html += '<p>' + verifiedCount + '/' + (stats.totalClaims || claimsCount || 8) + ' claims</p>';
+    html += '<p>' + verifiedCount + '/' + (stats.totalClaims || claimsCount || 8) + ' claims verified</p>';
     html += '</div></div></div>';
 
     // Pipeline status (compact)
@@ -939,13 +1317,139 @@ export function getWebviewContent(webview: vscode.Webview): string {
     });
   }
 
+  function renderActions() {
+    var html = '';
+    var isMac = navigator.platform.indexOf('Mac') > -1;
+    var mod = isMac ? '&#x2318;' : 'Ctrl';
+
+    html += '<div class="sg-action-hero">';
+    html += '<div class="sg-action-hero-icon">&#x26A1;</div>';
+    html += '<div class="sg-action-hero-title">Ship with confidence</div>';
+    html += '<div class="sg-action-hero-desc">Scan, infer ISL specs, verify against behavioral contracts, and gate &mdash; in one command.</div>';
+    html += '<button class="sg-action-hero-btn" id="sg-action-go">&#x25B6; shipgate go</button>';
+    html += '<div class="sg-action-hero-kbd"><span class="sg-kbd">' + mod + '</span> <span class="sg-kbd">&#x21E7;</span> <span class="sg-kbd">&#x23CE;</span></div>';
+    html += '</div>';
+
+    html += '<div class="sg-actions-section">';
+    html += '<div class="sg-actions-section-title">Workflows</div>';
+
+    html += '<div class="sg-action-card" id="sg-action-vibe">';
+    html += '<div class="sg-action-icon vibe">&#x2728;</div>';
+    html += '<div class="sg-action-body"><div class="sg-action-title">Vibe &rarr; Ship</div>';
+    html += '<div class="sg-action-desc">English prompt &rarr; ISL spec &rarr; verified code</div></div>';
+    html += '<span class="sg-action-arrow">&#x203A;</span></div>';
+
+    html += '<div class="sg-action-card" id="sg-action-go-fix">';
+    html += '<div class="sg-action-icon go">&#x1F6E0;</div>';
+    html += '<div class="sg-action-body"><div class="sg-action-title">Go + Auto-Heal</div>';
+    html += '<div class="sg-action-desc">Scan, then auto-fix violations</div></div>';
+    html += '<span class="sg-action-arrow">&#x203A;</span></div>';
+
+    html += '<div class="sg-action-card" id="sg-action-go-deep">';
+    html += '<div class="sg-action-icon scan">&#x1F50D;</div>';
+    html += '<div class="sg-action-body"><div class="sg-action-title">Deep Scan</div>';
+    html += '<div class="sg-action-desc">Thorough analysis, higher coverage target</div></div>';
+    html += '<span class="sg-action-arrow">&#x203A;</span></div>';
+    html += '</div>';
+
+    html += '<div class="sg-actions-section">';
+    html += '<div class="sg-actions-section-title">Analyze</div>';
+
+    html += '<div class="sg-action-card" id="sg-action-scan">';
+    html += '<div class="sg-action-icon scan">&#x1F4CB;</div>';
+    html += '<div class="sg-action-body"><div class="sg-action-title">Quick Scan</div>';
+    html += '<div class="sg-action-desc">Scan &amp; gate verdict</div></div>';
+    html += '<span class="sg-action-arrow">&#x203A;</span></div>';
+
+    html += '<div class="sg-action-card" id="sg-action-infer">';
+    html += '<div class="sg-action-icon infer">&#x1F9E0;</div>';
+    html += '<div class="sg-action-body"><div class="sg-action-title">Infer ISL Specs</div>';
+    html += '<div class="sg-action-desc">AI-generate behavioral specs from code</div></div>';
+    html += '<span class="sg-action-arrow">&#x203A;</span></div>';
+
+    html += '<div class="sg-action-card" id="sg-action-heal">';
+    html += '<div class="sg-action-icon heal">&#x1FA79;</div>';
+    html += '<div class="sg-action-body"><div class="sg-action-title">Heal All</div>';
+    html += '<div class="sg-action-desc">Auto-fix violations across project</div></div>';
+    html += '<span class="sg-action-arrow">&#x203A;</span></div>';
+    html += '</div>';
+
+    html += '<div class="sg-actions-section">';
+    html += '<div class="sg-actions-section-title">Generate from ISL</div>';
+    html += '<div class="sg-gen-grid">';
+    html += '<button class="sg-gen-btn" id="sg-gen-ts">TS</button>';
+    html += '<button class="sg-gen-btn" id="sg-gen-python">Python</button>';
+    html += '<button class="sg-gen-btn" id="sg-gen-rust">Rust</button>';
+    html += '<button class="sg-gen-btn" id="sg-gen-go">Go</button>';
+    html += '<button class="sg-gen-btn" id="sg-gen-graphql">GQL</button>';
+    html += '<button class="sg-gen-btn" id="sg-gen-openapi">OpenAPI</button>';
+    html += '</div></div>';
+
+    html += '<div class="sg-actions-section">';
+    html += '<div class="sg-actions-section-title">Spec Tools</div>';
+
+    html += '<div class="sg-action-card" id="sg-action-code-to-isl">';
+    html += '<div class="sg-action-icon" style="background:linear-gradient(135deg,#60a5fa,#3b82f6);box-shadow:0 2px 8px rgba(59,130,246,0.2)">&#x1F4DD;</div>';
+    html += '<div class="sg-action-body"><div class="sg-action-title">Code &rarr; ISL</div>';
+    html += '<div class="sg-action-desc">Generate spec from current file</div></div>';
+    html += '<span class="sg-action-arrow">&#x203A;</span></div>';
+
+    html += '<div class="sg-action-card" id="sg-action-fmt">';
+    html += '<div class="sg-action-icon" style="background:linear-gradient(135deg,#34d399,#10b981);box-shadow:0 2px 8px rgba(16,185,129,0.2)">&#x2261;</div>';
+    html += '<div class="sg-action-body"><div class="sg-action-title">Format &amp; Lint</div>';
+    html += '<div class="sg-action-desc">Auto-format all ISL spec files</div></div>';
+    html += '<span class="sg-action-arrow">&#x203A;</span></div>';
+
+    html += '</div>';
+
+    document.getElementById('sg-content').innerHTML = html;
+
+    var heroBtn = document.getElementById('sg-action-go');
+    if (heroBtn) heroBtn.addEventListener('click', function() { post('goCommand'); });
+
+    var bindings = [
+      ['sg-action-go-fix', 'goFix'],
+      ['sg-action-go-deep', 'goDeep'],
+      ['sg-action-vibe', 'vibeGenerate'],
+      ['sg-action-infer', 'inferSpecs'],
+      ['sg-action-scan', 'scanProject'],
+      ['sg-action-heal', 'healAll'],
+      ['sg-action-code-to-isl', 'codeToIsl'],
+      ['sg-action-fmt', 'fmtSpecs'],
+      ['sg-gen-ts', 'genTypescript'],
+      ['sg-gen-python', 'genPython'],
+      ['sg-gen-rust', 'genRust'],
+      ['sg-gen-go', 'genGo'],
+      ['sg-gen-graphql', 'genGraphql'],
+      ['sg-gen-openapi', 'genOpenapi'],
+    ];
+
+    bindings.forEach(function(b) {
+      var el = document.getElementById(b[0]);
+      if (el) el.addEventListener('click', function() { post(b[1]); });
+    });
+  }
+
   function renderFiles() {
     var files = data && data.files ? data.files : [];
     if (!files.length) {
-      document.getElementById('sg-content').innerHTML = '<div class="sg-empty-state"><div class="sg-empty-desc">No files data yet.</div></div>';
+      document.getElementById('sg-content').innerHTML = '<div class="sg-empty-state"><div class="sg-empty-icon">&#x1F4C2;</div><div class="sg-empty-title">No file data yet</div><div class="sg-empty-desc">Run a scan to see per-file verdicts.</div></div>';
       return;
     }
-    var html = '';
+    var shipCount = 0, warnCount = 0, failCount = 0;
+    files.forEach(function(f) {
+      if (f.status === 'SHIP') shipCount++;
+      else if (f.status === 'WARN') warnCount++;
+      else failCount++;
+    });
+
+    var html = '<div class="sg-file-summary">';
+    html += '<div class="sg-file-summary-item"><div class="sg-file-summary-val" style="color:var(--ship)">' + shipCount + '</div><div class="sg-file-summary-label">Passed</div></div>';
+    html += '<div class="sg-file-summary-item"><div class="sg-file-summary-val" style="color:var(--warn)">' + warnCount + '</div><div class="sg-file-summary-label">Warnings</div></div>';
+    html += '<div class="sg-file-summary-item"><div class="sg-file-summary-val" style="color:var(--noship)">' + failCount + '</div><div class="sg-file-summary-label">Failed</div></div>';
+    html += '</div>';
+    html += '<div class="sg-divider"></div>';
+
     files.forEach(function(f) {
       var status = (f.status || 'NO_SHIP').toLowerCase().replace('_','');
       html += '<div class="sg-file-row" data-path="' + escapeHtmlUI(f.path) + '" data-line="1">';
@@ -969,14 +1473,18 @@ export function getWebviewContent(webview: vscode.Webview): string {
     var content = document.getElementById('sg-content');
     var repoEl = document.getElementById('sg-repo');
     if (repoEl) repoEl.textContent = (data && data.repoName) || '—';
+    var ft = document.getElementById('sg-footer-time');
+    if (activeTab === 'actions') {
+      renderActions();
+      ft.textContent = data ? 'Last scan: ' + timeAgo(data.lastScanTime) : 'Ready';
+      return;
+    }
     if (!data) {
       renderEmpty();
-      var ft = document.getElementById('sg-footer-time');
       ft.innerHTML = window._sgScanning ? '<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:var(--blue);animation:pulse 2s infinite"></span>Scanning...</span>' : 'Last scan: —';
       return;
     }
-    var ft = document.getElementById('sg-footer-time');
-    ft.textContent = 'Last scan: ' + timeAgo(data.lastScanTime) + '';
+    ft.textContent = 'Last scan: ' + timeAgo(data.lastScanTime);
     if (activeTab === 'overview') renderOverview();
     else if (activeTab === 'claims') renderClaims();
     else if (activeTab === 'pipeline') renderPipeline();

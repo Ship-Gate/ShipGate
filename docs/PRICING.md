@@ -133,12 +133,20 @@ npx shipgate upgrade
 
 ---
 
+## Recently Shipped
+
+- [x] **Multi-repo dashboard** — Full Next.js 14 dashboard with org management, RBAC, audit logging
+- [x] **GitHub integration** — OAuth-based repo/PR/commit visibility in dashboard
+- [x] **Slack notifications** — Connect workspace, configure notification rules per channel/event
+- [x] **Deployment tracking** — Vercel/Railway webhook integration with real-time status feed
+- [x] **Audit export** — JSON/CSV export API for compliance audits
+
 ## Coming Soon
 
 - [ ] Compliance packs (SOC2, HIPAA, PCI-DSS)
-- [ ] Multi-repo dashboard
-- [ ] GitHub App (simplified setup)
-- [ ] Slack bot for real-time alerts
+- [ ] SSO/SAML for Enterprise IdPs
+- [ ] Slack notification dispatch (rules stored, event firing in progress)
+- [ ] Dashboard audit export UI (API exists, UI pending)
 
 ---
 

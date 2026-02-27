@@ -1,0 +1,83 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-02-16T17:22:01.231Z",
+  "contracts": [
+    {
+      "name": "ThemeTokens",
+      "type": "type",
+      "file": "src\\app\\theme.ts",
+      "line": 27,
+      "source": "typescript"
+    },
+    {
+      "name": "TermLine",
+      "type": "interface",
+      "file": "src\\app\\components\\TerminalDemo.tsx",
+      "line": 7,
+      "source": "typescript"
+    },
+    {
+      "name": "PricingPlan",
+      "type": "interface",
+      "file": "src\\app\\data\\pricing.ts",
+      "line": 6,
+      "source": "typescript"
+    },
+    {
+      "name": "PricingFaqItem",
+      "type": "interface",
+      "file": "src\\app\\data\\pricing.ts",
+      "line": 78,
+      "source": "typescript"
+    },
+    {
+      "name": "PlanId",
+      "type": "type",
+      "file": "src\\app\\data\\pricing.ts",
+      "line": 4,
+      "source": "typescript"
+    },
+    {
+      "name": "TerminalLine",
+      "type": "interface",
+      "file": "src\\app\\data\\terminal-content.ts",
+      "line": 1,
+      "source": "typescript"
+    },
+    {
+      "name": "ContentCardStat",
+      "type": "interface",
+      "file": "src\\app\\playwright-components\\ContentCard.tsx",
+      "line": 4,
+      "source": "typescript"
+    },
+    {
+      "name": "PipelineStep",
+      "type": "interface",
+      "file": "src\\app\\playwright-components\\PipelineView.tsx",
+      "line": 6,
+      "source": "typescript"
+    },
+    {
+      "name": "StepStatus",
+      "type": "type",
+      "file": "src\\app\\playwright-components\\PipelineView.tsx",
+      "line": 4,
+      "source": "typescript"
+    },
+    {
+      "name": "Step",
+      "type": "interface",
+      "file": "src\\app\\playwright-components\\StepIndicator.tsx",
+      "line": 4,
+      "source": "typescript"
+    },
+    {
+      "name": "ChartConfig",
+      "type": "type",
+      "file": "src\\app\\components\\ui\\chart.tsx",
+      "line": 11,
+      "source": "typescript"
+    }
+  ]
+}

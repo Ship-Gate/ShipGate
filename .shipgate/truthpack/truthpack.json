@@ -1,0 +1,296 @@
+{
+  "version": "2.0.0",
+  "provenance": {
+    "commitHash": "d954a62093663355321d50578c8de7f77d796523",
+    "commitMessage": "Merge origin/main - keep local work (README GIF, launch artifacts, work items)",
+    "nodeVersion": "v20.20.0",
+    "packageManager": {
+      "name": "pnpm",
+      "version": "8.15.0"
+    },
+    "timestamp": "2026-02-27T14:14:49.252Z",
+    "generatorVersion": "2.0.0",
+    "repoRoot": "/Users/liquidgroove/Desktop/ShipGate-main"
+  },
+  "routes": [
+    {
+      "path": "/api/auth/google",
+      "method": "GET",
+      "handler": "async",
+      "file": "landing-main/server.js",
+      "line": 125,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    },
+    {
+      "path": "/api/auth/google/callback",
+      "method": "GET",
+      "handler": "async",
+      "file": "landing-main/server.js",
+      "line": 127,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    },
+    {
+      "path": "/api/auth/github",
+      "method": "GET",
+      "handler": "async",
+      "file": "landing-main/server.js",
+      "line": 135,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    },
+    {
+      "path": "/api/auth/github/callback",
+      "method": "GET",
+      "handler": "async",
+      "file": "landing-main/server.js",
+      "line": 137,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    },
+    {
+      "path": "/api/user/profile",
+      "method": "GET",
+      "handler": "async",
+      "file": "landing-main/server.js",
+      "line": 146,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    },
+    {
+      "path": "/api/create-checkout-session",
+      "method": "POST",
+      "handler": "async",
+      "file": "landing-main/server.js",
+      "line": 151,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    },
+    {
+      "path": "/api/stripe/webhook",
+      "method": "POST",
+      "handler": "anonymous",
+      "file": "landing-main/server.js",
+      "line": 180,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    },
+    {
+      "path": "/api/health",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "landing-main/server.js",
+      "line": 217,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    }
+  ],
+  "envVars": [
+    {
+      "name": "PORT",
+      "file": "landing-main/server.js",
+      "line": 14,
+      "hasDefault": false,
+      "required": true,
+      "sensitive": false,
+      "confidence": 0.9,
+      "source": "process.env"
+    },
+    {
+      "name": "STRIPE_SECRET_KEY",
+      "file": "landing-main/server.js",
+      "line": 17,
+      "hasDefault": false,
+      "required": true,
+      "sensitive": true,
+      "confidence": 0.9,
+      "source": "process.env"
+    },
+    {
+      "name": "FRONTEND_URL",
+      "file": "landing-main/server.js",
+      "line": 21,
+      "hasDefault": false,
+      "required": true,
+      "sensitive": false,
+      "confidence": 0.9,
+      "source": "process.env"
+    },
+    {
+      "name": "SESSION_SECRET",
+      "file": "landing-main/server.js",
+      "line": 29,
+      "hasDefault": false,
+      "required": true,
+      "sensitive": true,
+      "confidence": 0.9,
+      "source": "process.env"
+    },
+    {
+      "name": "NODE_ENV",
+      "file": "landing-main/server.js",
+      "line": 33,
+      "hasDefault": false,
+      "required": true,
+      "sensitive": false,
+      "confidence": 0.9,
+      "source": "process.env"
+    },
+    {
+      "name": "JWT_SECRET",
+      "file": "landing-main/server.js",
+      "line": 47,
+      "hasDefault": false,
+      "required": true,
+      "sensitive": true,
+      "confidence": 0.9,
+      "source": "process.env"
+    },
+    {
+      "name": "GOOGLE_CLIENT_ID",
+      "file": "landing-main/server.js",
+      "line": 80,
+      "hasDefault": false,
+      "required": true,
+      "sensitive": false,
+      "confidence": 0.9,
+      "source": "process.env"
+    },
+    {
+      "name": "GOOGLE_CLIENT_SECRET",
+      "file": "landing-main/server.js",
+      "line": 81,
+      "hasDefault": false,
+      "required": true,
+      "sensitive": true,
+      "confidence": 0.9,
+      "source": "process.env"
+    },
+    {
+      "name": "GITHUB_CLIENT_ID",
+      "file": "landing-main/server.js",
+      "line": 103,
+      "hasDefault": false,
+      "required": true,
+      "sensitive": false,
+      "confidence": 0.9,
+      "source": "process.env"
+    },
+    {
+      "name": "GITHUB_CLIENT_SECRET",
+      "file": "landing-main/server.js",
+      "line": 104,
+      "hasDefault": false,
+      "required": true,
+      "sensitive": true,
+      "confidence": 0.9,
+      "source": "process.env"
+    },
+    {
+      "name": "STRIPE_WEBHOOK_SECRET",
+      "file": "landing-main/server.js",
+      "line": 190,
+      "hasDefault": false,
+      "required": true,
+      "sensitive": true,
+      "confidence": 0.9,
+      "source": "process.env"
+    },
+    {
+      "name": "CI",
+      "file": "scripts/check-ast-imports.ts",
+      "line": 204,
+      "hasDefault": false,
+      "required": true,
+      "sensitive": false,
+      "confidence": 0.9,
+      "source": "process.env"
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "@changesets/cli",
+      "version": "^2.27.0",
+      "type": "development",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@wednesday-solutions-eng/ai-agent-skills",
+      "version": "^1.1.0",
+      "type": "development",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "husky",
+      "version": "^9.1.7",
+      "type": "development",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "picocolors",
+      "version": "^1.1.1",
+      "type": "development",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "tsx",
+      "version": "^4.7.0",
+      "type": "development",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "turbo",
+      "version": "^2.0.0",
+      "type": "development",
+      "usedIn": [],
+      "workspace": false
+    }
+  ],
+  "runtimeProbes": [
+    {
+      "type": "http",
+      "endpoint": "/api/health",
+      "healthCheck": "/api/health",
+      "confidence": 0.8
+    }
+  ],
+  "summary": {
+    "routes": 8,
+    "envVars": 12,
+    "dbTables": 0,
+    "dependencies": 6,
+    "runtimeProbes": 1,
+    "avgConfidence": 0.8136363636363637
+  },
+  "auth": {
+    "provider": "unknown",
+    "middleware": [],
+    "routes": {
+      "callback": "/api/auth/github/callback"
+    },
+    "configFiles": [],
+    "confidence": 0.7
+  }
+}

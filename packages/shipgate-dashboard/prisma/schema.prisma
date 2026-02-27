@@ -1,0 +1,330 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Identity ────────────────────────────────────────────────────────────
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  name              String?
+  avatar            String?
+  provider          String // github | google
+  providerAccountId String
+  isPro             Boolean   @default(false)
+  stripeCustomerId  String?
+  proExpiresAt      DateTime?
+  createdAt         DateTime  @default(now())
+
+  memberships Membership[]
+  runs        Run[]
+  tokens      PersonalAccessToken[]
+  usageMeters UsageMeter[]
+
+  @@unique([provider, providerAccountId])
+  @@map("users")
+}
+
+model Org {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  memberships         Membership[]
+  projects            Project[]
+  runs                Run[]
+  githubConnections   GitHubConnection[]
+  slackConnection     SlackConnection?
+  deploymentProviders DeploymentProvider[]
+
+  @@map("orgs")
+}
+
+model Membership {
+  id     String         @id @default(cuid())
+  userId String
+  orgId  String
+  role   MembershipRole @default(member)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org  Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, orgId])
+  @@map("memberships")
+}
+
+enum MembershipRole {
+  admin
+  member
+  viewer
+}
+
+// ── Projects ────────────────────────────────────────────────────────────
+
+model Project {
+  id            String   @id @default(cuid())
+  orgId         String
+  name          String
+  repoUrl       String?
+  defaultBranch String?
+  createdAt     DateTime @default(now())
+
+  org  Org   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  runs Run[]
+
+  @@unique([orgId, name])
+  @@index([orgId])
+  @@map("projects")
+}
+
+// ── Auth tokens ─────────────────────────────────────────────────────────
+
+model PersonalAccessToken {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  tokenHash  String    @unique
+  prefix     String // first 8 chars for identification
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("personal_access_tokens")
+}
+
+// ── Verification runs ───────────────────────────────────────────────────
+
+model Run {
+  id           String    @id @default(cuid())
+  orgId        String
+  projectId    String
+  userId       String
+  agentType    AgentType
+  agentVersion String?
+  commitSha    String?
+  branch       String?
+  status       RunStatus @default(pending)
+  verdict      Verdict?
+  score        Float?
+  startedAt    DateTime  @default(now())
+  finishedAt   DateTime?
+  durationMs   Int?
+  metaJson     Json?
+
+  org       Org           @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  project   Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  findings  Finding[]
+  proofs    ProofBundle[]
+  artifacts Artifact[]
+
+  @@index([orgId, startedAt(sort: Desc)])
+  @@index([projectId, startedAt(sort: Desc)])
+  @@index([userId])
+  @@map("runs")
+}
+
+enum AgentType {
+  cli
+  vscode
+  ci
+}
+
+enum RunStatus {
+  pending
+  running
+  completed
+  failed
+}
+
+enum Verdict {
+  SHIP
+  WARN
+  NO_SHIP
+}
+
+// ── Findings ────────────────────────────────────────────────────────────
+
+model Finding {
+  id          String  @id @default(cuid())
+  runId       String
+  severity    String // critical | high | medium | low | info
+  category    String // ghost-route | ghost-env | auth-bypass | etc.
+  title       String
+  filePath    String?
+  lineStart   Int?
+  lineEnd     Int?
+  message     String
+  fingerprint String
+  confidence  Float?
+  metaJson    Json?
+
+  run Run @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([fingerprint])
+  @@map("findings")
+}
+
+// ── Proof bundles ───────────────────────────────────────────────────────
+
+model ProofBundle {
+  id          String   @id @default(cuid())
+  runId       String
+  kind        String // proof_bundle | isl_spec | coverage_report
+  status      String   @default("uploaded")
+  artifactUrl String?
+  summaryJson Json?
+  createdAt   DateTime @default(now())
+
+  run Run @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@map("proof_bundles")
+}
+
+// ── Artifacts ───────────────────────────────────────────────────────────
+
+model Artifact {
+  id        String   @id @default(cuid())
+  runId     String
+  kind      String // proof_bundle | isl_spec | coverage_report | log | sarif | other
+  path      String
+  sha256    String?
+  sizeBytes Int?
+  metaJson  Json?
+  createdAt DateTime @default(now())
+
+  run Run @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@map("artifacts")
+}
+
+// ── Usage metering ──────────────────────────────────────────────────────
+
+model UsageMeter {
+  id     String @id @default(cuid())
+  userId String
+  month  String // "2026-02" format
+  scans  Int    @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month])
+  @@index([userId])
+  @@map("usage_meters")
+}
+
+// ── Audit log ───────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String // run.created, auth.login, token.created, etc.
+  resource   String? // e.g. "run:abc123"
+  orgId      String?
+  metaJson   Json?
+  ipAddress  String? // client IP from x-forwarded-for / x-real-ip
+  userAgent  String? // request user-agent
+  requestId  String? // x-request-id or generated
+  sessionId  String? // hashed session for correlation
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([orgId, createdAt(sort: Desc)])
+  @@index([action, createdAt(sort: Desc)])
+  @@map("audit_logs")
+}
+
+// ── GitHub integration ──────────────────────────────────────────────────
+
+model GitHubConnection {
+  id          String   @id @default(cuid())
+  orgId       String
+  login       String
+  accessToken String
+  avatarUrl   String?
+  scope       String
+  createdAt   DateTime @default(now())
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, login])
+  @@map("github_connections")
+}
+
+// ── Slack integration ───────────────────────────────────────────────────
+
+model SlackConnection {
+  id          String   @id @default(cuid())
+  orgId       String   @unique
+  teamId      String
+  teamName    String
+  accessToken String
+  botUserId   String?
+  createdAt   DateTime @default(now())
+
+  org           Org                     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  notifications SlackNotificationRule[]
+
+  @@map("slack_connections")
+}
+
+model SlackNotificationRule {
+  id           String  @id @default(cuid())
+  connectionId String
+  channelId    String
+  channelName  String
+  event        String
+  enabled      Boolean @default(true)
+
+  connection SlackConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@map("slack_notification_rules")
+}
+
+// ── Deployment tracking ─────────────────────────────────────────────────
+
+model DeploymentProvider {
+  id            String   @id @default(cuid())
+  orgId         String
+  provider      String
+  webhookSecret String
+  projectFilter String?
+  createdAt     DateTime @default(now())
+
+  org         Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  deployments Deployment[]
+
+  @@unique([orgId, provider])
+  @@map("deployment_providers")
+}
+
+model Deployment {
+  id          String    @id @default(cuid())
+  providerId  String
+  externalId  String
+  projectName String
+  environment String?
+  status      String
+  url         String?
+  commitSha   String?
+  branch      String?
+  creator     String?
+  startedAt   DateTime
+  finishedAt  DateTime?
+
+  provider DeploymentProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, startedAt(sort: Desc)])
+  @@map("deployments")
+}

@@ -1,0 +1,76 @@
+{
+  "checks": [
+    {
+      "name": "Security scan",
+      "status": "warning",
+      "message": "7 high issues"
+    },
+    {
+      "name": "No hardcoded secrets",
+      "status": "passed"
+    },
+    {
+      "name": "Environment variables",
+      "status": "passed"
+    },
+    {
+      "name": "Build check",
+      "status": "passed"
+    },
+    {
+      "name": "No console.logs",
+      "status": "passed",
+      "message": "2 found"
+    },
+    {
+      "name": "Git status",
+      "status": "warning",
+      "message": "17 uncommitted files"
+    },
+    {
+      "name": "Tests pass",
+      "status": "skipped",
+      "message": "No test script found"
+    },
+    {
+      "name": "Lint check",
+      "status": "skipped",
+      "message": "No lint script found"
+    },
+    {
+      "name": "Dependency audit",
+      "status": "failed",
+      "message": "Critical vulnerabilities found"
+    },
+    {
+      "name": "Lockfile integrity",
+      "status": "passed"
+    },
+    {
+      "name": "No hallucinations",
+      "status": "passed"
+    },
+    {
+      "name": "TODO/FIXME count",
+      "status": "passed"
+    },
+    {
+      "name": "License file",
+      "status": "warning",
+      "message": "No LICENSE file found"
+    },
+    {
+      "name": "README exists",
+      "status": "passed"
+    },
+    {
+      "name": ".gitignore check",
+      "status": "passed"
+    },
+    {
+      "name": "No localhost URLs",
+      "status": "passed"
+    }
+  ],
+  "timestamp": "2026-02-15T11:12:10.012Z"
+}

@@ -1,6 +1,6 @@
-# Contributing to ISL
+# Contributing to ShipGate
 
-Thank you for your interest in contributing to ISL (Intent Specification Language)! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to ShipGate! This document provides guidelines and instructions for contributing.
 
 ## Getting Started
 
@@ -14,8 +14,8 @@ Thank you for your interest in contributing to ISL (Intent Specification Languag
 1. Fork the repository
 2. Clone your fork:
    ```bash
-   git clone https://github.com/guardiavault-oss/ISL-LANG.git
-   cd isl-lang
+   git clone https://github.com/Ship-Gate/ShipGate.git
+   cd ShipGate
    ```
 3. Install dependencies:
    ```bash
@@ -44,6 +44,24 @@ Thank you for your interest in contributing to ISL (Intent Specification Languag
 
 CI will fail if the lockfile changes after install, indicating drift that needs to be fixed.
 
+## Repository Structure
+
+ShipGate is a monorepo with 248 packages managed by pnpm workspaces and Turborepo.
+
+| Directory | Contents |
+|-----------|----------|
+| `packages/core/` | Core verification engine (62k lines) |
+| `packages/cli/` | CLI binary — `shipgate` (46k lines) |
+| `packages/isl-*/` | 38 ISL language packages (parser, gate, pipeline, proof, PBT, healer, etc.) |
+| `packages/codegen-*/` | 30 code generation targets (TypeScript, Python, Rust, Go, GraphQL, gRPC, Terraform, WASM, etc.) |
+| `packages/stdlib-*/` | 31 standard library modules (payments, rate-limit, cache, auth, billing, queue, workflow, etc.) |
+| `packages/verifier-*/` | 6 verification engines (chaos, temporal, formal, security, sandbox) |
+| `packages/sdk-*/` | 8 client SDKs (Flutter/Dart, Kotlin, Swift, Python, TypeScript, Web, React Native) |
+| `packages/shipgate-dashboard/` | Next.js 14 web dashboard with GitHub/Slack/Deploy integrations |
+| `docs/` | 146 documentation files |
+| `samples/` | ISL spec samples and tutorials |
+| `demos/` | Demo projects and showcases |
+
 ## Development Workflow
 
 ### Branching Strategy
@@ -60,7 +78,7 @@ CI will fail if the lockfile changes after install, indicating drift that needs 
 
 ### Making Changes
 
-1. **If adding or changing behaviors/APIs:** Prefer an ISL spec-first workflow: create or update a spec in `specs/**/*.isl` (or `examples/*.isl`), run `pnpm isl:check` and `pnpm isl:gen`, then implement and run `pnpm isl:verify` / `pnpm isl:gate`. See [docs/ISL_DEVELOPMENT_LOOP.md](docs/ISL_DEVELOPMENT_LOOP.md).
+1. **If adding or changing behaviors/APIs:** Prefer an ISL spec-first workflow: create or update a spec in `specs/**/*.isl` (or `examples/*.isl`), run `shipgate verify`, then implement and run `shipgate gate`. See [docs/ISL_DEVELOPMENT_LOOP.md](docs/ISL_DEVELOPMENT_LOOP.md).
 2. Make your changes in the appropriate package(s)
 3. Write or update tests as needed
 4. Ensure all tests pass:
@@ -94,6 +112,7 @@ Examples:
 - `feat(parser): add support for generic types`
 - `fix(typechecker): resolve infinite loop in recursive types`
 - `docs(readme): update installation instructions`
+- `feat(dashboard): add Slack notification config component`
 
 ## Pull Request Process
 
@@ -119,24 +138,46 @@ Examples:
 pnpm test
 
 # Run tests for a specific package
-pnpm --filter @isl-lang/parser test
+pnpm --filter @isl-lang/core test
+
+# Run tests for the dashboard
+pnpm --filter shipgate-dashboard test
 
 # Run tests in watch mode
-pnpm --filter @isl-lang/parser test:watch
+pnpm --filter @isl-lang/core test:watch
 ```
 
 ### Writing Tests
 
 - Place tests in `__tests__` directories or `*.test.ts` files
 - Use Vitest for unit tests
-- Aim for high coverage on core packages (parser, typechecker)
+- Use Playwright for E2E tests (dashboard)
+- Aim for high coverage on core packages (parser, typechecker, evaluator)
+
+## Dashboard Development
+
+The dashboard (`packages/shipgate-dashboard`) is a Next.js 14 App Router application:
+
+```bash
+cd packages/shipgate-dashboard
+cp .env.example .env.local   # Configure OAuth, Stripe, Slack, encryption
+pnpm dev                      # http://localhost:3001
+```
+
+Key areas:
+- `app/` — Next.js App Router pages and API routes
+- `components/` — React components (UI primitives + dashboard-specific)
+- `hooks/` — Custom React hooks (`useApi`, `useData`, `useIntegrations`, etc.)
+- `lib/` — Shared utilities (auth, encryption, GitHub helpers, Prisma client)
+- `prisma/schema.prisma` — Database schema (PostgreSQL)
 
 ## Code Style
 
 - TypeScript strict mode enabled
 - Use explicit types for public APIs
 - Prefer functional patterns where appropriate
-- Document complex logic with comments
+- Use `@/` path alias for imports within the dashboard package
+- Follow existing naming conventions (kebab-case files, PascalCase components)
 
 ## Getting Help
 

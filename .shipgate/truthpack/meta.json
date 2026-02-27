@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "generatedAt": "2026-02-27T14:14:49.252Z",
+  "hash": "5735e4b660eeffe6",
+  "scannerVersions": {
+    "routes": "2.0.0",
+    "env": "2.0.0",
+    "auth": "2.0.0",
+    "contracts": "2.0.0"
+  },
+  "summary": {
+    "routes": 8,
+    "envVars": 12,
+    "dbTables": 0,
+    "dependencies": 6,
+    "runtimeProbes": 1,
+    "avgConfidence": 0.8136363636363637
+  }
+}

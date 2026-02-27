@@ -1,205 +1,128 @@
 'use client';
 
-import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { SectionCard } from '@/components/shared/section-card';
-import { Badge } from '@/components/shared/badge';
-import { StatusDot } from '@/components/shared/status-dot';
-import { workflowRuns } from '@/lib/mock-data';
-import { verdictColor, verdictBg } from '@/lib/verdict-helpers';
-import type { WorkflowRun } from '@/lib/types';
+import { useApi } from '@/hooks/use-api';
+import { Skeleton } from '@/components/shared/skeleton';
+import { ErrorState } from '@/components/shared/error-state';
+import { EmptyState } from '@/components/shared/empty-state';
+import type { RunSummary } from '@/hooks/use-data';
+
+function verdictStyle(verdict: string | null) {
+  switch (verdict) {
+    case 'SHIP':
+      return { color: '#00e68a', bg: 'rgba(0,230,138,0.08)' };
+    case 'NO_SHIP':
+      return { color: '#ff5c6a', bg: 'rgba(255,92,106,0.08)' };
+    case 'WARN':
+      return { color: '#ffb547', bg: 'rgba(255,181,71,0.08)' };
+    default:
+      return { color: '#38bdf8', bg: 'rgba(56,189,248,0.08)' };
+  }
+}
+
+function formatDuration(ms: number | null): string {
+  if (!ms) return '—';
+  const secs = Math.round(ms / 1000);
+  if (secs < 60) return `${secs}s`;
+  return `${Math.floor(secs / 60)}m ${secs % 60}s`;
+}
 
 export function CicdPanel() {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const activeCount = workflowRuns.filter((r) => r.status === 'running').length;
-
-  return (
-    <SectionCard
-      title="CI/CD Pipeline"
-      subtitle="GitHub Actions"
-      extra={
-        <div className="flex gap-1.5">
-          <Badge text={`${workflowRuns.length} runs`} color="#8888a0" bg="#1a1a24" />
-          {activeCount > 0 && (
-            <Badge text={`${activeCount} active`} color="#38bdf8" bg="rgba(56,189,248,0.08)" />
-          )}
-        </div>
-      }
-    >
-      {workflowRuns.map((run) => (
-        <RunRow
-          key={run.id}
-          run={run}
-          expanded={expandedId === run.id}
-          onToggle={() => setExpandedId(expandedId === run.id ? null : run.id)}
-        />
-      ))}
-    </SectionCard>
+  const { data, isLoading, error, refetch } = useApi<RunSummary[]>(
+    '/api/v1/runs?trigger=ci&limit=5'
   );
-}
 
-function RunRow({
-  run,
-  expanded,
-  onToggle,
-}: {
-  run: WorkflowRun;
-  expanded: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div className="border-b border-sg-border last:border-b-0">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full flex items-center gap-2.5 py-2.5 px-[18px] cursor-pointer text-left transition-colors hover:bg-[rgba(255,255,255,0.015)]"
-        style={{
-          background: expanded ? 'rgba(255,255,255,0.015)' : 'transparent',
-        }}
-      >
-        <StatusDot status={run.status} />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-sg-text0 truncate">
-              {run.commitMsg}
-            </span>
-            <span className="text-[10px] text-sg-accent font-mono shrink-0">
-              {run.pr}
-            </span>
-          </div>
-          <div className="flex gap-2 text-[10px] text-sg-text3 mt-0.5">
-            <span>{run.branch}</span>
-            <span>•</span>
-            <span>{run.author}</span>
-            <span>•</span>
-            <span>{run.time}</span>
-          </div>
-        </div>
-        {run.verdict && (
-          <Badge
-            text={run.verdict}
-            color={verdictColor(run.verdict)}
-            bg={verdictBg(run.verdict)}
-          />
-        )}
-        {run.score != null && (
-          <span className="text-xs font-semibold text-sg-text0 font-mono w-6 text-right">
-            {run.score}
-          </span>
-        )}
-        <span className="text-[10px] text-sg-text3 font-mono w-[50px] text-right">
-          {run.duration}
-        </span>
-        <span
-          className="text-[10px] text-sg-text3 transition-transform"
-          style={{ transform: expanded ? 'rotate(180deg)' : '' }}
-        >
-          ▾
-        </span>
-      </button>
-
-      <AnimatePresence initial={false}>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="overflow-hidden"
-          >
-            <div className="pt-1 pb-3.5 px-[18px] pl-9">
-              {/* Job pipeline */}
-              <div className="flex items-center gap-1 flex-wrap mb-2.5">
-                {run.jobs.map((job, ji) => (
-                  <motion.div
-                    key={ji}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: ji * 0.03 }}
-                    className="flex items-center gap-1.5"
-                  >
-                    <div
-                      className="flex items-center gap-1.5 py-1.5 px-2.5 rounded-[5px] border border-sg-border"
-                      style={{ background: '#1a1a24' }}
-                    >
-                      <StatusDot status={job.status} size={6} />
-                      <span
-                        className={`text-[10px] ${
-                          job.status === 'pending' ? 'text-sg-text3' : 'text-sg-text1'
-                        }`}
-                      >
-                        {job.name}
-                      </span>
-                      <span className="text-[9px] text-sg-text3 font-mono">
-                        {job.duration}
-                      </span>
-                    </div>
-                    {ji < run.jobs.length - 1 && (
-                      <span className="text-[10px] text-sg-text3">→</span>
-                    )}
-                  </motion.div>
-                ))}
+  if (isLoading) {
+    return (
+      <div className="bg-sg-bg1 border border-sg-border rounded-card p-5">
+        <Skeleton className="h-4 w-28 mb-4" />
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-sg-bg2/30 border border-sg-border/50">
+              <Skeleton className="w-2 h-2 rounded-full" />
+              <div className="flex-1 space-y-1">
+                <Skeleton className="h-3 w-48" />
+                <Skeleton className="h-2 w-32" />
               </div>
-
-              {/* Blockers */}
-              {run.blockers && run.blockers.length > 0 && (
-                <div
-                  className="py-2 px-3 rounded-[6px] mt-1 border"
-                  style={{
-                    background: 'rgba(255,92,106,0.08)',
-                    borderColor: 'rgba(255,92,106,0.15)',
-                  }}
-                >
-                  <div className="text-[10px] font-semibold text-sg-noship uppercase tracking-wider mb-1">
-                    Blockers
-                  </div>
-                  {run.blockers.map((b, bi) => (
-                    <div
-                      key={bi}
-                      className="text-[11px] text-sg-noship opacity-80 flex gap-1.5 mt-0.5"
-                    >
-                      <span>✗</span>
-                      <span>{b}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Quick actions */}
-              <div className="flex gap-1.5 mt-2.5">
-                <ActionButton>View Logs</ActionButton>
-                <ActionButton>View Proof Bundle</ActionButton>
-                <ActionButton>Re-run</ActionButton>
-                {run.verdict === 'NO_SHIP' && (
-                  <button
-                    type="button"
-                    className="py-1 px-2.5 rounded border text-[10px] font-semibold cursor-pointer transition-opacity hover:opacity-90"
-                    style={{
-                      borderColor: 'rgba(0,230,138,0.3)',
-                      background: 'rgba(0,230,138,0.08)',
-                      color: '#00e68a',
-                    }}
-                  >
-                    Auto-fix →
-                  </button>
-                )}
-              </div>
+              <Skeleton className="h-4 w-12" />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-function ActionButton({ children }: { children: React.ReactNode }) {
+  if (error) return <ErrorState message={error} onRetry={refetch} />;
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="bg-sg-bg1 border border-sg-border rounded-card">
+        <EmptyState
+          title="CI/CD Pipeline"
+          description="No CI-triggered runs yet. Connect your CI pipeline to see results."
+        />
+      </div>
+    );
+  }
+
   return (
-    <button
-      type="button"
-      className="py-1 px-2.5 rounded border border-sg-border bg-transparent text-[10px] text-sg-text2 cursor-pointer hover:text-sg-text1 transition-colors"
-    >
-      {children}
-    </button>
+    <div className="bg-sg-bg1 border border-sg-border rounded-card">
+      <div className="flex items-center justify-between px-5 pt-5 pb-3">
+        <h3 className="text-sm font-semibold text-sg-text0">CI/CD Pipeline</h3>
+        <span className="text-[10px] text-sg-text3">{data.length} runs</span>
+      </div>
+
+      <div>
+        {data.map((run) => {
+          const vs = verdictStyle(run.verdict);
+          return (
+            <div
+              key={run.id}
+              className="flex items-center gap-2.5 py-2.5 px-5 border-b border-sg-border last:border-b-0"
+            >
+              <div
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{
+                  background: run.status === 'running' ? '#38bdf8' :
+                    run.status === 'completed' ? (run.verdict === 'SHIP' ? '#00e68a' : '#ff5c6a') :
+                    '#555566',
+                }}
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-sg-text0 truncate">
+                    {run.projectName}
+                  </span>
+                  {run.branch && (
+                    <span className="text-[10px] text-sg-accent font-mono shrink-0">
+                      {run.branch}
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2 text-[10px] text-sg-text3 mt-0.5">
+                  {run.commitSha && <span className="font-mono">{run.commitSha.slice(0, 7)}</span>}
+                  {run.userName && (
+                    <>
+                      <span>·</span>
+                      <span>{run.userName}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              {run.verdict && (
+                <span
+                  className="text-[9px] py-0.5 px-1.5 rounded font-semibold shrink-0"
+                  style={{ color: vs.color, background: vs.bg }}
+                >
+                  {run.verdict}
+                </span>
+              )}
+              <span className="text-[10px] text-sg-text3 font-mono w-[50px] text-right shrink-0">
+                {formatDuration(run.durationMs)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

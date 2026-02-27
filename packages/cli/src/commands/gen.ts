@@ -64,7 +64,7 @@ export interface GenResult {
 // Valid Targets
 // ─────────────────────────────────────────────────────────────────────────────
 
-const VALID_TARGETS: GenerationTarget[] = ['ts', 'typescript', 'rust', 'go', 'openapi'];
+const VALID_TARGETS: GenerationTarget[] = ['ts', 'typescript', 'rust', 'go', 'openapi', 'python', 'graphql'];
 
 /**
  * Normalize target name

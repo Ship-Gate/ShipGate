@@ -690,9 +690,23 @@ export function getWebviewContent(): string {
           <div class="empty-state">
             <div class="logo">⚡</div>
             <h2>Welcome to ShipGate</h2>
-            <p>No .shipgate.yml found in this workspace.</p>
-            <button class="btn btn-primary" data-command="init">Initialize Project</button>
-            <p style="margin-top: 16px;">Or run: <code>npx shipgate init</code></p>
+            <p>Behavioral verification for AI-generated code.<br/>Get started in seconds.</p>
+            <div style="text-align:left;max-width:240px;margin:16px auto 0;">
+              <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;">
+                <span style="width:20px;height:20px;border-radius:50%;background:var(--accent-bg);border:1px solid rgba(99,102,241,0.15);color:var(--accent);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</span>
+                <span style="font-size:11px;color:var(--text1);line-height:1.4;"><strong style="color:var(--text0);">Initialize</strong> — Detect your project &amp; generate ISL specs</span>
+              </div>
+              <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;">
+                <span style="width:20px;height:20px;border-radius:50%;background:var(--accent-bg);border:1px solid rgba(99,102,241,0.15);color:var(--accent);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</span>
+                <span style="font-size:11px;color:var(--text1);line-height:1.4;"><strong style="color:var(--text0);">Verify</strong> — Check code against behavioral contracts</span>
+              </div>
+              <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;">
+                <span style="width:20px;height:20px;border-radius:50%;background:var(--accent-bg);border:1px solid rgba(99,102,241,0.15);color:var(--accent);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</span>
+                <span style="font-size:11px;color:var(--text1);line-height:1.4;"><strong style="color:var(--text0);">Ship</strong> — Get a SHIP / NO_SHIP verdict with evidence</span>
+              </div>
+            </div>
+            <button class="btn btn-primary" data-command="goCommand" style="box-shadow:0 0 12px rgba(0,230,138,0.15);">▶ shipgate go</button>
+            <p style="margin-top: 10px;font-size:10px;color:var(--text3);">Or press <kbd style="padding:1px 4px;border-radius:3px;background:var(--bg2);border:1px solid var(--border);font-family:var(--vscode-editor-font-family,monospace);font-size:9px;">⌘⇧↵</kbd></p>
           </div>
         \`;
       }
@@ -914,44 +928,62 @@ export function getWebviewContent(): string {
       }
       
       function renderActions() {
+        var heroHtml = \`
+          <div style="background:linear-gradient(145deg,rgba(0,230,138,0.04),rgba(99,102,241,0.04));border:1px solid rgba(0,230,138,0.08);border-radius:14px;padding:22px 18px 20px;margin-bottom:16px;text-align:center;position:relative;overflow:hidden;">
+            <div style="font-size:28px;margin-bottom:10px;">⚡</div>
+            <div style="font-size:16px;font-weight:800;color:var(--text0);margin-bottom:4px;letter-spacing:-0.4px;">Ship with confidence</div>
+            <div style="font-size:11px;color:var(--text2);margin-bottom:16px;line-height:1.5;max-width:220px;margin-left:auto;margin-right:auto;">Scan, infer ISL specs, verify, and gate — in one command.</div>
+            <button class="btn btn-primary" data-command="goCommand" style="box-shadow:0 0 16px rgba(0,230,138,0.2);font-size:12px;font-weight:700;letter-spacing:0.2px;">▶ shipgate go</button>
+            <div style="margin-top:10px;font-size:10px;color:var(--text3);">
+              <kbd style="padding:1px 4px;border-radius:3px;background:var(--bg2);border:1px solid var(--border);font-size:9px;">⌘</kbd>
+              <kbd style="padding:1px 4px;border-radius:3px;background:var(--bg2);border:1px solid var(--border);font-size:9px;">⇧</kbd>
+              <kbd style="padding:1px 4px;border-radius:3px;background:var(--bg2);border:1px solid var(--border);font-size:9px;">↵</kbd>
+            </div>
+          </div>
+        \`;
+
         const groups = [
+          {
+            label: 'Workflows',
+            items: [
+              { icon: '✦', label: 'Vibe → Ship', desc: 'English → ISL → verified code', cmd: 'vibeGenerate', color: 'var(--accent)', shortcut: '⌘⇧V' },
+              { icon: '⚡', label: 'Go + Auto-Heal', desc: 'Scan, then auto-fix violations', cmd: 'goFix', color: 'var(--ship)', shortcut: '' },
+              { icon: '◎', label: 'Deep Scan', desc: 'Thorough analysis, higher coverage', cmd: 'goDeep', color: 'var(--blue)', shortcut: '' },
+            ],
+          },
+          {
+            label: 'Analyze',
+            items: [
+              { icon: '▶', label: 'Quick Scan', desc: 'Scan & gate verdict', cmd: 'scanProject', color: 'var(--blue)', shortcut: '' },
+              { icon: '◈', label: 'Infer ISL Specs', desc: 'AI-generate specs from code', cmd: 'inferSpecs', color: '#a78bfa', shortcut: '' },
+              { icon: '⚡', label: 'Heal All', desc: 'Auto-fix violations across project', cmd: 'autofixAll', color: 'var(--warn)', shortcut: '' },
+            ],
+          },
           {
             label: 'Verification',
             items: [
-              { icon: '▶', label: 'Verify Workspace', desc: 'Full scan of all files', cmd: 'verify', color: 'var(--ship)', shortcut: '⌘⇧V' },
+              { icon: '▶', label: 'Verify Workspace', desc: 'Full scan of all files', cmd: 'verify', color: 'var(--ship)', shortcut: '' },
               { icon: '▶', label: 'Verify Current File', desc: 'Scan the active editor', cmd: 'verifyFile', color: 'var(--ship)', shortcut: '' },
               { icon: '⚑', label: 'Ship Check', desc: 'CI gate — SHIP or block', cmd: 'ship', color: 'var(--accent)', shortcut: '' },
+            ],
+          },
+          {
+            label: 'Spec Tools',
+            items: [
+              { icon: '✎', label: 'Code → ISL', desc: 'Generate spec from current file', cmd: 'codeToIsl', color: '#60a5fa', shortcut: '' },
+              { icon: '✎', label: 'Generate ISL Spec', desc: 'Scaffold spec from source', cmd: 'genSpec', color: 'var(--accent)', shortcut: '' },
+              { icon: '⟳', label: 'Format & Lint', desc: 'Auto-format all .isl files', cmd: 'fmtSpecs', color: 'var(--ship)', shortcut: '' },
               { icon: '✦', label: 'Lint ISL Specs', desc: 'Check .isl files for errors', cmd: 'lintSpecs', color: 'var(--blue)', shortcut: '' },
             ],
           },
           {
-            label: 'Auto-Heal',
-            items: [
-              { icon: '⚡', label: 'Heal All Issues', desc: 'Auto-fix every finding', cmd: 'autofixAll', color: 'var(--warn)', shortcut: '' },
-              { icon: '⚡', label: 'Heal Current File', desc: 'Auto-fix active editor', cmd: 'autofix', color: 'var(--warn)', shortcut: '' },
-            ],
-          },
-          {
-            label: 'Generate',
-            items: [
-              { icon: '✎', label: 'Generate ISL Spec', desc: 'Create spec from current file', cmd: 'genSpec', color: 'var(--accent)', shortcut: '' },
-              { icon: '⟳', label: 'Format Specs', desc: 'Auto-format all .isl files', cmd: 'fmtSpecs', color: 'var(--text2)', shortcut: '' },
-              { icon: '⇢', label: 'Migrate Specs', desc: 'Upgrade to latest ISL version', cmd: 'migrateSpecs', color: 'var(--text2)', shortcut: '' },
-            ],
-          },
-          {
-            label: 'Analysis',
+            label: 'Analysis & Compliance',
             items: [
               { icon: '◎', label: 'Trust Score', desc: 'Detailed trust breakdown', cmd: 'trustScore', color: 'var(--ship)', shortcut: '' },
               { icon: '◈', label: 'Coverage Report', desc: 'Spec coverage % per file', cmd: 'coverage', color: 'var(--blue)', shortcut: '' },
               { icon: '⊿', label: 'Drift Detection', desc: 'Code vs spec divergence', cmd: 'drift', color: 'var(--warn)', shortcut: '' },
               { icon: '⚠', label: 'Security Report', desc: 'Secrets, auth, injection scan', cmd: 'securityReport', color: 'var(--noship)', shortcut: '' },
-            ],
-          },
-          {
-            label: 'Compliance',
-            items: [
-              { icon: '🛡', label: 'SOC 2 Audit', desc: 'Run full SOC 2 compliance check', cmd: 'compliance', color: 'var(--ship)', shortcut: '' },
+              { icon: '🛡', label: 'SOC 2 Audit', desc: 'Full SOC 2 compliance check', cmd: 'compliance', color: 'var(--ship)', shortcut: '' },
               { icon: '📋', label: 'Policy Check', desc: 'Validate against team policies', cmd: 'policyCheck', color: 'var(--accent)', shortcut: '' },
             ],
           },
@@ -966,7 +998,21 @@ export function getWebviewContent(): string {
           },
         ];
 
-        return groups.map(g => \`
+        var genGridHtml = \`
+          <div class="section">
+            <div class="section-title">Generate from ISL</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;">
+              <button class="btn" data-command="genTypescript" style="font-size:10px;padding:8px 4px;text-align:center;">TS</button>
+              <button class="btn" data-command="genPython" style="font-size:10px;padding:8px 4px;text-align:center;">Python</button>
+              <button class="btn" data-command="genRust" style="font-size:10px;padding:8px 4px;text-align:center;">Rust</button>
+              <button class="btn" data-command="genGo" style="font-size:10px;padding:8px 4px;text-align:center;">Go</button>
+              <button class="btn" data-command="genGraphql" style="font-size:10px;padding:8px 4px;text-align:center;">GQL</button>
+              <button class="btn" data-command="genOpenapi" style="font-size:10px;padding:8px 4px;text-align:center;">OpenAPI</button>
+            </div>
+          </div>
+        \`;
+
+        var groupsHtml = groups.map(g => \`
           <div class="section">
             <div class="section-title">\${g.label}</div>
             \${g.items.map(item => \`
@@ -981,6 +1027,28 @@ export function getWebviewContent(): string {
             \`).join('')}
           </div>
         \`).join('');
+
+        var allGroupsHtml = groups.slice(0, 2).map(renderGroup).join('') +
+          genGridHtml +
+          groups.slice(2).map(renderGroup).join('');
+
+        function renderGroup(g) {
+          return \`<div class="section">
+            <div class="section-title">\${g.label}</div>
+            \${g.items.map(item => \`
+              <div class="action-row" data-command="\${item.cmd}">
+                <div class="action-icon" style="color: \${item.color};">\${item.icon}</div>
+                <div class="action-body">
+                  <div class="action-label">\${item.label}</div>
+                  <div class="action-desc">\${item.desc}</div>
+                </div>
+                \${item.shortcut ? \`<div class="action-shortcut">\${item.shortcut}</div>\` : '<div class="action-arrow">\u203a</div>'}
+              </div>
+            \`).join('')}
+          </div>\`;
+        }
+
+        return heroHtml + allGroupsHtml;
       }
 
       function renderFindings() {

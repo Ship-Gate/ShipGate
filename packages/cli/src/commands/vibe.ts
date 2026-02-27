@@ -1905,37 +1905,45 @@ export function printVibeResult(result: VibeResult, opts?: { format?: string }):
     return;
   }
 
-  console.log('');
-  console.log(chalk.bold('━━━ Safe Vibe Coding Result ━━━'));
-  console.log('');
-
-  // Verdict
   const verdictColor = result.verdict === 'SHIP' ? chalk.green : result.verdict === 'WARN' ? chalk.yellow : chalk.red;
-  console.log(`  ${chalk.bold('Verdict:')}  ${verdictColor(result.verdict)}`);
-  console.log(`  ${chalk.bold('Score:')}    ${(result.finalScore * 100).toFixed(0)}%`);
-  console.log(`  ${chalk.bold('Duration:')} ${(result.duration / 1000).toFixed(1)}s`);
-  console.log(`  ${chalk.bold('Output:')}   ${result.outputDir}`);
-  // Cache stats display - disabled until feature is implemented
-  // if (result.cacheStats && result.cacheStats.length > 0) {
-  //   for (const msg of result.cacheStats) {
-  //     console.log(`  ${chalk.cyan(msg)}`);
-  //   }
-  //   console.log('');
-  // }
+  const scorePct = (result.finalScore * 100).toFixed(0);
+  const scoreBarWidth = 20;
+  const scoreFilled = Math.round((result.finalScore) * scoreBarWidth);
+  const scoreBar = `${'█'.repeat(scoreFilled)}${'░'.repeat(scoreBarWidth - scoreFilled)}`;
+
+  console.log('');
+  console.log(chalk.bold('┌──────────────────────────────────────────────────────┐'));
+  console.log(chalk.bold('│             ShipGate — Safe Vibe Coding              │'));
+  console.log(chalk.bold('├──────────────────────────────────────────────────────┤'));
+  console.log(`  Verdict:   ${verdictColor(result.verdict)}`);
+  console.log(`  Score:     [${scoreBar}] ${scorePct}%`);
+  console.log(`  Duration:  ${(result.duration / 1000).toFixed(1)}s`);
+  console.log(`  Output:    ${relative(process.cwd(), result.outputDir)}/`);
   console.log('');
 
   // Stages
-  console.log(chalk.bold('  Pipeline Stages:'));
+  console.log(chalk.bold('  Pipeline:'));
   for (const stage of result.stages) {
     const icon = stage.success ? chalk.green('✓') : chalk.red('✗');
-    const duration = chalk.gray(`(${stage.duration}ms)`);
-    console.log(`    ${icon} ${stage.stage} ${duration}`);
+    const dur = chalk.gray(`${stage.duration}ms`);
+    const details = stage.details ? formatStageDetail(stage.details as Record<string, unknown>) : '';
+    console.log(`    ${icon} ${padRight(stage.stage, 16)} ${dur}${details}`);
   }
   console.log('');
 
+  // Token usage (if available)
+  if (result.totalTokens && (result.totalTokens.input > 0 || result.totalTokens.output > 0)) {
+    const t = result.totalTokens;
+    console.log(chalk.bold('  Token usage:'));
+    console.log(`    Input:  ${t.input.toLocaleString()} tokens`);
+    console.log(`    Output: ${t.output.toLocaleString()} tokens`);
+    console.log(`    Total:  ${t.total.toLocaleString()} tokens`);
+    console.log('');
+  }
+
   // Files
   if (result.files.length > 0) {
-    console.log(chalk.bold('  Generated Files:'));
+    console.log(chalk.bold(`  Generated files (${result.files.length}):`));
     const byType = new Map<string, VibeGeneratedFile[]>();
     for (const file of result.files) {
       if (!byType.has(file.type)) byType.set(file.type, []);
@@ -1944,10 +1952,11 @@ export function printVibeResult(result: VibeResult, opts?: { format?: string }):
     for (const [type, files] of byType) {
       console.log(`    ${chalk.cyan(type)} (${files.length})`);
       for (const file of files.slice(0, 5)) {
-        console.log(`      ${chalk.gray('•')} ${file.path}`);
+        const sizeKB = (file.size / 1024).toFixed(1);
+        console.log(`      ${chalk.gray('•')} ${file.path} ${chalk.gray(`(${sizeKB}KB)`)}`);
       }
       if (files.length > 5) {
-        console.log(`      ${chalk.gray(`  ... and ${files.length - 5} more`)}`);
+        console.log(chalk.gray(`      ... and ${files.length - 5} more`));
       }
     }
     console.log('');
@@ -1955,27 +1964,55 @@ export function printVibeResult(result: VibeResult, opts?: { format?: string }):
 
   // Errors/violations
   if (result.errors.length > 0) {
-    console.log(chalk.bold('  Issues:'));
+    console.log(chalk.bold(`  Violations (${result.errors.length}):`));
     for (const error of result.errors.slice(0, 10)) {
-      console.log(`    ${chalk.red('•')} ${error}`);
+      console.log(`    ${chalk.red('✗')} ${error}`);
     }
     if (result.errors.length > 10) {
-      console.log(`    ${chalk.gray(`  ... and ${result.errors.length - 10} more`)}`);
+      console.log(chalk.gray(`    ... and ${result.errors.length - 10} more`));
     }
     console.log('');
   }
 
+  // ISL spec info
+  if (result.islSpecPath) {
+    console.log(`  ISL spec:  ${relative(process.cwd(), result.islSpecPath)}`);
+    console.log('');
+  }
+
   // Next steps
-  if (result.success) {
-    console.log(chalk.bold('  Next Steps:'));
-    console.log(`    ${chalk.gray('$')} cd ${relative(process.cwd(), result.outputDir)}`);
+  const outputRel = relative(process.cwd(), result.outputDir);
+  console.log(chalk.bold('  Next steps:'));
+  if (result.verdict === 'SHIP' || result.verdict === 'WARN') {
+    console.log(`    ${chalk.gray('$')} cd ${outputRel}`);
     console.log(`    ${chalk.gray('$')} npm install`);
     if (result.files.some(f => f.type === 'database')) {
       console.log(`    ${chalk.gray('$')} npx prisma db push`);
     }
     console.log(`    ${chalk.gray('$')} npm run dev`);
     console.log('');
+    console.log(`    ${chalk.gray('$')} shipgate verify ${outputRel}     ${chalk.gray('# Re-verify anytime')}`);
+    console.log(`    ${chalk.gray('$')} shipgate gate --ci               ${chalk.gray('# Add to CI')}`);
+  } else {
+    console.log(`    ${chalk.gray('$')} shipgate vibe "..." --fix        ${chalk.gray('# Re-run with auto-heal')}`);
+    console.log(`    ${chalk.gray('$')} shipgate heal ${outputRel}       ${chalk.gray('# Fix violations')}`);
   }
+
+  console.log(chalk.bold('└──────────────────────────────────────────────────────┘'));
+  console.log('');
+}
+
+function formatStageDetail(details: Record<string, unknown>): string {
+  const parts: string[] = [];
+  if (typeof details.fileCount === 'number') parts.push(`${details.fileCount} files`);
+  if (typeof details.language === 'string' && details.language !== 'typescript') parts.push(details.language);
+  if (typeof details.confidence === 'number') parts.push(`${(details.confidence as number * 100).toFixed(0)}% confidence`);
+  if (typeof details.verdict === 'string') parts.push(details.verdict as string);
+  return parts.length > 0 ? chalk.gray(` — ${parts.join(', ')}`) : '';
+}
+
+function padRight(str: string, len: number): string {
+  return str.length >= len ? str : str + ' '.repeat(len - str.length);
 }
 
 export function getVibeExitCode(result: VibeResult): number {

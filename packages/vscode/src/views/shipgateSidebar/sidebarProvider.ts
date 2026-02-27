@@ -238,6 +238,45 @@ export class ShipgateSidebarProvider implements vscode.WebviewViewProvider {
       case 'healAll':
         vscode.commands.executeCommand('shipgate.heal');
         break;
+      case 'goCommand':
+        vscode.commands.executeCommand('shipgate.go');
+        break;
+      case 'goFix':
+        vscode.commands.executeCommand('shipgate.goFix');
+        break;
+      case 'goDeep':
+        vscode.commands.executeCommand('shipgate.goDeep');
+        break;
+      case 'vibeGenerate':
+        vscode.commands.executeCommand('shipgate.vibeGenerate');
+        break;
+      case 'scanProject':
+        vscode.commands.executeCommand('shipgate.scanProject');
+        break;
+      case 'inferSpecs':
+        vscode.commands.executeCommand('shipgate.inferSpecs');
+        break;
+      case 'genTypescript':
+        vscode.commands.executeCommand('shipgate.genTypescript');
+        break;
+      case 'genPython':
+        vscode.commands.executeCommand('shipgate.genPython');
+        break;
+      case 'genRust':
+        vscode.commands.executeCommand('shipgate.genRust');
+        break;
+      case 'genGo':
+        vscode.commands.executeCommand('shipgate.genGo');
+        break;
+      case 'genGraphql':
+        vscode.commands.executeCommand('shipgate.genGraphql');
+        break;
+      case 'genOpenapi':
+        vscode.commands.executeCommand('shipgate.genOpenapi');
+        break;
+      case 'fmtSpecs':
+        vscode.commands.executeCommand('shipgate.fmtSpecs');
+        break;
       case 'healFile':
         if (msg.payload && typeof msg.payload === 'object' && 'file' in msg.payload) {
           const { file, intent } = msg.payload as { file: string; intent?: string };

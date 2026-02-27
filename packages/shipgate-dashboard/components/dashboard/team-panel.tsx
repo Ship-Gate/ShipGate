@@ -1,75 +1,92 @@
-import { SectionCard } from '@/components/shared/section-card';
-import { teamMembers } from '@/lib/mock-data';
+'use client';
 
-function avatarBorderColor(shipRate: number): string {
-  if (shipRate >= 90) return 'rgba(0,230,138,0.3)';
-  if (shipRate >= 80) return 'rgba(255,181,71,0.3)';
-  return 'rgba(255,92,106,0.3)';
-}
-
-function shipRateColor(shipRate: number): string {
-  if (shipRate >= 90) return '#00e68a';
-  if (shipRate >= 80) return '#ffb547';
-  return '#ff5c6a';
-}
+import { useProfile } from '@/hooks/use-data';
+import { Skeleton } from '@/components/shared/skeleton';
+import { ErrorState } from '@/components/shared/error-state';
+import { EmptyState } from '@/components/shared/empty-state';
 
 export function TeamPanel() {
-  return (
-    <SectionCard
-      title="Team"
-      subtitle="Ship rates & patterns"
-      extra={
-        <span className="text-[11px] text-sg-ship font-semibold">86% avg</span>
-      }
-    >
-      {teamMembers.map((m) => (
-        <div
-          key={m.name}
-          className="flex items-center gap-3 py-2.5 px-[18px] border-b border-sg-border"
-        >
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold text-sg-text1 shrink-0"
-            style={{
-              background: '#222233',
-              border: `2px solid ${avatarBorderColor(m.shipRate)}`,
-            }}
-          >
-            {m.avatar}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-semibold text-sg-text0">
-                {m.name}
-              </span>
-              <span className="text-[10px] text-sg-text3">{m.role}</span>
-              <span
-                className="ml-auto text-[9px] py-0.5 px-1 rounded-[3px] shrink-0"
-                style={{
-                  background: 'rgba(0,230,138,0.08)',
-                  color: '#00e68a',
-                }}
-              >
-                🔥 {m.streak}d streak
-              </span>
-            </div>
-            <div className="flex gap-3 text-[10px] text-sg-text3 mt-0.5">
-              <span>
-                <strong className="text-sg-text1">{m.scans}</strong> scans
-              </span>
-              <span>
-                <strong style={{ color: shipRateColor(m.shipRate) }}>
-                  {m.shipRate}%
-                </strong>{' '}
-                ship rate
-              </span>
-              <span>
-                Top issue:{' '}
-                <strong className="text-sg-text2">{m.topIssue}</strong>
-              </span>
-            </div>
+  const { data, isLoading, error, refetch } = useProfile();
+
+  if (isLoading) {
+    return (
+      <div className="bg-sg-bg1 border border-sg-border rounded-card p-5">
+        <Skeleton className="h-4 w-20 mb-4" />
+        <div className="flex items-center gap-3 mb-4">
+          <Skeleton className="w-10 h-10 rounded-full" />
+          <div className="space-y-1.5">
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-2 w-24" />
           </div>
         </div>
-      ))}
-    </SectionCard>
+        <Skeleton className="h-2 w-full" />
+      </div>
+    );
+  }
+
+  if (error) return <ErrorState message={error} onRetry={refetch} />;
+
+  if (!data) {
+    return (
+      <div className="bg-sg-bg1 border border-sg-border rounded-card">
+        <EmptyState title="Team" description="Sign in to view your team information." />
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-sg-bg1 border border-sg-border rounded-card">
+      <div className="px-5 pt-5 pb-3">
+        <h3 className="text-sm font-semibold text-sg-text0">Team</h3>
+      </div>
+
+      <div className="px-5 pb-4">
+        <div className="flex items-center gap-3 mb-4">
+          {data.avatar ? (
+            <img
+              src={data.avatar}
+              alt={data.name ?? data.email}
+              className="w-10 h-10 rounded-full border-2 border-sg-border"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-sg-bg3 flex items-center justify-center text-sm font-semibold text-sg-text1 border-2 border-sg-border">
+              {(data.name ?? data.email).charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <div className="text-xs font-semibold text-sg-text0">{data.name ?? data.email}</div>
+            <div className="text-[10px] text-sg-text3">{data.email}</div>
+            <div className="text-[10px] text-sg-text3 capitalize">via {data.provider}</div>
+          </div>
+        </div>
+
+        {data.orgs.length > 0 ? (
+          <div>
+            <div className="text-[10px] text-sg-text3 uppercase tracking-wider mb-2">
+              Organizations
+            </div>
+            <div className="space-y-1.5">
+              {data.orgs.map((org) => (
+                <div
+                  key={org.id}
+                  className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-sg-bg2/30 border border-sg-border/50"
+                >
+                  <span className="text-[11px] text-sg-text0 font-medium">{org.name}</span>
+                  <span className="text-[9px] text-sg-text3 uppercase">{org.role}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-[10px] text-sg-text3">No organizations</div>
+        )}
+      </div>
+
+      <div className="px-5 pb-4 border-t border-sg-border pt-3">
+        <div className="text-[10px] text-sg-text3">
+          Member since {new Date(data.createdAt).toLocaleDateString()}
+        </div>
+      </div>
+    </div>
   );
 }

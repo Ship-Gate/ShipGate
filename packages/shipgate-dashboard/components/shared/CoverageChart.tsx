@@ -61,7 +61,7 @@ export function TrustScoreChart({ data }: TrustScoreChartProps) {
                   border: '1px solid hsl(217.2, 32.6%, 17.5%)',
                   borderRadius: '6px',
                 }}
-                formatter={(value: number) => [`${value.toFixed(1)}%`, 'Trust Score']}
+                formatter={((value: any) => [`${(value ?? 0).toFixed(1)}%`, 'Trust Score']) as any}
               />
               <Area
                 type="monotone"
@@ -140,10 +140,11 @@ export function CoverageBreakdown({ coverage }: CoverageBreakdownProps) {
                   border: '1px solid hsl(217.2, 32.6%, 17.5%)',
                   borderRadius: '6px',
                 }}
-                formatter={(value: number, name: string, entry) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                formatter={((value: any, _name: any, entry: any) => {
                   const item = entry.payload
-                  return [`${item.covered}/${item.total} (${value.toFixed(1)}%)`, 'Coverage']
-                }}
+                  return [`${item.covered}/${item.total} (${(value ?? 0).toFixed(1)}%)`, 'Coverage']
+                }) as any}
               />
               <Bar 
                 dataKey="percentage" 

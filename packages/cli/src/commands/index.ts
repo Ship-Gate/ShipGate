@@ -157,3 +157,5 @@ export {
   getSeedRunExitCode,
   getSeedResetExitCode,
 } from './seed.js';
+
+export { go, printGoResult, getGoExitCode, type GoOptions, type GoResult } from './go.js';

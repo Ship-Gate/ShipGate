@@ -6,7 +6,7 @@
 
 import { build } from 'esbuild';
 import { readFileSync, existsSync } from 'fs';
-import { resolve, dirname } from 'path';
+import { resolve, dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -38,11 +38,27 @@ const aliasPlugin = {
   name: 'alias-resolver',
   setup(build) {
     build.onResolve({ filter: /^@isl-lang\// }, (args) => {
+      // Exact match
       if (aliases[args.path]) {
-        return {
-          path: aliases[args.path],
-          namespace: 'file',
-        };
+        return { path: aliases[args.path], namespace: 'file' };
+      }
+      // Subpath imports: @isl-lang/gate/trust-score -> resolve from gate's src dir
+      const parts = args.path.split('/');
+      const basePkg = parts.slice(0, 2).join('/');
+      const subpath = parts.slice(2).join('/');
+      if (subpath && aliases[basePkg]) {
+        const baseDir = dirname(aliases[basePkg]);
+        const candidates = [
+          resolve(baseDir, subpath + '.ts'),
+          resolve(baseDir, subpath, 'index.ts'),
+          resolve(baseDir, subpath + '.js'),
+          resolve(baseDir, subpath, 'index.js'),
+        ];
+        for (const candidate of candidates) {
+          if (existsSync(candidate)) {
+            return { path: candidate, namespace: 'file' };
+          }
+        }
       }
       return null;
     });
@@ -62,7 +78,6 @@ const buildOptions = {
   },
   // Shebang is already in src/index.ts, esbuild will preserve it
   external: [
-    '@isl-lang/security-scanner',
     '@isl-lang/coherence-engine',
     '@isl-lang/inference',
     '@isl-lang/intent-translator',
@@ -70,15 +85,18 @@ const buildOptions = {
     '@isl-lang/isl-smt',
     '@isl-lang/pbt',
     '@isl-lang/verifier-temporal',
-    '@isl-lang/autofix',
     '@isl-lang/interpreter',
     '@isl-lang/api-versioning',
     '@isl-lang/schema-evolution',
     '@isl-lang/codegen-python',
     '@isl-lang/codegen-graphql',
+    '@isl-lang/frontend-generator',
+    '@isl-lang/isl-compiler',
+    '@isl-lang/errors',
     'chromium-bidi',
     'playwright-core',
-    // OpenTelemetry packages - circular deps prevent bundling, installed as runtime deps
+    'tree-sitter',
+    'tree-sitter-go',
     '@opentelemetry/api',
     '@opentelemetry/resources',
     '@opentelemetry/sdk-trace-base',

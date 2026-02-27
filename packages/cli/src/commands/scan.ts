@@ -622,7 +622,7 @@ export async function runProjectScan(
           const result = await specGenFn!(content, lang, {
             hints: [`File: ${relative(resolvedPath, file.path)}`],
             config: {
-              provider: options.provider ?? 'stub',
+              provider: options.provider ?? (process.env['ANTHROPIC_API_KEY'] ? 'anthropic' : process.env['OPENAI_API_KEY'] ? 'openai' : 'stub'),
               model: options.model,
             },
           });
@@ -788,22 +788,46 @@ function extractBlock(source: string, startIndex: number): string | null {
 
 export function formatProjectScanResult(result: ProjectScanResult): string {
   const lines: string[] = [];
+  const verdictIcon = result.verdict === 'SHIP' ? '✓' : result.verdict === 'WARN' ? '!' : '✗';
+  const coveragePct = result.coverage.percent;
+  const coverageBar = renderProgressBar(coveragePct, 20);
+
   lines.push('');
-  lines.push('━━━ Project Scan Result ━━━');
-  lines.push('');
-  lines.push(`  Verdict:        ${result.verdict}`);
-  lines.push(`  Files scanned:  ${result.filesScanned}`);
-  lines.push(`  Specs generated: ${result.specsGenerated}`);
-  lines.push(`  Coverage:       ${result.coverage.percent}% (${result.coverage.covered}/${result.coverage.total})`);
-  lines.push(`  Duration:       ${(result.duration / 1000).toFixed(1)}s`);
+  lines.push('┌──────────────────────────────────────────────────────┐');
+  lines.push('│                  ShipGate Project Scan               │');
+  lines.push('├──────────────────────────────────────────────────────┤');
+  lines.push(`│  ${verdictIcon} Verdict:   ${padEnd(result.verdict, 40)}│`);
+  lines.push(`│    Score:     ${padEnd(result.gateResult ? `${result.gateResult.score}/100` : 'N/A', 39)}│`);
+  lines.push(`│    Duration:  ${padEnd(`${(result.duration / 1000).toFixed(1)}s`, 39)}│`);
+  lines.push('├──────────────────────────────────────────────────────┤');
+  lines.push(`│  Files scanned:   ${padEnd(String(result.filesScanned), 34)}│`);
+  lines.push(`│  Specs generated: ${padEnd(String(result.specsGenerated), 34)}│`);
+  lines.push(`│  Coverage:        ${padEnd(`${coverageBar} ${coveragePct}%`, 34)}│`);
+  lines.push('└──────────────────────────────────────────────────────┘');
 
   if (result.mergedSpecPath) {
-    lines.push(`  Merged spec:    ${result.mergedSpecPath}`);
+    lines.push('');
+    lines.push(`  Merged ISL spec: ${relative(process.cwd(), result.mergedSpecPath)}`);
+  }
+
+  if (result.truthpackUpdated) {
+    lines.push('  Truthpack:       updated');
+  }
+
+  if (result.gateResult && result.gateResult.violations.length > 0) {
+    lines.push('');
+    lines.push(`  Violations (${result.gateResult.violations.length}):`);
+    for (const v of result.gateResult.violations.slice(0, 10)) {
+      lines.push(`    ✗ ${v}`);
+    }
+    if (result.gateResult.violations.length > 10) {
+      lines.push(`    ... and ${result.gateResult.violations.length - 10} more`);
+    }
   }
 
   if (result.coverage.gaps.length > 0) {
     lines.push('');
-    lines.push('  Coverage gaps:');
+    lines.push(`  Coverage gaps (${result.coverage.gaps.length}):`);
     for (const gap of result.coverage.gaps.slice(0, 10)) {
       lines.push(`    • ${gap}`);
     }
@@ -821,6 +845,38 @@ export function formatProjectScanResult(result: ProjectScanResult): string {
   }
 
   lines.push('');
+  lines.push('  Next steps:');
+  if (result.verdict === 'SHIP') {
+    lines.push('    Your project is safe to ship.');
+    if (result.mergedSpecPath) {
+      lines.push(`    $ shipgate verify ${relative(process.cwd(), result.mergedSpecPath)}   # Re-verify anytime`);
+    }
+    lines.push('    $ shipgate gate --ci                                    # Add to CI pipeline');
+  } else if (result.verdict === 'WARN') {
+    lines.push('    Review the generated specs and coverage gaps.');
+    if (result.mergedSpecPath) {
+      lines.push(`    $ cat ${relative(process.cwd(), result.mergedSpecPath)}              # Review generated ISL`);
+      lines.push(`    $ shipgate verify ${relative(process.cwd(), result.mergedSpecPath)}   # Re-verify after fixes`);
+    }
+  } else {
+    lines.push('    Fix violations, then re-scan:');
+    lines.push('    $ shipgate scan .                                       # Re-scan project');
+    if (result.mergedSpecPath) {
+      lines.push(`    $ shipgate heal ${relative(process.cwd(), result.mergedSpecPath)}     # Auto-fix with AI`);
+    }
+  }
+
+  lines.push('');
   return lines.join('\n');
+}
+
+function renderProgressBar(percent: number, width: number): string {
+  const filled = Math.round((percent / 100) * width);
+  const empty = width - filled;
+  return `[${'█'.repeat(filled)}${'░'.repeat(empty)}]`;
+}
+
+function padEnd(str: string, len: number): string {
+  return str.length >= len ? str : str + ' '.repeat(len - str.length);
 }
 

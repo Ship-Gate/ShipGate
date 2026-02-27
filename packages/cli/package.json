@@ -1,6 +1,6 @@
 {
-  "name": "shipgate",
-  "version": "2.1.1",
+  "name": "@shipgate/cli",
+  "version": "3.0.0",
   "description": "Behavioral CI gate for AI-generated code. SHIP or NO_SHIP.",
   "author": "ShipGate Contributors",
   "license": "MIT",
@@ -30,14 +30,8 @@
     "intent-specification-language"
   ],
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./package.json": "./package.json"
+  "publishConfig": {
+    "access": "public"
   },
   "engines": {
     "node": ">=18"

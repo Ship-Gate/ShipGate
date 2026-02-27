@@ -56,3 +56,14 @@ demos/islstudio-hello-gate/
 
 # Local Netlify folder
 .netlify
+
+# pnpm store
+.pnpm-store/
+
+# VS Code extension builds
+*.vsix
+
+# Build artifacts
+tsconfig.tsbuildinfo
+**/tsconfig.tsbuildinfo
+**/package-lock.json

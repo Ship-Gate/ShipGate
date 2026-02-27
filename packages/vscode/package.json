@@ -2,7 +2,7 @@
   "name": "shipgate-isl",
   "displayName": "Shipgate — Behavioral Verification",
   "description": "Behavioral verification for AI-generated code. Write intent specs, catch violations before they ship.",
-  "version": "0.3.0",
+  "version": "2.0.0",
   "publisher": "shipgate",
   "license": "MIT",
   "author": "Shipgate Team",
@@ -116,12 +116,6 @@
         "title": "ShipGate: Initialize Project",
         "category": "ShipGate",
         "icon": "$(new-folder)"
-      },
-      {
-        "command": "shipgate.ship",
-        "title": "ShipGate: Ship Check (Full)",
-        "category": "ShipGate",
-        "icon": "$(rocket)"
       },
       {
         "command": "shipgate.autofix",
@@ -350,6 +344,84 @@
         "title": "Shipgate: Sign Out of Pro",
         "category": "Shipgate",
         "icon": "$(sign-out)"
+      },
+      {
+        "command": "shipgate.go",
+        "title": "ShipGate: Go (Scan + Infer + Verify + Gate)",
+        "category": "ShipGate",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "shipgate.goFix",
+        "title": "ShipGate: Go + Auto-Fix",
+        "category": "ShipGate",
+        "icon": "$(wand)"
+      },
+      {
+        "command": "shipgate.goDeep",
+        "title": "ShipGate: Go Deep Scan",
+        "category": "ShipGate",
+        "icon": "$(search)"
+      },
+      {
+        "command": "shipgate.vibeGenerate",
+        "title": "ShipGate: Vibe — NL to Verified Code",
+        "category": "ShipGate",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "shipgate.scanProject",
+        "title": "ShipGate: Scan Project",
+        "category": "ShipGate",
+        "icon": "$(search)"
+      },
+      {
+        "command": "shipgate.inferSpecs",
+        "title": "ShipGate: Infer ISL Specs from Code",
+        "category": "ShipGate",
+        "icon": "$(lightbulb)"
+      },
+      {
+        "command": "shipgate.genTypescript",
+        "title": "ShipGate: Generate TypeScript from ISL",
+        "category": "ShipGate",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "shipgate.genPython",
+        "title": "ShipGate: Generate Python from ISL",
+        "category": "ShipGate",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "shipgate.genRust",
+        "title": "ShipGate: Generate Rust from ISL",
+        "category": "ShipGate",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "shipgate.genGo",
+        "title": "ShipGate: Generate Go from ISL",
+        "category": "ShipGate",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "shipgate.genGraphql",
+        "title": "ShipGate: Generate GraphQL from ISL",
+        "category": "ShipGate",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "shipgate.genOpenapi",
+        "title": "ShipGate: Generate OpenAPI from ISL",
+        "category": "ShipGate",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "shipgate.openEvidence",
+        "title": "ShipGate: View Evidence",
+        "category": "ShipGate",
+        "icon": "$(output)"
       }
     ],
     "walkthroughs": [
@@ -404,6 +476,16 @@
         "command": "shipgate.autofix",
         "key": "ctrl+shift+.",
         "mac": "cmd+shift+."
+      },
+      {
+        "command": "shipgate.go",
+        "key": "ctrl+shift+enter",
+        "mac": "cmd+shift+enter"
+      },
+      {
+        "command": "shipgate.vibeGenerate",
+        "key": "ctrl+shift+v",
+        "mac": "cmd+shift+v"
       }
     ],
     "configuration": {
@@ -685,8 +767,44 @@
         },
         {
           "command": "shipgate.openVibePanel"
+        },
+        {
+          "command": "shipgate.go"
+        },
+        {
+          "command": "shipgate.goFix"
+        },
+        {
+          "command": "shipgate.goDeep"
+        },
+        {
+          "command": "shipgate.vibeGenerate"
+        },
+        {
+          "command": "shipgate.scanProject"
+        },
+        {
+          "command": "shipgate.inferSpecs"
+        },
+        {
+          "command": "shipgate.genTypescript"
+        },
+        {
+          "command": "shipgate.genPython"
+        },
+        {
+          "command": "shipgate.genRust"
+        },
+        {
+          "command": "shipgate.genGo"
+        },
+        {
+          "command": "shipgate.genGraphql"
+        },
+        {
+          "command": "shipgate.genOpenapi"
         }
-      ]}
+      ]
     },
     "configurationDefaults": {
       "[isl]": {
@@ -695,6 +813,7 @@
         "editor.formatOnSave": true,
         "editor.semanticHighlighting.enabled": true
       }
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run build",
@@ -712,8 +831,6 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@isl-lang/firewall": "workspace:*",
-    "@isl-lang/lsp-server": "workspace:*",
     "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
@@ -725,15 +842,5 @@
     "typescript": "^5.3.0",
     "vitest": "^1.0.0",
     "tsup": "^8.0.1"
-  },
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  },
-  "types": "./dist/index.d.ts",
-  "sideEffects": false
+  }
 }

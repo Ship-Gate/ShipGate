@@ -168,13 +168,30 @@ Keep the current philosophy; rebrand:
 ## 8. Next Actions
 
 1. [ ] Register `shipgate.dev` (or similar)
-2. [ ] Create `SHIPGATE_REBRAND.md` with exact find-replace list
+2. [x] ~~Create `SHIPGATE_REBRAND.md` with exact find-replace list~~ — Rebrand largely complete
 3. [ ] Publish `shipgate` to npm (replace placeholder)
 4. [ ] Build minimal landing page
 5. [ ] Record Three Big Lies demo (2 min)
 6. [ ] Draft HN post
-7. [ ] Update README with Shipgate branding
+7. [x] ~~Update README with Shipgate branding~~ — Done (2026-02-27)
+
+## 9. Post-Plan Progress (2026-02-27 Update)
+
+Since this plan was created, the following have been built and shipped:
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Dashboard RBAC | **Done** | Admin/member/viewer roles enforced on all API routes |
+| Dashboard audit logging | **Done** | ipAddress, userAgent, requestId, sessionId; export API |
+| GitHub integration | **Done** | OAuth flow, read-only repo/PR/commit display |
+| Slack integration | **Done** | OAuth flow, notification rule CRUD (dispatch pending) |
+| Deployment tracking | **Done** | Vercel/Railway webhooks with signature verification |
+| Dashboard visuals | **Done** | Sparklines, verdict chart, activity feed, integration strip |
+| Token encryption | **Done** | AES-256-GCM for stored OAuth tokens |
+| Vibe pipeline in dashboard | **Done** | NL → ISL → verified code from the browser |
+
+The 248-package monorepo contains **1.1M+ lines of source code** across core engine, CLI, 38 ISL packages, 30 codegen targets, 31 stdlib modules, 8 SDKs (Flutter, Kotlin, Swift, Python, TypeScript, Web, React Native), 6 verifiers, and the full dashboard.
 
 ---
 
-*Plan created: 2026-02-08*
+*Plan created: 2026-02-08 | Last updated: 2026-02-27*

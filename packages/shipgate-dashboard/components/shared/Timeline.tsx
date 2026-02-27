@@ -3,7 +3,29 @@
 import { cn } from '@/lib/utils'
 import { formatDate, formatDuration } from '@/lib/utils'
 import { VerdictBadge, VerdictDot } from '@/components/shared/VerdictBadge'
-import type { BehaviorResult, TestResult, ConditionResult } from '@/lib/api'
+interface ConditionResult {
+  condition: string;
+  passed: boolean;
+  expected?: string;
+  actual?: string;
+}
+
+interface TestResult {
+  name: string;
+  verdict: 'pass' | 'fail' | 'skip' | 'error';
+  duration: number;
+  message?: string;
+  preconditionResults: ConditionResult[];
+  postconditionResults: ConditionResult[];
+}
+
+interface BehaviorResult {
+  behaviorId: string;
+  behaviorName: string;
+  verdict: 'pass' | 'fail' | 'partial' | 'skip' | 'error';
+  duration: number;
+  tests: TestResult[];
+}
 
 interface TimelineProps {
   results: BehaviorResult[]

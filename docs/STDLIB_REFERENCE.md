@@ -1,10 +1,10 @@
-# ISL Standard Library 1.0 Reference
+# ISL Standard Library Reference
 
 ## Overview
 
-The ISL Standard Library provides 10 core modules for ISL 1.0. All modules are designed with formal verification in mind, with explicit determinism annotations.
+The ISL Standard Library provides **31 modules** for ISL. The original 10 core modules are designed with formal verification in mind, with explicit determinism annotations. Additional modules cover payments, auth, caching, queues, workflows, and more.
 
-## Quick Reference
+## Core Modules (10 — verification-ready)
 
 | Module | Import | Determinism | Description |
 |--------|--------|-------------|-------------|
@@ -20,6 +20,32 @@ The ISL Standard Library provides 10 core modules for ISL 1.0. All modules are d
 | URL | `use @isl/url` | 100% | URL parsing/manipulation |
 
 *Mixed modules have explicitly marked non-deterministic functions
+
+## Extended Modules (21 — application-level)
+
+| Module | Package | Lines | Description |
+|--------|---------|-------|-------------|
+| Payments | `stdlib-payments` | 9,889 | Charges, checkout, refunds, idempotency, receipts |
+| Rate Limit | `stdlib-rate-limit` | 7,166 | Token bucket, sliding window, distributed rate limiting |
+| Queue | `stdlib-queue` | 4,403 | Job queues, retry, dead-letter, priority scheduling |
+| Cache | `stdlib-cache` | 3,710 | Multi-layer caching, invalidation, TTL management |
+| SaaS | `stdlib-saas` | 2,617 | Multi-tenancy primitives, tenant isolation |
+| Workflow | `stdlib-workflow` | 2,589 | State machines, step functions, saga orchestration |
+| Auth | `stdlib-auth` | 2,443 | Authentication, sessions, token management |
+| Billing | `stdlib-billing` | 2,119 | Subscription management, metering, invoicing |
+| HTTP | `stdlib-http` | 1,682 | HTTP client/server primitives, middleware |
+| Database | `stdlib-database` | 546 | Connection pooling, migrations, query building |
+| Actors | `stdlib-actors` | — | Actor model primitives |
+| AI | `stdlib-ai` | — | AI/ML integration patterns |
+| Analytics | `stdlib-analytics` | — | Event tracking, metrics |
+| API | `stdlib-api` | — | API design patterns |
+| Audit | `stdlib-audit` | — | Audit trail primitives |
+| Distributed | `stdlib-distributed` | — | Distributed systems patterns |
+| Email | `stdlib-email` | — | Email sending, templates |
+| Events | `stdlib-events` | — | Event sourcing, pub/sub |
+| Files | `stdlib-files` | — | File storage, uploads |
+| Messaging | `stdlib-messaging` | — | Message passing, channels |
+| Notifications | `stdlib-notifications` | — | Push, email, SMS notifications |
 
 ---
 

@@ -1,0 +1,126 @@
+{
+  "items": [
+    {
+      "title": "Set up CI/CD pipeline",
+      "description": "No continuous integration detected — add GitHub Actions, CircleCI, or GitLab CI",
+      "status": "planned",
+      "priority": "high",
+      "aiSuggested": true,
+      "category": "feature",
+      "source": "signal",
+      "id": "177108376629948aumlut5",
+      "createdAt": "2026-02-14T15:42:46.299Z"
+    },
+    {
+      "title": "Add test infrastructure",
+      "description": "No test directory found — set up a testing framework (Jest, Vitest, Mocha)",
+      "status": "planned",
+      "priority": "high",
+      "aiSuggested": true,
+      "category": "test",
+      "source": "signal",
+      "id": "1771083766300v1lc8jr3a",
+      "createdAt": "2026-02-14T15:42:46.300Z"
+    },
+    {
+      "title": "Audit and trim dependencies",
+      "description": "Large number of dependencies detected — audit for unused packages and reduce bundle size",
+      "status": "planned",
+      "priority": "medium",
+      "aiSuggested": true,
+      "category": "refactor",
+      "source": "signal",
+      "id": "1771083766300dy46vq190",
+      "createdAt": "2026-02-14T15:42:46.300Z"
+    },
+    {
+      "title": "Add a LICENSE file",
+      "description": "No license file found — add one to clarify usage rights for contributors and users",
+      "status": "planned",
+      "priority": "low",
+      "aiSuggested": true,
+      "category": "docs",
+      "source": "signal",
+      "id": "1771083766300vg9f9z11n",
+      "createdAt": "2026-02-14T15:42:46.300Z"
+    }
+  ],
+  "adaptations": [
+    {
+      "id": "1771083766300uheui1",
+      "timestamp": "2026-02-14T15:42:46.300Z",
+      "type": "signal_detected",
+      "itemId": "177108376629948aumlut5",
+      "itemTitle": "Set up CI/CD pipeline",
+      "description": "Detected: No CI/CD config detected"
+    },
+    {
+      "id": "17710837663004s83kq",
+      "timestamp": "2026-02-14T15:42:46.300Z",
+      "type": "signal_detected",
+      "itemId": "1771083766300v1lc8jr3a",
+      "itemTitle": "Add test infrastructure",
+      "description": "Detected: No test directory found"
+    },
+    {
+      "id": "1771083766300nyc6os",
+      "timestamp": "2026-02-14T15:42:46.300Z",
+      "type": "signal_detected",
+      "itemId": "1771083766300dy46vq190",
+      "itemTitle": "Audit and trim dependencies",
+      "description": "Detected: 57 dependencies"
+    },
+    {
+      "id": "17710837663001wwdt1",
+      "timestamp": "2026-02-14T15:42:46.300Z",
+      "type": "signal_detected",
+      "itemId": "1771083766300vg9f9z11n",
+      "itemTitle": "Add a LICENSE file",
+      "description": "Detected: No LICENSE file"
+    }
+  ],
+  "lastUpdated": "2026-02-15T11:11:47.231Z",
+  "lastSignalHash": "has-docker:false|has-ci:true|no-ci:false|no-tests:true|no-env-example:false|has-prisma:false|has-drizzle:false|large-bundle:true|no-license:true",
+  "projectSignals": [
+    {
+      "type": "has-docker",
+      "detected": false
+    },
+    {
+      "type": "has-ci",
+      "detected": true,
+      "detail": "GitHub Actions found"
+    },
+    {
+      "type": "no-ci",
+      "detected": false
+    },
+    {
+      "type": "no-tests",
+      "detected": true,
+      "detail": "No test directory found"
+    },
+    {
+      "type": "no-env-example",
+      "detected": false
+    },
+    {
+      "type": "has-prisma",
+      "detected": false
+    },
+    {
+      "type": "has-drizzle",
+      "detected": false
+    },
+    {
+      "type": "large-bundle",
+      "detected": true,
+      "detail": "72 dependencies"
+    },
+    {
+      "type": "no-license",
+      "detected": true,
+      "detail": "No LICENSE file"
+    }
+  ]
+}

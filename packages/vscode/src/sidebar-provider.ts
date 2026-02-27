@@ -30,6 +30,20 @@ const COMMAND_MAP: Record<string, string> = {
   rerun:          'shipgate.verify',
   healAll:        'shipgate.autofixAll',
   viewLogs:       'shipgate.exportReport',
+  goCommand:      'shipgate.go',
+  goFix:          'shipgate.goFix',
+  goDeep:         'shipgate.goDeep',
+  vibeGenerate:   'shipgate.vibeGenerate',
+  scanProject:    'shipgate.scanProject',
+  inferSpecs:     'shipgate.inferSpecs',
+  genTypescript:  'shipgate.genTypescript',
+  genPython:      'shipgate.genPython',
+  genRust:        'shipgate.genRust',
+  genGo:          'shipgate.genGo',
+  genGraphql:     'shipgate.genGraphql',
+  genOpenapi:     'shipgate.genOpenapi',
+  codeToIsl:      'shipgate.codeToIsl',
+  runScan:        'shipgate.verify',
 };
 
 export class ShipGateSidebarProvider implements vscode.WebviewViewProvider {

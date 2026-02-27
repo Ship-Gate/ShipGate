@@ -5,7 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress'
 import { VerdictBadge, VerdictDot } from '@/components/shared/VerdictBadge'
 import { formatDate, formatPercentage } from '@/lib/utils'
-import type { Domain } from '@/lib/api'
+interface Domain {
+  id: string;
+  name: string;
+  description: string;
+  behaviorCount: number;
+  lastVerified: string | null;
+  trustScore: number;
+  status: 'verified' | 'failing' | 'pending' | 'unknown';
+}
 
 interface DomainCardProps {
   domain: Domain

@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "patterns": [
+    {
+      "name": "custom-hooks",
+      "category": "react",
+      "description": "Custom hooks for reusable logic",
+      "example": "export function useAuth() { const [user, setUser] = useState(null); return { user }; }",
+      "antiPatterns": [
+        "Duplicate state logic across components",
+        "Side effects in render"
+      ]
+    }
+  ]
+}

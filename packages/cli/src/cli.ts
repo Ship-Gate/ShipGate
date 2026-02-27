@@ -6,7 +6,7 @@
  * Commands:
  *   shipgate parse <file>      # Parse and show AST
  *   shipgate check <file>      # Type check
- *   shipgate gen <target> <file>  # Generate code (ts, rust, go, openapi)
+ *   shipgate gen <target> <file>  # Generate code (ts, rust, go, python, graphql, openapi)
  *   shipgate verify <file>     # Verify spec against target
  *   shipgate repl             # Start REPL
  *   shipgate init             # Create .isl config and example spec
@@ -94,6 +94,7 @@ import {
   printOpenAPIGenerateResult, printOpenAPIValidateResult,
   getOpenAPIGenerateExitCode, getOpenAPIValidateExitCode,
   diffOpenAPI, printDiffOpenAPIResult, getDiffOpenAPIExitCode,
+  go, printGoResult, getGoExitCode,
 } from './commands/index.js';
 import type { FailOnLevel } from './commands/verify.js';
 import { TeamConfigError } from '@isl-lang/core';
@@ -133,6 +134,7 @@ const COMMANDS = [
   'drift', // Drift detection between code and specs
   'vibe', // Safe Vibe Coding: NL → ISL → codegen → verify → SHIP
   'scan', // Scan any project: generate ISL specs + gate verdict
+  'go', // One command: detect → init → infer ISL → verify → gate
   'seed generate', 'seed run', 'seed reset', // Prisma seed from ISL
 ];
 
@@ -145,9 +147,10 @@ const program = new Command();
 
 program
   .name('shipgate')
-  .description(chalk.bold('ShipGate CLI') + '\n' +
-    chalk.gray('Define what your code should do. We enforce it.') + '\n' +
-    chalk.gray("('isl' is an alias — use 'shipgate' for the canonical CLI.)"))
+  .description(chalk.bold('ShipGate CLI') + ' — Stop AI from shipping fake features.\n' +
+    chalk.gray('  Quick start:  shipgate go            # Scan, infer ISL, verify, gate') + '\n' +
+    chalk.gray('  From scratch: shipgate vibe "todo app"  # NL → ISL → full-stack code') + '\n' +
+    chalk.gray('  Codegen:      shipgate gen python auth.isl  # ISL → Python/Rust/Go/TS'))
   .version(VERSION, '-V, --version', 'Show version number')
   .option('-v, --verbose', 'Enable verbose output')
   .option('-q, --quiet', 'Suppress non-error output')
@@ -296,6 +299,11 @@ program
 
     // AI-powered generation
     if (options.ai) {
+      const { requirePro } = await import('./services/pro-gate.js');
+      if (!(await requirePro('gen --ai'))) {
+        process.exit(ExitCode.USAGE_ERROR);
+        return;
+      }
       const result = await genAI(target, file, {
         output: options.output,
         force: options.force,
@@ -1014,6 +1022,14 @@ program
     // When called with a name (not "."): create ./name and init inside it
     const projectName = name === '.' ? path.basename(process.cwd()) || 'my-project' : (name ?? 'my-isl-project');
     const targetDir = name === '.' ? process.cwd() : (options.directory ? path.resolve(options.directory) : undefined);
+
+    if (options.ai) {
+      const { requirePro } = await import('./services/pro-gate.js');
+      if (!(await requirePro('init --ai'))) {
+        process.exit(ExitCode.USAGE_ERROR);
+        return;
+      }
+    }
 
     const result = await init(projectName, {
       template: options.template as 'minimal' | 'full' | 'api',
@@ -1795,7 +1811,11 @@ program
     const opts = program.opts();
 
     if (options.ai) {
-      // AI-powered heal: verify → AI fix → re-verify loop
+      const { requirePro } = await import('./services/pro-gate.js');
+      if (!(await requirePro('heal --ai'))) {
+        process.exit(ExitCode.USAGE_ERROR);
+        return;
+      }
       const result = await aiHeal(pattern, {
         maxIterations: parseInt(options.maxIterations),
         format: opts.format,
@@ -1867,6 +1887,14 @@ program
       process.exit(ExitCode.USAGE_ERROR);
     }
 
+    {
+      const { requirePro } = await import('./services/pro-gate.js');
+      if (!(await requirePro('vibe'))) {
+        process.exit(ExitCode.USAGE_ERROR);
+        return;
+      }
+    }
+
     const result = await vibe(prompt ?? '', {
       output: options.output,
       lang: options.lang,
@@ -1929,6 +1957,8 @@ program
   .option('--min-coverage <n>', 'Minimum spec coverage (0-100). Fail if below.', '0')
   .option('--provider <provider>', 'AI provider: anthropic or openai')
   .option('--model <model>', 'AI model override')
+  .option('--no-upload', 'Skip uploading results to ShipGate Dashboard')
+  .option('--project <name>', 'Project name for dashboard upload')
   .action(async (targetPath: string | undefined, options) => {
     const opts = program.opts();
     const scanPath = targetPath ?? '.';
@@ -1948,7 +1978,99 @@ program
       console.log(formatProjectScanResult(result));
     }
 
+    // Auto-upload to dashboard when authenticated (skip with --no-upload)
+    if (options.upload !== false) {
+      try {
+        const { uploadScanResult, resolveOrgId } = await import('./services/upload.js');
+        const { getToken } = await import('./services/config-store.js');
+        const { execSync } = await import('child_process');
+
+        if (!getToken()) {
+          // Silently skip -- user hasn't authenticated yet
+        } else {
+          const orgId = await resolveOrgId();
+          const projectName = options.project ?? path.basename(path.resolve(scanPath));
+
+          let commitSha: string | undefined;
+          let branch: string | undefined;
+          try {
+            commitSha = execSync('git rev-parse HEAD', { cwd: scanPath, encoding: 'utf8' }).trim();
+            branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: scanPath, encoding: 'utf8' }).trim();
+          } catch { /* not a git repo */ }
+
+          const findings = (result as { results?: Array<{ file: string; violations: Array<{ rule: string; message: string; line?: number; severity: string }> }> }).results?.flatMap((f) =>
+            (f.violations ?? []).map((v) => ({
+              severity: v.severity === 'error' ? 'high' : v.severity === 'warning' ? 'medium' : 'low',
+              category: v.rule ?? 'general',
+              title: v.rule ?? 'violation',
+              filePath: f.file,
+              lineStart: v.line,
+              message: v.message,
+              fingerprint: `${f.file}:${v.rule}:${v.line ?? 0}`,
+            }))
+          ) ?? [];
+
+          const uploadResult = await uploadScanResult(
+            { orgId, projectName, agentType: 'cli', commitSha, branch },
+            findings,
+            result.gateResult?.verdict ?? result.verdict ?? 'NO_SHIP',
+            result.gateResult?.score ?? 0,
+            result.duration ?? 0
+          );
+
+          console.log(chalk.green(`\n✓ Uploaded to dashboard (run: ${uploadResult.runId}, ${uploadResult.findingsUploaded} findings)`));
+        }
+      } catch (err: unknown) {
+        const apiErr = err as { status?: number; message?: string };
+        if (apiErr.status === 402) {
+          const { formatScanLimitError } = await import('./services/pro-gate.js');
+          console.error(formatScanLimitError({ message: apiErr.message }));
+        } else {
+          console.log(chalk.yellow(`\n⚠ Upload failed: ${(err as Error).message}`));
+        }
+      }
+    }
+
     process.exit(result.success ? 0 : 1);
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Go Command — One command to scan, infer, verify, and gate any project
+// ─────────────────────────────────────────────────────────────────────────────
+
+program
+  .command('go [path]')
+  .description('One command: detect → init → infer ISL → truthpack → verify → gate\n  Examples:\n    shipgate go                     # Scan current directory\n    shipgate go ./my-project        # Scan target project\n    shipgate go --fix               # Auto-heal violations\n    shipgate go --deep              # Thorough scan, higher coverage')
+  .option('--fix', 'Auto-heal violations after scan')
+  .option('--deep', 'Thorough scan with minimum 50% coverage requirement')
+  .option('--min-coverage <n>', 'Minimum spec coverage (0-100)', '0')
+  .option('--provider <provider>', 'AI provider: anthropic or openai')
+  .option('--model <model>', 'AI model override')
+  .option('--no-upload', 'Skip uploading results to ShipGate Dashboard')
+  .option('--project <name>', 'Project name for dashboard upload')
+  .action(async (targetPath: string | undefined, options) => {
+    const opts = program.opts();
+    const scanPath = targetPath ?? '.';
+
+    const result = await go(scanPath, {
+      fix: options.fix,
+      deep: options.deep,
+      minCoverage: parseInt(options.minCoverage),
+      provider: options.provider,
+      model: options.model,
+      format: opts.format,
+      verbose: opts.verbose,
+      upload: options.upload,
+      project: options.project,
+    });
+
+    if (opts.format === 'json') {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      printGoResult(result, scanPath);
+    }
+
+    process.exit(getGoExitCode(result));
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2129,6 +2251,14 @@ program
         console.log(chalk.gray(`  Output: ${options.output}`));
       }
       console.log('');
+    }
+
+    if (options.ai) {
+      const { requirePro } = await import('./services/pro-gate.js');
+      if (!(await requirePro('isl-generate --ai'))) {
+        process.exit(ExitCode.USAGE_ERROR);
+        return;
+      }
     }
 
     const result = await islGenerate(path, {
@@ -2984,6 +3114,48 @@ program.exitOverride((err: any) => {
   
   throw err;
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Auth Commands — authenticate with ShipGate Dashboard API
+// ─────────────────────────────────────────────────────────────────────────────
+
+import {
+  authLogin,
+  authLogout,
+  authStatus,
+  printAuthLoginResult,
+  printAuthStatus,
+} from './commands/auth.js';
+
+const authCommand = program
+  .command('auth')
+  .description('Authenticate with the ShipGate Dashboard API');
+
+authCommand
+  .command('login <token>')
+  .description('Login with a Personal Access Token (create one in Dashboard → Settings)')
+  .option('--api-url <url>', 'Dashboard API URL (default: http://localhost:3001)')
+  .action(async (token: string, options) => {
+    const result = await authLogin(token, options.apiUrl);
+    printAuthLoginResult(result);
+    process.exit(result.success ? 0 : 1);
+  });
+
+authCommand
+  .command('logout')
+  .description('Remove stored credentials')
+  .action(() => {
+    const result = authLogout();
+    printAuthLoginResult(result);
+  });
+
+authCommand
+  .command('status')
+  .description('Show current authentication status')
+  .action(() => {
+    const status = authStatus();
+    printAuthStatus(status);
+  });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Export

@@ -1,0 +1,92 @@
+{
+  "routes": [
+    {
+      "path": "/api/auth/google",
+      "method": "GET",
+      "handler": "async",
+      "file": "landing-main/server.js",
+      "line": 125,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    },
+    {
+      "path": "/api/auth/google/callback",
+      "method": "GET",
+      "handler": "async",
+      "file": "landing-main/server.js",
+      "line": 127,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    },
+    {
+      "path": "/api/auth/github",
+      "method": "GET",
+      "handler": "async",
+      "file": "landing-main/server.js",
+      "line": 135,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    },
+    {
+      "path": "/api/auth/github/callback",
+      "method": "GET",
+      "handler": "async",
+      "file": "landing-main/server.js",
+      "line": 137,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    },
+    {
+      "path": "/api/user/profile",
+      "method": "GET",
+      "handler": "async",
+      "file": "landing-main/server.js",
+      "line": 146,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    },
+    {
+      "path": "/api/create-checkout-session",
+      "method": "POST",
+      "handler": "async",
+      "file": "landing-main/server.js",
+      "line": 151,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    },
+    {
+      "path": "/api/stripe/webhook",
+      "method": "POST",
+      "handler": "anonymous",
+      "file": "landing-main/server.js",
+      "line": 180,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    },
+    {
+      "path": "/api/health",
+      "method": "GET",
+      "handler": "anonymous",
+      "file": "landing-main/server.js",
+      "line": 217,
+      "parameters": [],
+      "middleware": [],
+      "confidence": 0.7,
+      "adapter": "generic-fs"
+    }
+  ]
+}

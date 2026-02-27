@@ -1,31 +1,37 @@
 /**
- * Pro License Service
+ * Pro License Service (server-backed via PAT)
  *
- * Manages Shipgate Pro subscription state:
- *  - Stores license token in VS Code SecretStorage
- *  - Verifies license with portal API
- *  - Caches shared API key for Pro features (heal, intent builder)
- *  - Exposes Pro status for sidebar gating
+ * Checks Pro subscription status by calling GET /api/v1/me with
+ * the stored Personal Access Token. The server DB is the single
+ * source of truth for isPro.
  */
 
 import * as vscode from 'vscode';
 
-const LICENSE_SECRET_KEY = 'shipgate.pro.licenseToken';
-const PORTAL_BASE_URL = 'https://shipgate.dev';
-const VERIFY_ENDPOINT = `${PORTAL_BASE_URL}/api/verify`;
-
-// ── DEV/TEST MODE: set to true to bypass portal verification ──
-// Any token will activate Pro, and the token itself is used as the API key.
-// Set to false before shipping to production.
-const DEV_MODE = true;
+const PAT_SECRET_KEY = 'shipgate.pat';
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 export interface ProState {
   active: boolean;
   email: string | null;
   plan: 'free' | 'pro';
-  expiresAt: string | null;
+  scansUsed: number;
+  scansLimit: number;
+  canScan: boolean;
   error: string | null;
   checking: boolean;
+}
+
+interface MeResponse {
+  data: {
+    id: string;
+    email: string;
+    name: string;
+    isPro: boolean;
+    scansUsed: number;
+    scansLimit: number;
+    canScan: boolean;
+  };
 }
 
 export class ProService {
@@ -33,89 +39,35 @@ export class ProService {
     active: false,
     email: null,
     plan: 'free',
-    expiresAt: null,
+    scansUsed: 0,
+    scansLimit: 25,
+    canScan: true,
     error: null,
     checking: false,
   };
 
-  private cachedApiKey: string | null = null;
-  private licenseToken: string | null = null;
+  private lastFetch = 0;
   private onChangeCallbacks: Array<() => void> = [];
 
   constructor(private readonly secrets: vscode.SecretStorage) {}
 
-  /**
-   * Initialize: load stored license token and verify.
-   */
+  private getApiUrl(): string {
+    const config = vscode.workspace.getConfiguration('shipgate');
+    return config.get<string>('dashboardApiUrl', 'http://localhost:3001');
+  }
+
   async initialize(): Promise<void> {
-    try {
-      const token = await this.secrets.get(LICENSE_SECRET_KEY);
-      if (token) {
-        this.licenseToken = token;
-        await this.verify();
-      }
-    } catch {
-      // Silent — no stored token
+    const token = await this.secrets.get(PAT_SECRET_KEY);
+    if (token) {
+      await this.refresh();
     }
   }
 
-  /**
-   * Activate Pro with a license token (from magic link URI callback).
-   */
-  async activate(token: string): Promise<boolean> {
-    this.licenseToken = token;
-    await this.secrets.store(LICENSE_SECRET_KEY, token);
-    const ok = await this.verify();
-    if (ok) {
-      vscode.window.showInformationMessage('Shipgate Pro activated! 🎉 AI-powered features are now unlocked.');
-    }
-    return ok;
-  }
-
-  /**
-   * Deactivate Pro (sign out).
-   */
-  async deactivate(): Promise<void> {
-    this.licenseToken = null;
-    this.cachedApiKey = null;
-    await this.secrets.delete(LICENSE_SECRET_KEY);
-    this.state = {
-      active: false,
-      email: null,
-      plan: 'free',
-      expiresAt: null,
-      error: null,
-      checking: false,
-    };
-    this.notifyChange();
-  }
-
-  /**
-   * Verify the stored license token with the portal API.
-   * Returns the shared API key on success.
-   */
-  async verify(): Promise<boolean> {
-    if (!this.licenseToken) {
-      this.state.active = false;
-      this.state.plan = 'free';
-      this.notifyChange();
+  async refresh(): Promise<boolean> {
+    const token = await this.secrets.get(PAT_SECRET_KEY);
+    if (!token) {
+      this.resetState();
       return false;
-    }
-
-    // ── DEV MODE: skip server verification, accept any token ──
-    if (DEV_MODE) {
-      this.state = {
-        active: true,
-        email: 'dev@shipgate.dev',
-        plan: 'pro',
-        expiresAt: null,
-        error: null,
-        checking: false,
-      };
-      // Use the token itself as the API key (paste your OpenAI key as the token)
-      this.cachedApiKey = this.licenseToken;
-      this.notifyChange();
-      return true;
     }
 
     this.state.checking = true;
@@ -123,89 +75,97 @@ export class ProService {
     this.notifyChange();
 
     try {
-      const res = await fetch(VERIFY_ENDPOINT, {
-        method: 'POST',
+      const url = `${this.getApiUrl()}/api/v1/me`;
+      const res = await fetch(url, {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.licenseToken}`,
+          Authorization: `Bearer ${token}`,
+          'User-Agent': 'shipgate-vscode',
         },
-        body: JSON.stringify({ token: this.licenseToken }),
       });
 
       if (!res.ok) {
-        const body = await res.text();
-        this.state.active = false;
-        this.state.plan = 'free';
-        this.state.error = res.status === 401 ? 'License expired or invalid' : `Verification failed: ${body}`;
-        this.cachedApiKey = null;
+        const msg = res.status === 401
+          ? 'API token is invalid or expired. Re-set it with "ShipGate: Set API Token".'
+          : `Server returned ${res.status}`;
         this.state.checking = false;
+        this.state.error = msg;
         this.notifyChange();
         return false;
       }
 
-      const data = (await res.json()) as {
-        active: boolean;
-        email: string;
-        plan: string;
-        expiresAt: string;
-        apiKey: string;
-      };
+      const body = (await res.json()) as MeResponse;
+      const d = body.data;
 
       this.state = {
-        active: data.active,
-        email: data.email,
-        plan: data.active ? 'pro' : 'free',
-        expiresAt: data.expiresAt,
+        active: d.isPro,
+        email: d.email,
+        plan: d.isPro ? 'pro' : 'free',
+        scansUsed: d.scansUsed,
+        scansLimit: d.scansLimit,
+        canScan: d.canScan,
         error: null,
         checking: false,
       };
-      this.cachedApiKey = data.apiKey || null;
+      this.lastFetch = Date.now();
       this.notifyChange();
-      return data.active;
+      return d.isPro;
     } catch (err) {
       this.state.checking = false;
-      this.state.error = 'Could not reach license server. Check your connection.';
+      this.state.error = 'Could not reach ShipGate API. Check your connection.';
       this.notifyChange();
       return false;
     }
   }
 
-  /**
-   * Get the shared API key for Pro users. Returns null if not Pro.
-   */
-  getApiKey(): string | null {
-    return this.state.active ? this.cachedApiKey : null;
-  }
-
-  /**
-   * Get current Pro state (for sidebar rendering).
-   */
   getState(): ProState {
     return { ...this.state };
   }
 
-  /**
-   * Check if user has Pro access.
-   */
   isPro(): boolean {
     return this.state.active;
   }
 
-  /**
-   * Get the portal URL for upgrading to Pro.
-   */
+  canScan(): boolean {
+    return this.state.canScan;
+  }
+
   getUpgradeUrl(): string {
-    return `${PORTAL_BASE_URL}/pro`;
+    return `${this.getApiUrl()}/checkout`;
   }
 
   /**
-   * Register a callback for state changes.
+   * Re-fetch if cache is stale (> CACHE_TTL_MS).
+   * Returns current isPro status.
    */
+  async ensureFresh(): Promise<boolean> {
+    if (Date.now() - this.lastFetch > CACHE_TTL_MS) {
+      return this.refresh();
+    }
+    return this.state.active;
+  }
+
   onChange(cb: () => void): vscode.Disposable {
     this.onChangeCallbacks.push(cb);
-    return { dispose: () => {
-      this.onChangeCallbacks = this.onChangeCallbacks.filter((c) => c !== cb);
-    }};
+    return {
+      dispose: () => {
+        this.onChangeCallbacks = this.onChangeCallbacks.filter((c) => c !== cb);
+      },
+    };
+  }
+
+  private resetState(): void {
+    this.state = {
+      active: false,
+      email: null,
+      plan: 'free',
+      scansUsed: 0,
+      scansLimit: 25,
+      canScan: true,
+      error: null,
+      checking: false,
+    };
+    this.notifyChange();
   }
 
   private notifyChange(): void {
