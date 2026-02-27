@@ -1,8 +1,9 @@
 [build]
-  command = "npm install && npx prisma generate && npm run build"
+  command = "npm install --legacy-peer-deps && npm run build"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
+  NODE_OPTIONS = "--max-old-space-size=4096"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
