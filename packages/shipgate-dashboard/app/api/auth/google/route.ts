@@ -10,9 +10,10 @@ export async function GET(req: NextRequest) {
   const redirect = req.nextUrl.searchParams.get('redirect') || '/checkout';
   const state = Buffer.from(JSON.stringify({ redirect })).toString('base64url');
 
+  const origin = process.env.NEXTAUTH_URL || req.nextUrl.origin;
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
-    redirect_uri: `${req.nextUrl.origin}/api/auth/google/callback`,
+    redirect_uri: `${origin}/api/auth/google/callback`,
     response_type: 'code',
     scope: 'openid email profile',
     state,

@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/?error=no_code', req.url));
   }
 
-  const accessToken = await exchangeCode(code, req.nextUrl.origin);
+  const accessToken = await exchangeCode(code, process.env.NEXTAUTH_URL || req.nextUrl.origin);
   if (!accessToken) {
     return NextResponse.redirect(new URL('/?error=auth_failed', req.url));
   }
