@@ -31,7 +31,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "shipgate": "workspace:*",
+    "@shipgate/cli": "workspace:*",
     "@isl-lang/islstudio": "workspace:*",
     "@isl-lang/parser": "workspace:*",
     "@isl-lang/isl-verify": "workspace:*",

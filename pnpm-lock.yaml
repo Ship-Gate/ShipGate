@@ -118,6 +118,9 @@ importers:
       '@isl-lang/parser':
         specifier: workspace:*
         version: link:../../packages/parser
+      '@shipgate/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.25
@@ -127,9 +130,6 @@ importers:
       '@types/uuid':
         specifier: ^9.0.7
         version: 9.0.8
-      shipgate:
-        specifier: workspace:*
-        version: link:../../packages/cli
       typescript:
         specifier: ^5.3.0
         version: 5.9.3
@@ -269,6 +269,9 @@ importers:
         specifier: ^9.0.2
         version: 9.0.3
     devDependencies:
+      '@shipgate/cli':
+        specifier: workspace:^
+        version: link:../../packages/cli
       '@types/bcryptjs':
         specifier: ^2.4.6
         version: 2.4.6
@@ -278,9 +281,6 @@ importers:
       '@types/jsonwebtoken':
         specifier: ^9.0.7
         version: 9.0.10
-      shipgate:
-        specifier: workspace:^
-        version: link:../../packages/cli
       tsx:
         specifier: ^4.19.0
         version: 4.21.0
@@ -774,15 +774,6 @@ importers:
 
   packages/cli:
     dependencies:
-      '@isl-lang/codegen-tests':
-        specifier: workspace:*
-        version: link:../codegen-tests
-      '@isl-lang/errors':
-        specifier: workspace:*
-        version: link:../errors
-      '@isl-lang/verifier-sandbox':
-        specifier: workspace:*
-        version: link:../verifier-sandbox
       '@opentelemetry/api':
         specifier: ^1.8.0
         version: 1.9.0
