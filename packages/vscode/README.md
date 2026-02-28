@@ -24,9 +24,14 @@ AI writes the code. You define the behavioral contracts. ShipGate verifies every
 
 ---
 
-## What's New in 3.1
+## What's New in 3.5
 
-- **CLI resolution fix** — When the extension is installed (e.g. in Cursor or from the Marketplace), it no longer runs `node` on the extension directory, which caused a crash because the `vscode` module is only available inside the extension host. The extension now uses the local `packages/cli/dist/cli.cjs` only when running from the monorepo (path contains `packages/vscode`); otherwise it uses `npx shipgate` for verify, init, heal, and all CLI-backed commands.
+- **Webview redesign** — Dark mission-control UI with score rings, verdict cards, and tabbed navigation (Overview / Actions / Findings / Files)
+- **CLI shim fix** — No more "Cannot find module vscode" crash when the VSIX is invoked outside the extension host
+- **CLI resolver** — Prefers workspace-local CLI over `npx` for faster, more reliable verification
+- **Build improvements** — Corrected esbuild externals and production minification
+
+> **Note:** Version 3.5.0 supersedes all previous releases (0.x through 3.1.x). Please update to 3.5.0 or later.
 
 ---
 
