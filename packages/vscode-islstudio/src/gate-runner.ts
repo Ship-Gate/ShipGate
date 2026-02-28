@@ -40,14 +40,13 @@ export async function runGate(
   const cwd = workspaceFolder.uri.fsPath;
   const changedFlag = changedOnly ? '--changed-only' : '';
   
-  // Try to use local shipgate CLI first, fallback to npx
+  // Try local binary first, then npx with correct scoped package name
   let cmd: string;
   try {
-    // Check if shipgate is installed locally
     await execAsync('which shipgate', { cwd });
     cmd = `shipgate gate --ci --output json ${changedFlag}`;
   } catch {
-    cmd = `npx shipgate@latest gate --ci --output json ${changedFlag}`;
+    cmd = `npx @shipgate/cli@latest gate --ci --output json ${changedFlag}`;
   }
 
   if (outputChannel) {

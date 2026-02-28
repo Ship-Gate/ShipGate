@@ -1,0 +1,3518 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-02-28T21:10:56.003Z",
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/vibe-test6/src/app/api/v1/tasks",
+      "handler": "GET handler",
+      "file": "/vibe-test6/src/app/api/v1/tasks/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/vibe-test6/src/app/api/v1/tasks",
+      "handler": "POST handler",
+      "file": "/vibe-test6/src/app/api/v1/tasks/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/dogfood-blog-output/app/api/register-author",
+      "handler": "POST handler",
+      "file": "/dogfood-blog-output/app/api/register-author/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/dogfood-blog-output/app/api/user-register",
+      "handler": "POST handler",
+      "file": "/dogfood-blog-output/app/api/user-register/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/dogfood-blog-output/app/api/search-posts",
+      "handler": "POST handler",
+      "file": "/dogfood-blog-output/app/api/search-posts/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/dogfood-blog-output/app/api/create-post",
+      "handler": "POST handler",
+      "file": "/dogfood-blog-output/app/api/create-post/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/dogfood-blog-output/app/api/moderate-comment",
+      "handler": "POST handler",
+      "file": "/dogfood-blog-output/app/api/moderate-comment/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/dogfood-blog-output/app/api/create-comment",
+      "handler": "POST handler",
+      "file": "/dogfood-blog-output/app/api/create-comment/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/templates/auth-golden/src/app/api/auth/login",
+      "handler": "POST handler",
+      "file": "/templates/auth-golden/src/app/api/auth/login/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/templates/auth-golden/src/app/api/auth/refresh",
+      "handler": "POST handler",
+      "file": "/templates/auth-golden/src/app/api/auth/refresh/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/templates/auth-golden/src/app/api/auth/logout",
+      "handler": "POST handler",
+      "file": "/templates/auth-golden/src/app/api/auth/logout/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/templates/auth-golden/src/app/api/auth/register",
+      "handler": "POST handler",
+      "file": "/templates/auth-golden/src/app/api/auth/register/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/vibe-test12/src/app/api/v1/users/register",
+      "handler": "POST handler",
+      "file": "/vibe-test12/src/app/api/v1/users/register/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/vibe-test12/src/app/api/v1/tasks",
+      "handler": "POST handler",
+      "file": "/vibe-test12/src/app/api/v1/tasks/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/api/posts/:id",
+      "handler": "GET handler",
+      "file": "/packages/crud-template-examples/src/app/api/posts/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "PUT",
+      "path": "/packages/crud-template-examples/src/app/api/posts/:id",
+      "handler": "PUT handler",
+      "file": "/packages/crud-template-examples/src/app/api/posts/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "DELETE",
+      "path": "/packages/crud-template-examples/src/app/api/posts/:id",
+      "handler": "DELETE handler",
+      "file": "/packages/crud-template-examples/src/app/api/posts/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/api/products",
+      "handler": "GET handler",
+      "file": "/packages/crud-template-examples/src/app/api/products/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/crud-template-examples/src/app/api/products",
+      "handler": "POST handler",
+      "file": "/packages/crud-template-examples/src/app/api/products/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/api/invoices",
+      "handler": "GET handler",
+      "file": "/packages/crud-template-examples/src/app/api/invoices/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/crud-template-examples/src/app/api/invoices",
+      "handler": "POST handler",
+      "file": "/packages/crud-template-examples/src/app/api/invoices/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/api/posts",
+      "handler": "GET handler",
+      "file": "/packages/crud-template-examples/src/app/api/posts/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/crud-template-examples/src/app/api/posts",
+      "handler": "POST handler",
+      "file": "/packages/crud-template-examples/src/app/api/posts/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/api/invoices/:id",
+      "handler": "GET handler",
+      "file": "/packages/crud-template-examples/src/app/api/invoices/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "PUT",
+      "path": "/packages/crud-template-examples/src/app/api/invoices/:id",
+      "handler": "PUT handler",
+      "file": "/packages/crud-template-examples/src/app/api/invoices/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "DELETE",
+      "path": "/packages/crud-template-examples/src/app/api/invoices/:id",
+      "handler": "DELETE handler",
+      "file": "/packages/crud-template-examples/src/app/api/invoices/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/api/products/:id",
+      "handler": "GET handler",
+      "file": "/packages/crud-template-examples/src/app/api/products/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "PUT",
+      "path": "/packages/crud-template-examples/src/app/api/products/:id",
+      "handler": "PUT handler",
+      "file": "/packages/crud-template-examples/src/app/api/products/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "DELETE",
+      "path": "/packages/crud-template-examples/src/app/api/products/:id",
+      "handler": "DELETE handler",
+      "file": "/packages/crud-template-examples/src/app/api/products/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/isl-verify-monorepo/packages/license-server/src/app/api/success",
+      "handler": "GET handler",
+      "file": "/packages/isl-verify-monorepo/packages/license-server/src/app/api/success/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/isl-verify-monorepo/packages/license-server/src/app/api/checkout",
+      "handler": "POST handler",
+      "file": "/packages/isl-verify-monorepo/packages/license-server/src/app/api/checkout/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/isl-verify-monorepo/packages/license-server/src/app/api/verify",
+      "handler": "POST handler",
+      "file": "/packages/isl-verify-monorepo/packages/license-server/src/app/api/verify/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/isl-verify-monorepo/packages/license-server/src/app/api/webhook",
+      "handler": "POST handler",
+      "file": "/packages/isl-verify-monorepo/packages/license-server/src/app/api/webhook/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/delete-todo",
+      "handler": "POST handler",
+      "file": "/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/delete-todo/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/isl-pipeline/dogfood-todo-output/app/api/user-register",
+      "handler": "POST handler",
+      "file": "/packages/isl-pipeline/dogfood-todo-output/app/api/user-register/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/update-todo",
+      "handler": "POST handler",
+      "file": "/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/update-todo/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/login-user",
+      "handler": "POST handler",
+      "file": "/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/login-user/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/register-user",
+      "handler": "POST handler",
+      "file": "/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/register-user/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/reorder-todos",
+      "handler": "POST handler",
+      "file": "/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/reorder-todos/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/user-register",
+      "handler": "POST handler",
+      "file": "/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/user-register/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/create-todo",
+      "handler": "POST handler",
+      "file": "/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/create-todo/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks",
+      "handler": "GET handler",
+      "file": "/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks",
+      "handler": "POST handler",
+      "file": "/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/:id",
+      "handler": "GET handler",
+      "file": "/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "PATCH",
+      "path": "/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/:id",
+      "handler": "PATCH handler",
+      "file": "/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "DELETE",
+      "path": "/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/:id",
+      "handler": "DELETE handler",
+      "file": "/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/billing/portal",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/billing/portal/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/webhooks/stripe",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/webhooks/stripe/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/integrations/slack/connect",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/integrations/slack/connect/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/integrations/slack/disconnect",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/integrations/slack/disconnect/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/integrations/github/callback",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/integrations/github/callback/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/integrations/github/connect",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/integrations/github/connect/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/webhooks/railway",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/webhooks/railway/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/webhooks/vercel",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/webhooks/vercel/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/checkout/create",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/checkout/create/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/runs",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/runs/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/v1/runs",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/runs/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/integrations/github/disconnect",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/integrations/github/disconnect/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/integrations/slack/callback",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/integrations/slack/callback/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/auth/stripe-success",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/auth/stripe-success/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/tokens",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/tokens/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/v1/tokens",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/tokens/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "DELETE",
+      "path": "/packages/shipgate-dashboard/app/api/v1/tokens/:id",
+      "handler": "DELETE handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/tokens/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/v1/runs/:id/proof-bundles",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/runs/[id]/proof-bundles/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/me",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/me/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/runs/:id",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/runs/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/auth/me",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/auth/me/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/auth/logout",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/auth/logout/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/auth/github",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/auth/github/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "PATCH",
+      "path": "/packages/shipgate-dashboard/app/api/v1/profile",
+      "handler": "PATCH handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/profile/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/auth/google",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/auth/google/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/auth/github/callback",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/auth/github/callback/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/v1/vibe/run",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/vibe/run/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/runs/:id/findings",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/runs/[id]/findings/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/v1/runs/:id/findings",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/runs/[id]/findings/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/v1/runs/:id/complete",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/runs/[id]/complete/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/auth/google/callback",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/auth/google/callback/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/projects",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/projects/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/v1/projects",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/projects/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/projects/:id",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/projects/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/integrations/deployments/list",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/integrations/deployments/list/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/metrics/overview",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/metrics/overview/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/integrations/slack/channels",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/integrations/slack/channels/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/integrations/github/status",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/integrations/github/status/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/integrations/github/prs",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/integrations/github/prs/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "DELETE",
+      "path": "/packages/shipgate-dashboard/app/api/v1/integrations/deployments/:id",
+      "handler": "DELETE handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/integrations/deployments/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/integrations/github/commits",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/integrations/github/commits/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/integrations/github/repos",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/integrations/github/repos/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/integrations/slack/status",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/integrations/slack/status/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/v1/integrations/slack/rules",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/integrations/slack/rules/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/integrations/deployments/status",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/integrations/deployments/status/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/shipgate-dashboard/app/api/v1/integrations/deployments/setup",
+      "handler": "POST handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/integrations/deployments/setup/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/metrics/findings",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/metrics/findings/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "PATCH",
+      "path": "/packages/shipgate-dashboard/app/api/v1/integrations/slack/rules/:id",
+      "handler": "PATCH handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/integrations/slack/rules/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "DELETE",
+      "path": "/packages/shipgate-dashboard/app/api/v1/integrations/slack/rules/:id",
+      "handler": "DELETE handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/integrations/slack/rules/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/api/v1/activity",
+      "handler": "GET handler",
+      "file": "/packages/shipgate-dashboard/app/api/v1/activity/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/portal/src/app/api/checkout",
+      "handler": "POST handler",
+      "file": "/packages/portal/src/app/api/checkout/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/portal/src/app/api/verify",
+      "handler": "POST handler",
+      "file": "/packages/portal/src/app/api/verify/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/portal/src/app/api/webhook",
+      "handler": "POST handler",
+      "file": "/packages/portal/src/app/api/webhook/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/portal/src/app/api/success",
+      "handler": "GET handler",
+      "file": "/packages/portal/src/app/api/success/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/core/src/audit-v2/fixtures/workspace1/app/api/webhooks/github",
+      "handler": "POST handler",
+      "file": "/packages/core/src/audit-v2/fixtures/workspace1/app/api/webhooks/github/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/core/src/audit-v2/fixtures/workspace1/app/api/users",
+      "handler": "GET handler",
+      "file": "/packages/core/src/audit-v2/fixtures/workspace1/app/api/users/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/core/src/audit-v2/fixtures/workspace1/app/api/users",
+      "handler": "POST handler",
+      "file": "/packages/core/src/audit-v2/fixtures/workspace1/app/api/users/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "DELETE",
+      "path": "/packages/core/src/audit-v2/fixtures/workspace1/app/api/users",
+      "handler": "DELETE handler",
+      "file": "/packages/core/src/audit-v2/fixtures/workspace1/app/api/users/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/packages/core/src/audit-v2/fixtures/workspace1/app/api/webhooks/stripe",
+      "handler": "POST handler",
+      "file": "/packages/core/src/audit-v2/fixtures/workspace1/app/api/webhooks/stripe/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/dogfood-blog-output/app/api/create-post",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/dogfood-blog-output/app/api/create-post/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/dogfood-blog-output/app/api/create-comment",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/dogfood-blog-output/app/api/create-comment/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/templates/auth-golden/src/app/api/auth/logout",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/templates/auth-golden/src/app/api/auth/logout/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/templates/auth-golden/src/app/api/auth/login",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/templates/auth-golden/src/app/api/auth/login/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/templates/auth-golden/src/app/api/auth/register",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/templates/auth-golden/src/app/api/auth/register/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/dogfood-blog-output/app/api/search-posts",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/dogfood-blog-output/app/api/search-posts/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/templates/auth-golden/src/app/api/auth/refresh",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/templates/auth-golden/src/app/api/auth/refresh/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/dogfood-blog-output/app/api/user-register",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/dogfood-blog-output/app/api/user-register/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/dogfood-blog-output/app/api/register-author",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/dogfood-blog-output/app/api/register-author/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/dogfood-blog-output/app/api/moderate-comment",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/dogfood-blog-output/app/api/moderate-comment/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/vibe-test12/src/app/api/v1/tasks",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/vibe-test12/src/app/api/v1/tasks/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/vibe-test12/src/app/api/v1/users/register",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/vibe-test12/src/app/api/v1/users/register/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/products",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/products/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/products",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/products/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/invoices",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/invoices/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/invoices",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/invoices/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/products/:id",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/products/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "PUT",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/products/:id",
+      "handler": "PUT handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/products/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "DELETE",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/products/:id",
+      "handler": "DELETE handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/products/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/invoices/:id",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/invoices/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "PUT",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/invoices/:id",
+      "handler": "PUT handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/invoices/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "DELETE",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/invoices/:id",
+      "handler": "DELETE handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/invoices/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/posts/:id",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/posts/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "PUT",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/posts/:id",
+      "handler": "PUT handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/posts/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "DELETE",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/posts/:id",
+      "handler": "DELETE handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/posts/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/posts",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/posts/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/posts",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/api/posts/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/:id",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "PATCH",
+      "path": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/:id",
+      "handler": "PATCH handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "DELETE",
+      "path": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/:id",
+      "handler": "DELETE handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/nextjs-prisma/app/api/tasks/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/update-todo",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/update-todo/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/user-register",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/user-register/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/create-todo",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/create-todo/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/dogfood-todo-output/app/api/user-register",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/dogfood-todo-output/app/api/user-register/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/login-user",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/login-user/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/delete-todo",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/delete-todo/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/register-user",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/register-user/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/reorder-todos",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-pipeline/packages/isl-pipeline/dogfood-todo-v2/app/api/reorder-todos/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/src/app/api/verify",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/src/app/api/verify/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/src/app/api/checkout",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/src/app/api/checkout/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/src/app/api/success",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/src/app/api/success/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/src/app/api/webhook",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/src/app/api/webhook/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/billing/portal",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/billing/portal/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/webhooks/stripe",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/webhooks/stripe/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/integrations/github/connect",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/integrations/github/connect/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/integrations/slack/disconnect",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/integrations/slack/disconnect/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/integrations/github/disconnect",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/integrations/github/disconnect/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/integrations/slack/connect",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/integrations/slack/connect/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/checkout/create",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/checkout/create/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/integrations/slack/callback",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/integrations/slack/callback/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/webhooks/railway",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/webhooks/railway/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/webhooks/vercel",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/webhooks/vercel/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "DELETE",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/tokens/:id",
+      "handler": "DELETE handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/tokens/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/runs",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/runs/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/runs",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/runs/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/tokens",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/tokens/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/tokens",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/tokens/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/runs/:id/proof-bundles",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/runs/[id]/proof-bundles/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/runs/:id",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/runs/[id]/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/vibe/run",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/vibe/run/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/runs/:id/findings",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/runs/[id]/findings/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/runs/:id/findings",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/runs/[id]/findings/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "POST",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/runs/:id/complete",
+      "handler": "POST handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/runs/[id]/complete/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/me",
+      "handler": "GET handler",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/api/v1/me/route.ts",
+      "framework": "nextjs",
+      "confidence": "high"
+    },
+    {
+      "method": "GET",
+      "path": "/vibe-test12/src/app",
+      "handler": "page.tsx",
+      "file": "/vibe-test12/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/vibe-test12/src/app/tasks",
+      "handler": "page.tsx",
+      "file": "/vibe-test12/src/app/tasks/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/vibe-test12/src/app/tasks/create",
+      "handler": "page.tsx",
+      "file": "/vibe-test12/src/app/tasks/create/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/portal/src/app",
+      "handler": "page.tsx",
+      "file": "/packages/portal/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/portal/src/app/pro",
+      "handler": "page.tsx",
+      "file": "/packages/portal/src/app/pro/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/portal/src/app/pro/success",
+      "handler": "page.tsx",
+      "file": "/packages/portal/src/app/pro/success/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/types/app",
+      "handler": "page.ts",
+      "file": "/packages/crud-template-examples/.next/types/app/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/types/app/invoices/create",
+      "handler": "page.ts",
+      "file": "/packages/crud-template-examples/.next/types/app/invoices/create/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/types/app/posts",
+      "handler": "page.ts",
+      "file": "/packages/crud-template-examples/.next/types/app/posts/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/types/app/invoices",
+      "handler": "page.ts",
+      "file": "/packages/crud-template-examples/.next/types/app/invoices/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/types/app/products",
+      "handler": "page.ts",
+      "file": "/packages/crud-template-examples/.next/types/app/products/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/types/app/invoices/:id",
+      "handler": "page.ts",
+      "file": "/packages/crud-template-examples/.next/types/app/invoices/[id]/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/types/app/products/create",
+      "handler": "page.ts",
+      "file": "/packages/crud-template-examples/.next/types/app/products/create/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/types/app/products/:id",
+      "handler": "page.ts",
+      "file": "/packages/crud-template-examples/.next/types/app/products/[id]/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/types/app/invoices/:id/edit",
+      "handler": "page.ts",
+      "file": "/packages/crud-template-examples/.next/types/app/invoices/[id]/edit/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/types/app/posts/:id",
+      "handler": "page.ts",
+      "file": "/packages/crud-template-examples/.next/types/app/posts/[id]/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/types/app/posts/create",
+      "handler": "page.ts",
+      "file": "/packages/crud-template-examples/.next/types/app/posts/create/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/types/app/products/:id/edit",
+      "handler": "page.ts",
+      "file": "/packages/crud-template-examples/.next/types/app/products/[id]/edit/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app",
+      "handler": "page.tsx",
+      "file": "/packages/crud-template-examples/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/types/app/posts/:id/edit",
+      "handler": "page.ts",
+      "file": "/packages/crud-template-examples/.next/types/app/posts/[id]/edit/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/invoices",
+      "handler": "page.tsx",
+      "file": "/packages/crud-template-examples/src/app/invoices/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/products",
+      "handler": "page.tsx",
+      "file": "/packages/crud-template-examples/src/app/products/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/products/:id",
+      "handler": "page.tsx",
+      "file": "/packages/crud-template-examples/src/app/products/[id]/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/invoices/:id",
+      "handler": "page.tsx",
+      "file": "/packages/crud-template-examples/src/app/invoices/[id]/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/products/:id/edit",
+      "handler": "page.tsx",
+      "file": "/packages/crud-template-examples/src/app/products/[id]/edit/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/products/create",
+      "handler": "page.tsx",
+      "file": "/packages/crud-template-examples/src/app/products/create/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/invoices/:id/edit",
+      "handler": "page.tsx",
+      "file": "/packages/crud-template-examples/src/app/invoices/[id]/edit/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/server/app",
+      "handler": "page.js",
+      "file": "/packages/crud-template-examples/.next/server/app/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/invoices/create",
+      "handler": "page.tsx",
+      "file": "/packages/crud-template-examples/src/app/invoices/create/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/posts",
+      "handler": "page.tsx",
+      "file": "/packages/crud-template-examples/src/app/posts/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/posts/:id",
+      "handler": "page.tsx",
+      "file": "/packages/crud-template-examples/src/app/posts/[id]/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/posts/create",
+      "handler": "page.tsx",
+      "file": "/packages/crud-template-examples/src/app/posts/create/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/server/app/invoices",
+      "handler": "page.js",
+      "file": "/packages/crud-template-examples/.next/server/app/invoices/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/src/app/posts/:id/edit",
+      "handler": "page.tsx",
+      "file": "/packages/crud-template-examples/src/app/posts/[id]/edit/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/server/app/invoices/create",
+      "handler": "page.js",
+      "file": "/packages/crud-template-examples/.next/server/app/invoices/create/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/server/app/products",
+      "handler": "page.js",
+      "file": "/packages/crud-template-examples/.next/server/app/products/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/server/app/products/create",
+      "handler": "page.js",
+      "file": "/packages/crud-template-examples/.next/server/app/products/create/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/server/app/invoices/:id",
+      "handler": "page.js",
+      "file": "/packages/crud-template-examples/.next/server/app/invoices/[id]/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/server/app/invoices/:id/edit",
+      "handler": "page.js",
+      "file": "/packages/crud-template-examples/.next/server/app/invoices/[id]/edit/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/server/app/posts",
+      "handler": "page.js",
+      "file": "/packages/crud-template-examples/.next/server/app/posts/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/server/app/posts/create",
+      "handler": "page.js",
+      "file": "/packages/crud-template-examples/.next/server/app/posts/create/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/server/app/posts/:id",
+      "handler": "page.js",
+      "file": "/packages/crud-template-examples/.next/server/app/posts/[id]/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/server/app/products/:id/edit",
+      "handler": "page.js",
+      "file": "/packages/crud-template-examples/.next/server/app/products/[id]/edit/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/server/app/products/:id",
+      "handler": "page.js",
+      "file": "/packages/crud-template-examples/.next/server/app/products/[id]/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/crud-template-examples/.next/server/app/posts/:id/edit",
+      "handler": "page.js",
+      "file": "/packages/crud-template-examples/.next/server/app/posts/[id]/edit/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/audit-viewer/src/app",
+      "handler": "page.tsx",
+      "file": "/packages/audit-viewer/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/audit-viewer/src/app/compliance",
+      "handler": "page.tsx",
+      "file": "/packages/audit-viewer/src/app/compliance/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/audit-viewer/src/app/events/:id",
+      "handler": "page.tsx",
+      "file": "/packages/audit-viewer/src/app/events/[id]/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/audit-viewer/src/app/analytics",
+      "handler": "page.tsx",
+      "file": "/packages/audit-viewer/src/app/analytics/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/isl-verify-monorepo/packages/license-server/src/app/pricing",
+      "handler": "page.tsx",
+      "file": "/packages/isl-verify-monorepo/packages/license-server/src/app/pricing/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/isl-verify-monorepo/packages/license-server/src/app",
+      "handler": "page.tsx",
+      "file": "/packages/isl-verify-monorepo/packages/license-server/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/isl-verify-monorepo/packages/license-server/src/app/success",
+      "handler": "page.tsx",
+      "file": "/packages/isl-verify-monorepo/packages/license-server/src/app/success/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/isl-verify-monorepo/packages/license-server/.next/types/app",
+      "handler": "page.ts",
+      "file": "/packages/isl-verify-monorepo/packages/license-server/.next/types/app/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/isl-verify-monorepo/packages/license-server/.next/types/app/pricing",
+      "handler": "page.ts",
+      "file": "/packages/isl-verify-monorepo/packages/license-server/.next/types/app/pricing/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/isl-verify-monorepo/packages/license-server/.next/types/app/success",
+      "handler": "page.ts",
+      "file": "/packages/isl-verify-monorepo/packages/license-server/.next/types/app/success/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/isl-verify-monorepo/packages/license-server/.next/server/app",
+      "handler": "page.js",
+      "file": "/packages/isl-verify-monorepo/packages/license-server/.next/server/app/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/isl-verify-monorepo/packages/license-server/.next/server/app/pricing",
+      "handler": "page.js",
+      "file": "/packages/isl-verify-monorepo/packages/license-server/.next/server/app/pricing/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/isl-verify-monorepo/packages/license-server/.next/server/app/_not-found",
+      "handler": "page.js",
+      "file": "/packages/isl-verify-monorepo/packages/license-server/.next/server/app/_not-found/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/isl-verify-monorepo/packages/license-server/.next/server/app/success",
+      "handler": "page.js",
+      "file": "/packages/isl-verify-monorepo/packages/license-server/.next/server/app/success/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/visual-editor/.next/server/app",
+      "handler": "page.js",
+      "file": "/packages/visual-editor/.next/server/app/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/visual-editor/src/app",
+      "handler": "page.tsx",
+      "file": "/packages/visual-editor/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/visual-editor/.next/types/app",
+      "handler": "page.ts",
+      "file": "/packages/visual-editor/.next/types/app/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/diff-viewer/.next/types/app",
+      "handler": "page.ts",
+      "file": "/packages/diff-viewer/.next/types/app/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/diff-viewer/src/app",
+      "handler": "page.tsx",
+      "file": "/packages/diff-viewer/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/diff-viewer/.next/server/app",
+      "handler": "page.js",
+      "file": "/packages/diff-viewer/.next/server/app/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/marketplace-web/src/app",
+      "handler": "page.tsx",
+      "file": "/packages/marketplace-web/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/marketplace-web/src/app/search",
+      "handler": "page.tsx",
+      "file": "/packages/marketplace-web/src/app/search/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/marketplace-web/src/app/intents/:name",
+      "handler": "page.tsx",
+      "file": "/packages/marketplace-web/src/app/intents/[name]/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/prs",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/prs/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/domains",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/domains/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/verifications",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/verifications/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/runs",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/runs/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/findings",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/findings/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/team",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/team/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/cicd",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/cicd/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/vibe",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/vibe/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/deploys",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/static/chunks/app/dashboard/deploys/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/server/app/dashboard/runs",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/server/app/dashboard/runs/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/server/app/dashboard/vibe",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/server/app/dashboard/vibe/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/server/app/dashboard",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/server/app/dashboard/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/server/app/dashboard/verifications",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/server/app/dashboard/verifications/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/server/app/dashboard/cicd",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/server/app/dashboard/cicd/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/server/app/dashboard/findings",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/server/app/dashboard/findings/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/server/app/dashboard/deploys",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/server/app/dashboard/deploys/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/types/app/dashboard",
+      "handler": "page.ts",
+      "file": "/packages/shipgate-dashboard/.next/types/app/dashboard/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/types/app/dashboard/domains",
+      "handler": "page.ts",
+      "file": "/packages/shipgate-dashboard/.next/types/app/dashboard/domains/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/types/app/dashboard/vibe",
+      "handler": "page.ts",
+      "file": "/packages/shipgate-dashboard/.next/types/app/dashboard/vibe/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/types/app/dashboard/findings",
+      "handler": "page.ts",
+      "file": "/packages/shipgate-dashboard/.next/types/app/dashboard/findings/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/types/app/dashboard/cicd",
+      "handler": "page.ts",
+      "file": "/packages/shipgate-dashboard/.next/types/app/dashboard/cicd/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/types/app/dashboard/runs",
+      "handler": "page.ts",
+      "file": "/packages/shipgate-dashboard/.next/types/app/dashboard/runs/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/types/app/dashboard/team",
+      "handler": "page.ts",
+      "file": "/packages/shipgate-dashboard/.next/types/app/dashboard/team/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/server/app/dashboard/team",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/server/app/dashboard/team/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/types/app/dashboard/verifications",
+      "handler": "page.ts",
+      "file": "/packages/shipgate-dashboard/.next/types/app/dashboard/verifications/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/types/app/dashboard/deploys",
+      "handler": "page.ts",
+      "file": "/packages/shipgate-dashboard/.next/types/app/dashboard/deploys/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/server/app/dashboard/prs",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/server/app/dashboard/prs/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/types/app/dashboard/prs",
+      "handler": "page.ts",
+      "file": "/packages/shipgate-dashboard/.next/types/app/dashboard/prs/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/.next/server/app/dashboard/domains",
+      "handler": "page.js",
+      "file": "/packages/shipgate-dashboard/.next/server/app/dashboard/domains/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app",
+      "handler": "page.tsx",
+      "file": "/packages/shipgate-dashboard/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/checkout",
+      "handler": "page.tsx",
+      "file": "/packages/shipgate-dashboard/app/checkout/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/dashboard/deploys",
+      "handler": "page.tsx",
+      "file": "/packages/shipgate-dashboard/app/dashboard/deploys/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/dashboard/prs",
+      "handler": "page.tsx",
+      "file": "/packages/shipgate-dashboard/app/dashboard/prs/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/dashboard/api-keys",
+      "handler": "page.tsx",
+      "file": "/packages/shipgate-dashboard/app/dashboard/api-keys/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/dashboard",
+      "handler": "page.tsx",
+      "file": "/packages/shipgate-dashboard/app/dashboard/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/dashboard/vibe",
+      "handler": "page.tsx",
+      "file": "/packages/shipgate-dashboard/app/dashboard/vibe/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/dashboard/cicd",
+      "handler": "page.tsx",
+      "file": "/packages/shipgate-dashboard/app/dashboard/cicd/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/dashboard/billing",
+      "handler": "page.tsx",
+      "file": "/packages/shipgate-dashboard/app/dashboard/billing/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/dashboard/runs",
+      "handler": "page.tsx",
+      "file": "/packages/shipgate-dashboard/app/dashboard/runs/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/dashboard/findings",
+      "handler": "page.tsx",
+      "file": "/packages/shipgate-dashboard/app/dashboard/findings/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/dashboard/domains",
+      "handler": "page.tsx",
+      "file": "/packages/shipgate-dashboard/app/dashboard/domains/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/dashboard/team",
+      "handler": "page.tsx",
+      "file": "/packages/shipgate-dashboard/app/dashboard/team/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/dashboard/settings",
+      "handler": "page.tsx",
+      "file": "/packages/shipgate-dashboard/app/dashboard/settings/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/shipgate-dashboard/app/dashboard/verifications",
+      "handler": "page.tsx",
+      "file": "/packages/shipgate-dashboard/app/dashboard/verifications/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/playground/src/app",
+      "handler": "page.tsx",
+      "file": "/packages/playground/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/trace-viewer/src/app",
+      "handler": "page.tsx",
+      "file": "/packages/trace-viewer/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/vibe-test6/src/app",
+      "handler": "page.tsx",
+      "file": "/vibe-test6/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/vibe-test6/src/app/tasks/create",
+      "handler": "page.tsx",
+      "file": "/vibe-test6/src/app/tasks/create/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/vibe-test12/src/app",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/vibe-test12/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/vibe-test12/src/app/tasks",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/vibe-test12/src/app/tasks/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/vibe-test12/src/app/tasks/create",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/vibe-test12/src/app/tasks/create/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/products",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/products/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/products/create",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/products/create/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/products/:id",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/products/[id]/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/invoices",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/invoices/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/products/:id/edit",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/products/[id]/edit/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/invoices/create",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/invoices/create/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/invoices/:id",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/invoices/[id]/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/invoices/:id/edit",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/invoices/[id]/edit/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/posts",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/posts/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/posts",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/posts/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/posts/create",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/posts/create/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/posts/:id",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/posts/[id]/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/posts/create",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/posts/create/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/posts/:id/edit",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/src/app/posts/[id]/edit/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/products",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/products/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/invoices",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/invoices/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/invoices/:id",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/invoices/[id]/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/invoices/:id/edit",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/invoices/[id]/edit/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/posts/:id",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/posts/[id]/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/products/create",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/products/create/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/invoices/create",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/invoices/create/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/products/:id",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/products/[id]/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/posts/create",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/posts/create/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/products/:id/edit",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/products/[id]/edit/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/products",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/products/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/products/create",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/products/create/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/products/:id",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/products/[id]/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/products/:id/edit",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/products/[id]/edit/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/invoices",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/invoices/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/invoices/:id",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/invoices/[id]/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/invoices/create",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/invoices/create/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/posts",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/posts/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/invoices/:id/edit",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/invoices/[id]/edit/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/posts/:id",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/posts/[id]/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/posts/:id/edit",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/server/app/posts/[id]/edit/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/posts/:id/edit",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/crud-template-examples/.next/types/app/posts/[id]/edit/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/audit-viewer/src/app/analytics",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/audit-viewer/src/app/analytics/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/audit-viewer/src/app/compliance",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/audit-viewer/src/app/compliance/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/audit-viewer/src/app",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/audit-viewer/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/audit-viewer/src/app/events/:id",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/audit-viewer/src/app/events/[id]/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/src/app",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/src/app/pricing",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/src/app/pricing/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/src/app/success",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/src/app/success/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/.next/types/app",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/.next/types/app/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/.next/types/app/success",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/.next/types/app/success/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/.next/server/app/pricing",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/.next/server/app/pricing/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/.next/types/app/pricing",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/.next/types/app/pricing/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/.next/server/app",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/.next/server/app/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/.next/server/app/_not-found",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/.next/server/app/_not-found/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/.next/server/app/success",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-verify-monorepo/packages/license-server/.next/server/app/success/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/visual-editor/src/app",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/visual-editor/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/visual-editor/.next/types/app",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/visual-editor/.next/types/app/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/visual-editor/.next/server/app",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/visual-editor/.next/server/app/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/diff-viewer/src/app",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/diff-viewer/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/diff-viewer/.next/types/app",
+      "handler": "page.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/diff-viewer/.next/types/app/page.ts",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/diff-viewer/.next/server/app",
+      "handler": "page.js",
+      "file": "/.claude/worktrees/amazing-bohr/packages/diff-viewer/.next/server/app/page.js",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/marketplace-web/src/app",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/marketplace-web/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/marketplace-web/src/app/search",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/marketplace-web/src/app/search/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/marketplace-web/src/app/intents/:name",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/marketplace-web/src/app/intents/[name]/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/checkout",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/checkout/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/team",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/team/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/runs",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/runs/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/cicd",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/cicd/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/findings",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/findings/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/vibe",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/vibe/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/api-keys",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/api-keys/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/verifications",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/verifications/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/billing",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/billing/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/deploys",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/deploys/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/domains",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/domains/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/prs",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/prs/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/settings",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/shipgate-dashboard/app/dashboard/settings/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/playground/src/app",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/playground/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/trace-viewer/src/app",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/trace-viewer/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/portal/src/app",
+      "handler": "page.tsx",
+      "file": "/.claude/worktrees/amazing-bohr/packages/portal/src/app/page.tsx",
+      "framework": "nextjs",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/templates/auth-express/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/templates/auth-express/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/templates/auth-fastify/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/templates/auth-fastify/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/users",
+      "handler": "users.ts",
+      "file": "/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/users.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/marketplace-api/src/routes/intents",
+      "handler": "intents.ts",
+      "file": "/packages/marketplace-api/src/routes/intents.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/marketplace-api/src/routes/trust",
+      "handler": "trust.ts",
+      "file": "/packages/marketplace-api/src/routes/trust.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/marketplace-api/src/routes/search",
+      "handler": "search.ts",
+      "file": "/packages/marketplace-api/src/routes/search.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/marketplace-api/src/routes/packs",
+      "handler": "packs.ts",
+      "file": "/packages/marketplace-api/src/routes/packs.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/isl-discovery/fixtures/discovery-run/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/packages/isl-discovery/fixtures/discovery-run/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/isl-discovery/fixtures/discovery-run/fastify/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/packages/isl-discovery/fixtures/discovery-run/fastify/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/dashboard-api/src/routes/coverage",
+      "handler": "coverage.ts",
+      "file": "/packages/dashboard-api/src/routes/coverage.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/dashboard-api/src/routes/proof-bundles",
+      "handler": "proof-bundles.ts",
+      "file": "/packages/dashboard-api/src/routes/proof-bundles.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/dashboard-api/src/routes/dashboard",
+      "handler": "dashboard.ts",
+      "file": "/packages/dashboard-api/src/routes/dashboard.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/dashboard-api/src/routes/reports",
+      "handler": "reports.ts",
+      "file": "/packages/dashboard-api/src/routes/reports.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/dashboard-api/src/routes/trends",
+      "handler": "trends.ts",
+      "file": "/packages/dashboard-api/src/routes/trends.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/intents",
+      "handler": "intents.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/intents.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/trust",
+      "handler": "trust.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/trust.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/search",
+      "handler": "search.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/search.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/packs",
+      "handler": "packs.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/packs.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/users",
+      "handler": "users.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/users.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-discovery/fixtures/discovery-run/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-discovery/fixtures/discovery-run/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-discovery/fixtures/discovery-run/fastify/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-discovery/fixtures/discovery-run/fastify/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/proof-bundles",
+      "handler": "proof-bundles.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/proof-bundles.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/dashboard",
+      "handler": "dashboard.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/dashboard.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/reports",
+      "handler": "reports.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/reports.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/trends",
+      "handler": "trends.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/trends.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/coverage",
+      "handler": "coverage.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/coverage.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/templates/auth-express/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/.claude/worktrees/amazing-bohr/templates/auth-express/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/templates/auth-fastify/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/.claude/worktrees/amazing-bohr/templates/auth-fastify/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/templates/auth-fastify/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/templates/auth-fastify/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/templates/auth-express/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/templates/auth-express/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/users",
+      "handler": "users.ts",
+      "file": "/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/users.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/security-verifier-enhancer/tests/fixtures/routes/public-endpoint",
+      "handler": "public-endpoint.ts",
+      "file": "/packages/security-verifier-enhancer/tests/fixtures/routes/public-endpoint.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/security-verifier-enhancer/tests/fixtures/routes/missing-auth",
+      "handler": "missing-auth.ts",
+      "file": "/packages/security-verifier-enhancer/tests/fixtures/routes/missing-auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/security-verifier-enhancer/tests/fixtures/routes/extra-auth",
+      "handler": "extra-auth.ts",
+      "file": "/packages/security-verifier-enhancer/tests/fixtures/routes/extra-auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/security-verifier-enhancer/tests/fixtures/routes/correct-auth",
+      "handler": "correct-auth.ts",
+      "file": "/packages/security-verifier-enhancer/tests/fixtures/routes/correct-auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/marketplace-api/src/routes/trust",
+      "handler": "trust.ts",
+      "file": "/packages/marketplace-api/src/routes/trust.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/marketplace-api/src/routes/search",
+      "handler": "search.ts",
+      "file": "/packages/marketplace-api/src/routes/search.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/marketplace-api/src/routes/packs",
+      "handler": "packs.ts",
+      "file": "/packages/marketplace-api/src/routes/packs.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/marketplace-api/src/routes/intents",
+      "handler": "intents.ts",
+      "file": "/packages/marketplace-api/src/routes/intents.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/isl-discovery/fixtures/discovery-run/fastify/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/packages/isl-discovery/fixtures/discovery-run/fastify/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/isl-discovery/fixtures/discovery-run/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/packages/isl-discovery/fixtures/discovery-run/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/dashboard-api/src/routes/coverage",
+      "handler": "coverage.ts",
+      "file": "/packages/dashboard-api/src/routes/coverage.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/dashboard-api/src/routes/proof-bundles",
+      "handler": "proof-bundles.ts",
+      "file": "/packages/dashboard-api/src/routes/proof-bundles.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/dashboard-api/src/routes/dashboard",
+      "handler": "dashboard.ts",
+      "file": "/packages/dashboard-api/src/routes/dashboard.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/dashboard-api/src/routes/reports",
+      "handler": "reports.ts",
+      "file": "/packages/dashboard-api/src/routes/reports.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/packages/dashboard-api/src/routes/trends",
+      "handler": "trends.ts",
+      "file": "/packages/dashboard-api/src/routes/trends.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/templates/auth-express/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/.claude/worktrees/amazing-bohr/templates/auth-express/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/templates/auth-fastify/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/.claude/worktrees/amazing-bohr/templates/auth-fastify/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/users",
+      "handler": "users.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/users.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/spec-inference/tests/fixtures/express-mongoose/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/intents",
+      "handler": "intents.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/intents.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/trust",
+      "handler": "trust.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/trust.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/search",
+      "handler": "search.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/search.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/packs",
+      "handler": "packs.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/marketplace-api/src/routes/packs.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/security-verifier-enhancer/tests/fixtures/routes/extra-auth",
+      "handler": "extra-auth.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/security-verifier-enhancer/tests/fixtures/routes/extra-auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/security-verifier-enhancer/tests/fixtures/routes/public-endpoint",
+      "handler": "public-endpoint.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/security-verifier-enhancer/tests/fixtures/routes/public-endpoint.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/security-verifier-enhancer/tests/fixtures/routes/missing-auth",
+      "handler": "missing-auth.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/security-verifier-enhancer/tests/fixtures/routes/missing-auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/security-verifier-enhancer/tests/fixtures/routes/correct-auth",
+      "handler": "correct-auth.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/security-verifier-enhancer/tests/fixtures/routes/correct-auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-discovery/fixtures/discovery-run/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-discovery/fixtures/discovery-run/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/isl-discovery/fixtures/discovery-run/fastify/src/routes/auth",
+      "handler": "auth.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/isl-discovery/fixtures/discovery-run/fastify/src/routes/auth.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/dashboard",
+      "handler": "dashboard.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/dashboard.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/coverage",
+      "handler": "coverage.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/coverage.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/proof-bundles",
+      "handler": "proof-bundles.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/proof-bundles.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/reports",
+      "handler": "reports.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/reports.ts",
+      "framework": "express",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/trends",
+      "handler": "trends.ts",
+      "file": "/.claude/worktrees/amazing-bohr/packages/dashboard-api/src/routes/trends.ts",
+      "framework": "express",
+      "confidence": "medium"
+    }
+  ]
+}

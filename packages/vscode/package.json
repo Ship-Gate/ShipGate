@@ -2,7 +2,7 @@
   "name": "shipgate-isl",
   "displayName": "Shipgate — Behavioral Verification",
   "description": "Behavioral verification for AI-generated code. Write intent specs, catch violations before they ship.",
-  "version": "2.0.0",
+  "version": "3.1.0",
   "publisher": "shipgate",
   "license": "MIT",
   "author": "Shipgate Team",
@@ -48,19 +48,23 @@
   ],
   "contributes": {
     "viewsContainers": {
-      "activitybar": [{
-        "id": "shipgate",
-        "title": "ShipGate",
-        "icon": "media/shipgate-icon.svg"
-      }]
+      "activitybar": [
+        {
+          "id": "shipgate",
+          "title": "ShipGate",
+          "icon": "media/shipgate-icon.svg"
+        }
+      ]
     },
     "views": {
-      "shipgate": [{
-        "type": "webview",
-        "id": "shipgate.sidebar",
-        "name": "ShipGate",
-        "icon": "media/shipgate-icon.svg"
-      }]
+      "shipgate": [
+        {
+          "type": "webview",
+          "id": "shipgate.sidebar",
+          "name": "ShipGate",
+          "icon": "media/shipgate-icon.svg"
+        }
+      ]
     },
     "languages": [
       {
@@ -514,12 +518,19 @@
         "shipgate.severity.minimum": {
           "type": "string",
           "default": "medium",
-          "enum": ["low","medium","high","critical"],
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
           "description": "Minimum severity to display"
         },
         "shipgate.compliance.frameworks": {
           "type": "array",
-          "default": ["soc2"],
+          "default": [
+            "soc2"
+          ],
           "description": "Active compliance frameworks"
         },
         "shipgate.github.autoSync": {

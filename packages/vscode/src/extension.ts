@@ -29,17 +29,34 @@ let extensionContext: vscode.ExtensionContext;
 let proService: ProService;
 
 function getCliCommand(): string {
-  const extensionPath = extensionContext.extensionUri.fsPath;
-  const cliPath = extensionPath.replace(/packages[\/\\]vscode/, 'packages/cli/dist/cli.cjs');
-  
-  // Check if CLI exists at the expected path
   const fs = require('fs');
-  if (fs.existsSync(cliPath)) {
-    return `node "${cliPath}"`;
+  const pathMod = require('path');
+  const extensionPath = extensionContext.extensionUri.fsPath;
+
+  // 1. Monorepo layout: extension lives at packages/vscode
+  if (/packages[\/\\]vscode/.test(extensionPath)) {
+    const cliPath = extensionPath.replace(/packages[\/\\]vscode/, 'packages/cli/dist/cli.cjs');
+    if (fs.existsSync(cliPath)) {
+      return `node "${cliPath}"`;
+    }
   }
-  
-  // Fallback to npx
-  console.warn(`ShipGate CLI not found at ${cliPath}, falling back to npx`);
+
+  // 2. Workspace-local CLI (covers installed-VSIX + monorepo workspace)
+  const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  if (workspaceRoot) {
+    const candidates = [
+      pathMod.join(workspaceRoot, 'packages', 'cli', 'dist', 'cli.cjs'),
+      pathMod.join(workspaceRoot, 'node_modules', 'shipgate', 'dist', 'cli.cjs'),
+      pathMod.join(workspaceRoot, 'node_modules', '.bin', 'shipgate'),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return p.endsWith('.cjs') || p.endsWith('.js') ? `node "${p}"` : `"${p}"`;
+      }
+    }
+  }
+
+  // 3. Fallback
   return 'npx shipgate';
 }
 

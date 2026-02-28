@@ -1,4 +1,4 @@
-// File: C:\Users\mevla\OneDrive\Desktop\projects\IntentOS\packages\crud-template-examples\src\app\api\posts\[id]\route.ts
+// File: /Users/liquidgroove/Desktop/ShipGate-main/packages/crud-template-examples/src/app/api/posts/[id]/route.ts
 import * as entry from '../../../../../../src/app/api/posts/[id]/route.js'
 import type { NextRequest } from 'next/server.js'
 

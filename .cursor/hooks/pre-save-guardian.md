@@ -21,9 +21,5 @@ Fires on every file save in the workspace.
 - Remove unused imports
 - Update truthpack if route file changed
 
-## Mandatory Response Format
-- End every response with the verification badge in italics: *verified by vibecheck*
-- End every response with a list of what is still left to be completed (or "Nothing left" if done).
-
 ---
 <!-- vibecheck:context-engine:v1 -->

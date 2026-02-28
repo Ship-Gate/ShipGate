@@ -24,9 +24,5 @@ If a truthpack change conflicts with a manually-edited rule:
 - Add a note about the conflict
 - Flag for user review
 
-## Mandatory Response Format
-- End every response with the verification badge in italics: *verified by vibecheck*
-- End every response with a list of what is still left to be completed (or "Nothing left" if done).
-
 ---
 <!-- vibecheck:context-engine:v1 -->

@@ -1,14 +1,14 @@
 {
   "version": "2.0.0",
   "provenance": {
-    "commitHash": "d954a62093663355321d50578c8de7f77d796523",
-    "commitMessage": "Merge origin/main - keep local work (README GIF, launch artifacts, work items)",
+    "commitHash": "7ae520ef84e3462353ba47c463c17bc35d88c41c",
+    "commitMessage": "fix: exclude Next.js app packages from gate to eliminate false-positive ghost-import errors",
     "nodeVersion": "v20.20.0",
     "packageManager": {
       "name": "pnpm",
       "version": "8.15.0"
     },
-    "timestamp": "2026-02-27T14:14:49.252Z",
+    "timestamp": "2026-02-28T22:05:59.072Z",
     "generatorVersion": "2.0.0",
     "repoRoot": "/Users/liquidgroove/Desktop/ShipGate-main"
   },

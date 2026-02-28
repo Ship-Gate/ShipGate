@@ -24,12 +24,8 @@ If your code conflicts with the truthpack:
 
 ## Auto-Update
 This rule evolves automatically as the truthpack changes.
-Current truthpack hash: `unknown`
-Last generated: unknown
-
-## Mandatory Response Format
-- End every response with the verification badge in italics: *verified by vibecheck*
-- End every response with a list of what is still left to be completed (or "Nothing left" if done).
+Current truthpack hash: `mm6tfm6b`
+Last generated: 2026-02-28T21:10:56.003Z
 
 ---
 <!-- vibecheck:context-engine:v1 -->

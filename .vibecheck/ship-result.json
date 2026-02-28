@@ -26,7 +26,7 @@
     {
       "name": "Git status",
       "status": "warning",
-      "message": "289 uncommitted files"
+      "message": "91 uncommitted files"
     },
     {
       "name": "Tests pass",
@@ -35,8 +35,8 @@
     },
     {
       "name": "Lint check",
-      "status": "failed",
-      "message": "11 lint errors"
+      "status": "warning",
+      "message": "Lint warnings found"
     },
     {
       "name": "Dependency audit",
@@ -71,5 +71,5 @@
       "status": "passed"
     }
   ],
-  "timestamp": "2026-02-16T15:33:09.287Z"
+  "timestamp": "2026-02-28T22:03:22.507Z"
 }

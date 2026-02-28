@@ -79,6 +79,35 @@ function copyDir(src, dest) {
   }
 }
 
+const cliBanner = `
+// CLI shim — when run outside VS Code (e.g. node <extension-dir> go .),
+// delegate to npx shipgate instead of crashing on missing 'vscode' module.
+if (typeof process !== 'undefined' && process.argv[1] && !process.env.VSCODE_PID && !process.env.VSCODE_IPC_HOOK) {
+  try { require('vscode'); } catch (_e) {
+    var _args = process.argv.slice(2);
+    if (_args.length > 0) {
+      var _cp = require('child_process');
+      var _path = require('path');
+      // Try local CLI first (monorepo sibling)
+      var _localCli = _path.join(__dirname, '..', '..', 'cli', 'dist', 'cli.cjs');
+      try { require('fs').accessSync(_localCli); } catch (_) { _localCli = ''; }
+      if (_localCli) {
+        var _r = _cp.spawnSync(process.execPath, [_localCli].concat(_args), { stdio: 'inherit', cwd: process.cwd() });
+        process.exit(_r.status || 0);
+      } else {
+        var _r = _cp.spawnSync('npx', ['--yes', 'shipgate'].concat(_args), { stdio: 'inherit', cwd: process.cwd() });
+        process.exit(_r.status || 0);
+      }
+    } else {
+      console.log('ShipGate VS Code Extension');
+      console.log('Usage inside VS Code: Install from marketplace');
+      console.log('Usage from CLI:       npx shipgate <command> [options]');
+      process.exit(0);
+    }
+  }
+}
+`;
+
 async function main() {
   const ctx = await esbuild.context({
     entryPoints: ['src/extension.ts'],
@@ -91,17 +120,14 @@ async function main() {
     outfile: 'dist/extension.cjs',
     external: ['vscode', '@isl-lang/firewall', 'tree-sitter', 'tree-sitter-go'],
     logLevel: 'info',
+    banner: { js: cliBanner },
     plugins: [
       copyServerPlugin,
       ...(watch ? [esbuildProblemMatcherPlugin] : []),
     ],
-    // Tree-shaking and optimization
     treeShaking: true,
-    // Target Node.js version used by VS Code
     target: 'node18',
-    // Keep names for better error messages
     keepNames: !production,
-    // Analyze bundle size in production
     metafile: production,
   });
 

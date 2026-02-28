@@ -6,1246 +6,731 @@ export function getWebviewContent(): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data: vscode-resource:;">
   <style>
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    @keyframes slideUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes ringDraw { from{stroke-dashoffset:var(--ring-circ)} to{stroke-dashoffset:var(--ring-offset)} }
+    @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+    @keyframes glowPulse { 0%,100%{opacity:.25} 50%{opacity:.45} }
+
     :root {
-      --bg0: #0a0a0f; --bg1: #111118; --bg2: #1a1a24; --bg3: #222233;
-      --border: rgba(255,255,255,0.06); --border-hover: rgba(255,255,255,0.12);
-      --text0: #ffffff; --text1: #c8c8d4; --text2: #8888a0; --text3: #555566;
-      --ship: #00e68a; --ship-bg: rgba(0,230,138,0.08); --ship-glow: rgba(0,230,138,0.3);
-      --warn: #ffb547; --warn-bg: rgba(255,181,71,0.08);
-      --noship: #ff5c6a; --noship-bg: rgba(255,92,106,0.08);
-      --accent: #6366f1; --accent-bg: rgba(99,102,241,0.08);
-      --blue: #38bdf8; --blue-bg: rgba(56,189,248,0.08);
-      --high-sev: #ff8a4c;
+      --bg-base: #08080c;
+      --bg-raised: #0f0f15;
+      --bg-surface: #16161f;
+      --bg-hover: #1c1c28;
+      --bg-active: #222230;
+      --border-dim: rgba(255,255,255,.04);
+      --border-default: rgba(255,255,255,.07);
+      --border-bright: rgba(255,255,255,.12);
+      --text-primary: #eeeef2;
+      --text-secondary: #a0a0b8;
+      --text-tertiary: #6a6a80;
+      --text-ghost: #44445a;
+      --green: #00dc82;
+      --green-dim: rgba(0,220,130,.06);
+      --green-mid: rgba(0,220,130,.12);
+      --green-glow: rgba(0,220,130,.35);
+      --amber: #f5a623;
+      --amber-dim: rgba(245,166,35,.06);
+      --amber-mid: rgba(245,166,35,.12);
+      --amber-glow: rgba(245,166,35,.35);
+      --red: #ef4444;
+      --red-dim: rgba(239,68,68,.06);
+      --red-mid: rgba(239,68,68,.12);
+      --red-glow: rgba(239,68,68,.35);
+      --indigo: #818cf8;
+      --indigo-dim: rgba(129,140,248,.06);
+      --indigo-mid: rgba(129,140,248,.12);
+      --cyan: #22d3ee;
+      --cyan-dim: rgba(34,211,238,.06);
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --ease: cubic-bezier(.16,1,.3,1);
     }
-    
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
     body {
-      font-family: var(--vscode-font-family), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg1);
-      color: var(--text1);
+      font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+      background: var(--bg-base);
+      color: var(--text-secondary);
       font-size: 12px;
       line-height: 1.5;
       overflow-x: hidden;
-      width: 320px;
     }
-    
-    .mono { font-family: var(--vscode-editor-font-family), Consolas, 'Courier New', monospace; }
-    
-    #root { display: flex; flex-direction: column; height: 100vh; }
-    
-    /* Header */
-    .header {
-      position: sticky;
-      top: 0;
-      background: var(--bg1);
-      border-bottom: 1px solid var(--border);
-      z-index: 100;
+
+    .mono { font-family: var(--vscode-editor-font-family, 'SF Mono', Consolas, 'Courier New', monospace); }
+    #root { display:flex; flex-direction:column; height:100vh; }
+
+    /* ---- HEADER ---- */
+    .hdr {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg-base);
+      border-bottom: 1px solid var(--border-dim);
+      backdrop-filter: blur(12px);
     }
-    
-    .brand-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
+    .hdr-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px 8px;
     }
-    
-    .brand-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .hdr-brand { display:flex; align-items:center; gap:9px; }
+    .hdr-logo {
+      width: 26px; height: 26px; border-radius: 6px;
+      background: linear-gradient(135deg, var(--green), var(--indigo));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; color: #000; letter-spacing: -1px;
     }
-    
-    .logo {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
-      background: linear-gradient(135deg, var(--ship), var(--accent));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
+    .hdr-title { font-size:13px; font-weight:700; color:var(--text-primary); letter-spacing:-.3px; }
+    .hdr-sub { font-size:10px; color:var(--text-ghost); margin-top:1px; }
+    .hdr-btns { display:flex; gap:4px; }
+    .ib {
+      width:26px; height:26px; border-radius:var(--radius-sm);
+      background: var(--bg-surface); border:1px solid var(--border-dim);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; color:var(--text-tertiary); font-size:12px;
+      transition: all 80ms var(--ease);
     }
-    
-    .brand-text h1 {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text0);
-      letter-spacing: -0.01em;
+    .ib:hover { background:var(--bg-hover); border-color:var(--border-bright); color:var(--text-primary); }
+
+    /* ---- TABS ---- */
+    .tabs {
+      display:flex; gap:0; padding:0 10px;
+      border-bottom: 1px solid var(--border-dim);
     }
-    
-    .brand-text p {
-      font-size: 10px;
-      color: var(--text3);
-    }
-    
-    .header-actions {
-      display: flex;
-      gap: 6px;
-    }
-    
-    .icon-btn {
-      width: 26px;
-      height: 26px;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--text2);
-      font-size: 12px;
-      transition: all 100ms cubic-bezier(0.16,1,0.3,1);
-    }
-    
-    .icon-btn:hover {
-      background: var(--bg3);
-      border-color: var(--border-hover);
-      color: var(--text0);
-      transform: scale(1.02);
-    }
-    
-    .tab-bar {
-      display: flex;
-      gap: 2px;
-      padding: 0 12px;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    
-    .tab-bar::-webkit-scrollbar { display: none; }
-    
     .tab {
-      padding: 7px 11px;
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text3);
+      padding: 7px 12px; font-size:11px; font-weight:500;
+      color: var(--text-ghost); cursor:pointer;
       border-bottom: 2px solid transparent;
-      cursor: pointer;
+      transition: color 120ms, border-color 120ms;
       white-space: nowrap;
-      transition: all 200ms cubic-bezier(0.16,1,0.3,1);
     }
-    
-    .tab.active {
-      color: var(--text0);
-      border-bottom-color: var(--ship);
+    .tab:hover { color:var(--text-tertiary); }
+    .tab.on { color:var(--text-primary); border-bottom-color:var(--green); }
+
+    /* ---- SCROLL CONTENT ---- */
+    .body { flex:1; overflow-y:auto; padding:14px; }
+    .body::-webkit-scrollbar { width:4px; }
+    .body::-webkit-scrollbar-thumb { background:var(--border-default); border-radius:2px; }
+    .sect { margin-bottom:14px; animation: slideUp 140ms var(--ease) both; }
+    .sect-lbl {
+      font-size:9px; font-weight:700; text-transform:uppercase;
+      letter-spacing:.06em; color:var(--text-ghost); margin-bottom:6px;
     }
-    
-    .tab:hover:not(.active) {
-      color: var(--text1);
+
+    /* ---- CARD ---- */
+    .c {
+      background: var(--bg-raised);
+      border: 1px solid var(--border-dim);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      transition: border-color 100ms, background 100ms;
     }
-    
-    /* Content */
-    .content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
+    .c:hover { border-color:var(--border-default); }
+    .c+.c { margin-top:6px; }
+
+    /* ---- VERDICT CARD ---- */
+    .vc {
+      position:relative; overflow:hidden;
+      padding: 16px 14px;
     }
-    
-    .section {
-      margin-bottom: 16px;
+    .vc.ship { background:var(--green-dim); border-color:var(--green-mid); }
+    .vc.warn { background:var(--amber-dim); border-color:var(--amber-mid); }
+    .vc.noship { background:var(--red-dim); border-color:var(--red-mid); }
+    .vc-row { display:flex; align-items:center; gap:14px; position:relative; z-index:1; }
+    .vc-ring { position:relative; flex-shrink:0; width:56px; height:56px; }
+    .vc-score {
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+      font-size:17px; font-weight:800; letter-spacing:-1px;
     }
-    
-    .section-title {
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 8px;
+    .vc h2 { font-size:22px; font-weight:800; letter-spacing:-.5px; }
+    .vc p { font-size:11px; color:var(--text-secondary); margin-top:2px; }
+    .vc-glow {
+      position:absolute; top:-24px; right:-24px;
+      width:80px; height:80px; border-radius:50%;
+      filter:blur(32px); pointer-events:none;
+      animation: glowPulse 4s ease infinite;
     }
-    
-    /* Cards */
-    .card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px 16px;
-      transition: all 200ms cubic-bezier(0.16,1,0.3,1);
+
+    /* ---- STATS GRID ---- */
+    .sg { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+    .sc {
+      background:var(--bg-raised); border:1px solid var(--border-dim);
+      border-radius: var(--radius-md); padding:10px 12px;
     }
-    
-    .card:hover {
-      border-color: var(--border-hover);
-      background: rgba(255,255,255,0.02);
+    .sc-lbl { font-size:9px; color:var(--text-ghost); text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
+    .sc-val { font-size:18px; font-weight:800; color:var(--text-primary); letter-spacing:-1px; }
+
+    /* ---- BADGE ---- */
+    .b {
+      display:inline-flex; align-items:center; padding:1px 7px;
+      border-radius:3px; font-size:9px; font-weight:700;
+      text-transform:uppercase; letter-spacing:.02em;
     }
-    
-    /* Verdict Card */
-    .verdict-card {
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .verdict-card.ship { background: var(--ship-bg); border-color: rgba(0,230,138,0.2); }
-    .verdict-card.warn { background: var(--warn-bg); border-color: rgba(255,181,71,0.2); }
-    .verdict-card.noship { background: var(--noship-bg); border-color: rgba(255,92,106,0.2); }
-    
-    .verdict-content {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      position: relative;
-      z-index: 1;
-    }
-    
-    .verdict-ring {
-      flex-shrink: 0;
-    }
-    
-    .verdict-info h2 {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 4px;
-    }
-    
-    .verdict-info p {
-      font-size: 11px;
-      color: var(--text2);
-    }
-    
-    .verdict-glow {
-      position: absolute;
-      top: -20px;
-      right: -20px;
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      filter: blur(28px);
-      opacity: 0.35;
-      pointer-events: none;
-    }
-    
-    /* Stats Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    
-    .stat-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      padding: 10px 12px;
-    }
-    
-    .stat-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-    
-    .stat-label {
-      font-size: 10px;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    
-    .stat-value {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text0);
-    }
-    
-    /* Badge */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 2px 8px;
-      border-radius: 3px;
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-      font-family: var(--vscode-editor-font-family), Consolas, monospace;
-    }
-    
-    .badge.ship { background: var(--ship-bg); color: var(--ship); border: 1px solid rgba(0,230,138,0.2); }
-    .badge.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid rgba(255,181,71,0.2); }
-    .badge.noship { background: var(--noship-bg); color: var(--noship); border: 1px solid rgba(255,92,106,0.2); }
-    .badge.accent { background: var(--accent-bg); color: var(--accent); border: 1px solid rgba(99,102,241,0.2); }
-    .badge.neutral { background: var(--bg2); color: var(--text2); border: 1px solid var(--border); }
-    
-    /* Status Dot */
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-    
-    .status-dot.ship { background: var(--ship); }
-    .status-dot.warn { background: var(--warn); }
-    .status-dot.noship { background: var(--noship); }
-    .status-dot.blue { background: var(--blue); }
-    .status-dot.pulse { animation: pulse 2s infinite; }
-    
-    /* Buttons */
+    .b.ship { background:var(--green-dim); color:var(--green); border:1px solid var(--green-mid); }
+    .b.warn { background:var(--amber-dim); color:var(--amber); border:1px solid var(--amber-mid); }
+    .b.noship { background:var(--red-dim); color:var(--red); border:1px solid var(--red-mid); }
+    .b.info { background:var(--indigo-dim); color:var(--indigo); border:1px solid var(--indigo-mid); }
+    .b.muted { background:var(--bg-surface); color:var(--text-ghost); border:1px solid var(--border-dim); }
+
+    /* ---- DOT ---- */
+    .dot { width:7px; height:7px; border-radius:50%; display:inline-block; flex-shrink:0; }
+    .dot.green { background:var(--green); }
+    .dot.amber { background:var(--amber); }
+    .dot.red { background:var(--red); }
+    .dot.cyan { background:var(--cyan); }
+    .dot.dim { background:var(--text-ghost); }
+    .dot.pulse { animation:pulse 2s infinite; }
+
+    /* ---- BUTTON ---- */
     .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 100ms cubic-bezier(0.16,1,0.3,1);
-      border: none;
+      display:inline-flex; align-items:center; justify-content:center; gap:5px;
+      padding:7px 14px; border-radius:var(--radius-sm);
+      font-size:11px; font-weight:600; cursor:pointer;
+      transition: all 80ms var(--ease); border:none;
     }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, var(--ship), var(--accent));
-      color: #000;
+    .btn-go {
+      background: var(--green); color:#000;
+      box-shadow: 0 0 12px var(--green-glow), inset 0 1px 0 rgba(255,255,255,.15);
     }
-    
-    .btn-primary:hover {
-      transform: scale(1.02);
-      filter: brightness(1.1);
+    .btn-go:hover { filter:brightness(1.12); transform:scale(1.01); }
+    .btn-sec {
+      background:var(--bg-surface); color:var(--text-primary);
+      border:1px solid var(--border-default);
     }
-    
-    .btn-secondary {
-      background: var(--bg2);
-      color: var(--text0);
-      border: 1px solid var(--border);
+    .btn-sec:hover { background:var(--bg-hover); border-color:var(--border-bright); }
+    .btn-heal {
+      background:var(--amber-dim); color:var(--amber);
+      border:1px solid var(--amber-mid);
     }
-    
-    .btn-secondary:hover {
-      background: var(--bg3);
-      border-color: var(--border-hover);
+    .btn-heal:hover { background:var(--amber-mid); }
+    .btn-sm { padding:3px 8px; font-size:9px; }
+
+    /* ---- ACTION ROW ---- */
+    .ar {
+      display:flex; align-items:center; gap:10px;
+      padding:9px 10px; border-radius:var(--radius-md);
+      border:1px solid var(--border-dim); background:var(--bg-raised);
+      cursor:pointer; transition: border-color 80ms, background 80ms;
+      margin-bottom:4px;
     }
-    
-    .btn-small {
-      padding: 3px 8px;
-      font-size: 9px;
+    .ar:hover { border-color:var(--border-bright); background:var(--bg-hover); }
+    .ar:active { background:var(--bg-active); }
+    .ar-icon { font-size:14px; width:22px; text-align:center; flex-shrink:0; }
+    .ar-body { flex:1; min-width:0; }
+    .ar-label { font-size:12px; font-weight:500; color:var(--text-primary); }
+    .ar-desc { font-size:10px; color:var(--text-ghost); margin-top:1px; }
+    .ar-right { font-size:13px; color:var(--text-ghost); flex-shrink:0; }
+    .ar-kbd {
+      font-size:9px; color:var(--text-ghost); background:var(--bg-base);
+      border:1px solid var(--border-dim); border-radius:3px; padding:1px 5px;
+      flex-shrink:0;
     }
 
-    .btn-warn {
-      background: var(--warn-bg);
-      color: var(--warn);
-      border: 1px solid rgba(255,181,71,0.25);
-    }
+    /* ---- PROGRESS BAR ---- */
+    .pb { width:100%; height:3px; background:var(--bg-active); border-radius:2px; overflow:hidden; }
+    .pb-fill { height:100%; transition: width .8s var(--ease); border-radius:2px; }
 
-    .btn-warn:hover { background: rgba(255,181,71,0.15); }
-
-    /* Action rows */
-    .action-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 10px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: var(--bg2);
-      margin-bottom: 5px;
-      cursor: pointer;
-      transition: border-color 0.1s, background 0.1s;
-    }
-
-    .action-row:hover {
-      border-color: var(--border-hover);
-      background: var(--bg3);
-    }
-
-    .action-row:active { opacity: 0.8; }
-
-    .action-icon {
-      font-size: 14px;
-      width: 22px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-
-    .action-body { flex: 1; min-width: 0; }
-
-    .action-label {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text0);
-      line-height: 1.3;
-    }
-
-    .action-desc {
-      font-size: 10px;
-      color: var(--text3);
-      margin-top: 1px;
-    }
-
-    .action-arrow {
-      font-size: 14px;
-      color: var(--text3);
-      flex-shrink: 0;
-    }
-
-    .action-shortcut {
-      font-size: 9px;
-      font-family: var(--vscode-editor-font-family), Consolas, monospace;
-      color: var(--text3);
-      background: var(--bg0);
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      padding: 1px 5px;
-      flex-shrink: 0;
-    }
-    
-    /* Footer */
-    .footer {
-      position: sticky;
-      bottom: 0;
-      background: var(--bg1);
-      border-top: 1px solid var(--border);
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    
-    .footer-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 10px;
-      color: var(--text3);
-    }
-    
-    /* Animations */
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-    
-    @keyframes ping {
-      0% { transform: scale(1); opacity: 0.6; }
-      100% { transform: scale(2.2); opacity: 0; }
-    }
-    
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .fade-in {
-      animation: fadeIn 120ms cubic-bezier(0.16,1,0.3,1);
-    }
-    
-    /* Empty State */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-    }
-    
-    .empty-state .logo {
-      margin: 0 auto 20px;
-    }
-    
-    .empty-state h2 {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text0);
-      margin-bottom: 8px;
-    }
-    
-    .empty-state p {
-      font-size: 12px;
-      color: var(--text2);
-      margin-bottom: 20px;
-      line-height: 1.6;
-    }
-    
-    .empty-state code {
-      font-family: var(--vscode-editor-font-family), Consolas, monospace;
-      font-size: 11px;
-      background: var(--bg2);
-      padding: 4px 8px;
-      border-radius: 4px;
-      color: var(--text1);
-    }
-    
-    /* Claim expand/collapse */
-    .claim-detail {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 200ms ease;
-    }
-    
-    .claim-detail.show {
-      max-height: 200px;
-    }
-    
-    /* Progress bar */
-    .progress-bar {
-      width: 60px;
-      height: 4px;
-      background: var(--bg1);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-    
-    .progress-fill {
-      height: 100%;
-      transition: width 0.8s cubic-bezier(0.16,1,0.3,1);
-    }
-    
-    /* Input */
+    /* ---- INPUT ---- */
     input[type="text"] {
-      width: 100%;
-      padding: 8px 12px;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text1);
-      font-size: 12px;
-      font-family: inherit;
+      width:100%; padding:7px 10px; background:var(--bg-surface);
+      border:1px solid var(--border-dim); border-radius:var(--radius-sm);
+      color:var(--text-primary); font-size:12px; font-family:inherit;
     }
-    
-    input[type="text"]:focus {
-      outline: none;
-      border-color: var(--border-hover);
+    input[type="text"]:focus { outline:none; border-color:var(--border-bright); }
+    input[type="text"]::placeholder { color:var(--text-ghost); }
+
+    /* ---- FOOTER ---- */
+    .ftr {
+      position:sticky; bottom:0; background:var(--bg-base);
+      border-top:1px solid var(--border-dim);
+      padding:10px 14px; display:flex; align-items:center; justify-content:space-between;
     }
-    
-    input[type="text"]::placeholder {
-      color: var(--text3);
-    }
+    .ftr-status { display:flex; align-items:center; gap:6px; font-size:10px; color:var(--text-ghost); }
+
+    /* ---- EMPTY STATE ---- */
+    .empty { text-align:center; padding:48px 18px; }
+    .empty h2 { font-size:16px; font-weight:700; color:var(--text-primary); margin-bottom:6px; }
+    .empty p { font-size:12px; color:var(--text-tertiary); margin-bottom:16px; line-height:1.6; }
+
+    /* ---- CLAIM ---- */
+    .claim-detail { max-height:0; overflow:hidden; transition:max-height 200ms ease; }
+    .claim-detail.show { max-height:200px; }
+
+    /* ---- GEN GRID ---- */
+    .gen-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; }
+    .gen-grid .btn { font-size:10px; padding:7px 4px; }
+
+    /* ---- UTILITY ---- */
+    .fade { animation: slideUp 140ms var(--ease) both; }
+    .trunc { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .gap-6 > *+* { margin-top:6px; }
+    .gap-4 > *+* { margin-top:4px; }
   </style>
 </head>
 <body>
   <div id="root"></div>
-  
   <script>
-    (function() {
-      const vscode = acquireVsCodeApi();
-      
-      let state = {
-        activeTab: 'overview',
-        data: null, // Will be populated from extension
-        isScanning: false,
-        error: null,
-        expandedClaim: -1,
-        expandedRun: -1,
-        severityFilters: { critical: true, high: true, medium: true, low: true },
-        fileSort: 'verdict',
-        fileFilter: '',
-      };
-      
-      // Message handling
-      window.addEventListener('message', (event) => {
-        const msg = event.data;
-        switch (msg.type) {
-          case 'results':
-            state.data = msg.data;
-            state.isScanning = false;
-            state.error = null;
-            render();
-            break;
-          case 'scanning':
-            state.isScanning = true;
-            render();
-            break;
-          case 'error':
-            state.isScanning = false;
-            state.error = msg.message;
-            render();
-            break;
-        }
-      });
-      
-      // Helpers
-      function verdictColor(v) {
-        if (v === 'SHIP' || v === 'pass') return 'var(--ship)';
-        if (v === 'WARN' || v === 'pending') return 'var(--warn)';
-        if (v === 'NO_SHIP' || v === 'fail') return 'var(--noship)';
-        if (v === 'running') return 'var(--blue)';
-        return 'var(--text3)';
-      }
-      
-      function verdictBadge(v) {
-        if (v === 'SHIP' || v === 'pass') return 'ship';
-        if (v === 'WARN' || v === 'pending') return 'warn';
-        if (v === 'NO_SHIP' || v === 'fail') return 'noship';
-        return 'neutral';
-      }
-      
-      function severityColor(s) {
-        if (s === 'critical') return 'var(--noship)';
-        if (s === 'high') return 'var(--high-sev)';
-        if (s === 'medium') return 'var(--warn)';
-        return 'var(--text3)';
-      }
-      
-      function ringSVG(value, size, color) {
-        const r = (size - 4) / 2;
-        const circ = 2 * Math.PI * r;
-        const offset = circ - (value / 100) * circ;
-        return \`
-          <svg width="\${size}" height="\${size}" style="transform: rotate(-90deg);">
-            <circle cx="\${size/2}" cy="\${size/2}" r="\${r}" fill="none" stroke="var(--bg3)" stroke-width="4" />
-            <circle cx="\${size/2}" cy="\${size/2}" r="\${r}" fill="none" stroke="\${color}" stroke-width="4"
-              stroke-dasharray="\${circ}" stroke-dashoffset="\${offset}" stroke-linecap="round"
-              style="transition: stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1);" />
-          </svg>
-        \`;
-      }
-      
-      function sparklineSVG(data, color, w, h) {
-        const max = Math.max(...data), min = Math.min(...data), range = max - min || 1;
-        const pts = data.map((v, i) => \`\${(i / (data.length - 1)) * w},\${h - ((v - min) / range) * h}\`).join(" ");
-        return \`
-          <svg width="\${w}" height="\${h}">
-            <polyline points="\${pts}" fill="none" stroke="\${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-            <circle cx="\${w}" cy="\${h - ((data[data.length - 1] - min) / range) * h}" r="2" fill="\${color}" />
-          </svg>
-        \`;
-      }
-      
-      // Render engine
-      function render() {
-        const root = document.getElementById('root');
-        root.innerHTML = renderHeader() + renderContent() + renderFooter();
-        attachEventListeners();
-      }
-      
-      function renderHeader() {
-        const data = state.data || {};
-        const workspaceName = data.projectName || 'workspace';
-        const branch = data.branch || 'main';
-        
-        return \`
-          <div class="header">
-            <div class="brand-bar">
-              <div class="brand-left">
-                <div class="logo">⚡</div>
-                <div class="brand-text">
-                  <h1>ShipGate</h1>
-                  <p>\${workspaceName} • \${branch}</p>
-                </div>
-              </div>
-              <div class="header-actions">
-                <button class="icon-btn" data-command="verify">↻</button>
-                <button class="icon-btn" data-command="openDashboard">⊞</button>
-                <button class="icon-btn" data-command="openSettings">⚙</button>
-              </div>
-            </div>
-            <div class="tab-bar">
-              <div class="tab \${state.activeTab === 'overview' ? 'active' : ''}" data-tab="overview">Overview</div>
-              <div class="tab \${state.activeTab === 'claims' ? 'active' : ''}" data-tab="claims">Claims</div>
-              <div class="tab \${state.activeTab === 'actions' ? 'active' : ''}" data-tab="actions">Actions</div>
-              <div class="tab \${state.activeTab === 'findings' ? 'active' : ''}" data-tab="findings">Findings</div>
-              <div class="tab \${state.activeTab === 'files' ? 'active' : ''}" data-tab="files">Files</div>
-            </div>
-          </div>
-        \`;
-      }
-      
-      function renderContent() {
-        if (state.isScanning) {
-          return '<div class="content fade-in">' + renderScanning() + '</div>';
-        }
-        
-        if (state.error) {
-          return '<div class="content fade-in">' + renderError() + '</div>';
-        }
-        
-        if (!state.data) {
-          return '<div class="content fade-in">' + renderEmpty() + '</div>';
-        }
-        
-        let content = '';
-        switch (state.activeTab) {
-          case 'overview': content = renderOverview(); break;
-          case 'claims': content = renderClaims(); break;
-          case 'actions': content = renderActions(); break;
-          case 'findings': content = renderFindings(); break;
-          case 'files': content = renderFiles(); break;
-        }
-        
-        return '<div class="content fade-in">' + content + '</div>';
-      }
-      
-      function renderFooter() {
-        const statusText = state.isScanning ? 'Scanning...' : 'Last scan: 12s ago';
-        const statusDot = state.isScanning ? 'blue pulse' : '';
-        
-        return \`
-          <div class="footer">
-            <div class="footer-status">
-              <span class="status-dot \${statusDot}"></span>
-              <span>\${statusText}</span>
-            </div>
-            <button class="btn btn-primary" id="btn-verify">▶ Verify</button>
-          </div>
-        \`;
-      }
-      
-      function renderEmpty() {
-        return \`
-          <div class="empty-state">
-            <div class="logo">⚡</div>
-            <h2>Welcome to ShipGate</h2>
-            <p>Behavioral verification for AI-generated code.<br/>Get started in seconds.</p>
-            <div style="text-align:left;max-width:240px;margin:16px auto 0;">
-              <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;">
-                <span style="width:20px;height:20px;border-radius:50%;background:var(--accent-bg);border:1px solid rgba(99,102,241,0.15);color:var(--accent);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</span>
-                <span style="font-size:11px;color:var(--text1);line-height:1.4;"><strong style="color:var(--text0);">Initialize</strong> — Detect your project &amp; generate ISL specs</span>
-              </div>
-              <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;">
-                <span style="width:20px;height:20px;border-radius:50%;background:var(--accent-bg);border:1px solid rgba(99,102,241,0.15);color:var(--accent);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</span>
-                <span style="font-size:11px;color:var(--text1);line-height:1.4;"><strong style="color:var(--text0);">Verify</strong> — Check code against behavioral contracts</span>
-              </div>
-              <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;">
-                <span style="width:20px;height:20px;border-radius:50%;background:var(--accent-bg);border:1px solid rgba(99,102,241,0.15);color:var(--accent);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</span>
-                <span style="font-size:11px;color:var(--text1);line-height:1.4;"><strong style="color:var(--text0);">Ship</strong> — Get a SHIP / NO_SHIP verdict with evidence</span>
-              </div>
-            </div>
-            <button class="btn btn-primary" data-command="goCommand" style="box-shadow:0 0 12px rgba(0,230,138,0.15);">▶ shipgate go</button>
-            <p style="margin-top: 10px;font-size:10px;color:var(--text3);">Or press <kbd style="padding:1px 4px;border-radius:3px;background:var(--bg2);border:1px solid var(--border);font-family:var(--vscode-editor-font-family,monospace);font-size:9px;">⌘⇧↵</kbd></p>
-          </div>
-        \`;
-      }
-      
-      function renderScanning() {
-        return \`
-          <div class="empty-state">
-            <div class="logo">⚡</div>
-            <h2>Verifying...</h2>
-            <p>Scanning 263 files for verification</p>
-            <div style="width: 200px; height: 4px; background: var(--bg2); border-radius: 2px; margin: 20px auto; overflow: hidden;">
-              <div style="width: 60%; height: 100%; background: var(--ship); animation: shimmer 1.5s infinite;"></div>
-            </div>
-          </div>
-        \`;
-      }
-      
-      function renderError() {
-        return \`
-          <div class="empty-state">
-            <h2>Scan Error</h2>
-            <p style="color: var(--noship);">\${state.error || 'Unknown error occurred'}</p>
-            <button class="btn btn-secondary" data-command="verify">Retry</button>
-          </div>
-        \`;
-      }
-      
-      function renderOverview() {
-        const data = state.data || {};
-        const verdict = data.verdict || 'UNKNOWN';
-        const score = data.score || 0;
-        const verdictClass = verdict.toLowerCase().replace('_', '');
-        const verdictColorValue = verdictColor(verdict);
-        
-        // Calculate real stats from data
-        const totalFiles = data.files ? data.files.length : 0;
-        const passFiles = data.files ? data.files.filter(f => f.status === 'PASS').length : 0;
-        const failFiles = data.files ? data.files.filter(f => f.status === 'FAIL').length : 0;
-        const warnFiles = data.files ? data.files.filter(f => f.status === 'WARN').length : 0;
-        const totalViolations = data.files ? data.files.reduce((sum, f) => sum + (f.blockers?.length || 0) + (f.errors?.length || 0), 0) : 0;
-        const coveragePct = data.coverage ? Math.round((data.coverage.specced / data.coverage.total) * 100) : 0;
-        
-        return \`
-          <div class="section">
-            <div class="verdict-card card \${verdictClass}">
-              <div class="verdict-content">
-                <div class="verdict-ring">
-                  \${ringSVG(score, 56, verdictColorValue)}
-                  <div style="position: absolute; top: 50%; left: 28px; transform: translate(-50%, -50%); font-size: 16px; font-weight: 700; color: \${verdictColorValue}; font-family: var(--vscode-editor-font-family), Consolas, monospace;">\${score}</div>
-                </div>
-                <div class="verdict-info">
-                  <h2 style="color: \${verdictColorValue};">\${verdict}</h2>
-                  <p>\${passFiles} passed • \${failFiles} failed • \${warnFiles} warnings</p>
-                </div>
-              </div>
-              <div class="verdict-glow" style="background: \${verdictColorValue};"></div>
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="stats-grid">
-              <div class="stat-card">
-                <div class="stat-header">
-                  <span class="stat-label">Pass/Total</span>
-                </div>
-                <div class="stat-value mono">\${passFiles}/\${totalFiles}</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-header">
-                  <span class="stat-label">Coverage</span>
-                </div>
-                <div class="stat-value mono">\${coveragePct}%</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-header">
-                  <span class="stat-label">Files</span>
-                </div>
-                <div class="stat-value mono">\${totalFiles}</div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-header">
-                  <span class="stat-label">Issues</span>
-                </div>
-                <div class="stat-value mono">\${totalViolations}</div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="card" style="padding: 10px 12px; cursor: pointer;" id="pipeline-mini">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                <span class="status-dot blue pulse"></span>
-                <span style="flex: 1; font-size: 12px; color: var(--text1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">feat: add payment flow</span>
-                <span class="badge accent">PR</span>
-              </div>
-              <div style="display: flex; gap: 4px; margin-bottom: 8px;">
-                <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--ship);"></div>
-                <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--blue); animation: pulse 2s infinite;"></div>
-                <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--bg3);"></div>
-                <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--bg3);"></div>
-                <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--bg3);"></div>
-              </div>
-              <div style="font-size: 10px; color: var(--blue);">shipgate verify • <span class="mono">31s</span></div>
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="section-title">Findings Preview</div>
-            <div class="card" style="padding: 8px 12px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-size: 11px; font-weight: 600; color: var(--text0);">Active</span>
-                <span class="badge noship">\${totalViolations}</span>
-              </div>
-              \${totalViolations > 0 ? '<div style="display: flex; flex-direction: column; gap: 6px;">' + data.files.filter(f => (f.blockers?.length || 0) + (f.errors?.length || 0) > 0).slice(0, 3).map(f => { const issues = [...(f.blockers || []), ...(f.errors || [])]; const firstIssue = issues[0] || 'Unknown issue'; const dotColor = f.status === 'FAIL' ? 'noship' : 'warn'; return '<div style="display: flex; gap: 8px; cursor: pointer;" data-file="' + f.file + '" data-line="1"><span class="status-dot ' + dotColor + '" style="margin-top: 2px;"></span><div style="flex: 1;"><div style="font-size: 11px; color: var(--text1);">' + firstIssue.substring(0, 50) + '</div><div class="mono" style="font-size: 9px; color: var(--text3);">' + f.file + '</div></div></div>'; }).join('') + '</div>' : '<p style="font-size: 11px; color: var(--ship); text-align: center;">✓ No issues found</p>'}
-              <div style="margin-top: 10px; text-align: center;">
-                <a href="#" style="font-size: 10px; color: var(--accent); text-decoration: none;" id="link-findings">View all findings →</a>
-              </div>
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="section-title">Compliance</div>
-            <div class="card">
-              <div style="display: flex; gap: 6px;">
-                <div style="flex: 1; text-align: center; background: var(--bg1); border: 1px solid var(--border); border-radius: 5px; padding: 6px 8px;">
-                  <div class="mono" style="font-size: 14px; font-weight: 700; color: var(--ship);">83%</div>
-                  <div style="font-size: 9px; color: var(--text3);">SOC 2</div>
-                </div>
-                <div style="flex: 1; text-align: center; background: var(--bg1); border: 1px solid var(--border); border-radius: 5px; padding: 6px 8px;">
-                  <div class="mono" style="font-size: 14px; font-weight: 700; color: var(--warn);">71%</div>
-                  <div style="font-size: 9px; color: var(--text3);">HIPAA</div>
-                </div>
-                <div style="flex: 1; text-align: center; background: var(--bg1); border: 1px solid var(--border); border-radius: 5px; padding: 6px 8px;">
-                  <div class="mono" style="font-size: 14px; font-weight: 700; color: var(--warn);">67%</div>
-                  <div style="font-size: 9px; color: var(--text3);">EU AI</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="section-title">AI Provenance</div>
-            <div class="card">
-              <div style="display: flex; flex-direction: column; gap: 8px;">
-                \${['AI-Generated|67|var(--accent)', 'Human|17|var(--ship)', 'AI-Assisted|11|var(--warn)', 'Unknown|5|var(--text3)'].map(row => {
-                  const [label, pct, color] = row.split('|');
-                  return '<div style="display: flex; align-items: center; gap: 10px;">' +
-                    '<div style="width: 8px; height: 8px; border-radius: 2px; background: ' + color + ';"></div>' +
-                    '<span style="flex: 1; font-size: 11px; color: var(--text2);">' + label + '</span>' +
-                    '<div class="progress-bar">' +
-                    '<div class="progress-fill" style="width: ' + pct + '%; background: ' + color + ';"></div>' +
-                    '</div>' +
-                    '<span class="mono" style="font-size: 10px; color: var(--text3); width: 28px; text-align: right;">' + pct + '%</span>' +
-                    '</div>';
-                }).join('')}
-              </div>
-            </div>
-          </div>
-          
-          <div class="section">
-            <div class="section-title">Proof Bundle Preview</div>
-            <div class="card" style="padding: 10px 12px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-size: 10px; color: var(--text3); text-transform: uppercase;">Latest Bundle</span>
-                <span class="mono" style="font-size: 9px; color: var(--text3);">a1b2c3d</span>
-              </div>
-              <div class="mono" style="font-size: 10px; line-height: 1.6;">
-                <div style="color: var(--ship);">✓ Import Integrity ···· PROVEN</div>
-                <div style="color: var(--warn);">◐ Type Safety ········ 94%</div>
-              </div>
-              <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <span class="mono" style="font-size: 9px; color: var(--text3);">HMAC: 7f3a...c821</span>
-                <a href="#" style="font-size: 10px; color: var(--accent); text-decoration: none;" data-command="viewProofBundle">View full →</a>
-              </div>
-            </div>
-          </div>
-        \`;
-      }
-      
-      function renderClaims() {
-        const claims = [
-          { name: 'Import Integrity', status: 'PROVEN', confidence: 100, evidence: '847/847 imports resolve. 0 hallucinated packages.', control: 'CC7.1' },
-          { name: 'Auth Coverage', status: 'PROVEN', confidence: 100, evidence: '23/23 protected routes have auth middleware.', control: 'CC6.1' },
-          { name: 'Input Validation', status: 'PROVEN', confidence: 100, evidence: '19/19 endpoints validate with Zod.', control: 'CC6.6' },
-          { name: 'SQL Injection', status: 'PROVEN', confidence: 98, evidence: '0 raw SQL. All queries via Prisma ORM.', control: 'CC6.6' },
-          { name: 'Secret Exposure', status: 'PROVEN', confidence: 100, evidence: '0 hardcoded secrets. .env in .gitignore.', control: 'CC6.7' },
-          { name: 'Type Safety', status: 'PARTIAL', confidence: 94, evidence: '247/263 functions typed. 16 implicit any.', control: 'CC8.1' },
-          { name: 'Error Handling', status: 'PARTIAL', confidence: 87, evidence: '20/23 handlers have boundaries. 3 missing.', control: 'CC7.4' },
-          { name: 'AI Hallucinations', status: 'PROVEN', confidence: 96, evidence: '0 phantom endpoints. 0 ghost APIs detected.', control: 'CC7.1' }
-        ];
-        
-        return \`
-          <div class="section">
-            \${claims.map((claim, idx) => {
-              const isProven = claim.status === 'PROVEN';
-              const color = isProven ? 'var(--ship)' : 'var(--warn)';
-              const icon = isProven ? '✓' : '◐';
-              const isExpanded = state.expandedClaim === idx;
-              
-              return '<div class="card" style="margin-bottom: 8px; cursor: pointer;" data-claim="' + idx + '">' +
-                '<div style="display: flex; align-items: center; gap: 12px;">' +
-                '<div style="width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; background: ' + color + '12; color: ' + color + '; border: 1px solid ' + color + '25;">' +
-                icon +
+  (function(){
+    var vsc = acquireVsCodeApi();
+    var S = {
+      tab: 'overview',
+      data: null,
+      scanning: false,
+      err: null,
+      expandClaim: -1,
+      fileSort: 'verdict',
+      fileQ: '',
+      sevFilter: { critical:true, high:true, medium:true, low:true },
+    };
+
+    window.addEventListener('message', function(e){
+      var m = e.data;
+      if (m.type === 'results') { S.data = m.data; S.scanning = false; S.err = null; }
+      if (m.type === 'scanning') { S.scanning = true; }
+      if (m.type === 'error') { S.scanning = false; S.err = m.message; }
+      draw();
+    });
+
+    function vc(v) {
+      if (v==='SHIP'||v==='PASS'||v==='pass') return 'var(--green)';
+      if (v==='WARN'||v==='pending') return 'var(--amber)';
+      if (v==='NO_SHIP'||v==='FAIL'||v==='fail') return 'var(--red)';
+      if (v==='running') return 'var(--cyan)';
+      return 'var(--text-ghost)';
+    }
+    function vb(v) {
+      if (v==='SHIP'||v==='PASS') return 'ship';
+      if (v==='WARN') return 'warn';
+      if (v==='NO_SHIP'||v==='FAIL') return 'noship';
+      return 'muted';
+    }
+    function sc(s) {
+      if (s==='critical') return 'var(--red)';
+      if (s==='high') return 'var(--amber)';
+      if (s==='medium') return 'var(--amber)';
+      return 'var(--text-ghost)';
+    }
+
+    function ring(val, sz, col) {
+      var r = (sz-6)/2, circ = 2*Math.PI*r;
+      var off = circ - (val/100)*circ;
+      return '<svg width="'+sz+'" height="'+sz+'" style="transform:rotate(-90deg);display:block;">' +
+        '<circle cx="'+sz/2+'" cy="'+sz/2+'" r="'+r+'" fill="none" stroke="var(--bg-active)" stroke-width="4"/>' +
+        '<circle cx="'+sz/2+'" cy="'+sz/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="4" ' +
+        'stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'" stroke-linecap="round" ' +
+        'style="--ring-circ:'+circ+';--ring-offset:'+off+';animation:ringDraw .8s var(--ease) both;"/>' +
+        '</svg>';
+    }
+
+    function draw() {
+      document.getElementById('root').innerHTML = hdr() + content() + ftr();
+      bind();
+    }
+
+    function hdr() {
+      var d = S.data || {};
+      var name = d.projectName || 'workspace';
+      var branch = d.branch || 'main';
+      return '<div class="hdr">' +
+        '<div class="hdr-bar">' +
+          '<div class="hdr-brand">' +
+            '<div class="hdr-logo">SG</div>' +
+            '<div><div class="hdr-title">ShipGate</div><div class="hdr-sub">' + name + ' / ' + branch + '</div></div>' +
+          '</div>' +
+          '<div class="hdr-btns">' +
+            '<button class="ib" data-cmd="verify" title="Re-scan">&#x21bb;</button>' +
+            '<button class="ib" data-cmd="openSettings" title="Settings">&#x2699;</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="tabs">' +
+          tab('overview','Overview') + tab('actions','Actions') + tab('findings','Findings') + tab('files','Files') +
+        '</div>' +
+      '</div>';
+    }
+    function tab(id,label) {
+      return '<div class="tab'+(S.tab===id?' on':'')+'" data-tab="'+id+'">'+label+'</div>';
+    }
+
+    function content() {
+      if (S.scanning) return '<div class="body fade">' + scanningView() + '</div>';
+      if (S.err && S.tab !== 'actions') return '<div class="body fade">' + errorView() + '</div>';
+      var c = '';
+      if (S.tab==='overview') c = S.data ? overviewView() : emptyView();
+      else if (S.tab==='actions') c = actionsView();
+      else if (S.tab==='findings') c = S.data ? findingsView() : noDataView('Findings', 'Run a scan to see verification findings');
+      else if (S.tab==='files') c = S.data ? filesView() : noDataView('Files', 'Run a scan to see per-file results');
+      return '<div class="body fade">' + c + '</div>';
+    }
+
+    function ftr() {
+      var txt = S.scanning ? 'Scanning...' : (S.data ? 'Last scan: '+timeSince(S.data.timestamp) : 'Ready');
+      var dot = S.scanning ? 'cyan pulse' : (S.data ? 'green' : 'dim');
+      return '<div class="ftr">' +
+        '<div class="ftr-status"><span class="dot '+dot+'"></span><span>'+txt+'</span></div>' +
+        '<button class="btn btn-go" id="btn-go">'+(S.scanning?'...':'&#9654; Verify')+'</button>' +
+      '</div>';
+    }
+
+    function timeSince(ts) {
+      if (!ts) return 'never';
+      var s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+      if (s < 5) return 'just now';
+      if (s < 60) return s + 's ago';
+      if (s < 3600) return Math.floor(s/60) + 'm ago';
+      return Math.floor(s/3600) + 'h ago';
+    }
+
+    /* ---- EMPTY ---- */
+    function emptyView() {
+      return '<div class="empty">' +
+        '<div class="hdr-logo" style="width:40px;height:40px;font-size:18px;margin:0 auto 16px;border-radius:10px;">SG</div>' +
+        '<h2>ShipGate</h2>' +
+        '<p>Behavioral verification for AI-generated code.<br>Scan, verify, and ship with confidence.</p>' +
+        '<div style="text-align:left;max-width:220px;margin:0 auto 18px;" class="gap-6">' +
+          step(1,'Initialize','Detect project & generate ISL specs') +
+          step(2,'Verify','Check code against behavioral contracts') +
+          step(3,'Ship','SHIP / NO_SHIP verdict with evidence') +
+        '</div>' +
+        '<button class="btn btn-go" data-cmd="goCommand" style="font-size:12px;padding:9px 20px;">&#9654; shipgate go</button>' +
+        '<div style="margin-top:10px;font-size:10px;color:var(--text-ghost);"><kbd class="ar-kbd">&#8984;&#8679;&#8629;</kbd></div>' +
+      '</div>';
+    }
+    function step(n,title,desc) {
+      return '<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;">' +
+        '<span style="width:18px;height:18px;border-radius:50%;background:var(--indigo-dim);border:1px solid var(--indigo-mid);color:var(--indigo);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+n+'</span>' +
+        '<span style="font-size:11px;color:var(--text-secondary);line-height:1.4;"><strong style="color:var(--text-primary);">'+title+'</strong> &mdash; '+desc+'</span>' +
+      '</div>';
+    }
+
+    function scanningView() {
+      return '<div class="empty">' +
+        '<div style="width:28px;height:28px;border:3px solid var(--border-default);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 18px;"></div>' +
+        '<h2>Verifying</h2>' +
+        '<p>Scanning files against behavioral contracts</p>' +
+        '<div class="pb" style="width:180px;margin:0 auto;"><div class="pb-fill" style="width:65%;background:var(--green);animation:shimmer 1.5s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,var(--green) 25%,var(--green-glow) 50%,var(--green) 75%);"></div></div>' +
+      '</div>';
+    }
+
+    function errorView() {
+      return '<div class="empty">' +
+        '<h2 style="color:var(--red);">Scan Error</h2>' +
+        '<p style="color:var(--red);">'+(S.err||'Unknown error')+'</p>' +
+        '<button class="btn btn-sec" data-cmd="verify">Retry</button>' +
+      '</div>';
+    }
+
+    function noDataView(title, desc) {
+      return '<div class="empty">' +
+        '<div style="font-size:22px;margin-bottom:10px;opacity:.35;">&#9638;</div>' +
+        '<h2>' + title + '</h2>' +
+        '<p>' + desc + '</p>' +
+        '<button class="btn btn-go" data-cmd="verify" style="margin-top:14px;font-size:11px;padding:8px 18px;">&#9654; Run Scan</button>' +
+      '</div>';
+    }
+
+    /* ---- OVERVIEW ---- */
+    function overviewView() {
+      var d = S.data, v = d.verdict||'UNKNOWN', sc = d.score||0;
+      var cls = v==='SHIP'?'ship':v==='WARN'?'warn':'noship';
+      var col = vc(v);
+      var files = d.files||[];
+      var total = files.length;
+      var pass = files.filter(function(f){return f.status==='PASS'}).length;
+      var fail = files.filter(function(f){return f.status==='FAIL'}).length;
+      var warns = files.filter(function(f){return f.status==='WARN'}).length;
+      var issues = files.reduce(function(s,f){return s+(f.blockers?f.blockers.length:0)+(f.errors?f.errors.length:0)},0);
+      var covPct = d.coverage&&d.coverage.total ? Math.round((d.coverage.specced/d.coverage.total)*100) : 0;
+      var dur = d.duration ? (d.duration < 1000 ? d.duration+'ms' : (d.duration/1000).toFixed(1)+'s') : '--';
+
+      var o = '';
+
+      // Verdict card
+      o += '<div class="sect">' +
+        '<div class="c vc '+cls+'">' +
+          '<div class="vc-row">' +
+            '<div class="vc-ring">' + ring(sc,56,col) +
+              '<div class="vc-score mono" style="color:'+col+';">'+sc+'</div>' +
+            '</div>' +
+            '<div>' +
+              '<h2 style="color:'+col+';">'+v+'</h2>' +
+              '<p>'+pass+' passed &middot; '+fail+' failed &middot; '+warns+' warnings</p>' +
+            '</div>' +
+          '</div>' +
+          '<div class="vc-glow" style="background:'+col+';"></div>' +
+        '</div>' +
+      '</div>';
+
+      // Stats
+      o += '<div class="sect"><div class="sg">' +
+        statCard('Pass Rate', pass+'/'+total) +
+        statCard('Coverage', covPct+'%') +
+        statCard('Files', total.toString()) +
+        statCard('Issues', issues.toString()) +
+      '</div></div>';
+
+      // Duration
+      o += '<div class="sect"><div class="c" style="padding:8px 12px;display:flex;align-items:center;justify-content:space-between;">' +
+        '<span style="font-size:10px;color:var(--text-ghost);text-transform:uppercase;letter-spacing:.04em;">Duration</span>' +
+        '<span class="mono" style="font-size:13px;font-weight:700;color:var(--text-primary);">'+dur+'</span>' +
+      '</div></div>';
+
+      // Findings preview
+      if (issues > 0) {
+        o += '<div class="sect"><div class="sect-lbl">Top Issues</div>';
+        var shown = 0;
+        for (var i=0;i<files.length&&shown<3;i++) {
+          var f = files[i];
+          var all = (f.blockers||[]).concat(f.errors||[]);
+          for (var j=0;j<all.length&&shown<3;j++) {
+            var dotCls = f.status==='FAIL'?'red':'amber';
+            o += '<div class="c" style="padding:8px 10px;cursor:pointer;margin-bottom:4px;" data-file="'+f.file+'" data-line="1">' +
+              '<div style="display:flex;gap:8px;align-items:flex-start;">' +
+                '<span class="dot '+dotCls+'" style="margin-top:3px;"></span>' +
+                '<div style="flex:1;min-width:0;">' +
+                  '<div style="font-size:11px;color:var(--text-secondary);line-height:1.3;" class="trunc">'+esc(all[j])+'</div>' +
+                  '<div class="mono" style="font-size:9px;color:var(--text-ghost);margin-top:2px;">'+f.file+'</div>' +
                 '</div>' +
-                '<div style="flex: 1;">' +
-                '<div class="mono" style="font-size: 13px; color: var(--text1);">' + claim.name + '</div>' +
-                '</div>' +
-                '<div class="mono" style="font-size: 11px; color: var(--text3);">' + claim.confidence + '%</div>' +
-                '<div style="font-size: 10px; color: var(--text3); transform: rotate(' + (isExpanded ? 180 : 0) + 'deg); transition: transform 200ms;">▾</div>' +
-                '</div>' +
-                '<div class="claim-detail ' + (isExpanded ? 'show' : '') + '" style="padding-left: 44px; margin-top: 8px;">' +
-                '<p style="font-size: 12px; color: var(--text2); line-height: 1.6; margin-bottom: 8px;">' + claim.evidence + '</p>' +
-                '<div class="badge accent">SOC 2 — ' + claim.control + '</div>' +
-                '</div>' +
-                '</div>';
-            }).join('')}
-          </div>
-        \`;
-      }
-      
-      function renderActions() {
-        var heroHtml = \`
-          <div style="background:linear-gradient(145deg,rgba(0,230,138,0.04),rgba(99,102,241,0.04));border:1px solid rgba(0,230,138,0.08);border-radius:14px;padding:22px 18px 20px;margin-bottom:16px;text-align:center;position:relative;overflow:hidden;">
-            <div style="font-size:28px;margin-bottom:10px;">⚡</div>
-            <div style="font-size:16px;font-weight:800;color:var(--text0);margin-bottom:4px;letter-spacing:-0.4px;">Ship with confidence</div>
-            <div style="font-size:11px;color:var(--text2);margin-bottom:16px;line-height:1.5;max-width:220px;margin-left:auto;margin-right:auto;">Scan, infer ISL specs, verify, and gate — in one command.</div>
-            <button class="btn btn-primary" data-command="goCommand" style="box-shadow:0 0 16px rgba(0,230,138,0.2);font-size:12px;font-weight:700;letter-spacing:0.2px;">▶ shipgate go</button>
-            <div style="margin-top:10px;font-size:10px;color:var(--text3);">
-              <kbd style="padding:1px 4px;border-radius:3px;background:var(--bg2);border:1px solid var(--border);font-size:9px;">⌘</kbd>
-              <kbd style="padding:1px 4px;border-radius:3px;background:var(--bg2);border:1px solid var(--border);font-size:9px;">⇧</kbd>
-              <kbd style="padding:1px 4px;border-radius:3px;background:var(--bg2);border:1px solid var(--border);font-size:9px;">↵</kbd>
-            </div>
-          </div>
-        \`;
-
-        const groups = [
-          {
-            label: 'Workflows',
-            items: [
-              { icon: '✦', label: 'Vibe → Ship', desc: 'English → ISL → verified code', cmd: 'vibeGenerate', color: 'var(--accent)', shortcut: '⌘⇧V' },
-              { icon: '⚡', label: 'Go + Auto-Heal', desc: 'Scan, then auto-fix violations', cmd: 'goFix', color: 'var(--ship)', shortcut: '' },
-              { icon: '◎', label: 'Deep Scan', desc: 'Thorough analysis, higher coverage', cmd: 'goDeep', color: 'var(--blue)', shortcut: '' },
-            ],
-          },
-          {
-            label: 'Analyze',
-            items: [
-              { icon: '▶', label: 'Quick Scan', desc: 'Scan & gate verdict', cmd: 'scanProject', color: 'var(--blue)', shortcut: '' },
-              { icon: '◈', label: 'Infer ISL Specs', desc: 'AI-generate specs from code', cmd: 'inferSpecs', color: '#a78bfa', shortcut: '' },
-              { icon: '⚡', label: 'Heal All', desc: 'Auto-fix violations across project', cmd: 'autofixAll', color: 'var(--warn)', shortcut: '' },
-            ],
-          },
-          {
-            label: 'Verification',
-            items: [
-              { icon: '▶', label: 'Verify Workspace', desc: 'Full scan of all files', cmd: 'verify', color: 'var(--ship)', shortcut: '' },
-              { icon: '▶', label: 'Verify Current File', desc: 'Scan the active editor', cmd: 'verifyFile', color: 'var(--ship)', shortcut: '' },
-              { icon: '⚑', label: 'Ship Check', desc: 'CI gate — SHIP or block', cmd: 'ship', color: 'var(--accent)', shortcut: '' },
-            ],
-          },
-          {
-            label: 'Spec Tools',
-            items: [
-              { icon: '✎', label: 'Code → ISL', desc: 'Generate spec from current file', cmd: 'codeToIsl', color: '#60a5fa', shortcut: '' },
-              { icon: '✎', label: 'Generate ISL Spec', desc: 'Scaffold spec from source', cmd: 'genSpec', color: 'var(--accent)', shortcut: '' },
-              { icon: '⟳', label: 'Format & Lint', desc: 'Auto-format all .isl files', cmd: 'fmtSpecs', color: 'var(--ship)', shortcut: '' },
-              { icon: '✦', label: 'Lint ISL Specs', desc: 'Check .isl files for errors', cmd: 'lintSpecs', color: 'var(--blue)', shortcut: '' },
-            ],
-          },
-          {
-            label: 'Analysis & Compliance',
-            items: [
-              { icon: '◎', label: 'Trust Score', desc: 'Detailed trust breakdown', cmd: 'trustScore', color: 'var(--ship)', shortcut: '' },
-              { icon: '◈', label: 'Coverage Report', desc: 'Spec coverage % per file', cmd: 'coverage', color: 'var(--blue)', shortcut: '' },
-              { icon: '⊿', label: 'Drift Detection', desc: 'Code vs spec divergence', cmd: 'drift', color: 'var(--warn)', shortcut: '' },
-              { icon: '⚠', label: 'Security Report', desc: 'Secrets, auth, injection scan', cmd: 'securityReport', color: 'var(--noship)', shortcut: '' },
-              { icon: '🛡', label: 'SOC 2 Audit', desc: 'Full SOC 2 compliance check', cmd: 'compliance', color: 'var(--ship)', shortcut: '' },
-              { icon: '📋', label: 'Policy Check', desc: 'Validate against team policies', cmd: 'policyCheck', color: 'var(--accent)', shortcut: '' },
-            ],
-          },
-          {
-            label: 'Advanced',
-            items: [
-              { icon: '⟁', label: 'Chaos Test', desc: 'Inject faults and observe', cmd: 'chaosTest', color: 'var(--noship)', shortcut: '' },
-              { icon: '◷', label: 'Simulate Behavior', desc: 'Run ISL scenario simulations', cmd: 'simulate', color: 'var(--blue)', shortcut: '' },
-              { icon: '⬡', label: 'Property-Based Tests', desc: 'Generate and run PBT suite', cmd: 'pbt', color: 'var(--accent)', shortcut: '' },
-              { icon: '⬡', label: 'View Proof Bundle', desc: 'Browse attestation & evidence', cmd: 'viewProofBundle', color: 'var(--ship)', shortcut: '' },
-            ],
-          },
-        ];
-
-        var genGridHtml = \`
-          <div class="section">
-            <div class="section-title">Generate from ISL</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;">
-              <button class="btn" data-command="genTypescript" style="font-size:10px;padding:8px 4px;text-align:center;">TS</button>
-              <button class="btn" data-command="genPython" style="font-size:10px;padding:8px 4px;text-align:center;">Python</button>
-              <button class="btn" data-command="genRust" style="font-size:10px;padding:8px 4px;text-align:center;">Rust</button>
-              <button class="btn" data-command="genGo" style="font-size:10px;padding:8px 4px;text-align:center;">Go</button>
-              <button class="btn" data-command="genGraphql" style="font-size:10px;padding:8px 4px;text-align:center;">GQL</button>
-              <button class="btn" data-command="genOpenapi" style="font-size:10px;padding:8px 4px;text-align:center;">OpenAPI</button>
-            </div>
-          </div>
-        \`;
-
-        var groupsHtml = groups.map(g => \`
-          <div class="section">
-            <div class="section-title">\${g.label}</div>
-            \${g.items.map(item => \`
-              <div class="action-row" data-command="\${item.cmd}">
-                <div class="action-icon" style="color: \${item.color};">\${item.icon}</div>
-                <div class="action-body">
-                  <div class="action-label">\${item.label}</div>
-                  <div class="action-desc">\${item.desc}</div>
-                </div>
-                \${item.shortcut ? \`<div class="action-shortcut">\${item.shortcut}</div>\` : '<div class="action-arrow">\u203a</div>'}
-              </div>
-            \`).join('')}
-          </div>
-        \`).join('');
-
-        var allGroupsHtml = groups.slice(0, 2).map(renderGroup).join('') +
-          genGridHtml +
-          groups.slice(2).map(renderGroup).join('');
-
-        function renderGroup(g) {
-          return \`<div class="section">
-            <div class="section-title">\${g.label}</div>
-            \${g.items.map(item => \`
-              <div class="action-row" data-command="\${item.cmd}">
-                <div class="action-icon" style="color: \${item.color};">\${item.icon}</div>
-                <div class="action-body">
-                  <div class="action-label">\${item.label}</div>
-                  <div class="action-desc">\${item.desc}</div>
-                </div>
-                \${item.shortcut ? \`<div class="action-shortcut">\${item.shortcut}</div>\` : '<div class="action-arrow">\u203a</div>'}
-              </div>
-            \`).join('')}
-          </div>\`;
+              '</div>' +
+            '</div>';
+            shown++;
+          }
         }
-
-        return heroHtml + allGroupsHtml;
+        o += '<div style="text-align:center;margin-top:6px;"><a href="#" style="font-size:10px;color:var(--indigo);text-decoration:none;" id="link-findings">View all '+issues+' findings &#8594;</a></div></div>';
       }
 
-      function renderFindings() {
-        const data = state.data || {};
-        
-        // Extract all findings from files
-        const findings = [];
-        if (data.files) {
-          data.files.forEach(f => {
-            if (f.blockers) {
-              f.blockers.forEach(msg => {
-                findings.push({
-                  severity: f.status === 'FAIL' ? 'high' : 'medium',
-                  message: msg,
-                  file: f.file,
-                  line: 1,
-                  engine: f.mode || 'shipgate',
-                  fixable: false
-                });
-              });
-            }
-            if (f.errors) {
-              f.errors.forEach(msg => {
-                findings.push({
-                  severity: 'critical',
-                  message: msg,
-                  file: f.file,
-                  line: 1,
-                  engine: f.mode || 'shipgate',
-                  fixable: false
-                });
-              });
-            }
+      // Quick actions
+      o += '<div class="sect"><div class="sect-lbl">Quick Actions</div>' +
+        '<div style="display:flex;gap:6px;">' +
+          '<button class="btn btn-sec" data-cmd="verify" style="flex:1;font-size:10px;">&#9654; Re-scan</button>' +
+          (issues>0 ? '<button class="btn btn-heal" data-cmd="autofixAll" style="flex:1;font-size:10px;">&#9889; Heal All</button>' : '') +
+          '<button class="btn btn-sec" data-cmd="viewProofBundle" style="flex:1;font-size:10px;">&#9638; Proof</button>' +
+        '</div></div>';
+
+      return o;
+    }
+
+    function statCard(lbl,val) {
+      return '<div class="sc"><div class="sc-lbl">'+lbl+'</div><div class="sc-val mono">'+val+'</div></div>';
+    }
+
+    /* ---- ACTIONS ---- */
+    function actionsView() {
+      var o = '';
+
+      // Hero
+      o += '<div style="background:linear-gradient(145deg,var(--green-dim),var(--indigo-dim));border:1px solid var(--green-mid);border-radius:var(--radius-lg);padding:20px 16px;text-align:center;margin-bottom:14px;position:relative;overflow:hidden;">' +
+        '<div class="hdr-logo" style="width:36px;height:36px;font-size:16px;margin:0 auto 10px;border-radius:8px;">SG</div>' +
+        '<div style="font-size:15px;font-weight:800;color:var(--text-primary);letter-spacing:-.3px;">Ship with confidence</div>' +
+        '<div style="font-size:11px;color:var(--text-tertiary);margin:4px 0 14px;max-width:200px;margin-left:auto;margin-right:auto;">Scan, infer specs, verify, and gate&mdash;one command.</div>' +
+        '<button class="btn btn-go" data-cmd="goCommand" style="font-size:12px;padding:8px 22px;">&#9654; shipgate go</button>' +
+        '<div style="margin-top:8px;"><kbd class="ar-kbd">&#8984;&#8679;&#8629;</kbd></div>' +
+      '</div>';
+
+      var groups = [
+        { label: 'Workflows', items: [
+          { icon:'\u2726', label:'Vibe &rarr; Ship', desc:'English &rarr; ISL &rarr; verified code', cmd:'vibeGenerate', col:'var(--indigo)', kbd:'\u2318\u21e7V' },
+          { icon:'\u26a1', label:'Go + Auto-Heal', desc:'Scan then auto-fix violations', cmd:'goFix', col:'var(--green)' },
+          { icon:'\u25ce', label:'Deep Scan', desc:'Thorough analysis, higher coverage', cmd:'goDeep', col:'var(--cyan)' },
+        ]},
+        { label: 'Analyze', items: [
+          { icon:'\u25b6', label:'Quick Scan', desc:'Scan & gate verdict', cmd:'scanProject', col:'var(--cyan)' },
+          { icon:'\u25c8', label:'Infer ISL Specs', desc:'AI-generate specs from code', cmd:'inferSpecs', col:'var(--indigo)' },
+          { icon:'\u26a1', label:'Heal All', desc:'Auto-fix across project', cmd:'autofixAll', col:'var(--amber)' },
+        ]},
+        { label: 'Verification', items: [
+          { icon:'\u25b6', label:'Verify Workspace', desc:'Full scan of all files', cmd:'verify', col:'var(--green)' },
+          { icon:'\u25b6', label:'Verify Current File', desc:'Scan the active editor', cmd:'verifyFile', col:'var(--green)' },
+          { icon:'\u2691', label:'Ship Check', desc:'CI gate \u2014 SHIP or block', cmd:'ship', col:'var(--indigo)' },
+        ]},
+        { label: 'Spec Tools', items: [
+          { icon:'\u270e', label:'Code &rarr; ISL', desc:'Generate spec from current file', cmd:'codeToIsl', col:'var(--cyan)' },
+          { icon:'\u270e', label:'Generate ISL Spec', desc:'Scaffold spec from source', cmd:'genSpec', col:'var(--indigo)' },
+          { icon:'\u21bb', label:'Format & Lint', desc:'Auto-format all .isl files', cmd:'fmtSpecs', col:'var(--green)' },
+        ]},
+        { label: 'Reports', items: [
+          { icon:'\u25ce', label:'Trust Score', desc:'Detailed trust breakdown', cmd:'trustScore', col:'var(--green)' },
+          { icon:'\u25c8', label:'Coverage Report', desc:'Spec coverage % per file', cmd:'coverage', col:'var(--cyan)' },
+          { icon:'\u26a0', label:'Security Report', desc:'Secrets, auth, injection scan', cmd:'securityReport', col:'var(--red)' },
+          { icon:'\ud83d\udee1', label:'SOC 2 Audit', desc:'Full compliance check', cmd:'compliance', col:'var(--green)' },
+        ]},
+      ];
+
+      for (var g=0; g<groups.length; g++) {
+        o += '<div class="sect"><div class="sect-lbl">'+groups[g].label+'</div>';
+        for (var i=0; i<groups[g].items.length; i++) {
+          var it = groups[g].items[i];
+          o += '<div class="ar" data-cmd="'+it.cmd+'">' +
+            '<div class="ar-icon" style="color:'+it.col+';">'+it.icon+'</div>' +
+            '<div class="ar-body"><div class="ar-label">'+it.label+'</div><div class="ar-desc">'+it.desc+'</div></div>' +
+            (it.kbd ? '<div class="ar-kbd">'+it.kbd+'</div>' : '<div class="ar-right">&rsaquo;</div>') +
+          '</div>';
+        }
+        o += '</div>';
+      }
+
+      // Gen grid
+      o += '<div class="sect"><div class="sect-lbl">Generate from ISL</div><div class="gen-grid">' +
+        '<button class="btn btn-sec" data-cmd="genTypescript">TS</button>' +
+        '<button class="btn btn-sec" data-cmd="genPython">Python</button>' +
+        '<button class="btn btn-sec" data-cmd="genRust">Rust</button>' +
+        '<button class="btn btn-sec" data-cmd="genGo">Go</button>' +
+        '<button class="btn btn-sec" data-cmd="genGraphql">GQL</button>' +
+        '<button class="btn btn-sec" data-cmd="genOpenapi">OpenAPI</button>' +
+      '</div></div>';
+
+      return o;
+    }
+
+    /* ---- FINDINGS ---- */
+    function findingsView() {
+      var d = S.data||{};
+      var findings = [];
+      if (d.files) {
+        d.files.forEach(function(f) {
+          if (f.blockers) f.blockers.forEach(function(msg) {
+            findings.push({ sev: f.status==='FAIL'?'high':'medium', msg:msg, file:f.file, line:1, eng:f.mode||'shipgate', fix:false });
           });
-        }
-        
-        const fixableCount = findings.filter(f => f.fixable).length;
-        
-        return \`
-          <div class="section">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 11px; font-weight: 600; color: var(--text0);">Findings</span>
-                <span class="badge noship">\${findings.length}</span>
-              </div>
-              \${findings.length > 0 ? '<button class="btn btn-warn" data-command="autofixAll" style="font-size: 9px; padding: 3px 8px;">⚡ Heal All</button>' : ''}
-            </div>
-            
-            \${findings.map(f => {
-              const sevColor = severityColor(f.severity);
-              const dotStyle = 'background: ' + sevColor + '; margin-top: 4px;' + (f.severity === 'critical' ? ' box-shadow: 0 0 6px ' + sevColor + '60;' : '');
-              const fixBtn = f.fixable ? '<button class="btn btn-small" style="background: var(--ship-bg); color: var(--ship); border: 1px solid var(--ship)25;" data-fix="true">Fix</button>' : '';
-              return '<div class="card" style="margin-bottom: 8px; cursor: pointer;" data-file="' + f.file + '" data-line="' + f.line + '">' +
-                '<div style="display: flex; align-items: start; gap: 10px;">' +
-                '<span class="status-dot" style="' + dotStyle + '"></span>' +
-                '<div style="flex: 1;">' +
-                '<div style="font-size: 11px; color: var(--text1); line-height: 1.4; margin-bottom: 4px;">' + f.message + '</div>' +
-                '<div style="font-size: 9px; color: var(--text3);">' +
-                '<span class="mono">' + f.file + ':' + f.line + '</span>' +
-                '<span style="margin: 0 6px;">•</span>' +
-                '<span>' + f.engine + '</span>' +
-                '</div>' +
-                '</div>' +
-                fixBtn +
-                '</div>' +
-                '</div>';
-            }).join('')}
-            
-            <button class="btn btn-primary" style="width: 100%; margin-top: 8px;" data-command="autofixAll">
-              Auto-fix all (\${fixableCount})
-            </button>
-            <p style="font-size: 10px; color: var(--text3); text-align: center; margin-top: 8px;">\${fixableCount} of \${findings.length} findings are auto-fixable</p>
-          </div>
-        \`;
+          if (f.errors) f.errors.forEach(function(msg) {
+            findings.push({ sev:'critical', msg:msg, file:f.file, line:1, eng:f.mode||'shipgate', fix:false });
+          });
+        });
       }
-      
-      function renderFiles() {
-        const data = state.data || {};
-        const files = (data.files || []).map(f => ({
+
+      var o = '<div class="sect">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+          '<div style="display:flex;align-items:center;gap:6px;">' +
+            '<span style="font-size:11px;font-weight:600;color:var(--text-primary);">Findings</span>' +
+            '<span class="b noship">'+findings.length+'</span>' +
+          '</div>' +
+          (findings.length>0 ? '<button class="btn btn-heal btn-sm" data-cmd="autofixAll">&#9889; Heal</button>' : '') +
+        '</div>';
+
+      if (findings.length === 0) {
+        o += '<div class="c" style="text-align:center;padding:28px 14px;">' +
+          '<div style="font-size:20px;margin-bottom:8px;">&#10003;</div>' +
+          '<div style="font-size:13px;font-weight:600;color:var(--green);">No issues found</div>' +
+          '<div style="font-size:11px;color:var(--text-ghost);margin-top:4px;">All files pass verification</div>' +
+        '</div>';
+      } else {
+        for (var i=0; i<findings.length; i++) {
+          var f = findings[i];
+          var dotCol = f.sev==='critical'?'red':f.sev==='high'?'amber':'amber';
+          var glowStyle = f.sev==='critical'?'box-shadow:0 0 5px var(--red-glow);':'';
+          o += '<div class="c" style="padding:9px 10px;cursor:pointer;margin-bottom:5px;" data-file="'+f.file+'" data-line="'+f.line+'">' +
+            '<div style="display:flex;gap:8px;align-items:flex-start;">' +
+              '<span class="dot '+dotCol+'" style="margin-top:3px;'+glowStyle+'"></span>' +
+              '<div style="flex:1;min-width:0;">' +
+                '<div style="font-size:11px;color:var(--text-secondary);line-height:1.35;">'+esc(f.msg)+'</div>' +
+                '<div style="display:flex;gap:6px;align-items:center;margin-top:3px;">' +
+                  '<span class="mono" style="font-size:9px;color:var(--text-ghost);">'+f.file+':'+f.line+'</span>' +
+                  '<span style="font-size:9px;color:var(--text-ghost);">&middot;</span>' +
+                  '<span style="font-size:9px;color:var(--text-ghost);">'+f.eng+'</span>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }
+      }
+      o += '</div>';
+      return o;
+    }
+
+    /* ---- FILES ---- */
+    function filesView() {
+      var d = S.data||{};
+      var files = (d.files||[]).map(function(f) {
+        return {
           name: f.file,
-          verdict: f.status === 'PASS' ? 'SHIP' : f.status === 'FAIL' ? 'NO_SHIP' : 'WARN',
-          score: f.score || 0,
-          findings: (f.blockers?.length || 0) + (f.errors?.length || 0)
-        }));
-        
-        return \`
-          <div class="section">
-            <input 
-              type="text" 
-              id="file-search" 
-              placeholder="Filter files..." 
-              style="margin-bottom: 12px;"
-            />
-            
-            <div style="display: flex; gap: 6px; margin-bottom: 12px;">
-              <div class="badge accent" style="cursor: pointer; padding: 4px 10px;" data-sort="verdict">By verdict</div>
-              <div class="badge neutral" style="cursor: pointer; padding: 4px 10px;" data-sort="name">By name</div>
-              <div class="badge neutral" style="cursor: pointer; padding: 4px 10px;" data-sort="score">By score</div>
-            </div>
-            
-            \${files.map(f => {
-              const badge = verdictBadge(f.verdict);
-              const findingBadge = f.findings > 0 ? '<span style="width: 16px; height: 16px; border-radius: 50%; background: var(--noship); color: #fff; font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: 600;">' + f.findings + '</span>' : '';
-              return '<div class="card" style="margin-bottom: 6px; padding: 10px 12px; cursor: pointer;" data-file="' + f.name + '">' +
-                '<div style="display: flex; align-items: center; gap: 10px;">' +
-                '<span class="badge ' + badge + '" style="font-size: 8px; padding: 2px 6px;">' + f.verdict + '</span>' +
-                '<span class="mono" style="flex: 1; font-size: 12px; color: var(--text1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + f.name + '</span>' +
-                findingBadge +
-                '<span class="mono" style="font-size: 11px; color: var(--text3);">' + f.score + '</span>' +
-                '</div>' +
-                '</div>';
-            }).join('')}
-          </div>
-        \`;
-      }
-      
-      function attachEventListeners() {
-        // Tab clicks
-        document.querySelectorAll('[data-tab]').forEach(el => {
-          el.onclick = () => {
-            state.activeTab = el.dataset.tab;
-            render();
-          };
-        });
-        
-        // Command buttons (works for all [data-command] elements including action rows)
-        document.querySelectorAll('[data-command]').forEach(el => {
-          el.onclick = (e) => {
-            e.stopPropagation();
-            const payload = el.dataset.file ? { command: el.dataset.command, file: el.dataset.file } : { command: el.dataset.command };
-            vscode.postMessage(payload);
-          };
-        });
-        
-        // Claim expand/collapse
-        document.querySelectorAll('[data-claim]').forEach(el => {
-          el.onclick = () => {
-            const idx = parseInt(el.dataset.claim);
-            state.expandedClaim = state.expandedClaim === idx ? -1 : idx;
-            render();
-          };
-        });
-        
-        // File clicks
-        document.querySelectorAll('[data-file]').forEach(el => {
-          el.onclick = (e) => {
-            if (e.target.dataset.fix) {
-              e.stopPropagation();
-              vscode.postMessage({ command: 'autofix' });
-            } else {
-              vscode.postMessage({ 
-                command: 'openFile', 
-                file: el.dataset.file, 
-                line: parseInt(el.dataset.line || '1') 
-              });
-            }
-          };
-        });
-        
-        // Verify button
-        const verifyBtn = document.getElementById('btn-verify');
-        if (verifyBtn) {
-          verifyBtn.onclick = () => vscode.postMessage({ command: 'verify' });
-        }
-        
-        // Pipeline mini click
-        const pipelineMini = document.getElementById('pipeline-mini');
-        if (pipelineMini) {
-          pipelineMini.onclick = () => {
-            state.activeTab = 'pipeline';
-            render();
-          };
-        }
-        
-        // Findings link
-        const findingsLink = document.getElementById('link-findings');
-        if (findingsLink) {
-          findingsLink.onclick = (e) => {
-            e.preventDefault();
-            state.activeTab = 'findings';
-            render();
-          };
-        }
-        
-        // File search
-        const fileSearch = document.getElementById('file-search');
-        if (fileSearch) {
-          fileSearch.oninput = (e) => {
-            state.fileFilter = e.target.value.toLowerCase();
-            // Could filter files here
-          };
+          verdict: f.status==='PASS'?'SHIP':f.status==='FAIL'?'NO_SHIP':'WARN',
+          score: f.score||0,
+          issues: (f.blockers?f.blockers.length:0)+(f.errors?f.errors.length:0)
+        };
+      });
+
+      // Sort
+      if (S.fileSort==='name') files.sort(function(a,b){return a.name.localeCompare(b.name)});
+      else if (S.fileSort==='score') files.sort(function(a,b){return a.score-b.score});
+      else files.sort(function(a,b){
+        var order = {NO_SHIP:0,WARN:1,SHIP:2};
+        return (order[a.verdict]||0) - (order[b.verdict]||0);
+      });
+
+      // Filter
+      if (S.fileQ) files = files.filter(function(f){return f.name.toLowerCase().indexOf(S.fileQ)!==-1});
+
+      var o = '<div class="sect">' +
+        '<input type="text" id="file-search" placeholder="Filter files..." style="margin-bottom:8px;" value="'+S.fileQ+'">' +
+        '<div style="display:flex;gap:4px;margin-bottom:10px;">' +
+          sortBtn('verdict','Verdict') + sortBtn('name','Name') + sortBtn('score','Score') +
+        '</div>';
+
+      if (files.length===0) {
+        o += '<div style="text-align:center;padding:20px;font-size:11px;color:var(--text-ghost);">No files match</div>';
+      } else {
+        for (var i=0; i<files.length; i++) {
+          var f = files[i];
+          var badge = vb(f.verdict);
+          var issueBadge = f.issues>0 ? '<span style="min-width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:8px;display:flex;align-items:center;justify-content:center;font-weight:700;">'+f.issues+'</span>' : '';
+          o += '<div class="c" style="padding:8px 10px;cursor:pointer;margin-bottom:4px;" data-file="'+f.name+'">' +
+            '<div style="display:flex;align-items:center;gap:8px;">' +
+              '<span class="b '+badge+'" style="font-size:8px;padding:1px 5px;">'+f.verdict+'</span>' +
+              '<span class="mono trunc" style="flex:1;font-size:11px;color:var(--text-secondary);">'+f.name+'</span>' +
+              issueBadge +
+              '<span class="mono" style="font-size:10px;color:var(--text-ghost);">'+f.score+'</span>' +
+            '</div>' +
+          '</div>';
         }
       }
-      
-      // Initialize
-      render();
-    })();
+      o += '</div>';
+      return o;
+    }
+
+    function sortBtn(key,label) {
+      var cls = S.fileSort===key ? 'b info' : 'b muted';
+      return '<span class="'+cls+'" style="cursor:pointer;padding:3px 8px;" data-sort="'+key+'">'+label+'</span>';
+    }
+
+    function esc(s) {
+      return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    /* ---- EVENT BINDING ---- */
+    function bind() {
+      // Tabs
+      document.querySelectorAll('[data-tab]').forEach(function(el) {
+        el.onclick = function() { S.tab = el.dataset.tab; draw(); };
+      });
+      // Commands
+      document.querySelectorAll('[data-cmd]').forEach(function(el) {
+        el.onclick = function(e) {
+          e.stopPropagation();
+          vsc.postMessage({ command: el.dataset.cmd });
+        };
+      });
+      // File clicks
+      document.querySelectorAll('[data-file]').forEach(function(el) {
+        el.onclick = function() {
+          vsc.postMessage({ command:'openFile', file:el.dataset.file, line:parseInt(el.dataset.line||'1') });
+        };
+      });
+      // Verify button
+      var goBtn = document.getElementById('btn-go');
+      if (goBtn) goBtn.onclick = function() { vsc.postMessage({ command:'verify' }); };
+      // Findings link
+      var fl = document.getElementById('link-findings');
+      if (fl) fl.onclick = function(e) { e.preventDefault(); S.tab='findings'; draw(); };
+      // File search
+      var fs = document.getElementById('file-search');
+      if (fs) fs.oninput = function(e) { S.fileQ = e.target.value.toLowerCase(); draw(); };
+      // Sort buttons
+      document.querySelectorAll('[data-sort]').forEach(function(el) {
+        el.onclick = function() { S.fileSort = el.dataset.sort; draw(); };
+      });
+    }
+
+    draw();
+  })();
   </script>
 </body>
 </html>`;

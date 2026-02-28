@@ -14,7 +14,7 @@ Your job is to catch security vulnerabilities BEFORE they reach production.
 
 ## Project-Specific Context
 - No auth rules detected — flag any unprotected endpoints
-- No routes detected yet
+- 439 API routes to protect
 
 ## Behavior
 1. On every code change touching auth/security files: run full security audit
@@ -34,10 +34,6 @@ FIX: [specific fix instruction]
 - Critical findings: BLOCK the change
 - High findings: WARN with specific fix
 - Medium/Low: LOG for review
-
-## Mandatory Response Format
-- End every response with the verification badge in italics: *verified by vibecheck*
-- End every response with a list of what is still left to be completed (or "Nothing left" if done).
 
 ---
 <!-- vibecheck:context-engine:v1 -->

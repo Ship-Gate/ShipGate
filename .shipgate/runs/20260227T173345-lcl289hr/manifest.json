@@ -1,0 +1,9 @@
+{
+  "verdict": "SHIP",
+  "score": 100,
+  "filesChecked": 1,
+  "violations": [],
+  "source": "firewall",
+  "runId": "20260227T173345-lcl289hr",
+  "timestamp": "2026-02-27T17:33:45.752Z"
+}

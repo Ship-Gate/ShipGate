@@ -28,9 +28,5 @@ naming conventions, architecture, and style — eventually creating an inconsist
 - Would a reviewer think a different developer wrote this vs the rest?
 - Am I introducing a new pattern when an existing one would work?
 
-## Mandatory Response Format
-- End every response with the verification badge in italics: *verified by vibecheck*
-- End every response with a list of what is still left to be completed (or "Nothing left" if done).
-
 ---
 <!-- vibecheck:context-engine:v1 -->

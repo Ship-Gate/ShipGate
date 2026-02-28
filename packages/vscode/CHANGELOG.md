@@ -5,6 +5,14 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [3.1.0] — 2026-02-27
+
+### Fixed
+
+- **CLI resolution when installed** — The extension was running `node` on the extension install directory (e.g. `.cursor/extensions/shipgate.shipgate-isl-2.0.0-universal`) when the path didn't contain `packages/vscode`, so the replace never ran and `existsSync(extensionPath)` was true (directory exists). That made Node execute the extension bundle, which requires the `vscode` module and crashed outside the extension host. Now the local CLI path is only used when the extension path contains `packages/vscode` (monorepo dev); otherwise the extension uses `npx shipgate`. Same guard added in `resolveShipgateExecutable()` in `shipgateRunner.ts`.
+
+---
+
 ## [2.0.0] — 2026-02-26
 
 ### Added

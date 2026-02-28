@@ -21,7 +21,7 @@ import DangerousMission from "./components/hero/DangerousMission";
 import RiveButton from "./components/ui/RiveButton";
 import FrostedNav from "./components/FrostedNav";
 import SignInModal from "./components/SignInModal";
-import { createCheckoutSession, STRIPE_PRICE_IDS } from "./components/StripeProvider";
+import { redirectToCheckout, STRIPE_PRICE_IDS } from "./components/StripeProvider";
 
 /* ── Existing components ── */
 import LogoCarousel from "./components/LogoCarousel";
@@ -218,7 +218,7 @@ function PricingSection() {
             {/* Rive-style CTA on highlighted plan, standard btn otherwise */}
             {highlighted ? (
               <RiveButton
-                href={ctaAction === "contact" ? "mailto:team@shipgate.dev" : "#how-it-works"}
+                href={ctaAction === "contact" ? "mailto:team@shipgate.dev" : ctaAction === "upgrade" ? (import.meta.env.VITE_DASHBOARD_URL || "https://app.shipgate.dev") + "/checkout" : "https://www.npmjs.com/package/shipgate"}
                 variant="primary"
                 className="relative z-10 mt-6 w-full justify-center"
               >
@@ -226,7 +226,7 @@ function PricingSection() {
               </RiveButton>
             ) : (
               <a
-                href={ctaAction === "contact" ? "mailto:team@shipgate.dev?subject=ShipGate%20Enterprise" : "#"}
+                href={ctaAction === "contact" ? "mailto:team@shipgate.dev?subject=ShipGate%20Enterprise" : ctaAction === "install" ? "https://www.npmjs.com/package/shipgate" : (import.meta.env.VITE_DASHBOARD_URL || "https://app.shipgate.dev") + "/checkout"}
                 className="relative z-10 mt-6 block w-full py-3 text-center soft-card__btn"
               >
                 {cta}
@@ -306,20 +306,8 @@ export default function LandingPage() {
   const { mobile, tablet } = useBreakpoint();
   const tunnelScrollRef = useRef(0);
 
-  const handleStripeCheckout = async (planName: string) => {
-    try {
-      const priceMap: Record<string, string> = {
-        'Starter': STRIPE_PRICE_IDS.starter,
-        'Pro': STRIPE_PRICE_IDS.pro,
-        'Enterprise': STRIPE_PRICE_IDS.enterprise,
-      };
-      
-      const priceId = priceMap[planName];
-      const { url } = await createCheckoutSession(priceId);
-      window.location.href = url;
-    } catch (error) {
-      console.error('Stripe checkout error:', error);
-    }
+  const handleStripeCheckout = (planName: string) => {
+    redirectToCheckout(planName.toLowerCase());
   };
 
   const handleNavClick = (path: string) => {

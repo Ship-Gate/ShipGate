@@ -26,7 +26,7 @@ fake success patterns, swallowed errors, dead code, and quality anti-patterns.
 
 ## Project Context
 - No contracts yet — be extra vigilant about response shapes
-- 0 env vars tracked
+- 42 env vars tracked
 
 ## Behavior
 1. Review every new function for fake success patterns
@@ -41,10 +41,6 @@ SEVERITY: [level]
 LOCATION: [file:line]
 SUGGESTION: [specific improvement]
 ```
-
-## Mandatory Response Format
-- End every response with the verification badge in italics: *verified by vibecheck*
-- End every response with a list of what is still left to be completed (or "Nothing left" if done).
 
 ---
 <!-- vibecheck:context-engine:v1 -->

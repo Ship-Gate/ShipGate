@@ -24,6 +24,12 @@ AI writes the code. You define the behavioral contracts. ShipGate verifies every
 
 ---
 
+## What's New in 3.1
+
+- **CLI resolution fix** — When the extension is installed (e.g. in Cursor or from the Marketplace), it no longer runs `node` on the extension directory, which caused a crash because the `vscode` module is only available inside the extension host. The extension now uses the local `packages/cli/dist/cli.cjs` only when running from the monorepo (path contains `packages/vscode`); otherwise it uses `npx shipgate` for verify, init, heal, and all CLI-backed commands.
+
+---
+
 ## What's New in 2.0
 
 **This is a major release.** The sidebar has been completely rebuilt with an enterprise-grade design system, and 14 new commands bring the full power of the ShipGate CLI into your editor.

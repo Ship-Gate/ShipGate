@@ -1,4 +1,4 @@
-// File: C:\Users\mevla\OneDrive\Desktop\projects\IntentOS\packages\crud-template-examples\src\app\posts\create\page.tsx
+// File: /Users/liquidgroove/Desktop/ShipGate-main/packages/crud-template-examples/src/app/posts/create/page.tsx
 import * as entry from '../../../../../src/app/posts/create/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

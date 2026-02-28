@@ -1,0 +1,150 @@
+{
+  "verdict": "NO_SHIP",
+  "score": 0,
+  "filesChecked": 4,
+  "violations": [
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/github/callback/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/provision-user cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/github/callback/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/audit cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/github/callback/route.ts"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: NEXTAUTH_URL is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/github/callback/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/github/callback/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/provision-user cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/github/callback/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/audit cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/github/callback/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/github/route.ts"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: NEXTAUTH_URL is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/github/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/github/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/google/callback/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/provision-user cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/google/callback/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/audit cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/google/callback/route.ts"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: NEXTAUTH_URL is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/google/callback/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/google/callback/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/provision-user cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/google/callback/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @/lib/audit cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/google/callback/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/google/route.ts"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: NEXTAUTH_URL is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/google/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/shipgate-dashboard/app/api/auth/google/route.ts"
+    }
+  ],
+  "source": "firewall",
+  "runId": "20260227T230017-1fyyl6va",
+  "timestamp": "2026-02-27T23:00:17.876Z"
+}

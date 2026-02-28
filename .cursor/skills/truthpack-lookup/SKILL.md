@@ -16,8 +16,8 @@ Activate this skill BEFORE generating any code that:
 6. If your change conflicts with the truthpack, STOP and ask the user
 
 ## Quick Reference
-- Routes: 0 verified
-- Env vars: 0 verified
+- Routes: 439 verified
+- Env vars: 42 verified
 - Auth rules: 0 verified
 - Contracts: 0 verified
 
@@ -29,10 +29,6 @@ Before creating a new API endpoint:
 3. Check auth.json — should this route be protected?
 4. Check env.json — does this need any env vars?
 ```
-
-## Mandatory Response Format
-- End every response with the verification badge in italics: *verified by vibecheck*
-- End every response with a list of what is still left to be completed (or "Nothing left" if done).
 
 ---
 <!-- vibecheck:context-engine:v1 -->

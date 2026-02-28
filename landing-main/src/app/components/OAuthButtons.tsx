@@ -1,5 +1,7 @@
 import { Chrome, Github } from 'lucide-react';
 
+const DASHBOARD_URL = import.meta.env.VITE_DASHBOARD_URL || 'https://app.shipgate.dev';
+
 interface OAuthButtonsProps {
   onOAuthStart?: () => void;
 }
@@ -7,16 +9,12 @@ interface OAuthButtonsProps {
 export default function OAuthButtons({ onOAuthStart }: OAuthButtonsProps) {
   const handleGoogleAuth = () => {
     onOAuthStart?.();
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://shipgate-backend.vercel.app';
-    const redirectUrl = encodeURIComponent(window.location.origin);
-    window.location.href = `${backendUrl}/api/auth/google?redirect=${redirectUrl}`;
+    window.location.href = `${DASHBOARD_URL}/api/auth/google`;
   };
 
   const handleGitHubAuth = () => {
     onOAuthStart?.();
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://shipgate-backend.vercel.app';
-    const redirectUrl = encodeURIComponent(window.location.origin);
-    window.location.href = `${backendUrl}/api/auth/github?redirect=${redirectUrl}`;
+    window.location.href = `${DASHBOARD_URL}/api/auth/github`;
   };
 
   return (

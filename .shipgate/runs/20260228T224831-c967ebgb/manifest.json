@@ -1,0 +1,1242 @@
+{
+  "verdict": "NO_SHIP",
+  "score": 0,
+  "filesChecked": 52,
+  "violations": [
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/_not-found.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/invoices/[id]/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/invoices/[id]/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/invoices/[id] is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/invoices/[id]/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/invoices/[id]/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/invoices/[id]/route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/invoices/[id]/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/invoices/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/invoices/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/invoices is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/invoices/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/invoices/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/invoices/route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/invoices/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/posts/[id]/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/posts/[id]/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/posts/[id] is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/posts/[id]/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/posts/[id]/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/posts/[id]/route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/posts/[id]/route.js"
+    },
+    {
+      "policyId": "intent/audit-missing",
+      "message": "Destructive operation may lack audit trail",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/posts/[id]/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/posts/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/posts/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/posts is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/posts/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/posts/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/posts/route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/posts/route.js"
+    },
+    {
+      "policyId": "intent/audit-missing",
+      "message": "Destructive operation may lack audit trail",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/posts/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/products/[id]/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/products/[id]/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/products/[id] is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/products/[id]/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/products/[id]/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/products/[id]/route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/products/[id]/route.js"
+    },
+    {
+      "policyId": "intent/audit-missing",
+      "message": "Destructive operation may lack audit trail",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/products/[id]/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/products/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/products/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/products is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/products/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/products/route is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/products/route.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/products/route.js"
+    },
+    {
+      "policyId": "intent/audit-missing",
+      "message": "Destructive operation may lack audit trail",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/crud-template-examples/.next/server/app/api/products/route.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/invoices is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/invoices/[id]/edit/page.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/invoices/${e} is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/invoices/[id]/edit/page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/invoices/[id]/edit/page.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/invoices is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/invoices/[id]/page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/invoices/[id]/page.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/invoices is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/invoices/create/page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/invoices/create/page.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/invoices is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/invoices/page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/invoices/page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/page.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/posts/${e} is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/posts/[id]/edit/page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/posts/[id]/edit/page.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/posts is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/posts/[id]/page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/posts/[id]/page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/posts/create/page.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/posts is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/posts/page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/posts/page.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/products is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/products/[id]/edit/page.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/products/${e} is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/products/[id]/edit/page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/products/[id]/edit/page.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/products is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/products/[id]/page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/products/[id]/page.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/products is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/products/create/page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/products/create/page.js"
+    },
+    {
+      "policyId": "ghost-route",
+      "message": "Ghost route detected: /api/products is not defined in the truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/products/page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/app/products/page.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/pages/_app.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/pages/_document.js"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../webpack-runtime.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/server/pages/_error.js"
+    },
+    {
+      "policyId": "intent/audit-missing",
+      "message": "Destructive operation may lack audit trail",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/crud-template-examples/.next/server/pages/_error.js"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../../src/app/api/invoices/[id]/route.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/invoices/[id]/route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/invoices/[id]/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/invoices/[id]/route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/invoices/[id]/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/invoices/[id]/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/invoices/[id]/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../src/app/api/invoices/route.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/invoices/route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/api/invoices/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/invoices/route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/api/invoices/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/invoices/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/invoices/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../../src/app/api/posts/[id]/route.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/posts/[id]/route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/posts/[id]/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/posts/[id]/route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/posts/[id]/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/posts/[id]/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/posts/[id]/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../src/app/api/posts/route.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/posts/route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/api/posts/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/posts/route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/api/posts/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/posts/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/posts/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../../src/app/api/products/[id]/route.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/products/[id]/route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/products/[id]/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/products/[id]/route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/api/products/[id]/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/products/[id]/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/products/[id]/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../src/app/api/products/route.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/products/route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/api/products/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/products/route.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/api/products/route.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/products/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/server.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/api/products/route.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../../src/app/invoices/[id]/edit/page.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/[id]/edit/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/invoices/[id]/edit/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/[id]/edit/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/invoices/[id]/edit/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/[id]/edit/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/dist/lib/metadata/types/metadata-interface.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/[id]/edit/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../src/app/invoices/[id]/page.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/[id]/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/invoices/[id]/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/[id]/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/invoices/[id]/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/[id]/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/dist/lib/metadata/types/metadata-interface.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/[id]/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../src/app/invoices/create/page.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/create/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/invoices/create/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/create/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/invoices/create/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/create/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/dist/lib/metadata/types/metadata-interface.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/create/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../src/app/invoices/page.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../src/app/invoices/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../src/app/invoices/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/dist/lib/metadata/types/metadata-interface.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/invoices/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../src/app/layout.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/layout.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../src/app/layout.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/layout.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../src/app/layout.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/layout.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/dist/lib/metadata/types/metadata-interface.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/layout.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../src/app/page.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../src/app/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../src/app/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/dist/lib/metadata/types/metadata-interface.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../../src/app/posts/[id]/edit/page.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/[id]/edit/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/posts/[id]/edit/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/[id]/edit/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/posts/[id]/edit/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/[id]/edit/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/dist/lib/metadata/types/metadata-interface.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/[id]/edit/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../src/app/posts/[id]/page.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/[id]/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/posts/[id]/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/[id]/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/posts/[id]/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/[id]/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/dist/lib/metadata/types/metadata-interface.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/[id]/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../src/app/posts/create/page.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/create/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/posts/create/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/create/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/posts/create/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/create/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/dist/lib/metadata/types/metadata-interface.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/create/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../src/app/posts/page.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../src/app/posts/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../src/app/posts/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/dist/lib/metadata/types/metadata-interface.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/posts/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../../src/app/products/[id]/edit/page.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/[id]/edit/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/products/[id]/edit/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/[id]/edit/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../../src/app/products/[id]/edit/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/[id]/edit/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/dist/lib/metadata/types/metadata-interface.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/[id]/edit/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../src/app/products/[id]/page.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/[id]/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/products/[id]/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/[id]/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/products/[id]/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/[id]/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/dist/lib/metadata/types/metadata-interface.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/[id]/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../../src/app/products/create/page.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/create/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/products/create/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/create/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../../src/app/products/create/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/create/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/dist/lib/metadata/types/metadata-interface.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/create/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../../../../src/app/products/page.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../src/app/products/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../../../src/app/products/page.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/page.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: next/dist/lib/metadata/types/metadata-interface.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/crud-template-examples/.next/types/app/products/page.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../src/content.config.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/docs/.astro/content.d.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode-islstudio/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./sidebar cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode-islstudio/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./heal-ui cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode-islstudio/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./webview/sidebar-provider cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode-islstudio/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./gate-runner cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode-islstudio/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./intent-manager cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode-islstudio/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./proof-bundle-manager cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode-islstudio/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode-islstudio/src/extension.ts"
+    },
+    {
+      "policyId": "auth/bypass-detected",
+      "message": "Auth bypass pattern detected",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages/vscode-islstudio/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode-islstudio/src/gate-runner.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode-islstudio/src/gate-runner.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: tsup cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode-islstudio/tsup.config.ts"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: VSCODE_PID is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode-islstudio/tsup.config.ts"
+    },
+    {
+      "policyId": "ghost-env",
+      "message": "Ghost env var: VSCODE_IPC_HOOK is not defined in .env files or truthpack",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode-islstudio/tsup.config.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: tsup cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode-islstudio/tsup.config.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/vscode-islstudio/tsup.config.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../model/types cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/cli/shipgateRunner.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ../utils/json cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/cli/shipgateRunner.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/cli/shipgateRunner.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./sidebar-provider cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./diagnostics cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./codelens cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./statusbar cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./cli/shipgateRunner cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./views/proof-bundle-panel cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./views/evidence-decorations cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./views/evidence-codelens cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./views/file-decorations cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./commands/proof-commands cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./services/proService cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "intent/encryption-required",
+      "message": "Sensitive data must be encrypted before storage",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    }
+  ],
+  "source": "firewall",
+  "runId": "20260228T224831-c967ebgb",
+  "timestamp": "2026-02-28T22:48:31.173Z"
+}

@@ -11,11 +11,19 @@ and prevent architectural drift — when new code breaks established patterns.
 4. **Module Boundaries**: Respect package/module boundaries
 
 ## Project Architecture
-### API Layer
-- Not yet mapped
+### API Layer (439 routes)
+- `GET /vibe-test6/src/app/api/v1/tasks` (nextjs)
+- `POST /vibe-test6/src/app/api/v1/tasks` (nextjs)
+- `POST /dogfood-blog-output/app/api/register-author` (nextjs)
+- `POST /dogfood-blog-output/app/api/user-register` (nextjs)
+- `POST /dogfood-blog-output/app/api/search-posts` (nextjs)
 
-### Environment (0 vars)
-- None detected
+### Environment (42 vars)
+- `CI`
+- `ISL_AI_ENABLED`
+- `ISL_AI_PROVIDER`
+- `PORT`
+- `NODE_ENV`
 
 ## Anti-Drift Rules
 1. Don't create a new utility when one exists — search first
@@ -27,10 +35,6 @@ and prevent architectural drift — when new code breaks established patterns.
 ## When Reviewing
 Ask: "Does this change make the architecture MORE or LESS consistent?"
 If LESS → suggest the consistent alternative.
-
-## Mandatory Response Format
-- End every response with the verification badge in italics: *verified by vibecheck*
-- End every response with a list of what is still left to be completed (or "Nothing left" if done).
 
 ---
 <!-- vibecheck:context-engine:v1 -->

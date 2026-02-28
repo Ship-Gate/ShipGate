@@ -60,11 +60,14 @@ export async function resolveShipgateExecutable(
     }
   }
 
-  // 2. Extension-local CLI (sibling package in monorepo — works when scanning external projects)
-  const extensionDir = dirname(__dirname); // packages/vscode
-  const extensionLocalCli = join(extensionDir, '..', 'cli', 'dist', 'cli.cjs');
-  if (existsSync(extensionLocalCli)) {
-    return { executable: 'node', args: [resolve(extensionLocalCli), ...CLI_VERIFY_JSON_PAYLOAD] };
+  // 2. Extension-local CLI (sibling package in monorepo only — path contains packages/vscode)
+  const extensionDir = dirname(__dirname); // packages/vscode in dev, extension root when installed
+  const isMonorepoLayout = /packages[\/\\]vscode/.test(extensionDir);
+  if (isMonorepoLayout) {
+    const extensionLocalCli = join(extensionDir, '..', 'cli', 'dist', 'cli.cjs');
+    if (existsSync(extensionLocalCli)) {
+      return { executable: 'node', args: [resolve(extensionLocalCli), ...CLI_VERIFY_JSON_PAYLOAD] };
+    }
   }
 
   // 3. pnpm workspace - try pnpm exec

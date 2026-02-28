@@ -22,9 +22,5 @@ Fires after every `vibecheck scan` completes.
 - Count adaptations per rule
 - Report improvement or regression
 
-## Mandatory Response Format
-- End every response with the verification badge in italics: *verified by vibecheck*
-- End every response with a list of what is still left to be completed (or "Nothing left" if done).
-
 ---
 <!-- vibecheck:context-engine:v1 -->

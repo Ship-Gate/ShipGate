@@ -1,5 +1,30 @@
 {
     "[isl]": {
         "editor.formatOnSave": true
+    },
+    "files.watcherExclude": {
+        "**/node_modules/**": true,
+        "**/dist/**": true,
+        "**/.next/**": true,
+        "**/.turbo/**": true,
+        "**/pnpm-store/**": true,
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/coverage/**": true,
+        "**/*.tsbuildinfo": true
+    },
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/.turbo": true,
+        "**/pnpm-store": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/.next": true,
+        "**/.turbo": true,
+        "**/pnpm-store": true,
+        "**/coverage": true,
+        "pnpm-lock.yaml": true
     }
 }

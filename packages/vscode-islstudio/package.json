@@ -1,8 +1,8 @@
 {
   "name": "vscode-islstudio",
-  "displayName": "Shipgate",
+  "displayName": "Shipgate — Behavioral Verification",
   "description": "Unified code gate. Truthpack validation (routes, env, imports) + 25 security rules (auth, pii, payments, rate-limit, intent). SHIP or NO_SHIP with evidence. Verified by ShipGate.",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "publisher": "shipgate",
   "license": "MIT",
   "repository": {
@@ -216,21 +216,5 @@
     "rimraf": "^5.0.5"
   },
   "dependencies": {},
-  "private": true,
-  "experimental": true,
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  },
-  "types": "./dist/index.d.ts",
-  "sideEffects": false,
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ]
+  "private": true
 }

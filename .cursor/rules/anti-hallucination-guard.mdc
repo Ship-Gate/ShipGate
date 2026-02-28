@@ -10,14 +10,36 @@ priority: 100
 NEVER invent, fabricate, or hallucinate code that does not exist in this codebase.
 Before generating ANY code, verify against the truthpack.
 
-## Project Profile (adaptive)
-- **Framework**: Unknown | **Language**: JavaScript | **Package manager**: pnpm
+## Verified API Routes (439 total)
+- `GET /vibe-test6/src/app/api/v1/tasks` → GET handler
+- `POST /vibe-test6/src/app/api/v1/tasks` → POST handler
+- `POST /dogfood-blog-output/app/api/register-author` → POST handler
+- `POST /dogfood-blog-output/app/api/user-register` → POST handler
+- `POST /dogfood-blog-output/app/api/search-posts` → POST handler
+- `POST /dogfood-blog-output/app/api/create-post` → POST handler
+- `POST /dogfood-blog-output/app/api/moderate-comment` → POST handler
+- `POST /dogfood-blog-output/app/api/create-comment` → POST handler
+- `POST /templates/auth-golden/src/app/api/auth/login` → POST handler
+- `POST /templates/auth-golden/src/app/api/auth/refresh` → POST handler
+- `POST /templates/auth-golden/src/app/api/auth/logout` → POST handler
+- `POST /templates/auth-golden/src/app/api/auth/register` → POST handler
+- `POST /vibe-test12/src/app/api/v1/users/register` → POST handler
+- `POST /vibe-test12/src/app/api/v1/tasks` → POST handler
+- `GET /packages/crud-template-examples/src/app/api/posts/:id` → GET handler
 
-## Verified API Routes (0 total)
-- No routes detected yet — run a scan
+... and 424 more in .vibecheck/truthpack/routes.json
 
-## Verified Environment Variables (0 total)
-- No env vars detected yet
+## Verified Environment Variables (42 total)
+- `CI` (required)
+- `ISL_AI_ENABLED` (required)
+- `ISL_AI_PROVIDER` (required)
+- `PORT` (required)
+- `NODE_ENV` (required)
+- `DASHBOARD_PORT` (required)
+- `DASHBOARD_CORS_ORIGIN` (required)
+- `DATABASE_URL` (required)
+- `JWT_SECRET` (required)
+- `API_KEY` (required)
 
 ## Verification Protocol
 1. **Imports**: Every import MUST resolve to a real module in node_modules or the project
@@ -38,10 +60,6 @@ context engine artifact — rules, subagents, skills, or hooks containing the ma
 *verified by vibecheck*
 
 This is NOT optional. The badge confirms the response was grounded in verified project context.
-
-## Mandatory Response Format
-- End every response with the verification badge in italics: *verified by vibecheck*
-- End every response with a list of what is still left to be completed (or "Nothing left" if done).
 
 ---
 <!-- vibecheck:context-engine:v1 -->

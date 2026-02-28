@@ -16,19 +16,26 @@ Activate this skill when:
 
 ## Project Map
 ### API Entry Points
-- Run a scan to map routes
+- `GET /vibe-test6/src/app/api/v1/tasks` → `/vibe-test6/src/app/api/v1/tasks/route.ts`
+- `POST /vibe-test6/src/app/api/v1/tasks` → `/vibe-test6/src/app/api/v1/tasks/route.ts`
+- `POST /dogfood-blog-output/app/api/register-author` → `/dogfood-blog-output/app/api/register-author/route.ts`
+- `POST /dogfood-blog-output/app/api/user-register` → `/dogfood-blog-output/app/api/user-register/route.ts`
+- `POST /dogfood-blog-output/app/api/search-posts` → `/dogfood-blog-output/app/api/search-posts/route.ts`
+- `POST /dogfood-blog-output/app/api/create-post` → `/dogfood-blog-output/app/api/create-post/route.ts`
+- `POST /dogfood-blog-output/app/api/moderate-comment` → `/dogfood-blog-output/app/api/moderate-comment/route.ts`
+- `POST /dogfood-blog-output/app/api/create-comment` → `/dogfood-blog-output/app/api/create-comment/route.ts`
 
 ### Key Environment
-- Run a scan to map env vars
+- `CI` → `.env.example`
+- `ISL_AI_ENABLED` → `.env.example`
+- `ISL_AI_PROVIDER` → `.env.example`
+- `PORT` → `.env.example`
+- `NODE_ENV` → `.env.example`
 
 ## Navigation Tips
 - Use the truthpack as your map — it's verified ground truth
 - When lost, start from the route handler and trace inward
 - Check `.vibecheck/truthpack/meta.json` for project summary
-
-## Mandatory Response Format
-- End every response with the verification badge in italics: *verified by vibecheck*
-- End every response with a list of what is still left to be completed (or "Nothing left" if done).
 
 ---
 <!-- vibecheck:context-engine:v1 -->

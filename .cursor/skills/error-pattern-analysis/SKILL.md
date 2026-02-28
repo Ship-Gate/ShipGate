@@ -26,9 +26,5 @@ Activate this skill when:
 - Don't disable ESLint rules — fix the code
 - Don't skip tests — fix the test or the code
 
-## Mandatory Response Format
-- End every response with the verification badge in italics: *verified by vibecheck*
-- End every response with a list of what is still left to be completed (or "Nothing left" if done).
-
 ---
 <!-- vibecheck:context-engine:v1 -->

@@ -433,7 +433,7 @@ async function explainRule(ruleId?: string) {
   outputChannel.show();
 
   try {
-    const { stdout } = await execAsync(`npx @isl-lang/cli@latest rules explain ${ruleId}`);
+    const { stdout } = await execAsync(`npx @shipgate/cli@latest rules explain ${ruleId}`);
     
     // Show in a webview panel
     const panel = vscode.window.createWebviewPanel(
@@ -484,7 +484,7 @@ async function createBaseline() {
 
   try {
     const cwd = workspaceFolder.uri.fsPath;
-    const { stdout } = await execAsync('npx @isl-lang/cli@latest baseline create', { cwd });
+    const { stdout } = await execAsync('npx @shipgate/cli@latest baseline create', { cwd });
     
     outputChannel.appendLine(stdout);
     vscode.window.showInformationMessage(
@@ -505,7 +505,7 @@ async function useBaseline() {
 
   try {
     const cwd = workspaceFolder.uri.fsPath;
-    const { stdout } = await execAsync('npx @isl-lang/cli@latest baseline show', { cwd });
+    const { stdout } = await execAsync('npx @shipgate/cli@latest baseline show', { cwd });
     
     outputChannel.appendLine('\nBaseline status:');
     outputChannel.appendLine(stdout);
@@ -535,7 +535,7 @@ async function initProject() {
 
   try {
     const cwd = workspaceFolder.uri.fsPath;
-    const { stdout } = await execAsync('npx @isl-lang/cli@latest init -y', { cwd });
+    const { stdout } = await execAsync('npx @shipgate/cli@latest init -y', { cwd });
     
     outputChannel.appendLine(stdout);
     vscode.window.showInformationMessage(
@@ -568,7 +568,7 @@ async function handleHealUntilShip() {
     const cwd = workspaceFolder.uri.fsPath;
     
     // Run heal command via CLI
-    const cmd = `npx @isl-lang/cli@latest heal --max-iterations 8 --verbose`;
+    const cmd = `npx @shipgate/cli@latest heal --max-iterations 8 --verbose`;
     
     outputChannel.appendLine(`Command: ${cmd}`);
     

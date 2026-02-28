@@ -1,0 +1,7 @@
+{
+  "name": "vibecheck-reality-runner",
+  "private": true,
+  "dependencies": {
+    "@playwright/test": "latest"
+  }
+}
