@@ -1,4 +1,6 @@
 [build]
+  base = "packages/shipgate-dashboard"
+  publish = ".next"
   command = "npx prisma generate && npm run build"
 
 [build.environment]
