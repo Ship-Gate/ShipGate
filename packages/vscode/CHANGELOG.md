@@ -5,7 +5,7 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [3.5.0] — 2026-02-28
+## [4.0.0] — 2026-02-28
 
 ### Added
 
@@ -13,13 +13,14 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Production API URLs** — All API calls, dashboard links, and Pro checkout now point to `https://app.shipgate.dev` instead of `localhost:3001`.
 - **CLI shim banner** — Added graceful handling for direct `node` invocation of the extension bundle (fixes "Cannot find module vscode" crash when the VSIX is run outside the extension host).
 - **CLI resolver priority** — Now prefers workspace-local CLI over `npx`, reducing cold-start latency and ensuring the correct version runs in monorepo setups.
 - **esbuild config** — Improved bundling with corrected externals and production minification settings.
 
 ### Changed
 
-- **Minimum version: 3.5.0** — All previous VSIX builds (0.x through 3.1.x) are superseded. Users should install 3.5.0 or later.
+- **Minimum version: 4.0.0** — All previous VSIX builds (0.x through 3.5.x) are superseded. Users should install 4.0.0 or later.
 
 ---
 

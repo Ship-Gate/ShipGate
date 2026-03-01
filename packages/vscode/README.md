@@ -24,14 +24,15 @@ AI writes the code. You define the behavioral contracts. ShipGate verifies every
 
 ---
 
-## What's New in 3.5
+## What's New in 4.0
 
+- **Production-ready API** — All API calls, dashboard links, and Pro checkout now point to `https://app.shipgate.dev`
 - **Webview redesign** — Dark mission-control UI with score rings, verdict cards, and tabbed navigation (Overview / Actions / Findings / Files)
 - **CLI shim fix** — No more "Cannot find module vscode" crash when the VSIX is invoked outside the extension host
 - **CLI resolver** — Prefers workspace-local CLI over `npx` for faster, more reliable verification
 - **Build improvements** — Corrected esbuild externals and production minification
 
-> **Note:** Version 3.5.0 supersedes all previous releases (0.x through 3.1.x). Please update to 3.5.0 or later.
+> **Note:** Version 4.0.0 supersedes all previous releases. Please update to 4.0.0 or later.
 
 ---
 
@@ -286,7 +287,7 @@ All available via **Cmd+Shift+P** (Ctrl+Shift+P on Windows/Linux):
   "shipgate.compliance.frameworks": ["soc2"],
 
   // Dashboard
-  "shipgate.dashboardApiUrl": "http://localhost:3001"
+  "shipgate.dashboardApiUrl": "https://app.shipgate.dev"
 }
 ```
 

@@ -150,7 +150,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('shipgate.exportReport', () => exportReport()),
     vscode.commands.registerCommand('shipgate.openDashboard', () => {
       const config = vscode.workspace.getConfiguration('shipgate');
-      const url = config.get<string>('dashboardApiUrl', 'http://localhost:3001');
+      const url = config.get<string>('dashboardApiUrl', 'https://app.shipgate.dev');
       vscode.env.openExternal(vscode.Uri.parse(url));
     }),
     vscode.commands.registerCommand('shipgate.setApiToken', async () => {
@@ -503,7 +503,7 @@ async function clearFindings() {
  */
 async function postToDashboard(scanResult: any, cwd: string, context: vscode.ExtensionContext): Promise<void> {
   const config = vscode.workspace.getConfiguration('shipgate');
-  const apiUrl = config.get<string>('dashboardApiUrl', 'http://localhost:3001');
+  const apiUrl = config.get<string>('dashboardApiUrl', 'https://app.shipgate.dev');
 
   const token = await context.secrets.get('shipgate.pat');
   if (!token) return; // Not authenticated, silently skip

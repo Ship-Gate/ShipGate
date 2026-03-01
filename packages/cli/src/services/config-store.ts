@@ -17,7 +17,7 @@ const CONFIG_DIR = join(homedir(), '.shipgate');
 const CONFIG_PATH = join(CONFIG_DIR, 'config.json');
 
 const DEFAULTS: CliConfig = {
-  apiUrl: 'http://localhost:3001',
+  apiUrl: 'https://app.shipgate.dev',
 };
 
 export function loadCliConfig(): CliConfig {

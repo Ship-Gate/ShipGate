@@ -53,7 +53,7 @@ export class ProService {
 
   private getApiUrl(): string {
     const config = vscode.workspace.getConfiguration('shipgate');
-    return config.get<string>('dashboardApiUrl', 'http://localhost:3001');
+    return config.get<string>('dashboardApiUrl', 'https://app.shipgate.dev');
   }
 
   async initialize(): Promise<void> {

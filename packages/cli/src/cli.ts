@@ -3134,7 +3134,7 @@ const authCommand = program
 authCommand
   .command('login <token>')
   .description('Login with a Personal Access Token (create one in Dashboard → Settings)')
-  .option('--api-url <url>', 'Dashboard API URL (default: http://localhost:3001)')
+  .option('--api-url <url>', 'Dashboard API URL (default: https://app.shipgate.dev)')
   .action(async (token: string, options) => {
     const result = await authLogin(token, options.apiUrl);
     printAuthLoginResult(result);
