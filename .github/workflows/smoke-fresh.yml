@@ -29,7 +29,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Turbo cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .turbo
           key: smoke-turbo-${{ runner.os }}-node20-${{ github.sha }}
