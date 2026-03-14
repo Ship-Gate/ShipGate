@@ -100,7 +100,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Turbo cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-node20-${{ github.sha }}
@@ -137,7 +137,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Turbo cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-node20-${{ github.sha }}
@@ -178,7 +178,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Turbo cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-node20-${{ github.sha }}
@@ -217,7 +217,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Turbo cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-node20-${{ github.sha }}
@@ -327,7 +327,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Turbo cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-node${{ matrix.node }}-${{ github.sha }}
@@ -365,7 +365,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Turbo cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-node20-${{ github.sha }}
@@ -416,7 +416,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Turbo cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-node20-${{ github.sha }}
@@ -430,7 +430,7 @@ jobs:
         run: pnpm turbo run build --cache-dir=.turbo
 
       - name: Restore baseline
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .test-temp/performance-baseline.json
           key: performance-baseline-${{ runner.os }}-node20
