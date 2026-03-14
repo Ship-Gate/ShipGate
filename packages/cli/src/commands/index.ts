@@ -130,8 +130,13 @@ export { shipCommand, type ShipCommandOptions, type ShipCommandResult } from './
 export {
   provenanceInit,
   printProvenanceInitResult,
+  provenanceScan,
+  printProvenanceScanResult,
+  getProvenanceScanExitCode,
   type ProvenanceInitOptions,
   type ProvenanceInitResult,
+  type ProvenanceScanCommandOptions,
+  type ProvenanceScanResult,
 } from './provenance.js';
 
 export { vibe, printVibeResult, getVibeExitCode, type VibeOptions, type VibeResult, type VibeGeneratedFile } from './vibe.js';

@@ -200,13 +200,74 @@ export async function gate(specPath: string, options: GateOptions): Promise<Gate
         implSource = await readFile(impl, 'utf-8');
       }
 
-      // Run local gate implementation
-      const result = await runLocalGate({
-        specSource,
-        implSource,
-        threshold,
-        outputDir: output,
-      });
+      // Try authoritative gate first (full specless checks), fall back to local gate
+      let result: GateVerdict;
+      try {
+        const { runAuthoritativeGate } = await import('@isl-lang/gate');
+        const implPath = resolve(impl);
+        const projectRoot = existsSync(implPath) ? implPath : process.cwd();
+
+        const authResult = await runAuthoritativeGate({
+          projectRoot,
+          spec: specSource,
+          implementation: implPath,
+          thresholds: { minScore: threshold, minTestPassRate: 100, minCoverage: 70, maxCriticalFindings: 0, maxHighFindings: 0, allowSkipped: false },
+          writeBundle: !!output,
+          evidencePath: output,
+          dependencyAudit: true,
+        });
+
+        const decision: 'SHIP' | 'NO-SHIP' = authResult.verdict === 'SHIP' ? 'SHIP' : 'NO-SHIP';
+        const blockers = authResult.reasons
+          .filter(r => r.blocking)
+          .map(r => ({ clause: r.code, reason: r.message, severity: r.severity === 'critical' ? 'critical' : r.severity === 'high' ? 'high' : 'medium' }));
+
+        result = {
+          decision,
+          exitCode: authResult.exitCode,
+          trustScore: authResult.score,
+          confidence: authResult.confidence,
+          summary: authResult.summary,
+          bundlePath: output,
+          manifest: {
+            fingerprint: authResult.evidence.fingerprint,
+            specHash: authResult.evidence.inputs.specHash,
+            implHash: authResult.evidence.inputs.implHash,
+            timestamp: authResult.evidence.timestamp,
+          },
+          results: {
+            clauses: authResult.aggregation.signals.map(s => ({
+              id: s.source,
+              type: s.source,
+              description: s.summary,
+              status: s.passed ? 'passed' as const : 'failed' as const,
+              error: s.passed ? undefined : s.summary,
+            })),
+            summary: {
+              total: authResult.aggregation.tests.total,
+              passed: authResult.aggregation.tests.passed,
+              failed: authResult.aggregation.tests.failed,
+              skipped: authResult.aggregation.tests.skipped,
+            },
+            blockers,
+          },
+          suggestion: authResult.suggestions?.join('; '),
+        };
+
+        if (verbose) {
+          console.log(chalk.gray('  Using authoritative gate (@isl-lang/gate)'));
+        }
+      } catch {
+        if (verbose) {
+          console.log(chalk.gray('  @isl-lang/gate not available, using local gate'));
+        }
+        result = await runLocalGate({
+          specSource,
+          implSource,
+          threshold,
+          outputDir: output,
+        });
+      }
       
       // Run policy checks if not skipped
       if (!options.skipPolicy) {

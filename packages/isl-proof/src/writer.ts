@@ -48,10 +48,14 @@ import type {
   VerifyResults,
   TraceRef,
   TestsSummary,
+  ProofCertificate,
   // V2.1 types for 1.0 release
   EvaluatorDecisionTrace,
   SMTSolverTranscript,
   RunMetadata,
+  // V2.3 proof chain
+  ProofChainEntry,
+  ProofRegression,
 } from './manifest.js';
 import { loadProvenance, type AIProvenance } from './provenance.js';
 import type { CoverageReport } from '@isl-lang/isl-coverage';
@@ -158,6 +162,14 @@ export interface TraceSummary {
   events?: unknown[];
 }
 
+/**
+ * Input for attaching a proof certificate with optional raw file content
+ */
+export interface ProofCertificateInput extends ProofCertificate {
+  /** Raw certificate file content (e.g. SMT-LIB output). Written to bundle when provided. */
+  certificateContent?: string;
+}
+
 // ============================================================================
 // Proof Bundle Writer
 // ============================================================================
@@ -185,6 +197,9 @@ export class ProofBundleWriter {
   private traceRefs: TraceRef[] = [];
   private testsSummary: TestsSummary | null = null;
   
+  // V2 proof certificates
+  private proofCertificates: ProofCertificateInput[] = [];
+  
   // V2.1 fields for 1.0 release
   private evaluatorTrace: EvaluatorDecisionTrace | null = null;
   private smtTranscript: SMTSolverTranscript | null = null;
@@ -195,6 +210,13 @@ export class ProofBundleWriter {
 
   // AI provenance (optional)
   private provenance: AIProvenance | null = null;
+
+  // V2.3 proof chain fields
+  private chainId: string | null = null;
+  private previousBundleId: string | null = null;
+  private previousBundleHash: string | null = null;
+  private previousBundlePath: string | null = null;
+  private chainSequenceNumber: number | null = null;
 
   constructor(options: WriterOptions) {
     this.options = options;
@@ -295,6 +317,37 @@ export class ProofBundleWriter {
   }
 
   // ============================================================================
+  // V2.3 Setters - Proof Chain (lineage across versions)
+  // ============================================================================
+
+  /**
+   * Set the previous bundle for chain linking.
+   * @param bundleId  Bundle ID of the predecessor
+   * @param bundleHash SHA-256 hash of the predecessor's manifest.json
+   * @param bundlePath Optional filesystem path to the predecessor bundle (enables regression detection)
+   */
+  setPreviousBundle(bundleId: string, bundleHash: string, bundlePath?: string): this {
+    this.previousBundleId = bundleId;
+    this.previousBundleHash = bundleHash;
+    this.previousBundlePath = bundlePath ?? null;
+    return this;
+  }
+
+  /**
+   * Set the chain ID (stable project identifier across versions).
+   * @param chainId Unique identifier for the project chain
+   * @param sequenceNumber Optional explicit sequence number; when omitted,
+   *        the writer will attempt to derive it from the previous bundle.
+   */
+  setChainId(chainId: string, sequenceNumber?: number): this {
+    this.chainId = chainId;
+    if (sequenceNumber !== undefined) {
+      this.chainSequenceNumber = sequenceNumber;
+    }
+    return this;
+  }
+
+  // ============================================================================
   // V2 Setters - Import Graph, Stdlib Versions, Verify Results, Trace Refs
   // ============================================================================
 
@@ -358,6 +411,22 @@ export class ProofBundleWriter {
    */
   setTestsSummary(summary: TestsSummary): this {
     this.testsSummary = summary;
+    return this;
+  }
+
+  /**
+   * Add a proof certificate linking a claim to its verification method
+   */
+  addProofCertificate(cert: ProofCertificateInput): this {
+    this.proofCertificates.push(cert);
+    return this;
+  }
+
+  /**
+   * Set all proof certificates at once
+   */
+  setProofCertificates(certs: ProofCertificateInput[]): this {
+    this.proofCertificates = certs;
     return this;
   }
 
@@ -498,6 +567,9 @@ export class ProofBundleWriter {
     await fs.mkdir(path.join(bundleDir, 'results'), { recursive: true });
     await fs.mkdir(path.join(bundleDir, 'reports'), { recursive: true });
 
+    // Build manifest-level proof certificates (strip raw content for the manifest)
+    const manifestCertificates: ProofCertificate[] = this.proofCertificates.map(({ certificateContent: _, ...cert }) => cert);
+
     // Calculate verdict using v2 fail-closed rules
     const verdictResult = calculateVerdictV2({
       gateResult: this.gateResult,
@@ -507,6 +579,7 @@ export class ProofBundleWriter {
       verifyResults: this.verifyResults || undefined,
       importGraph: this.importGraph || undefined,
       stdlibVersions: this.stdlibVersions.length > 0 ? this.stdlibVersions : undefined,
+      proofCertificates: manifestCertificates.length > 0 ? manifestCertificates : undefined,
     });
 
     // Load provenance if not set (from env or .shipgate/provenance.json)
@@ -515,6 +588,39 @@ export class ProofBundleWriter {
       if (loaded) {
         this.provenance = loaded;
       }
+    }
+
+    // Build proof chain entry if chain data is available
+    let chainEntry: ProofChainEntry | undefined;
+    if (this.chainId) {
+      let sequenceNumber = this.chainSequenceNumber ?? 1;
+      let regressions: ProofRegression[] | undefined;
+
+      if (this.previousBundleId && this.previousBundlePath) {
+        try {
+          const prevManifestRaw = await fs.readFile(
+            path.join(this.previousBundlePath, 'manifest.json'),
+            'utf-8',
+          );
+          const prevManifest = JSON.parse(prevManifestRaw) as ProofBundleManifest;
+
+          if (sequenceNumber === 1 && prevManifest.chain?.sequenceNumber != null) {
+            sequenceNumber = prevManifest.chain.sequenceNumber + 1;
+          }
+
+          regressions = this.detectRegressions(prevManifest);
+        } catch {
+          // Previous bundle unreadable — proceed without regression data
+        }
+      }
+
+      chainEntry = {
+        previousBundleId: this.previousBundleId,
+        previousBundleHash: this.previousBundleHash,
+        sequenceNumber,
+        chainId: this.chainId,
+        ...(regressions && regressions.length > 0 ? { regressions } : {}),
+      };
     }
 
     // Collect tool versions
@@ -551,6 +657,7 @@ export class ProofBundleWriter {
       verifyResults: this.verifyResults || undefined,
       traceRefs: this.traceRefs.length > 0 ? this.traceRefs : undefined,
       testsSummary: this.testsSummary || undefined,
+      proofCertificates: manifestCertificates.length > 0 ? manifestCertificates : undefined,
       // V2.1 fields for 1.0 release - evaluator trace, SMT transcript, run metadata
       evaluatorTrace: this.evaluatorTrace || undefined,
       smtTranscript: this.smtTranscript || undefined,
@@ -559,6 +666,8 @@ export class ProofBundleWriter {
       coverage: this.coverage || undefined,
       // AI provenance (optional)
       provenance: this.provenance || undefined,
+      // V2.3 proof chain
+      chain: chainEntry,
       // Original fields
       gateResult: this.gateResult,
       buildResult: this.buildResult,
@@ -706,6 +815,29 @@ export class ProofBundleWriter {
       files.push('results/trace-refs.json');
     }
 
+    // Write proof certificates if available
+    if (this.proofCertificates.length > 0) {
+      await fs.mkdir(path.join(bundleDir, 'certificates'), { recursive: true });
+      
+      for (const cert of this.proofCertificates) {
+        if (cert.certificateContent) {
+          const ext = cert.method === 'smt-proof' ? '.smt2' : '.txt';
+          const certFileName = `certificates/${cert.claimId}${ext}`;
+          await fs.writeFile(
+            path.join(bundleDir, certFileName),
+            cert.certificateContent
+          );
+          files.push(certFileName);
+        }
+      }
+      
+      await fs.writeFile(
+        path.join(bundleDir, 'certificates', 'index.json'),
+        safeJSONStringify(manifestCertificates, undefined, 2)
+      );
+      files.push('certificates/index.json');
+    }
+
     // Write tests summary if available (secrets are automatically masked)
     if (this.testsSummary) {
       await fs.writeFile(
@@ -816,6 +948,57 @@ export class ProofBundleWriter {
       verdict: manifest.verdict,
       verdictReason: manifest.verdictReason,
     };
+  }
+
+  /**
+   * Compare current claims against a previous manifest and detect regressions
+   * (claims whose verification strength decreased).
+   */
+  private detectRegressions(previous: ProofBundleManifest): ProofRegression[] {
+    const regressions: ProofRegression[] = [];
+
+    if (!this.verifyResults?.clauses || !previous.verifyResults?.clauses) {
+      return regressions;
+    }
+
+    const strengthOrder: Record<string, number> = {
+      'proven': 3,
+      'not_proven': 1,
+      'unknown': 0,
+      'violated': -1,
+    };
+
+    const methodStrength: Record<string, number> = {
+      'smt-proof': 5,
+      'pbt-exhaustive': 4,
+      'static-analysis': 3,
+      'runtime-trace': 2,
+      'heuristic': 1,
+    };
+
+    for (const prevClause of previous.verifyResults.clauses) {
+      const curClause = this.verifyResults.clauses.find(c => c.clauseId === prevClause.clauseId);
+      if (!curClause) continue;
+
+      const prevStrength = strengthOrder[prevClause.status] ?? 0;
+      const curStrength = strengthOrder[curClause.status] ?? 0;
+
+      const prevMethodStr = methodStrength[prevClause.proofMethod ?? 'heuristic'] ?? 0;
+      const curMethodStr = methodStrength[curClause.proofMethod ?? 'heuristic'] ?? 0;
+
+      if (curStrength < prevStrength || (curStrength === prevStrength && curMethodStr < prevMethodStr)) {
+        regressions.push({
+          claimId: curClause.clauseId,
+          property: curClause.clauseType,
+          previousStatus: prevClause.status,
+          currentStatus: curClause.status,
+          previousMethod: prevClause.proofMethod ?? 'heuristic',
+          currentMethod: curClause.proofMethod ?? 'heuristic',
+        });
+      }
+    }
+
+    return regressions;
   }
 
   /**

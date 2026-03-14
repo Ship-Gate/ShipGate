@@ -14,7 +14,7 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 export interface ProState {
   active: boolean;
   email: string | null;
-  plan: 'free' | 'pro';
+  plan: 'free' | 'pro' | 'enterprise';
   scansUsed: number;
   scansLimit: number;
   canScan: boolean;
@@ -28,6 +28,7 @@ interface MeResponse {
     email: string;
     name: string;
     isPro: boolean;
+    plan?: 'free' | 'pro' | 'enterprise';
     scansUsed: number;
     scansLimit: number;
     canScan: boolean;
@@ -100,7 +101,7 @@ export class ProService {
       this.state = {
         active: d.isPro,
         email: d.email,
-        plan: d.isPro ? 'pro' : 'free',
+        plan: d.plan || (d.isPro ? 'pro' : 'free'),
         scansUsed: d.scansUsed,
         scansLimit: d.scansLimit,
         canScan: d.canScan,

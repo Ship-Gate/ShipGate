@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-type SessionData = { email?: string; id?: string; isPro?: boolean };
+type SessionData = { email?: string; id?: string; isPro?: boolean; plan?: string; provider?: string };
+
+const ENTERPRISE_ONLY_PATHS = ['/dashboard/settings/sso', '/dashboard/settings/audit'];
 
 function parseSession(cookie: string | undefined): SessionData | null {
   if (!cookie) return null;
@@ -14,17 +16,35 @@ function parseSession(cookie: string | undefined): SessionData | null {
   }
 }
 
+function getEffectivePlan(session: SessionData): string {
+  if (session.plan) return session.plan;
+  if (session.isPro) return 'pro';
+  return 'free';
+}
+
 export function middleware(req: NextRequest) {
   const session = parseSession(req.cookies.get('shipgate-session')?.value);
   const path = req.nextUrl.pathname;
 
-  // Dashboard: requires session + Pro
+  // SAML auth routes — always pass through
+  if (path.startsWith('/api/auth/saml')) {
+    return NextResponse.next();
+  }
+
+  // Dashboard: requires session + paid plan
   if (path.startsWith('/dashboard')) {
     if (!session) {
       return NextResponse.redirect(new URL('/', req.url));
     }
-    if (!session.isPro) {
+
+    const plan = getEffectivePlan(session);
+
+    if (plan === 'free') {
       return NextResponse.redirect(new URL('/checkout', req.url));
+    }
+
+    if (plan === 'pro' && ENTERPRISE_ONLY_PATHS.some((p) => path.startsWith(p))) {
+      return NextResponse.redirect(new URL('/dashboard/settings?upgrade=enterprise', req.url));
     }
   }
 
@@ -33,16 +53,18 @@ export function middleware(req: NextRequest) {
     if (!session) {
       return NextResponse.redirect(new URL('/', req.url));
     }
-    if (session.isPro) {
+    const plan = getEffectivePlan(session);
+    if (plan === 'enterprise') {
       return NextResponse.redirect(new URL('/dashboard', req.url));
     }
   }
 
-  // Home: if logged in with Pro, go to dashboard; if logged in without Pro, go to checkout
+  // Home: redirect based on plan
   if (path === '/') {
     if (session) {
+      const plan = getEffectivePlan(session);
       return NextResponse.redirect(
-        new URL(session.isPro ? '/dashboard' : '/checkout', req.url)
+        new URL(plan !== 'free' ? '/dashboard' : '/checkout', req.url)
       );
     }
   }

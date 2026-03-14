@@ -241,3 +241,22 @@ export {
   type ProofProperty,
   type Finding,
 } from './proof-bundle-formatter.js';
+
+// Incremental Verification
+export {
+  runIncrementalVerification,
+  formatIncrementalStats,
+  detectChanges,
+  buildDependencyGraph,
+  getAffectedFiles,
+  VerificationCache,
+  type IncrementalOptions,
+  type IncrementalStats,
+  type IncrementalVerificationResult,
+  type SingleFileResult,
+  type ChangedFile,
+  type ChangeDetectorOptions,
+  type DependencyGraph,
+  type CachedResult,
+  type CachedFinding,
+} from './incremental/index.js';

@@ -32,7 +32,7 @@ export default function Dashboard() {
 
   const handleManageBilling = async () => {
     if (!stripeCustomerId) {
-      setPortalError('No billing account. Subscribe to Team to manage billing.');
+      setPortalError('No billing account. Subscribe to Pro to manage billing.');
       return;
     }
     setPortalError(null);
@@ -48,8 +48,8 @@ export default function Dashboard() {
     }
   };
 
-  const planLabel = plan === 'free' ? 'Free' : plan === 'team' ? 'Team' : 'Enterprise';
-  const PlanIcon = plan === 'free' ? Zap : plan === 'team' ? Users : Building2;
+  const planLabel = plan === 'free' ? 'Free' : plan === 'pro' ? 'Pro' : 'Enterprise';
+  const PlanIcon = plan === 'free' ? Zap : plan === 'pro' ? Users : Building2;
 
   return (
     <div className="min-h-screen pt-24 pb-20">
@@ -111,7 +111,7 @@ export default function Dashboard() {
                 to="/pricing"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl soft-card__btn"
               >
-                Upgrade to Team
+                Upgrade to Pro
                 <ArrowRight className="w-4 h-4" />
               </Link>
             )}

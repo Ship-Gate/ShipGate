@@ -19,6 +19,7 @@
 import type { SMTExpr, SMTDecl, SMTSort } from '@isl-lang/prover';
 import type { SMTCheckResult } from '@isl-lang/isl-smt';
 import { toSMTLib, declToSMTLib } from '@isl-lang/prover';
+import { convertExpr, createVarMap, type Z3Context } from './expr-converter.js';
 
 // Dynamic import to avoid loading WASM unless needed
 let z3Module: {
@@ -293,22 +294,65 @@ export class Z3WasmSolver {
       throw new Error('Z3 context not initialized');
     }
 
-    // For MVP, we'll use a workaround: parse the SMT-LIB manually
-    // or use the expression converter. For now, return an error indicating
-    // that SMT-LIB parsing needs to be implemented via expression conversion.
-    // 
-    // TODO: Implement full SMT-LIB parser or expression converter
-    
-    // Temporary: Use the expression-based approach instead
-    // This requires converting SMTExpr to Z3 expressions
-    return {
-      status: 'error',
-      message: 'SMT-LIB string parsing not yet implemented. Use expression-based API.',
+    const ctx = this.context as unknown as Z3Context & {
+      eval?: (script: string) => Promise<string>;
+      parseSMTLib2String?: (str: string) => unknown[];
     };
+
+    const timeoutPromise = new Promise<SMTCheckResult>((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout')), this.config.timeout);
+    });
+
+    const solvePromise = (async (): Promise<SMTCheckResult> => {
+      try {
+        if (typeof ctx.parseSMTLib2String === 'function') {
+          const assertions = ctx.parseSMTLib2String(smtLib);
+          const solver = new ctx.Solver();
+          for (const a of assertions) {
+            solver.add(a);
+          }
+          const checkResult = await solver.check();
+          if (checkResult === 'sat') {
+            return { status: 'sat', model: this.parseModelString(solver.model().toString()) };
+          } else if (checkResult === 'unsat') {
+            return { status: 'unsat' };
+          }
+          return { status: 'unknown', reason: `Z3 returned: ${checkResult}` };
+        }
+
+        return {
+          status: 'error',
+          message: 'SMT-LIB string parsing not available in this Z3 WASM build. Use expression-based API.',
+        };
+      } catch (error) {
+        if (error instanceof Error && error.message === 'Timeout') {
+          return { status: 'timeout' };
+        }
+        return {
+          status: 'error',
+          message: error instanceof Error ? error.message : String(error),
+        };
+      }
+    })();
+
+    try {
+      return await Promise.race([solvePromise, timeoutPromise]);
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Timeout') {
+        return { status: 'timeout' };
+      }
+      return {
+        status: 'error',
+        message: error instanceof Error ? error.message : String(error),
+      };
+    }
   }
   
   /**
-   * Solve using expression conversion (preferred method)
+   * Solve using expression conversion (preferred method).
+   *
+   * Converts the SMTExpr tree to Z3 expressions via the expr-converter
+   * module, which handles Bool, Int, Real, String, Array sorts and quantifiers.
    */
   private async solveWithExpressions(
     formula: SMTExpr,
@@ -318,28 +362,8 @@ export class Z3WasmSolver {
       throw new Error('Z3 context not initialized');
     }
 
-    const z3 = await initZ3();
-    const ctx = this.context as {
-      Solver: new () => {
-        add: (expr: unknown) => void;
-        check: () => Promise<string>;
-        model: () => { toString: () => string };
-      };
-      Int: {
-        const: (name: string) => {
-          ge: (val: number | unknown) => unknown;
-          le: (val: number | unknown) => unknown;
-          gt: (val: number | unknown) => unknown;
-          lt: (val: number | unknown) => unknown;
-        };
-        val: (val: number) => unknown;
-      };
-      And: (...args: unknown[]) => unknown;
-      Or: (...args: unknown[]) => unknown;
-      Not: (arg: unknown) => unknown;
-    };
+    const ctx = this.context as unknown as Z3Context;
 
-    // Use timeout wrapper
     const timeoutPromise = new Promise<SMTCheckResult>((_, reject) => {
       setTimeout(() => {
         reject(new Error('Timeout'));
@@ -348,31 +372,19 @@ export class Z3WasmSolver {
 
     const solvePromise = (async () => {
       try {
-        // Convert declarations to Z3 variables
-        const vars = new Map<string, unknown>();
-        for (const decl of declarations) {
-          if (decl.kind === 'Const') {
-            if (decl.sort.kind === 'Int') {
-              vars.set(decl.name, ctx.Int.const(decl.name));
-            }
-          }
-        }
+        const vars = createVarMap(declarations, ctx);
+        const z3Expr = convertExpr(formula, ctx, vars);
 
-        // Convert formula to Z3 expression (simplified - only handles basic cases)
-        const z3Expr = this.convertToZ3Expr(formula, ctx, vars);
-        
-        // Create solver and add expression
         const solver = new ctx.Solver();
         solver.add(z3Expr);
-        
-        // Check satisfiability
+
         const checkResult = await solver.check();
-        
+
         if (checkResult === 'sat') {
           const model = solver.model();
           return {
             status: 'sat' as const,
-            model: this.parseModelString(model.toString()),
+            model: this.extractModel(model, vars),
           };
         } else if (checkResult === 'unsat') {
           return { status: 'unsat' as const };
@@ -404,116 +416,107 @@ export class Z3WasmSolver {
   }
 
   /**
-   * Convert SMTExpr to Z3 expression (simplified converter)
+   * Extract a model as a plain JS object.
+   *
+   * Tries per-variable eval first (handles all sorts correctly),
+   * then falls back to string-based model parsing.
    */
-  private convertToZ3Expr(
-    expr: SMTExpr,
-    ctx: {
-      Int: {
-        const: (name: string) => {
-          ge: (val: number | unknown) => unknown;
-          le: (val: number | unknown) => unknown;
-          gt: (val: number | unknown) => unknown;
-          lt: (val: number | unknown) => unknown;
-        };
-        val: (val: number) => unknown;
-      };
-      And: (...args: unknown[]) => unknown;
-      Or: (...args: unknown[]) => unknown;
-      Not: (arg: unknown) => unknown;
-    },
-    vars: Map<string, unknown>
-  ): unknown {
-    switch (expr.kind) {
-      case 'Var': {
-        const varExpr = vars.get(expr.name);
-        if (!varExpr) {
-          throw new Error(`Variable ${expr.name} not found`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private extractModel(model: any, vars: Map<string, any>): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
+
+    for (const [name, varExpr] of vars) {
+      try {
+        const val = model.eval(varExpr, true);
+        if (val != null) {
+          result[name] = this.parseValueString(String(val));
         }
-        return varExpr;
+      } catch {
+        // Variable not evaluable in model — skip
       }
-
-      case 'Int':
-        return ctx.Int.val(expr.value);
-
-      case 'Gt': {
-        const left = this.getIntExpr(expr.left, ctx, vars);
-        const right = this.getIntExpr(expr.right, ctx, vars);
-        return left.gt(typeof right === 'number' ? right : ctx.Int.val(0));
-      }
-
-      case 'Lt': {
-        const left = this.getIntExpr(expr.left, ctx, vars);
-        const right = this.getIntExpr(expr.right, ctx, vars);
-        return left.lt(typeof right === 'number' ? right : ctx.Int.val(0));
-      }
-
-      case 'Ge': {
-        const left = this.getIntExpr(expr.left, ctx, vars);
-        const right = this.getIntExpr(expr.right, ctx, vars);
-        return left.ge(typeof right === 'number' ? right : ctx.Int.val(0));
-      }
-
-      case 'Le': {
-        const left = this.getIntExpr(expr.left, ctx, vars);
-        const right = this.getIntExpr(expr.right, ctx, vars);
-        return left.le(typeof right === 'number' ? right : ctx.Int.val(0));
-      }
-
-      case 'And':
-        return ctx.And(...expr.args.map(arg => this.convertToZ3Expr(arg, ctx, vars)));
-
-      case 'Or':
-        return ctx.Or(...expr.args.map(arg => this.convertToZ3Expr(arg, ctx, vars)));
-
-      case 'Not':
-        return ctx.Not(this.convertToZ3Expr(expr.arg, ctx, vars));
-
-      default:
-        throw new Error(`Unsupported expression kind: ${expr.kind}`);
     }
-  }
 
-  private getIntExpr(
-    expr: SMTExpr,
-    ctx: {
-      Int: {
-        const: (name: string) => {
-          ge: (val: number | unknown) => unknown;
-          le: (val: number | unknown) => unknown;
-          gt: (val: number | unknown) => unknown;
-          lt: (val: number | unknown) => unknown;
-        };
-        val: (val: number) => unknown;
-      };
-    },
-    vars: Map<string, unknown>
-  ): { ge: (val: number | unknown) => unknown; le: (val: number | unknown) => unknown; gt: (val: number | unknown) => unknown; lt: (val: number | unknown) => unknown } | number {
-    if (expr.kind === 'Var') {
-      const varExpr = vars.get(expr.name);
-      return varExpr as { ge: (val: number | unknown) => unknown; le: (val: number | unknown) => unknown; gt: (val: number | unknown) => unknown; lt: (val: number | unknown) => unknown };
-    }
-    if (expr.kind === 'Int') {
-      return expr.value;
-    }
-    throw new Error(`Cannot convert to Int expression: ${expr.kind}`);
+    if (Object.keys(result).length > 0) return result;
+
+    return this.parseModelString(model.toString());
   }
 
   /**
-   * Parse model string from Z3 output
+   * Parse model string from Z3 output.
+   *
+   * Handles parametric sorts like (Array Int Int) and nested values
+   * by walking balanced parentheses instead of a flat regex.
    */
   private parseModelString(modelStr: string): Record<string, unknown> {
     const result: Record<string, unknown> = {};
-    
-    // Parse Z3 model format: (define-fun x () Int 42)
-    const matches = modelStr.matchAll(/\(define-fun\s+(\w+)\s+\(\)\s+\w+\s+([^)]+)\)/g);
-    for (const match of matches) {
-      const name = match[1];
-      const valueStr = match[2];
-      result[name!] = this.parseValueString(valueStr);
+
+    let searchFrom = 0;
+    while (searchFrom < modelStr.length) {
+      const idx = modelStr.indexOf('(define-fun ', searchFrom);
+      if (idx === -1) break;
+
+      let pos = idx + '(define-fun '.length;
+
+      // Read variable name
+      while (pos < modelStr.length && /\s/.test(modelStr[pos]!)) pos++;
+      const nameStart = pos;
+      while (pos < modelStr.length && /\w/.test(modelStr[pos]!)) pos++;
+      const name = modelStr.substring(nameStart, pos);
+
+      // Skip params ()
+      while (pos < modelStr.length && modelStr[pos] !== '(') pos++;
+      pos = this.skipBalanced(modelStr, pos);
+
+      // Skip whitespace
+      while (pos < modelStr.length && /\s/.test(modelStr[pos]!)) pos++;
+
+      // Skip sort — may be an atom like Int or a compound like (Array Int Int)
+      pos = this.skipSExpr(modelStr, pos);
+
+      // Skip whitespace
+      while (pos < modelStr.length && /\s/.test(modelStr[pos]!)) pos++;
+
+      // Read value
+      const valStart = pos;
+      pos = this.skipSExpr(modelStr, pos);
+      const valueStr = modelStr.substring(valStart, pos).trim();
+
+      if (name) {
+        result[name] = this.parseValueString(valueStr);
+      }
+
+      searchFrom = pos;
     }
-    
+
     return result;
+  }
+
+  private skipBalanced(str: string, pos: number): number {
+    if (pos >= str.length || str[pos] !== '(') return pos;
+    let depth = 1;
+    pos++;
+    while (pos < str.length && depth > 0) {
+      if (str[pos] === '(') depth++;
+      else if (str[pos] === ')') depth--;
+      pos++;
+    }
+    return pos;
+  }
+
+  private skipSExpr(str: string, pos: number): number {
+    if (pos >= str.length) return pos;
+    if (str[pos] === '(') return this.skipBalanced(str, pos);
+    if (str[pos] === '"') {
+      pos++;
+      while (pos < str.length) {
+        if (str[pos] === '\\') { pos += 2; continue; }
+        if (str[pos] === '"') { pos++; break; }
+        pos++;
+      }
+      return pos;
+    }
+    while (pos < str.length && !/[\s()]/.test(str[pos]!)) pos++;
+    return pos;
   }
 
 

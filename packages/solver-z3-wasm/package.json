@@ -1,7 +1,7 @@
 {
   "name": "@isl-lang/solver-z3-wasm",
   "version": "0.1.0",
-  "description": "Z3 WASM solver adapter for ISL - provides SMT solving without external installs",
+  "description": "Z3 WASM solver adapter for ISL - Bool, Int, Real, String, Array theories + quantifiers without external installs",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

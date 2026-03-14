@@ -325,31 +325,129 @@ function walkAst(ast: unknown, visitor: (node: unknown) => void): void {
   }
 }
 
+// ============================================================================
+// AST Effect Detection Registry
+// ============================================================================
+
+interface ASTEffectRule {
+  callee: string | RegExp;
+  effect: EffectRef;
+}
+
+const AST_EFFECT_RULES: ASTEffectRule[] = [
+  // IO effects
+  { callee: 'fetch', effect: { effect: 'IO', operations: ['request'] } },
+  { callee: 'readFile', effect: { effect: 'IO', operations: ['read'] } },
+  { callee: 'readFileSync', effect: { effect: 'IO', operations: ['read'] } },
+  { callee: 'writeFile', effect: { effect: 'IO', operations: ['write'] } },
+  { callee: 'writeFileSync', effect: { effect: 'IO', operations: ['write'] } },
+  { callee: 'appendFile', effect: { effect: 'IO', operations: ['write'] } },
+  { callee: 'unlink', effect: { effect: 'IO', operations: ['delete'] } },
+  { callee: 'unlinkSync', effect: { effect: 'IO', operations: ['delete'] } },
+  { callee: 'mkdir', effect: { effect: 'IO', operations: ['write'] } },
+  { callee: 'rmdir', effect: { effect: 'IO', operations: ['delete'] } },
+  { callee: /^console\.\w+$/, effect: { effect: 'IO', operations: ['log'] } },
+  { callee: 'exec', effect: { effect: 'IO', operations: ['process'] } },
+  { callee: 'execSync', effect: { effect: 'IO', operations: ['process'] } },
+  { callee: 'spawn', effect: { effect: 'IO', operations: ['process'] } },
+
+  // Async effects
+  { callee: 'setTimeout', effect: { effect: 'Async', operations: ['timer'] } },
+  { callee: 'setInterval', effect: { effect: 'Async', operations: ['timer'] } },
+  { callee: 'setImmediate', effect: { effect: 'Async', operations: ['timer'] } },
+  { callee: 'queueMicrotask', effect: { effect: 'Async', operations: ['schedule'] } },
+  { callee: /^Promise\.\w+$/, effect: { effect: 'Async' } },
+
+  // Random / nondeterminism
+  { callee: 'Math.random', effect: { effect: 'Random', operations: ['float'] } },
+  { callee: /^crypto\.random\w*$/, effect: { effect: 'Random', operations: ['bytes'] } },
+  { callee: 'crypto.getRandomValues', effect: { effect: 'Random', operations: ['bytes'] } },
+  { callee: 'uuid', effect: { effect: 'Random', operations: ['uuid'] } },
+  { callee: 'nanoid', effect: { effect: 'Random', operations: ['uuid'] } },
+
+  // Network
+  { callee: /^axios\.\w+$/, effect: { effect: 'Network' } },
+  { callee: /^http\.\w+$/, effect: { effect: 'Network' } },
+  { callee: /^https\.\w+$/, effect: { effect: 'Network' } },
+
+  // Database
+  { callee: /^prisma\.\w+$/, effect: { effect: 'Database' } },
+  { callee: /^knex\.\w+$/, effect: { effect: 'Database' } },
+  { callee: /^sequelize\.\w+$/, effect: { effect: 'Database' } },
+  { callee: /^mongoose\.\w+$/, effect: { effect: 'Database' } },
+
+  // State
+  { callee: 'setState', effect: { effect: 'State', operations: ['put'] } },
+  { callee: /^store\.\w+$/, effect: { effect: 'State' } },
+
+  // Time
+  { callee: 'Date.now', effect: { effect: 'Time', operations: ['now'] } },
+  { callee: 'performance.now', effect: { effect: 'Time', operations: ['now'] } },
+  { callee: 'process.hrtime', effect: { effect: 'Time', operations: ['now'] } },
+];
+
+export function registerASTEffectRule(rule: ASTEffectRule): void {
+  AST_EFFECT_RULES.push(rule);
+}
+
+export function registerASTEffectRules(rules: ASTEffectRule[]): void {
+  AST_EFFECT_RULES.push(...rules);
+}
+
+function matchCallee(name: string, pattern: string | RegExp): boolean {
+  if (typeof pattern === 'string') return name === pattern;
+  return pattern.test(name);
+}
+
 function getNodeEffects(node: unknown): EffectRef[] {
   if (!node || typeof node !== 'object') return [];
 
   const n = node as Record<string, unknown>;
 
-  // Check for effect annotations
   if (n.effects && Array.isArray(n.effects)) {
     return n.effects as EffectRef[];
   }
 
-  // Check for known effectful operations
   if (n.kind === 'CallExpression') {
     const callee = n.callee as Record<string, unknown> | undefined;
     if (callee?.name) {
       const name = callee.name as string;
-      // Known effectful functions
-      if (['fetch', 'readFile', 'writeFile', 'console.log'].includes(name)) {
-        return [{ effect: 'IO' }];
+      for (const rule of AST_EFFECT_RULES) {
+        if (matchCallee(name, rule.callee)) {
+          return [{ ...rule.effect }];
+        }
       }
-      if (['setTimeout', 'setInterval', 'Promise'].includes(name)) {
-        return [{ effect: 'Async' }];
+    }
+
+    if (callee?.kind === 'MemberExpression') {
+      const obj = callee.object as Record<string, unknown> | undefined;
+      const prop = callee.property as Record<string, unknown> | undefined;
+      if (obj?.name && prop?.name) {
+        const fullName = `${obj.name}.${prop.name}`;
+        for (const rule of AST_EFFECT_RULES) {
+          if (matchCallee(fullName, rule.callee)) {
+            return [{ ...rule.effect }];
+          }
+        }
       }
-      if (['Math.random', 'crypto.random'].includes(name)) {
-        return [{ effect: 'Random' }];
-      }
+    }
+  }
+
+  if (n.kind === 'AwaitExpression') {
+    return [{ effect: 'Async', operations: ['await'] }];
+  }
+
+  if (n.kind === 'ThrowStatement') {
+    return [{ effect: 'Exception', operations: ['throw'] }];
+  }
+
+  if (n.kind === 'NewExpression') {
+    const callee = n.callee as Record<string, unknown> | undefined;
+    if (callee?.name === 'Date') {
+      return [{ effect: 'Time', operations: ['now'] }];
+    }
+    if (callee?.name === 'Worker') {
+      return [{ effect: 'Async', operations: ['fork'] }];
     }
   }
 

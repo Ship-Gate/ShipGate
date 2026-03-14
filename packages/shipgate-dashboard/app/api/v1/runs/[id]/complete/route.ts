@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authenticate, assertOrgAccess, requireOrgRole } from '@/lib/api-auth';
+import { authenticate, requireOrgRole } from '@/lib/api-auth';
 import { prisma } from '@/lib/prisma';
 import { auditLog } from '@/lib/audit';
+import { dispatchSlackNotifications } from '@/lib/slack-notify';
 import type { Verdict } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
 
@@ -12,7 +13,10 @@ export async function POST(
   const auth = await authenticate(req);
   if (auth instanceof NextResponse) return auth;
 
-  const run = await prisma.run.findUnique({ where: { id: params.id } });
+  const run = await prisma.run.findUnique({
+    where: { id: params.id },
+    include: { project: { select: { name: true } } },
+  });
   if (!run) {
     return NextResponse.json({ error: 'Run not found' }, { status: 404 });
   }
@@ -41,6 +45,17 @@ export async function POST(
   });
 
   auditLog(req, auth, 'run.completed', `run:${params.id}`, run.orgId, { verdict: updated.verdict, score: updated.score });
+
+  const payload = {
+    runId: params.id,
+    projectName: run.project.name,
+    verdict: updated.verdict,
+    score: updated.score,
+  };
+  void dispatchSlackNotifications(run.orgId, 'run.completed', payload).catch(() => {});
+  if (updated.verdict === 'NO_SHIP') {
+    void dispatchSlackNotifications(run.orgId, 'verdict.no_ship', payload).catch(() => {});
+  }
 
   return NextResponse.json({
     data: { id: updated.id, status: updated.status, verdict: updated.verdict, score: updated.score },

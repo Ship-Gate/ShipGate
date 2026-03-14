@@ -5,11 +5,13 @@ node_modules/
 dist/
 generated/
 .next/
+.turbo/
 .vercel/
 
 # IDE
 .idea/
 .vscode/
+.wikicode/
 *.swp
 *.swo
 

@@ -1,14 +1,14 @@
 {
   "version": "2.0.0",
   "provenance": {
-    "commitHash": "7ae520ef84e3462353ba47c463c17bc35d88c41c",
-    "commitMessage": "fix: exclude Next.js app packages from gate to eliminate false-positive ghost-import errors",
+    "commitHash": "f4a24d39298c466b4098e4cff3b2fd20df1b2277",
+    "commitMessage": "chore: bump extension to v4.0.0, point all API URLs to app.shipgate.dev",
     "nodeVersion": "v20.20.0",
     "packageManager": {
       "name": "pnpm",
       "version": "8.15.0"
     },
-    "timestamp": "2026-02-28T22:05:59.072Z",
+    "timestamp": "2026-03-01T18:22:55.332Z",
     "generatorVersion": "2.0.0",
     "repoRoot": "/Users/liquidgroove/Desktop/ShipGate-main"
   },
@@ -226,6 +226,13 @@
   ],
   "dependencies": [
     {
+      "name": "@shipgate/cli",
+      "version": "workspace:*",
+      "type": "development",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
       "name": "@changesets/cli",
       "version": "^2.27.0",
       "type": "development",
@@ -280,7 +287,7 @@
     "routes": 8,
     "envVars": 12,
     "dbTables": 0,
-    "dependencies": 6,
+    "dependencies": 7,
     "runtimeProbes": 1,
     "avgConfidence": 0.8136363636363637
   },

@@ -1,31 +1,34 @@
-import { useEffect, useRef, type ReactNode, type RefObject } from "react";
+import React, { useEffect, useRef, type ReactNode, type RefObject } from "react";
 import Lenis from "lenis";
 import "./tunnel.css";
 
 const SPEED_FACTOR = 15.0;
 const ROCKET_SPEED_FACTOR = 0.25;
 
-// Zoomed-out fade distances — cards visible from further away
 const FAR_FADE_START = -9000;
 const FAR_FADE_END = -4800;
 const NEAR_FADE_START = 1000;
 const NEAR_FADE_END = 1900;
 
-// Snap-lock settings
-const SNAP_DEBOUNCE_MS = 70; // Wait this long after scroll settles to snap
-const SNAP_DURATION = 1.1; // Snap animation duration in seconds
-const SNAP_DEAD_ZONE = 60; // Z distance threshold — if already this close, don't snap
-const STICKY_RANGE = 9500; // Z distance for card straightening + slowdown
+const SNAP_DEBOUNCE_MS = 35;
+const SNAP_DURATION = 1.8;
+const SNAP_DEAD_ZONE = 40;
+const STICKY_RANGE = 14000;
+const STICKY_FRICTION = 0.25;
 
 interface ScrollTunnelProps {
   children: ReactNode;
   tunnelScrollRef?: RefObject<number>;
+  currentCardRef?: React.MutableRefObject<number>;
+  totalSections?: number;
   totalDepth?: number;
 }
 
 export function ScrollTunnel({
   children,
   tunnelScrollRef,
+  currentCardRef,
+  totalSections,
   totalDepth = 10000,
 }: ScrollTunnelProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -49,9 +52,9 @@ export function ScrollTunnel({
 
     /* ── Lenis smooth scroll ── */
     const lenis = new Lenis({
-      lerp: isMobileRef.current ? 0.001 : 0.06,
-      touchMultiplier: isMobileRef.current ? 2.0 : 1.35,
-      wheelMultiplier: 0.55,
+      lerp: isMobileRef.current ? 0.001 : 0.04,
+      touchMultiplier: isMobileRef.current ? 2.0 : 1.2,
+      wheelMultiplier: 0.3,
     });
 
     let scrollPos = 0;
@@ -104,7 +107,10 @@ export function ScrollTunnel({
 
       lenis.scrollTo(targetScroll, {
         duration: SNAP_DURATION,
-        easing: (t: number) => 1 - Math.pow(1 - t, 4), // ease-out quart
+        easing: (t: number) => {
+          const t1 = 1 - Math.pow(1 - t, 5);
+          return t1 * (1 + 0.3 * Math.sin(t * Math.PI));
+        },
         onComplete: () => {
           isSnappingRef.current = false;
         },
@@ -126,7 +132,7 @@ export function ScrollTunnel({
       if (
         hasUserInteracted &&
         !isSnappingRef.current &&
-        Math.abs(e.velocity) < 1.2
+        Math.abs(e.velocity) < 0.6
       )
         scheduleSnap();
     });
@@ -148,6 +154,7 @@ export function ScrollTunnel({
 
       // Track current card
       currentCardIndexRef.current = findNearestCardIndex(scrollPos);
+      if (currentCardRef) currentCardRef.current = currentCardIndexRef.current;
 
       /* Sticky factor: how close are we to any section center? */
       let minAbsViz = Infinity;
@@ -163,6 +170,12 @@ export function ScrollTunnel({
       const stickyFactor = nearSection
         ? 1.0 - Math.min(minAbsViz / STICKY_RANGE, 1.0)
         : 0;
+
+      if (!isSnappingRef.current && !isMobileRef.current) {
+        const baseLerp = 0.04;
+        const stickyLerp = baseLerp * (1.0 - stickyFactor * STICKY_FRICTION);
+        lenis.options.lerp = Math.max(0.008, stickyLerp);
+      }
 
       /* Update external scroll progress ref */
       if (tunnelScrollRef) {

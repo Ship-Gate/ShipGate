@@ -1,13 +1,16 @@
 /**
  * Go Command — One command to rule them all.
  *
+ * Zero-config by design. Works without API keys via specless mode.
+ * When API keys are available, also generates ISL specs for deeper coverage.
+ *
  * Usage:
- *   shipgate go                   # Scan current dir, infer ISL, verify, gate
+ *   shipgate go                   # Scan current dir (zero-config)
  *   shipgate go ./my-project      # Scan target dir
  *   shipgate go --fix             # Auto-heal violations after scan
  *   shipgate go --deep            # Thorough scan with higher coverage
  *
- * Pipeline: detect → init → infer ISL → truthpack → verify → gate → report
+ * Pipeline: detect → init → specless scan → [AI specs if keys available] → provenance → gate → report
  */
 
 import { resolve, relative, join, basename } from 'path';
@@ -28,6 +31,16 @@ export interface GoOptions {
   verbose?: boolean;
   upload?: boolean;
   project?: string;
+  /** Skip provenance scan */
+  noProvenance?: boolean;
+}
+
+export interface ProvenanceSummarySnapshot {
+  totalLines: number;
+  aiAuthored: number;
+  humanAuthored: number;
+  aiPercentage: number;
+  topAgent: string | null;
 }
 
 export interface GoResult {
@@ -35,6 +48,7 @@ export interface GoResult {
   verdict: 'SHIP' | 'NO_SHIP' | 'WARN';
   phases: Array<{ name: string; success: boolean; duration: number; details?: string }>;
   scanResult: ProjectScanResult | null;
+  provenance: ProvenanceSummarySnapshot | null;
   duration: number;
   errors: string[];
 }
@@ -128,8 +142,14 @@ export async function go(targetPath: string, options: GoOptions = {}): Promise<G
   }
 
   // ── Phase 3: Scan + Infer ISL + Truthpack + Gate ───────────────────
+  const hasAIKeys = !!(process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY);
   const scanStart = Date.now();
-  spinner && (spinner.text = 'Scanning project, generating ISL specs, running gate...');
+
+  if (hasAIKeys) {
+    spinner && (spinner.text = 'Scanning project, generating ISL specs, running gate...');
+  } else {
+    spinner && (spinner.text = 'Scanning project (specless mode — no API keys needed)...');
+  }
   spinner?.start();
 
   let scanResult: ProjectScanResult | null = null;
@@ -159,6 +179,104 @@ export async function go(targetPath: string, options: GoOptions = {}): Promise<G
     errors.push(`Scan failed: ${msg}`);
     phases.push({ name: 'scan', success: false, duration: Date.now() - scanStart, details: msg });
     spinner?.fail('Scan failed');
+  }
+
+  // ── Phase 3b: Specless fallback when no specs were generated ──────
+  // Ensures `shipgate go` always delivers value, even without API keys.
+  if (scanResult && scanResult.specsGenerated === 0 && scanResult.filesScanned > 0) {
+    const speclessStart = Date.now();
+    spinner && (spinner.text = 'Running specless security checks (no API keys required)...');
+    spinner?.start();
+
+    try {
+      const { gate } = await import('./gate.js');
+      const speclessResult = await gate({
+        path: resolvedPath,
+        mode: 'specless',
+        threshold: options.minCoverage ?? 70,
+      });
+
+      const speclessViolations = speclessResult.violations?.length ?? 0;
+      const speclessScore = speclessResult.score ?? 0;
+
+      if (!scanResult.gateResult) {
+        scanResult.gateResult = {
+          verdict: speclessResult.verdict ?? 'WARN',
+          score: speclessScore,
+          violations: speclessResult.violations ?? [],
+        };
+        scanResult.verdict = speclessResult.verdict ?? 'WARN';
+      }
+
+      phases.push({
+        name: 'specless',
+        success: speclessViolations === 0,
+        duration: Date.now() - speclessStart,
+        details: `${speclessViolations} findings, score: ${speclessScore}`,
+      });
+
+      spinner?.succeed(`Specless checks: ${speclessViolations} findings (score: ${speclessScore})`);
+    } catch {
+      phases.push({
+        name: 'specless',
+        success: true,
+        duration: Date.now() - speclessStart,
+        details: 'specless checks skipped',
+      });
+      spinner?.info('Specless checks skipped');
+    }
+  }
+
+  // ── Phase 3c: Provenance snapshot ─────────────────────────────────
+  let provenance: ProvenanceSummarySnapshot | null = null;
+  if (!options.noProvenance) {
+    const provStart = Date.now();
+    spinner && (spinner.text = 'Scanning code provenance (AI attribution)...');
+    spinner?.start();
+
+    try {
+      const { buildProjectAttribution, getAgentDisplayName } = await import('@isl-lang/code-provenance');
+      const attr = buildProjectAttribution({
+        cwd: resolvedPath,
+        maxFiles: 100,
+      });
+
+      let topAgentName: string | null = null;
+      let topAgentCount = 0;
+      for (const [agent, count] of Object.entries(attr.summary.byAgent)) {
+        if ((count ?? 0) > topAgentCount) {
+          topAgentCount = count ?? 0;
+          topAgentName = getAgentDisplayName(agent as any);
+        }
+      }
+
+      provenance = {
+        totalLines: attr.summary.totalLines,
+        aiAuthored: attr.summary.aiAuthored,
+        humanAuthored: attr.summary.humanAuthored,
+        aiPercentage: attr.summary.totalLines > 0
+          ? Math.round((attr.summary.aiAuthored / attr.summary.totalLines) * 100)
+          : 0,
+        topAgent: topAgentName,
+      };
+
+      phases.push({
+        name: 'provenance',
+        success: true,
+        duration: Date.now() - provStart,
+        details: `${provenance.totalLines} lines, ${provenance.aiPercentage}% AI-authored`,
+      });
+
+      spinner?.succeed(`Provenance: ${provenance.totalLines} lines, ${provenance.aiPercentage}% AI-authored`);
+    } catch {
+      phases.push({
+        name: 'provenance',
+        success: true,
+        duration: Date.now() - provStart,
+        details: 'provenance skipped (not in git repo)',
+      });
+      spinner?.info('Provenance scan skipped');
+    }
   }
 
   // ── Phase 4: Auto-heal (if --fix and violations exist) ─────────────
@@ -206,6 +324,7 @@ export async function go(targetPath: string, options: GoOptions = {}): Promise<G
     verdict,
     phases,
     scanResult,
+    provenance,
     duration: totalDuration,
     errors,
   };
@@ -258,29 +377,69 @@ export function printGoResult(result: GoResult, projectPath: string): void {
     }
   }
 
-  if (result.errors.length > 0) {
+  const allIssues = [
+    ...result.errors,
+    ...(result.scanResult?.errors ?? []),
+  ];
+  if (allIssues.length > 0) {
     console.log('');
     console.log(chalk.bold('  Issues:'));
-    for (const err of result.errors.slice(0, 5)) {
+    for (const err of allIssues.slice(0, 8)) {
       console.log(`    ${chalk.yellow('!')} ${err}`);
     }
+    if (allIssues.length > 8) {
+      console.log(chalk.gray(`    ... and ${allIssues.length - 8} more`));
+    }
+  }
+
+  // ── Provenance summary ─────────────────────────────────────────────
+  if (result.provenance) {
+    const p = result.provenance;
+    console.log('');
+    console.log(chalk.bold('  Code Provenance:'));
+    const humanPct = p.totalLines > 0 ? Math.round((p.humanAuthored / p.totalLines) * 100) : 0;
+    console.log(`    ${chalk.green(`${humanPct}% Human`)}  ${chalk.magenta(`${p.aiPercentage}% AI`)}  ${chalk.gray(`(${p.totalLines.toLocaleString()} total lines)`)}`);
+    if (p.topAgent) {
+      console.log(`    Top AI agent: ${chalk.magenta(p.topAgent)}`);
+    }
+    console.log(`    ${chalk.gray('$')} shipgate provenance        ${chalk.gray('# Full audit trail')}`);
+  } else {
+    const provenancePhase = result.phases.find((p) => p.name === 'provenance');
+    console.log('');
+    console.log(chalk.bold('  Code Provenance:'));
+    if (provenancePhase?.details?.includes('not in git repo')) {
+      console.log(chalk.gray('    Not available — project is not a git repository.'));
+      console.log(chalk.gray('    Initialize git and commit your code to enable provenance tracking.'));
+    } else {
+      console.log(chalk.gray('    Skipped — run separately:'));
+    }
+    console.log(`    ${chalk.gray('$')} shipgate provenance init   ${chalk.gray('# Install pre-commit hook for AI tagging')}`);
+    console.log(`    ${chalk.gray('$')} shipgate provenance        ${chalk.gray('# Full audit trail')}`);
   }
 
   console.log('');
   console.log(chalk.bold('  Next steps:'));
+  if (result.scanResult && result.scanResult.specsGenerated === 0 && result.scanResult.filesScanned > 0) {
+    console.log(chalk.gray('    Specless mode — security checks ran without ISL specs.'));
+    console.log(chalk.gray('    For deeper verification, set ANTHROPIC_API_KEY or OPENAI_API_KEY.'));
+    console.log('');
+  }
   if (result.verdict === 'SHIP') {
     console.log(chalk.green('    Your project is safe to ship.'));
     console.log(`    ${chalk.gray('$')} shipgate gate --ci         ${chalk.gray('# Add to CI')}`);
+    console.log(`    ${chalk.gray('$')} shipgate provenance        ${chalk.gray('# AI audit trail')}`);
     console.log(`    ${chalk.gray('$')} shipgate scan --upload     ${chalk.gray('# Push to dashboard')}`);
   } else if (result.verdict === 'WARN') {
-    console.log(chalk.yellow('    Review generated specs and coverage gaps.'));
+    console.log(chalk.yellow('    Review findings and coverage gaps.'));
     if (result.scanResult?.mergedSpecPath) {
       console.log(`    ${chalk.gray('$')} shipgate verify ${relative(process.cwd(), result.scanResult.mergedSpecPath)}`);
     }
     console.log(`    ${chalk.gray('$')} shipgate go --fix          ${chalk.gray('# Auto-heal violations')}`);
+    console.log(`    ${chalk.gray('$')} shipgate provenance        ${chalk.gray('# AI audit trail')}`);
   } else {
     console.log(`    ${chalk.gray('$')} shipgate go --fix          ${chalk.gray('# Auto-heal violations')}`);
     console.log(`    ${chalk.gray('$')} shipgate go --deep         ${chalk.gray('# Deeper scan')}`);
+    console.log(`    ${chalk.gray('$')} shipgate provenance        ${chalk.gray('# AI audit trail')}`);
     console.log(`    ${chalk.gray('$')} shipgate heal .            ${chalk.gray('# Manual heal')}`);
   }
 

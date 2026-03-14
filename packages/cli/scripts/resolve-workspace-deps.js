@@ -54,6 +54,7 @@ const PKG_MAP = {
   '@isl-lang/translator': 'isl-translator',
   '@isl-lang/generator': 'isl-generator',
   '@isl-lang/autofix': 'autofix',
+  '@isl-lang/spec-assist': 'spec-assist',
   '@isl-lang/security-scanner': 'security-scanner',
 };
 
@@ -64,8 +65,8 @@ for (const [pkgName, pkgDir] of Object.entries(PKG_MAP)) {
   
   let resolved = null;
   
-  // For observability, use source to avoid ESM/CJS interop issues in dist
-  if (pkgName === '@isl-lang/observability') {
+  // Use source for packages where we need a single entry for clean bundling
+  if (pkgName === '@isl-lang/observability' || pkgName === '@isl-lang/spec-assist') {
     const srcPath = resolve(pkgPath, 'src', 'index.ts');
     if (existsSync(srcPath)) {
       resolved = srcPath;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 type Profile = {
   id: string;
@@ -84,8 +84,26 @@ export default function SettingsPage() {
     );
   }
 
+  const searchParams = useSearchParams();
+  const upgradeTarget = searchParams.get('upgrade');
+
   return (
     <div className="max-w-2xl mx-auto">
+      {upgradeTarget === 'enterprise' && (
+        <div className="mb-6 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+          <h3 className="text-sm font-semibold text-purple-400 mb-1">Enterprise Feature</h3>
+          <p className="text-xs text-sg-text3 mb-3">
+            SSO/SAML, audit log export, and API access require the Enterprise plan.
+          </p>
+          <a
+            href="/checkout?plan=enterprise"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500 text-white text-xs font-medium hover:bg-purple-600 transition-colors"
+          >
+            Upgrade to Enterprise
+            <span className="opacity-75">$149/mo</span>
+          </a>
+        </div>
+      )}
       <button
         onClick={() => router.back()}
         className="text-xs text-sg-text3 hover:text-sg-text1 mb-4 transition-colors"
@@ -183,6 +201,38 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* SSO Configuration (admin) */}
+      {profile.orgs.some((o) => o.role === 'admin') && (
+        <div className="bg-sg-bg1 border border-sg-border rounded-xl p-6 mb-6">
+          <h2 className="text-sm font-semibold text-sg-text0 mb-4">Single Sign-On</h2>
+          <p className="text-sm text-sg-text3 mb-3">
+            Configure SAML SSO and domain verification for enterprise identity (admin only).
+          </p>
+          <a
+            href="/dashboard/settings/sso"
+            className="text-sm text-sg-ship hover:underline"
+          >
+            Configure SSO →
+          </a>
+        </div>
+      )}
+
+      {/* Audit Log Export (admin) */}
+      {profile.orgs.some((o) => o.role === 'admin') && (
+        <div className="bg-sg-bg1 border border-sg-border rounded-xl p-6 mb-6">
+          <h2 className="text-sm font-semibold text-sg-text0 mb-4">Audit Log</h2>
+          <p className="text-sm text-sg-text3 mb-3">
+            Export organization audit trail for compliance (admin only).
+          </p>
+          <a
+            href="/dashboard/settings/audit"
+            className="text-sm text-sg-ship hover:underline"
+          >
+            Export audit log →
+          </a>
+        </div>
+      )}
 
       {/* Organizations */}
       {profile.orgs.length > 0 && (

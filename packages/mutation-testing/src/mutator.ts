@@ -20,6 +20,7 @@ import { logicalOperators } from './mutations/logical';
 import { boundaryOperators } from './mutations/boundary';
 import { nullOperators } from './mutations/null';
 import { temporalOperators } from './mutations/temporal';
+import { parse } from '@isl-lang/parser';
 
 /** All available mutation operators */
 const ALL_OPERATORS: MutationOperator[] = [
@@ -252,18 +253,51 @@ export function createMutants(
 }
 
 /**
- * Parse ISL source (placeholder - would use actual parser)
+ * Adapt a parser AST node (uses `kind`) to the mutation engine's
+ * ISLNode interface (uses `type`). Recursively converts all child nodes.
+ */
+function adaptParserNode(node: Record<string, unknown>): ISLNode {
+  const adapted: ISLNode = {
+    type: (node.kind as string) ?? (node.type as string) ?? 'Unknown',
+  };
+
+  if (node.location) {
+    adapted.location = node.location as ISLNode['location'];
+  } else if (node.span) {
+    const span = node.span as { start?: { line: number; column: number }; end?: { line: number; column: number } };
+    adapted.location = { start: span.start, end: span.end };
+  }
+
+  for (const [key, value] of Object.entries(node)) {
+    if (key === 'kind' || key === 'location' || key === 'span') continue;
+    if (Array.isArray(value)) {
+      adapted[key] = value.map((item) =>
+        typeof item === 'object' && item !== null && ('kind' in item || 'type' in item)
+          ? adaptParserNode(item as Record<string, unknown>)
+          : item
+      );
+    } else if (typeof value === 'object' && value !== null && ('kind' in value || 'type' in value)) {
+      adapted[key] = adaptParserNode(value as Record<string, unknown>);
+    } else {
+      adapted[key] = value;
+    }
+  }
+
+  return adapted;
+}
+
+/**
+ * Parse ISL source using the real @isl-lang/parser and adapt the AST.
  */
 function parseISL(source: string): ISLNode {
-  // This would use the actual ISL parser
-  // For now, return a mock structure
-  return {
-    type: 'Domain',
-    name: 'Mock',
-    entities: [],
-    behaviors: [],
-    types: [],
-  };
+  const result = parse(source);
+  if (result.domain) {
+    return adaptParserNode(result.domain as unknown as Record<string, unknown>);
+  }
+  if (result.errors && result.errors.length > 0) {
+    throw new Error(`ISL parse error: ${result.errors.map((e: { message: string }) => e.message).join('; ')}`);
+  }
+  return { type: 'Domain', name: 'Empty' };
 }
 
 /**

@@ -298,3 +298,31 @@ export type {
   FailureReport,
   ShrunkField,
 } from './failure-formatter.js';
+
+// ============================================================================
+// DIFFERENTIAL TESTING (v1.3.0)
+// ============================================================================
+
+// Comparator - structural and semantic output comparison
+export {
+  deepEqual,
+  semanticEqual,
+  diffOutputs,
+} from './comparator.js';
+
+export type {
+  OutputDiff,
+} from './comparator.js';
+
+// Differential Runner - compare two implementations against same ISL spec
+export {
+  DifferentialRunner,
+  formatDifferentialReport,
+} from './differential.js';
+
+export type {
+  Implementation,
+  DifferentialConfig,
+  DifferentialResult,
+  Disagreement,
+} from './differential.js';

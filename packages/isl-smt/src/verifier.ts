@@ -117,7 +117,7 @@ export class SMTVerifier {
       results.push(preResult);
     }
     
-    // 2. Check postcondition implication (pre => post)
+    // 2. Check success postcondition implication (pre => post success)
     if (behavior.preconditions && behavior.postconditions) {
       const implResult = await this.checkPostconditionImplication(
         behaviorName,
@@ -127,7 +127,105 @@ export class SMTVerifier {
       );
       results.push(implResult);
     }
+
+    // 3. Check error path postcondition consistency for each named error case
+    if (behavior.postconditions) {
+      const errorResults = await this.checkErrorPathConsistency(
+        behaviorName,
+        behavior.preconditions,
+        behavior.postconditions,
+        ctx
+      );
+      results.push(...errorResults);
+    }
     
+    return results;
+  }
+
+  /**
+   * Check that error-path postconditions are internally consistent (satisfiable).
+   * For each named error guard (e.g. EMAIL_EXISTS, NOT_FOUND), we verify:
+   *   1. The error postconditions for that guard are satisfiable on their own.
+   *   2. They do not contradict the preconditions (i.e. pre AND error_post is sat).
+   */
+  private async checkErrorPathConsistency(
+    behaviorName: string,
+    preconditions: ConditionBlock | undefined,
+    postconditions: ConditionBlock,
+    ctx: EncodingContext
+  ): Promise<SMTVerificationResult[]> {
+    const results: SMTVerificationResult[] = [];
+
+    const postConditionsList = this.normalizeConditions(postconditions);
+
+    // Group conditions by guard name; skip the success guard
+    const errorGroups = new Map<string, ConditionStatement[]>();
+    for (const condition of postConditionsList) {
+      if (!condition.guard || this.isSuccessGuard(condition.guard)) continue;
+      const guardName = typeof condition.guard === 'string'
+        ? condition.guard
+        : (condition.guard as { name?: string }).name ?? 'unknown_error';
+      const existing = errorGroups.get(guardName) ?? [];
+      existing.push(...(Array.isArray(condition.statements) ? condition.statements : []));
+      errorGroups.set(guardName, existing);
+    }
+
+    for (const [guardName, statements] of errorGroups) {
+      if (statements.length === 0) continue;
+      const start = Date.now();
+      const name = `${behaviorName}/error_path/${guardName}`;
+
+      const errorCtx = createContext();
+      for (const [k, v] of ctx.variables) errorCtx.variables.set(k, v);
+      // Add an error result variable for the named error case
+      errorCtx.variables.set('__error__', Sort.String());
+
+      const errorConditions: SMTExpr[] = [];
+      const errors: string[] = [];
+
+      for (const stmt of statements) {
+        const encoded = encodeCondition(stmt, errorCtx);
+        if (encoded.success) {
+          errorConditions.push(encoded.expr);
+        } else if ('error' in encoded) {
+          errors.push(encoded.error);
+        }
+      }
+
+      if (errors.length > 0) {
+        results.push({
+          kind: 'postcondition_implication',
+          name,
+          result: { status: 'error', message: `Error path encoding errors: ${errors.join(', ')}` },
+          duration: Date.now() - start,
+        });
+        continue;
+      }
+
+      if (errorConditions.length === 0) continue;
+
+      const formula = errorConditions.length === 1
+        ? errorConditions[0]!
+        : Expr.and(...errorConditions);
+
+      const declarations: SMTDecl[] = [];
+      for (const [varName, sort] of errorCtx.variables) {
+        declarations.push(Decl.const(varName, sort));
+      }
+
+      // Check: error postconditions are satisfiable (not self-contradictory)
+      const satResult = await this.solver.checkSat(formula, declarations);
+
+      results.push({
+        kind: 'postcondition_implication',
+        name,
+        result: satResult.status === 'unsat'
+          ? { status: 'error', message: `Error path "${guardName}" postconditions are contradictory (unsat)` }
+          : satResult,
+        duration: Date.now() - start,
+      });
+    }
+
     return results;
   }
   
@@ -283,8 +381,8 @@ export class SMTVerifier {
     
     const postConditionsList = this.normalizeConditions(postconditions);
     for (const condition of postConditionsList) {
-      // Skip error guards for now - only verify success postconditions
-      if (condition.guard && condition.guard !== 'success') {
+      // Success-path implication only; error paths are handled by checkErrorPathConsistency
+      if (condition.guard && !this.isSuccessGuard(condition.guard)) {
         continue;
       }
       
@@ -604,7 +702,7 @@ export async function resolveUnknown(
       reason?: string
     ): import('./types.js').SolverEvidence => ({
       queryHash,
-      solver: options?.solver ?? 'builtin',
+      solver: options?.solver ?? 'auto',
       status,
       model,
       reason,
@@ -769,7 +867,7 @@ export async function verifyFormal(
           { kind: 'BoolConst', value: true } as any,
           []
         ),
-        solver: options.solver ?? 'builtin',
+        solver: options.solver ?? 'auto',
         status: result.result.status === 'error' ? 'error' :
                 result.result.status as 'sat' | 'unsat' | 'unknown' | 'timeout',
         model: result.result.status === 'sat' ? result.result.model : undefined,

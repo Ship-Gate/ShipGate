@@ -13,6 +13,15 @@ import { EvidenceCodeLensProvider, ImportDecorationManager } from './views/evide
 import { FileDecorationProvider } from './views/file-decorations';
 import { registerProofCommands } from './commands/proof-commands';
 import { ProService } from './services/proService';
+import * as inlineAnalyzer from './services/inlineAnalyzer';
+import { ShipGateCodeActionProvider } from './services/codeActions';
+import * as supplyChainChecker from './services/supplyChainChecker';
+import * as deepAnalyzer from './services/deepAnalyzer';
+import { TaintFlowCodeLensProvider, extractTaintFlows } from './services/taintCodeLens';
+import { DiagnosticManager } from './services/diagnosticManager';
+import * as output from './output';
+import { createLanguageClient, startClient, stopClient } from './client';
+import type { LanguageClient } from 'vscode-languageclient/node';
 
 const execAsync = promisify(exec);
 
@@ -27,6 +36,9 @@ let importDecorations: ImportDecorationManager;
 let fileDecorations: FileDecorationProvider;
 let extensionContext: vscode.ExtensionContext;
 let proService: ProService;
+let languageClient: LanguageClient | undefined;
+let taintCodeLens: TaintFlowCodeLensProvider;
+let diagnosticManager: DiagnosticManager;
 
 function getCliCommand(): string {
   const fs = require('fs');
@@ -61,12 +73,14 @@ function getCliCommand(): string {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('ShipGate extension activating...');
+  output.log('ShipGate extension activating...');
   extensionContext = context;
 
   // Pro service (server-backed license check via PAT)
   proService = new ProService(context.secrets);
-  void proService.initialize();
+  void proService.initialize().then(() => pushProStatus());
+
+  proService.onChange(() => pushProStatus());
 
   // Sidebar
   sidebarProvider = new ShipGateSidebarProvider(context.extensionUri, context);
@@ -117,6 +131,20 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
+  // Code Actions (Quick Fixes)
+  context.subscriptions.push(
+    vscode.languages.registerCodeActionsProvider(
+      [
+        { language: 'typescript' },
+        { language: 'typescriptreact' },
+        { language: 'javascript' },
+        { language: 'javascriptreact' },
+      ],
+      new ShipGateCodeActionProvider(),
+      { providedCodeActionKinds: ShipGateCodeActionProvider.providedCodeActionKinds }
+    )
+  );
+
   // Status bar
   statusBar = new ShipGateStatusBar();
   context.subscriptions.push(statusBar);
@@ -132,6 +160,27 @@ export function activate(context: vscode.ExtensionContext) {
   // File Decorations
   fileDecorations = new FileDecorationProvider();
   context.subscriptions.push(vscode.window.registerFileDecorationProvider(fileDecorations));
+
+  // ISL Language Server (provides diagnostics, completions, hover, go-to-def for .isl files)
+  const lspOutputChannel = vscode.window.createOutputChannel('ISL Language Server');
+  context.subscriptions.push(lspOutputChannel);
+  try {
+    languageClient = createLanguageClient(context, lspOutputChannel);
+    startClient(languageClient).then(() => {
+      lspOutputChannel.appendLine('[ShipGate] ISL Language Server started');
+    }).catch((err) => {
+      lspOutputChannel.appendLine(`[ShipGate] LSP start failed: ${err.message}`);
+      console.warn('ShipGate LSP: Could not start language server:', err.message);
+    });
+    context.subscriptions.push({ dispose: () => { if (languageClient) stopClient(languageClient); } });
+  } catch (err: any) {
+    lspOutputChannel.appendLine(`[ShipGate] LSP not available: ${err.message}`);
+    output.log('ISL Language Server not found, running in syntax-only mode');
+  }
+
+  // Output channel
+  context.subscriptions.push({ dispose: () => output.dispose() });
+  output.log('ShipGate extension activated');
 
   // Commands
   context.subscriptions.push(
@@ -153,20 +202,6 @@ export function activate(context: vscode.ExtensionContext) {
       const url = config.get<string>('dashboardApiUrl', 'https://app.shipgate.dev');
       vscode.env.openExternal(vscode.Uri.parse(url));
     }),
-    vscode.commands.registerCommand('shipgate.setApiToken', async () => {
-      const token = await vscode.window.showInputBox({
-        prompt: 'Enter your ShipGate Personal Access Token (starts with sg_)',
-        password: true,
-        placeHolder: 'sg_...',
-        validateInput: (v) => v && !v.startsWith('sg_') ? 'Token must start with sg_' : null,
-      });
-      if (token) {
-        await context.secrets.store('shipgate.pat', token);
-        await proService.refresh();
-        const plan = proService.isPro() ? 'Pro' : 'Free';
-        vscode.window.showInformationMessage(`ShipGate API token saved (${plan} plan). Scan results will now sync to the dashboard.`);
-      }
-    }),
     vscode.commands.registerCommand('shipgate.clearApiToken', async () => {
       await context.secrets.delete('shipgate.pat');
       await proService.refresh();
@@ -187,9 +222,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('shipgate.chaosTest', () => runInTerminal('chaos .', 'ShipGate Chaos')),
     vscode.commands.registerCommand('shipgate.simulate', () => runInTerminal('simulate', 'ShipGate Simulate')),
     vscode.commands.registerCommand('shipgate.pbt', () => runInTerminal('pbt .', 'ShipGate PBT')),
-    vscode.commands.registerCommand('shipgate.go', () => runGoCommand()),
-    vscode.commands.registerCommand('shipgate.goFix', () => runGoCommand('--fix')),
-    vscode.commands.registerCommand('shipgate.goDeep', () => runGoCommand('--deep')),
+    vscode.commands.registerCommand('shipgate.go', () => runGoInline()),
+    vscode.commands.registerCommand('shipgate.goFix', () => runGoInline('--fix')),
+    vscode.commands.registerCommand('shipgate.goDeep', () => runGoInline('--deep')),
     vscode.commands.registerCommand('shipgate.vibeGenerate', async () => {
       if (await requirePro('Safe Vibe Coding')) runVibeCommand();
     }),
@@ -204,21 +239,242 @@ export function activate(context: vscode.ExtensionContext) {
       if (await requirePro('Infer Specs (AI)')) runInTerminal('scan . --provider anthropic', 'ShipGate Infer Specs');
     }),
     vscode.commands.registerCommand('shipgate.openEvidence', () => runInTerminal('open', 'ShipGate Evidence')),
+    vscode.commands.registerCommand('shipgate.openAllFailing', () => openAllFailing()),
+    vscode.commands.registerCommand('shipgate.copySummary', () => copySummary()),
+    vscode.commands.registerCommand('shipgate.setApiToken', async () => {
+      const token = await vscode.window.showInputBox({
+        prompt: 'Enter your ShipGate Personal Access Token (starts with sg_)',
+        password: true,
+        placeHolder: 'sg_...',
+        validateInput: (v) => v && !v.startsWith('sg_') ? 'Token must start with sg_' : null,
+      });
+      if (token) {
+        await context.secrets.store('shipgate.pat', token);
+        await proService.refresh();
+        pushProStatus();
+        const state = proService.getState();
+        const plan = state.plan === 'enterprise' ? 'Enterprise' : state.active ? 'Pro' : 'Free';
+        vscode.window.showInformationMessage(`ShipGate API token saved (${plan} plan).`);
+      }
+    }),
+  );
+
+  // Missing commands — wired to real CLI or stub actions
+  context.subscriptions.push(
+    vscode.commands.registerCommand('shipgate.generateSpec', () => runGenSpec()),
+    vscode.commands.registerCommand('shipgate.verifyAll', () => runVerification('full')),
+    vscode.commands.registerCommand('shipgate.validateISL', () => {
+      const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
+      if (!activeFile?.endsWith('.isl')) {
+        vscode.window.showWarningMessage('Open an .isl file to validate');
+        return;
+      }
+      runInTerminal(`check "${activeFile}"`, 'ShipGate Validate ISL');
+    }),
+    vscode.commands.registerCommand('shipgate.isl.parseFile', () => {
+      const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
+      if (!activeFile?.endsWith('.isl')) {
+        vscode.window.showWarningMessage('Open an .isl file to parse');
+        return;
+      }
+      runInTerminal(`parse "${activeFile}"`, 'ISL Parse');
+    }),
+    vscode.commands.registerCommand('shipgate.isl.typeCheck', () => {
+      const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
+      if (activeFile?.endsWith('.isl')) {
+        runInTerminal(`check "${activeFile}"`, 'ISL Type Check');
+      } else {
+        runInTerminal('check .', 'ISL Type Check');
+      }
+    }),
+    vscode.commands.registerCommand('shipgate.isl.generateTypeScript', () => {
+      const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
+      if (activeFile?.endsWith('.isl')) {
+        runInTerminal(`gen ts "${activeFile}"`, 'ISL Gen TypeScript');
+      } else {
+        vscode.window.showWarningMessage('Open an .isl file to generate TypeScript');
+      }
+    }),
+    vscode.commands.registerCommand('shipgate.isl.generateRust', () => {
+      const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
+      if (activeFile?.endsWith('.isl')) {
+        runInTerminal(`gen rust "${activeFile}"`, 'ISL Gen Rust');
+      } else {
+        vscode.window.showWarningMessage('Open an .isl file to generate Rust');
+      }
+    }),
+    vscode.commands.registerCommand('shipgate.isl.openRepl', () => runInTerminal('repl', 'ISL REPL')),
+    vscode.commands.registerCommand('shipgate.isl.initProject', () => runInit()),
+    vscode.commands.registerCommand('shipgate.isl.verifySpec', () => {
+      const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
+      if (activeFile?.endsWith('.isl')) {
+        runInTerminal(`verify --spec "${activeFile}"`, 'ISL Verify Spec');
+      } else {
+        runVerification('full');
+      }
+    }),
+    vscode.commands.registerCommand('shipgate.isl.restartServer', async () => {
+      if (languageClient) {
+        await stopClient(languageClient);
+        await startClient(languageClient);
+        vscode.window.showInformationMessage('ISL Language Server restarted.');
+      } else {
+        vscode.window.showWarningMessage('ISL Language Server is not running.');
+      }
+    }),
+    vscode.commands.registerCommand('shipgate.isl.generateSkeleton', () => {
+      const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
+      if (activeFile?.endsWith('.isl')) {
+        runInTerminal(`gen ts "${activeFile}" --skeleton`, 'ISL Skeleton');
+      } else {
+        vscode.window.showWarningMessage('Open an .isl file first');
+      }
+    }),
+    vscode.commands.registerCommand('shipgate.runScan', () => runInTerminal('scan .', 'ShipGate Scan')),
+    vscode.commands.registerCommand('shipgate.heal', () => runInTerminal('heal .', 'ShipGate Heal')),
+    vscode.commands.registerCommand('shipgate.healFile', () => {
+      const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
+      if (activeFile) {
+        runInTerminal(`heal "${activeFile}"`, 'ShipGate Heal File');
+      }
+    }),
+    vscode.commands.registerCommand('shipgate.vibe', async () => {
+      if (await requirePro('Vibe Coding')) runVibeCommand();
+    }),
+    vscode.commands.registerCommand('shipgate.openVibePanel', () => {
+      vscode.commands.executeCommand('shipgate.sidebar.focus');
+    }),
+    vscode.commands.registerCommand('shipgate.openReport', async () => {
+      const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      if (!cwd) return;
+      const reportPath = vscode.Uri.file(`${cwd}/.shipgate/evidence/report.html`);
+      try {
+        await vscode.env.openExternal(reportPath);
+      } catch {
+        runInTerminal('open', 'ShipGate Report');
+      }
+    }),
+    vscode.commands.registerCommand('shipgate.openSettings', () => {
+      vscode.commands.executeCommand('workbench.action.openSettings', 'shipgate');
+    }),
+    vscode.commands.registerCommand('shipgate.selectWorkspaceRoot', async () => {
+      const folders = vscode.workspace.workspaceFolders;
+      if (!folders || folders.length <= 1) {
+        vscode.window.showInformationMessage('Only one workspace root available.');
+        return;
+      }
+      const picked = await vscode.window.showQuickPick(
+        folders.map(f => ({ label: f.name, description: f.uri.fsPath, folder: f })),
+        { placeHolder: 'Select workspace root for ShipGate' }
+      );
+      if (picked) {
+        vscode.window.showInformationMessage(`ShipGate root: ${picked.label}`);
+      }
+    }),
+    vscode.commands.registerCommand('shipgate.codeToIsl', () => {
+      const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
+      if (activeFile) {
+        runInTerminal(`isl-generate "${activeFile}"`, 'Code → ISL');
+      } else {
+        runInTerminal('isl-generate .', 'Code → ISL');
+      }
+    }),
+    vscode.commands.registerCommand('shipgate.codeToIslFromFile', () => {
+      const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
+      if (activeFile) {
+        runInTerminal(`isl-generate "${activeFile}"`, 'Code → ISL');
+      } else {
+        vscode.window.showWarningMessage('Open a source file first');
+      }
+    }),
+    vscode.commands.registerCommand('shipgate.githubConnect', () => {
+      const config = vscode.workspace.getConfiguration('shipgate');
+      const url = config.get<string>('dashboardApiUrl', 'https://app.shipgate.dev');
+      vscode.env.openExternal(vscode.Uri.parse(`${url}/api/integrations/github/connect`));
+    }),
+    vscode.commands.registerCommand('shipgate.githubRefresh', () => {
+      vscode.window.showInformationMessage('GitHub integration refreshed.');
+    }),
+    vscode.commands.registerCommand('shipgate.runFirewall', () => {
+      runFirewallCheck();
+    }),
+    vscode.commands.registerCommand('shipgate.openWalkthrough', () => {
+      vscode.commands.executeCommand(
+        'workbench.action.openWalkthrough',
+        'shipgate.shipgate-isl#shipgate.walkthrough'
+      );
+    }),
+    vscode.commands.registerCommand('shipgate.upgradePro', () => {
+      vscode.env.openExternal(vscode.Uri.parse(proService.getUpgradeUrl()));
+    }),
+    vscode.commands.registerCommand('shipgate.activatePro', async () => {
+      await vscode.commands.executeCommand('shipgate.setApiToken');
+    }),
+    vscode.commands.registerCommand('shipgate.signOut', async () => {
+      await context.secrets.delete('shipgate.pat');
+      await proService.refresh();
+      pushProStatus();
+      vscode.window.showInformationMessage('Signed out of ShipGate.');
+    }),
   );
 
   // Proof Bundle Commands
   registerProofCommands(context);
 
-  // Scan on save
+  // Watch mode: re-scan on save + firewall
+  let watchDebounce: ReturnType<typeof setTimeout> | null = null;
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((doc) => {
-      if (vscode.workspace.getConfiguration('shipgate').get('scanOnSave')) {
-        runVerification('file', doc.uri);
+      const config = vscode.workspace.getConfiguration('shipgate');
+
+      // Firewall on save
+      if (config.get('firewall.enabled') && config.get('firewall.runOnSave')) {
+        runFirewallCheck(doc.uri);
+      }
+
+      if (config.get('scanOnSave') || config.get('watchMode')) {
+        if (watchDebounce) clearTimeout(watchDebounce);
+        watchDebounce = setTimeout(() => {
+          sidebarProvider.sendMessage({ type: 'watchEvent', file: vscode.workspace.asRelativePath(doc.uri) });
+          runVerification('file', doc.uri);
+        }, 1500);
       }
     })
   );
 
-  console.log('ShipGate extension activated');
+  // Inline Analyzer — real-time regex-based checks on document change
+  inlineAnalyzer.activate(context);
+
+  // Supply Chain Checker — typosquatting and deprecated dependency detection
+  supplyChainChecker.activate(context);
+
+  // Deep Analyzer — thorough security analysis on save
+  deepAnalyzer.activate(context);
+
+  // Taint Flow CodeLens — visualize source→sink taint flows
+  taintCodeLens = new TaintFlowCodeLensProvider();
+  context.subscriptions.push(
+    vscode.languages.registerCodeLensProvider(
+      [
+        { language: 'typescript' },
+        { language: 'typescriptreact' },
+        { language: 'javascript' },
+        { language: 'javascriptreact' },
+      ],
+      taintCodeLens
+    )
+  );
+
+  // Diagnostic Manager — unified diagnostic collections
+  diagnosticManager = new DiagnosticManager();
+  context.subscriptions.push({ dispose: () => diagnosticManager.dispose() });
+
+  // Auto-scan on workspace open (opt-in)
+  if (vscode.workspace.getConfiguration('shipgate').get('autoScanOnOpen')) {
+    setTimeout(() => runVerification('full'), 3000);
+  }
+
+  output.log('ShipGate extension activated');
 }
 
 async function requirePro(featureName: string): Promise<boolean> {
@@ -237,6 +493,26 @@ async function requirePro(featureName: string): Promise<boolean> {
     await vscode.commands.executeCommand('shipgate.setApiToken');
     await proService.refresh();
     return proService.isPro();
+  }
+  return false;
+}
+
+async function checkScanLimit(): Promise<boolean> {
+  await proService.ensureFresh();
+  if (proService.canScan()) return true;
+
+  const state = proService.getState();
+  const choice = await vscode.window.showWarningMessage(
+    `You've used all ${state.scansLimit} free scans this month (${state.scansUsed}/${state.scansLimit}). Upgrade to Pro for unlimited scans.`,
+    'Upgrade to Pro',
+    'Set API Token',
+  );
+  if (choice === 'Upgrade to Pro') {
+    vscode.env.openExternal(vscode.Uri.parse(proService.getUpgradeUrl()));
+  } else if (choice === 'Set API Token') {
+    await vscode.commands.executeCommand('shipgate.setApiToken');
+    await proService.refresh();
+    return proService.canScan();
   }
   return false;
 }
@@ -270,8 +546,11 @@ function fileFindingsToFindings(files: FileFinding[], cwd: string) {
 }
 
 async function runVerification(scope: 'full' | 'file', uri?: vscode.Uri) {
+  if (!(await checkScanLimit())) return;
   statusBar.setScanning();
-  sidebarProvider.sendMessage({ type: 'scanning', scope });
+  output.logScanStart(scope);
+  sidebarProvider.sendMessage({ type: 'scanning', scope, action: 'verify' });
+  sidebarProvider.sendMessage({ type: 'progress', percent: 10, phase: 'Detecting project...' });
 
   try {
     const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -279,28 +558,34 @@ async function runVerification(scope: 'full' | 'file', uri?: vscode.Uri) {
       throw new Error('No workspace folder found');
     }
 
-const target = scope === 'file' && uri ? uri.fsPath : '.';
-    
-    // Execute shipgate CLI (handle exit codes properly)
-    const { stdout, stderr } = await execAsync(`${getCliCommand()} verify ${target} --json`, { 
-      cwd, 
-      timeout: 60000 
+    const target = scope === 'file' && uri ? uri.fsPath : '.';
+
+    sidebarProvider.sendMessage({ type: 'progress', percent: 25, phase: 'Scanning files...' });
+
+    const { stdout } = await execAsync(`${getCliCommand()} verify ${target} --json`, {
+      cwd,
+      timeout: 60000
     }).catch((err) => {
-      // CLI returns exit code 1 for NO_SHIP, but still outputs JSON
       if (err.stdout) {
         return { stdout: err.stdout, stderr: err.stderr || '' };
       }
       throw err;
     });
 
-    // Parse JSON output
+    sidebarProvider.sendMessage({ type: 'progress', percent: 75, phase: 'Generating verdict...' });
+
     const cliResult = JSON.parse(stdout);
-    
-    // Format data for webview
+
     const workspaceName = vscode.workspace.workspaceFolders?.[0]?.name || 'workspace';
+    let branch = 'main';
+    try {
+      const cp = require('child_process');
+      branch = cp.execSync('git rev-parse --abbrev-ref HEAD', { cwd, encoding: 'utf8' }).trim();
+    } catch { /* not a git repo */ }
+
     const dashboardData = {
       projectName: workspaceName,
-      branch: 'main', // TODO: Get from git
+      branch,
       verdict: cliResult.result?.verdict || cliResult.verdict || 'UNKNOWN',
       score: cliResult.result?.score || cliResult.score || 0,
       files: cliResult.result?.files || cliResult.files || [],
@@ -309,20 +594,58 @@ const target = scope === 'file' && uri ? uri.fsPath : '.';
       timestamp: new Date().toISOString()
     };
 
-    // Send results to sidebar
+    sidebarProvider.sendMessage({ type: 'progress', percent: 100, phase: 'Complete' });
+
+    const specSnippet = await loadSpecPreview();
+    if (specSnippet) dashboardData.specPreview = specSnippet;
+    dashboardData.watchMode = !!vscode.workspace.getConfiguration('shipgate').get('watchMode');
+
     sidebarProvider.sendMessage({ type: 'results', data: dashboardData });
 
-    // Update diagnostics and codelens with findings
     const findings = fileFindingsToFindings(dashboardData.files, cwd);
     diagnostics.update(findings, cwd);
     codeLens.updateFindings(findings);
+    diagnosticManager.updateScanFindings(findings, cwd);
 
-    // Update status bar
+    // Update taint flow visualization for active editor
+    const activeDoc = vscode.window.activeTextEditor?.document;
+    if (activeDoc) {
+      const taintFlows = extractTaintFlows(activeDoc.getText(), activeDoc.uri.fsPath);
+      taintCodeLens.updateFlows(taintFlows);
+    }
+
+    const importFindings = findings.filter(f => f.engine === 'hallucination' || f.message.includes('import'));
+    const routeFindings = findings.filter(f => f.engine === 'auth-drift' || f.message.includes('route'));
+    evidenceDecorations.updateEvidence(findings.map(f => ({
+      file: f.file,
+      line: f.line,
+      type: f.severity === 'error' ? 'violation' as const : 'warning' as const,
+      message: f.message,
+    })));
+    importDecorations.updateImportEvidence(importFindings.map(f => ({
+      file: f.file,
+      line: f.line,
+      status: 'unverified' as const,
+      message: f.message,
+    })));
+    evidenceCodeLens.updateRouteEvidence(routeFindings.map(f => ({
+      file: f.file,
+      line: f.line,
+      verified: false,
+      message: f.message,
+    })));
+
     statusBar.setVerdict(dashboardData.verdict, dashboardData.score);
+    output.logScanEnd(dashboardData.verdict, dashboardData.score, dashboardData.duration);
+    for (const f of findings) {
+      output.logFinding(f.severity, f.file, f.line, f.message);
+    }
 
-    // Fire-and-forget: POST result to dashboard API
+    updateFileDecorations(dashboardData.files, cwd);
+    pushProStatus();
     postToDashboard(cliResult as any, cwd, extensionContext);
   } catch (err: any) {
+    output.logError('Verification failed', err);
     const errorMsg = err.message || 'Verification failed';
     sidebarProvider.sendMessage({ type: 'error', message: errorMsg });
     statusBar.setError();
@@ -344,27 +667,31 @@ terminal.sendText(`${getCliCommand()} init`);
 }
 
 async function runShipCheck() {
+  if (!(await checkScanLimit())) return;
   statusBar.setScanning();
-  sidebarProvider.sendMessage({ type: 'scanning', scope: 'full' });
+  sidebarProvider.sendMessage({ type: 'scanning', scope: 'full', action: 'ship' });
+  sidebarProvider.sendMessage({ type: 'progress', percent: 10, phase: 'Initializing ship check...' });
 
   try {
     const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     if (!cwd) throw new Error('No workspace folder found');
 
-const { stdout } = await execAsync(`${getCliCommand()} ship --ci --json`, { cwd, timeout: 120000 })
+    sidebarProvider.sendMessage({ type: 'progress', percent: 30, phase: 'Running CI gate...' });
+
+    const { stdout } = await execAsync(`${getCliCommand()} ship --ci --json`, { cwd, timeout: 120000 })
       .catch((err) => {
-        // CLI returns exit code 1 for NO_SHIP, but still outputs JSON
         if (err.stdout) {
           return { stdout: err.stdout, stderr: err.stderr || '' };
         }
         throw err;
       });
+
+    sidebarProvider.sendMessage({ type: 'progress', percent: 90, phase: 'Finalizing...' });
     const data = JSON.parse(stdout);
-    
+
     sidebarProvider.sendMessage({ type: 'results', data });
     statusBar.setVerdict(data.verdict || 'SHIP', data.score || 100);
-    
-    vscode.window.showInformationMessage(`ShipGate: ${data.verdict} (${data.score}/100)`);
+    pushProStatus();
   } catch (err: any) {
     sidebarProvider.sendMessage({ type: 'error', message: err.message });
     statusBar.setError();
@@ -405,8 +732,79 @@ async function runGenSpec(): Promise<void> {
 async function toggleWatch() {
   const config = vscode.workspace.getConfiguration('shipgate');
   const current = config.get('watchMode');
-  await config.update('watchMode', !current, vscode.ConfigurationTarget.Workspace);
-  vscode.window.showInformationMessage(`ShipGate watch mode: ${!current ? 'enabled' : 'disabled'}`);
+  const newVal = !current;
+  await config.update('watchMode', newVal, vscode.ConfigurationTarget.Workspace);
+  sidebarProvider.sendMessage({ type: 'watchMode', enabled: newVal });
+  statusBar.setWatch(newVal);
+}
+
+function updateFileDecorations(files: any[], cwd: string) {
+  const pathMod = require('path');
+  const statuses = files.map((f: any) => ({
+    file: pathMod.resolve(cwd, f.file),
+    status: f.status === 'PASS' ? 'proven' as const
+      : f.status === 'FAIL' ? 'failed' as const
+      : 'partial' as const,
+    trustScore: Math.round((f.score || 0) * 100),
+  }));
+  fileDecorations.updateFileStatus(statuses);
+}
+
+async function copySummary() {
+  const lastResults = extensionContext.workspaceState.get('shipgate.lastResults') as any;
+  if (!lastResults) {
+    vscode.window.showWarningMessage('No scan results to copy. Run a ship check first.');
+    return;
+  }
+  const files = lastResults.files || [];
+  const pass = files.filter((f: any) => f.status === 'PASS').length;
+  const fail = files.filter((f: any) => f.status === 'FAIL').length;
+  const warns = files.filter((f: any) => f.status === 'WARN').length;
+  const issues = files.reduce((s: number, f: any) => s + (f.blockers?.length || 0) + (f.errors?.length || 0), 0);
+
+  const lines = [
+    `ShipGate Verification Summary`,
+    `Verdict: ${lastResults.verdict || 'UNKNOWN'}`,
+    `Score: ${lastResults.score || 0}`,
+    `Files: ${files.length} (${pass} pass, ${fail} fail, ${warns} warn)`,
+    `Issues: ${issues}`,
+    `Coverage: ${lastResults.coverage?.specced || 0}/${lastResults.coverage?.total || 0}`,
+    `Time: ${new Date(lastResults.timestamp).toLocaleString()}`,
+  ];
+  if (issues > 0) {
+    lines.push('', 'Top Issues:');
+    let shown = 0;
+    for (const f of files) {
+      for (const b of [...(f.blockers || []), ...(f.errors || [])]) {
+        if (shown >= 5) break;
+        lines.push(`  - ${f.file}: ${typeof b === 'string' ? b : b.message || b}`);
+        shown++;
+      }
+      if (shown >= 5) break;
+    }
+  }
+  await vscode.env.clipboard.writeText(lines.join('\n'));
+  vscode.window.showInformationMessage('Summary copied to clipboard');
+}
+
+async function loadSpecPreview(): Promise<string | null> {
+  const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  if (!cwd) return null;
+  const fs = require('fs');
+  const pathMod = require('path');
+  const specPaths = [
+    pathMod.join(cwd, '.shipgate', 'specs', 'auto-generated.isl'),
+    pathMod.join(cwd, '.shipgate', 'specs', 'main.isl'),
+  ];
+  for (const sp of specPaths) {
+    if (fs.existsSync(sp)) {
+      try {
+        const content = fs.readFileSync(sp, 'utf8');
+        return content.slice(0, 800);
+      } catch { /* skip */ }
+    }
+  }
+  return null;
 }
 
 async function viewProofBundle() {
@@ -435,11 +833,95 @@ async function exportReport() {
 terminal.sendText(`${getCliCommand()} export --format pdf`);
 }
 
-async function runGoCommand(flag?: string) {
-  const terminal = vscode.window.createTerminal('ShipGate Go');
-  terminal.show();
-  const extra = flag ? ` ${flag}` : '';
-  terminal.sendText(`${getCliCommand()} go .${extra}`);
+async function runGoInline(flag?: string) {
+  if (!(await checkScanLimit())) return;
+  statusBar.setScanning();
+  const actionName = flag === '--fix' ? 'goFix' : flag === '--deep' ? 'goDeep' : 'go';
+  sidebarProvider.sendMessage({ type: 'scanning', scope: 'full', action: actionName });
+  sidebarProvider.sendMessage({ type: 'progress', percent: 5, phase: 'Detecting project...' });
+
+  try {
+    const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!cwd) throw new Error('No workspace folder found');
+
+    const extra = flag ? ` ${flag}` : '';
+    sidebarProvider.sendMessage({ type: 'progress', percent: 15, phase: 'Scanning & inferring ISL specs...' });
+
+    const { stdout } = await execAsync(`${getCliCommand()} go .${extra} --format json`, {
+      cwd,
+      timeout: 300000,
+      maxBuffer: 10 * 1024 * 1024,
+    }).catch((err) => {
+      if (err.stdout) {
+        return { stdout: err.stdout, stderr: err.stderr || '' };
+      }
+      throw err;
+    });
+
+    sidebarProvider.sendMessage({ type: 'progress', percent: 85, phase: 'Building verdict...' });
+
+    let data: any;
+    try {
+      data = JSON.parse(stdout);
+    } catch {
+      const lines = stdout.trim().split('\n');
+      for (let i = lines.length - 1; i >= 0; i--) {
+        try { data = JSON.parse(lines[i]); break; } catch { /* try prev line */ }
+      }
+    }
+
+    if (!data) {
+      throw new Error('Could not parse shipgate go output');
+    }
+
+    const workspaceName = vscode.workspace.workspaceFolders?.[0]?.name || 'workspace';
+    let branch = 'main';
+    try {
+      const cp = require('child_process');
+      branch = cp.execSync('git rev-parse --abbrev-ref HEAD', { cwd, encoding: 'utf8' }).trim();
+    } catch { /* not a git repo */ }
+
+    const scanResult = data.scanResult || data.result || data;
+    const dashboardData = {
+      projectName: workspaceName,
+      branch,
+      verdict: data.verdict || scanResult?.verdict || 'UNKNOWN',
+      score: data.score ?? scanResult?.score ?? 0,
+      files: scanResult?.files || data.files || [],
+      coverage: scanResult?.coverage || data.coverage || { specced: 0, total: 0 },
+      duration: data.duration || scanResult?.duration || 0,
+      timestamp: new Date().toISOString()
+    };
+
+    sidebarProvider.sendMessage({ type: 'progress', percent: 100, phase: 'Complete' });
+
+    const specSnippet = await loadSpecPreview();
+    if (specSnippet) (dashboardData as any).specPreview = specSnippet;
+    (dashboardData as any).watchMode = !!vscode.workspace.getConfiguration('shipgate').get('watchMode');
+
+    sidebarProvider.sendMessage({ type: 'results', data: dashboardData });
+
+    const findings = fileFindingsToFindings(dashboardData.files, cwd);
+    diagnostics.update(findings, cwd);
+    codeLens.updateFindings(findings);
+    diagnosticManager.updateScanFindings(findings, cwd);
+    statusBar.setVerdict(dashboardData.verdict, dashboardData.score);
+
+    const activeDoc = vscode.window.activeTextEditor?.document;
+    if (activeDoc) {
+      const taintFlows = extractTaintFlows(activeDoc.getText(), activeDoc.uri.fsPath);
+      taintCodeLens.updateFlows(taintFlows);
+    }
+
+    updateFileDecorations(dashboardData.files, cwd);
+    pushProStatus();
+    postToDashboard(data as any, cwd, extensionContext);
+  } catch (err: any) {
+    const errorMsg = err.message || 'shipgate go failed';
+    sidebarProvider.sendMessage({ type: 'error', message: errorMsg });
+    statusBar.setError();
+    vscode.window.showErrorMessage(`ShipGate Go: ${errorMsg}`);
+  }
 }
 
 async function runVibeCommand() {
@@ -598,6 +1080,80 @@ async function postToDashboard(scanResult: any, cwd: string, context: vscode.Ext
   }
 }
 
+function pushProStatus() {
+  const state = proService.getState();
+  sidebarProvider.sendMessage({
+    type: 'proStatus',
+    active: state.active,
+    plan: state.plan,
+    email: state.email,
+    scansUsed: state.scansUsed,
+    scansLimit: state.scansLimit,
+    canScan: state.canScan,
+  });
+}
+
+async function openAllFailing() {
+  const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  if (!cwd) return;
+
+  const lastResults = extensionContext.workspaceState.get('shipgate.lastResults') as any;
+  if (!lastResults?.files) return;
+
+  const failingFiles = lastResults.files
+    .filter((f: any) => f.status === 'FAIL')
+    .slice(0, 10);
+
+  for (const f of failingFiles) {
+    const fullPath = require('path').resolve(cwd, f.file);
+    try {
+      const uri = vscode.Uri.file(fullPath);
+      const doc = await vscode.workspace.openTextDocument(uri);
+      await vscode.window.showTextDocument(doc, { preview: false });
+    } catch { /* skip */ }
+  }
+}
+
+async function runFirewallCheck(uri?: vscode.Uri) {
+  try {
+    const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!cwd) return;
+
+    const target = uri ? `"${uri.fsPath}"` : '.';
+    const { stdout } = await execAsync(
+      `${getCliCommand()} verify ${target} --json --quick`,
+      { cwd, timeout: 15000 }
+    ).catch((err) => {
+      if (err.stdout) return { stdout: err.stdout, stderr: err.stderr || '' };
+      throw err;
+    });
+
+    const result = JSON.parse(stdout);
+    const files = result?.result?.files ?? result?.files ?? [];
+    const findings = fileFindingsToFindings(files, cwd);
+
+    if (findings.length > 0) {
+      diagnostics.update(findings, cwd);
+      const criticalCount = findings.filter(f => f.severity === 'error').length;
+      if (criticalCount > 0) {
+        vscode.window.showWarningMessage(
+          `ShipGate Firewall: ${criticalCount} issue${criticalCount > 1 ? 's' : ''} detected`,
+          'Show Problems'
+        ).then(choice => {
+          if (choice === 'Show Problems') {
+            vscode.commands.executeCommand('workbench.actions.view.problems');
+          }
+        });
+      }
+    }
+  } catch {
+    // Firewall check failed silently — don't block the developer
+  }
+}
+
 export function deactivate() {
-  console.log('ShipGate extension deactivated');
+  inlineAnalyzer.deactivate();
+  supplyChainChecker.deactivate();
+  deepAnalyzer.deactivate();
+  output.log('ShipGate extension deactivated');
 }

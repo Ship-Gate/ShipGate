@@ -1,0 +1,36 @@
+{
+  "name": "@isl-lang/spec-generator",
+  "version": "0.1.0",
+  "description": "Prompt-to-ISL spec generator for the ShipGate no-code app builder engine",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@isl-lang/parser": "workspace:*",
+    "@isl-lang/spec-assist": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "rimraf": "^5.0.5"
+  },
+  "sideEffects": false,
+  "private": true,
+  "license": "MIT",
+  "files": ["dist"]
+}

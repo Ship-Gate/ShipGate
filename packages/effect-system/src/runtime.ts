@@ -125,49 +125,47 @@ function inferEffectKind(name: string): EffectKind {
     concurrent: 'async',
     metrics: 'metrics',
     resource: 'resource',
+    process: 'io',
+    environment: 'io',
+    crypto: 'io',
   };
 
   return kindMap[name.toLowerCase()] || 'custom';
 }
 
-/**
- * Infer effects from code patterns
- */
+const RUNTIME_EFFECT_PATTERNS: Array<{ pattern: RegExp; effect: ISLEffectAnnotation }> = [
+  { pattern: /\bconsole\.(log|error|warn|info|debug|trace)\b/, effect: { name: 'console', kind: 'io', reversible: false, idempotent: true } },
+  { pattern: /\b(fetch|axios\.\w+|http\.request|got\.\w+|ky\.\w+)\b/, effect: { name: 'network', kind: 'io', reversible: false, idempotent: false } },
+  { pattern: /\b(WebSocket|XMLHttpRequest|undici\.\w+)\b/, effect: { name: 'network', kind: 'io', reversible: false, idempotent: false } },
+  { pattern: /\b(fs\.|readFile|writeFile|unlink|mkdir|rmdir)\b/, effect: { name: 'filesystem', kind: 'io', reversible: false, idempotent: false } },
+  { pattern: /\b(Deno\.readTextFile|Deno\.writeTextFile)\b/, effect: { name: 'filesystem', kind: 'io', reversible: false, idempotent: false } },
+  { pattern: /\bMath\.random\b|\bcrypto\.random\w*|\bcrypto\.getRandomValues\b/, effect: { name: 'random', kind: 'nondeterminism', reversible: true, idempotent: false } },
+  { pattern: /\b(uuid|nanoid|cuid|ulid)\b/, effect: { name: 'random', kind: 'nondeterminism', reversible: true, idempotent: false } },
+  { pattern: /\b(Date\.now|new Date|performance\.now|process\.hrtime)\b/, effect: { name: 'time', kind: 'io', reversible: false, idempotent: false } },
+  { pattern: /\bsetTimeout\b|\bsetInterval\b/, effect: { name: 'time', kind: 'io', reversible: false, idempotent: false } },
+  { pattern: /\bthrow\s+new\s+\w*Error\b|\bthrow\s+/, effect: { name: 'error', kind: 'exception', reversible: true, idempotent: true } },
+  { pattern: /\.catch\s*\(|\bcatch\s*\(/, effect: { name: 'error', kind: 'exception', reversible: true, idempotent: true } },
+  { pattern: /\bprocess\.exit\b/, effect: { name: 'error', kind: 'exception', reversible: false, idempotent: false } },
+  { pattern: /\basync\s+function\b|\basync\s*\(|\bawait\s+|\bPromise\.\w+/, effect: { name: 'async', kind: 'async', reversible: true, idempotent: false } },
+  { pattern: /\bnew\s+Worker\b|\bworker_threads\b/, effect: { name: 'async', kind: 'async', reversible: true, idempotent: false } },
+  { pattern: /\.query\s*\(|\.execute\s*\(/, effect: { name: 'database', kind: 'io', reversible: false, idempotent: false } },
+  { pattern: /\b(prisma|knex|sequelize|typeorm|mongoose|drizzle|MongoClient)\.\w+/, effect: { name: 'database', kind: 'io', reversible: false, idempotent: false } },
+  { pattern: /\b(redis|Redis)\.\w+/, effect: { name: 'database', kind: 'io', reversible: false, idempotent: false } },
+  { pattern: /\bsetState\s*\(|\buseState\b|\buseReducer\b/, effect: { name: 'state', kind: 'state', reversible: true, idempotent: false } },
+  { pattern: /\bstore\.dispatch\b|\bstore\.commit\b/, effect: { name: 'state', kind: 'state', reversible: true, idempotent: false } },
+  { pattern: /\b(metrics|statsd|prometheus|opentelemetry)\.\w+/, effect: { name: 'metrics', kind: 'metrics', reversible: false, idempotent: true } },
+  { pattern: /\bchild_process\.\w+|\bexecSync\b|\bexec\b|\bspawn\b/, effect: { name: 'process', kind: 'io', reversible: false, idempotent: false } },
+  { pattern: /\bprocess\.env\b|\bDeno\.env\b/, effect: { name: 'environment', kind: 'io', reversible: false, idempotent: true } },
+];
+
+export function addRuntimeEffectPattern(pattern: RegExp, effect: ISLEffectAnnotation): void {
+  RUNTIME_EFFECT_PATTERNS.push({ pattern, effect });
+}
+
 function inferEffectsFromCode(code: string): ISLEffectAnnotation[] {
   const effects: ISLEffectAnnotation[] = [];
 
-  const patterns: Array<{ pattern: RegExp; effect: ISLEffectAnnotation }> = [
-    {
-      pattern: /\bconsole\.(log|error|warn|info)\b/,
-      effect: { name: 'console', kind: 'io', reversible: false, idempotent: true },
-    },
-    {
-      pattern: /\b(fetch|axios|http\.request)\b/,
-      effect: { name: 'network', kind: 'io', reversible: false, idempotent: false },
-    },
-    {
-      pattern: /\b(fs\.|readFile|writeFile|unlink)\b/,
-      effect: { name: 'filesystem', kind: 'io', reversible: false, idempotent: false },
-    },
-    {
-      pattern: /\bMath\.random\b|\bcrypto\.random/,
-      effect: { name: 'random', kind: 'nondeterminism', reversible: true, idempotent: false },
-    },
-    {
-      pattern: /\b(Date\.now|new Date)\b/,
-      effect: { name: 'time', kind: 'io', reversible: false, idempotent: false },
-    },
-    {
-      pattern: /\bthrow\s+new\s+\w+Error\b/,
-      effect: { name: 'error', kind: 'exception', reversible: true, idempotent: true },
-    },
-    {
-      pattern: /\b(async|await|Promise)\b/,
-      effect: { name: 'async', kind: 'async', reversible: true, idempotent: false },
-    },
-  ];
-
-  for (const { pattern, effect } of patterns) {
+  for (const { pattern, effect } of RUNTIME_EFFECT_PATTERNS) {
     if (pattern.test(code)) {
       effects.push(effect);
     }

@@ -10,7 +10,7 @@ import { generateAzureProvider, generateAzurePostgres } from '../src/providers/a
 import { extractComputeRequirements } from '../src/resources/compute';
 import { extractDatabaseRequirements } from '../src/resources/database';
 import { extractNetworkRequirements } from '../src/resources/network';
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 
 // ============================================================================
 // Test Fixtures

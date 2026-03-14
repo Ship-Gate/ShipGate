@@ -20,7 +20,7 @@ export type {
   TestEvidence,
   GateEvidence,
   GateViolation,
-  ProofChainEntry,
+  ProofChainEntry as LegacyProofChainEntry,
   VerificationResult,
 } from './proof-bundle.js';
 
@@ -32,6 +32,7 @@ export {
   calculateSpecHash,
   createStdlibVersion,
   calculateStdlibManifestHash,
+  classifyVerificationMethod,
   signManifest,
   verifyManifestSignature,
 } from './manifest.js';
@@ -50,6 +51,8 @@ export type { AIProvenance } from './provenance.js';
 
 export type {
   ProofVerdict,
+  ProofMethod,
+  ProofCertificate,
   ProofBundleManifest,
   BuildResult,
   TestResult,
@@ -71,6 +74,9 @@ export type {
   VerifyResults,
   TestsSummary,
   VerdictOptions,
+  // V2.3 proof chain types
+  ProofChainEntry,
+  ProofRegression,
 } from './manifest.js';
 
 // Proof bundle writer
@@ -86,6 +92,7 @@ export type {
   IterationInput,
   WriteResult,
   TraceSummary,
+  ProofCertificateInput,
 } from './writer.js';
 
 // Proof bundle verifier
@@ -220,6 +227,17 @@ export type {
   ClaimCollection,
 } from './claim-integration.js';
 
+// Proof method classifier
+export {
+  classifyMethod,
+  classifyMethods,
+  strongestMethod,
+} from './method-classifier.js';
+
+export type {
+  EvidenceDescriptor,
+} from './method-classifier.js';
+
 // ZIP bundle support
 export {
   createZipBundle,
@@ -268,6 +286,15 @@ export type {
   ZipVerifyOptions,
   ZipVerifyResult,
 } from './zip-verify.js';
+
+// Proof Chain Manager (lineage across versions)
+export {
+  ProofChainManager,
+} from './chain-manager.js';
+
+export type {
+  ProofChainInfo,
+} from './chain-manager.js';
 
 // HTML viewer
 export {

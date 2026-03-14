@@ -1,0 +1,511 @@
+{
+  "version": "2.0.0",
+  "provenance": {
+    "commitHash": "f4a24d39298c466b4098e4cff3b2fd20df1b2277",
+    "commitMessage": "chore: bump extension to v4.0.0, point all API URLs to app.shipgate.dev",
+    "nodeVersion": "v20.20.0",
+    "packageManager": {
+      "name": "pnpm",
+      "version": "8.15.0"
+    },
+    "timestamp": "2026-03-01T18:36:09.887Z",
+    "generatorVersion": "2.0.0",
+    "repoRoot": "/Users/liquidgroove/Desktop/ShipGate-main/landing-main"
+  },
+  "routes": [],
+  "envVars": [],
+  "dependencies": [
+    {
+      "name": "react",
+      "version": "18.3.1",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "react-dom",
+      "version": "18.3.1",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@emotion/react",
+      "version": "11.14.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@emotion/styled",
+      "version": "11.14.1",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@mui/icons-material",
+      "version": "7.3.5",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@mui/material",
+      "version": "7.3.5",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@popperjs/core",
+      "version": "2.11.8",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-accordion",
+      "version": "1.2.3",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-alert-dialog",
+      "version": "1.1.6",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-aspect-ratio",
+      "version": "1.1.2",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-avatar",
+      "version": "1.1.3",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-checkbox",
+      "version": "1.1.4",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-collapsible",
+      "version": "1.1.3",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-context-menu",
+      "version": "2.2.6",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-dialog",
+      "version": "1.1.6",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-dropdown-menu",
+      "version": "2.1.6",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-hover-card",
+      "version": "1.1.6",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-label",
+      "version": "2.1.2",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-menubar",
+      "version": "1.1.6",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-navigation-menu",
+      "version": "1.2.5",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-popover",
+      "version": "1.1.6",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-progress",
+      "version": "1.1.2",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-radio-group",
+      "version": "1.2.3",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-scroll-area",
+      "version": "1.2.3",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-select",
+      "version": "2.1.6",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-separator",
+      "version": "1.1.2",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-slider",
+      "version": "1.2.3",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-slot",
+      "version": "1.1.2",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-switch",
+      "version": "1.1.3",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-tabs",
+      "version": "1.1.3",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-toggle",
+      "version": "1.1.2",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-toggle-group",
+      "version": "1.1.2",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@radix-ui/react-tooltip",
+      "version": "1.1.8",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@splinetool/react-spline",
+      "version": "^4.1.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@stripe/stripe-js",
+      "version": "^8.7.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "class-variance-authority",
+      "version": "0.7.1",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "clsx",
+      "version": "2.1.1",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "cmdk",
+      "version": "1.1.1",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "date-fns",
+      "version": "3.6.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "embla-carousel-react",
+      "version": "8.6.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "framer-motion",
+      "version": "^12.34.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "input-otp",
+      "version": "1.4.2",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "lenis",
+      "version": "^1.3.17",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "lottie-react",
+      "version": "^2.4.1",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "lucide-react",
+      "version": "^0.487.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "motion",
+      "version": "12.23.24",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "next-themes",
+      "version": "0.4.6",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "react-day-picker",
+      "version": "8.10.1",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "react-dnd",
+      "version": "16.0.1",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "react-dnd-html5-backend",
+      "version": "16.0.1",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "react-hook-form",
+      "version": "7.55.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "react-popper",
+      "version": "2.3.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "react-resizable-panels",
+      "version": "2.1.7",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "react-responsive-masonry",
+      "version": "2.7.1",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "react-router",
+      "version": "7.13.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "react-router-dom",
+      "version": "^7.13.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "react-slick",
+      "version": "0.31.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "react-syntax-highlighter",
+      "version": "^16.1.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "recharts",
+      "version": "2.15.2",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "simple-icons",
+      "version": "^16.8.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "sonner",
+      "version": "2.0.3",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "tailwind-merge",
+      "version": "3.2.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "three",
+      "version": "^0.182.0",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "tw-animate-css",
+      "version": "1.3.8",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "vaul",
+      "version": "1.1.2",
+      "type": "production",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@tailwindcss/vite",
+      "version": "4.1.12",
+      "type": "development",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "@vitejs/plugin-react",
+      "version": "4.7.0",
+      "type": "development",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "tailwindcss",
+      "version": "4.1.12",
+      "type": "development",
+      "usedIn": [],
+      "workspace": false
+    },
+    {
+      "name": "vite",
+      "version": "6.3.5",
+      "type": "development",
+      "usedIn": [],
+      "workspace": false
+    }
+  ],
+  "runtimeProbes": [],
+  "summary": {
+    "routes": 0,
+    "envVars": 0,
+    "dbTables": 0,
+    "dependencies": 69,
+    "runtimeProbes": 0,
+    "avgConfidence": 0
+  }
+}

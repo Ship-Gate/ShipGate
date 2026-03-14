@@ -9,7 +9,7 @@ import { generatePreconditionTests } from '../src/preconditions';
 import { generatePostconditionTests } from '../src/postconditions';
 import { generateScenarioTests } from '../src/scenarios';
 import { generateChaosTests } from '../src/chaos';
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 
 // ============================================================================
 // Test Fixtures

@@ -1,0 +1,215 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://shipgate.dev/schemas/shipgate.schema.json",
+  "title": "ShipGate Configuration",
+  "description": "Configuration file for ShipGate CLI (.shipgate.yml)",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "integer",
+      "description": "Configuration file version",
+      "enum": [1]
+    },
+    "verify": {
+      "type": "object",
+      "description": "Verification settings",
+      "properties": {
+        "threshold": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 70,
+          "description": "Minimum trust score to pass (0-100)"
+        },
+        "failOn": {
+          "type": "string",
+          "enum": ["error", "warning", "unspecced", "noship"],
+          "default": "noship",
+          "description": "Strictness level: what triggers a failure"
+        },
+        "strict": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable strict verification mode"
+        },
+        "policies": {
+          "type": "object",
+          "description": "Per-policy toggle overrides",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "enabled": { "type": "boolean" }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "scan": {
+      "type": "object",
+      "description": "Scanning settings",
+      "properties": {
+        "exclude": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Glob patterns to exclude from scanning",
+          "default": ["node_modules", "dist", "build", ".git"]
+        },
+        "include": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Glob patterns to include in scanning"
+        }
+      },
+      "additionalProperties": false
+    },
+    "scanning": {
+      "type": "object",
+      "description": "Scanner feature toggles",
+      "properties": {
+        "hallucinations": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable hallucination detection"
+        },
+        "fakeFeatures": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable fake feature detection"
+        },
+        "secrets": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable secret detection"
+        },
+        "vulnerabilities": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable vulnerability scanning"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ai": {
+      "type": "object",
+      "description": "AI provider settings for spec generation",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["anthropic", "openai"],
+          "default": "anthropic",
+          "description": "AI provider for spec generation"
+        },
+        "model": {
+          "type": "string",
+          "description": "AI model override (e.g. claude-sonnet-4, gpt-4o)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ci": {
+      "type": "object",
+      "description": "CI-specific settings",
+      "properties": {
+        "failOn": {
+          "type": "string",
+          "enum": ["error", "warning", "unspecced"],
+          "default": "error",
+          "description": "CI failure threshold"
+        },
+        "requireIsl": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Glob patterns for files that must have ISL specs"
+        },
+        "ignore": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Glob patterns to ignore in CI"
+        },
+        "speclessMode": {
+          "type": "string",
+          "enum": ["on", "off", "warn-only"],
+          "default": "on",
+          "description": "Specless mode: run without ISL specs"
+        }
+      },
+      "additionalProperties": false
+    },
+    "generate": {
+      "type": "object",
+      "description": "Code generation settings",
+      "properties": {
+        "output": {
+          "type": "string",
+          "description": "Output directory for generated code"
+        },
+        "minConfidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Minimum confidence threshold for generated specs"
+        }
+      },
+      "additionalProperties": false
+    },
+    "guardrails": {
+      "type": "object",
+      "description": "Safety guardrail toggles",
+      "properties": {
+        "allowAutoSpecShip": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow auto-generated specs to produce SHIP verdict"
+        },
+        "allowNoTestExecution": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow SHIP without test execution evidence"
+        },
+        "allowEmptyCategories": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow SHIP with empty spec categories"
+        },
+        "allowUnvalidatedAiRules": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow unvalidated AI-generated rules"
+        }
+      },
+      "additionalProperties": false
+    },
+    "specs": {
+      "type": "object",
+      "description": "ISL spec file settings",
+      "properties": {
+        "include": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Glob patterns for ISL spec files"
+        }
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Code provenance settings",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable code provenance scanning in shipgate go"
+        },
+        "maxFiles": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 500,
+          "description": "Maximum files to scan for provenance"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

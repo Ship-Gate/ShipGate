@@ -2,7 +2,7 @@
   "name": "shipgate-isl",
   "displayName": "Shipgate — Behavioral Verification",
   "description": "Behavioral verification for AI-generated code. Write intent specs, catch violations before they ship.",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "publisher": "shipgate",
   "license": "MIT",
   "author": "Shipgate Team",
@@ -63,6 +63,16 @@
           "id": "shipgate.sidebar",
           "name": "ShipGate",
           "icon": "media/shipgate-icon.svg"
+        },
+        {
+          "id": "shipgate.proofBundle",
+          "name": "Proof Bundle",
+          "type": "webview"
+        },
+        {
+          "id": "shipgate.provenance",
+          "name": "Code Provenance",
+          "type": "webview"
         }
       ]
     },
@@ -430,37 +440,39 @@
     ],
     "walkthroughs": [
       {
-        "id": "shipgate-walkthrough",
-        "title": "Shipgate: Get Started",
-        "description": "Learn how to verify AI-generated code and catch violations before they ship.",
+        "id": "shipgate.gettingStarted",
+        "title": "Get Started with ShipGate",
+        "description": "Set up AI code verification in your project",
         "steps": [
           {
-            "id": "overview",
-            "title": "Welcome to Shipgate",
-            "description": "Behavioral verification for AI-generated code. Catch violations before they ship.\n\nOpen the **Shipgate** panel in the activity bar to get started."
+            "id": "init",
+            "title": "Initialize Your Project",
+            "description": "Run `npx shipgate init` to auto-detect your stack and generate verification rules.\n\n[Initialize Project](command:shipgate.init)",
+            "media": { "markdown": "media/walkthrough/step1-overview.md" }
           },
           {
-            "id": "run-scan",
-            "title": "Run Your First Scan",
-            "description": "The Intent Drift gauge shows how well your code matches your specs. Click Run Scan to verify your workspace.\n\n[Run Scan](command:shipgate.runScan)",
-            "completionEvents": [
-              "onCommand:shipgate.runScan"
-            ]
+            "id": "verify",
+            "title": "Run Your First Verification",
+            "description": "Press `Ctrl+Shift+G` (or `Cmd+Shift+G` on Mac) to verify your code.\n\n[Run Verification](command:shipgate.verify)",
+            "media": { "markdown": "media/walkthrough/step2-scan.md" }
           },
           {
-            "id": "live-firewall",
-            "title": "Live Firewall",
-            "description": "Runs automatically on save for .ts and .js files. Blocks ghost routes, env vars, and imports.\n\n[Open Settings](command:workbench.action.openSettings?%5B%22shipgate%22%5D)"
+            "id": "inline",
+            "title": "Real-Time Analysis",
+            "description": "ShipGate checks your code as you type. Look for red and yellow squiggles highlighting SQL injection, hardcoded secrets, and other issues.",
+            "media": { "markdown": "media/walkthrough/step3-firewall.md" }
           },
           {
-            "id": "github",
-            "title": "Connect GitHub",
-            "description": "Link your repo to see PRs and workflow runs. Click Connect in the Shipgate panel to sign in with GitHub (no token needed)."
+            "id": "proofBundle",
+            "title": "View Your Proof Bundle",
+            "description": "After verification, view the proof bundle with per-claim evidence.\n\n[View Proof Bundle](command:shipgate.viewProofBundle)",
+            "media": { "markdown": "media/walkthrough/step4-github.md" }
           },
           {
-            "id": "code-to-isl",
-            "title": "Code to ISL",
-            "description": "Generate intent specs from existing code. Click Generate ISL from Code in the Shipgate panel to scan your workspace.\n\n[Try It](command:shipgate.codeToIsl)"
+            "id": "ci",
+            "title": "Add to CI/CD",
+            "description": "Add ShipGate to your GitHub Actions workflow:\n```yaml\n- uses: shipgate/gate-action@v1\n  with:\n    token: ${{ secrets.GITHUB_TOKEN }}\n```",
+            "media": { "markdown": "media/walkthrough/step5-code-to-isl.md" }
           }
         ]
       }
@@ -628,6 +640,42 @@
           "type": "boolean",
           "default": true,
           "description": "Gate on save (firewall): run lightweight checks on .ts/.js save. Catches ghost routes, hardcoded secrets, policy violations. Fast and recommended."
+        },
+        "shipgate.inlineAnalysis.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable real-time inline security analysis as you type",
+          "scope": "resource"
+        },
+        "shipgate.inlineAnalysis.debounceMs": {
+          "type": "number",
+          "default": 500,
+          "description": "Debounce delay for inline analysis in milliseconds",
+          "scope": "resource"
+        },
+        "shipgate.deepAnalysis.onSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run deep analysis (full security scanner, taint detection) when a file is saved",
+          "scope": "resource"
+        },
+        "shipgate.supplyChain.checkOnOpen": {
+          "type": "boolean",
+          "default": true,
+          "description": "Check package.json for typosquatting and deprecated dependencies on workspace open",
+          "scope": "resource"
+        },
+        "shipgate.findings.showInProblemsPanel": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show ShipGate findings in the VS Code Problems panel",
+          "scope": "resource"
+        },
+        "shipgate.proofBundle.showPanel": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the Proof Bundle panel in the ShipGate sidebar",
+          "scope": "resource"
         }
       }
     },

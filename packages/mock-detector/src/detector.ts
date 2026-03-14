@@ -14,7 +14,7 @@ import type {
   DetectionSummary,
 } from './types.js';
 import { isAllowlisted } from './allowlist.js';
-import { detectHardcodedSuccess } from './patterns/hardcoded-success.js';
+import { detectHardcodedSuccess, detectObjectFlowPatterns } from './patterns/hardcoded-success.js';
 import { detectPlaceholderArrays } from './patterns/placeholder-arrays.js';
 import { detectTodoFakePatterns } from './patterns/todo-fake.js';
 import { DEFAULT_PATTERNS } from './patterns/index.js';
@@ -93,6 +93,10 @@ export function scanFile(options: ScanOptions): MockFinding[] {
       findings.push(...matches);
     }
   }
+
+  // Multi-line analysis: detect object flow patterns (var.success = true → return var)
+  const flowFindings = detectObjectFlowPatterns(lines, filePath, config);
+  findings.push(...flowFindings);
 
   // Filter by confidence threshold
   return findings.filter(f => f.confidence >= config.minConfidence);

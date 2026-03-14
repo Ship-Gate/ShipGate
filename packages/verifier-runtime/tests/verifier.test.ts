@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 import {
   verify,
   createEntityStore,

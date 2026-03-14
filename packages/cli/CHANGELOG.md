@@ -1,5 +1,47 @@
 # Changelog
 
+## [3.1.0] - 2026-03-02
+
+### Added
+- **Code Provenance** — line-level AI attribution engine (`@isl-lang/code-provenance`)
+  - `shipgate provenance` — project-wide AI audit trail (every line → agent + author + timestamp)
+  - `shipgate provenance <file>` — file-level blame view with agent badges
+  - `shipgate provenance init` — installs pre-commit hook that auto-tags commits with AI-Tool trailers
+  - `shipgate provenance --format csv|json` — compliance export for SOC 2 / audit teams
+  - Detects 9 AI agents: Cursor, Copilot, Claude Code, Codex, Gemini, Windsurf, Aider, Cody
+  - 5 detection methods: commit trailers (high), Co-authored-by (high), provenance session (high), commit message patterns (medium), config file heuristics (low)
+- **Zero-config `shipgate go`** — works without API keys via specless mode
+  - Automatically falls back to security checks when no ANTHROPIC_API_KEY or OPENAI_API_KEY is set
+  - Provenance scan included in every `go` run
+- **Dashboard Provenance page** — `/dashboard/provenance` with:
+  - Summary cards, pie chart, agent distribution bar chart, trend line
+  - File browser with search, pagination, and load-more
+  - Line-level blame view with keyboard navigation (j/k, Esc, Ctrl+C to copy as JSON)
+  - Confidence badges with color coding and hover tooltips
+  - Date range filter and CSV/JSON export with loading states
+- **Dashboard API** — 5 new provenance endpoints (`/api/v1/provenance/*`)
+- **VS Code provenance panel** — per-file AI attribution in the sidebar
+- **GitHub Action provenance output** — PR comments include AI % and top agent
+- **Opt-in CLI analytics** via PostHog (disabled by default, `SHIPGATE_ANALYTICS=1`)
+- **JSON Schema** for `.shipgate.yml` (`shipgate.schema.json`)
+- **Error catalog** documentation (`docs/ERROR_CATALOG.md`) — all E0001-E0712 codes
+- **Package maturity index** (`PACKAGES.md`) — tiers every package as Core/Stable/Beta/Experimental
+- **Dependabot** configuration for automated dependency updates
+- **Docker CI workflow** — builds and smoke-tests api-server and dashboard images
+
+### Changed
+- CLI package renamed from `@shipgate/cli` to `shipgate` (matches `npm install -g shipgate`)
+- `pnpm audit` in CI is now blocking (removed `continue-on-error`)
+- Dashboard nav restructured from 15 flat tabs to 6 primary + grouped "More" dropdown
+- README leads with provenance (audit trail) instead of verification
+- CLI help text updated to show `shipgate provenance` as second command after `shipgate go`
+
+### Fixed
+- Landing page routes wired via react-router-dom (14 pages: /pricing, /security, /about, etc.)
+- Landing page route transitions with Framer Motion (shared layout, fade+slide animations)
+- npm package name mismatch between docs and actual published name
+- Fleshed out empty stub packages: `stdlib-ai`, `stdlib-scheduling`, `ci-docker`
+
 ## [2.1.1] - 2026-02-17
 
 ### Added

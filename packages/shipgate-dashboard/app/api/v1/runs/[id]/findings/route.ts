@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authenticate, assertOrgAccess, requireOrgRole } from '@/lib/api-auth';
 import { prisma } from '@/lib/prisma';
 import { auditLog } from '@/lib/audit';
+import { dispatchSlackNotifications } from '@/lib/slack-notify';
 import type { Prisma } from '@prisma/client';
 
 export async function GET(
@@ -78,6 +79,20 @@ export async function POST(
   });
 
   auditLog(req, auth, 'findings.uploaded', `run:${params.id}`, run.orgId, { count: created.count });
+
+  const criticalFindings = body.findings.filter((f) => f.severity === 'critical');
+  if (criticalFindings.length > 0) {
+    const runWithProject = await prisma.run.findUnique({
+      where: { id: params.id },
+      include: { project: { select: { name: true } } },
+    });
+    void dispatchSlackNotifications(run.orgId, 'finding.critical', {
+      runId: params.id,
+      projectName: runWithProject?.project.name,
+      count: criticalFindings.length,
+      titles: criticalFindings.map((f) => f.title),
+    }).catch(() => {});
+  }
 
   return NextResponse.json(
     { data: { count: created.count } },

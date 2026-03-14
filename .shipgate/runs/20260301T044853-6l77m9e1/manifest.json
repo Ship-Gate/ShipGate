@@ -1,0 +1,1116 @@
+{
+  "verdict": "NO_SHIP",
+  "score": 0,
+  "filesChecked": 4,
+  "violations": [
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: commander cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: chalk cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./output.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./exit-codes.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./utils.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./config.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./config/index.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./commands/index.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/core cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/observability cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./commands/auth.js cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./output.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./exit-codes.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./utils.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./config.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./config/index.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./config/index.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./commands/index.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./commands/verify.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./services/pro-gate.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./services/pro-gate.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ../../packages/policy-engine/src/policy-manifest.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./services/pro-gate.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./services/pro-gate.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./commands/evidence-html.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./services/upload.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./services/config-store.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./services/pro-gate.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./services/pro-gate.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-file",
+      "message": "Ghost file: ./commands/auth.js does not exist",
+      "severity": "medium",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: commander cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: chalk cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/core cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: @isl-lang/observability cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "auth/bypass-detected",
+      "message": "Auth bypass pattern detected",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/cli/src/cli.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./sidebar-provider cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./diagnostics cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./codelens cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./statusbar cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./cli/shipgateRunner cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./views/proof-bundle-panel cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./views/evidence-decorations cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./views/evidence-codelens cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./views/file-decorations cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./commands/proof-commands cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: ./services/proService cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "pii/console-in-production",
+      "message": "console.log should be removed in production",
+      "severity": "medium",
+      "tier": "soft_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "intent/encryption-required",
+      "message": "Sensitive data must be encrypted before storage",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/extension.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/services/proService.ts"
+    },
+    {
+      "policyId": "ghost-import",
+      "message": "Ghost import: vscode cannot be resolved",
+      "severity": "high",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/services/proService.ts"
+    },
+    {
+      "policyId": "intent/encryption-required",
+      "message": "Sensitive data must be encrypted before storage",
+      "severity": "critical",
+      "tier": "hard_block",
+      "file": "packages/vscode/src/services/proService.ts"
+    }
+  ],
+  "source": "firewall",
+  "runId": "20260301T044853-6l77m9e1",
+  "timestamp": "2026-03-01T04:48:53.202Z"
+}

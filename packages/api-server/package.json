@@ -1,0 +1,59 @@
+{
+  "name": "@isl-lang/api-server",
+  "version": "1.0.0",
+  "description": "Hosted verification API server for ShipGate",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "hono": "^4.4.0",
+    "@hono/node-server": "^1.11.0",
+    "@hono/zod-openapi": "^0.16.0",
+    "zod": "^3.22.4",
+    "@shipgate/sdk": "workspace:*",
+    "@isl-lang/gate": "workspace:*",
+    "@isl-lang/security-scanner": "workspace:*",
+    "@isl-lang/hallucination-scanner": "workspace:*",
+    "@isl-lang/taint-tracker": "workspace:*",
+    "@isl-lang/spec-generator": "workspace:*",
+    "@isl-lang/codegen-fullstack": "workspace:*",
+    "@isl-lang/impact-analyzer": "workspace:*",
+    "@isl-lang/project-store": "workspace:*",
+    "@isl-lang/app-primitives": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsx": "^4.7.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "rimraf": "^5.0.5"
+  },
+  "tsup": {
+    "entry": ["src/index.ts"],
+    "format": ["esm"],
+    "dts": true,
+    "clean": true,
+    "sourcemap": true
+  },
+  "license": "MIT"
+}

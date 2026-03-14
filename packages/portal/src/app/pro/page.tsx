@@ -102,7 +102,7 @@ export default function ProPage() {
             One-time payment
           </div>
           <div className="flex items-baseline justify-center gap-1">
-            <span className="text-5xl font-bold text-sg-text1">$29</span>
+            <span className="text-5xl font-bold text-sg-text1">$49</span>
           </div>
           <div className="text-sg-text3 text-sm mt-1">Lifetime access to Pro features</div>
         </div>
@@ -131,7 +131,7 @@ export default function ProPage() {
             disabled={loading}
             className="w-full px-4 py-3 rounded-lg bg-sg-blue hover:bg-sg-blue/90 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Redirecting to checkout…' : 'Get Shipgate Pro — $29'}
+            {loading ? 'Redirecting to checkout…' : 'Get Shipgate Pro — $49'}
           </button>
 
           {error && (

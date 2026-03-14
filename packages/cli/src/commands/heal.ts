@@ -17,10 +17,6 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { parse as parseISL } from '@isl-lang/parser';
 import { SemanticHealer, type RepoContext, type SemanticHealResult, type SemanticHealIteration, type SemanticViolation } from '@isl-lang/pipeline';
-import {
-  HealPlanExecutor,
-  type VerificationFailureInput,
-} from '@isl-lang/autofix';
 import { output } from '../output.js';
 import { ExitCode } from '../exit-codes.js';
 import { isJsonOutput, isQuietOutput } from '../output.js';
@@ -28,8 +24,18 @@ import { unifiedVerify, type UnifiedVerifyOptions, type FileVerifyResultEntry } 
 import { loadConfig } from '../config.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Types
+// Types (VerificationFailureInput mirrors @isl-lang/autofix to avoid load-time require)
 // ─────────────────────────────────────────────────────────────────────────────
+
+export interface VerificationFailureInput {
+  file: string;
+  blockers: string[];
+  errors: string[];
+  status?: string;
+  score?: number;
+  specFile?: string;
+  sourceCode?: string;
+}
 
 export interface HealOptions {
   /** ISL spec file path (optional - auto-discovers if not provided) */
@@ -475,6 +481,19 @@ export async function aiHeal(targetPath: string, options: HealOptions = {}): Pro
 
   const callHealAI = createHealAICaller(provider, model, apiKey);
 
+  let HealPlanExecutor: typeof import('@isl-lang/autofix').HealPlanExecutor;
+  try {
+    const autofix = await import('@isl-lang/autofix');
+    HealPlanExecutor = autofix.HealPlanExecutor;
+  } catch (err: unknown) {
+    const code = err && typeof err === 'object' && 'code' in err ? (err as NodeJS.ErrnoException).code : '';
+    if (code === 'MODULE_NOT_FOUND' || (err instanceof Error && err.message?.includes('Cannot find module'))) {
+      throw new Error(
+        'Heal (AI fix) requires @isl-lang/autofix. Install it with: pnpm add @isl-lang/autofix',
+      );
+    }
+    throw err;
+  }
   const executor = new HealPlanExecutor({
     projectRoot,
     maxIterations,
@@ -492,7 +511,19 @@ export async function aiHeal(targetPath: string, options: HealOptions = {}): Pro
   }
 
   if (options.dryRun) {
-    const { RootCauseAnalyzer } = await import('@isl-lang/autofix');
+    let RootCauseAnalyzer: typeof import('@isl-lang/autofix').RootCauseAnalyzer;
+    try {
+      const autofix = await import('@isl-lang/autofix');
+      RootCauseAnalyzer = autofix.RootCauseAnalyzer;
+    } catch (err: unknown) {
+      const code = err && typeof err === 'object' && 'code' in err ? (err as NodeJS.ErrnoException).code : '';
+      if (code === 'MODULE_NOT_FOUND' || (err instanceof Error && err.message?.includes('Cannot find module'))) {
+        throw new Error(
+          'Heal (dry-run) requires @isl-lang/autofix. Install it with: pnpm add @isl-lang/autofix',
+        );
+      }
+      throw err;
+    }
     const analyzer = new RootCauseAnalyzer();
     const analyzed = analyzer.analyzeAll(entries);
     const byCategory = new Map<string, number>();

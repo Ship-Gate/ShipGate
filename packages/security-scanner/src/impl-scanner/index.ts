@@ -4,22 +4,28 @@
 
 export * from './typescript';
 export * from './python';
+export * from './go';
+export * from './java';
 
 import { Finding } from '../severity';
 import { scanTypeScript, TypeScriptScanOptions } from './typescript';
 import { scanPython, PythonScanOptions } from './python';
+import { scanGo, GoScanOptions } from './go';
+import { scanJava, JavaScanOptions } from './java';
 
 // ============================================================================
 // Unified Implementation Scanner
 // ============================================================================
 
-export type SupportedLanguage = 'typescript' | 'javascript' | 'python';
+export type SupportedLanguage = 'typescript' | 'javascript' | 'python' | 'go' | 'java';
 
 export interface ImplementationScanOptions {
   language?: SupportedLanguage;
   filePath?: string;
   typescript?: TypeScriptScanOptions;
   python?: PythonScanOptions;
+  go?: GoScanOptions;
+  java?: JavaScanOptions;
 }
 
 export interface ImplementationScanResult {
@@ -57,6 +63,22 @@ export function scanImplementation(
       };
     }
 
+    case 'go': {
+      const result = scanGo(source, filePath, options.go);
+      return {
+        ...result,
+        language,
+      };
+    }
+
+    case 'java': {
+      const result = scanJava(source, filePath, options.java);
+      return {
+        ...result,
+        language,
+      };
+    }
+
     default:
       return {
         findings: [],
@@ -74,7 +96,6 @@ export function detectLanguage(
   source: string,
   filePath?: string
 ): SupportedLanguage {
-  // Check file extension first
   if (filePath) {
     const ext = filePath.split('.').pop()?.toLowerCase();
     switch (ext) {
@@ -89,10 +110,30 @@ export function detectLanguage(
       case 'py':
       case 'pyw':
         return 'python';
+      case 'go':
+        return 'go';
+      case 'java':
+        return 'java';
     }
   }
 
-  // Heuristic detection based on content
+  const goIndicators = [
+    /^package\s+\w+/m,
+    /^import\s+\(/m,
+    /^func\s+\w+\s*\(/m,
+    /^func\s+\(\w+\s+\*?\w+\)\s+\w+/m,
+    /:=\s/,
+  ];
+
+  const javaIndicators = [
+    /^package\s+[\w.]+;/m,
+    /^import\s+[\w.]+;/m,
+    /public\s+class\s+\w+/m,
+    /public\s+static\s+void\s+main/m,
+    /System\.out\.println/,
+    /@Override/m,
+  ];
+
   const pythonIndicators = [
     /^import\s+\w+/m,
     /^from\s+\w+\s+import/m,
@@ -111,8 +152,18 @@ export function detectLanguage(
     /<\w+>/,
   ];
 
+  let goScore = 0;
+  let javaScore = 0;
   let pythonScore = 0;
   let tsScore = 0;
+
+  for (const pattern of goIndicators) {
+    if (pattern.test(source)) goScore++;
+  }
+
+  for (const pattern of javaIndicators) {
+    if (pattern.test(source)) javaScore++;
+  }
 
   for (const pattern of pythonIndicators) {
     if (pattern.test(source)) pythonScore++;
@@ -122,10 +173,16 @@ export function detectLanguage(
     if (pattern.test(source)) tsScore++;
   }
 
-  if (pythonScore > tsScore) return 'python';
-  if (tsScore > 0) return 'typescript';
-  
-  // Default to TypeScript
+  const scores: [SupportedLanguage, number][] = [
+    ['go', goScore],
+    ['java', javaScore],
+    ['python', pythonScore],
+    ['typescript', tsScore],
+  ];
+  scores.sort((a, b) => b[1] - a[1]);
+
+  if (scores[0]![1] > 0) return scores[0]![0];
+
   return 'typescript';
 }
 
@@ -137,6 +194,10 @@ function getDefaultFilePath(language: SupportedLanguage): string {
       return 'source.js';
     case 'python':
       return 'source.py';
+    case 'go':
+      return 'source.go';
+    case 'java':
+      return 'Source.java';
     default:
       return 'source.txt';
   }
@@ -148,15 +209,19 @@ function getDefaultFilePath(language: SupportedLanguage): string {
 
 import { getTypeScriptPatternCount } from './typescript';
 import { getPythonPatternCount } from './python';
+import { getGoPatternCount } from './go';
+import { getJavaPatternCount } from './java';
 
 export function getTotalPatternCount(): number {
-  return getTypeScriptPatternCount() + getPythonPatternCount();
+  return getTypeScriptPatternCount() + getPythonPatternCount() + getGoPatternCount() + getJavaPatternCount();
 }
 
 export function getPatternCountByLanguage(): Record<SupportedLanguage, number> {
   return {
     typescript: getTypeScriptPatternCount(),
-    javascript: getTypeScriptPatternCount(), // Same as TS
+    javascript: getTypeScriptPatternCount(),
     python: getPythonPatternCount(),
+    go: getGoPatternCount(),
+    java: getJavaPatternCount(),
   };
 }

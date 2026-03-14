@@ -298,7 +298,6 @@ jobs:
 
       - name: Run audit
         run: pnpm audit --audit-level=high
-        continue-on-error: true
 
   # ============================================================
   # Node version matrix — nightly only (not every PR)

@@ -13,12 +13,19 @@
  *   shipgate build             - Full pipeline: check + generate
  */
 
+import './load-env.js';
 import { program } from './cli.js';
 import { ExitCode } from './exit-codes.js';
 import { initTracing, shutdownTracing } from '@isl-lang/observability';
+import { trackCommand } from './analytics.js';
 
 // Initialise tracing early — noop unless ISL_TRACE=1 or SHIPGATE_TRACE=1
 initTracing({ serviceName: 'shipgate-cli', serviceVersion: '1.0.0' });
+
+// Track CLI invocation (opt-in, fire-and-forget)
+const cliArgs = process.argv.slice(2);
+const commandName = cliArgs.find(a => !a.startsWith('-')) ?? 'help';
+trackCommand(commandName);
 
 // Intercept process.exit to handle Commander's direct calls
 const originalExit = process.exit;

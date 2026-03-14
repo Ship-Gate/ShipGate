@@ -54,7 +54,9 @@ export type TsFindingKind =
   | 'phantom_package'      // No package.json found; cannot verify
   | 'ghost_import'         // Import of a non-existent relative module
   | 'unknown_builtin'      // Looks like a builtin but isn't (e.g. "node:fakemod")
-  | 'type_only_missing';   // Type-only import for package not in devDependencies
+  | 'type_only_missing'    // Type-only import for package not in devDependencies
+  | 'barrel_ghost_import'  // Symbol imported from barrel but not re-exported
+  | 'missing_export';      // Imported symbol doesn't exist in resolved module
 
 /**
  * A single dependency/import finding

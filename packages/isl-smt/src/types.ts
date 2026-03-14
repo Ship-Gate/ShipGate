@@ -34,8 +34,8 @@ export interface SMTVerifyOptions {
   produceModels?: boolean;
   /** Verbose logging */
   verbose?: boolean;
-  /** Solver to use (default: builtin, can use z3 if available, or z3-wasm as fallback) */
-  solver?: 'builtin' | 'z3' | 'cvc5' | 'z3-wasm';
+  /** Solver to use (default: auto). Auto tries z3 -> z3-wasm -> builtin. */
+  solver?: 'auto' | 'builtin' | 'z3' | 'cvc5' | 'z3-wasm';
 }
 
 // Import types from ISL core
@@ -153,7 +153,7 @@ export interface SolverEvidence {
   /** Hash of the SMT query (for caching and reproducibility) */
   queryHash: string;
   /** Solver used */
-  solver: 'builtin' | 'z3' | 'cvc5' | 'z3-wasm';
+  solver: 'auto' | 'builtin' | 'z3' | 'cvc5' | 'z3-wasm';
   /** Solver version (if external) */
   solverVersion?: string;
   /** Result status */

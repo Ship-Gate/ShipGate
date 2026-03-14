@@ -38,6 +38,22 @@ export type {
 } from './go/types.js';
 export { isGoStdlib, hasStdlibPrefix, GO_STDLIB_PACKAGES } from './go/stdlib.js';
 
+// ---- Java resolver ----
+export { resolveJava, scanJavaFile } from './java/resolver.js';
+export type {
+  JavaResolverOptions,
+} from './java/resolver.js';
+export type {
+  JavaDependencyCheckResult,
+  JavaFinding,
+  JavaFindingKind,
+  JavaImport,
+  JavaBuildConfig,
+  MavenDependency,
+  GradleDependency,
+  SourceLocation as JavaSourceLocation,
+} from './java/types.js';
+
 // ---- TypeScript/JavaScript resolver ----
 export { resolveTs, scanTsFile } from './ts/resolver.js';
 export type {

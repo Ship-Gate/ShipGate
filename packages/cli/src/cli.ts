@@ -83,6 +83,7 @@ import {
   truthpackBuild, printTruthpackBuildResult, getTruthpackBuildExitCode,
   truthpackDiff, printTruthpackDiffResult, getTruthpackDiffExitCode,
   provenanceInit, printProvenanceInitResult,
+  provenanceScan, printProvenanceScanResult, getProvenanceScanExitCode,
   shipCommand,
   vibe, printVibeResult, getVibeExitCode,
   runProjectScan, formatProjectScanResult,
@@ -99,6 +100,7 @@ import {
 import type { FailOnLevel } from './commands/verify.js';
 import { TeamConfigError } from '@isl-lang/core';
 import { initTracing, shutdownTracing, getCurrentTraceId, withSpan, ISL_ATTR, type TracedSpan } from '@isl-lang/observability';
+import { loadBaseline, saveBaseline, filterNewFindings, computeFindingHash } from './baseline.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Version (injected at build time from package.json)
@@ -147,9 +149,10 @@ const program = new Command();
 
 program
   .name('shipgate')
-  .description(chalk.bold('ShipGate CLI') + ' — Stop AI from shipping fake features.\n' +
-    chalk.gray('  Quick start:  shipgate go            # Scan, infer ISL, verify, gate') + '\n' +
-    chalk.gray('  From scratch: shipgate vibe "todo app"  # NL → ISL → full-stack code') + '\n' +
+  .description(chalk.bold('ShipGate CLI') + ' — The last gate before production for AI-written code.\n' +
+    chalk.gray('  Quick start:  shipgate go               # Zero-config scan + gate (no API keys needed)') + '\n' +
+    chalk.gray('  Audit trail:  shipgate provenance        # Every line → agent + author + timestamp') + '\n' +
+    chalk.gray('  From scratch: shipgate vibe "todo app"   # NL → ISL → verified code') + '\n' +
     chalk.gray('  Codegen:      shipgate gen python auth.isl  # ISL → Python/Rust/Go/TS'))
   .version(VERSION, '-V, --version', 'Show version number')
   .option('-v, --verbose', 'Enable verbose output')
@@ -510,7 +513,7 @@ program
   .option('--proof <bundleDir>', 'Verify using proof bundle (instead of path)')
   .option('--json', 'Output structured JSON to stdout')
   .option('--ci', 'CI mode: JSON stdout, GitHub Actions annotations, no color')
-  .option('--format <format>', 'Output format: json, text, gitlab, junit, github', 'text')
+  .option('--format <format>', 'Output format: json, text, gitlab, junit, github, sarif', 'text')
   .option('--fail-on <level>', 'Strictness: error (default), warning, unspecced', 'error')
   .option('-t, --timeout <ms>', 'Test timeout in milliseconds', '30000')
   .option('-s, --min-score <score>', 'Minimum trust score to pass', '70')
@@ -542,6 +545,8 @@ program
   .option('--explain', 'Generate detailed explanation reports (verdict-explain.json and .md)')
   .option('--spec-coverage', 'Report spec coverage: files with specs, auto-specced, unspecced')
   .option('--tiered-scoring', 'Use tiered trust score (Tier 1=3x, Tier 2=2x, Tier 3=1x)')
+  .option('--incremental', 'Only verify changed files and their dependents (uses git diff + cache)')
+  .option('--base-commit <ref>', 'Git ref to compare against for incremental mode (default: HEAD~1)')
   .action(async (path: string | undefined, options) => {
     await withSpan('cli.verify', { attributes: { [ISL_ATTR.COMMAND]: 'verify' } }, async (cliSpan: TracedSpan) => {
     const opts = program.opts();
@@ -680,7 +685,7 @@ program
       impl: options.impl,
       json: isJsonMode,
       ci: isCiMode,
-      format: outputFormat as 'json' | 'text' | 'gitlab' | 'junit' | 'github',
+      format: outputFormat as 'json' | 'text' | 'gitlab' | 'junit' | 'github' | 'sarif',
       quiet: isJsonMode,
       failOn,
       shipgateConfig: vibeConfig,
@@ -694,6 +699,8 @@ program
       explain: options.explain,
       specCoverage: options.specCoverage,
       useTieredScoring: options.tieredScoring,
+      incremental: options.incremental,
+      baseCommit: options.baseCommit,
     });
 
     // ── Apply ShipGate config enforcement ───────────────────────────────
@@ -736,7 +743,7 @@ program
     printUnifiedVerifyResult(result, {
       json: isJsonMode,
       ci: isCiMode,
-      format: outputFormat as 'json' | 'text' | 'gitlab' | 'junit' | 'github',
+      format: outputFormat as 'json' | 'text' | 'gitlab' | 'junit' | 'github' | 'sarif',
       verbose: opts.verbose,
       detailed: options.detailed,
     });
@@ -1617,6 +1624,8 @@ program
   .option('--proof-output <path>', 'Write proof bundle to path (e.g. .shipgate/proof.json). Deterministic, optionally signed via SHIPGATE_SIGNING_KEY.')
   .option('--proof-format <fmt>', 'Proof bundle format when --proof-output is set: json or md', 'json')
   .option('--ci', 'CI mode: minimal output, just the decision')
+  .option('--baseline <path>', 'Load baseline and suppress known findings (default: .shipgate/baseline.json)')
+  .option('--save-baseline', 'Save current findings as baseline after gate')
   .action(async (spec: string, options) => {
     const opts = program.opts();
     const isJson = opts.format === 'json';
@@ -1645,6 +1654,35 @@ program
       policyFile: options.policyFile,
       policyProfile: options.policyProfile as 'strict' | 'standard' | 'lenient' | undefined,
     });
+
+    const baselinePath = options.baseline ?? path.join(process.cwd(), '.shipgate', 'baseline.json');
+
+    type FlatViolation = { file: string; line?: number; check: string; message: string };
+    const gateViolations: FlatViolation[] = (result.results?.blockers ?? []).map((b: { clause: string; reason: string; line?: number }) => ({
+      file: spec,
+      line: b.line,
+      check: b.clause,
+      message: b.reason,
+    }));
+
+    if (options.saveBaseline) {
+      await saveBaseline(baselinePath, gateViolations);
+      if (!isCi) console.log(chalk.green(`\n✓ Baseline saved to ${baselinePath} (${gateViolations.length} findings)`));
+    }
+
+    if (options.baseline) {
+      const baseline = await loadBaseline(baselinePath);
+      if (baseline) {
+        const { newFindings, suppressedCount } = filterNewFindings(
+          gateViolations,
+          baseline,
+          (f) => computeFindingHash(f),
+        );
+        if (!isCi) console.log(chalk.cyan(`\nBaseline: ${suppressedCount} findings suppressed, ${newFindings.length} new findings`));
+      } else if (!isCi) {
+        console.log(chalk.yellow(`\n⚠ No baseline found at ${baselinePath}. Run with --save-baseline first.`));
+      }
+    }
 
     printGateResult(result, {
       format: isJson ? 'json' : 'pretty',
@@ -1959,6 +1997,11 @@ program
   .option('--model <model>', 'AI model override')
   .option('--no-upload', 'Skip uploading results to ShipGate Dashboard')
   .option('--project <name>', 'Project name for dashboard upload')
+  .option('--taint', 'Run taint analysis via @isl-lang/taint-tracker')
+  .option('--supply-chain', 'Run supply chain verification via @isl-lang/supply-chain-verifier')
+  .option('--semgrep', 'Run Semgrep rules via @isl-lang/semgrep-integration')
+  .option('--baseline <path>', 'Load baseline and suppress known findings (default: .shipgate/baseline.json)')
+  .option('--save-baseline', 'Save current findings as baseline after scan')
   .action(async (targetPath: string | undefined, options) => {
     const opts = program.opts();
     const scanPath = targetPath ?? '.';
@@ -1970,7 +2013,47 @@ program
       model: options.model,
       format: opts.format,
       verbose: opts.verbose,
+      taint: options.taint ?? false,
+      supplyChain: options.supplyChain ?? false,
+      semgrep: options.semgrep ?? false,
     });
+
+    const baselinePath = options.baseline ?? path.join(path.resolve(scanPath), '.shipgate', 'baseline.json');
+
+    // Flatten violations for baseline processing
+    type FlatViolation = { file: string; line?: number; check: string; message: string };
+    const allViolations: FlatViolation[] = (result.results ?? []).flatMap((r) =>
+      (r.violations ?? []).map((v) => ({
+        file: r.file,
+        line: v.line,
+        check: v.rule,
+        message: v.message,
+      })),
+    );
+
+    if (options.saveBaseline) {
+      await saveBaseline(baselinePath, allViolations);
+      console.log(chalk.green(`\n✓ Baseline saved to ${baselinePath} (${allViolations.length} findings)`));
+    }
+
+    if (options.baseline) {
+      const baseline = await loadBaseline(baselinePath);
+      if (baseline) {
+        const { newFindings, suppressedCount } = filterNewFindings(
+          allViolations,
+          baseline,
+          (f) => computeFindingHash(f),
+        );
+        console.log(chalk.cyan(`\nBaseline: ${suppressedCount} findings suppressed, ${newFindings.length} new findings`));
+
+        if (newFindings.length === 0 && !result.success) {
+          result.success = true;
+          result.verdict = 'SHIP';
+        }
+      } else {
+        console.log(chalk.yellow(`\n⚠ No baseline found at ${baselinePath}. Run with --save-baseline first.`));
+      }
+    }
 
     if (opts.format === 'json') {
       console.log(JSON.stringify(result, null, 2));
@@ -2040,13 +2123,23 @@ program
 
 program
   .command('go [path]')
-  .description('One command: detect → init → infer ISL → truthpack → verify → gate\n  Examples:\n    shipgate go                     # Scan current directory\n    shipgate go ./my-project        # Scan target project\n    shipgate go --fix               # Auto-heal violations\n    shipgate go --deep              # Thorough scan, higher coverage')
+  .description(
+    'One command: detect → scan → provenance → gate (zero-config)\n\n' +
+    '  Works without API keys via specless mode.\n' +
+    '  Set ANTHROPIC_API_KEY or OPENAI_API_KEY for deeper ISL verification.\n\n' +
+    '  Examples:\n' +
+    '    shipgate go                     # Scan current directory\n' +
+    '    shipgate go ./my-project        # Scan target project\n' +
+    '    shipgate go --fix               # Auto-heal violations\n' +
+    '    shipgate go --deep              # Thorough scan, higher coverage'
+  )
   .option('--fix', 'Auto-heal violations after scan')
   .option('--deep', 'Thorough scan with minimum 50% coverage requirement')
   .option('--min-coverage <n>', 'Minimum spec coverage (0-100)', '0')
   .option('--provider <provider>', 'AI provider: anthropic or openai')
   .option('--model <model>', 'AI model override')
   .option('--no-upload', 'Skip uploading results to ShipGate Dashboard')
+  .option('--no-provenance', 'Skip code provenance scan')
   .option('--project <name>', 'Project name for dashboard upload')
   .action(async (targetPath: string | undefined, options) => {
     const opts = program.opts();
@@ -2062,6 +2155,7 @@ program
       verbose: opts.verbose,
       upload: options.upload,
       project: options.project,
+      noProvenance: options.provenance === false,
     });
 
     if (opts.format === 'json') {
@@ -2487,19 +2581,56 @@ shipgateCommand
   });
 
 const provenanceCommand = shipgateCommand
-  .command('provenance')
-  .description('AI provenance metadata for proof bundles (vendor-agnostic)');
+  .command('provenance [path]')
+  .description(
+    'AI code provenance — line-level attribution audit trail\n\n' +
+    '  Every line mapped to its AI agent, operator, and timestamp.\n\n' +
+    '  Examples:\n' +
+    '    shipgate provenance                     # Project summary\n' +
+    '    shipgate provenance src/api/users.ts    # File-level blame\n' +
+    '    shipgate provenance --format json       # JSON export\n' +
+    '    shipgate provenance --format csv        # CSV export\n' +
+    '    shipgate provenance --summary           # High-level stats only\n' +
+    '    shipgate provenance init                # Install hook + create session'
+  )
+  .option('--format <format>', 'Output format: text, json, csv', 'text')
+  .option('--summary', 'Show high-level summary only')
+  .option('--since <date>', 'Filter by date (ISO format)')
+  .option('--max-files <n>', 'Maximum files to scan', parseInt)
+  .option('--include <exts>', 'File extensions to include (comma-separated, e.g. ts,py,go)')
+  .option('--exclude <dirs>', 'Directories to exclude (comma-separated)')
+  .action(async (targetPath: string | undefined, options) => {
+    if (targetPath === 'init') return;
+
+    const result = await provenanceScan({
+      path: targetPath,
+      format: options.format,
+      summary: options.summary,
+      since: options.since,
+      maxFiles: options.maxFiles,
+      include: options.include,
+      exclude: options.exclude,
+    });
+    printProvenanceScanResult(result, { format: options.format });
+    process.exit(getProvenanceScanExitCode(result));
+  });
 
 provenanceCommand
   .command('init')
-  .description('Create .shipgate/provenance.json template')
+  .description('Initialize provenance tracking: install pre-commit hook + create session file')
   .option('-d, --directory <dir>', 'Project root (default: cwd)')
   .option('--force', 'Overwrite existing provenance.json')
+  .option('--generator <tool>', 'AI tool name (cursor, copilot, claude, codex, gemini, windsurf, aider)')
+  .option('--model <model>', 'AI model identifier (e.g. claude-sonnet-4)')
+  .option('--no-hook', 'Skip installing the pre-commit hook')
   .action(async (options) => {
     const opts = program.opts();
     const result = await provenanceInit({
       directory: options.directory,
       force: options.force,
+      generator: options.generator,
+      model: options.model,
+      hook: options.hook,
     });
     printProvenanceInitResult(result, { format: opts.format });
     process.exit(result.success ? ExitCode.SUCCESS : ExitCode.ISL_ERROR);
@@ -2636,8 +2767,18 @@ shipgateCommand
   .option('--min-confidence <score>', 'Minimum confidence threshold (0-1, default: 0.6)', '0.6')
   .action(async (options) => {
     const opts = program.opts();
-    const { runShipgateFix } = await import('@isl-lang/autofix');
-    
+    let runShipgateFix: typeof import('@isl-lang/autofix').runShipgateFix;
+    try {
+      const autofix = await import('@isl-lang/autofix');
+      runShipgateFix = autofix.runShipgateFix;
+    } catch (err: unknown) {
+      const code = err && typeof err === 'object' && 'code' in err ? (err as NodeJS.ErrnoException).code : '';
+      if (code === 'MODULE_NOT_FOUND' || (err instanceof Error && err.message?.includes('Cannot find module'))) {
+        console.error('The fix command requires @isl-lang/autofix. Install it with: pnpm add @isl-lang/autofix');
+        process.exit(1);
+      }
+      throw err;
+    }
     const result = await runShipgateFix({
       projectRoot: process.cwd(),
       dryRun: !options.apply,

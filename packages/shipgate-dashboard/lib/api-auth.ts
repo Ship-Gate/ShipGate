@@ -132,6 +132,23 @@ export async function authenticate(
     select: { orgId: true, role: true },
   });
 
+  // SSO enforcement: if any of the user's orgs enforce SSO and session is not SAML, reject
+  if (session.provider && session.provider !== 'saml') {
+    const orgIds = memberships.map((m) => m.orgId);
+    if (orgIds.length > 0) {
+      const enforcedOrg = await prisma.org.findFirst({
+        where: { id: { in: orgIds }, ssoEnforced: true },
+        select: { id: true, name: true },
+      });
+      if (enforcedOrg) {
+        return NextResponse.json(
+          { error: `Organization "${enforcedOrg.name}" requires SSO login. Please sign in with SSO.` },
+          { status: 403 }
+        );
+      }
+    }
+  }
+
   const orgRoles = new Map<string, MembershipRole>();
   for (const m of memberships) {
     orgRoles.set(m.orgId, m.role);

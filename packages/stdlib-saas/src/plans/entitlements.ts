@@ -195,7 +195,7 @@ export class PlanEntitlements {
       metadata: {
         displayName: 'Starter',
         description: 'For small teams and growing businesses',
-        price: 29,
+        price: 49,
         currency: 'USD',
         billingInterval: 'monthly',
         features: [

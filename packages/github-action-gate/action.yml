@@ -41,7 +41,13 @@ outputs:
     description: 'Number of violations found'
   evidence-path:
     description: 'Path to evidence directory'
+  ai-percentage:
+    description: 'Percentage of code that is AI-authored'
+  top-agent:
+    description: 'Most used AI agent (cursor, copilot, claude-code, etc.)'
+  total-lines:
+    description: 'Total lines scanned for provenance'
 
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'

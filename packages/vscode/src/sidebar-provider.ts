@@ -44,6 +44,10 @@ const COMMAND_MAP: Record<string, string> = {
   genOpenapi:     'shipgate.genOpenapi',
   codeToIsl:      'shipgate.codeToIsl',
   runScan:        'shipgate.verify',
+  openAllFailing: 'shipgate.openAllFailing',
+  setApiToken:    'shipgate.setApiToken',
+  copySummary:    'shipgate.copySummary',
+  toggleWatch:    'shipgate.toggleWatch',
 };
 
 export class ShipGateSidebarProvider implements vscode.WebviewViewProvider {
@@ -81,6 +85,14 @@ export class ShipGateSidebarProvider implements vscode.WebviewViewProvider {
         if (data.hash) {
           void vscode.env.clipboard.writeText(data.hash);
           void vscode.window.showInformationMessage('Bundle hash copied');
+        }
+        return;
+      }
+
+      if (command === 'copyText') {
+        if ((data as any).text) {
+          void vscode.env.clipboard.writeText((data as any).text);
+          void vscode.window.showInformationMessage('Copied to clipboard');
         }
         return;
       }

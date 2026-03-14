@@ -16,7 +16,7 @@
  * // Verify a domain
  * const result = await verifySMT(domain, {
  *   timeout: 5000,
- *   solver: 'builtin', // or 'z3' if available
+ *   solver: 'auto', // tries z3 -> z3-wasm -> builtin
  * });
  * 
  * console.log(result.summary);

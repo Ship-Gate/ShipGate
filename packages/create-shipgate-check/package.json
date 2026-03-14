@@ -1,0 +1,33 @@
+{
+  "name": "create-shipgate-check",
+  "version": "1.0.0",
+  "description": "Scaffold a new ShipGate SpeclessCheck plugin",
+  "type": "module",
+  "bin": {
+    "create-shipgate-check": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --clean",
+    "dev": "tsup src/index.ts --format esm --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  },
+  "author": "mevla",
+  "license": "MIT",
+  "keywords": [
+    "shipgate",
+    "isl",
+    "specless",
+    "scaffold",
+    "create"
+  ]
+}

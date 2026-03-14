@@ -14,36 +14,84 @@
 
 ---
 
+## Know exactly who wrote every line of your code
+
+ShipGate gives enterprises the audit trail they need to adopt AI coding tools with confidence. Every line of code is attributed to its authoring agent (Claude, Copilot, Codex, Gemini, Windsurf, etc.), the human who prompted it, and when.
+
+```bash
+npm install -g shipgate
+
+# Zero config. No API keys needed. Works immediately:
+shipgate go
+
+# See every line, every agent, every author:
+shipgate provenance
+```
+
+```
+  Code Provenance Report
+  Repository: acme/payments-api
+  Branch: main (abc1234)
+
+  Attribution Summary
+  Total lines:     12,847
+  Human-authored:   4,231 (32.9%)
+  AI-assisted:      8,616 (67.1%)
+
+  By AI Agent
+  Cursor/Claude:    5,420 (42.2%)
+  GitHub Copilot:   2,891 (22.5%)
+  Claude Code:        305 (2.4%)
+
+  By Operator
+  john@acme.com:    6,200 (48.3%)  -- 71% AI-assisted
+  jane@acme.com:    4,100 (31.9%)  -- 65% AI-assisted
+```
+
+When your CISO asks "how much of our codebase was written by AI, and which AI?" — ShipGate answers that question, line by line, with confidence levels.
+
+---
+
 ## The Problem
 
 AI coding assistants generate code that compiles, passes linting, and looks correct — but:
 
-- **Ghost routes** — API endpoints referenced in code that don't exist in your spec
-- **Ghost env vars** — `process.env.STRIPE_KEY` accessed but never declared or configured
-- **Auth bypasses** — Public endpoints that should require authentication but don't
+- **No audit trail** — You can't tell which lines were AI-generated vs human-written
+- **Ghost routes** — API endpoints referenced in code that don't exist
+- **Ghost env vars** — `process.env.STRIPE_KEY` accessed but never declared
+- **Auth bypasses** — Public endpoints that should require authentication
 
-Linters can't catch these. Tests can't catch what they don't know to test. You need a behavioral gate.
+Linters can't catch these. Tests can't catch what they don't know to test. You need a behavioral gate with a full audit trail.
 
 ## How It Works
 
 ```
-Your intent (NL or ISL)  →  Behavioral contract  →  SHIP or NO_SHIP
-                                                      with evidence
+detect → scan (zero-config) → provenance → gate → SHIP or NO_SHIP
 ```
 
-1. **Define intent** — Write ISL specs by hand, or describe what you want in plain English
-2. **Verify code** — ShipGate checks implementation against the behavioral contract
-3. **Gate the merge** — SHIP (exit 0) or NO_SHIP (exit 1) with a tamper-proof evidence bundle
+1. **Zero-config scan** — ShipGate works immediately. No API keys, no specs, no setup. Specless mode runs security checks, hallucination detection, and provenance scanning out of the box.
+2. **AI attribution** — Every line is mapped to its author, AI agent, and timestamp using git blame + commit metadata analysis.
+3. **Gate the merge** — SHIP (exit 0) or NO_SHIP (exit 1) with a tamper-proof evidence bundle.
+4. **Go deeper** — Add `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` for AI-generated behavioral specs and deeper verification.
 
 ## Quick Start
 
 ```bash
 npm install -g shipgate
 
-# One command — detect, init, infer ISL, verify, gate:
+# Zero config — works immediately:
 shipgate go
 
-# Or go from natural language to a verified project in one shot:
+# AI audit trail — every line attributed:
+shipgate provenance
+
+# Line-level blame for a specific file:
+shipgate provenance src/api/users.ts
+
+# Install pre-commit hook for automatic AI tagging:
+shipgate provenance init
+
+# From natural language to verified code:
 shipgate vibe "build a todo API with auth and JWT"
 ```
 
@@ -51,17 +99,19 @@ shipgate vibe "build a todo API with auth and JWT"
 
 | Command | What it does |
 |---------|-------------|
-| `shipgate go [path]` | **One command to gate anything.** Detect → init → infer ISL → verify → gate. |
+| `shipgate go [path]` | **Zero-config gate.** Detect → scan → provenance → gate. No API keys needed. |
+| `shipgate provenance` | **AI audit trail.** Every line attributed to agent + author + timestamp. |
+| `shipgate provenance <file>` | Line-level blame view for a single file. |
+| `shipgate provenance init` | Install pre-commit hook for automatic AI-Tool tagging. |
+| `shipgate provenance --format csv` | Export audit trail for compliance teams. |
 | `shipgate go --fix` | Go + auto-heal violations |
 | `shipgate go --deep` | Go with thorough scan |
 | `shipgate vibe "<prompt>"` | NL → ISL spec → full-stack code → verify → SHIP/NO_SHIP |
-| `shipgate vibe "<prompt>" --lang python` | Vibe in Python, Rust, Go, or TypeScript |
-| `shipgate scan <path>` | Scan a codebase, AI-generate ISL specs, produce coverage report |
-| `shipgate verify <path>` | Verify implementation against specs. Detailed results + evidence |
-| `shipgate gate <spec> --impl <path>` | Binary SHIP/NO_SHIP verdict. Use in CI with `--ci` |
+| `shipgate scan <path>` | Full project scan with ISL spec generation |
+| `shipgate verify <path>` | Verify implementation against specs |
+| `shipgate gate <spec> --impl <path>` | Binary SHIP/NO_SHIP verdict for CI |
 | `shipgate gen ts <file.isl>` | Generate TypeScript from ISL (also: python, rust, go, graphql, openapi) |
 | `shipgate heal <path>` | AI-powered auto-fix for spec violations |
-| `shipgate policy list` | Show all 27 policy rules with severity and remediation hints |
 
 ## Why ISL?
 
@@ -165,24 +215,48 @@ shipgate vibe "REST API" --lang python   # NL → Python project
 shipgate vibe "REST API" --lang rust     # NL → Rust project
 ```
 
+## Code Provenance (AI Audit Trail)
+
+The provenance system gives enterprises complete visibility into AI-generated code:
+
+- **Line-level attribution** — Every line mapped to its AI agent, human operator, and timestamp
+- **Agent detection** — Identifies Cursor, Copilot, Claude Code, Codex, Gemini, Windsurf, Aider, and Cody
+- **Multiple detection methods** — Git commit trailers (highest confidence), Co-authored-by headers, commit message patterns, provenance session files
+- **Pre-commit hook** — `shipgate provenance init` installs a hook that automatically tags commits with `AI-Tool`, `AI-Session`, and `AI-Operator` trailers
+- **Export** — CSV and JSON export for compliance teams, auditors, and SOC 2 evidence packages
+- **Dashboard** — Full web UI with pie charts, agent distribution, trend lines, file browser, and line-level blame view
+
+See the [provenance dashboard](/dashboard/provenance) or run `shipgate provenance --format csv > audit.csv` for a compliance export.
+
 ## Architecture
 
-ShipGate is a monorepo (pnpm workspaces + Turborepo) with **248 packages** across **1.1M+ lines of source code**.
+ShipGate is a monorepo (pnpm workspaces + Turborepo). Every package has a maturity tier — see [PACKAGES.md](PACKAGES.md) for the full index.
+
+### Core Packages (production-ready)
+
+| Package | Purpose |
+|---------|---------|
+| `cli` | Full CLI: go, vibe, scan, verify, gate, provenance, heal |
+| `core` | Central verification engine |
+| `isl-gate` | SHIP/NO_SHIP gate engine with trust scoring |
+| `code-provenance` | Line-level AI attribution engine |
+| `isl-verify` | Verification runner |
+| `parser` | ISL recursive descent parser |
+| `isl-pipeline` | Verification pipeline orchestration |
+| `typechecker` | ISL type system |
 
 ### Package Categories
 
 | Category | Count | Examples |
 |----------|-------|---------|
-| **Core engine** | ~10 | `core` (62k lines), `cli` (46k lines), `evaluator`, `interpreter`, `errors` |
-| **ISL language** | 38 | `isl-core`, `isl-gate`, `isl-pipeline`, `isl-compiler`, `isl-proof`, `isl-pbt`, `isl-healer` |
-| **Code generation** | 30 | `codegen-types`, `codegen-graphql`, `codegen-grpc`, `codegen-terraform`, `codegen-python`, `codegen-rust`, `codegen-go`, `codegen-wasm` |
-| **Standard library** | 31 | `stdlib-payments` (10k lines), `stdlib-rate-limit` (7k), `stdlib-queue`, `stdlib-cache`, `stdlib-auth`, `stdlib-billing`, `stdlib-workflow`, `stdlib-saas` |
-| **Verifiers** | 6 | `verifier-chaos` (11k), `verifier-temporal` (10k), `verifier-formal` (7k), `verifier-security`, `verifier-sandbox` |
-| **SDKs** | 8 | `sdk-flutter` (Dart, 6k), `sdk-kotlin` (6k), `sdk-swift` (4k), `sdk-python` (3k), `sdk-typescript`, `sdk-web`, `sdk-react-native` |
-| **Security** | ~8 | `security-scanner` (7k), `security-policies` (5k), `secrets-hygiene`, `hallucination-scanner`, `fake-success-ui-detector` |
-| **Infrastructure** | ~20 | `distributed`, `event-sourcing`, `circuit-breaker`, `api-gateway`, `api-versioning`, `edge-runtime`, `streaming` |
-| **Dashboard** | 3 | `shipgate-dashboard` (11k), `dashboard-api`, `marketplace-web` |
-| **Tooling** | ~15 | `test-generator` (13k), `mutation-testing`, `snapshot-testing`, `formal-verification`, `prover`, `typechecker` |
+| **Core engine** | 11 | `core`, `cli`, `isl-gate`, `code-provenance`, `isl-verify` |
+| **ISL language** | 38 | `isl-core`, `isl-pipeline`, `isl-proof`, `isl-pbt`, `isl-healer` |
+| **Code generation** | 30 | `codegen-graphql`, `codegen-grpc`, `codegen-terraform`, `codegen-python`, `codegen-rust`, `codegen-go` |
+| **Standard library** | 31 | `stdlib-auth`, `stdlib-billing`, `stdlib-ai`, `stdlib-scheduling`, `stdlib-workflow` |
+| **Verifiers** | 6 | `verifier-chaos`, `verifier-temporal`, `verifier-formal`, `verifier-security` |
+| **SDKs** | 8 | `sdk-flutter` (Dart), `sdk-kotlin`, `sdk-swift`, `sdk-python`, `sdk-typescript`, `sdk-web` |
+| **Security** | ~8 | `security-scanner`, `secrets-hygiene`, `hallucination-scanner` |
+| **Dashboard** | 3 | `shipgate-dashboard`, `dashboard-api` |
 
 ### Top 10 Packages by Size
 

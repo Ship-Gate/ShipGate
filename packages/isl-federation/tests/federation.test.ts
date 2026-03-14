@@ -8,7 +8,7 @@ import { compose } from '../src/composer';
 import { validate } from '../src/validator';
 import { createResolver, extractReferences } from '../src/resolver';
 import { generateGateway } from '../src/gateway';
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 import type { FederatedService } from '../src/types';
 
 // ============================================================================

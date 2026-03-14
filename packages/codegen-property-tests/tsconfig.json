@@ -28,8 +28,7 @@
     ]
   },
   "include": [
-    "src/**/*",
-    "../../../master_contracts/**/*"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",

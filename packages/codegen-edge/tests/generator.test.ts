@@ -8,7 +8,7 @@ import { generateCloudflare } from '../src/targets/cloudflare';
 import { generateDeno } from '../src/targets/deno';
 import { generateVercel } from '../src/targets/vercel';
 import { generateNetlify } from '../src/targets/netlify';
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 
 // ============================================================================
 // TEST FIXTURES

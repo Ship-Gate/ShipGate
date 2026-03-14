@@ -7,7 +7,7 @@ import { generate } from '../src/generator';
 import { compileToWat, validateWat } from '../src/wat-emitter';
 import { generateBindings } from '../src/bindings';
 import { optimizeModule, formatOptimizationStats } from '../src/optimizer';
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 import type { WasmModule, WasmFunction } from '../src/types';
 
 // ============================================================================

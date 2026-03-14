@@ -19,6 +19,20 @@ import type {
 } from './types.js';
 
 /**
+ * Wrap fragment-only ISL (entity/behavior/type/enum without domain) in a minimal domain
+ * so the parser accepts it. The scan merge step extracts blocks from fragments anyway.
+ */
+function islForValidation(isl: string): string {
+  const trimmed = isl.trim();
+  const fragmentStart = /^(entity|behavior|type|enum|invariant|policy)\s/m;
+  const hasDomain = /^domain\s/m;
+  if (fragmentStart.test(trimmed) && !hasDomain.test(trimmed)) {
+    return `domain _ {\n${isl}\n}\n`;
+  }
+  return isl;
+}
+
+/**
  * Validate ISL spec through all pipeline stages
  * 
  * @param isl - The ISL code to validate
@@ -34,10 +48,12 @@ export async function validateISL(isl: string): Promise<ValidationResult> {
     semanticErrors: [],
     verifyIssues: [],
   };
+
+  const islToValidate = islForValidation(isl);
   
   // Stage 1: Parse
   try {
-    const parseResult = await runParser(isl);
+    const parseResult = await runParser(islToValidate);
     result.parseOk = parseResult.success;
     result.parseErrors = parseResult.errors;
     
@@ -56,7 +72,7 @@ export async function validateISL(isl: string): Promise<ValidationResult> {
   
   // Stage 2: Semantic Analysis
   try {
-    const semanticResult = await runSemanticAnalysis(isl);
+    const semanticResult = await runSemanticAnalysis(islToValidate);
     result.semanticOk = semanticResult.success;
     result.semanticErrors = semanticResult.errors;
     
@@ -74,7 +90,7 @@ export async function validateISL(isl: string): Promise<ValidationResult> {
   
   // Stage 3: Quick Verification
   try {
-    const verifyResult = await runQuickVerify(isl);
+    const verifyResult = await runQuickVerify(islToValidate);
     result.verifyOk = verifyResult.success;
     result.verifyIssues = verifyResult.issues;
   } catch (err) {

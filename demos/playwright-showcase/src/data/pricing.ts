@@ -38,9 +38,9 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'pro',
     icon: Rocket,
-    name: 'Team',
-    price: '29',
-    period: '/user/mo',
+    name: 'Pro',
+    price: '49',
+    period: '/mo',
     tagline: 'Unlimited repos. AI-powered specs.',
     features: [
       'Everything in Free',

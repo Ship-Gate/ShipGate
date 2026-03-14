@@ -11,7 +11,7 @@ import { encodeUniversal, encodeExistential } from '../src/encoding/quantifiers'
 import { encodeTemporalProperty } from '../src/encoding/temporal';
 import { parseCounterexample, formatCounterexample } from '../src/counterexample';
 import { generateReport, generateSummary } from '../src/report';
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 
 // ============================================================================
 // TEST FIXTURES

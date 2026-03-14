@@ -6,21 +6,22 @@ let stripePromise: Promise<any> | null = null;
 
 export function getStripe() {
   if (!stripePromise) {
-    stripePromise = loadStripe(
-      import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
-        'pk_live_51SxSuA7irSsrPUk9XAPMYhKXtkyUeCoSgKVzwCtbHWnbimjE6DRniOpE4WK8k3rhPuJraaBnLjkhuSaqniTLGsjL00EAGf5nZ5'
-    );
+    const key = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+    if (!key) {
+      console.warn('VITE_STRIPE_PUBLISHABLE_KEY not set');
+      return Promise.resolve(null);
+    }
+    stripePromise = loadStripe(key);
   }
   return stripePromise;
 }
 
 export function redirectToCheckout(plan?: string) {
-  const url = plan
-    ? `${DASHBOARD_URL}/checkout?plan=${encodeURIComponent(plan)}`
-    : `${DASHBOARD_URL}/checkout`;
-  window.location.href = url;
+  const target = plan || 'pro';
+  window.location.href = `${DASHBOARD_URL}/checkout?plan=${encodeURIComponent(target)}`;
 }
 
 export const STRIPE_PRICE_IDS = {
-  pro: import.meta.env.VITE_STRIPE_PRO_PRICE_ID || 'price_1T5NmB7irSsrPUk97mCDMfB2',
+  pro: import.meta.env.VITE_STRIPE_PRO_PRICE_ID || '',
+  enterprise: import.meta.env.VITE_STRIPE_ENTERPRISE_PRICE_ID || '',
 } as const;

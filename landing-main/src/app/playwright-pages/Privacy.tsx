@@ -5,7 +5,7 @@ export default function Privacy() {
     <LegalPageLayout
       title="Privacy Policy"
       description="How Shipgate collects, uses, and protects your information."
-      lastUpdated="February 11, 2026"
+      lastUpdated="March 1, 2026"
     >
       <h2>Overview</h2>
       <p>
@@ -44,6 +44,15 @@ export default function Privacy() {
         <li>To comply with legal obligations and enforce our terms</li>
       </ul>
 
+      <h2>Legal Basis for Processing (GDPR)</h2>
+      <p>Where the GDPR applies, we process personal data on the following bases:</p>
+      <ul>
+        <li><strong>Contract:</strong> To provide the Services you have signed up for (account management, verification, billing)</li>
+        <li><strong>Legitimate interest:</strong> Product improvement, security, fraud prevention</li>
+        <li><strong>Consent:</strong> Marketing communications (you may withdraw at any time)</li>
+        <li><strong>Legal obligation:</strong> Where required by law</li>
+      </ul>
+
       <h2>Data Sharing and Disclosure</h2>
       <p>
         We do not sell your personal information. We may share data with:
@@ -53,10 +62,32 @@ export default function Privacy() {
         <li><strong>Legal requirements:</strong> When required by law, court order, or governmental authority</li>
       </ul>
 
+      <h2>Subprocessors</h2>
+      <p>
+        We use a limited set of subprocessors to operate the Services. Each is bound by data protection terms.
+        The current list is published on our <a href="/security">Security &amp; Compliance</a> page. We notify
+        customers of material changes to subprocessors.
+      </p>
+
+      <h2>Data Processing Agreement (DPA)</h2>
+      <p>
+        Enterprise customers may request a Data Processing Agreement. Contact{' '}
+        <a href="mailto:privacy@shipgate.dev">privacy@shipgate.dev</a> for a copy.
+      </p>
+
       <h2>Data Retention</h2>
       <p>
         We retain your information only for as long as necessary to fulfill the purposes described in this policy
-        or as required by law. Account data is retained until you request deletion or close your account.
+        or as required by law. Specifically:
+      </p>
+      <ul>
+        <li><strong>Account data:</strong> Retained while your account is active and for a reasonable period after closure</li>
+        <li><strong>Audit logs:</strong> Retained for at least 12 months for compliance and incident review</li>
+        <li><strong>Payment records:</strong> Retained as required by applicable tax and financial regulations</li>
+      </ul>
+      <p>
+        You may request export or deletion of your data at any time by contacting{' '}
+        <a href="mailto:privacy@shipgate.dev">privacy@shipgate.dev</a>.
       </p>
 
       <h2>Security</h2>
@@ -74,9 +105,11 @@ export default function Privacy() {
         <li>Object to or restrict processing</li>
         <li>Data portability</li>
         <li>Withdraw consent where processing is based on consent</li>
+        <li>Lodge a complaint with a supervisory authority (if you are in the EEA/UK)</li>
       </ul>
       <p>
         To exercise these rights, contact us at <a href="mailto:privacy@shipgate.dev">privacy@shipgate.dev</a>.
+        We will respond within 30 days (or such shorter period as required by applicable law).
       </p>
 
       <h2>International Transfers</h2>
@@ -96,6 +129,12 @@ export default function Privacy() {
       <p>
         We may update this Privacy Policy from time to time. We will notify you of material changes by posting
         the updated policy on this page and updating the &quot;Last updated&quot; date.
+      </p>
+
+      <h2>Cookies</h2>
+      <p>
+        We use essential cookies for authentication (session cookies). We may use analytics cookies
+        with your consent. You can manage cookie preferences through your browser settings.
       </p>
 
       <h2>Contact Us</h2>

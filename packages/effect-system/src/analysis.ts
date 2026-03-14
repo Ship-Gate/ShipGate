@@ -233,55 +233,188 @@ export interface EffectConflict {
   reason: string;
 }
 
-/**
- * Effect inference
- * Infer effect annotations from code
- */
+// ============================================================================
+// Effect Pattern Registry
+// ============================================================================
+
+export interface EffectPattern {
+  pattern: RegExp;
+  effect: ISLEffectAnnotation;
+  category?: string;
+}
+
+const DEFAULT_EFFECT_PATTERNS: EffectPattern[] = [
+  // Network / HTTP
+  { pattern: /\bfetch\s*\(/, effect: { name: 'network', kind: 'io', reversible: false, idempotent: false }, category: 'network' },
+  { pattern: /\baxios\.\w+/, effect: { name: 'network', kind: 'io', reversible: false, idempotent: false }, category: 'network' },
+  { pattern: /\bhttp\.\w+/, effect: { name: 'network', kind: 'io', reversible: false, idempotent: false }, category: 'network' },
+  { pattern: /\bXMLHttpRequest\b/, effect: { name: 'network', kind: 'io', reversible: false, idempotent: false }, category: 'network' },
+  { pattern: /\bWebSocket\b/, effect: { name: 'network', kind: 'io', reversible: false, idempotent: false }, category: 'network' },
+  { pattern: /\bgot\.\w+\(/, effect: { name: 'network', kind: 'io', reversible: false, idempotent: false }, category: 'network' },
+  { pattern: /\bsuperagent\b/, effect: { name: 'network', kind: 'io', reversible: false, idempotent: false }, category: 'network' },
+  { pattern: /\bky\.\w+\(/, effect: { name: 'network', kind: 'io', reversible: false, idempotent: false }, category: 'network' },
+  { pattern: /\bundici\.\w+/, effect: { name: 'network', kind: 'io', reversible: false, idempotent: false }, category: 'network' },
+
+  // Filesystem
+  { pattern: /\bfs\./, effect: { name: 'filesystem', kind: 'io', reversible: false, idempotent: false }, category: 'filesystem' },
+  { pattern: /\breadFileSync\b|\breadFile\b/, effect: { name: 'filesystem', kind: 'io', reversible: false, idempotent: false }, category: 'filesystem' },
+  { pattern: /\bwriteFileSync\b|\bwriteFile\b/, effect: { name: 'filesystem', kind: 'io', reversible: false, idempotent: false }, category: 'filesystem' },
+  { pattern: /\bunlink\b|\bunlinkSync\b/, effect: { name: 'filesystem', kind: 'io', reversible: false, idempotent: false }, category: 'filesystem' },
+  { pattern: /\bmkdir\b|\bmkdirSync\b/, effect: { name: 'filesystem', kind: 'io', reversible: false, idempotent: false }, category: 'filesystem' },
+  { pattern: /\brmdir\b|\brm\b/, effect: { name: 'filesystem', kind: 'io', reversible: false, idempotent: false }, category: 'filesystem' },
+  { pattern: /\bDeno\.readTextFile\b|\bDeno\.writeTextFile\b/, effect: { name: 'filesystem', kind: 'io', reversible: false, idempotent: false }, category: 'filesystem' },
+
+  // Logging
+  { pattern: /\bconsole\.(log|error|warn|info|debug|trace)\b/, effect: { name: 'logging', kind: 'logging', reversible: false, idempotent: true }, category: 'logging' },
+  { pattern: /\blogger\.\w+/, effect: { name: 'logging', kind: 'logging', reversible: false, idempotent: true }, category: 'logging' },
+  { pattern: /\bpino\(|\bwinston\.\w+|\bbunyan\.\w+/, effect: { name: 'logging', kind: 'logging', reversible: false, idempotent: true }, category: 'logging' },
+  { pattern: /\blog4js\.\w+/, effect: { name: 'logging', kind: 'logging', reversible: false, idempotent: true }, category: 'logging' },
+
+  // Nondeterminism
+  { pattern: /\bMath\.random\b/, effect: { name: 'random', kind: 'nondeterminism', reversible: true, idempotent: false }, category: 'nondeterminism' },
+  { pattern: /\bcrypto\.random\w*/, effect: { name: 'random', kind: 'nondeterminism', reversible: true, idempotent: false }, category: 'nondeterminism' },
+  { pattern: /\bcrypto\.getRandomValues\b/, effect: { name: 'random', kind: 'nondeterminism', reversible: true, idempotent: false }, category: 'nondeterminism' },
+  { pattern: /\buuid\b|\bnanoid\b|\bcuid\b|\bulid\b/, effect: { name: 'random', kind: 'nondeterminism', reversible: true, idempotent: false }, category: 'nondeterminism' },
+
+  // Time
+  { pattern: /\bDate\.now\b|\bnew Date\b/, effect: { name: 'time', kind: 'io', reversible: false, idempotent: false }, category: 'time' },
+  { pattern: /\bsetTimeout\b|\bsetInterval\b/, effect: { name: 'time', kind: 'io', reversible: false, idempotent: false }, category: 'time' },
+  { pattern: /\bperformance\.now\b|\bprocess\.hrtime\b/, effect: { name: 'time', kind: 'io', reversible: false, idempotent: false }, category: 'time' },
+
+  // Exception
+  { pattern: /\bthrow\s+/, effect: { name: 'error', kind: 'exception', reversible: true, idempotent: true }, category: 'exception' },
+  { pattern: /\.catch\s*\(|\bcatch\s*\(/, effect: { name: 'error', kind: 'exception', reversible: true, idempotent: true }, category: 'exception' },
+  { pattern: /\bprocess\.exit\b/, effect: { name: 'error', kind: 'exception', reversible: false, idempotent: false }, category: 'exception' },
+
+  // Async
+  { pattern: /\basync\s+function\b|\basync\s*\(/, effect: { name: 'async', kind: 'async', reversible: true, idempotent: false }, category: 'async' },
+  { pattern: /\bawait\s+/, effect: { name: 'async', kind: 'async', reversible: true, idempotent: false }, category: 'async' },
+  { pattern: /\bPromise\.\w+/, effect: { name: 'async', kind: 'async', reversible: true, idempotent: false }, category: 'async' },
+  { pattern: /\bnew\s+Worker\b|\bworker_threads\b/, effect: { name: 'async', kind: 'async', reversible: true, idempotent: false }, category: 'async' },
+
+  // Database
+  { pattern: /\.query\s*\(|\.execute\s*\(/, effect: { name: 'database', kind: 'io', reversible: false, idempotent: false }, category: 'database' },
+  { pattern: /\bprisma\.\w+/, effect: { name: 'database', kind: 'io', reversible: false, idempotent: false }, category: 'database' },
+  { pattern: /\bknex\.\w+|\bknex\(/, effect: { name: 'database', kind: 'io', reversible: false, idempotent: false }, category: 'database' },
+  { pattern: /\bsequelize\.\w+/, effect: { name: 'database', kind: 'io', reversible: false, idempotent: false }, category: 'database' },
+  { pattern: /\btypeorm\b|\bgetRepository\b|\bgetManager\b/, effect: { name: 'database', kind: 'io', reversible: false, idempotent: false }, category: 'database' },
+  { pattern: /\bmongoose\.\w+|\bMongoClient\b/, effect: { name: 'database', kind: 'io', reversible: false, idempotent: false }, category: 'database' },
+  { pattern: /\bdrizzle\.\w+/, effect: { name: 'database', kind: 'io', reversible: false, idempotent: false }, category: 'database' },
+  { pattern: /\bredis\.\w+|\bRedis\(/, effect: { name: 'database', kind: 'io', reversible: false, idempotent: false }, category: 'database' },
+
+  // State
+  { pattern: /\bsetState\s*\(|\buseState\b/, effect: { name: 'state', kind: 'state', reversible: true, idempotent: false }, category: 'state' },
+  { pattern: /\bstore\.dispatch\b|\bstore\.commit\b/, effect: { name: 'state', kind: 'state', reversible: true, idempotent: false }, category: 'state' },
+  { pattern: /\buseReducer\b|\buseContext\b/, effect: { name: 'state', kind: 'state', reversible: true, idempotent: false }, category: 'state' },
+
+  // Metrics
+  { pattern: /\bmetrics\.\w+|\bstatsd\.\w+|\bprometheus\.\w+/, effect: { name: 'metrics', kind: 'metrics', reversible: false, idempotent: true }, category: 'metrics' },
+  { pattern: /\bopentelemetry\.\w+|\btracer\.\w+/, effect: { name: 'metrics', kind: 'metrics', reversible: false, idempotent: true }, category: 'metrics' },
+
+  // Process / Shell
+  { pattern: /\bchild_process\.\w+|\bexecSync\b|\bexec\b|\bspawn\b/, effect: { name: 'process', kind: 'io', reversible: false, idempotent: false }, category: 'process' },
+  { pattern: /\bDeno\.run\b|\bDeno\.Command\b/, effect: { name: 'process', kind: 'io', reversible: false, idempotent: false }, category: 'process' },
+
+  // Environment
+  { pattern: /\bprocess\.env\b|\bDeno\.env\b/, effect: { name: 'environment', kind: 'io', reversible: false, idempotent: true }, category: 'environment' },
+
+  // Crypto
+  { pattern: /\bcrypto\.createHash\b|\bcrypto\.createCipher\b|\bcrypto\.createSign\b/, effect: { name: 'crypto', kind: 'io', reversible: false, idempotent: true }, category: 'crypto' },
+  { pattern: /\bbcrypt\.\w+|\bargon2\.\w+/, effect: { name: 'crypto', kind: 'io', reversible: false, idempotent: true }, category: 'crypto' },
+];
+
+const globalPatternRegistry: EffectPattern[] = [...DEFAULT_EFFECT_PATTERNS];
+
+export function registerEffectPattern(pattern: EffectPattern): void {
+  globalPatternRegistry.push(pattern);
+}
+
+export function registerEffectPatterns(patterns: EffectPattern[]): void {
+  globalPatternRegistry.push(...patterns);
+}
+
+export function clearCustomPatterns(): void {
+  globalPatternRegistry.length = 0;
+  globalPatternRegistry.push(...DEFAULT_EFFECT_PATTERNS);
+}
+
+export function getEffectPatterns(): readonly EffectPattern[] {
+  return globalPatternRegistry;
+}
+
+// ============================================================================
+// Type-Aware Effect Inference
+// ============================================================================
+
+export interface TypeInfo {
+  name: string;
+  module?: string;
+  returnType?: string;
+  effectKind?: EffectKind;
+}
+
+const TYPE_EFFECT_MAP: Map<string, ISLEffectAnnotation> = new Map([
+  ['Promise', { name: 'async', kind: 'async', reversible: true, idempotent: false }],
+  ['Observable', { name: 'async', kind: 'async', reversible: true, idempotent: false }],
+  ['ReadableStream', { name: 'io', kind: 'io', reversible: false, idempotent: false }],
+  ['WritableStream', { name: 'io', kind: 'io', reversible: false, idempotent: false }],
+  ['Response', { name: 'network', kind: 'io', reversible: false, idempotent: false }],
+  ['Request', { name: 'network', kind: 'io', reversible: false, idempotent: false }],
+  ['EventEmitter', { name: 'async', kind: 'async', reversible: true, idempotent: false }],
+  ['Socket', { name: 'network', kind: 'io', reversible: false, idempotent: false }],
+  ['Connection', { name: 'database', kind: 'io', reversible: false, idempotent: false }],
+  ['Pool', { name: 'database', kind: 'io', reversible: false, idempotent: false }],
+  ['Transaction', { name: 'database', kind: 'io', reversible: false, idempotent: false }],
+  ['Generator', { name: 'state', kind: 'state', reversible: true, idempotent: false }],
+  ['AsyncGenerator', { name: 'async', kind: 'async', reversible: true, idempotent: false }],
+]);
+
+export function registerTypeEffect(typeName: string, effect: ISLEffectAnnotation): void {
+  TYPE_EFFECT_MAP.set(typeName, effect);
+}
+
 export class EffectInference {
-  /**
-   * Infer effects from TypeScript/JavaScript code
-   */
+  private patterns: EffectPattern[];
+  private typeMap: Map<string, ISLEffectAnnotation>;
+
+  constructor(
+    customPatterns?: EffectPattern[],
+    customTypeMap?: Map<string, ISLEffectAnnotation>
+  ) {
+    this.patterns = customPatterns ?? [...globalPatternRegistry];
+    this.typeMap = customTypeMap ?? new Map(TYPE_EFFECT_MAP);
+  }
+
+  addPattern(pattern: EffectPattern): void {
+    this.patterns.push(pattern);
+  }
+
+  addTypeMapping(typeName: string, effect: ISLEffectAnnotation): void {
+    this.typeMap.set(typeName, effect);
+  }
+
   inferFromCode(code: string): ISLEffectAnnotation[] {
     const effects: ISLEffectAnnotation[] = [];
     const seen = new Set<string>();
 
-    const patterns: Array<{ pattern: RegExp; effect: ISLEffectAnnotation }> = [
-      {
-        pattern: /fetch\s*\(|axios\.|http\./i,
-        effect: { name: 'network', kind: 'io', reversible: false, idempotent: false },
-      },
-      {
-        pattern: /fs\.|readFile|writeFile|unlink/i,
-        effect: { name: 'filesystem', kind: 'io', reversible: false, idempotent: false },
-      },
-      {
-        pattern: /console\.|logger\.|log\(/i,
-        effect: { name: 'logging', kind: 'logging', reversible: false, idempotent: true },
-      },
-      {
-        pattern: /Math\.random|crypto\.random|uuid/i,
-        effect: { name: 'random', kind: 'nondeterminism', reversible: true, idempotent: false },
-      },
-      {
-        pattern: /Date\.now|new Date|setTimeout|setInterval/i,
-        effect: { name: 'time', kind: 'io', reversible: false, idempotent: false },
-      },
-      {
-        pattern: /throw\s+|catch\s*\(|\.catch\(/i,
-        effect: { name: 'error', kind: 'exception', reversible: true, idempotent: true },
-      },
-      {
-        pattern: /async\s+|await\s+|Promise\./i,
-        effect: { name: 'async', kind: 'async', reversible: true, idempotent: false },
-      },
-      {
-        pattern: /\.query\(|\.execute\(|prisma\.|knex\./i,
-        effect: { name: 'database', kind: 'io', reversible: false, idempotent: false },
-      },
-    ];
-
-    for (const { pattern, effect } of patterns) {
+    for (const { pattern, effect } of this.patterns) {
       if (pattern.test(code) && !seen.has(effect.name)) {
+        effects.push({ ...effect });
+        seen.add(effect.name);
+      }
+    }
+
+    const typeEffects = this.inferFromReturnTypes(code);
+    for (const effect of typeEffects) {
+      if (!seen.has(effect.name)) {
+        effects.push(effect);
+        seen.add(effect.name);
+      }
+    }
+
+    const importEffects = this.inferFromImports(code);
+    for (const effect of importEffects) {
+      if (!seen.has(effect.name)) {
         effects.push(effect);
         seen.add(effect.name);
       }
@@ -290,9 +423,78 @@ export class EffectInference {
     return effects;
   }
 
-  /**
-   * Generate ISL effect annotations
-   */
+  inferFromReturnTypes(code: string): ISLEffectAnnotation[] {
+    const effects: ISLEffectAnnotation[] = [];
+    const seen = new Set<string>();
+
+    const returnTypePattern = /:\s*(Promise|Observable|ReadableStream|WritableStream|Response|Request|EventEmitter|Socket|Connection|Pool|Transaction|Generator|AsyncGenerator)\b/g;
+    let match: RegExpExecArray | null;
+    while ((match = returnTypePattern.exec(code)) !== null) {
+      const typeName = match[1]!;
+      const effect = this.typeMap.get(typeName);
+      if (effect && !seen.has(effect.name)) {
+        effects.push({ ...effect });
+        seen.add(effect.name);
+      }
+    }
+
+    const genericPattern = /:\s*(\w+)<[^>]*>/g;
+    while ((match = genericPattern.exec(code)) !== null) {
+      const typeName = match[1]!;
+      const effect = this.typeMap.get(typeName);
+      if (effect && !seen.has(effect.name)) {
+        effects.push({ ...effect });
+        seen.add(effect.name);
+      }
+    }
+
+    return effects;
+  }
+
+  inferFromImports(code: string): ISLEffectAnnotation[] {
+    const effects: ISLEffectAnnotation[] = [];
+    const seen = new Set<string>();
+
+    const importModuleEffects: Record<string, ISLEffectAnnotation> = {
+      'fs': { name: 'filesystem', kind: 'io', reversible: false, idempotent: false },
+      'fs/promises': { name: 'filesystem', kind: 'io', reversible: false, idempotent: false },
+      'node:fs': { name: 'filesystem', kind: 'io', reversible: false, idempotent: false },
+      'node:fs/promises': { name: 'filesystem', kind: 'io', reversible: false, idempotent: false },
+      'http': { name: 'network', kind: 'io', reversible: false, idempotent: false },
+      'https': { name: 'network', kind: 'io', reversible: false, idempotent: false },
+      'node:http': { name: 'network', kind: 'io', reversible: false, idempotent: false },
+      'net': { name: 'network', kind: 'io', reversible: false, idempotent: false },
+      'child_process': { name: 'process', kind: 'io', reversible: false, idempotent: false },
+      'node:child_process': { name: 'process', kind: 'io', reversible: false, idempotent: false },
+      'crypto': { name: 'crypto', kind: 'io', reversible: false, idempotent: true },
+      'node:crypto': { name: 'crypto', kind: 'io', reversible: false, idempotent: true },
+      'pg': { name: 'database', kind: 'io', reversible: false, idempotent: false },
+      'mysql2': { name: 'database', kind: 'io', reversible: false, idempotent: false },
+      'better-sqlite3': { name: 'database', kind: 'io', reversible: false, idempotent: false },
+      'redis': { name: 'database', kind: 'io', reversible: false, idempotent: false },
+      'ioredis': { name: 'database', kind: 'io', reversible: false, idempotent: false },
+      'mongoose': { name: 'database', kind: 'io', reversible: false, idempotent: false },
+      'axios': { name: 'network', kind: 'io', reversible: false, idempotent: false },
+      'got': { name: 'network', kind: 'io', reversible: false, idempotent: false },
+      'node-fetch': { name: 'network', kind: 'io', reversible: false, idempotent: false },
+    };
+
+    const importPattern = /(?:import\s+.*\s+from\s+['"]([^'"]+)['"]|require\s*\(\s*['"]([^'"]+)['"]\s*\))/g;
+    let match: RegExpExecArray | null;
+    while ((match = importPattern.exec(code)) !== null) {
+      const moduleName = match[1] ?? match[2];
+      if (moduleName) {
+        const effect = importModuleEffects[moduleName];
+        if (effect && !seen.has(effect.name)) {
+          effects.push({ ...effect });
+          seen.add(effect.name);
+        }
+      }
+    }
+
+    return effects;
+  }
+
   generateISLAnnotations(effects: ISLEffectAnnotation[]): string {
     if (effects.length === 0) {
       return '# Pure behavior (no side effects)';
@@ -306,16 +508,13 @@ export class EffectInference {
   }
 }
 
-/**
- * Create effect analyzer
- */
 export function createEffectAnalyzer(): EffectAnalyzer {
   return new EffectAnalyzer();
 }
 
-/**
- * Create effect inference engine
- */
-export function createEffectInference(): EffectInference {
-  return new EffectInference();
+export function createEffectInference(
+  customPatterns?: EffectPattern[],
+  customTypeMap?: Map<string, ISLEffectAnnotation>
+): EffectInference {
+  return new EffectInference(customPatterns, customTypeMap);
 }

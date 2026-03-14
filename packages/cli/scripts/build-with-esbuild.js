@@ -81,7 +81,6 @@ const buildOptions = {
     '@isl-lang/coherence-engine',
     '@isl-lang/inference',
     '@isl-lang/intent-translator',
-    '@isl-lang/spec-assist',
     '@isl-lang/isl-smt',
     '@isl-lang/pbt',
     '@isl-lang/verifier-temporal',

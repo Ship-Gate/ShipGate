@@ -1,20 +1,23 @@
 name: Fuzz Tests
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'packages/parser/**'
-      - '.github/workflows/fuzz.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'packages/parser/**'
-      - '.github/workflows/fuzz.yml'
   schedule:
-    # Nightly fuzz run at 04:00 UTC
-    - cron: '0 4 * * *'
+    # Weekly fuzz run — Sunday 04:00 UTC
+    - cron: '0 4 * * 0'
   workflow_dispatch:
+    inputs:
+      duration:
+        description: 'Duration per fuzzer in seconds'
+        required: false
+        default: '60'
+      target:
+        description: 'Fuzzer target (parser, evaluator, smt, scanner, all)'
+        required: false
+        default: 'all'
+      seed:
+        description: 'Random seed (leave empty for timestamp)'
+        required: false
+        default: ''
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -26,12 +29,16 @@ env:
 
 jobs:
   # ============================================================
-  # Fuzz Smoke Test - Quick run on every PR
+  # Parser Fuzzer
   # ============================================================
-  fuzz-smoke:
-    name: Fuzz Smoke Test
+  fuzz-parser:
+    name: Fuzz — Parser
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    if: >-
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' &&
+       (github.event.inputs.target == 'all' || github.event.inputs.target == 'parser'))
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,61 +58,189 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build parser
-        run: pnpm --filter @isl-lang/parser build
+        run: pnpm turbo run build --filter=@isl-lang/parser --cache-dir=.turbo
 
-      - name: Build corpus
-        run: pnpm --filter @isl-lang/parser corpus:build
-
-      - name: Run fuzz smoke test (10k iterations)
-        run: pnpm --filter @isl-lang/parser test:fuzz:smoke
+      - name: Run parser fuzzer
+        run: npx tsx packages/parser/tests/fuzz/fuzz-parser.ts
         env:
-          FUZZ_ITERATIONS: 10000
-          FUZZ_TIMEOUT: 5000
+          FUZZ_DURATION: ${{ github.event.inputs.duration || '60' }}
+          FUZZ_SEED: ${{ github.event.inputs.seed || '' }}
 
-  # ============================================================
-  # Fuzz Full Test - Longer run nightly
-  # ============================================================
-  fuzz-full:
-    name: Fuzz Full Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build parser
-        run: pnpm --filter @isl-lang/parser build
-
-      - name: Build corpus
-        run: pnpm --filter @isl-lang/parser corpus:build
-
-      - name: Run full fuzz test (100k iterations)
-        run: pnpm --filter @isl-lang/parser test:fuzz
-        env:
-          FUZZ_ITERATIONS: 100000
-          FUZZ_TIMEOUT: 10000
-
-      - name: Upload fuzz results
-        if: always()
+      - name: Upload crash artifacts
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: fuzz-results
-          path: |
-            packages/parser/fuzz-corpus.json
-            packages/parser/fuzz-report.json
+          name: fuzz-crashes-parser
+          path: fuzz-crashes-parser-*.json
           retention-days: 30
+
+  # ============================================================
+  # Expression Evaluator Fuzzer
+  # ============================================================
+  fuzz-evaluator:
+    name: Fuzz — Evaluator
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: >-
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' &&
+       (github.event.inputs.target == 'all' || github.event.inputs.target == 'evaluator'))
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build evaluator and dependencies
+        run: pnpm turbo run build --filter=@isl-lang/static-analyzer --cache-dir=.turbo
+
+      - name: Run evaluator fuzzer
+        run: npx tsx packages/isl-expression-evaluator/tests/fuzz/fuzz-evaluator.ts
+        env:
+          FUZZ_DURATION: ${{ github.event.inputs.duration || '60' }}
+          FUZZ_SEED: ${{ github.event.inputs.seed || '' }}
+
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashes-evaluator
+          path: fuzz-crashes-evaluator-*.json
+          retention-days: 30
+
+  # ============================================================
+  # SMT Encoder Fuzzer
+  # ============================================================
+  fuzz-smt:
+    name: Fuzz — SMT Encoder
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: >-
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' &&
+       (github.event.inputs.target == 'all' || github.event.inputs.target == 'smt'))
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build SMT and dependencies
+        run: pnpm turbo run build --filter=@isl-lang/isl-smt --cache-dir=.turbo
+
+      - name: Run SMT fuzzer
+        run: npx tsx packages/isl-smt/tests/fuzz/fuzz-encoder.ts
+        env:
+          FUZZ_DURATION: ${{ github.event.inputs.duration || '60' }}
+          FUZZ_SEED: ${{ github.event.inputs.seed || '' }}
+
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashes-smt
+          path: fuzz-crashes-smt-*.json
+          retention-days: 30
+
+  # ============================================================
+  # Security Scanner Fuzzer
+  # ============================================================
+  fuzz-scanner:
+    name: Fuzz — Security Scanner
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: >-
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' &&
+       (github.event.inputs.target == 'all' || github.event.inputs.target == 'scanner'))
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build scanner and dependencies
+        run: pnpm turbo run build --filter=@isl-lang/security-scanner --cache-dir=.turbo
+
+      - name: Run scanner fuzzer
+        run: npx tsx packages/security-scanner/tests/fuzz/fuzz-scanner.ts
+        env:
+          FUZZ_DURATION: ${{ github.event.inputs.duration || '60' }}
+          FUZZ_SEED: ${{ github.event.inputs.seed || '' }}
+
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashes-scanner
+          path: fuzz-crashes-scanner-*.json
+          retention-days: 30
+
+  # ============================================================
+  # Fuzz Gate — reports overall pass/fail
+  # ============================================================
+  fuzz-gate:
+    name: Fuzz Gate
+    runs-on: ubuntu-latest
+    needs: [fuzz-parser, fuzz-evaluator, fuzz-smt, fuzz-scanner]
+    if: always()
+    steps:
+      - name: Check fuzz results
+        run: |
+          echo "parser:    ${{ needs.fuzz-parser.result }}"
+          echo "evaluator: ${{ needs.fuzz-evaluator.result }}"
+          echo "smt:       ${{ needs.fuzz-smt.result }}"
+          echo "scanner:   ${{ needs.fuzz-scanner.result }}"
+
+          FAILED=0
+          for result in \
+            "${{ needs.fuzz-parser.result }}" \
+            "${{ needs.fuzz-evaluator.result }}" \
+            "${{ needs.fuzz-smt.result }}" \
+            "${{ needs.fuzz-scanner.result }}"; do
+            if [ "$result" = "failure" ]; then
+              FAILED=1
+            fi
+          done
+
+          if [ "$FAILED" = "1" ]; then
+            echo "::error::One or more fuzzers found crashes"
+            exit 1
+          fi
+          echo "All fuzzers passed"

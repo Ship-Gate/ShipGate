@@ -32,6 +32,34 @@ import type { AIProvenance } from './provenance.js';
 export type ProofVerdict = 'PROVEN' | 'INCOMPLETE_PROOF' | 'VIOLATED' | 'UNPROVEN';
 
 /**
+ * Proof method classification
+ *
+ * Ranks from strongest to weakest guarantee:
+ * - smt-proof: Formal SMT solver proof (strongest)
+ * - pbt-exhaustive: Property-based testing with exhaustive coverage
+ * - static-analysis: TypeScript compiler / AST-level analysis
+ * - runtime-trace: HTTP probes / runtime observation
+ * - heuristic: Regex / pattern matching (weakest)
+ */
+export type ProofMethod = 'smt-proof' | 'pbt-exhaustive' | 'static-analysis' | 'runtime-trace' | 'heuristic';
+
+/**
+ * Proof certificate linking a claim to its verification evidence
+ */
+export interface ProofCertificate {
+  /** Claim or clause ID this certificate covers */
+  claimId: string;
+  /** Method used to verify this claim */
+  method: ProofMethod;
+  /** Path to raw proof output (e.g. SMT-LIB .smt2 file), relative to bundle */
+  certificatePath?: string;
+  /** Version of the solver/tool that produced the proof */
+  solverVersion?: string;
+  /** Time spent verifying this claim in milliseconds */
+  checkTime?: number;
+}
+
+/**
  * Build/typecheck result
  */
 export interface BuildResult {
@@ -228,6 +256,10 @@ export interface ClauseVerifyResult {
   behavior?: string;
   /** Verification status */
   status: 'proven' | 'not_proven' | 'unknown' | 'violated';
+  /** Method used to verify this clause */
+  proofMethod?: ProofMethod;
+  /** Path to raw SMT-LIB proof output (relative to bundle) */
+  smtProofCertificate?: string;
   /** Evidence trace IDs used */
   traceIds: string[];
   /** Reason for status */
@@ -663,6 +695,37 @@ export interface ChaosAssertionResult {
 }
 
 /**
+ * A regression detected when comparing current claims against a previous bundle.
+ * Records a claim whose verification strength decreased between versions.
+ */
+export interface ProofRegression {
+  claimId: string;
+  property: string;
+  previousStatus: string;
+  currentStatus: string;
+  previousMethod: string;
+  currentMethod: string;
+}
+
+/**
+ * Proof chain entry linking this bundle to its predecessor.
+ * Enables continuous trust across versions by forming an immutable chain
+ * of proof bundles for a project.
+ */
+export interface ProofChainEntry {
+  /** Bundle ID of the predecessor (null for the first bundle in a chain) */
+  previousBundleId: string | null;
+  /** SHA-256 hash of the predecessor's manifest.json (null for first bundle) */
+  previousBundleHash: string | null;
+  /** Monotonically increasing sequence number within the chain */
+  sequenceNumber: number;
+  /** Stable identifier for the project; remains constant across versions */
+  chainId: string;
+  /** Claims that regressed relative to the previous bundle */
+  regressions?: ProofRegression[];
+}
+
+/**
  * Postcondition/invariant verification result from verification engine
  * 
  * Results from evaluating postconditions and invariants using trace events.
@@ -796,6 +859,9 @@ export interface ProofBundleManifest {
   /** Enhanced tests summary */
   testsSummary?: TestsSummary;
   
+  /** Proof certificates linking claims to verification methods and raw proof artifacts */
+  proofCertificates?: ProofCertificate[];
+  
   /** Coverage analytics (v2.2) */
   coverage?: CoverageReport;
   
@@ -814,6 +880,13 @@ export interface ProofBundleManifest {
   
   /** AI provenance - optional, vendor-agnostic (cursor/copilot/claude/etc) */
   provenance?: AIProvenance;
+  
+  // ============================================================================
+  // V2.3 Fields - Proof Chain (lineage across versions)
+  // ============================================================================
+  
+  /** Proof chain entry linking this bundle to its predecessor */
+  chain?: ProofChainEntry;
   
   // ============================================================================
   // Original Fields
@@ -891,6 +964,8 @@ export interface VerdictOptions {
   importGraph?: ImportGraph;
   /** Stdlib versions (optional - for stdlib tracking) */
   stdlibVersions?: StdlibVersion[];
+  /** Proof certificates (optional - for proof method enforcement) */
+  proofCertificates?: ProofCertificate[];
 }
 
 /**
@@ -983,6 +1058,37 @@ export function calculateVerdictV2(options: VerdictOptions): { verdict: ProofVer
     details.push(`✓ Verify: PROVEN (${options.verifyResults.summary.provenClauses} clauses)`);
   }
   
+  // FAIL-CLOSED: Check proof method strength on critical claims
+  if (options.proofCertificates && options.proofCertificates.length > 0 && options.verifyResults) {
+    const criticalClauses = options.verifyResults.clauses.filter(
+      c => c.clauseType === 'postcondition' || c.clauseType === 'invariant'
+    );
+    
+    const heuristicCritical = criticalClauses.filter(clause => {
+      const cert = options.proofCertificates!.find(c => c.claimId === clause.clauseId);
+      return cert?.method === 'heuristic';
+    });
+    
+    if (heuristicCritical.length > 0) {
+      return {
+        verdict: 'INCOMPLETE_PROOF',
+        reason: `${heuristicCritical.length} critical claim(s) use heuristic method — upgrade to smt-proof or pbt-exhaustive for PROVEN`,
+        details: [...details, `✗ Proof methods: ${heuristicCritical.length} critical claims verified by heuristic only`],
+      };
+    }
+    
+    const weakCritical = criticalClauses.filter(clause => {
+      const cert = options.proofCertificates!.find(c => c.claimId === clause.clauseId);
+      return cert && cert.method !== 'smt-proof' && cert.method !== 'pbt-exhaustive';
+    });
+    
+    if (weakCritical.length > 0) {
+      details.push(`⚠ Proof methods: ${weakCritical.length} critical claims not formally proven (non-blocking)`);
+    } else {
+      details.push(`✓ Proof methods: all critical claims formally verified`);
+    }
+  }
+  
   // Check import resolution (if provided)
   if (options.importGraph) {
     if (!options.importGraph.allResolved) {
@@ -1038,6 +1144,30 @@ export function calculateVerdict(
 }
 
 /**
+ * Classify a verification signal into a ProofMethod based on its source.
+ *
+ * Used when building proof certificates from raw verification results.
+ */
+export function classifyVerificationMethod(signal: { type: string; source: string }): ProofMethod {
+  const src = signal.source.toLowerCase();
+  const typ = signal.type.toLowerCase();
+
+  if (src.includes('smt') || src.includes('z3') || src.includes('cvc5') || typ.includes('smt')) {
+    return 'smt-proof';
+  }
+  if (src.includes('pbt') || src.includes('property-based') || typ.includes('pbt') || typ.includes('exhaustive')) {
+    return 'pbt-exhaustive';
+  }
+  if (src.includes('tsc') || src.includes('typescript') || src.includes('ast') || src.includes('static') || typ.includes('static-analysis')) {
+    return 'static-analysis';
+  }
+  if (src.includes('http') || src.includes('runtime') || src.includes('probe') || typ.includes('runtime') || typ.includes('trace')) {
+    return 'runtime-trace';
+  }
+  return 'heuristic';
+}
+
+/**
  * Calculate deterministic bundle ID from manifest contents
  */
 export function calculateBundleId(manifest: Omit<ProofBundleManifest, 'bundleId' | 'signature'>): string {
@@ -1061,6 +1191,14 @@ export function calculateBundleId(manifest: Omit<ProofBundleManifest, 'bundleId'
   // Include import graph hash if available
   if (manifest.importGraphHash) {
     hash.update(`imports:${manifest.importGraphHash}\n`);
+  }
+  
+  // Include proof certificates if available
+  if (manifest.proofCertificates && manifest.proofCertificates.length > 0) {
+    const sortedCerts = [...manifest.proofCertificates].sort((a, b) => a.claimId.localeCompare(b.claimId));
+    for (const cert of sortedCerts) {
+      hash.update(`cert:${cert.claimId}:${cert.method}${cert.certificatePath ? `:${cert.certificatePath}` : ''}\n`);
+    }
   }
   
   if (manifest.verificationEvaluation) {

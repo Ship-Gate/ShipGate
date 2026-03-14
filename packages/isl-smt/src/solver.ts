@@ -82,7 +82,7 @@ export interface ISMTSolver {
  * Create an SMT solver with the given options
  */
 export function createSolver(options: SMTVerifyOptions = {}): ISMTSolver {
-  const solver = options.solver ?? 'builtin';
+  const solver = options.solver ?? 'auto';
   const timeout = options.timeout ?? DEFAULT_TIMEOUT;
   const verbose = options.verbose ?? false;
   const produceModels = options.produceModels ?? true;
@@ -122,7 +122,6 @@ class SMTSolverImpl implements ISMTSolver {
   
   async checkSat(formula: SMTExpr, declarations: SMTDecl[] = []): Promise<SMTCheckResult> {
     try {
-      // Check cache first for deterministic results
       const queryHash = this.cache.hashQuery(formula, declarations);
       const cachedResult = this.cache.get(queryHash);
       
@@ -135,37 +134,32 @@ class SMTSolverImpl implements ISMTSolver {
       
       let result: SMTCheckResult;
       
-      // Try external solver if configured
-      if (this.config.solver === 'z3' || this.config.solver === 'cvc5') {
+      if (this.config.solver === 'auto') {
+        result = await this.solveAuto(formula, declarations);
+      } else if (this.config.solver === 'z3' || this.config.solver === 'cvc5') {
         const available = await this.checkExternalSolverAvailable(this.config.solver);
         if (available) {
           result = await this.solveWithExternalSolver(formula, declarations, this.config.solver);
-        } else {
-          // Try WASM fallback for Z3
-          if (this.config.solver === 'z3') {
-            const wasmAvailable = await this.checkWasmSolverAvailable();
-            if (wasmAvailable) {
-              if (this.config.verbose) {
-                console.log('[SMT] Z3 not available, falling back to Z3 WASM');
-              }
-              result = await this.solveWithWasmSolver(formula, declarations);
-            } else {
-              // Fall back to builtin if WASM also not available
-              if (this.config.verbose) {
-                console.log('[SMT] Z3 and Z3 WASM not available, falling back to builtin solver');
-              }
-              result = await this.solveEnhancedBuiltin(formula, declarations);
-            }
-          } else {
-            // Fall back to builtin if external solver not available
+        } else if (this.config.solver === 'z3') {
+          const wasmAvailable = await this.checkWasmSolverAvailable();
+          if (wasmAvailable) {
             if (this.config.verbose) {
-              console.log(`[SMT] ${this.config.solver.toUpperCase()} not available, falling back to builtin solver`);
+              console.log('[SMT] Z3 not available, falling back to Z3 WASM');
+            }
+            result = await this.solveWithWasmSolver(formula, declarations);
+          } else {
+            if (this.config.verbose) {
+              console.log('[SMT] Z3 and Z3 WASM not available, falling back to builtin solver');
             }
             result = await this.solveEnhancedBuiltin(formula, declarations);
           }
+        } else {
+          if (this.config.verbose) {
+            console.log(`[SMT] ${this.config.solver.toUpperCase()} not available, falling back to builtin solver`);
+          }
+          result = await this.solveEnhancedBuiltin(formula, declarations);
         }
       } else if (this.config.solver === 'z3-wasm') {
-        // Use WASM solver directly
         const wasmAvailable = await this.checkWasmSolverAvailable();
         if (wasmAvailable) {
           result = await this.solveWithWasmSolver(formula, declarations);
@@ -176,11 +170,9 @@ class SMTSolverImpl implements ISMTSolver {
           result = await this.solveEnhancedBuiltin(formula, declarations);
         }
       } else {
-        // Use enhanced builtin solver
         result = await this.solveEnhancedBuiltin(formula, declarations);
       }
       
-      // Cache the result
       this.cache.set(queryHash, result);
       
       return result;
@@ -190,6 +182,32 @@ class SMTSolverImpl implements ISMTSolver {
         message: error instanceof Error ? error.message : String(error),
       };
     }
+  }
+  
+  private async solveAuto(formula: SMTExpr, declarations: SMTDecl[]): Promise<SMTCheckResult> {
+    const z3Available = await this.checkExternalSolverAvailable('z3');
+    if (z3Available) {
+      if (this.config.verbose) console.log('[SMT] Auto: using native Z3');
+      const result = await this.solveWithExternalSolver(formula, declarations, 'z3');
+      if (result.status !== 'error') return result;
+    }
+
+    const cvc5Available = await this.checkExternalSolverAvailable('cvc5');
+    if (cvc5Available) {
+      if (this.config.verbose) console.log('[SMT] Auto: using native CVC5');
+      const result = await this.solveWithExternalSolver(formula, declarations, 'cvc5');
+      if (result.status !== 'error') return result;
+    }
+
+    const wasmAvailable = await this.checkWasmSolverAvailable();
+    if (wasmAvailable) {
+      if (this.config.verbose) console.log('[SMT] Auto: using Z3 WASM');
+      const result = await this.solveWithWasmSolver(formula, declarations);
+      if (result.status !== 'error') return result;
+    }
+
+    if (this.config.verbose) console.log('[SMT] Auto: using builtin CDCL solver');
+    return await this.solveEnhancedBuiltin(formula, declarations);
   }
   
   async checkValid(formula: SMTExpr, declarations: SMTDecl[] = []): Promise<SMTCheckResult> {

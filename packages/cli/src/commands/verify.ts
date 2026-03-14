@@ -40,7 +40,7 @@ import {
 } from '../auto-spec/index.js';
 import { withSpan, ISL_ATTR } from '@isl-lang/observability';
 import type { TemporalClauseResult } from '@isl-lang/verifier-temporal';
-import { formatGitLab, formatJUnit } from './output-formats.js';
+import { formatGitLab, formatJUnit, formatSarif } from './output-formats.js';
 import { safeJSONStringify } from '@isl-lang/secrets-hygiene';
 
 // Re-export types for use
@@ -2064,6 +2064,105 @@ export function getVerifyExitCode(result: VerifyResult): number {
   return result.success ? 0 : 1;
 }
 
+/**
+ * Format a single-spec VerifyResult as SARIF 2.1.0
+ */
+export function formatVerifyResultAsSarif(result: VerifyResult): object {
+  const rules: Array<{ id: string; shortDescription: { text: string } }> = [];
+  const sarifResults: Array<Record<string, unknown>> = [];
+  const ruleIds = new Set<string>();
+
+  if (result.verification?.testResult) {
+    const tr = result.verification.testResult;
+    const failedDetails = tr.details.filter((d) => d.status === 'failed');
+    for (const detail of failedDetails) {
+      const ruleId = `shipgate/${detail.category ?? 'test-failure'}`;
+      if (!ruleIds.has(ruleId)) {
+        ruleIds.add(ruleId);
+        rules.push({ id: ruleId, shortDescription: { text: detail.name } });
+      }
+      sarifResults.push({
+        ruleId,
+        message: { text: detail.error ?? `Test failed: ${detail.name}` },
+        level: detail.impact === 'critical' || detail.impact === 'high' ? 'error' : 'warning',
+        locations: [{
+          physicalLocation: {
+            artifactLocation: { uri: result.implFile },
+            region: { startLine: 1 },
+          },
+        }],
+        properties: { proofMethod: detail.category ?? null },
+      });
+    }
+  }
+
+  for (const error of result.errors) {
+    const ruleId = 'shipgate/verification-error';
+    if (!ruleIds.has(ruleId)) {
+      ruleIds.add(ruleId);
+      rules.push({ id: ruleId, shortDescription: { text: 'Verification error' } });
+    }
+    sarifResults.push({
+      ruleId,
+      message: { text: error },
+      level: 'error',
+      locations: [{
+        physicalLocation: {
+          artifactLocation: { uri: result.implFile },
+          region: { startLine: 1 },
+        },
+      }],
+    });
+  }
+
+  if (result.smtResult && !result.smtResult.success) {
+    for (const check of result.smtResult.checks) {
+      if (check.status === 'unsat' || check.status === 'error') {
+        const ruleId = `shipgate/smt-${check.kind}`;
+        if (!ruleIds.has(ruleId)) {
+          ruleIds.add(ruleId);
+          rules.push({ id: ruleId, shortDescription: { text: `SMT check: ${check.name}` } });
+        }
+        sarifResults.push({
+          ruleId,
+          message: { text: check.message ?? `SMT verification failed for ${check.name}` },
+          level: check.status === 'unsat' ? 'error' : 'warning',
+          locations: [{
+            physicalLocation: {
+              artifactLocation: { uri: result.specFile },
+              region: { startLine: 1 },
+            },
+          }],
+          properties: { proofMethod: 'smt' },
+        });
+      }
+    }
+  }
+
+  return {
+    $schema: 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/Schemata/sarif-schema-2.1.0.json',
+    version: '2.1.0',
+    runs: [{
+      tool: {
+        driver: {
+          name: 'shipgate',
+          version: '3.0.0',
+          informationUri: 'https://shipgate.dev',
+          rules,
+        },
+      },
+      results: sarifResults,
+      invocations: [{
+        executionSuccessful: result.success,
+        properties: {
+          trustScore: result.trustScore ?? null,
+          duration: result.duration,
+        },
+      }],
+    }],
+  };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Unified Verify — Types
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2087,7 +2186,7 @@ export type FileVerifyMode = 'ISL verified' | 'Specless' | 'Fake feature' | 'Ski
 export type SpecSource = 'hand-written' | 'inferred' | 'ai-assisted';
 
 /** Output format options */
-export type OutputFormat = 'json' | 'text' | 'gitlab' | 'junit' | 'github';
+export type OutputFormat = 'json' | 'text' | 'gitlab' | 'junit' | 'github' | 'sarif';
 
 /** Options for the unified verify command */
 export interface UnifiedVerifyOptions {
@@ -2132,6 +2231,10 @@ export interface UnifiedVerifyOptions {
   specCoverage?: boolean;
   /** Use tiered trust score weighting (Tier 1=3x, Tier 2=2x, Tier 3=1x) */
   useTieredScoring?: boolean;
+  /** Only verify changed files and their dependents (uses git diff + cache) */
+  incremental?: boolean;
+  /** Git ref to compare against for incremental mode (default: HEAD~1) */
+  baseCommit?: string;
 }
 
 /** Verification tier: 1=strict, 2=standard, 3=relaxed */
@@ -2249,6 +2352,8 @@ export interface UnifiedVerifyResult {
   exitCode: number;
   /** Proof bundle for audit trail — surfaces evidence, gaps, confidence, risk */
   proofBundle?: ProofBundle;
+  /** Incremental verification stats (only when --incremental) */
+  incrementalStats?: import('@isl-lang/verify-pipeline').IncrementalStats;
 }
 
 /** Detection result from path analysis */
@@ -3599,8 +3704,68 @@ export async function unifiedVerify(
     }
   }
 
+  // ── Incremental mode: filter to only changed + dependent files ────────
+  let incrementalStats: import('@isl-lang/verify-pipeline').IncrementalStats | null = null;
+  let filesToVerify = validFiles;
+
+  if (options.incremental) {
+    try {
+      const {
+        detectChanges: detectGitChanges,
+        buildDependencyGraph: buildGraph,
+        getAffectedFiles: getAffected,
+        VerificationCache,
+      } = await import('@isl-lang/verify-pipeline');
+
+      const changedFiles = await detectGitChanges(projectRoot, {
+        baseRef: options.baseCommit,
+      });
+
+      const changedPaths = changedFiles
+        .filter(f => f.status !== 'deleted')
+        .map(f => f.path);
+
+      const allRelPaths = validFiles.map(f => relative(projectRoot, f));
+      const graph = await buildGraph(allRelPaths, projectRoot);
+      const affectedPaths = getAffected(changedPaths, graph);
+      const affectedSet = new Set(affectedPaths);
+
+      const cache = new VerificationCache();
+      const cachedCount = validFiles.length - validFiles.filter(
+        f => affectedSet.has(relative(projectRoot, f)),
+      ).length;
+
+      filesToVerify = validFiles.filter(
+        f => affectedSet.has(relative(projectRoot, f)),
+      );
+
+      const dependentCount = Math.max(0, affectedPaths.length - changedPaths.length);
+      incrementalStats = {
+        totalFiles: validFiles.length,
+        changedFiles: changedPaths.length,
+        dependentFiles: dependentCount,
+        cachedFiles: cachedCount,
+        verifiedFiles: filesToVerify.length,
+        cacheHits: cachedCount,
+        cacheMisses: filesToVerify.length,
+      };
+
+      if (options.verbose) {
+        console.error(chalk.gray(`[shipgate] Incremental mode:`));
+        console.error(chalk.gray(`  Changed files: ${changedPaths.length}`));
+        console.error(chalk.gray(`  Dependent files: ${dependentCount}`));
+        console.error(chalk.gray(`  Cached/skipped: ${cachedCount}`));
+        console.error(chalk.gray(`  To verify: ${filesToVerify.length}`));
+      }
+    } catch (err) {
+      if (options.verbose) {
+        console.error(chalk.yellow(`[shipgate] Incremental mode unavailable, falling back to full verify: ${err instanceof Error ? err.message : String(err)}`));
+      }
+    }
+  }
+
   // ── Verify all files against their specs (real or generated) ──────────
-  for (const codeFile of validFiles) {
+  for (const codeFile of filesToVerify) {
     const matchedSpec = specMap.get(codeFile);
 
     if (matchedSpec) {
@@ -3654,6 +3819,28 @@ export async function unifiedVerify(
         mode: 'Skipped',
         score: 0,
         blockers: [`${relPath}: ISL spec found but no matching implementation`],
+        errors: [],
+        duration: 0,
+      });
+    }
+  }
+
+  // ── Incremental: add skipped (cached) files as PASS entries ──────────
+  if (options.incremental && incrementalStats && incrementalStats.cachedFiles > 0) {
+    const verifiedSet = new Set(filesToVerify.map(f => f));
+    for (const codeFile of validFiles) {
+      if (verifiedSet.has(codeFile)) continue;
+      const relPath = relative(process.cwd(), codeFile);
+      const tier = classifyTier(codeFile);
+      fileResults.push({
+        file: relPath,
+        status: 'PASS',
+        mode: 'ISL verified',
+        score: 1.0,
+        tier,
+        specFile: specMap.get(codeFile) ? relative(process.cwd(), specMap.get(codeFile)!) : undefined,
+        specSource: 'hand-written',
+        blockers: [],
         errors: [],
         duration: 0,
       });
@@ -3729,6 +3916,7 @@ export async function unifiedVerify(
     duration: Date.now() - startTime,
     exitCode,
     proofBundle,
+    incrementalStats: incrementalStats ?? undefined,
   };
 
   // Generate explain reports if requested
@@ -3798,6 +3986,11 @@ export function printUnifiedVerifyResult(
   
   if (format === 'junit') {
     console.log(formatJUnit(result));
+    return;
+  }
+
+  if (format === 'sarif') {
+    console.log(formatSarif(result));
     return;
   }
   
@@ -3889,6 +4082,20 @@ export function printUnifiedVerifyResult(
   const unspeccedCount = result.files.filter(f => !f.specSource).length;
   if (unspeccedCount > 0) srcParts.push(`${unspeccedCount} unspecced`);
   console.log(chalk.bold('Spec Source:  ') + (srcParts.length > 0 ? srcParts.join(', ') : chalk.gray('none')));
+
+  // Incremental stats (when --incremental)
+  if (result.incrementalStats) {
+    const s = result.incrementalStats;
+    const parts: string[] = [];
+    if (s.changedFiles > 0) parts.push(`${s.changedFiles} changed`);
+    if (s.dependentFiles > 0) parts.push(`${s.dependentFiles} dependent`);
+    if (s.cachedFiles > 0) parts.push(`${s.cachedFiles} cached`);
+    console.log(
+      chalk.bold('Incremental:  ') +
+      chalk.cyan(`Verified ${s.verifiedFiles}/${s.totalFiles} files`) +
+      chalk.gray(` (${parts.join(', ')})`),
+    );
+  }
 
   // Spec coverage report (when --spec-coverage)
   if (result.specCoverage) {

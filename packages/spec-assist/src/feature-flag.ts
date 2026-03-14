@@ -37,28 +37,39 @@ export function isAIEnabled(): FeatureFlagConfig {
   const envEnabled = process.env[AI_ENABLED_ENV];
   if (envEnabled !== undefined) {
     const enabled = envEnabled.toLowerCase() === 'true' || envEnabled === '1';
-    const provider = getProviderFromEnv();
+    const provider = getProviderFromEnv() ?? inferProviderFromEnv();
     return {
       enabled,
       source: 'env',
       provider,
     };
   }
-  
+
+  // If an API key is set, treat AI as enabled (so shipgate go works with just .env)
+  const inferred = inferProviderFromEnv();
+  if (inferred !== 'stub') {
+    return {
+      enabled: true,
+      source: 'default',
+      provider: inferred,
+    };
+  }
+
   // Check config file
   const configResult = loadConfigFile();
   if (configResult !== null) {
     return {
       enabled: configResult.enabled,
       source: 'config',
-      provider: configResult.provider,
+      provider: configResult.provider ?? inferred,
     };
   }
-  
+
   // Default: disabled
   return {
     enabled: false,
     source: 'default',
+    provider: inferred,
   };
 }
 
@@ -128,12 +139,28 @@ AI cannot bypass verification gates.`
  */
 export function getDefaultConfig(): SpecAssistConfig {
   const flag = isAIEnabled();
-  
+  const provider = flag.provider ?? inferProviderFromEnv();
+  const apiKey =
+    provider === 'openai'
+      ? process.env.OPENAI_API_KEY
+      : provider === 'anthropic'
+        ? process.env.ANTHROPIC_API_KEY
+        : process.env.ANTHROPIC_API_KEY ?? process.env.OPENAI_API_KEY;
+
   return {
-    provider: flag.provider ?? 'stub',
-    apiKey: process.env.ANTHROPIC_API_KEY,
+    provider,
+    apiKey,
     model: process.env.ISL_AI_MODEL,
-    maxTokens: 4096,
+    maxTokens: 2048,
     temperature: 0.3,
   };
+}
+
+/**
+ * Infer provider from env when not explicitly set (OPENAI or ANTHROPIC key)
+ */
+function inferProviderFromEnv(): SpecAssistConfig['provider'] {
+  if (process.env.OPENAI_API_KEY) return 'openai';
+  if (process.env.ANTHROPIC_API_KEY) return 'anthropic';
+  return 'stub';
 }

@@ -364,58 +364,6 @@ void main(){
   }
   c+=arcv*vec3(0.9,0.7,0.7)*20.0;
 
-  /* ── HUGE PORTAL GATE — ship flies through on scroll ── */
-  {
-    float gateZ=3.50;
-    float gateRadius=5.0;
-    float tubeRadius=0.05;
-    vec3 gateCenter=vec3(0,1.50,gateZ);
-    float gateDist=gateCenter.z-ro.z;
-    float gateVis=smoothstep(-4.0,0.0,gateDist)*smoothstep(60.0,5.0,gateDist);
-    if(gateVis>0.001){
-      float tHit=gateDist/rd.z;
-      if(tHit>0.0){
-        vec3 hp=ro+rd*tHit-gateCenter;
-        float r2d=length(hp.xy);
-        float ringDist=r2d-gateRadius;
-        float torusDist=length(vec2(ringDist,0.0))-tubeRadius;
-        float angle=atan(hp.y,hp.x);
-
-        float glow=exp(-max(torusDist,0.0)*5.0)*400.0;
-        float softGlow=exp(-abs(ringDist)*0.6)*80.0;
-
-        float hexSeg=pow(0.5+0.5*sin(angle*6.0),8.0);
-        float hexPulse=0.7+0.3*sin(iTime*3.0+angle*2.0);
-        float onRing=exp(-abs(ringDist)*6.0);
-
-        float chevAngle=angle+iTime*2.5;
-        float chevrons=pow(0.5+0.5*sin(chevAngle*12.0),10.0);
-
-        float inside=smoothstep(gateRadius+1.2,gateRadius-3.0,r2d);
-        float portalFill=inside*15.0;
-
-        float beamAngle=mod(angle+PI*0.25,PI*0.5)-PI*0.25;
-        float beam=exp(-abs(beamAngle)*30.0)*smoothstep(gateRadius+0.8,gateRadius,r2d)*smoothstep(gateRadius-1.5,gateRadius,r2d);
-
-        vec3 gateCol=mix(vec3(0.0,0.8,1.0),vec3(0.6,0.0,1.0),0.5+0.5*sin(angle*6.0+iTime));
-        vec3 portalCol=vec3(0.0,0.8,1.0);
-
-        c+=gateVis*(
-          glow*gateCol+
-          softGlow*gateCol*0.5+
-          hexSeg*hexPulse*onRing*vec3(0.0,1.0,1.0)*400.0+
-          chevrons*onRing*vec3(0.4,0.9,1.0)*250.0+
-          portalFill*portalCol+
-          beam*vec3(0.2,0.8,1.0)*200.0
-        );
-
-        float halo=exp(-abs(r2d-gateRadius*1.3)*1.0)*25.0;
-        float halo2=exp(-abs(r2d-gateRadius*1.5)*1.5)*12.0;
-        float halo3=exp(-abs(r2d-gateRadius*1.7)*2.0)*6.0;
-        c+=gateVis*(halo*vec3(0.1,0.5,1.0)+halo2*vec3(0.3,0.0,0.6)+halo3*vec3(0.1,0.3,0.8));
-      }
-    }
-  }
 
   vec3 rot2=vec3(0,0.2,-1.1);rot2.y=max(rot2.y,-0.9);
   float shipBankAngle=scrollCurveRoll*0.8;

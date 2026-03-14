@@ -17,6 +17,7 @@ model User {
   provider          String // github | google
   providerAccountId String
   isPro             Boolean   @default(false)
+  plan              String    @default("free") // "free" | "pro" | "enterprise"
   stripeCustomerId  String?
   proExpiresAt      DateTime?
   createdAt         DateTime  @default(now())
@@ -31,16 +32,22 @@ model User {
 }
 
 model Org {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  createdAt DateTime @default(now())
+  id                String   @id @default(cuid())
+  name              String   @unique
+  createdAt         DateTime @default(now())
+  ssoEnabled        Boolean  @default(false)
+  ssoDomain         String?  @unique
+  ssoEnforced       Boolean  @default(false)
+  domainVerified    Boolean  @default(false)
+  domainVerifyToken String?
 
-  memberships         Membership[]
-  projects            Project[]
-  runs                Run[]
-  githubConnections   GitHubConnection[]
-  slackConnection     SlackConnection?
-  deploymentProviders DeploymentProvider[]
+  memberships          Membership[]
+  projects             Project[]
+  runs                 Run[]
+  githubConnections    GitHubConnection[]
+  slackConnection      SlackConnection?
+  deploymentProviders  DeploymentProvider[]
+  complianceSnapshots  ComplianceSnapshot[]
 
   @@map("orgs")
 }
@@ -327,4 +334,21 @@ model Deployment {
 
   @@index([providerId, startedAt(sort: Desc)])
   @@map("deployments")
+}
+
+// ── Compliance snapshots ────────────────────────────────────────────────
+
+model ComplianceSnapshot {
+  id        String   @id @default(cuid())
+  orgId     String
+  period    String
+  framework String
+  controls  Json
+  evidence  Json
+  createdAt DateTime @default(now())
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, framework, createdAt(sort: Desc)])
+  @@map("compliance_snapshots")
 }

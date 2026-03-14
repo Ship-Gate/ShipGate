@@ -90,6 +90,8 @@ export {
   scanImplementation,
   scanTypeScript,
   scanPython,
+  scanGo,
+  scanJava,
   detectLanguage,
   getTotalPatternCount,
   getPatternCountByLanguage,
@@ -103,6 +105,10 @@ export type {
   TypeScriptScanResult,
   PythonScanOptions,
   PythonScanResult,
+  GoScanOptions,
+  GoScanResult,
+  JavaScanOptions,
+  JavaScanResult,
 } from './impl-scanner';
 
 // Reporters
@@ -145,6 +151,12 @@ export type {
   SecurityFinding,
   SecuritySeverity,
 } from './verification/index.js';
+
+// Deep analyzer (type-aware, interprocedural)
+export { deepAnalyze } from './deep-analyzer/index.js';
+export type { CallGraph, CallGraphNode } from './deep-analyzer/call-graph.js';
+export type { FoldedConstant } from './deep-analyzer/constant-folder.js';
+export type { ResolvedSink } from './deep-analyzer/type-resolver.js';
 
 // ============================================================================
 // Default Export

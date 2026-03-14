@@ -53,7 +53,7 @@ export default function Terms() {
 
       <h2>Subscriptions and Payment</h2>
       <p>
-        Paid plans (e.g., Team, Enterprise) are subject to additional subscription terms. Fees are
+        Paid plans (e.g., Pro, Enterprise) are subject to additional subscription terms. Fees are
         billed in advance. We may change pricing with 30 days&apos; notice. Refunds are handled in
         accordance with our refund policy at the time of purchase.
       </p>

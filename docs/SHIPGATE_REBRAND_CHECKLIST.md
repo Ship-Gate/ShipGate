@@ -84,7 +84,7 @@ Keep these as ISL (the language):
 - [x] Dashboard: current plan, “Manage billing”, “Upgrade to Team”, contact sales
 - [x] `SUBSCRIPTION_SETUP.md` in demos/playwright-showcase for env and wiring
 
-To go live: set `VITE_CLERK_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_TEAM_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`; implement webhook TODOs to persist plan/customerId.
+To go live: set `VITE_CLERK_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_PRO_PRICE_ID`, `STRIPE_ENTERPRISE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`; implement webhook TODOs to persist plan/customerId.
 
 ---
 

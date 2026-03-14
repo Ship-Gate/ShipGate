@@ -25,6 +25,8 @@ export interface PythonScanOptions {
   checkYaml?: boolean;
   checkXxe?: boolean;
   checkSsrf?: boolean;
+  checkDjango?: boolean;
+  checkFlask?: boolean;
 }
 
 const DEFAULT_OPTIONS: PythonScanOptions = {
@@ -37,6 +39,8 @@ const DEFAULT_OPTIONS: PythonScanOptions = {
   checkYaml: true,
   checkXxe: true,
   checkSsrf: true,
+  checkDjango: true,
+  checkFlask: true,
 };
 
 // ============================================================================
@@ -353,6 +357,118 @@ const PYTHON_PATTERNS: VulnerabilityPattern[] = [
     description: 'SSL certificate verification is disabled',
     recommendation: 'Always verify SSL certificates in production',
   },
+
+  // Pickle deserialization with user data
+  {
+    id: 'PY025',
+    name: 'Pickle Deserialization of User Data',
+    pattern: /pickle\.(?:load|loads)\s*\(\s*(?:request|req|user_data|upload|file_from|untrusted|data\b)/gi,
+    severity: 'critical',
+    category: 'injection',
+    cwe: 'CWE-502',
+    owasp: 'A08:2021',
+    description: 'Pickle deserialization of user-supplied data allows arbitrary code execution',
+    recommendation: 'Never unpickle data from untrusted sources; use JSON or MessagePack',
+    fix: `# Use JSON instead:\nimport json\ndata = json.loads(user_data)`,
+  },
+
+  // Subprocess injection with f-strings
+  {
+    id: 'PY026',
+    name: 'Subprocess Injection via f-string',
+    pattern: /subprocess\.(?:run|call|Popen|check_output|check_call)\s*\(\s*f["']/gi,
+    severity: 'critical',
+    category: 'injection',
+    cwe: 'CWE-78',
+    owasp: 'A03:2021',
+    description: 'subprocess called with f-string allows command injection',
+    recommendation: 'Use subprocess with a list of arguments and shell=False',
+    fix: `# Use list arguments:\nimport subprocess\nsubprocess.run(["command", user_input], shell=False)`,
+  },
+  {
+    id: 'PY027',
+    name: 'Subprocess Injection via Percent Formatting',
+    pattern: /subprocess\.(?:run|call|Popen|check_output|check_call)\s*\(\s*["'].+%s/gi,
+    severity: 'critical',
+    category: 'injection',
+    cwe: 'CWE-78',
+    owasp: 'A03:2021',
+    description: 'subprocess called with %-formatted string allows injection',
+    recommendation: 'Use subprocess with a list of arguments and shell=False',
+  },
+
+  // Django-specific: |safe template filter
+  {
+    id: 'PY028',
+    name: 'Django Template Unsafe Filter',
+    pattern: /\{\{\s*\w+\s*\|\s*safe\s*\}\}/gi,
+    severity: 'high',
+    category: 'injection',
+    cwe: 'CWE-79',
+    owasp: 'A03:2021',
+    description: 'Django |safe filter disables auto-escaping and may introduce XSS',
+    recommendation: 'Avoid |safe on user-controlled data; sanitize before marking safe',
+  },
+  {
+    id: 'PY029',
+    name: 'Django mark_safe with User Data',
+    pattern: /mark_safe\s*\(\s*(?:f["']|.+\+|.+\.format|.+%)/gi,
+    severity: 'high',
+    category: 'injection',
+    cwe: 'CWE-79',
+    owasp: 'A03:2021',
+    description: 'mark_safe() with dynamic content bypasses Django auto-escaping',
+    recommendation: 'Use format_html() instead of mark_safe() for dynamic content',
+    fix: `# Use format_html instead:\nfrom django.utils.html import format_html\nresult = format_html('<p>{}</p>', user_data)`,
+  },
+  {
+    id: 'PY030',
+    name: 'Django Missing CSRF Protection',
+    pattern: /@csrf_exempt/gi,
+    severity: 'medium',
+    category: 'authentication',
+    cwe: 'CWE-352',
+    owasp: 'A01:2021',
+    description: 'View decorated with @csrf_exempt disables CSRF protection',
+    recommendation: 'Only exempt CSRF for API views that use token auth; use DRF for APIs',
+  },
+
+  // Flask-specific
+  {
+    id: 'PY031',
+    name: 'Flask Server-Side Template Injection',
+    pattern: /render_template_string\s*\(\s*(?:f["']|.+\+|.+\.format|.+%|[^"'][^)]*\w)/gi,
+    severity: 'critical',
+    category: 'injection',
+    cwe: 'CWE-94',
+    owasp: 'A03:2021',
+    description: 'render_template_string() with user input enables server-side template injection',
+    recommendation: 'Use render_template() with template files; never pass user data to render_template_string()',
+    fix: `# Use file-based templates:\nfrom flask import render_template\nreturn render_template('page.html', content=user_data)`,
+  },
+  {
+    id: 'PY032',
+    name: 'Flask Missing CSRF Protection',
+    pattern: /WTF_CSRF_ENABLED\s*=\s*False/gi,
+    severity: 'medium',
+    category: 'authentication',
+    cwe: 'CWE-352',
+    owasp: 'A01:2021',
+    description: 'Flask-WTF CSRF protection is disabled',
+    recommendation: 'Keep CSRF protection enabled; use WTF_CSRF_ENABLED = True',
+  },
+  {
+    id: 'PY033',
+    name: 'Flask Secret Key Hardcoded',
+    pattern: /(?:app\.secret_key|SECRET_KEY)\s*=\s*["'][^"']+["']/gi,
+    severity: 'high',
+    category: 'secrets',
+    cwe: 'CWE-798',
+    owasp: 'A07:2021',
+    description: 'Flask secret key is hardcoded in source',
+    recommendation: 'Load SECRET_KEY from environment variables',
+    fix: `import os\napp.secret_key = os.environ.get('SECRET_KEY')`,
+  },
 ];
 
 // ============================================================================
@@ -457,6 +573,21 @@ function shouldCheckPattern(
     return options.checkSsrf !== false;
   }
   if (pattern.id.startsWith('PY017') || pattern.id.startsWith('PY018') || pattern.id === 'PY019') {
+    return options.checkHardcodedSecrets !== false;
+  }
+  if (pattern.id === 'PY025') {
+    return options.checkPickle !== false;
+  }
+  if (pattern.id === 'PY026' || pattern.id === 'PY027') {
+    return options.checkCommandInjection !== false;
+  }
+  if (pattern.id === 'PY028' || pattern.id === 'PY029' || pattern.id === 'PY030') {
+    return options.checkDjango !== false;
+  }
+  if (pattern.id === 'PY031' || pattern.id === 'PY032') {
+    return options.checkFlask !== false;
+  }
+  if (pattern.id === 'PY033') {
     return options.checkHardcodedSecrets !== false;
   }
 

@@ -34,13 +34,13 @@ Enterprise buyers expect: **SOC 2 Type II**, **SSO/SAML**, **RBAC**, **audit exp
 
 ### Remaining Gaps
 
-- No SSO/SAML for enterprise IdPs
-- No SCIM provisioning
-- No documented retention or deletion policies
-- No formal security/incident response program (process, not code)
+- ~~No SSO/SAML for enterprise IdPs~~ **Done** — SAML 2.0 via BoxyHQ Jackson
+- ~~No SCIM provisioning~~ **Done** — JIT provisioning on first SSO login
+- ~~No documented retention or deletion policies~~ **Done** — Privacy policy + Security page (retention), DPA (deletion)
+- ~~No formal security/incident response program (process, not code)~~ **Done** — `docs/policies/` (drafts, pending legal review)
 - No formal SOC 2 readiness/audit program engagement
-- Audit export UI not yet in dashboard settings (API exists)
-- Slack notification dispatch not yet wired (rules stored, events not yet fired)
+- ~~Audit export UI not yet in dashboard settings (API exists)~~ **Done** — Settings → Audit Log → Export (dashboard API + UI)
+- ~~Slack notification dispatch not yet wired (rules stored, events not yet fired)~~ **Done** — run.completed, verdict.no_ship, finding.critical dispatch to Slack
 
 ---
 
@@ -52,9 +52,9 @@ Enterprise buyers expect: **SOC 2 Type II**, **SSO/SAML**, **RBAC**, **audit exp
 
 | Control area        | Deliverable                                          | Status |
 |---------------------|------------------------------------------------------|--------|
-| **Security policies** | InfoSec, Access, Incident Response, BCP/DR policies | Not started (process) |
-| **Risk assessment** | Asset inventory, threat model, risk register          | Not started (process) |
-| **Vendor management** | Subprocessor list, DPAs, vendor review process     | Not started (legal) |
+| **Security policies** | InfoSec, Access, Incident Response, BCP/DR policies | Draft at `docs/policies/` |
+| **Risk assessment** | Asset inventory, threat model, risk register          | Drafts at `docs/compliance/` |
+| **Vendor management** | Subprocessor list, DPAs, vendor review process     | Drafts at `docs/compliance/VENDOR-MANAGEMENT.md` + `docs/legal/DPA-TEMPLATE.md` |
 | **Access control**  | RBAC (org admin vs member vs viewer), least-privilege | **DONE** |
 | **Audit trail**     | Immutable logs with IP/UA/requestId, export for auditors | **DONE** |
 | **Encryption**      | AES-256-GCM at rest (tokens), TLS in transit         | **DONE** |
@@ -68,9 +68,9 @@ Enterprise buyers expect: **SOC 2 Type II**, **SSO/SAML**, **RBAC**, **audit exp
 
 **Remaining Phase 1 work (process, not code):**
 
-- Draft and publish InfoSec, Access Control, Incident Response policies
-- Complete asset inventory and threat model
-- Compile subprocessor list and DPA template
+- ~~Draft and publish InfoSec, Access Control, Incident Response, BCP/DR policies~~ — Drafts in `docs/policies/`
+- ~~Compile subprocessor list and DPA template~~ — Security page + `docs/legal/DPA-TEMPLATE.md`
+- ~~Complete asset inventory and threat model~~ — `docs/compliance/ASSET-INVENTORY.md`, `THREAT-MODEL.md`, `RISK-REGISTER.md`
 
 ---
 
@@ -80,17 +80,21 @@ Enterprise buyers expect: **SOC 2 Type II**, **SSO/SAML**, **RBAC**, **audit exp
 
 | Deliverable            | Description                                      | Status |
 |-------------------------|--------------------------------------------------|--------|
-| **SAML 2.0 SSO**       | IdP-initiated and SP-initiated flows             | Not started |
-| **SCIM provisioning**  | User/group sync from IdP                         | Not started |
-| **Just-in-Time (JIT)** | Auto-provision users on first SSO login          | Not started |
-| **Domain verification**| Allow only corporate email domains               | Not started |
+| **SAML 2.0 SSO**       | IdP-initiated and SP-initiated flows (BoxyHQ Jackson) | **DONE** |
+| **SCIM provisioning**  | JIT provisioning on first SSO login              | **DONE** (JIT) |
+| **Just-in-Time (JIT)** | Auto-provision users on first SSO login          | **DONE** |
+| **Domain verification**| Allow only corporate email domains               | **DONE** |
 
-**Technical work (Phase 2)**
+**Technical work (Phase 2) — COMPLETED**
 
-- Integrate with Auth0, Okta, or similar for SAML + SCIM
-- Add `Org.ssoDomain`, `Org.samlEntityId`, `Org.samlMetadataUrl` to Prisma schema
-- Enforce SSO-only for Enterprise orgs
-- Admin console for SSO and domain config
+- BoxyHQ SAML Jackson integrated (`lib/jackson.ts`, shares PostgreSQL)
+- Org schema: `ssoEnabled`, `ssoDomain`, `ssoEnforced`, `domainVerified`, `domainVerifyToken`
+- 5 SAML routes: login, ACS, token, userinfo, callback (with JIT provisioning)
+- SSO connection admin API (CRUD via Jackson connectionAPIController)
+- Domain verification via DNS TXT record (`_shipgate-verify.{domain}`)
+- SSO enforcement in middleware + api-auth (rejects non-SAML sessions for enforced orgs)
+- SSO admin settings page: domain claim/verify, SAML config, enable/enforce toggles
+- SSO login entry point: email domain lookup → SAML redirect
 
 ---
 
@@ -98,25 +102,35 @@ Enterprise buyers expect: **SOC 2 Type II**, **SSO/SAML**, **RBAC**, **audit exp
 
 **Target: 6–12 months of evidence collection**
 
-| Activity                    | Timeline        |
-|-----------------------------|-----------------|
-| Engage SOC 2 auditor        | Month 1          |
-| Implement control gaps       | Months 1–3      |
-| Run controls in production   | Months 1–12     |
-| Evidence collection          | Ongoing         |
-| Type II audit                | After 6–12 months |
+| Activity                    | Timeline        | Status |
+|-----------------------------|-----------------|--------|
+| Engage SOC 2 auditor        | Month 1          | Not started |
+| Implement control gaps       | Months 1–3      | **Technical controls DONE** |
+| Run controls in production   | Months 1–12     | In progress |
+| Evidence collection          | Ongoing         | **Automated** |
+| Type II audit                | After 6–12 months | Not started |
+
+**Technical work (Phase 3) — COMPLETED**
+
+- Compliance evidence API (`/api/v1/compliance/evidence`) — aggregates CC5–CC8 data from audit logs, RBAC, proof bundles, runs
+- Compliance controls API (`/api/v1/compliance/controls`) — live SOC 2 CC control status (met/partial/not_met) with evidence
+- ComplianceSnapshot model — point-in-time evidence captures with period and framework
+- Compliance dashboard page (`/dashboard/compliance`) — control checklist, evidence summary, snapshot management
+- Automated evidence collection endpoint (`/api/v1/compliance/collect`) — cron-ready, idempotent per org/period
+- Compliance panel wired to real data (replaced stub)
+- Proof preview wired to real proof bundle data (replaced mock)
 
 **Control families (CC series)**
 
 - **CC1** – Control environment
 - **CC2** – Communication
-- **CC3** – Risk assessment
+- **CC3** – Risk assessment *(docs/compliance/ — asset inventory, threat model, risk register)*
 - **CC4** – Monitoring
-- **CC5** – Control activities
-- **CC6** – Logical access *(RBAC implemented)*
-- **CC7** – System operations *(Audit trail implemented)*
-- **CC8** – Change management *(ShipGate's proof bundles and audit trail)*
-- **CC9** – Risk mitigation
+- **CC5** – Control activities *(Verification runs tracked, encryption verified)*
+- **CC6** – Logical access *(RBAC + SSO implemented, live status in dashboard)*
+- **CC7** – System operations *(Audit trail + export + evidence collection)*
+- **CC8** – Change management *(Proof bundles + signed evidence + live tracking)*
+- **CC9** – Risk mitigation *(Risk register, vendor management docs)*
 
 ---
 
@@ -136,11 +150,11 @@ Enterprise buyers expect: **SOC 2 Type II**, **SSO/SAML**, **RBAC**, **audit exp
 
 The technical foundation is in place. Focus shifts to process and polish:
 
-1. **Audit export UI in dashboard** — Settings → Audit Log → Export (API already exists)
-2. **Slack notification dispatch** — Wire stored rules to actually send Slack messages on run/finding events
-3. **Security & Compliance page** — Public page with subprocessor list, data retention, encryption model, compliance status
-4. **Data Processing Agreement (DPA)** — Standard template for Enterprise customers
-5. **Policy documents** — InfoSec, Access Control, Incident Response, BCP/DR
+1. ~~**Audit export UI in dashboard**~~ — Settings → Audit Log → Export (API + UI in shipgate-dashboard) **Done**
+2. ~~**Slack notification dispatch**~~ — Wire stored rules to actually send Slack messages on run/finding events **Done**
+3. ~~**Security & Compliance page**~~ — Public page with subprocessor list, data retention, encryption model, compliance status (landing Security page) **Done**
+4. ~~**Data Processing Agreement (DPA)**~~ — Template at `docs/legal/DPA-TEMPLATE.md` **Done**
+5. ~~**Policy documents**~~ — InfoSec, Access Control, Incident Response, BCP/DR at `docs/policies/` **Done**
 
 ---
 
@@ -148,11 +162,11 @@ The technical foundation is in place. Focus shifts to process and polish:
 
 | Document                    | Purpose                           | Status |
 |---------------------------|-----------------------------------|--------|
-| Security policy            | Internal/external reference       | Not started |
-| Privacy policy             | Public, GDPR-aligned             | Not started |
-| Subprocessor list          | SOC 2, GDPR Art 28                | Not started |
-| DPA template               | Enterprise contracts              | Not started |
-| Incident response playbook | SOC 2 CC7, general preparedness   | Not started |
+| Security policy            | Internal/external reference       | Draft at `docs/policies/SECURITY-POLICY.md` |
+| Privacy policy             | Public, GDPR-aligned             | Updated (GDPR legal basis, retention, subprocessors, DPA, cookies) |
+| Subprocessor list          | SOC 2, GDPR Art 28                | Published on Security page |
+| DPA template               | Enterprise contracts              | Draft at `docs/legal/DPA-TEMPLATE.md` |
+| Incident response playbook | SOC 2 CC7, general preparedness   | Draft at `docs/policies/INCIDENT-RESPONSE-POLICY.md` |
 | Pen test report            | Third-party validation (annual)    | Not started |
 
 ---
@@ -176,4 +190,4 @@ The technical foundation is in place. Focus shifts to process and polish:
 
 ---
 
-*Last updated: 2026-02-27. Previous version: 2026-02-16.*
+*Last updated: 2026-03-01. Previous version: 2026-02-27.*

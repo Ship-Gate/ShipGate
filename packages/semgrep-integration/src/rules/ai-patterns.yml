@@ -1,0 +1,262 @@
+rules:
+  # ──────────────────────────────────────────────────────────────────────
+  # ai-hallucinated-api
+  # Detects calls to APIs that LLMs frequently hallucinate — methods that
+  # look plausible but don't exist in the real SDK.
+  # ──────────────────────────────────────────────────────────────────────
+  - id: ai-hallucinated-api
+    patterns:
+      - pattern-either:
+          - pattern: prisma.$MODEL.findByEmail(...)
+          - pattern: prisma.$MODEL.findByUsername(...)
+          - pattern: prisma.$MODEL.getById(...)
+          - pattern: prisma.$MODEL.exists(...)
+          - pattern: prisma.$MODEL.updateById(...)
+          - pattern: prisma.$MODEL.deleteById(...)
+          - pattern: stripe.charges.create({..., email: $E, ...})
+          - pattern: stripe.customers.charge(...)
+          - pattern: stripe.subscriptions.cancel($ID, { refund: true })
+          - pattern: bcrypt.encrypt(...)
+          - pattern: jwt.create(...)
+          - pattern: mongoose.model($M).findByIdAndRemove(...)
+          - pattern: res.sendJSON(...)
+          - pattern: response.sendStatus(...)
+    message: >
+      Possible hallucinated API call. This method does not exist in the
+      library's real SDK. Verify against official documentation.
+    severity: ERROR
+    languages: [javascript, typescript]
+    metadata:
+      category: correctness
+      technology: [ai-generated]
+      confidence: HIGH
+      cwe: ["CWE-477: Use of Obsolete Function"]
+      shipgate-check: hallucination
+
+  # ──────────────────────────────────────────────────────────────────────
+  # ai-unsafe-deserialization
+  # JSON.parse on user-controlled input without schema validation.
+  # ──────────────────────────────────────────────────────────────────────
+  - id: ai-unsafe-deserialization
+    patterns:
+      - pattern-either:
+          - pattern: JSON.parse(req.body)
+          - pattern: JSON.parse(req.body.$FIELD)
+          - pattern: JSON.parse(request.body)
+          - pattern: |
+              $X = req.body;
+              ...
+              JSON.parse($X);
+          - pattern: |
+              $X = await $REQ.text();
+              ...
+              JSON.parse($X);
+    pattern-not:
+      pattern: |
+        $SCHEMA.parse(JSON.parse(...));
+    message: >
+      JSON.parse of user input without schema validation. Use a validation
+      library (zod, joi, ajv) to validate parsed data before use.
+    severity: WARNING
+    languages: [javascript, typescript]
+    metadata:
+      category: security
+      technology: [ai-generated]
+      cwe: ["CWE-502: Deserialization of Untrusted Data"]
+      confidence: MEDIUM
+      shipgate-check: unsafe-deserialization
+
+  # ──────────────────────────────────────────────────────────────────────
+  # ai-ssrf-pattern
+  # fetch/axios with user-controlled URL and no allowlist check.
+  # ──────────────────────────────────────────────────────────────────────
+  - id: ai-ssrf-pattern
+    patterns:
+      - pattern-either:
+          - pattern: fetch(req.body.$URL, ...)
+          - pattern: fetch(req.query.$URL, ...)
+          - pattern: fetch(req.params.$URL, ...)
+          - pattern: fetch($HEADERS[$KEY], ...)
+          - pattern: axios.get(req.body.$URL, ...)
+          - pattern: axios.get(req.query.$URL, ...)
+          - pattern: axios.post(req.body.$URL, ...)
+          - pattern: |
+              $URL = req.body.$FIELD;
+              ...
+              fetch($URL, ...);
+          - pattern: |
+              $URL = req.query.$FIELD;
+              ...
+              fetch($URL, ...);
+          - pattern: |
+              $URL = req.query.$FIELD;
+              ...
+              axios.get($URL, ...);
+    message: >
+      Server-Side Request Forgery: fetching a URL directly from user input
+      without allowlist validation. Validate the URL against an allowlist
+      of permitted hosts before making the request.
+    severity: ERROR
+    languages: [javascript, typescript]
+    metadata:
+      category: security
+      technology: [ai-generated]
+      cwe: ["CWE-918: Server-Side Request Forgery (SSRF)"]
+      confidence: HIGH
+      shipgate-check: ssrf
+
+  # ──────────────────────────────────────────────────────────────────────
+  # ai-prompt-injection
+  # Direct interpolation of user input into LLM prompt strings.
+  # ──────────────────────────────────────────────────────────────────────
+  - id: ai-prompt-injection
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $PROMPT = `... ${req.body.$INPUT} ...`;
+              ...
+              $CLIENT.chat.completions.create({..., messages: [{..., content: $PROMPT}], ...});
+          - pattern: |
+              $CLIENT.chat.completions.create({..., messages: [{..., content: `... ${$USER_INPUT} ...`}], ...});
+          - pattern: |
+              $PROMPT = "..." + req.body.$FIELD + "...";
+          - pattern: |
+              $PROMPT = `... ${req.query.$INPUT} ...`;
+    pattern-not:
+      pattern: |
+        $SANITIZED = $SANITIZE_FN($USER_INPUT);
+        ...
+        $CLIENT.chat.completions.create({..., messages: [{..., content: $SANITIZED}], ...});
+    message: >
+      Potential prompt injection: user input is interpolated directly into
+      an LLM prompt without sanitization. Sanitize or escape user content,
+      or use a system/user message separation pattern.
+    severity: WARNING
+    languages: [javascript, typescript]
+    metadata:
+      category: security
+      technology: [ai-generated, llm]
+      cwe: ["CWE-94: Improper Control of Generation of Code"]
+      confidence: MEDIUM
+      shipgate-check: prompt-injection
+
+  # ──────────────────────────────────────────────────────────────────────
+  # ai-eval-injection
+  # eval() or Function() with any dynamic content.
+  # ──────────────────────────────────────────────────────────────────────
+  - id: ai-eval-injection
+    patterns:
+      - pattern-either:
+          - pattern: eval($CODE)
+          - pattern: new Function($CODE)
+          - pattern: new Function(..., $CODE)
+          - pattern: setTimeout($CODE, ...)
+          - pattern: setInterval($CODE, ...)
+      - metavariable-pattern:
+          metavariable: $CODE
+          pattern-not: |
+            "..."
+    message: >
+      Dynamic code execution via eval() or Function() constructor with
+      non-literal input. This enables arbitrary code execution. Use a
+      safe alternative (JSON.parse, a sandboxed interpreter, or a DSL).
+    severity: ERROR
+    languages: [javascript, typescript]
+    metadata:
+      category: security
+      technology: [ai-generated]
+      cwe: ["CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code"]
+      confidence: HIGH
+      shipgate-check: eval-injection
+
+  # ──────────────────────────────────────────────────────────────────────
+  # ai-hardcoded-jwt-secret
+  # JWT signing with hardcoded string literals instead of env vars.
+  # ──────────────────────────────────────────────────────────────────────
+  - id: ai-hardcoded-jwt-secret
+    patterns:
+      - pattern-either:
+          - pattern: jwt.sign($PAYLOAD, "...", ...)
+          - pattern: jwt.sign($PAYLOAD, '...', ...)
+          - pattern: jwt.verify($TOKEN, "...", ...)
+          - pattern: jwt.verify($TOKEN, '...', ...)
+          - pattern: sign($PAYLOAD, "...", ...)
+          - pattern: jsonwebtoken.sign($PAYLOAD, "...", ...)
+      - pattern-not: jwt.sign($PAYLOAD, "", ...)
+      - pattern-not: jwt.verify($TOKEN, "", ...)
+    message: >
+      JWT secret is hardcoded as a string literal. Use an environment
+      variable (e.g., process.env.JWT_SECRET) or a secrets manager.
+    severity: ERROR
+    languages: [javascript, typescript]
+    metadata:
+      category: security
+      technology: [ai-generated]
+      cwe: ["CWE-798: Use of Hard-coded Credentials"]
+      confidence: HIGH
+      shipgate-check: hardcoded-secret
+
+  # ──────────────────────────────────────────────────────────────────────
+  # ai-missing-error-handling
+  # Async functions that neither use try/catch nor return .catch().
+  # ──────────────────────────────────────────────────────────────────────
+  - id: ai-missing-error-handling
+    patterns:
+      - pattern: |
+          app.$METHOD($PATH, async ($REQ, $RES) => {
+            ...
+            await $EXPR;
+            ...
+          });
+      - pattern-not: |
+          app.$METHOD($PATH, async ($REQ, $RES) => {
+            try { ... } catch($E) { ... }
+          });
+    message: >
+      Async route handler lacks error handling. An unhandled rejection will
+      crash the process or return a 500 with no useful response. Wrap the
+      body in try/catch or use an error-handling middleware.
+    severity: WARNING
+    languages: [javascript, typescript]
+    metadata:
+      category: correctness
+      technology: [ai-generated]
+      cwe: ["CWE-755: Improper Handling of Exceptional Conditions"]
+      confidence: MEDIUM
+      shipgate-check: missing-error-handling
+
+  # ──────────────────────────────────────────────────────────────────────
+  # ai-sql-string-concat
+  # String concatenation or template literals in SQL queries.
+  # ──────────────────────────────────────────────────────────────────────
+  - id: ai-sql-string-concat
+    patterns:
+      - pattern-either:
+          - pattern: $DB.query("..." + $VAR + "...", ...)
+          - pattern: $DB.query(`...${$VAR}...`, ...)
+          - pattern: $DB.execute("..." + $VAR + "...", ...)
+          - pattern: $DB.execute(`...${$VAR}...`, ...)
+          - pattern: $POOL.query("..." + $VAR + "...", ...)
+          - pattern: $POOL.query(`...${$VAR}...`, ...)
+          - pattern: $DB.raw("..." + $VAR + "...", ...)
+          - pattern: $DB.raw(`...${$VAR}...`, ...)
+          - pattern: |
+              $QUERY = "..." + $VAR + "...";
+              ...
+              $DB.query($QUERY, ...);
+          - pattern: |
+              $QUERY = `...${$VAR}...`;
+              ...
+              $DB.query($QUERY, ...);
+    message: >
+      SQL query built with string concatenation or template literals.
+      This is vulnerable to SQL injection. Use parameterized queries
+      or a query builder (knex, prisma, drizzle).
+    severity: ERROR
+    languages: [javascript, typescript]
+    metadata:
+      category: security
+      technology: [ai-generated]
+      cwe: ["CWE-89: Improper Neutralization of Special Elements used in an SQL Command"]
+      confidence: HIGH
+      shipgate-check: sql-injection

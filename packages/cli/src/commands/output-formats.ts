@@ -158,6 +158,113 @@ export function formatJUnit(result: UnifiedVerifyResult): string {
 }
 
 /**
+ * Format result as SARIF 2.1.0
+ * https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html
+ */
+export function formatSarif(result: UnifiedVerifyResult): string {
+  const ruleMap = new Map<string, { id: string; shortDescription: string; severity: 'error' | 'warning' | 'note' }>();
+  const sarifResults: Array<Record<string, unknown>> = [];
+
+  for (const file of result.files) {
+    if (file.status === 'FAIL') {
+      for (const blocker of file.blockers) {
+        const ruleId = deriveRuleId(blocker);
+        if (!ruleMap.has(ruleId)) {
+          ruleMap.set(ruleId, {
+            id: ruleId,
+            shortDescription: blocker.length > 120 ? blocker.slice(0, 117) + '...' : blocker,
+            severity: 'error',
+          });
+        }
+
+        sarifResults.push({
+          ruleId,
+          message: { text: blocker },
+          level: 'error',
+          locations: [{
+            physicalLocation: {
+              artifactLocation: { uri: file.file, uriBaseId: '%SRCROOT%' },
+              region: { startLine: 1 },
+            },
+          }],
+          properties: {
+            proofMethod: file.mode,
+            score: file.score,
+            tier: file.tier ?? null,
+          },
+        });
+      }
+    } else if (file.status === 'WARN') {
+      const ruleId = file.mode === 'Specless' ? 'shipgate/specless-warn' : 'shipgate/low-score';
+      const message = file.mode === 'Specless'
+        ? `No ISL spec found — specless verification (score: ${file.score})`
+        : `Verification warning (score: ${file.score})`;
+
+      if (!ruleMap.has(ruleId)) {
+        ruleMap.set(ruleId, { id: ruleId, shortDescription: message, severity: 'warning' });
+      }
+
+      sarifResults.push({
+        ruleId,
+        message: { text: message },
+        level: 'warning',
+        locations: [{
+          physicalLocation: {
+            artifactLocation: { uri: file.file, uriBaseId: '%SRCROOT%' },
+            region: { startLine: 1 },
+          },
+        }],
+        properties: {
+          proofMethod: file.mode,
+          score: file.score,
+          tier: file.tier ?? null,
+        },
+      });
+    }
+  }
+
+  const sarif = {
+    $schema: 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/Schemata/sarif-schema-2.1.0.json',
+    version: '2.1.0' as const,
+    runs: [{
+      tool: {
+        driver: {
+          name: 'shipgate',
+          version: '3.0.0',
+          informationUri: 'https://shipgate.dev',
+          rules: Array.from(ruleMap.values()).map((r) => ({
+            id: r.id,
+            shortDescription: { text: r.shortDescription },
+            defaultConfiguration: { level: r.severity },
+          })),
+        },
+      },
+      results: sarifResults,
+      invocations: [{
+        executionSuccessful: result.verdict !== 'NO_SHIP',
+        properties: {
+          verdict: result.verdict,
+          trustScore: result.trustScore,
+          confidence: result.confidence,
+          mode: result.mode,
+        },
+      }],
+    }],
+  };
+
+  return JSON.stringify(sarif, null, 2);
+}
+
+function deriveRuleId(blocker: string): string {
+  const normalized = blocker
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+  return `shipgate/${normalized || 'verification-failure'}`;
+}
+
+/**
  * Escape XML special characters
  */
 function escapeXml(str: string): string {

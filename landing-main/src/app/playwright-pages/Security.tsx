@@ -6,7 +6,7 @@ export default function Security() {
     <LegalPageLayout
       title="Security"
       description="How Shipgate protects your code and data."
-      lastUpdated="February 11, 2026"
+      lastUpdated="March 1, 2026"
     >
       <div className="mb-12 p-6 rounded-xl border border-emerald-500/30 bg-emerald-950/20">
         <div className="flex items-start gap-4">
@@ -74,11 +74,34 @@ export default function Security() {
         researchers who follow responsible disclosure practices.
       </p>
 
-      <h2>Compliance</h2>
+      <h2>Compliance & Subprocessors</h2>
+
+      <h3>Compliance status</h3>
+      <ul>
+        <li><strong>SOC 2:</strong> Readiness work in progress; technical controls (RBAC, audit logging, encryption) are in place.</li>
+        <li><strong>Enterprise:</strong> RBAC, audit export (CSV/JSON), signed proof bundles, and encryption at rest for OAuth tokens.</li>
+      </ul>
+
+      <h3>Subprocessor list</h3>
+      <p className="mb-2">We use the following subprocessors to operate our service. Each is bound by appropriate data processing terms.</p>
+      <ul>
+        <li><strong>Stripe</strong> — Payments; PCI-compliant; no card data stored by Shipgate.</li>
+        <li><strong>GitHub</strong> — OAuth identity and repository metadata (read-only) when you connect your org.</li>
+        <li><strong>Google</strong> — OAuth identity for sign-in.</li>
+        <li><strong>Slack</strong> — Optional workspace connection for notifications; only when you connect Slack.</li>
+        <li><strong>Vercel / Railway</strong> — Optional deployment webhook receivers; only when you configure deployment tracking.</li>
+      </ul>
+
+      <h3>Data retention</h3>
       <p>
-        Shipgate is designed with enterprise compliance in mind. Contact us for information about
-        SOC 2, HIPAA, or other compliance frameworks.
+        Account and organization data are retained while your account is active. Audit logs are retained for at least 12 months to support compliance and incident review. You can request export or deletion of your data by contacting <a href="mailto:privacy@shipgate.dev">privacy@shipgate.dev</a>.
       </p>
+
+      <h3>Encryption model</h3>
+      <ul>
+        <li><strong>In transit:</strong> All traffic uses HTTPS (TLS 1.3).</li>
+        <li><strong>At rest:</strong> OAuth tokens (GitHub, Slack) stored by Shipgate are encrypted with AES-256-GCM. Application data is stored in a PostgreSQL environment with encryption at rest.</li>
+      </ul>
 
       <h2>Contact</h2>
       <p>

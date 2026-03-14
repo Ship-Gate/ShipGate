@@ -120,20 +120,24 @@ export default function FrostedNav() {
 
     // Handle navigation
     if (path.indexOf('#') === 0) {
-      // Internal scroll navigation
       const section = path.replace('#', '');
-      const NAV_SECTIONS: Record<string, number> = {
-        "How It Works": 40000 / 3,
-        "Pricing": 48000 / 3,
-        "FAQ": 54000 / 3,
-      };
-      window.scrollTo({ top: NAV_SECTIONS[section] || 0, behavior: "smooth" });
+      const sectionId = section.toLowerCase().replace(/ /g, '-');
+      const el = document.getElementById(sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        const NAV_SECTIONS: Record<string, number> = {
+          "How It Works": 87600 / 15,
+          "Pricing": 130800 / 15,
+          "FAQ": 145200 / 15,
+        };
+        window.scrollTo({ top: NAV_SECTIONS[section] || 0, behavior: "smooth" });
+      }
     } else if (path.indexOf('http') === 0) {
       // External link
       window.open(path, '_blank');
     } else if (path === '/signin') {
-      // Navigate to sign in page
-      window.location.href = '/signin';
+      window.location.href = 'https://app.shipgate.dev';
     } else {
       // Internal route
       window.location.href = path;

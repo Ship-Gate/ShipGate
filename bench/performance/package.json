@@ -1,0 +1,18 @@
+{
+  "name": "@isl-lang/perf-benchmarks",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bench": "tsx src/runner.ts",
+    "bench:small": "tsx src/runner.ts --size 10",
+    "bench:medium": "tsx src/runner.ts --size 100",
+    "bench:large": "tsx src/runner.ts --size 1000",
+    "bench:xl": "tsx src/runner.ts --size 10000",
+    "report": "tsx src/report.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "vitest": "^1.2.0"
+  }
+}

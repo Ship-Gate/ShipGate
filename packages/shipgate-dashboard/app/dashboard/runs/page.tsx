@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRuns } from '@/hooks/use-data';
 import { TableSkeleton } from '@/components/shared/skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
@@ -112,9 +113,16 @@ export default function RunsPage() {
             {runs.map((run) => (
               <tr
                 key={run.id}
-                className="border-b border-sg-border last:border-0 hover:bg-sg-bg2/50"
+                className="border-b border-sg-border last:border-0 hover:bg-sg-bg2/50 cursor-pointer"
               >
-                <td className="p-4 font-medium text-sg-text0">{run.projectName}</td>
+                <td className="p-4">
+                  <Link
+                    href={`/dashboard/runs/${run.id}`}
+                    className="font-medium text-sg-text0 hover:text-sg-accent transition-colors"
+                  >
+                    {run.projectName}
+                  </Link>
+                </td>
                 <td className="p-4 text-sg-text1 text-sm">{run.branch ?? '-'}</td>
                 <td className="p-4">
                   <span

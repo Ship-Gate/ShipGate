@@ -55,6 +55,7 @@ export interface FindingItem {
   message: string;
   fingerprint: string;
   confidence: number | null;
+  metaJson: unknown;
 }
 
 export interface ProofItem {

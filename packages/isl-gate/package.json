@@ -61,7 +61,14 @@
   "peerDependencies": {
     "@isl-lang/hallucination-scanner": "workspace:*",
     "@isl-lang/security-scanner": "workspace:*",
-    "@isl-lang/firewall": "workspace:*"
+    "@isl-lang/firewall": "workspace:*",
+    "@isl-lang/mock-detector": "workspace:*",
+    "@isl-lang/fake-success-ui-detector": "workspace:*",
+    "@isl-lang/phantom-dependency-scanner": "workspace:*",
+    "@isl-lang/security-verifier-enhancer": "workspace:*",
+    "@isl-lang/taint-tracker": "workspace:*",
+    "@isl-lang/supply-chain-verifier": "workspace:*",
+    "@isl-lang/semgrep-integration": "workspace:*"
   },
   "peerDependenciesMeta": {
     "@isl-lang/hallucination-scanner": {
@@ -71,6 +78,27 @@
       "optional": true
     },
     "@isl-lang/firewall": {
+      "optional": true
+    },
+    "@isl-lang/mock-detector": {
+      "optional": true
+    },
+    "@isl-lang/fake-success-ui-detector": {
+      "optional": true
+    },
+    "@isl-lang/phantom-dependency-scanner": {
+      "optional": true
+    },
+    "@isl-lang/security-verifier-enhancer": {
+      "optional": true
+    },
+    "@isl-lang/taint-tracker": {
+      "optional": true
+    },
+    "@isl-lang/supply-chain-verifier": {
+      "optional": true
+    },
+    "@isl-lang/semgrep-integration": {
       "optional": true
     }
   },
@@ -84,6 +112,8 @@
   "author": "mevla",
   "license": "MIT",
   "sideEffects": [
-    "./dist/chunk-*.js"
+    "./dist/chunk-*.js",
+    "./dist/specless/index.js",
+    "./dist/specless/*-adapter.js"
   ]
 }

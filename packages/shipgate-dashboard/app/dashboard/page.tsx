@@ -8,6 +8,7 @@ import { Sparkline } from '@/components/shared/sparkline';
 import { VerdictChart } from '@/components/dashboard/verdict-chart';
 import { ActivityFeed } from '@/components/dashboard/activity-feed';
 import { IntegrationsStrip } from '@/components/dashboard/integrations-strip';
+import { OnboardingBanner } from '@/components/onboarding';
 import Link from 'next/link';
 
 function verdictClasses(verdict: string | null) {
@@ -146,6 +147,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <OnboardingBanner />
       {/* Summary cards with sparklines */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {STAT_CARDS.map((card) => {

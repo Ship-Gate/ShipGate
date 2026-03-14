@@ -29,6 +29,12 @@ shipgate vibe "build a todo API with auth and JWT"
 
 ---
 
+## Pricing
+
+ShipGate is built to work for everyone. **Starter membership is $29** — full CLI, AI spec generation (bring your own `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`), verify and gate. [Learn more →](https://shipgate.dev)
+
+---
+
 ## Commands
 
 ### Core Workflows

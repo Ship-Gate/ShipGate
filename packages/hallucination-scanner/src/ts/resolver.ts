@@ -23,6 +23,7 @@ import type {
   PackageManifest,
   SourceLocation,
 } from './types.js';
+import type * as typescript from 'typescript';
 
 export interface TsResolverOptions {
   projectRoot: string;
@@ -308,6 +309,12 @@ function computeTrustScore(findings: TsFinding[]): number {
       case 'type_only_missing':
         penalty += 10;
         break;
+      case 'barrel_ghost_import':
+        penalty += 20;
+        break;
+      case 'missing_export':
+        penalty += 15;
+        break;
       default:
         penalty += 15;
     }
@@ -356,4 +363,281 @@ export async function scanTsFile(
     findings: checkResult.findings,
     checkResult,
   };
+}
+
+// ── TypeScript compiler-based resolution ─────────────────────────────────
+
+/**
+ * Attempt to load the TypeScript compiler. Returns null if unavailable.
+ */
+async function loadTypeScript(): Promise<typeof typescript | null> {
+  try {
+    return await import('typescript') as unknown as typeof typescript;
+  } catch {
+    return null;
+  }
+}
+
+function isBarrelFile(filePath: string): boolean {
+  const base = path.basename(filePath);
+  return /^index\.(ts|tsx|js|jsx|mjs|cjs|mts|cts)$/.test(base);
+}
+
+function hasExportModifier(ts: typeof typescript, node: typescript.Node): boolean {
+  if (typeof ts.canHaveModifiers === 'function' && ts.canHaveModifiers(node)) {
+    const modifiers = ts.getModifiers(node);
+    return modifiers?.some(m => m.kind === ts.SyntaxKind.ExportKeyword) ?? false;
+  }
+  return false;
+}
+
+function hasStarExport(ts: typeof typescript, sourceFile: typescript.SourceFile): boolean {
+  let found = false;
+  ts.forEachChild(sourceFile, (node) => {
+    if (ts.isExportDeclaration(node) && !node.exportClause && node.moduleSpecifier) {
+      found = true;
+    }
+  });
+  return found;
+}
+
+/**
+ * Resolve exports from a TypeScript source file.
+ * Maps exported symbol names to the module they originate from.
+ * For direct exports (export const x), maps to the current file path.
+ * For re-exports (export { x } from './y'), maps to the module specifier.
+ */
+export function resolveExports(
+  sourceFile: typescript.SourceFile,
+  ts: typeof typescript,
+): Map<string, string> {
+  const exports = new Map<string, string>();
+  const fileName = sourceFile.fileName;
+
+  ts.forEachChild(sourceFile, (node) => {
+    if (ts.isVariableStatement(node) && hasExportModifier(ts, node)) {
+      for (const decl of node.declarationList.declarations) {
+        if (ts.isIdentifier(decl.name)) {
+          exports.set(decl.name.text, fileName);
+        }
+      }
+    }
+
+    if ((ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node)) &&
+        hasExportModifier(ts, node) && node.name) {
+      exports.set(node.name.text, fileName);
+    }
+
+    if (ts.isEnumDeclaration(node) && hasExportModifier(ts, node)) {
+      exports.set(node.name.text, fileName);
+    }
+
+    if (ts.isTypeAliasDeclaration(node) && hasExportModifier(ts, node)) {
+      exports.set(node.name.text, fileName);
+    }
+
+    if (ts.isInterfaceDeclaration(node) && hasExportModifier(ts, node)) {
+      exports.set(node.name.text, fileName);
+    }
+
+    if (ts.isExportDeclaration(node)) {
+      if (node.exportClause && ts.isNamedExports(node.exportClause)) {
+        const source = node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)
+          ? node.moduleSpecifier.text
+          : fileName;
+        for (const element of node.exportClause.elements) {
+          exports.set(element.name.text, source);
+        }
+      }
+    }
+
+    if (ts.isExportAssignment(node)) {
+      exports.set('default', fileName);
+    }
+  });
+
+  return exports;
+}
+
+/**
+ * Resolve imports using the TypeScript compiler for deeper analysis.
+ * Creates a TypeScript program, resolves each import with ts.resolveModuleName(),
+ * follows re-export chains, and validates that imported symbols exist.
+ *
+ * Falls back gracefully (returns empty findings) when TypeScript is unavailable.
+ * The existing line-based resolver (resolveTs) serves as a fast fallback.
+ */
+export async function resolveWithTypeScript(
+  files: string[],
+  projectRoot: string,
+): Promise<TsFinding[]> {
+  const ts = await loadTypeScript();
+  if (!ts) return [];
+
+  const resolvedRoot = path.resolve(projectRoot);
+  const tsconfigPath = ts.findConfigFile(resolvedRoot, ts.sys.fileExists, 'tsconfig.json');
+
+  let compilerOptions: typescript.CompilerOptions = {
+    allowJs: true,
+    checkJs: false,
+    noEmit: true,
+    moduleResolution: ts.ModuleResolutionKind.Node10,
+    target: ts.ScriptTarget.ESNext,
+    module: ts.ModuleKind.ESNext,
+  };
+
+  if (tsconfigPath) {
+    const configFile = ts.readConfigFile(tsconfigPath, ts.sys.readFile);
+    if (configFile.config) {
+      const parsed = ts.parseJsonConfigFileContent(configFile.config, ts.sys, resolvedRoot);
+      compilerOptions = { ...parsed.options, noEmit: true };
+    }
+  }
+
+  const resolvedFiles = files.map(f => path.resolve(f));
+  const program = ts.createProgram(resolvedFiles, compilerOptions);
+  const findings: TsFinding[] = [];
+
+  for (const sourceFile of program.getSourceFiles()) {
+    if (sourceFile.isDeclarationFile) continue;
+    const normalizedName = path.resolve(sourceFile.fileName);
+    if (!resolvedFiles.includes(normalizedName)) continue;
+
+    ts.forEachChild(sourceFile, (node) => {
+      if (ts.isImportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+        processImport(ts, node, sourceFile, program, compilerOptions, findings);
+      }
+
+      if (ts.isExportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+        processReExport(ts, node, sourceFile, program, compilerOptions, findings);
+      }
+    });
+  }
+
+  return findings;
+}
+
+function processImport(
+  ts: typeof typescript,
+  node: typescript.ImportDeclaration,
+  sourceFile: typescript.SourceFile,
+  program: typescript.Program,
+  options: typescript.CompilerOptions,
+  findings: TsFinding[],
+): void {
+  const specifier = (node.moduleSpecifier as typescript.StringLiteral).text;
+  if (!specifier.startsWith('.') && !specifier.startsWith('/')) return;
+
+  const resolved = ts.resolveModuleName(specifier, sourceFile.fileName, options, ts.sys);
+  if (!resolved.resolvedModule) return;
+
+  const resolvedPath = resolved.resolvedModule.resolvedFileName;
+  const resolvedSource = program.getSourceFile(resolvedPath);
+  if (!resolvedSource) return;
+
+  const namedBindings = node.importClause?.namedBindings;
+  if (!namedBindings || !ts.isNamedImports(namedBindings)) return;
+
+  const moduleExports = resolveExports(resolvedSource, ts);
+  if (hasStarExport(ts, resolvedSource)) return;
+
+  const barrel = isBarrelFile(resolvedPath);
+
+  for (const element of namedBindings.elements) {
+    const importedName = (element.propertyName ?? element.name).text;
+    if (moduleExports.has(importedName)) continue;
+
+    if (barrel) {
+      const foundInChain = followReExportChain(ts, moduleExports, resolvedPath, program, options, importedName);
+      if (foundInChain) continue;
+
+      const { line: lineNum } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
+      findings.push({
+        kind: 'barrel_ghost_import',
+        message: `Symbol "${importedName}" imported from barrel "${specifier}" but not re-exported from any source`,
+        specifier,
+        location: { file: sourceFile.fileName, line: lineNum + 1, column: 1 },
+        suggestion: `Verify "${importedName}" is exported from a module referenced by ${path.basename(resolvedPath)}`,
+      });
+    } else {
+      const { line: lineNum } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
+      findings.push({
+        kind: 'missing_export',
+        message: `Symbol "${importedName}" is not exported from "${specifier}"`,
+        specifier,
+        location: { file: sourceFile.fileName, line: lineNum + 1, column: 1 },
+        suggestion: `Check that "${importedName}" is defined and exported in ${resolvedPath}`,
+      });
+    }
+  }
+}
+
+function processReExport(
+  ts: typeof typescript,
+  node: typescript.ExportDeclaration,
+  sourceFile: typescript.SourceFile,
+  program: typescript.Program,
+  options: typescript.CompilerOptions,
+  findings: TsFinding[],
+): void {
+  const specifier = (node.moduleSpecifier as typescript.StringLiteral).text;
+  if (!specifier.startsWith('.') && !specifier.startsWith('/')) return;
+  if (!node.exportClause || !ts.isNamedExports(node.exportClause)) return;
+
+  const resolved = ts.resolveModuleName(specifier, sourceFile.fileName, options, ts.sys);
+  if (!resolved.resolvedModule) return;
+
+  const resolvedPath = resolved.resolvedModule.resolvedFileName;
+  const resolvedSource = program.getSourceFile(resolvedPath);
+  if (!resolvedSource) return;
+
+  const moduleExports = resolveExports(resolvedSource, ts);
+  if (hasStarExport(ts, resolvedSource)) return;
+
+  for (const element of node.exportClause.elements) {
+    const exportedName = (element.propertyName ?? element.name).text;
+    if (moduleExports.has(exportedName)) continue;
+
+    const { line: lineNum } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
+    findings.push({
+      kind: 'missing_export',
+      message: `Re-exported symbol "${exportedName}" not found in "${specifier}"`,
+      specifier,
+      location: { file: sourceFile.fileName, line: lineNum + 1, column: 1 },
+      suggestion: `Verify "${exportedName}" exists in ${resolvedPath}`,
+    });
+  }
+}
+
+/**
+ * Follow re-export chains to check if a symbol is transitively exported
+ * through sources referenced by a barrel file.
+ */
+function followReExportChain(
+  ts: typeof typescript,
+  barrelExports: Map<string, string>,
+  barrelPath: string,
+  program: typescript.Program,
+  options: typescript.CompilerOptions,
+  targetName: string,
+): boolean {
+  const visitedSources = new Set<string>();
+
+  for (const [, source] of barrelExports) {
+    if (source === barrelPath || !source.startsWith('.') || visitedSources.has(source)) continue;
+    visitedSources.add(source);
+
+    const chainResolved = ts.resolveModuleName(source, barrelPath, options, ts.sys);
+    if (!chainResolved.resolvedModule) continue;
+
+    const chainFile = program.getSourceFile(chainResolved.resolvedModule.resolvedFileName);
+    if (!chainFile) continue;
+
+    const chainExports = resolveExports(chainFile, ts);
+    if (chainExports.has(targetName) || hasStarExport(ts, chainFile)) {
+      return true;
+    }
+  }
+
+  return false;
 }

@@ -1,0 +1,196 @@
+services:
+  # ── PostgreSQL ────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: shipgate
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shipgate}
+      POSTGRES_DB: shipgate
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shipgate -d shipgate"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - shipgate
+
+  # ── Redis (optional — caching and rate-limit store) ───────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - shipgate
+
+  # ── Dashboard (Next.js) ──────────────────────────────────────────────────
+  dashboard:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM node:20-slim AS base
+        RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
+        RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+        WORKDIR /app
+
+        FROM base AS deps
+        COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+        COPY packages/shipgate-dashboard/package.json packages/shipgate-dashboard/
+        COPY packages/shipgate-dashboard/prisma packages/shipgate-dashboard/prisma/
+        RUN pnpm install --filter @isl-lang/shipgate-dashboard --frozen-lockfile
+
+        FROM base AS builder
+        WORKDIR /app
+        COPY --from=deps /app/node_modules ./node_modules
+        COPY --from=deps /app/packages/shipgate-dashboard/node_modules ./packages/shipgate-dashboard/node_modules
+        COPY packages/shipgate-dashboard packages/shipgate-dashboard
+        WORKDIR /app/packages/shipgate-dashboard
+        RUN npx prisma generate
+        ENV NEXT_TELEMETRY_DISABLED=1
+        RUN npm run build
+
+        FROM base AS runner
+        WORKDIR /app/packages/shipgate-dashboard
+        ENV NODE_ENV=production
+        ENV NEXT_TELEMETRY_DISABLED=1
+        RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
+        COPY --from=builder /app/packages/shipgate-dashboard/.next ./.next
+        COPY --from=builder /app/packages/shipgate-dashboard/public ./public
+        COPY --from=builder /app/packages/shipgate-dashboard/package.json ./package.json
+        COPY --from=builder /app/packages/shipgate-dashboard/node_modules ./node_modules
+        COPY --from=builder /app/packages/shipgate-dashboard/prisma ./prisma
+        COPY --from=builder /app/packages/shipgate-dashboard/next.config.js ./next.config.js
+        USER nextjs
+        EXPOSE 3001
+        CMD ["npx", "next", "start", "-p", "3001"]
+    restart: unless-stopped
+    ports:
+      - "${DASHBOARD_PORT:-3001}:3001"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://shipgate:${POSTGRES_PASSWORD:-shipgate}@postgres:5432/shipgate
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      SESSION_SECRET: ${SESSION_SECRET:-${JWT_SECRET}}
+      DASHBOARD_PORT: "3001"
+      DASHBOARD_CORS_ORIGIN: ${FRONTEND_URL:-http://localhost:3001}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRO_PRICE_ID: ${STRIPE_PRO_PRICE_ID:-}
+      STRIPE_ENTERPRISE_PRICE_ID: ${STRIPE_ENTERPRISE_PRICE_ID:-}
+      STRIPE_SUCCESS_URL: ${STRIPE_SUCCESS_URL:-http://localhost:3001/success}
+      STRIPE_CANCEL_URL: ${STRIPE_CANCEL_URL:-http://localhost:3001/cancel}
+      STRIPE_PORTAL_RETURN_URL: ${STRIPE_PORTAL_RETURN_URL:-http://localhost:3001/account}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3001/api/v1/health').then(r=>{if(!r.ok)throw 1}).catch(()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - shipgate
+
+  # ── API Server (Hono) ───────────────────────────────────────────────────
+  api-server:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM node:20-slim AS base
+        RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
+        WORKDIR /app
+
+        FROM base AS deps
+        COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+        COPY packages/api-server/package.json packages/api-server/
+        COPY packages/sdk/package.json packages/sdk/
+        COPY packages/isl-gate/package.json packages/isl-gate/
+        COPY packages/security-scanner/package.json packages/security-scanner/
+        COPY packages/hallucination-scanner/package.json packages/hallucination-scanner/
+        COPY packages/taint-tracker/package.json packages/taint-tracker/
+        RUN pnpm install --filter @isl-lang/api-server... --frozen-lockfile
+
+        FROM base AS builder
+        WORKDIR /app
+        COPY --from=deps /app/node_modules ./node_modules
+        COPY --from=deps /app/packages ./packages
+        COPY packages/api-server packages/api-server
+        COPY packages/sdk packages/sdk
+        COPY packages/isl-gate packages/isl-gate
+        COPY packages/security-scanner packages/security-scanner
+        COPY packages/hallucination-scanner packages/hallucination-scanner
+        COPY packages/taint-tracker packages/taint-tracker
+        WORKDIR /app/packages/api-server
+        RUN npm run build
+
+        FROM node:20-slim AS runner
+        WORKDIR /app
+        ENV NODE_ENV=production
+        RUN addgroup --system --gid 1001 shipgate && adduser --system --uid 1001 shipgate
+        COPY --from=builder /app/packages/api-server/dist ./dist
+        COPY --from=builder /app/packages/api-server/package.json ./package.json
+        COPY --from=builder /app/packages/api-server/node_modules ./node_modules
+        USER shipgate
+        EXPOSE 4000
+        HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=15s \
+          CMD node -e "fetch('http://localhost:4000/api/v1/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))"
+        CMD ["node", "dist/index.js"]
+    restart: unless-stopped
+    ports:
+      - "${API_SERVER_PORT:-4000}:4000"
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+      SHIPGATE_API_KEYS: ${SHIPGATE_API_KEYS:-}
+      SHIPGATE_RATE_LIMIT: ${SHIPGATE_RATE_LIMIT:-100}
+      DATABASE_URL: postgresql://shipgate:${POSTGRES_PASSWORD:-shipgate}@postgres:5432/shipgate
+      REDIS_URL: redis://redis:6379
+      ISL_AI_ENABLED: ${ISL_AI_ENABLED:-false}
+      ISL_AI_PROVIDER: ${ISL_AI_PROVIDER:-openai}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:4000/api/v1/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - shipgate
+
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
+
+networks:
+  shipgate:
+    driver: bridge

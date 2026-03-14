@@ -2,7 +2,7 @@
 // Test Fixtures - Reusable ISL domain builders for Terraform generator tests
 // ============================================================================
 
-import type * as AST from '../../../master_contracts/ast';
+import type * as AST from '@isl-lang/parser';
 
 export function loc(): AST.SourceLocation {
   return { file: 'test.isl', line: 1, column: 1, endLine: 1, endColumn: 1 };

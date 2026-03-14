@@ -393,17 +393,17 @@ app.post('/api/live/charge', (req, res) => {
   }, 400);
 });
 
-// Subscription checkout: create Stripe Checkout session for Team plan
-// Requires STRIPE_SECRET_KEY and STRIPE_TEAM_PRICE_ID in env; otherwise returns 503 with message
+// Subscription checkout: create Stripe Checkout session for Pro plan
+// Requires STRIPE_SECRET_KEY and STRIPE_PRO_PRICE_ID in env; otherwise returns 503 with message
 app.post('/api/create-checkout-session', async (req, res) => {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-  const priceId = process.env.STRIPE_TEAM_PRICE_ID;
+  const priceId = process.env.STRIPE_PRO_PRICE_ID;
   const successUrl = process.env.STRIPE_SUCCESS_URL ?? `${req.protocol}://${req.get('host')?.replace(String(PORT), '5173') ?? ''}/dashboard?session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = process.env.STRIPE_CANCEL_URL ?? `${req.protocol}://${req.get('host')?.replace(String(PORT), '5173') ?? ''}/pricing`;
 
   if (!stripeSecretKey || !priceId) {
     res.status(503).json({
-      message: 'Billing is not configured. Set STRIPE_SECRET_KEY and STRIPE_TEAM_PRICE_ID to enable checkout.',
+      message: 'Billing is not configured. Set STRIPE_SECRET_KEY and STRIPE_PRO_PRICE_ID to enable checkout.',
     });
     return;
   }

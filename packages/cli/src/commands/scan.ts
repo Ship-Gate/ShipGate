@@ -459,6 +459,12 @@ export interface ProjectScanOptions {
   format?: 'pretty' | 'json';
   /** Verbose */
   verbose?: boolean;
+  /** Run taint analysis via @isl-lang/taint-tracker */
+  taint?: boolean;
+  /** Run supply chain verification via @isl-lang/supply-chain-verifier */
+  supplyChain?: boolean;
+  /** Run Semgrep rules via @isl-lang/semgrep-integration */
+  semgrep?: boolean;
 }
 
 export interface ProjectScanResult {
@@ -610,28 +616,55 @@ export async function runProjectScan(
   }
 
   if (specGenFn) {
+    const effectiveProvider =
+      options.provider ??
+      (process.env['ANTHROPIC_API_KEY'] ? 'anthropic' : process.env['OPENAI_API_KEY'] ? 'openai' : 'stub');
+    // Enable AI when using a real provider so spec-assist's requireAIEnabled() passes
+    if (effectiveProvider === 'openai' || effectiveProvider === 'anthropic') {
+      process.env['ISL_AI_ENABLED'] = 'true';
+    }
+    let firstFailureReason: string | null = null;
     const batchSize = 10;
     for (let i = 0; i < sourceFiles.length; i += batchSize) {
       const batch = sourceFiles.slice(i, i + batchSize);
       const batchPromises = batch.map(async (file) => {
         try {
-          const content = await readFileAsync(file.path, 'utf-8');
+          let content = await readFileAsync(file.path, 'utf-8');
           if (content.trim().length < 20) return null;
+
+          // Stay under model context (e.g. gpt-3.5-turbo 16k): cap code size so prompt + completion fits
+          const maxCodeChars = 7_000;
+          const truncated = content.length > maxCodeChars;
+          if (truncated) content = content.slice(0, maxCodeChars) + '\n\n// ... (truncated for context limit)';
 
           const lang = file.language as 'typescript' | 'javascript' | 'python' | 'go' | 'rust' | 'java';
           const result = await specGenFn!(content, lang, {
-            hints: [`File: ${relative(resolvedPath, file.path)}`],
+            hints: [`File: ${relative(resolvedPath, file.path)}${truncated ? ' (truncated)' : ''}`],
             config: {
-              provider: options.provider ?? (process.env['ANTHROPIC_API_KEY'] ? 'anthropic' : process.env['OPENAI_API_KEY'] ? 'openai' : 'stub'),
+              provider: effectiveProvider,
               model: options.model,
+              apiKey:
+                effectiveProvider === 'openai'
+                  ? process.env['OPENAI_API_KEY']
+                  : effectiveProvider === 'anthropic'
+                    ? process.env['ANTHROPIC_API_KEY']
+                    : undefined,
             },
           });
 
           if (result.success && result.isl) {
             return result.isl;
           }
+          // Capture first failure reason so report can show why 0 specs
+          if (firstFailureReason === null && result.diagnostics?.length) {
+            firstFailureReason = result.diagnostics.map((d) => d.message).join('; ').slice(0, 200);
+          } else if (firstFailureReason === null && result.metadata?.provider) {
+            firstFailureReason = `Provider ${result.metadata.provider} returned no valid ISL (validation failed).`;
+          }
         } catch (err) {
-          errors.push(`spec-assist failed for ${relative(resolvedPath, file.path)}: ${err instanceof Error ? err.message : String(err)}`);
+          const msg = err instanceof Error ? err.message : String(err);
+          errors.push(`spec-assist failed for ${relative(resolvedPath, file.path)}: ${msg}`);
+          if (firstFailureReason === null) firstFailureReason = msg.slice(0, 200);
         }
         return null;
       });
@@ -640,6 +673,9 @@ export async function runProjectScan(
       for (const spec of results) {
         if (spec) specFragments.push(spec);
       }
+    }
+    if (specFragments.length === 0 && firstFailureReason) {
+      errors.push(`No specs generated. Sample reason: ${firstFailureReason}`);
     }
   }
 
@@ -693,6 +729,57 @@ export async function runProjectScan(
     errors.push('truthpack-v2 not available; skipping truthpack extraction');
   }
 
+  // Step 4b: Optional tool scans (taint, supply-chain, semgrep)
+  const toolFindings: Array<{ file: string; rule: string; message: string; severity: string; tool: string }> = [];
+
+  if (options.taint) {
+    try {
+      const { TaintAnalyzer } = await import('@isl-lang/taint-tracker');
+      const analyzer = new TaintAnalyzer();
+      for (const file of sourceFiles) {
+        const content = await readFileAsync(file.path, 'utf-8');
+        const taintResult = await analyzer.analyze(content, { filePath: file.path });
+        if (taintResult.findings) {
+          for (const f of taintResult.findings) {
+            toolFindings.push({ file: file.path, rule: f.rule ?? 'taint-flow', message: f.message, severity: f.severity ?? 'high', tool: 'taint-tracker' });
+          }
+        }
+      }
+    } catch {
+      errors.push('taint-tracker not available; skipping taint analysis');
+    }
+  }
+
+  if (options.supplyChain) {
+    try {
+      const { SupplyChainScanner } = await import('@isl-lang/supply-chain-verifier');
+      const scanner = new SupplyChainScanner();
+      const scResult = await scanner.scan({ projectRoot: resolvedPath });
+      if (scResult.findings) {
+        for (const f of scResult.findings) {
+          toolFindings.push({ file: f.file ?? resolvedPath, rule: f.rule ?? 'supply-chain', message: f.message, severity: f.severity ?? 'high', tool: 'supply-chain-verifier' });
+        }
+      }
+    } catch {
+      errors.push('supply-chain-verifier not available; skipping supply chain scan');
+    }
+  }
+
+  if (options.semgrep) {
+    try {
+      const { SemgrepRunner } = await import('@isl-lang/semgrep-integration');
+      const runner = new SemgrepRunner();
+      const sgResult = await runner.run({ projectRoot: resolvedPath, files: sourceFiles.map(f => f.path) });
+      if (sgResult.findings) {
+        for (const f of sgResult.findings) {
+          toolFindings.push({ file: f.file ?? resolvedPath, rule: f.rule ?? 'semgrep', message: f.message, severity: f.severity ?? 'medium', tool: 'semgrep' });
+        }
+      }
+    } catch {
+      errors.push('semgrep-integration not available; skipping semgrep scan');
+    }
+  }
+
   // Step 5: Cross-reference coverage
   const totalArtifacts = truthpackRoutes.length + truthpackEnvVars.length + sourceFiles.length;
   const coveredArtifacts = specFragments.length;
@@ -726,6 +813,24 @@ export async function runProjectScan(
     }
   } catch {
     errors.push('Gate command not available; skipping gate verification');
+  }
+
+  // Step 6b: Merge tool findings into gate result
+  if (toolFindings.length > 0) {
+    const criticalCount = toolFindings.filter(f => f.severity === 'critical' || f.severity === 'high').length;
+    if (!gateResult) {
+      gateResult = {
+        verdict: criticalCount > 0 ? 'NO_SHIP' : 'WARN',
+        score: criticalCount > 0 ? Math.max(0, 100 - criticalCount * 20) : 80,
+        violations: toolFindings.map(f => `[${f.tool}] ${f.rule}: ${f.message}`),
+      };
+    } else {
+      gateResult.violations.push(...toolFindings.map(f => `[${f.tool}] ${f.rule}: ${f.message}`));
+      if (criticalCount > 0) {
+        gateResult.verdict = 'NO_SHIP';
+        gateResult.score = Math.max(0, gateResult.score - criticalCount * 20);
+      }
+    }
   }
 
   // Step 7: Determine final verdict
